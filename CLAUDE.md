@@ -15,17 +15,24 @@ A SaaS for **Kaufman Finance Group** - an Israeli mortgage advisor office. Repla
 - Timeline: ~1 month to MVP
 
 ## Tech Stack
-- **Framework:** Next.js 15 (App Router) + TypeScript
-- **Database:** Supabase (PostgreSQL) + Supabase Auth
+- **Framework:** Next.js **16.2.6** (App Router) + React **19.2.4** + TypeScript 5
+- **Database:** Supabase (PostgreSQL) + Supabase Auth (`@supabase/ssr` 0.10+)
 - **Styling:** Tailwind CSS v4 + shadcn/ui components
 - **Icons:** Lucide React (NEVER emojis in UI)
-- **Forms:** React Hook Form + Zod validation
-- **i18n:** next-intl
-- **Server state:** TanStack Query
+- **Forms:** React Hook Form + **Zod 4**
+- **i18n:** next-intl 4
+- **Server state:** TanStack Query 5
 - **URL state:** nuqs (type-safe URL search params)
-- **Animations:** Framer Motion (subtle, professional)
+- **Animations:** Framer Motion 12 (subtle, professional)
 - **Env vars:** @t3-oss/env-nextjs (type-safe)
 - **Hosting:** Vercel
+
+### Important Version Notes (Next.js 16 specifics)
+- File convention: use **`src/proxy.ts`** (NOT `middleware.ts` - deprecated in Next 16)
+- Function export: **`export async function proxy(...)`** (was `middleware`)
+- Turbopack is **enabled by default** in dev mode
+- React 19 features available: `useActionState`, `useFormStatus`, `use()` hook
+- Zod 4 has breaking API changes from Zod 3 - check docs when copying old code
 
 ## Brand
 | Element | Value |
