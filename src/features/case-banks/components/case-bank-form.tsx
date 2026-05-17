@@ -7,8 +7,10 @@ import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { FormField, NativeSelect } from '@/components/shared/form-fields';
+
+import { fieldDefault } from '@/lib/utils/form-defaults';
 
 import { saveCaseBankAction } from '../actions/save-case-bank';
 import {
@@ -39,18 +41,6 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
   );
 }
 
-function fieldValue(
-  name: string,
-  submitted: Partial<Record<string, string>> | undefined,
-  initial: CaseBankRow | null | undefined,
-): string {
-  if (submitted && name in submitted) return submitted[name] ?? '';
-  if (!initial) return '';
-  const v = (initial as unknown as Record<string, unknown>)[name];
-  if (v === null || v === undefined) return '';
-  return String(v);
-}
-
 export function CaseBankForm({ caseId, initial, banks, statuses }: CaseBankFormProps) {
   const [state, formAction] = useActionState<CaseBankActionState, FormData>(
     saveCaseBankAction,
@@ -79,10 +69,10 @@ export function CaseBankForm({ caseId, initial, banks, statuses }: CaseBankFormP
       {initial && <input type="hidden" name="case_bank_id" value={initial.id} />}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Field label="בנק" required error={fieldErrors.bank_id}>
+        <FormField label="בנק" required error={fieldErrors.bank_id}>
           <NativeSelect
             name="bank_id"
-            defaultValue={fieldValue('bank_id', submitted, initial)}
+            defaultValue={fieldDefault('bank_id', submitted, initial)}
             required
           >
             <option value="">— בחר —</option>
@@ -92,12 +82,12 @@ export function CaseBankForm({ caseId, initial, banks, statuses }: CaseBankFormP
               </option>
             ))}
           </NativeSelect>
-        </Field>
+        </FormField>
 
-        <Field label="סטטוס בבנק" error={fieldErrors.bank_status_id}>
+        <FormField label="סטטוס בבנק" error={fieldErrors.bank_status_id}>
           <NativeSelect
             name="bank_status_id"
-            defaultValue={fieldValue('bank_status_id', submitted, initial)}
+            defaultValue={fieldDefault('bank_status_id', submitted, initial)}
           >
             <option value="">— ללא —</option>
             {statuses.map((s) => (
@@ -106,7 +96,7 @@ export function CaseBankForm({ caseId, initial, banks, statuses }: CaseBankFormP
               </option>
             ))}
           </NativeSelect>
-        </Field>
+        </FormField>
       </div>
 
       <label className="flex items-center gap-2 cursor-pointer">
@@ -120,57 +110,57 @@ export function CaseBankForm({ caseId, initial, banks, statuses }: CaseBankFormP
       </label>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Field label="שם הבנקאי" error={fieldErrors.banker_name}>
+        <FormField label="שם הבנקאי" error={fieldErrors.banker_name}>
           <Input
             name="banker_name"
-            defaultValue={fieldValue('banker_name', submitted, initial)}
+            defaultValue={fieldDefault('banker_name', submitted, initial)}
           />
-        </Field>
+        </FormField>
 
-        <Field label="טלפון הבנקאי" error={fieldErrors.banker_phone}>
+        <FormField label="טלפון הבנקאי" error={fieldErrors.banker_phone}>
           <Input
             name="banker_phone"
             type="tel"
             dir="ltr"
-            defaultValue={fieldValue('banker_phone', submitted, initial)}
+            defaultValue={fieldDefault('banker_phone', submitted, initial)}
           />
-        </Field>
+        </FormField>
 
-        <Field label="אימייל הבנקאי" error={fieldErrors.banker_email}>
+        <FormField label="אימייל הבנקאי" error={fieldErrors.banker_email}>
           <Input
             name="banker_email"
             type="email"
             dir="ltr"
-            defaultValue={fieldValue('banker_email', submitted, initial)}
+            defaultValue={fieldDefault('banker_email', submitted, initial)}
           />
-        </Field>
+        </FormField>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Field label="תאריך הגשה" error={fieldErrors.submission_date}>
+        <FormField label="תאריך הגשה" error={fieldErrors.submission_date}>
           <Input
             name="submission_date"
             type="date"
-            defaultValue={fieldValue('submission_date', submitted, initial)}
+            defaultValue={fieldDefault('submission_date', submitted, initial)}
           />
-        </Field>
+        </FormField>
 
-        <Field label="תאריך תגובה" error={fieldErrors.response_date}>
+        <FormField label="תאריך תגובה" error={fieldErrors.response_date}>
           <Input
             name="response_date"
             type="date"
-            defaultValue={fieldValue('response_date', submitted, initial)}
+            defaultValue={fieldDefault('response_date', submitted, initial)}
           />
-        </Field>
+        </FormField>
       </div>
 
-      <Field label="הערות" error={fieldErrors.notes}>
+      <FormField label="הערות" error={fieldErrors.notes}>
         <Textarea
           name="notes"
           rows={3}
-          defaultValue={fieldValue('notes', submitted, initial)}
+          defaultValue={fieldDefault('notes', submitted, initial)}
         />
-      </Field>
+      </FormField>
 
       {genericError && (
         <div className="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
@@ -185,35 +175,3 @@ export function CaseBankForm({ caseId, initial, banks, statuses }: CaseBankFormP
   );
 }
 
-function Field({
-  label,
-  required,
-  error,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  error?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <Label className="text-neutral-700">
-        {label}
-        {required && <span className="text-red-500 ms-1">*</span>}
-      </Label>
-      {children}
-      {error && <p className="text-xs text-red-600">{error}</p>}
-    </div>
-  );
-}
-
-function NativeSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  const { className = '', ...rest } = props;
-  return (
-    <select
-      {...rest}
-      className={`h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#C9A961] ${className}`}
-    />
-  );
-}

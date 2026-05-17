@@ -30,16 +30,19 @@ export function EditableBankCell({
   const [bank, setBank] = useState<BankOption | null>(currentBank);
   const [isPending, startTransition] = useTransition();
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
 
   useEffect(() => {
     if (!open) return;
-    const onScroll = () => setOpen(false);
+    const onScroll = (e: Event) => {
+      if (dropdownRef.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    };
     window.addEventListener('scroll', onScroll, true);
-    window.addEventListener('resize', onScroll);
+    window.addEventListener('resize', () => setOpen(false));
     return () => {
       window.removeEventListener('scroll', onScroll, true);
-      window.removeEventListener('resize', onScroll);
     };
   }, [open]);
 
@@ -113,6 +116,7 @@ export function EditableBankCell({
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden />
           <div
+            ref={dropdownRef}
             className="fixed z-50 bg-white border border-neutral-200 rounded-lg shadow-xl py-1 min-w-52 max-h-72 overflow-y-auto scrollbar-thin"
             style={{ top: pos.top, right: pos.right }}
           >
