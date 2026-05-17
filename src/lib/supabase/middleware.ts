@@ -40,7 +40,15 @@ export async function updateSession(request: NextRequest) {
 
   // Redirect unauthenticated users away from protected routes.
   const pathname = request.nextUrl.pathname;
-  const isProtectedRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/cases');
+  const isProtectedRoute =
+    pathname.startsWith('/cases') ||
+    pathname.startsWith('/leads') ||
+    pathname.startsWith('/tasks') ||
+    pathname.startsWith('/team') ||
+    pathname.startsWith('/templates') ||
+    pathname.startsWith('/audit-log') ||
+    pathname.startsWith('/settings') ||
+    pathname.startsWith('/dashboard');
   const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/signup');
 
   if (!user && isProtectedRoute) {
@@ -51,7 +59,7 @@ export async function updateSession(request: NextRequest) {
 
   if (user && isAuthRoute) {
     const url = request.nextUrl.clone();
-    url.pathname = '/dashboard';
+    url.pathname = '/cases';
     return NextResponse.redirect(url);
   }
 
