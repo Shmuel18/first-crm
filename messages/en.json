@@ -94,7 +94,15 @@
       "saved": "Saved views",
       "saveCurrent": "Save current view",
       "exportExcel": "Export to Excel",
-      "exportPdf": "Export to PDF"
+      "exportPdf": "Export to PDF",
+      "exporting": "Exporting...",
+      "exportFailed": "Export failed",
+      "exportEmpty": "No cases to export",
+      "pdf": {
+        "title": "Active Cases - Kaufman Finance Group",
+        "subtitle": "Total {count} cases",
+        "generatedAt": "Generated on: {date}"
+      }
     },
     "summary": {
       "activeCases": "active cases",

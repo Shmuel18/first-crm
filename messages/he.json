@@ -94,7 +94,15 @@
       "saved": "תצוגות שמורות",
       "saveCurrent": "שמור תצוגה נוכחית",
       "exportExcel": "ייצוא לאקסל",
-      "exportPdf": "ייצוא ל-PDF"
+      "exportPdf": "ייצוא ל-PDF",
+      "exporting": "מייצא...",
+      "exportFailed": "ייצוא נכשל",
+      "exportEmpty": "אין תיקים לייצוא",
+      "pdf": {
+        "title": "תיקים פעילים - Kaufman Finance Group",
+        "subtitle": "סה״כ {count} תיקים",
+        "generatedAt": "תאריך הפקה: {date}"
+      }
     },
     "summary": {
       "activeCases": "תיקים פעילים",

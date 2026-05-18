@@ -1,5 +1,7 @@
-import { Bookmark, ChevronDown, FileSpreadsheet, FileText, Star } from 'lucide-react';
+import { Bookmark, ChevronDown, Star } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+
+import { DashboardExportButtons } from './dashboard-export-buttons';
 
 export function DashboardSavedViews() {
   const t = useTranslations('dashboard.savedViews');
@@ -16,14 +18,7 @@ export function DashboardSavedViews() {
         {t('saveCurrent')}
       </button>
       <div className="flex-1" />
-      <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 text-xs text-neutral-700 hover:bg-neutral-50 transition">
-        <FileSpreadsheet className="size-3.5" />
-        {t('exportExcel')}
-      </button>
-      <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 text-xs text-neutral-700 hover:bg-neutral-50 transition">
-        <FileText className="size-3.5" />
-        {t('exportPdf')}
-      </button>
+      <DashboardExportButtons />
     </div>
   );
 }
