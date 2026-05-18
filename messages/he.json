@@ -36,7 +36,15 @@
     "searchPlaceholder": "חיפוש לפי שם, ת״ז, טלפון או מספר תיק...",
     "newCase": "פתיחת תיק חדש",
     "notifications": "התראות",
-    "logout": "התנתק"
+    "logout": "התנתק",
+    "userMenu": {
+      "open": "תפריט משתמש",
+      "language": "שפת ממשק",
+      "languageHebrew": "עברית",
+      "languageEnglish": "אנגלית",
+      "settings": "הגדרות",
+      "logout": "התנתק"
+    }
   },
   "auth": {
     "login": {

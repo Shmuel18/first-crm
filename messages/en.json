@@ -36,7 +36,15 @@
     "searchPlaceholder": "Search by name, ID, phone or case number...",
     "newCase": "New Case",
     "notifications": "Notifications",
-    "logout": "Log out"
+    "logout": "Log out",
+    "userMenu": {
+      "open": "User menu",
+      "language": "Interface language",
+      "languageHebrew": "Hebrew",
+      "languageEnglish": "English",
+      "settings": "Settings",
+      "logout": "Log out"
+    }
   },
   "auth": {
     "login": {

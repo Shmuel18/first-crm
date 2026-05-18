@@ -33,7 +33,7 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
           <col />
         </colgroup>
         <thead>
-          <tr className="border-b-2 border-neutral-200">
+          <tr className="bg-neutral-100 border-b-2 border-neutral-300">
             <Th>{t('row')}</Th>
             <Th>{t('clientName')}</Th>
             <Th>{t('nationalId')}</Th>

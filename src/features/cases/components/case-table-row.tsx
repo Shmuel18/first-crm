@@ -8,7 +8,6 @@ import { EditableBankCell } from '@/features/case-banks/components/editable-bank
 
 import type { Locale } from '@/lib/i18n/direction';
 
-import { CopyableIdCell } from './copyable-id-cell';
 import { EditableAdvisorCell } from './editable-advisor-cell';
 import { EditableStatusCell } from './editable-status-cell';
 import { EditableTextCell } from './editable-text-cell';
@@ -48,11 +47,12 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }
   const t = useTranslations('dashboard.rowState');
   const locale = useLocale() as Locale;
 
+  // Zebra striping + clear borders - Excel-like density for power users
   const rowClasses = [
-    'group transition-colors relative border-b border-neutral-100 cursor-pointer',
-    row.isStuck && 'bg-red-50/60 hover:bg-red-50',
-    row.isFrozen && 'bg-neutral-50 text-neutral-500',
-    !row.isStuck && !row.isFrozen && 'hover:bg-neutral-50',
+    'group transition-colors relative border-b border-neutral-200 cursor-pointer h-12',
+    row.isStuck && 'bg-red-50/80 hover:bg-red-100/80',
+    row.isFrozen && 'bg-neutral-100 text-neutral-500 hover:bg-neutral-150',
+    !row.isStuck && !row.isFrozen && 'odd:bg-white even:bg-neutral-50/60 hover:!bg-[#FAF6EC]',
   ]
     .filter(Boolean)
     .join(' ');
@@ -68,15 +68,15 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }
       <td className="px-4 py-3 text-xs text-neutral-400 tabular-nums">{row.index}</td>
 
       <td className="px-4 py-3">
-        <span className="font-bold text-neutral-900 group-hover:text-[#C9A961] transition whitespace-nowrap">
+        <span className="font-medium text-sm text-neutral-900 group-hover:text-[#C9A961] transition whitespace-nowrap">
           {row.clientLabel || (
             <span className="italic font-normal text-neutral-400">{t('noBorrowers')}</span>
           )}
         </span>
       </td>
 
-      <td className="px-4 py-3">
-        <CopyableIdCell value={row.nationalId} />
+      <td className="px-4 py-3 text-sm text-neutral-700 tabular-nums" dir="ltr">
+        {row.nationalId ?? <span className="text-neutral-400">—</span>}
       </td>
 
       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
