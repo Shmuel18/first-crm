@@ -1,3 +1,4 @@
+import { uploadCaseDocumentToDrive } from '@/features/integrations/services/drive-case-uploader';
 import { createClient } from '@/lib/supabase/server';
 import type { CaseId, DocumentId } from '@/lib/types/branded';
 
@@ -114,4 +115,77 @@ export async function signedUrlFor(
 
   if (error || !data) return null;
   return data.signedUrl;
+}
+
+const BUCKET = 'case-documents';
+
+export type PersistBlobsResult =
+  | {
+      ok: true;
+      storagePath: string;
+      driveFileId: string | null;
+      driveFileUrl: string | null;
+    }
+  | { ok: false; error: 'storage'; message: string };
+
+/**
+ * Upload the file blob to Supabase Storage (primary, required) and Drive
+ * (secondary, best-effort), then persist all references on the documents row.
+ * Drive failures are non-fatal - the document is usable from Supabase alone.
+ */
+export async function persistDocumentBlobs(
+  documentId: string,
+  caseId: string,
+  file: File,
+): Promise<PersistBlobsResult> {
+  const supabase = await createClient();
+  const path = storagePathFor(caseId, documentId, file.name);
+
+  const { error: storageErr } = await supabase.storage
+    .from(BUCKET)
+    .upload(path, file, { contentType: file.type, upsert: false });
+  if (storageErr) return { ok: false, error: 'storage', message: storageErr.message };
+
+  // Drive upload (best-effort) - needs case + category context
+  const { data: ctx } = await supabase
+    .from('documents')
+    .select(
+      `id,
+       case:case_id(id, case_number, metadata),
+       category:category_id(drive_folder),
+       borrower:borrower_id(first_name, last_name)`,
+    )
+    .eq('id', documentId)
+    .maybeSingle();
+
+  let driveFileId: string | null = null;
+  let driveFileUrl: string | null = null;
+
+  if (ctx?.case && ctx.category) {
+    const buf = await file.arrayBuffer();
+    const familyName =
+      [ctx.borrower?.first_name, ctx.borrower?.last_name].filter(Boolean).join('_') || 'Case';
+    const out = await uploadCaseDocumentToDrive({
+      caseId: ctx.case.id,
+      caseNumber: ctx.case.case_number,
+      familyName,
+      driveFolder: ctx.category.drive_folder,
+      file: { content: buf, name: file.name, mimeType: file.type },
+    });
+    if (out.ok) {
+      driveFileId = out.driveFileId;
+      driveFileUrl = out.webViewLink;
+    }
+  }
+
+  await supabase
+    .from('documents')
+    .update({
+      metadata: { storage_path: path },
+      drive_file_id: driveFileId,
+      drive_file_url: driveFileUrl,
+    })
+    .eq('id', documentId);
+
+  return { ok: true, storagePath: path, driveFileId, driveFileUrl };
 }

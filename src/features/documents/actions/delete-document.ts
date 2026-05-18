@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
+import { deleteCaseDocumentFromDrive } from '@/features/integrations/services/drive-case-uploader';
 import { createClient } from '@/lib/supabase/server';
 
 type Result =
@@ -18,7 +19,7 @@ export async function deleteDocumentAction(
 
   const { data: doc, error: fetchErr } = await supabase
     .from('documents')
-    .select('id, metadata')
+    .select('id, metadata, drive_file_id')
     .eq('id', documentId)
     .maybeSingle();
 
@@ -32,6 +33,9 @@ export async function deleteDocumentAction(
 
   if (storagePath) {
     await supabase.storage.from('case-documents').remove([storagePath]);
+  }
+  if (doc.drive_file_id) {
+    await deleteCaseDocumentFromDrive(doc.drive_file_id);
   }
 
   const { error: deleteErr } = await supabase

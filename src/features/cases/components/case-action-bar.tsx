@@ -43,46 +43,44 @@ export async function CaseActionBar({
   const tc = await getTranslations('common');
 
   return (
-    <div className="bg-[#0A0A0A] text-white sticky top-16 z-20 shadow-lg -mx-6 px-6 py-4 border-b border-neutral-800">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="flex items-start gap-4 flex-1 min-w-0">
+    <div className="bg-[#FAF8F3] text-neutral-900 sticky top-16 z-20 shadow-sm -mx-6 px-6 py-3 border-b border-[#C9A961]/20">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           <Link
             href="/cases"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 mt-1 text-xs border border-neutral-700 hover:border-[#C9A961] rounded-lg transition shrink-0"
+            title={tc('back')}
+            className="inline-flex items-center justify-center size-7 border border-neutral-300 hover:border-[#C9A961] text-neutral-600 hover:text-[#C9A961] bg-white/60 rounded-md transition shrink-0"
           >
             <ArrowRight className="size-3.5" />
-            {tc('back')}
           </Link>
 
-          <div className="flex flex-col gap-1.5 min-w-0">
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="font-display text-xl font-medium truncate max-w-md">
-                {borrowerNames || t('withBorrowers')}
-              </span>
-              <span className="text-neutral-500">|</span>
-              <span className="text-[#C9A961] font-mono text-base">
-                {t('caseLabel')} {caseNumber}
-              </span>
-              <CaseStatusBadge name={statusName} color={statusColor} interactive />
-            </div>
+          <div className="flex items-center gap-2 flex-wrap min-w-0">
+            <span className="font-display text-base font-semibold truncate max-w-md">
+              {borrowerNames || t('withBorrowers')}
+            </span>
+            <span className="text-neutral-300">·</span>
+            <span className="text-[#C9A961] font-mono text-sm">
+              {t('caseLabel')} {caseNumber}
+            </span>
+            <CaseStatusBadge name={statusName} color={statusColor} interactive />
             {(caseTypePrimary || caseTypeSecondary) && (
-              <div className="text-xs text-neutral-400 flex items-center gap-1.5">
+              <span className="hidden md:inline-flex items-center gap-1 ms-1">
                 {caseTypePrimary && (
-                  <span className="px-2 py-0.5 rounded bg-neutral-900 border border-neutral-700">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-white border border-neutral-200 text-neutral-600">
                     {caseTypePrimary}
                   </span>
                 )}
                 {caseTypeSecondary && (
-                  <span className="px-2 py-0.5 rounded bg-neutral-900 border border-neutral-700">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-white border border-neutral-200 text-neutral-600">
                     + {caseTypeSecondary}
                   </span>
                 )}
-              </div>
+              </span>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-0.5 shrink-0">
           <ActionIcon icon={Calculator} title={t('actions.calculator')} />
           <ActionIcon icon={ClipboardList} title={t('actions.history')} />
           <ActionIcon
@@ -100,7 +98,7 @@ export async function CaseActionBar({
       </div>
 
       {lastSavedAt && (
-        <div className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-emerald-400">
+        <div className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] text-emerald-700">
           <Check className="size-3" />
           <span>
             {tc('savedAgo')} {lastSavedAt}
@@ -123,12 +121,12 @@ function ActionIcon({
   href?: string;
 }) {
   const className =
-    'relative size-9 rounded-lg text-neutral-300 hover:bg-white/10 hover:text-[#C9A961] transition flex items-center justify-center';
+    'relative size-8 rounded-md text-neutral-500 hover:bg-white hover:text-[#C9A961] transition flex items-center justify-center';
   const content = (
     <>
-      <Icon className="size-4" />
+      <Icon className="size-3.5" />
       {hasAlert && (
-        <span className="absolute top-1.5 left-1.5 size-2 bg-[#C9A961] rounded-full ring-2 ring-[#0A0A0A]" />
+        <span className="absolute top-1 left-1 size-1.5 bg-[#C9A961] rounded-full ring-2 ring-[#FAF8F3]" />
       )}
     </>
   );

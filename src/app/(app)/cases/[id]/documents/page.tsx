@@ -7,6 +7,7 @@ import {
   listDocumentsForCase,
 } from '@/features/documents/services/documents.service';
 import { getCaseById } from '@/features/cases/services/cases.service';
+import { autoSyncIfStale } from '@/features/integrations/services/drive-document-sync';
 import { asCaseId } from '@/lib/types/branded';
 
 type Props = { params: Promise<{ id: string }> };
@@ -14,6 +15,10 @@ type Props = { params: Promise<{ id: string }> };
 export default async function CaseDocumentsPage({ params }: Props) {
   const { id } = await params;
   const caseId = asCaseId(id);
+
+  // Best-effort: pull fresh files from Drive before rendering.
+  // Rate-limited internally to once every 10s - cheap if user navigates fast.
+  await autoSyncIfStale(caseId);
 
   const [caseData, documents, categories, borrowers] = await Promise.all([
     getCaseById(caseId),

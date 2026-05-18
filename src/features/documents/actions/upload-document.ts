@@ -9,10 +9,8 @@ import {
   DocumentMetadataSchema,
   MAX_FILE_SIZE_BYTES,
 } from '../schemas/document.schema';
+import { persistDocumentBlobs } from '../services/documents.service';
 import type { DocumentActionState } from '../types';
-import { storagePathFor } from '../services/documents.service';
-
-const BUCKET = 'case-documents';
 
 export async function uploadDocumentAction(
   _prev: DocumentActionState,
@@ -69,25 +67,15 @@ export async function uploadDocumentAction(
     })
     .select('id')
     .single();
-
   if (insertErr || !inserted) {
     return { ok: false, error: 'unknown', message: insertErr?.message };
   }
 
-  const path = storagePathFor(caseId, inserted.id, file.name);
-  const { error: storageErr } = await supabase.storage
-    .from(BUCKET)
-    .upload(path, file, { contentType: file.type, upsert: false });
-
-  if (storageErr) {
+  const result = await persistDocumentBlobs(inserted.id, caseId, file);
+  if (!result.ok) {
     await supabase.from('documents').delete().eq('id', inserted.id);
-    return { ok: false, error: 'storage', message: storageErr.message };
+    return { ok: false, error: 'storage', message: result.message };
   }
-
-  await supabase
-    .from('documents')
-    .update({ metadata: { storage_path: path } })
-    .eq('id', inserted.id);
 
   revalidatePath(`/cases/${caseId}/documents`);
   revalidatePath(`/cases/${caseId}`);

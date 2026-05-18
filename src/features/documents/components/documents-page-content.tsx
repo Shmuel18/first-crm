@@ -7,6 +7,7 @@ import { DocumentsActionBar } from './documents-action-bar';
 import { DocumentsSummary } from './documents-summary';
 import { DocumentPreviewModal } from './document-preview-modal';
 import { FolderCard } from './folder-card';
+import { UncategorizedCard } from './uncategorized-card';
 import { UploadDocumentModal } from './upload-document-modal';
 
 type Borrower = { id: string; firstName: string | null; lastName: string | null };
@@ -32,20 +33,23 @@ export function DocumentsPageContent({
   const [uploadFolder, setUploadFolder] = useState<DriveFolder | null>(null);
   const [previewDoc, setPreviewDoc] = useState<DocumentWithRelations | null>(null);
 
-  const buckets = useMemo(() => {
+  const { buckets, uncategorized } = useMemo(() => {
     const result: Record<DriveFolder, DocumentWithRelations[]> = {
       identity: [],
       income_il: [],
       income_abroad: [],
       insurance_collateral: [],
     };
+    const unc: DocumentWithRelations[] = [];
     for (const doc of documents) {
       const f = doc.category?.drive_folder as DriveFolder | undefined;
       if (f && (DRIVE_FOLDERS as readonly string[]).includes(f)) {
         result[f].push(doc);
+      } else {
+        unc.push(doc);
       }
     }
-    return result;
+    return { buckets: result, uncategorized: unc };
   }, [documents]);
 
   const totals = useMemo(() => {
@@ -75,6 +79,15 @@ export function DocumentsPageContent({
       />
 
       <DocumentsSummary {...totals} />
+
+      {uncategorized.length > 0 && (
+        <UncategorizedCard
+          documents={uncategorized}
+          categories={categories}
+          caseId={caseId}
+          onPreview={setPreviewDoc}
+        />
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {DRIVE_FOLDERS.map((folder) => (

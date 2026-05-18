@@ -29,7 +29,7 @@ function DialogContent({
       <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px] data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 transition-opacity duration-200" />
       <DialogPrimitive.Popup
         className={cn(
-          'fixed start-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 bg-white p-6 shadow-2xl rounded-2xl border border-neutral-200',
+          'fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 bg-white p-6 shadow-2xl rounded-2xl border border-neutral-200 max-h-[calc(100vh-2rem)] overflow-y-auto',
           'data-[starting-style]:opacity-0 data-[ending-style]:opacity-0 data-[starting-style]:scale-95 data-[ending-style]:scale-95 transition-all duration-200',
           className,
         )}

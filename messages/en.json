@@ -348,7 +348,7 @@
         "connectedAs": "Connected as",
         "connectedAt": "Connected on",
         "rootFolder": "Root folder",
-        "scopeNote": "Permission is limited to files the system creates (drive.file) — the system does not see other files in your Drive.",
+        "scopeNote": "Full Drive permission — required for bidirectional sync (files you upload directly to Drive will appear in the app too).",
         "connect": "🔌 Connect Google Drive",
         "reconnect": "Reconnect",
         "disconnect": "Disconnect",
@@ -369,8 +369,18 @@
     "pageTitle": "Case documents",
     "backToCase": "Back to case",
     "syncIndicator": {
-      "synced": "Stored in Supabase Storage",
+      "synced": "Synced with Google Drive (every upload is mirrored)",
       "driveComingSoon": "Google Drive sync coming soon"
+    },
+    "sync": {
+      "button": "Sync from Drive",
+      "imported": "✅ Imported {count} new files from Drive",
+      "updated": "🔄 Updated location for {count} files moved in Drive",
+      "nothingNew": "No new files in Drive - everything is synced",
+      "errors": {
+        "notConnected": "Drive not connected. Go to Settings → Integrations.",
+        "generic": "Sync failed. Try again or check the Drive connection."
+      }
     },
     "actions": {
       "upload": "Upload document",
@@ -383,6 +393,11 @@
       "verified": "{count} verified",
       "pending": "{count} pending review",
       "empty": "No documents uploaded yet"
+    },
+    "uncategorized": {
+      "title": "Uncategorized ({count})",
+      "subtitle": "Files in the case's Drive folder without a category subfolder. Pick a category for each file.",
+      "pickCategory": "Categorize..."
     },
     "folders": {
       "identity": {

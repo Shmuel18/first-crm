@@ -90,3 +90,27 @@ export async function clearIntegration(provider: IntegrationProvider): Promise<v
     .eq('provider', provider);
   if (error) throw error;
 }
+
+/** Persist a freshly refreshed access token without touching other fields. */
+export async function persistRefreshedAccessToken(
+  provider: IntegrationProvider,
+  accessToken: string,
+  tokenExpiresAt: string,
+): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('office_integrations')
+    .update({ access_token: accessToken, token_expires_at: tokenExpiresAt })
+    .eq('provider', provider);
+  if (error) throw error;
+}
+
+/** Persist the root Drive folder ID (lazy-created on first upload). */
+export async function persistDriveRootFolderId(folderId: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('office_integrations')
+    .update({ drive_root_folder_id: folderId })
+    .eq('provider', 'google_drive');
+  if (error) throw error;
+}

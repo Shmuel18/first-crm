@@ -50,6 +50,11 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
     if (!doc) return;
     setUrl(null);
     setError(null);
+    // Drive-backed docs render via Drive iframe - no Supabase fetch needed
+    if (doc.drive_file_id) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     getDocumentPreviewUrlAction(doc.id)
       .then((res) => {
@@ -86,6 +91,11 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
 
   const isImage = doc.mime_type?.startsWith('image/') ?? false;
   const isPdf = doc.mime_type === 'application/pdf';
+  // Drive preview handles Word, Excel, PPT, PDF, images - everything.
+  // Falls back to Supabase signed URL for files not in Drive yet.
+  const drivePreviewUrl = doc.drive_file_id
+    ? `https://drive.google.com/file/d/${doc.drive_file_id}/preview`
+    : null;
 
   return (
     <Dialog open={Boolean(doc)} onOpenChange={(open) => !open && onClose()}>
@@ -105,18 +115,26 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
           {!loading && error && (
             <p className="text-sm text-rose-600 px-4 py-6 text-center">{error}</p>
           )}
-          {!loading && !error && url && isImage && (
+          {!loading && !error && drivePreviewUrl && (
+            <iframe
+              src={drivePreviewUrl}
+              title={doc.file_name}
+              className="w-full h-[58vh]"
+              allow="autoplay"
+            />
+          )}
+          {!loading && !error && !drivePreviewUrl && url && isImage && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={url} alt={doc.file_name} className="max-h-[58vh] object-contain" />
           )}
-          {!loading && !error && url && isPdf && (
+          {!loading && !error && !drivePreviewUrl && url && isPdf && (
             <iframe
               src={url}
               title={doc.file_name}
               className="w-full h-[58vh]"
             />
           )}
-          {!loading && !error && url && !isImage && !isPdf && (
+          {!loading && !error && !drivePreviewUrl && url && !isImage && !isPdf && (
             <div className="text-center text-neutral-500 px-4 py-12">
               <FileQuestion className="size-10 mx-auto mb-3 text-neutral-300" />
               <p className="text-sm">{t('noPreview')}</p>
@@ -124,10 +142,10 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
           )}
         </div>
 
-        {url && (
+        {(url || doc.drive_file_url) && (
           <div className="flex flex-wrap items-center gap-2">
             <a
-              href={url}
+              href={doc.drive_file_url ?? url ?? '#'}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-xs text-neutral-600 hover:text-[#C9A961] transition"
@@ -135,15 +153,19 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
               <ExternalLink className="size-3" />
               {t('openNewTab')}
             </a>
-            <span className="text-neutral-300">·</span>
-            <a
-              href={url}
-              download={doc.file_name}
-              className="inline-flex items-center gap-1.5 text-xs text-neutral-600 hover:text-[#C9A961] transition"
-            >
-              <Download className="size-3" />
-              {t('downloadOriginal')}
-            </a>
+            {url && (
+              <>
+                <span className="text-neutral-300">·</span>
+                <a
+                  href={url}
+                  download={doc.file_name}
+                  className="inline-flex items-center gap-1.5 text-xs text-neutral-600 hover:text-[#C9A961] transition"
+                >
+                  <Download className="size-3" />
+                  {t('downloadOriginal')}
+                </a>
+              </>
+            )}
           </div>
         )}
 

@@ -1,9 +1,20 @@
 'use client';
 
+import { useTransition } from 'react';
 import Link from 'next/link';
 
-import { ArrowRight, ClipboardList, Cloud, FolderOpen, MessageSquare, Upload } from 'lucide-react';
+import {
+  ArrowRight,
+  ClipboardList,
+  FolderOpen,
+  Loader2,
+  MessageSquare,
+  RefreshCw,
+  Upload,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
+
+import { syncDriveDocumentsAction } from '../actions/sync-drive-documents';
 
 type Props = {
   caseId: string;
@@ -21,53 +32,79 @@ export function DocumentsActionBar({
   const t = useTranslations('documents.actions');
   const tPage = useTranslations('documents');
   const tCase = useTranslations('case.actionBar');
+  const tSync = useTranslations('documents.sync');
+  const [isPending, startTransition] = useTransition();
+
+  const handleSync = () =>
+    startTransition(async () => {
+      const res = await syncDriveDocumentsAction(caseId);
+      if (res.ok) {
+        const parts: string[] = [];
+        if (res.imported > 0) parts.push(tSync('imported', { count: res.imported }));
+        if (res.updated > 0) parts.push(tSync('updated', { count: res.updated }));
+        if (parts.length === 0) {
+          window.alert(tSync('nothingNew'));
+        } else {
+          window.alert(parts.join('\n'));
+        }
+      } else {
+        const errKey = res.error === 'not_connected' ? 'errors.notConnected' : 'errors.generic';
+        window.alert(tSync(errKey));
+      }
+    });
 
   return (
-    <div className="bg-[#0A0A0A] text-white sticky top-16 z-20 shadow-lg -mx-6 px-6 py-4 border-b border-neutral-800">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-4 min-w-0">
+    <div className="bg-[#FAF8F3] text-neutral-900 sticky top-16 z-20 shadow-sm -mx-6 px-6 py-3 border-b border-[#C9A961]/20">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           <Link
             href={`/cases/${caseId}`}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs border border-neutral-700 hover:border-[#C9A961] rounded-lg transition shrink-0"
+            className="inline-flex items-center justify-center size-7 border border-neutral-300 hover:border-[#C9A961] text-neutral-600 hover:text-[#C9A961] bg-white/60 rounded-md transition shrink-0"
+            title={tPage('backToCase')}
           >
             <ArrowRight className="size-3.5" />
-            {tPage('backToCase')}
           </Link>
-          <div className="flex items-center gap-3 flex-wrap min-w-0">
-            <span className="font-display text-lg font-medium truncate">
+          <div className="flex items-center gap-2 flex-wrap min-w-0">
+            <span className="font-display text-base font-semibold truncate max-w-md">
               {borrowerNames || tCase('withBorrowers')}
             </span>
-            <span className="text-neutral-500 hidden sm:inline">|</span>
+            <span className="text-neutral-300">·</span>
             <span className="text-[#C9A961] font-mono text-sm">
               {tCase('caseLabel')} {caseNumber}
             </span>
-            <span className="text-neutral-500 hidden sm:inline">|</span>
-            <span className="text-xs text-neutral-400 uppercase tracking-wider">
+            <span className="hidden md:inline-flex text-[10px] px-1.5 py-0.5 rounded bg-white border border-neutral-200 text-neutral-600 uppercase tracking-wider">
               {tPage('pageTitle')}
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             type="button"
             onClick={onUpload}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[#C9A961] hover:bg-[#B8985A] text-[#0A0A0A] font-medium text-sm transition"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#C9A961] hover:bg-[#B8985A] text-[#0A0A0A] font-medium text-xs transition"
           >
-            <Upload className="size-4" />
+            <Upload className="size-3.5" />
             {t('upload')}
+          </button>
+          <button
+            type="button"
+            onClick={handleSync}
+            disabled={isPending}
+            title={tSync('button')}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-neutral-300 hover:border-[#C9A961] text-neutral-700 hover:text-[#C9A961] bg-white/60 text-xs transition disabled:opacity-50"
+          >
+            {isPending ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="size-3.5" />
+            )}
+            <span className="hidden lg:inline">{tSync('button')}</span>
           </button>
           <BarIcon icon={MessageSquare} title={t('sendRequest')} disabled />
           <BarIcon icon={FolderOpen} title={t('openDrive')} disabled />
           <BarIcon icon={ClipboardList} title={t('history')} disabled />
         </div>
-      </div>
-
-      <div className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-neutral-400">
-        <Cloud className="size-3" />
-        <span>{tPage('syncIndicator.synced')}</span>
-        <span className="text-neutral-600">·</span>
-        <span className="italic">{tPage('syncIndicator.driveComingSoon')}</span>
       </div>
     </div>
   );
@@ -87,9 +124,9 @@ function BarIcon({
       type="button"
       disabled={disabled}
       title={title}
-      className="size-9 rounded-lg text-neutral-300 hover:bg-white/10 hover:text-[#C9A961] transition flex items-center justify-center disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-neutral-300 disabled:cursor-not-allowed"
+      className="size-8 rounded-md text-neutral-500 hover:bg-white hover:text-[#C9A961] transition flex items-center justify-center disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-neutral-500 disabled:cursor-not-allowed"
     >
-      <Icon className="size-4" />
+      <Icon className="size-3.5" />
     </button>
   );
 }

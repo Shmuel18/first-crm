@@ -62,6 +62,19 @@ export function UploadDocumentModal({
   const tErr = useTranslations('documents.errors');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const dropped = e.dataTransfer.files?.[0];
+    if (!dropped || !fileInputRef.current) return;
+    // Programmatically set the file input via DataTransfer
+    const dt = new DataTransfer();
+    dt.items.add(dropped);
+    fileInputRef.current.files = dt.files;
+    setFileName(dropped.name);
+  };
 
   const [state, formAction] = useActionState<DocumentActionState, FormData>(
     uploadDocumentAction,
@@ -105,7 +118,17 @@ export function UploadDocumentModal({
             <div className="flex items-center gap-2">
               <label
                 htmlFor="file-input"
-                className="flex-1 flex items-center gap-2 px-3 h-10 rounded-md border border-dashed border-neutral-300 bg-neutral-50 hover:border-[#C9A961] hover:bg-[#C9A961]/5 transition cursor-pointer text-sm text-neutral-600"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragOver(true);
+                }}
+                onDragLeave={() => setIsDragOver(false)}
+                onDrop={handleDrop}
+                className={`flex-1 flex items-center gap-2 px-3 h-10 rounded-md border border-dashed transition cursor-pointer text-sm ${
+                  isDragOver
+                    ? 'border-[#C9A961] bg-[#C9A961]/10 text-[#C9A961]'
+                    : 'border-neutral-300 bg-neutral-50 hover:border-[#C9A961] hover:bg-[#C9A961]/5 text-neutral-600'
+                }`}
               >
                 <UploadIcon className="size-4 shrink-0" />
                 <span className="truncate">{fileName ?? t('filePlaceholder')}</span>

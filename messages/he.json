@@ -348,7 +348,7 @@
         "connectedAs": "מחובר כ",
         "connectedAt": "נחבר בתאריך",
         "rootFolder": "תיקיית שורש",
-        "scopeNote": "ההרשאה מוגבלת לקבצים שהמערכת יוצרת בלבד (drive.file) - המערכת לא רואה קבצים אחרים ב-Drive שלך.",
+        "scopeNote": "הרשאה מלאה ל-Drive - נדרשת לסנכרון דו-כיווני (קבצים שתעלה ישירות ל-Drive יופיעו גם באתר).",
         "connect": "🔌 חבר Google Drive",
         "reconnect": "חבר מחדש",
         "disconnect": "נתק חיבור",
@@ -369,8 +369,18 @@
     "pageTitle": "מסמכי תיק",
     "backToCase": "חזרה לתיק",
     "syncIndicator": {
-      "synced": "מאוחסן ב-Supabase Storage",
+      "synced": "מסונכרן עם Google Drive (כל העלאה נשמרת גם בדרייב)",
       "driveComingSoon": "סנכרון Google Drive יתווסף בקרוב"
+    },
+    "sync": {
+      "button": "סנכרן מ-Drive",
+      "imported": "✅ יובאו {count} קבצים חדשים מ-Drive",
+      "updated": "🔄 עודכן מיקום ל-{count} קבצים שזזו ב-Drive",
+      "nothingNew": "אין קבצים חדשים ב-Drive - הכל מסונכרן",
+      "errors": {
+        "notConnected": "Drive לא מחובר. גש להגדרות → אינטגרציות.",
+        "generic": "הסנכרון נכשל. נסה שוב או בדוק את החיבור ל-Drive."
+      }
     },
     "actions": {
       "upload": "העלאת מסמך",
@@ -383,6 +393,11 @@
       "verified": "{count} מאומתים",
       "pending": "{count} ממתינים לבדיקה",
       "empty": "אין עדיין מסמכים בתיק"
+    },
+    "uncategorized": {
+      "title": "לא מסווגים ({count})",
+      "subtitle": "קבצים בתיקיית התיק ב-Drive ללא תת-תיקיית קטגוריה. בחר קטגוריה לכל קובץ.",
+      "pickCategory": "סווג ל..."
     },
     "folders": {
       "identity": {

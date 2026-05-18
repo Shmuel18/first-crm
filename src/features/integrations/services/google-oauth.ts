@@ -9,7 +9,7 @@ import { env } from '@/lib/env';
 export const GOOGLE_DRIVE_SCOPES = [
   'openid',
   'email',
-  'https://www.googleapis.com/auth/drive.file',
+  'https://www.googleapis.com/auth/drive',
 ] as const;
 
 const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
