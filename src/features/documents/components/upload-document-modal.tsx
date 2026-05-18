@@ -1,0 +1,194 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
+
+import { Loader2, Upload as UploadIcon, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { FormField, NativeSelect } from '@/components/shared/form-fields';
+
+import { uploadDocumentAction } from '../actions/upload-document';
+import {
+  DOCUMENT_ACTION_INITIAL,
+  type DocumentActionState,
+  type DocumentCategoryRow,
+  type DriveFolder,
+} from '../types';
+
+type Props = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  caseId: string;
+  categories: ReadonlyArray<DocumentCategoryRow>;
+  borrowers: ReadonlyArray<{ id: string; firstName: string | null; lastName: string | null }>;
+  defaultFolder?: DriveFolder | null;
+};
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  const t = useTranslations('documents.uploadModal');
+  return (
+    <Button
+      type="submit"
+      disabled={pending}
+      className="bg-[#0A0A0A] hover:bg-neutral-800 text-white h-10 min-w-28"
+    >
+      {pending ? <Loader2 className="size-4 animate-spin" /> : t('submit')}
+    </Button>
+  );
+}
+
+export function UploadDocumentModal({
+  open,
+  onOpenChange,
+  caseId,
+  categories,
+  borrowers,
+  defaultFolder,
+}: Props) {
+  const t = useTranslations('documents.uploadModal');
+  const tErr = useTranslations('documents.errors');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
+
+  const [state, formAction] = useActionState<DocumentActionState, FormData>(
+    uploadDocumentAction,
+    DOCUMENT_ACTION_INITIAL,
+  );
+
+  useEffect(() => {
+    if (state.ok === true) {
+      onOpenChange(false);
+      setFileName(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }, [state, onOpenChange]);
+
+  const filteredCategories = defaultFolder
+    ? categories.filter((c) => c.drive_folder === defaultFolder)
+    : categories;
+
+  const defaultCategoryId = filteredCategories[0]?.id ?? '';
+
+  const fieldErrors =
+    state.ok === false && state.error === 'validation' ? state.fieldErrors ?? {} : {};
+  const genericError =
+    state.ok === false && state.error !== 'idle' && state.error !== 'validation'
+      ? state.message ?? tErr('uploadFailed')
+      : state.ok === false && state.error === 'validation' && state.message
+        ? state.message
+        : null;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-xl">
+        <DialogHeader>
+          <DialogTitle>{t('title')}</DialogTitle>
+        </DialogHeader>
+
+        <form action={formAction} className="space-y-4" noValidate>
+          <input type="hidden" name="case_id" value={caseId} />
+
+          <FormField label={t('fileLabel')} required>
+            <div className="flex items-center gap-2">
+              <label
+                htmlFor="file-input"
+                className="flex-1 flex items-center gap-2 px-3 h-10 rounded-md border border-dashed border-neutral-300 bg-neutral-50 hover:border-[#C9A961] hover:bg-[#C9A961]/5 transition cursor-pointer text-sm text-neutral-600"
+              >
+                <UploadIcon className="size-4 shrink-0" />
+                <span className="truncate">{fileName ?? t('filePlaceholder')}</span>
+              </label>
+              {fileName && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (fileInputRef.current) fileInputRef.current.value = '';
+                    setFileName(null);
+                  }}
+                  className="size-9 rounded-md border border-neutral-200 text-neutral-500 hover:text-rose-600 hover:border-rose-200 transition flex items-center justify-center"
+                  aria-label="clear"
+                >
+                  <X className="size-4" />
+                </button>
+              )}
+            </div>
+            <input
+              id="file-input"
+              ref={fileInputRef}
+              name="file"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,.doc,.docx,.xls,.xlsx"
+              className="sr-only"
+              required
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                setFileName(f?.name ?? null);
+              }}
+            />
+          </FormField>
+
+          <FormField label={t('categoryLabel')} required error={fieldErrors.category_id}>
+            <NativeSelect name="category_id" defaultValue={defaultCategoryId} required>
+              {filteredCategories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name_he}
+                </option>
+              ))}
+            </NativeSelect>
+          </FormField>
+
+          <FormField label={t('borrowerLabel')}>
+            <NativeSelect name="borrower_id" defaultValue="">
+              <option value="">{t('borrowerGeneral')}</option>
+              {borrowers.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {[b.firstName, b.lastName].filter(Boolean).join(' ') || '—'}
+                </option>
+              ))}
+            </NativeSelect>
+          </FormField>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField label={t('expiryLabel')}>
+              <Input name="expiry_date" type="date" />
+            </FormField>
+          </div>
+
+          <FormField label={t('notesLabel')}>
+            <Textarea name="notes" rows={2} />
+          </FormField>
+
+          {genericError && (
+            <div className="rounded-md bg-rose-50 border border-rose-200 px-3 py-2 text-sm text-rose-700">
+              {genericError}
+            </div>
+          )}
+
+          <DialogFooter>
+            <SubmitButton />
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => onOpenChange(false)}
+              className="h-10"
+            >
+              {t('cancel')}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

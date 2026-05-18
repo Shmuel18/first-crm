@@ -154,7 +154,9 @@
       "requestDetails": "פרטי הבקשה (סיפור התיק)",
       "requestDetailsEmpty": "טרם נכתבו פרטי בקשה מלאים.",
       "documents": "מסמכים",
-      "documentsComingSoon": "ניהול מסמכים + סנכרון Google Drive יתווסף בקרוב"
+      "documentsComingSoon": "ניהול מסמכים + סנכרון Google Drive יתווסף בקרוב",
+      "documentsHint": "לחץ על 'פתח מסמכים' לעמוד הניהול - העלאה, צ׳ק-ליסט, אימות וסטטוסים.",
+      "openDocuments": "פתח מסמכים"
     },
     "fields": {
       "propertyValue": "שווי הנכס",
@@ -313,6 +315,150 @@
     "errors": {
       "unauthorized": "אין הרשאה",
       "generic": "שגיאה בשמירה. נסה שוב."
+    }
+  },
+  "settings": {
+    "nav": {
+      "pageTitle": "הגדרות",
+      "pageSubtitle": "פרופיל אישי, הגדרות משרד, אינטגרציות וגיבוי",
+      "comingSoon": "בקרוב",
+      "profile": "פרופיל אישי",
+      "security": "אבטחה",
+      "notifications": "התראות",
+      "office": "פרטי המשרד",
+      "roles": "תפקידים והרשאות",
+      "integrations": "אינטגרציות",
+      "import": "ייבוא נתונים",
+      "backup": "גיבוי ושחזור"
+    },
+    "integrations": {
+      "title": "אינטגרציות וחיבורים",
+      "subtitle": "חבר את המערכת לכלים חיצוניים - Google Drive, יומן Google, וואטסאפ, מייל.",
+      "status": {
+        "connected": "מחובר",
+        "disconnected": "לא מחובר",
+        "error": "שגיאה"
+      },
+      "drive": {
+        "title": "Google Drive",
+        "subtitle": "אחסון מסמכים בתיקיית KFG_Cases במשרד שלך",
+        "notConfiguredTitle": "האינטגרציה לא הוגדרה במערכת",
+        "notConfiguredBody": "המפתח טרם הגדיר Google Cloud Project. עד שזה ייעשה, מסמכים נשמרים ב-Supabase Storage בלבד. צור קשר עם המפתח להפעלה.",
+        "connectIntro": "לחיצה על 'חבר' תפנה אותך לגוגל לאישור גישה. תיקיית KFG_Cases תיווצר אוטומטית ב-Drive שלך והמערכת תעלה אליה מסמכים של תיקים חדשים.",
+        "connectedAs": "מחובר כ",
+        "connectedAt": "נחבר בתאריך",
+        "rootFolder": "תיקיית שורש",
+        "scopeNote": "ההרשאה מוגבלת לקבצים שהמערכת יוצרת בלבד (drive.file) - המערכת לא רואה קבצים אחרים ב-Drive שלך.",
+        "connect": "🔌 חבר Google Drive",
+        "reconnect": "חבר מחדש",
+        "disconnect": "נתק חיבור",
+        "disconnectConfirm": "לנתק את החיבור ל-Drive? קבצים קיימים יישמרו ב-Drive, אבל המערכת לא תעלה קבצים חדשים עד שתחבר שוב.",
+        "connectedFlash": "Drive חובר בהצלחה!",
+        "errors": {
+          "oauth_not_configured": "האינטגרציה לא מוגדרת במערכת. צור קשר עם המפתח.",
+          "state_mismatch": "תקלת אבטחה (state mismatch). נסה שוב.",
+          "admin_only": "רק מנהל יכול לחבר אינטגרציות.",
+          "missing_params": "פרמטרים חסרים בחזרה מגוגל. נסה שוב.",
+          "access_denied": "ביטלת את האישור בגוגל. החיבור לא בוצע.",
+          "generic": "החיבור נכשל. נסה שוב או צור קשר עם המפתח."
+        }
+      }
+    }
+  },
+  "documents": {
+    "pageTitle": "מסמכי תיק",
+    "backToCase": "חזרה לתיק",
+    "syncIndicator": {
+      "synced": "מאוחסן ב-Supabase Storage",
+      "driveComingSoon": "סנכרון Google Drive יתווסף בקרוב"
+    },
+    "actions": {
+      "upload": "העלאת מסמך",
+      "sendRequest": "שלח בקשת מסמכים",
+      "openDrive": "פתח בדרייב",
+      "history": "היסטוריית מסמכים"
+    },
+    "summary": {
+      "total": "סך הכל {count} מסמכים",
+      "verified": "{count} מאומתים",
+      "pending": "{count} ממתינים לבדיקה",
+      "empty": "אין עדיין מסמכים בתיק"
+    },
+    "folders": {
+      "identity": {
+        "title": "זיהוי וקשר",
+        "subtitle": "ת״ז · רישיון · דרכון · נישואין"
+      },
+      "income_il": {
+        "title": "תעסוקה והכנסות",
+        "subtitle": "תלושי שכר · 106 · אישורי מעסיק · שומות"
+      },
+      "income_abroad": {
+        "title": "הכנסות מחו״ל",
+        "subtitle": "תלושים זרים · תדפיסי בנק זרים"
+      },
+      "insurance_collateral": {
+        "title": "אישורים וביטחונות",
+        "subtitle": "ביטוח חיים · נסח טאבו · שמאות · חוזה רכישה"
+      }
+    },
+    "status": {
+      "missing": "חסר",
+      "new": "ממתין לבדיקה",
+      "verified": "תקין",
+      "rejected": "נדחה",
+      "expired": "פג תוקף",
+      "not_relevant": "לא רלוונטי"
+    },
+    "statusActions": {
+      "markVerified": "סמן כתקין",
+      "markRejected": "החזר לבדיקה",
+      "markNew": "סמן כממתין",
+      "markNotRelevant": "סמן כלא רלוונטי"
+    },
+    "uploadModal": {
+      "title": "העלאת מסמך חדש",
+      "fileLabel": "קובץ (PDF / תמונה / DOC, עד 20MB)",
+      "filePlaceholder": "גרור קובץ או לחץ לבחירה",
+      "categoryLabel": "סוג מסמך",
+      "borrowerLabel": "שייך ללווה (אופציונלי)",
+      "borrowerGeneral": "כללי (לא משויך ללווה)",
+      "expiryLabel": "תוקף עד (אופציונלי)",
+      "notesLabel": "הערות",
+      "submit": "העלה",
+      "submitting": "מעלה...",
+      "cancel": "ביטול"
+    },
+    "previewModal": {
+      "title": "תצוגה מקדימה",
+      "uploadedBy": "הועלה ע״י",
+      "uploadedAt": "תאריך העלאה",
+      "verifiedBy": "אומת ע״י",
+      "size": "גודל",
+      "category": "סוג",
+      "borrower": "לווה",
+      "expiry": "תוקף עד",
+      "openNewTab": "פתח בלשונית חדשה",
+      "downloadOriginal": "הורד מקור",
+      "noPreview": "אין תצוגה מקדימה לסוג קובץ זה",
+      "close": "סגור",
+      "deleteConfirm": "למחוק את המסמך לצמיתות? פעולה זו לא ניתנת לביטול."
+    },
+    "card": {
+      "documentCount": "{count} מסמכים",
+      "addDocument": "הוסף מסמך",
+      "noDocuments": "אין מסמכים בקטגוריה זו",
+      "borrowerGeneral": "כללי"
+    },
+    "errors": {
+      "fileRequired": "יש לבחור קובץ להעלאה",
+      "fileTooLarge": "הקובץ חורג מגודל מקסימלי (20MB)",
+      "fileTypeNotAllowed": "סוג קובץ לא נתמך",
+      "categoryRequired": "יש לבחור סוג מסמך",
+      "unauthorized": "אין הרשאה",
+      "uploadFailed": "ההעלאה נכשלה. נסה שוב.",
+      "deleteFailed": "המחיקה נכשלה. נסה שוב.",
+      "statusUpdateFailed": "עדכון הסטטוס נכשל"
     }
   }
 }

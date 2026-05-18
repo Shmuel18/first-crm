@@ -154,7 +154,9 @@
       "requestDetails": "Request Details (full story)",
       "requestDetailsEmpty": "No detailed request written yet.",
       "documents": "Documents",
-      "documentsComingSoon": "Document management + Google Drive sync coming soon"
+      "documentsComingSoon": "Document management + Google Drive sync coming soon",
+      "documentsHint": "Click 'Open documents' for the management page — upload, checklist, verify and statuses.",
+      "openDocuments": "Open documents"
     },
     "fields": {
       "propertyValue": "Property value",
@@ -313,6 +315,150 @@
     "errors": {
       "unauthorized": "Not authorized",
       "generic": "Error saving. Please try again."
+    }
+  },
+  "settings": {
+    "nav": {
+      "pageTitle": "Settings",
+      "pageSubtitle": "Personal profile, office settings, integrations and backup",
+      "comingSoon": "soon",
+      "profile": "Profile",
+      "security": "Security",
+      "notifications": "Notifications",
+      "office": "Office details",
+      "roles": "Roles & permissions",
+      "integrations": "Integrations",
+      "import": "Data import",
+      "backup": "Backup & restore"
+    },
+    "integrations": {
+      "title": "Integrations & connections",
+      "subtitle": "Connect the system to external tools — Google Drive, Google Calendar, WhatsApp, email.",
+      "status": {
+        "connected": "Connected",
+        "disconnected": "Disconnected",
+        "error": "Error"
+      },
+      "drive": {
+        "title": "Google Drive",
+        "subtitle": "Store documents in your office's KFG_Cases folder",
+        "notConfiguredTitle": "Integration not configured",
+        "notConfiguredBody": "The developer hasn't set up a Google Cloud project yet. Until then, documents are stored in Supabase Storage only. Contact the developer to enable this.",
+        "connectIntro": "Clicking 'Connect' will redirect you to Google to approve access. The KFG_Cases folder will be created automatically in your Drive, and the system will upload documents for new cases there.",
+        "connectedAs": "Connected as",
+        "connectedAt": "Connected on",
+        "rootFolder": "Root folder",
+        "scopeNote": "Permission is limited to files the system creates (drive.file) — the system does not see other files in your Drive.",
+        "connect": "🔌 Connect Google Drive",
+        "reconnect": "Reconnect",
+        "disconnect": "Disconnect",
+        "disconnectConfirm": "Disconnect from Drive? Existing files stay in Drive, but the system won't upload new files until you reconnect.",
+        "connectedFlash": "Drive connected successfully!",
+        "errors": {
+          "oauth_not_configured": "Integration not configured. Contact the developer.",
+          "state_mismatch": "Security check failed (state mismatch). Try again.",
+          "admin_only": "Only an admin can connect integrations.",
+          "missing_params": "Missing parameters on return from Google. Try again.",
+          "access_denied": "You declined consent in Google. Connection not completed.",
+          "generic": "Connection failed. Try again or contact the developer."
+        }
+      }
+    }
+  },
+  "documents": {
+    "pageTitle": "Case documents",
+    "backToCase": "Back to case",
+    "syncIndicator": {
+      "synced": "Stored in Supabase Storage",
+      "driveComingSoon": "Google Drive sync coming soon"
+    },
+    "actions": {
+      "upload": "Upload document",
+      "sendRequest": "Request documents from client",
+      "openDrive": "Open in Drive",
+      "history": "Documents history"
+    },
+    "summary": {
+      "total": "{count} documents total",
+      "verified": "{count} verified",
+      "pending": "{count} pending review",
+      "empty": "No documents uploaded yet"
+    },
+    "folders": {
+      "identity": {
+        "title": "Identity & contact",
+        "subtitle": "ID · license · passport · marriage"
+      },
+      "income_il": {
+        "title": "Employment & income",
+        "subtitle": "Payslips · 106 · employer letters · assessments"
+      },
+      "income_abroad": {
+        "title": "Foreign income",
+        "subtitle": "Foreign payslips · foreign bank statements"
+      },
+      "insurance_collateral": {
+        "title": "Approvals & collateral",
+        "subtitle": "Life insurance · land registry · appraisal · purchase"
+      }
+    },
+    "status": {
+      "missing": "Missing",
+      "new": "Pending review",
+      "verified": "Verified",
+      "rejected": "Rejected",
+      "expired": "Expired",
+      "not_relevant": "Not relevant"
+    },
+    "statusActions": {
+      "markVerified": "Mark as verified",
+      "markRejected": "Return to review",
+      "markNew": "Mark pending",
+      "markNotRelevant": "Mark not relevant"
+    },
+    "uploadModal": {
+      "title": "Upload new document",
+      "fileLabel": "File (PDF / image / DOC, up to 20MB)",
+      "filePlaceholder": "Drag a file or click to select",
+      "categoryLabel": "Document type",
+      "borrowerLabel": "Link to borrower (optional)",
+      "borrowerGeneral": "General (not linked to a borrower)",
+      "expiryLabel": "Expires on (optional)",
+      "notesLabel": "Notes",
+      "submit": "Upload",
+      "submitting": "Uploading...",
+      "cancel": "Cancel"
+    },
+    "previewModal": {
+      "title": "Preview",
+      "uploadedBy": "Uploaded by",
+      "uploadedAt": "Uploaded on",
+      "verifiedBy": "Verified by",
+      "size": "Size",
+      "category": "Type",
+      "borrower": "Borrower",
+      "expiry": "Expires on",
+      "openNewTab": "Open in new tab",
+      "downloadOriginal": "Download original",
+      "noPreview": "No preview available for this file type",
+      "close": "Close",
+      "deleteConfirm": "Permanently delete this document? This cannot be undone."
+    },
+    "card": {
+      "documentCount": "{count} documents",
+      "addDocument": "Add document",
+      "noDocuments": "No documents in this category",
+      "borrowerGeneral": "General"
+    },
+    "errors": {
+      "fileRequired": "Please choose a file to upload",
+      "fileTooLarge": "File exceeds the 20MB limit",
+      "fileTypeNotAllowed": "File type not supported",
+      "categoryRequired": "Please pick a document type",
+      "unauthorized": "Not authorized",
+      "uploadFailed": "Upload failed. Please try again.",
+      "deleteFailed": "Delete failed. Please try again.",
+      "statusUpdateFailed": "Status update failed"
     }
   }
 }

@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -1130,6 +1130,77 @@ export type Database = {
           {
             foreignKeyName: "leads_updated_by_fkey"
             columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      office_integrations: {
+        Row: {
+          access_token: string | null
+          connected_at: string | null
+          connected_by: string | null
+          connected_email: string | null
+          connected_external_user_id: string | null
+          created_at: string
+          drive_root_folder_id: string | null
+          drive_root_folder_name: string
+          id: string
+          last_error: string | null
+          last_synced_at: string | null
+          metadata: Json
+          provider: string
+          refresh_token: string | null
+          scopes: string[] | null
+          status: string
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          connected_at?: string | null
+          connected_by?: string | null
+          connected_email?: string | null
+          connected_external_user_id?: string | null
+          created_at?: string
+          drive_root_folder_id?: string | null
+          drive_root_folder_name?: string
+          id?: string
+          last_error?: string | null
+          last_synced_at?: string | null
+          metadata?: Json
+          provider: string
+          refresh_token?: string | null
+          scopes?: string[] | null
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          connected_at?: string | null
+          connected_by?: string | null
+          connected_email?: string | null
+          connected_external_user_id?: string | null
+          created_at?: string
+          drive_root_folder_id?: string | null
+          drive_root_folder_name?: string
+          id?: string
+          last_error?: string | null
+          last_synced_at?: string | null
+          metadata?: Json
+          provider?: string
+          refresh_token?: string | null
+          scopes?: string[] | null
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "office_integrations_connected_by_fkey"
+            columns: ["connected_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

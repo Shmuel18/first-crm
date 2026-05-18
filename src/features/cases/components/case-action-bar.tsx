@@ -17,6 +17,7 @@ import { getTranslations } from 'next-intl/server';
 import { CaseStatusBadge } from './case-status-badge';
 
 type ActionBarProps = {
+  caseId: string;
   caseNumber: string;
   statusName: string | null;
   statusColor: string | null;
@@ -28,6 +29,7 @@ type ActionBarProps = {
 };
 
 export async function CaseActionBar({
+  caseId,
   caseNumber,
   statusName,
   statusColor,
@@ -83,7 +85,12 @@ export async function CaseActionBar({
         <div className="flex items-center gap-1 shrink-0">
           <ActionIcon icon={Calculator} title={t('actions.calculator')} />
           <ActionIcon icon={ClipboardList} title={t('actions.history')} />
-          <ActionIcon icon={Folder} title={t('actions.documents')} hasAlert={hasDocumentAlerts} />
+          <ActionIcon
+            icon={Folder}
+            title={t('actions.documents')}
+            hasAlert={hasDocumentAlerts}
+            href={`/cases/${caseId}/documents`}
+          />
           <ActionIcon icon={MessageSquare} title={t('actions.sendMessage')} />
           <ActionIcon icon={UserPlus} title={t('actions.assignTask')} />
           <ActionIcon icon={Calendar} title={t('actions.calendar')} />
@@ -108,21 +115,35 @@ function ActionIcon({
   icon: Icon,
   title,
   hasAlert,
+  href,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   title: string;
   hasAlert?: boolean;
+  href?: string;
 }) {
-  return (
-    <button
-      type="button"
-      title={title}
-      className="relative size-9 rounded-lg text-neutral-300 hover:bg-white/10 hover:text-[#C9A961] transition flex items-center justify-center"
-    >
+  const className =
+    'relative size-9 rounded-lg text-neutral-300 hover:bg-white/10 hover:text-[#C9A961] transition flex items-center justify-center';
+  const content = (
+    <>
       <Icon className="size-4" />
       {hasAlert && (
         <span className="absolute top-1.5 left-1.5 size-2 bg-[#C9A961] rounded-full ring-2 ring-[#0A0A0A]" />
       )}
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} title={title} className={className}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" title={title} className={className}>
+      {content}
     </button>
   );
 }

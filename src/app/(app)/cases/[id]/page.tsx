@@ -2,10 +2,10 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import {
-  Banknote,
   Briefcase,
   Building2,
   FileText,
+  FolderArchive,
   Home,
   Pencil,
   Settings,
@@ -73,6 +73,7 @@ export default async function CaseDetailPage({ params }: Props) {
   return (
     <div className="space-y-5 -mt-6">
       <CaseActionBar
+        caseId={caseData.id}
         caseNumber={caseData.case_number}
         statusName={caseData.status?.name_he ?? null}
         statusColor={caseData.status?.color ?? null}
@@ -203,9 +204,21 @@ export default async function CaseDetailPage({ params }: Props) {
           )}
         </CaseBlock>
 
-        <CaseBlock title={t('blocks.documents')} icon={<Banknote />} fullWidth>
+        <CaseBlock
+          title={t('blocks.documents')}
+          icon={<FolderArchive />}
+          fullWidth
+          rightSlot={
+            <Link
+              href={`/cases/${caseData.id}/documents`}
+              className="text-xs text-[#C9A961] hover:underline font-medium"
+            >
+              {t('blocks.openDocuments')}
+            </Link>
+          }
+        >
           <p className="text-sm text-neutral-500 text-center py-4">
-            {t('blocks.documentsComingSoon')}
+            {t('blocks.documentsHint')}
           </p>
         </CaseBlock>
       </div>
