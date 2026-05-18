@@ -80,9 +80,9 @@ export default async function SettingsLayout({
 
   return (
     <div className="-mt-6">
-      <div className="bg-[#0A0A0A] text-white sticky top-16 z-20 shadow-lg -mx-6 px-6 py-4 border-b border-neutral-800">
-        <h1 className="font-display text-xl font-medium">{t('pageTitle')}</h1>
-        <p className="text-xs text-neutral-400 mt-1">{t('pageSubtitle')}</p>
+      <div className="bg-[#FAF8F3] text-neutral-900 sticky top-16 z-20 shadow-sm -mx-6 px-6 py-3 border-b border-[#C9A961]/20">
+        <h1 className="font-display text-base font-semibold">{t('pageTitle')}</h1>
+        <p className="text-[11px] text-neutral-500 mt-0.5">{t('pageSubtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6 mt-6">

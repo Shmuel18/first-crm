@@ -358,7 +358,6 @@
         "rootFolder": "תיקיית שורש",
         "scopeNote": "הרשאה מלאה ל-Drive - נדרשת לסנכרון דו-כיווני (קבצים שתעלה ישירות ל-Drive יופיעו גם באתר).",
         "connect": "חבר Google Drive",
-        "reconnect": "חבר מחדש",
         "disconnect": "נתק חיבור",
         "disconnectConfirm": "לנתק את החיבור ל-Drive? קבצים קיימים יישמרו ב-Drive, אבל המערכת לא תעלה קבצים חדשים עד שתחבר שוב.",
         "connectedFlash": "Drive חובר בהצלחה!",
