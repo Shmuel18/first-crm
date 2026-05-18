@@ -8,7 +8,10 @@ import {
   exchangeCodeForTokens,
   fetchUserInfo,
 } from '@/features/integrations/services/google-oauth';
-import { upsertIntegration } from '@/features/integrations/services/integrations.service';
+import {
+  getIntegration,
+  upsertIntegration,
+} from '@/features/integrations/services/integrations.service';
 
 const OAUTH_STATE_COOKIE = 'google_oauth_state';
 
@@ -50,12 +53,18 @@ export async function GET(request: Request): Promise<Response> {
     const userInfo = await fetchUserInfo(tokens.access_token);
     const expiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
 
+    // Google only returns refresh_token on first consent. On re-consent it
+    // may be omitted - in that case keep the previously stored one (if any)
+    // so refresh keeps working. Only overwrite when we got a fresh one.
+    const existing = await getIntegration('google_drive');
+    const refreshToken = tokens.refresh_token ?? existing?.refresh_token ?? null;
+
     await upsertIntegration({
       provider: 'google_drive',
       status: 'connected',
       connectedEmail: userInfo.email,
       connectedExternalUserId: userInfo.sub,
-      refreshToken: tokens.refresh_token ?? null,
+      refreshToken,
       accessToken: tokens.access_token,
       tokenExpiresAt: expiresAt,
       scopes: tokens.scope.split(' '),

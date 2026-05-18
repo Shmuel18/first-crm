@@ -119,7 +119,12 @@ export function EditableTextCell({
 
       {editing && popoverPos && (
         <>
-          <div className="fixed inset-0 z-40" onClick={cancel} />
+          <div
+            className="fixed inset-0 z-40"
+            onClick={save}
+            aria-hidden
+            title=""
+          />
           <div
             className="fixed z-50 bg-white shadow-2xl border border-neutral-200 rounded-lg p-2"
             style={{ top: popoverPos.top, left: popoverPos.left, width: POPOVER_WIDTH }}
@@ -137,7 +142,7 @@ export function EditableTextCell({
               className="w-full px-2 py-1.5 text-sm border border-neutral-200 rounded resize-none focus:outline-none focus:ring-2 focus:ring-[#C9A961]/40"
             />
             <div className="flex items-center justify-between gap-2 mt-1.5">
-              <span className="text-[10px] text-neutral-400">⌘↵ {tc('save')} · Esc {tc('cancel')}</span>
+              <span className="text-[10px] text-neutral-400">Ctrl+Enter {tc('save')} · Esc {tc('cancel')}</span>
               <div className="flex gap-1.5">
                 <button
                   type="button"

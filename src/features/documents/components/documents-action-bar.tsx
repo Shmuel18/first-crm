@@ -13,6 +13,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
 import { syncDriveDocumentsAction } from '../actions/sync-drive-documents';
 
@@ -44,14 +45,15 @@ export function DocumentsActionBar({
         const parts: string[] = [];
         if (res.imported > 0) parts.push(tSync('imported', { count: res.imported }));
         if (res.updated > 0) parts.push(tSync('updated', { count: res.updated }));
+        if (res.deleted > 0) parts.push(tSync('deleted', { count: res.deleted }));
         if (parts.length === 0) {
-          window.alert(tSync('nothingNew'));
+          toast(tSync('nothingNew'));
         } else {
-          window.alert(parts.join('\n'));
+          toast.success(parts.join(' · '));
         }
       } else {
         const errKey = res.error === 'not_connected' ? 'errors.notConnected' : 'errors.generic';
-        window.alert(tSync(errKey));
+        toast.error(tSync(errKey));
       }
     });
 

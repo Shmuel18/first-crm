@@ -48,10 +48,12 @@ export function EditableBankCell({
       if (dropdownRef.current?.contains(e.target as Node)) return;
       setOpen(false);
     };
+    const onResize = () => setOpen(false);
     window.addEventListener('scroll', onScroll, true);
-    window.addEventListener('resize', () => setOpen(false));
+    window.addEventListener('resize', onResize);
     return () => {
       window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', onResize);
     };
   }, [open]);
 
@@ -154,16 +156,19 @@ export function EditableBankCell({
 function BankAvatar({ bank, size }: { bank: BankOption; size: 'sm' | 'md' }) {
   const sizeClass = size === 'md' ? 'size-9' : 'size-7';
   const fallbackText = size === 'md' ? 'text-[11px]' : 'text-[10px]';
+  const [logoFailed, setLogoFailed] = useState(false);
+  const showLogo = bank.logo_url && !logoFailed;
 
-  if (bank.logo_url) {
+  if (showLogo) {
     return (
       <span
         className={`${sizeClass} rounded-lg bg-white border border-neutral-200 shadow-sm flex items-center justify-center shrink-0 overflow-hidden`}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={bank.logo_url}
+          src={bank.logo_url ?? ''}
           alt={bank.name_he}
+          onError={() => setLogoFailed(true)}
           className="max-w-[85%] max-h-[85%] object-contain"
         />
       </span>

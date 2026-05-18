@@ -2,8 +2,22 @@ import { env } from '@/lib/env';
 
 /**
  * Google OAuth 2.0 helpers (server-only).
- * Scope: drive.file lets the app create files + see what it created.
- * Does NOT require Google's verification review (drive.file is "non-sensitive").
+ *
+ * Scope: `drive` (FULL Drive access) — REQUIRED for bidirectional sync because
+ * the office wants files dropped manually into Drive to surface in the app.
+ * `drive.file` would only see files we created, breaking that use case.
+ *
+ * Google classifies `drive` as a "restricted" scope. Implication:
+ *   - In Testing mode (current setup): up to 100 test users, each must be
+ *     added to the OAuth consent screen as a Test user. Users see an
+ *     "unverified app" warning but can proceed via Advanced > Continue.
+ *     No verification required.
+ *   - For Production (public app): Google requires a CASA Tier 2 security
+ *     assessment ($15k-75k, 4-6 weeks).
+ *   - Alternative for one office: a Google Workspace "Internal" app
+ *     (kaufman.co.il Workspace) avoids the warning AND verification.
+ *
+ * For Kaufman's office (~10 users) staying in Testing mode is the path.
  */
 
 export const GOOGLE_DRIVE_SCOPES = [

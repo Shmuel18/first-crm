@@ -56,7 +56,7 @@ async function persistLastSyncedAt(caseId: string): Promise<void> {
 }
 
 export type DriveSyncOutcome =
-  | { ok: true; imported: number; updated: number; skipped: number }
+  | { ok: true; imported: number; updated: number; skipped: number; deleted: number }
   | {
       ok: false;
       reason: 'not_connected' | 'case_not_found' | 'no_folder' | 'error';
@@ -97,6 +97,7 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
   const { data: categories } = await supabase
     .from('document_categories')
     .select('id, key, drive_folder, sort_order')
+    .eq('is_active', true)
     .order('sort_order');
 
   const firstCategoryPerFolder = new Map<string, string>();
@@ -129,6 +130,10 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
   let imported = 0;
   let updated = 0;
   let skipped = 0;
+  let deleted = 0;
+  // Track which existing drive_file_ids we actually saw this pass - the
+  // unseen ones were deleted from Drive (or moved out of our folders).
+  const seenDriveIds = new Set<string>();
 
   try {
     const importOrUpdateFile = async (
@@ -136,6 +141,7 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
       categoryId: string | null,
       driveFolder: string | null,
     ) => {
+      seenDriveIds.add(file.id);
       const found = existingByDriveId.get(file.id);
       if (found) {
         // File already known - detect any move (between subfolders OR to/from root)
@@ -154,20 +160,29 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
         }
         return;
       }
-      const { error } = await supabase.from('documents').insert({
-        case_id: caseId,
-        category_id: categoryId,
-        file_name: file.name,
-        file_size: file.size ? Number(file.size) : null,
-        mime_type: file.mimeType,
-        drive_file_id: file.id,
-        drive_file_url: file.webViewLink,
-        status: 'new',
-        metadata: { source: 'drive_sync' },
-      });
-      if (!error) {
+      const { data: inserted, error } = await supabase
+        .from('documents')
+        .insert({
+          case_id: caseId,
+          category_id: categoryId,
+          file_name: file.name,
+          file_size: file.size ? Number(file.size) : null,
+          mime_type: file.mimeType,
+          drive_file_id: file.id,
+          drive_file_url: file.webViewLink,
+          status: 'new',
+          metadata: { source: 'drive_sync' },
+        })
+        .select('id')
+        .single();
+      if (!error && inserted) {
         imported += 1;
-        existingByDriveId.set(file.id, { docId: '', currentDriveFolder: driveFolder });
+        // Track the inserted docId so a second sight of the same file_id
+        // (e.g. via shortcuts or shared files) updates the right row.
+        existingByDriveId.set(file.id, {
+          docId: inserted.id,
+          currentDriveFolder: driveFolder,
+        });
       }
     };
 
@@ -190,6 +205,19 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
     for (const f of rootFiles) {
       await importOrUpdateFile(f, null, null);
     }
+
+    // Soft-delete docs whose Drive file vanished (deleted or moved outside
+    // our case folder hierarchy). The blob may still be in Supabase Storage
+    // but the doc record is hidden from the UI.
+    for (const [driveId, entry] of existingByDriveId) {
+      if (seenDriveIds.has(driveId)) continue;
+      if (!entry.docId) continue;
+      const { error } = await supabase
+        .from('documents')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', entry.docId);
+      if (!error) deleted += 1;
+    }
   } catch (err) {
     return {
       ok: false,
@@ -199,7 +227,7 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
   }
 
   await persistLastSyncedAt(caseId);
-  return { ok: true, imported, updated, skipped };
+  return { ok: true, imported, updated, skipped, deleted };
 }
 
 export type { GoogleDriveClient };

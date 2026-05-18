@@ -6,7 +6,7 @@ import { syncDriveDocumentsForCase } from '@/features/integrations/services/driv
 import { createClient } from '@/lib/supabase/server';
 
 type Result =
-  | { ok: true; imported: number; updated: number; skipped: number }
+  | { ok: true; imported: number; updated: number; skipped: number; deleted: number }
   | {
       ok: false;
       error: 'unauthorized' | 'not_connected' | 'case_not_found' | 'no_folder' | 'unknown';
@@ -26,5 +26,11 @@ export async function syncDriveDocumentsAction(caseId: string): Promise<Result> 
 
   revalidatePath(`/cases/${caseId}/documents`);
   revalidatePath(`/cases/${caseId}`);
-  return { ok: true, imported: out.imported, updated: out.updated, skipped: out.skipped };
+  return {
+    ok: true,
+    imported: out.imported,
+    updated: out.updated,
+    skipped: out.skipped,
+    deleted: out.deleted,
+  };
 }

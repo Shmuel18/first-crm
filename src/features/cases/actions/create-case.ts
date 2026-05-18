@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
+import { sanitizeRichTextHtml } from '@/lib/utils/sanitize-html';
 
 import { CaseFormSchema } from '../schemas/case.schema';
 import type { CaseActionState, CaseFormValues } from '../types';
@@ -49,6 +50,7 @@ export async function createCaseAction(
     .from('cases')
     .insert({
       ...parsed.data,
+      request_details: sanitizeRichTextHtml(parsed.data.request_details ?? null),
       created_by: userRes.user.id,
       updated_by: userRes.user.id,
     })

@@ -2,6 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 
+import { getTranslations } from 'next-intl/server';
+
 import { createClient } from '@/lib/supabase/server';
 
 import {
@@ -16,20 +18,21 @@ export async function uploadDocumentAction(
   _prev: DocumentActionState,
   formData: FormData,
 ): Promise<DocumentActionState> {
+  const t = await getTranslations('documents.errors');
   const caseId = formData.get('case_id');
   const file = formData.get('file');
 
   if (typeof caseId !== 'string' || !caseId) {
-    return { ok: false, error: 'validation', message: 'case_id חסר' };
+    return { ok: false, error: 'validation', message: t('caseIdMissing') };
   }
   if (!(file instanceof File) || file.size === 0) {
-    return { ok: false, error: 'validation', message: 'יש לבחור קובץ להעלאה' };
+    return { ok: false, error: 'validation', message: t('fileRequired') };
   }
   if (file.size > MAX_FILE_SIZE_BYTES) {
-    return { ok: false, error: 'validation', message: 'הקובץ חורג מגודל מקסימלי (20MB)' };
+    return { ok: false, error: 'validation', message: t('fileTooLarge') };
   }
   if (!(ALLOWED_MIME_TYPES as readonly string[]).includes(file.type)) {
-    return { ok: false, error: 'validation', message: 'סוג קובץ לא נתמך' };
+    return { ok: false, error: 'validation', message: t('fileTypeNotAllowed') };
   }
 
   const meta = DocumentMetadataSchema.safeParse({

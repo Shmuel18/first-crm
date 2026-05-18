@@ -32,7 +32,6 @@ export function DriveIntegrationCard({
   connectedFlag,
 }: Props) {
   const t = useTranslations('settings.integrations.drive');
-  const tCommon = useTranslations('common');
   const locale = useLocale();
   const [isPending, startTransition] = useTransition();
 
@@ -146,7 +145,7 @@ export function DriveIntegrationCard({
 
         {oauthConfigured && (
           <p className="text-[11px] text-neutral-400 leading-relaxed pt-2 border-t border-neutral-100">
-            {tCommon('none')} · {t('scopeNote')}
+            {t('scopeNote')}
           </p>
         )}
       </div>

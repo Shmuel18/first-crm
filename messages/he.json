@@ -349,7 +349,7 @@
         "connectedAt": "נחבר בתאריך",
         "rootFolder": "תיקיית שורש",
         "scopeNote": "הרשאה מלאה ל-Drive - נדרשת לסנכרון דו-כיווני (קבצים שתעלה ישירות ל-Drive יופיעו גם באתר).",
-        "connect": "🔌 חבר Google Drive",
+        "connect": "חבר Google Drive",
         "reconnect": "חבר מחדש",
         "disconnect": "נתק חיבור",
         "disconnectConfirm": "לנתק את החיבור ל-Drive? קבצים קיימים יישמרו ב-Drive, אבל המערכת לא תעלה קבצים חדשים עד שתחבר שוב.",
@@ -374,8 +374,9 @@
     },
     "sync": {
       "button": "סנכרן מ-Drive",
-      "imported": "✅ יובאו {count} קבצים חדשים מ-Drive",
-      "updated": "🔄 עודכן מיקום ל-{count} קבצים שזזו ב-Drive",
+      "imported": "יובאו {count} קבצים חדשים מ-Drive",
+      "updated": "עודכן מיקום ל-{count} קבצים שזזו ב-Drive",
+      "deleted": "{count} קבצים שנמחקו ב-Drive הוסרו מהמערכת",
       "nothingNew": "אין קבצים חדשים ב-Drive - הכל מסונכרן",
       "errors": {
         "notConnected": "Drive לא מחובר. גש להגדרות → אינטגרציות.",
@@ -470,10 +471,21 @@
       "fileTooLarge": "הקובץ חורג מגודל מקסימלי (20MB)",
       "fileTypeNotAllowed": "סוג קובץ לא נתמך",
       "categoryRequired": "יש לבחור סוג מסמך",
+      "caseIdMissing": "מזהה תיק חסר",
       "unauthorized": "אין הרשאה",
       "uploadFailed": "ההעלאה נכשלה. נסה שוב.",
       "deleteFailed": "המחיקה נכשלה. נסה שוב.",
       "statusUpdateFailed": "עדכון הסטטוס נכשל"
     }
+  },
+  "richTextEditor": {
+    "bold": "מודגש (Ctrl+B)",
+    "italic": "נטוי (Ctrl+I)",
+    "underline": "קו תחתי (Ctrl+U)",
+    "heading2": "כותרת גדולה",
+    "heading3": "כותרת קטנה",
+    "bulletList": "רשימה בולטים",
+    "orderedList": "רשימה ממוספרת",
+    "blockquote": "ציטוט"
   }
 }

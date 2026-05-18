@@ -11,6 +11,7 @@ import { getIntegration, persistDriveRootFolderId } from './integrations.service
 type CaseDriveMeta = {
   case_folder_id?: string;
   subfolders?: Partial<Record<string, string>>;
+  last_synced_at?: string;
 };
 
 export type DriveCaseUploadInput = {
@@ -78,6 +79,10 @@ async function ensureCaseFolder(
   if (meta.case_folder_id) return meta.case_folder_id;
   const id = await client.ensureFolder(caseFolderName(caseNumber, familyName), rootId);
   meta.case_folder_id = id;
+  // Seed last_synced_at so the documents page doesn't kick off a redundant
+  // sync on first navigation right after an upload. The auto-sync rate limit
+  // will trigger a real sync only after MIN_AUTO_SYNC_INTERVAL_MS passes.
+  meta.last_synced_at = new Date().toISOString();
   await persistCaseDriveMeta(caseId, meta);
   return id;
 }

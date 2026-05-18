@@ -14,6 +14,7 @@ import {
   Quote,
   Underline as UnderlineIcon,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 type Props = {
   value: string;
@@ -60,26 +61,27 @@ export function RichTextEditor({ value, onChange, placeholder, minRows = 8 }: Pr
 }
 
 function Toolbar({ editor }: { editor: Editor }) {
+  const t = useTranslations('richTextEditor');
   return (
     <div className="flex items-center gap-0.5 border-b border-neutral-200 bg-[#FAF8F3] px-2 py-1.5">
       <ToolBtn
         active={editor.isActive('bold')}
         onClick={() => editor.chain().focus().toggleBold().run()}
-        title="Bold (Ctrl+B)"
+        title={t('bold')}
       >
         <Bold className="size-3.5" />
       </ToolBtn>
       <ToolBtn
         active={editor.isActive('italic')}
         onClick={() => editor.chain().focus().toggleItalic().run()}
-        title="Italic (Ctrl+I)"
+        title={t('italic')}
       >
         <Italic className="size-3.5" />
       </ToolBtn>
       <ToolBtn
         active={editor.isActive('underline')}
         onClick={() => editor.chain().focus().toggleUnderline().run()}
-        title="Underline (Ctrl+U)"
+        title={t('underline')}
       >
         <UnderlineIcon className="size-3.5" />
       </ToolBtn>
@@ -87,14 +89,14 @@ function Toolbar({ editor }: { editor: Editor }) {
       <ToolBtn
         active={editor.isActive('heading', { level: 2 })}
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        title="Heading 2"
+        title={t('heading2')}
       >
         <Heading2 className="size-3.5" />
       </ToolBtn>
       <ToolBtn
         active={editor.isActive('heading', { level: 3 })}
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-        title="Heading 3"
+        title={t('heading3')}
       >
         <Heading3 className="size-3.5" />
       </ToolBtn>
@@ -102,14 +104,14 @@ function Toolbar({ editor }: { editor: Editor }) {
       <ToolBtn
         active={editor.isActive('bulletList')}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
-        title="Bullet list"
+        title={t('bulletList')}
       >
         <List className="size-3.5" />
       </ToolBtn>
       <ToolBtn
         active={editor.isActive('orderedList')}
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        title="Ordered list"
+        title={t('orderedList')}
       >
         <ListOrdered className="size-3.5" />
       </ToolBtn>
@@ -117,7 +119,7 @@ function Toolbar({ editor }: { editor: Editor }) {
       <ToolBtn
         active={editor.isActive('blockquote')}
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        title="Quote"
+        title={t('blockquote')}
       >
         <Quote className="size-3.5" />
       </ToolBtn>

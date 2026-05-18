@@ -21,11 +21,10 @@ export async function disconnectGoogleDriveAction(): Promise<Result> {
 
   try {
     const row = await getIntegration('google_drive');
+    // Revoking the refresh_token also invalidates all access tokens issued
+    // from it - no need (and risky) to revoke the access token separately.
     if (row?.refresh_token) {
       await revokeToken(row.refresh_token).catch(() => undefined);
-    }
-    if (row?.access_token) {
-      await revokeToken(row.access_token).catch(() => undefined);
     }
     await clearIntegration('google_drive');
   } catch (err) {

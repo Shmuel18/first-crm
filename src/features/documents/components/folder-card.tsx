@@ -3,8 +3,8 @@
 import { useMemo } from 'react';
 
 import {
-  Banknote,
   Briefcase,
+  CheckCircle2,
   FileText,
   Globe2,
   Plus,
@@ -86,7 +86,7 @@ export function FolderCard({ folder, documents, onUpload, onPreview }: Props) {
             <>
               <span className="text-neutral-300">·</span>
               <span className="inline-flex items-center gap-1 text-emerald-700">
-                <Banknote className="size-3" />
+                <CheckCircle2 className="size-3" />
                 {verifiedCount}
               </span>
             </>

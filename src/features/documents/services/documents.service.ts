@@ -1,4 +1,7 @@
-import { uploadCaseDocumentToDrive } from '@/features/integrations/services/drive-case-uploader';
+import {
+  deleteCaseDocumentFromDrive,
+  uploadCaseDocumentToDrive,
+} from '@/features/integrations/services/drive-case-uploader';
 import { createClient } from '@/lib/supabase/server';
 import type { CaseId, DocumentId } from '@/lib/types/branded';
 
@@ -178,7 +181,7 @@ export async function persistDocumentBlobs(
     }
   }
 
-  await supabase
+  const { error: updateErr } = await supabase
     .from('documents')
     .update({
       metadata: { storage_path: path },
@@ -186,6 +189,17 @@ export async function persistDocumentBlobs(
       drive_file_url: driveFileUrl,
     })
     .eq('id', documentId);
+
+  // Rollback both stores if we fail to record the references on the row -
+  // otherwise the blobs become orphaned (Supabase path is recoverable,
+  // but the Drive file_id is gone forever once this function returns).
+  if (updateErr) {
+    await supabase.storage.from(BUCKET).remove([path]).catch(() => undefined);
+    if (driveFileId) {
+      await deleteCaseDocumentFromDrive(driveFileId);
+    }
+    return { ok: false, error: 'storage', message: updateErr.message };
+  }
 
   return { ok: true, storagePath: path, driveFileId, driveFileUrl };
 }

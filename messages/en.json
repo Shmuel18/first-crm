@@ -349,7 +349,7 @@
         "connectedAt": "Connected on",
         "rootFolder": "Root folder",
         "scopeNote": "Full Drive permission — required for bidirectional sync (files you upload directly to Drive will appear in the app too).",
-        "connect": "🔌 Connect Google Drive",
+        "connect": "Connect Google Drive",
         "reconnect": "Reconnect",
         "disconnect": "Disconnect",
         "disconnectConfirm": "Disconnect from Drive? Existing files stay in Drive, but the system won't upload new files until you reconnect.",
@@ -374,8 +374,9 @@
     },
     "sync": {
       "button": "Sync from Drive",
-      "imported": "✅ Imported {count} new files from Drive",
-      "updated": "🔄 Updated location for {count} files moved in Drive",
+      "imported": "Imported {count} new files from Drive",
+      "updated": "Updated location for {count} files moved in Drive",
+      "deleted": "{count} files deleted in Drive were removed from the system",
       "nothingNew": "No new files in Drive - everything is synced",
       "errors": {
         "notConnected": "Drive not connected. Go to Settings → Integrations.",
@@ -470,10 +471,21 @@
       "fileTooLarge": "File exceeds the 20MB limit",
       "fileTypeNotAllowed": "File type not supported",
       "categoryRequired": "Please pick a document type",
+      "caseIdMissing": "Case ID is missing",
       "unauthorized": "Not authorized",
       "uploadFailed": "Upload failed. Please try again.",
       "deleteFailed": "Delete failed. Please try again.",
       "statusUpdateFailed": "Status update failed"
     }
+  },
+  "richTextEditor": {
+    "bold": "Bold (Ctrl+B)",
+    "italic": "Italic (Ctrl+I)",
+    "underline": "Underline (Ctrl+U)",
+    "heading2": "Heading 2",
+    "heading3": "Heading 3",
+    "bulletList": "Bullet list",
+    "orderedList": "Ordered list",
+    "blockquote": "Quote"
   }
 }

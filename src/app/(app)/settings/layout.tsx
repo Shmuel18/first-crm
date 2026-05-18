@@ -95,7 +95,13 @@ export default async function SettingsLayout({
                 : 'text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900'
             }`;
             return item.disabled ? (
-              <div key={item.href} className={className} title={t('comingSoon')}>
+              <div
+                key={item.href}
+                className={className}
+                title={t('comingSoon')}
+                role="link"
+                aria-disabled="true"
+              >
                 <Icon className="size-4" />
                 <span className="flex-1">{t(item.labelKey)}</span>
                 <span className="text-[10px] uppercase text-neutral-400">

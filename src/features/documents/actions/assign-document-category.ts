@@ -19,6 +19,18 @@ export async function assignDocumentCategoryAction(
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
 
+  // Same permission gate the other doc actions use: verifying a doc
+  // (including re-categorizing) requires verify_document or upload_document.
+  const { data: hasPerm } = await supabase.rpc('has_permission', {
+    perm_key: 'verify_document',
+  });
+  const { data: hasUploadPerm } = await supabase.rpc('has_permission', {
+    perm_key: 'upload_document',
+  });
+  if (hasPerm !== true && hasUploadPerm !== true) {
+    return { ok: false, error: 'unauthorized' };
+  }
+
   const { error } = await supabase
     .from('documents')
     .update({ category_id: categoryId })
