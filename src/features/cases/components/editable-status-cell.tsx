@@ -7,6 +7,7 @@ import { Check, ChevronDown, Loader2 } from 'lucide-react';
 import { quickUpdateCaseFieldAction } from '../actions/quick-update-case';
 
 import { CaseStatusBadge } from './case-status-badge';
+import { calcDropdownPos, type DropdownPosition } from './dropdown-position';
 
 type StatusOption = {
   id: string;
@@ -36,12 +37,11 @@ export function EditableStatusCell({
   const [isPending, startTransition] = useTransition();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
+  const [pos, setPos] = useState<DropdownPosition | null>(null);
 
   useEffect(() => {
     if (!open) return;
     const onScroll = (e: Event) => {
-      // Allow scrolling within the dropdown - only close on external scroll
       if (dropdownRef.current?.contains(e.target as Node)) return;
       setOpen(false);
     };
@@ -53,10 +53,7 @@ export function EditableStatusCell({
   }, [open]);
 
   const handleOpen = () => {
-    const rect = triggerRef.current?.getBoundingClientRect();
-    if (rect) {
-      setPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
-    }
+    setPos(calcDropdownPos(triggerRef.current));
     setOpen(true);
   };
 
@@ -108,7 +105,7 @@ export function EditableStatusCell({
           <div
             ref={dropdownRef}
             className="fixed z-50 bg-white border border-neutral-200 rounded-lg shadow-xl py-1 min-w-48 max-h-72 overflow-y-auto scrollbar-thin"
-            style={{ top: pos.top, right: pos.right }}
+            style={pos}
           >
             {options.map((opt) => (
               <button

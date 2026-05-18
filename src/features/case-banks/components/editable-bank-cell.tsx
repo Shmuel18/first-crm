@@ -5,6 +5,11 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 import { Check, ChevronDown, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import {
+  calcDropdownPos,
+  type DropdownPosition,
+} from '@/features/cases/components/dropdown-position';
+
 import { setPrimaryBankAction } from '../actions/set-primary-bank';
 
 type BankOption = {
@@ -35,7 +40,7 @@ export function EditableBankCell({
   const [isPending, startTransition] = useTransition();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
+  const [pos, setPos] = useState<DropdownPosition | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -51,10 +56,7 @@ export function EditableBankCell({
   }, [open]);
 
   const handleOpen = () => {
-    const rect = triggerRef.current?.getBoundingClientRect();
-    if (rect) {
-      setPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
-    }
+    setPos(calcDropdownPos(triggerRef.current));
     setOpen(true);
   };
 
@@ -122,7 +124,7 @@ export function EditableBankCell({
           <div
             ref={dropdownRef}
             className="fixed z-50 bg-white border border-neutral-200 rounded-lg shadow-xl py-1 min-w-52 max-h-72 overflow-y-auto scrollbar-thin"
-            style={{ top: pos.top, right: pos.right }}
+            style={pos}
           >
             <button
               type="button"
