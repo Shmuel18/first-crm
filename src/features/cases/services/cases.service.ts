@@ -10,7 +10,7 @@ const CASE_SELECT_WITH_RELATIONS = `
   case_type_secondary:case_types!cases_case_type_secondary_id_fkey(id, key, name_he, name_en),
   assigned_advisor:profiles!cases_assigned_advisor_id_fkey(id, first_name, last_name),
   case_borrowers(is_primary, borrower:borrowers(id, first_name, last_name, national_id)),
-  case_banks(is_primary, bank:banks(id, key, name_he, color, logo_url))
+  case_banks(is_primary, bank:banks(id, key, name_he, name_en, color, logo_url))
 ` as const;
 
 export type CaseListFilters = {
@@ -85,6 +85,7 @@ type CaseBankJoin = {
   bank: {
     id: string;
     name_he: string;
+    name_en: string;
     color: string;
     logo_url: string | null;
     key: string;
@@ -138,6 +139,7 @@ export function getPrimaryBank(caseItem: {
 }): {
   id: string;
   name_he: string;
+  name_en: string;
   color: string;
   logo_url: string | null;
   key: string;

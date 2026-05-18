@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import {
@@ -13,12 +14,27 @@ import { type ReactElement } from 'react';
 
 import type { ExportRow } from './build-export-rows';
 
-// Register Hebrew font once at module load. Path resolves from project root
-// (Next runs server modules with cwd = project root).
-Font.register({
-  family: 'Heebo',
-  src: path.join(process.cwd(), 'public', 'fonts', 'heebo-regular.ttf'),
-});
+/**
+ * On Vercel Serverless, `process.cwd()` isn't the repo root and `public/`
+ * isn't necessarily co-located with cwd. Register the font lazily, reading
+ * the bytes ourselves via fs so we don't depend on cwd at all.
+ *
+ * The first call pays a one-time cost; subsequent renders reuse the registered
+ * family until the function instance is recycled.
+ */
+let fontRegistered = false;
+async function ensureFontRegistered(): Promise<void> {
+  if (fontRegistered) return;
+  // Path is relative to the compiled output but `public/` ships to the
+  // runtime via Next's tracing. On Vercel, files under `public/` are
+  // accessible relative to the lambda root.
+  const fontPath = path.join(process.cwd(), 'public', 'fonts', 'heebo-regular.ttf');
+  const buffer = await readFile(fontPath);
+  // @react-pdf/renderer accepts a Buffer at runtime but its types only declare
+  // string | URL. The cast is the documented escape hatch.
+  Font.register({ family: 'Heebo', src: buffer as unknown as string });
+  fontRegistered = true;
+}
 
 const COLORS = {
   black: '#0A0A0A',
@@ -156,5 +172,6 @@ export async function generateCasesPdf(
   rows: ReadonlyArray<ExportRow>,
   headers: PdfHeaders,
 ): Promise<Buffer> {
+  await ensureFontRegistered();
   return await renderToBuffer(<CasesDocument rows={rows} h={headers} />);
 }
