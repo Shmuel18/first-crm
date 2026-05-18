@@ -50,6 +50,16 @@ export async function GET(request: Request): Promise<Response> {
 
   try {
     const tokens = await exchangeCodeForTokens(code);
+
+    // Google's consent screen lets users grant a partial subset of the
+    // requested scopes. If they deny the Drive scope, we'd happily store
+    // an "authenticated" row whose every Drive API call 403s. Verify here
+    // and fail loudly instead.
+    const grantedScopes = tokens.scope.split(' ');
+    if (!grantedScopes.includes('https://www.googleapis.com/auth/drive')) {
+      return redirectWithError('drive_scope_missing');
+    }
+
     const userInfo = await fetchUserInfo(tokens.access_token);
     const expiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
 
@@ -67,7 +77,7 @@ export async function GET(request: Request): Promise<Response> {
       refreshToken,
       accessToken: tokens.access_token,
       tokenExpiresAt: expiresAt,
-      scopes: tokens.scope.split(' '),
+      scopes: grantedScopes,
       connectedBy: userRes.user.id,
       connectedAt: new Date().toISOString(),
       lastError: null,

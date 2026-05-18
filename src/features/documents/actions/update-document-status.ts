@@ -40,7 +40,8 @@ export async function updateDocumentStatusAction(
   const { error } = await supabase
     .from('documents')
     .update(update)
-    .eq('id', documentId);
+    .eq('id', documentId)
+    .eq('case_id', caseId); // defense-in-depth: doc must belong to the supplied case
 
   if (error) return { ok: false, error: 'unknown', message: error.message };
 

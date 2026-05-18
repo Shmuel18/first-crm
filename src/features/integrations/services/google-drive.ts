@@ -14,6 +14,9 @@ export type DriveUploadResult = {
 export class GoogleDriveClient {
   private accessToken: string | null;
   private tokenExpiresAt: number;
+  // Singleton in-flight refresh so concurrent callers don't double-refresh
+  // and race to overwrite each other's persisted token.
+  private refreshPromise: Promise<string> | null = null;
 
   constructor(private integration: IntegrationRow) {
     this.accessToken = integration.access_token;
@@ -23,22 +26,31 @@ export class GoogleDriveClient {
   }
 
   private async getAccessToken(): Promise<string> {
-    // Use cached token if it has > 60s of life left
     if (this.accessToken && this.tokenExpiresAt > Date.now() + 60_000) {
       return this.accessToken;
     }
     if (!this.integration.refresh_token) {
       throw new Error('No refresh token on integration');
     }
-    const tokens = await refreshAccessToken(this.integration.refresh_token);
-    this.accessToken = tokens.access_token;
-    this.tokenExpiresAt = Date.now() + tokens.expires_in * 1000;
-    await persistRefreshedAccessToken(
-      this.integration.provider as IntegrationProvider,
-      this.accessToken,
-      new Date(this.tokenExpiresAt).toISOString(),
-    );
-    return this.accessToken;
+    if (this.refreshPromise) return this.refreshPromise;
+
+    this.refreshPromise = (async () => {
+      const tokens = await refreshAccessToken(this.integration.refresh_token!);
+      this.accessToken = tokens.access_token;
+      this.tokenExpiresAt = Date.now() + tokens.expires_in * 1000;
+      await persistRefreshedAccessToken(
+        this.integration.provider as IntegrationProvider,
+        this.accessToken,
+        new Date(this.tokenExpiresAt).toISOString(),
+      );
+      return this.accessToken;
+    })();
+
+    try {
+      return await this.refreshPromise;
+    } finally {
+      this.refreshPromise = null;
+    }
   }
 
   private async authedFetch(url: string, init: RequestInit = {}): Promise<Response> {
@@ -143,6 +155,38 @@ export class GoogleDriveClient {
     if (!res.ok) throw new Error(`Drive list folder failed: ${res.status}`);
     const data = (await res.json()) as { files: DriveFileMeta[] };
     return data.files ?? [];
+  }
+
+  /**
+   * Paginated variant - follows nextPageToken until exhausted. Use this
+   * (not listFolderFiles) whenever the absence of a file would be
+   * interpreted as "deleted" - otherwise everything past file #200 would
+   * appear gone and be wiped from our records.
+   */
+  async listFolderFilesPaginated(folderId: string): Promise<DriveFileMeta[]> {
+    const q = `'${folderId}' in parents and trashed = false and mimeType != '${FOLDER_MIME}'`;
+    const fields =
+      'nextPageToken,files(id,name,mimeType,size,webViewLink,modifiedTime,createdTime)';
+    const out: DriveFileMeta[] = [];
+    let pageToken: string | undefined;
+    do {
+      const params = new URLSearchParams({
+        q,
+        fields,
+        pageSize: '1000',
+        spaces: 'drive',
+      });
+      if (pageToken) params.set('pageToken', pageToken);
+      const res = await this.authedFetch(`${DRIVE_API}/files?${params.toString()}`);
+      if (!res.ok) throw new Error(`Drive list folder failed: ${res.status}`);
+      const data = (await res.json()) as {
+        files: DriveFileMeta[];
+        nextPageToken?: string;
+      };
+      if (data.files) out.push(...data.files);
+      pageToken = data.nextPageToken;
+    } while (pageToken);
+    return out;
   }
 
   async listSubfolders(parentId: string): Promise<{ id: string; name: string }[]> {

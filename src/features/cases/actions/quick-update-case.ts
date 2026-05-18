@@ -3,6 +3,9 @@
 import { revalidatePath } from 'next/cache';
 
 import { createClient } from '@/lib/supabase/server';
+import type { Database } from '@/types/database';
+
+type CasesUpdate = Database['public']['Tables']['cases']['Update'];
 
 /**
  * Whitelist of fields that can be updated via inline edit.
@@ -15,7 +18,7 @@ const ALLOWED_FIELDS = [
   'case_blocker',
   'insurance_status',
   'referrer_name',
-] as const;
+] as const satisfies ReadonlyArray<keyof CasesUpdate>;
 
 type AllowedField = (typeof ALLOWED_FIELDS)[number];
 
@@ -36,19 +39,27 @@ export async function quickUpdateCaseFieldAction(
     return { ok: false, error: 'unauthorized' };
   }
 
-  // Normalize empty → null
-  const finalValue = value === '' ? null : value;
+  // Defense-in-depth: confirm caller can actually see this case before
+  // mutating - RLS is enforced too, but a permission regression in a
+  // future migration shouldn't silently let this action through.
+  const { data: caseRow } = await supabase
+    .from('cases')
+    .select('id')
+    .eq('id', caseId)
+    .maybeSingle();
+  if (!caseRow) {
+    return { ok: false, error: 'unauthorized' };
+  }
 
-  // Type-narrow the update payload per field for type safety
-  const updatePayload: Record<string, string | null> = {
+  const finalValue = value === '' ? null : value;
+  const updatePayload: CasesUpdate = {
     [field]: finalValue,
     updated_by: userRes.user.id,
   };
 
   const { error } = await supabase
     .from('cases')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic field whitelist already validated
-    .update(updatePayload as any)
+    .update(updatePayload)
     .eq('id', caseId);
 
   if (error) {

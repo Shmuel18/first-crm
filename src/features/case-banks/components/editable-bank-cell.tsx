@@ -119,7 +119,7 @@ export function EditableBankCell({
             <button
               type="button"
               onClick={() => handleSelect(null)}
-              className="w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-right text-neutral-500 hover:bg-neutral-50"
+              className="w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-start text-neutral-500 hover:bg-neutral-50"
             >
               <span>{noBankLabel}</span>
               {!bank && <Check className="size-3.5 text-[#C9A961]" />}
@@ -132,7 +132,7 @@ export function EditableBankCell({
                   key={opt.id}
                   type="button"
                   onClick={() => handleSelect(opt)}
-                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-right transition ${
+                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-start transition ${
                     selected ? 'bg-[#C9A961]/8' : 'hover:bg-neutral-50'
                   }`}
                 >

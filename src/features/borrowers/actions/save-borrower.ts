@@ -4,25 +4,10 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
+import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
 
 import { BorrowerFormSchema } from '../schemas/borrower.schema';
 import type { BorrowerActionState } from '../types';
-
-function formDataToObject(fd: FormData): Record<string, FormDataEntryValue> {
-  const obj: Record<string, FormDataEntryValue> = {};
-  fd.forEach((v, k) => {
-    obj[k] = v;
-  });
-  return obj;
-}
-
-function formDataToValues(fd: FormData): Partial<Record<string, string>> {
-  const out: Partial<Record<string, string>> = {};
-  fd.forEach((v, k) => {
-    if (typeof v === 'string') out[k] = v;
-  });
-  return out;
-}
 
 export async function saveBorrowerAction(
   _prevState: BorrowerActionState,
@@ -31,7 +16,7 @@ export async function saveBorrowerAction(
   const values = formDataToValues(formData);
 
   const caseId = formData.get('case_id');
-  const borrowerId = formData.get('borrower_id'); // empty for create
+  const borrowerId = formData.get('borrower_id');
   if (typeof caseId !== 'string' || !caseId) {
     return { ok: false, error: 'validation', values };
   }
@@ -54,10 +39,17 @@ export async function saveBorrowerAction(
     return { ok: false, error: 'unauthorized', values };
   }
 
+  // Defense-in-depth: confirm caller can see the case before any mutation
+  const { data: caseRow } = await supabase
+    .from('cases')
+    .select('id')
+    .eq('id', caseId)
+    .maybeSingle();
+  if (!caseRow) return { ok: false, error: 'unauthorized', values };
+
   let finalBorrowerId: string;
 
   if (typeof borrowerId === 'string' && borrowerId) {
-    // Edit existing borrower
     const { error } = await supabase
       .from('borrowers')
       .update({ ...borrowerFields, updated_by: userRes.user.id })
@@ -73,7 +65,6 @@ export async function saveBorrowerAction(
 
     finalBorrowerId = borrowerId;
   } else {
-    // Create new borrower + link to case
     const { data: newBorrower, error } = await supabase
       .from('borrowers')
       .insert({
@@ -96,28 +87,16 @@ export async function saveBorrowerAction(
     finalBorrowerId = newBorrower.id;
   }
 
-  // If this is marked as primary, also update cases.primary_borrower_id
+  // Surface failure to update cases.primary_borrower_id instead of swallowing
+  // it - otherwise the join table and the case row can disagree silently.
   if (is_primary) {
-    await supabase
+    const { error: primaryErr } = await supabase
       .from('cases')
       .update({ primary_borrower_id: finalBorrowerId })
       .eq('id', caseId);
+    if (primaryErr) return { ok: false, error: 'unknown', values };
   }
 
   revalidatePath(`/cases/${caseId}`);
   redirect(`/cases/${caseId}`);
-}
-
-export async function removeBorrowerFromCaseAction(
-  caseId: string,
-  borrowerId: string,
-): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from('case_borrowers')
-    .delete()
-    .eq('case_id', caseId)
-    .eq('borrower_id', borrowerId);
-  if (error) throw new Error(error.message);
-  revalidatePath(`/cases/${caseId}`);
 }

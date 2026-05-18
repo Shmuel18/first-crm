@@ -7,12 +7,10 @@ import { createClient } from '@/lib/supabase/server';
 type Result = { ok: true } | { ok: false; error: string };
 
 /**
- * Quick action: sets the primary bank for a case from the dashboard.
- * If the bank already exists in case_banks → marks it primary (unsets others).
- * If the bank doesn't exist yet → creates a new case_banks row with is_primary=true.
- *
- * This is for the dashboard quick-edit. Full bank details (banker, status, dates)
- * are edited via /cases/[id]/banks/[bankId]/edit.
+ * Sets the primary bank for a case via an atomic RPC (see migration 021).
+ * The RPC clears any existing primary, then either updates an existing
+ * case_banks row or inserts a new one - all inside a single PG function
+ * call so the case never observes a no-primary intermediate state.
  */
 export async function setPrimaryBankAction(
   caseId: string,
@@ -20,54 +18,25 @@ export async function setPrimaryBankAction(
 ): Promise<Result> {
   const supabase = await createClient();
   const { data: userRes } = await supabase.auth.getUser();
-  if (!userRes.user) {
-    return { ok: false, error: 'unauthorized' };
-  }
+  if (!userRes.user) return { ok: false, error: 'unauthorized' };
 
-  // 1. Unset is_primary on all existing case_banks for this case
-  const { error: unsetError } = await supabase
-    .from('case_banks')
-    .update({ is_primary: false })
-    .eq('case_id', caseId)
-    .eq('is_primary', true);
-
-  if (unsetError) return { ok: false, error: unsetError.message };
-
-  if (bankId === null) {
-    // Just clearing the primary - we're done
-    revalidatePath('/cases');
-    revalidatePath(`/cases/${caseId}`);
-    return { ok: true };
-  }
-
-  // 2. Check if this case_bank already exists
-  const { data: existing } = await supabase
-    .from('case_banks')
+  // Defense-in-depth: confirm caller can see the case
+  const { data: caseRow } = await supabase
+    .from('cases')
     .select('id')
-    .eq('case_id', caseId)
-    .eq('bank_id', bankId)
+    .eq('id', caseId)
     .maybeSingle();
+  if (!caseRow) return { ok: false, error: 'unauthorized' };
 
-  if (existing) {
-    // Update existing row to primary
-    const { error: updateError } = await supabase
-      .from('case_banks')
-      .update({ is_primary: true })
-      .eq('id', existing.id);
-
-    if (updateError) return { ok: false, error: updateError.message };
-  } else {
-    // Insert new row as primary
-    const { error: insertError } = await supabase.from('case_banks').insert({
-      case_id: caseId,
-      bank_id: bankId,
-      is_primary: true,
-      created_by: userRes.user.id,
-      updated_by: userRes.user.id,
-    });
-
-    if (insertError) return { ok: false, error: insertError.message };
-  }
+  // RPC handles bankId === null internally (clears primary). Supabase types
+  // mark the param as non-null because PG signatures don't express
+  // nullability - cast is safe per the function body in migration 021.
+  const { error } = await supabase.rpc('set_primary_bank', {
+    p_case_id: caseId,
+    p_bank_id: bankId as string,
+    p_user_id: userRes.user.id,
+  });
+  if (error) return { ok: false, error: error.message };
 
   revalidatePath('/cases');
   revalidatePath(`/cases/${caseId}`);

@@ -1,7 +1,6 @@
 import Link from 'next/link';
 
 import {
-  ArrowRight,
   Calculator,
   Calendar,
   Check,
@@ -12,7 +11,10 @@ import {
   MoreVertical,
   UserPlus,
 } from 'lucide-react';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
+
+import { BackArrow } from '@/components/shared/back-arrow';
+import type { Locale } from '@/lib/i18n/direction';
 
 import { CaseStatusBadge } from './case-status-badge';
 
@@ -41,6 +43,7 @@ export async function CaseActionBar({
 }: ActionBarProps) {
   const t = await getTranslations('case.actionBar');
   const tc = await getTranslations('common');
+  const locale = (await getLocale()) as Locale;
 
   return (
     <div className="bg-[#FAF8F3] text-neutral-900 sticky top-16 z-20 shadow-sm -mx-6 px-6 py-3 border-b border-[#C9A961]/20">
@@ -51,7 +54,7 @@ export async function CaseActionBar({
             title={tc('back')}
             className="inline-flex items-center justify-center size-7 border border-neutral-300 hover:border-[#C9A961] text-neutral-600 hover:text-[#C9A961] bg-white/60 rounded-md transition shrink-0"
           >
-            <ArrowRight className="size-3.5" />
+            <BackArrow locale={locale} className="size-3.5" />
           </Link>
 
           <div className="flex items-center gap-2 flex-wrap min-w-0">

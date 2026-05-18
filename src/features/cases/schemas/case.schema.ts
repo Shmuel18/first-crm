@@ -12,6 +12,17 @@ const optionalString = z.preprocess(
   z.string().optional(),
 );
 
+/**
+ * request_details is rich HTML from Tiptap - sanitized at write time but
+ * still capped to prevent DoS via megabyte-sized pastes (sanitize cost +
+ * render cost on every case-detail load).
+ */
+const REQUEST_DETAILS_MAX = 50_000;
+const optionalLongText = z.preprocess(
+  (v) => (v === '' || v === null ? undefined : v),
+  z.string().max(REQUEST_DETAILS_MAX).optional(),
+);
+
 const optionalUuid = z.preprocess(
   (v) => (v === '' || v === null ? undefined : v),
   z.string().uuid().optional(),
@@ -66,7 +77,7 @@ export const CaseFormSchema = z.object({
   fee_amount: optionalNumber,
   expected_income: optionalNumber,
   short_note: optionalString,
-  request_details: optionalString,
+  request_details: optionalLongText,
 });
 
 export type CaseFormInput = z.infer<typeof CaseFormSchema>;

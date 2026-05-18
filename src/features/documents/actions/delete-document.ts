@@ -21,6 +21,7 @@ export async function deleteDocumentAction(
     .from('documents')
     .select('id, metadata, drive_file_id')
     .eq('id', documentId)
+    .eq('case_id', caseId) // defense-in-depth: doc must belong to the supplied case
     .maybeSingle();
 
   if (fetchErr) return { ok: false, error: 'unknown', message: fetchErr.message };

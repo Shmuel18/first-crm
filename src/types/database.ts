@@ -1824,6 +1824,10 @@ export type Database = {
       generate_case_number: { Args: never; Returns: string }
       has_permission: { Args: { perm_key: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      set_primary_bank: {
+        Args: { p_bank_id: string; p_case_id: string; p_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

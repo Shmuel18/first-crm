@@ -1,15 +1,17 @@
 import Link from 'next/link';
 
-import { ArrowRight } from 'lucide-react';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 
+import { BackArrow } from '@/components/shared/back-arrow';
 import { CaseForm } from '@/features/cases/components/case-form';
 import { createClient } from '@/lib/supabase/server';
+import type { Locale } from '@/lib/i18n/direction';
 
 export default async function NewCasePage() {
   const supabase = await createClient();
   const t = await getTranslations('case.form');
   const tc = await getTranslations('common');
+  const locale = (await getLocale()) as Locale;
 
   const [caseTypesRes, statusesRes, advisorsRes, isAdminRes] = await Promise.all([
     supabase
@@ -39,7 +41,7 @@ export default async function NewCasePage() {
           href="/cases"
           className="inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-900 mb-3"
         >
-          <ArrowRight className="size-4" />
+          <BackArrow locale={locale} className="size-4" />
           {tc('back')}
         </Link>
         <h1 className="text-2xl font-light text-neutral-900">{t('title.create')}</h1>

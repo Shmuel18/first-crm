@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 
 import {
   AlertCircle,
@@ -13,6 +13,15 @@ import {
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 
 import { disconnectGoogleDriveAction } from '../actions/disconnect-google-drive';
@@ -32,17 +41,19 @@ export function DriveIntegrationCard({
   connectedFlag,
 }: Props) {
   const t = useTranslations('settings.integrations.drive');
+  const tCommon = useTranslations('common');
   const locale = useLocale();
   const [isPending, startTransition] = useTransition();
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const dateLocale = locale === 'he' ? 'he-IL' : 'en-GB';
   const connectedAt = view.connectedAt
     ? new Date(view.connectedAt).toLocaleString(dateLocale)
     : null;
 
-  const handleDisconnect = () =>
+  const handleDisconnectConfirmed = () =>
     startTransition(async () => {
-      if (!window.confirm(t('disconnectConfirm'))) return;
+      setConfirmOpen(false);
       await disconnectGoogleDriveAction();
     });
 
@@ -124,7 +135,7 @@ export function DriveIntegrationCard({
             <Button
               type="button"
               variant="destructive"
-              onClick={handleDisconnect}
+              onClick={() => setConfirmOpen(true)}
               disabled={isPending}
               className="h-10"
             >
@@ -133,6 +144,35 @@ export function DriveIntegrationCard({
             </Button>
           )}
         </div>
+
+        <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogTitle>{t('disconnect')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('disconnectConfirm')}</AlertDialogDescription>
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                render={
+                  <Button type="button" variant="ghost" className="h-10">
+                    {tCommon('cancel')}
+                  </Button>
+                }
+              />
+              <AlertDialogAction
+                render={
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={handleDisconnectConfirmed}
+                    disabled={isPending}
+                    className="h-10"
+                  >
+                    {t('disconnect')}
+                  </Button>
+                }
+              />
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {oauthConfigured && (
           <p className="text-[11px] text-neutral-400 leading-relaxed pt-2 border-t border-neutral-100">
@@ -184,7 +224,14 @@ function prettifyError(
   reason: string,
   t: ReturnType<typeof useTranslations>,
 ): string {
-  const known = ['oauth_not_configured', 'state_mismatch', 'admin_only', 'missing_params', 'access_denied'];
+  const known = [
+    'oauth_not_configured',
+    'state_mismatch',
+    'admin_only',
+    'missing_params',
+    'access_denied',
+    'drive_scope_missing',
+  ];
   if (known.includes(reason)) return t(`errors.${reason}`);
   return t('errors.generic');
 }
