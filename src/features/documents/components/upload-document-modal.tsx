@@ -89,6 +89,15 @@ export function UploadDocumentModal({
     }
   }, [state, onOpenChange]);
 
+  // Reset internal state whenever the modal is closed (X / Cancel / outside click)
+  useEffect(() => {
+    if (!open) {
+      setFileName(null);
+      setIsDragOver(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }, [open]);
+
   const filteredCategories = defaultFolder
     ? categories.filter((c) => c.drive_folder === defaultFolder)
     : categories;

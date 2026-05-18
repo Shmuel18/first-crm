@@ -19,6 +19,7 @@ type Props = {
   documents: DocumentWithRelations[];
   categories: DocumentCategoryRow[];
   borrowers: Borrower[];
+  driveFolderId: string | null;
 };
 
 export function DocumentsPageContent({
@@ -28,6 +29,7 @@ export function DocumentsPageContent({
   documents,
   categories,
   borrowers,
+  driveFolderId,
 }: Props) {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploadFolder, setUploadFolder] = useState<DriveFolder | null>(null);
@@ -76,6 +78,7 @@ export function DocumentsPageContent({
         caseNumber={caseNumber}
         borrowerNames={borrowerNames}
         onUpload={handleUploadGlobal}
+        driveFolderId={driveFolderId}
       />
 
       <DocumentsSummary {...totals} />

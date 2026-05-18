@@ -43,6 +43,13 @@ export default async function CaseDocumentsPage({ params }: Props) {
     lastName: borrower.last_name,
   }));
 
+  const driveFolderId =
+    caseData.metadata &&
+    typeof caseData.metadata === 'object' &&
+    'drive' in caseData.metadata
+      ? ((caseData.metadata as { drive?: { case_folder_id?: string } }).drive?.case_folder_id ?? null)
+      : null;
+
   return (
     <DocumentsPageContent
       caseId={caseData.id}
@@ -51,6 +58,7 @@ export default async function CaseDocumentsPage({ params }: Props) {
       documents={documents}
       categories={categories}
       borrowers={borrowerOptions}
+      driveFolderId={driveFolderId}
     />
   );
 }

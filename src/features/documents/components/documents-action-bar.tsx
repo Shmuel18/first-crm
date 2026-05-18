@@ -21,6 +21,7 @@ type Props = {
   caseNumber: string;
   borrowerNames: string;
   onUpload: () => void;
+  driveFolderId: string | null;
 };
 
 export function DocumentsActionBar({
@@ -28,6 +29,7 @@ export function DocumentsActionBar({
   caseNumber,
   borrowerNames,
   onUpload,
+  driveFolderId,
 }: Props) {
   const t = useTranslations('documents.actions');
   const tPage = useTranslations('documents');
@@ -102,7 +104,12 @@ export function DocumentsActionBar({
             <span className="hidden lg:inline">{tSync('button')}</span>
           </button>
           <BarIcon icon={MessageSquare} title={t('sendRequest')} disabled />
-          <BarIcon icon={FolderOpen} title={t('openDrive')} disabled />
+          <BarIcon
+            icon={FolderOpen}
+            title={t('openDrive')}
+            href={driveFolderId ? `https://drive.google.com/drive/folders/${driveFolderId}` : undefined}
+            disabled={!driveFolderId}
+          />
           <BarIcon icon={ClipboardList} title={t('history')} disabled />
         </div>
       </div>
@@ -114,18 +121,24 @@ function BarIcon({
   icon: Icon,
   title,
   disabled,
+  href,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   title: string;
   disabled?: boolean;
+  href?: string;
 }) {
+  const className =
+    'size-8 rounded-md text-neutral-500 hover:bg-white hover:text-[#C9A961] transition flex items-center justify-center disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-neutral-500 disabled:cursor-not-allowed';
+  if (href && !disabled) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" title={title} className={className}>
+        <Icon className="size-3.5" />
+      </a>
+    );
+  }
   return (
-    <button
-      type="button"
-      disabled={disabled}
-      title={title}
-      className="size-8 rounded-md text-neutral-500 hover:bg-white hover:text-[#C9A961] transition flex items-center justify-center disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-neutral-500 disabled:cursor-not-allowed"
-    >
+    <button type="button" disabled={disabled} title={title} className={className}>
       <Icon className="size-3.5" />
     </button>
   );

@@ -33,7 +33,7 @@ export async function Topbar() {
 
   return (
     <header className="h-16 bg-[#0A0A0A] text-white sticky top-0 z-30 shadow-md">
-      <div className="h-full px-4 flex items-center gap-4">
+      <div className="h-full px-4 flex items-center gap-3">
         <Link href="/cases" className="flex flex-col leading-tight shrink-0">
           <span className="brand-logo text-xl whitespace-nowrap">KAUFMAN</span>
           <span className="brand-tagline">FINANCE&nbsp;GROUP</span>
@@ -48,7 +48,7 @@ export async function Topbar() {
           />
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 ms-auto">
           <Link
             href="/cases/new"
             className="btn-gold inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm whitespace-nowrap"
