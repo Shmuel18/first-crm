@@ -132,15 +132,6 @@ export function DriveIntegrationCard({
               {t('disconnect')}
             </Button>
           )}
-          {oauthConfigured && isConnected && (
-            <a
-              href="/api/auth/google/start"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-200 hover:border-[#C9A961] text-neutral-700 hover:text-[#C9A961] text-sm font-medium transition"
-            >
-              <Link2 className="size-4" />
-              {t('reconnect')}
-            </a>
-          )}
         </div>
 
         {oauthConfigured && (

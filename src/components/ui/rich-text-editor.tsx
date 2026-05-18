@@ -2,7 +2,6 @@
 
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
 import Placeholder from '@tiptap/extension-placeholder';
 import {
   Bold,
@@ -27,8 +26,8 @@ export function RichTextEditor({ value, onChange, placeholder, minRows = 8 }: Pr
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
+      // StarterKit v3 already includes Underline - no need to add separately
       StarterKit.configure({ heading: { levels: [2, 3] } }),
-      Underline,
       Placeholder.configure({ placeholder: placeholder ?? '' }),
     ],
     content: value,

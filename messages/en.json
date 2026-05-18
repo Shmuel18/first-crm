@@ -350,7 +350,6 @@
         "rootFolder": "Root folder",
         "scopeNote": "Full Drive permission — required for bidirectional sync (files you upload directly to Drive will appear in the app too).",
         "connect": "Connect Google Drive",
-        "reconnect": "Reconnect",
         "disconnect": "Disconnect",
         "disconnectConfirm": "Disconnect from Drive? Existing files stay in Drive, but the system won't upload new files until you reconnect.",
         "connectedFlash": "Drive connected successfully!",
