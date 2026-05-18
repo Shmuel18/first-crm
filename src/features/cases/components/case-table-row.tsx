@@ -47,12 +47,14 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }
   const t = useTranslations('dashboard.rowState');
   const locale = useLocale() as Locale;
 
-  // Zebra striping + clear borders - Excel-like density for power users
+  // Excel-style row separation: stronger zebra + double-line borders + slight inset shadow
   const rowClasses = [
-    'group transition-colors relative border-b border-neutral-200 cursor-pointer h-12',
-    row.isStuck && 'bg-red-50/80 hover:bg-red-100/80',
-    row.isFrozen && 'bg-neutral-100 text-neutral-500 hover:bg-neutral-150',
-    !row.isStuck && !row.isFrozen && 'odd:bg-white even:bg-neutral-50/60 hover:!bg-[#FAF6EC]',
+    'group transition-colors relative cursor-pointer h-14',
+    'border-b-2 border-neutral-200',
+    'shadow-[inset_0_-1px_0_rgba(255,255,255,0.6)]',
+    row.isStuck && 'bg-red-50 hover:bg-red-100',
+    row.isFrozen && 'bg-neutral-200/70 text-neutral-500 hover:bg-neutral-300/70',
+    !row.isStuck && !row.isFrozen && 'odd:bg-white even:bg-[#F4F4F2] hover:!bg-[#FAF6EC]',
   ]
     .filter(Boolean)
     .join(' ');
@@ -75,7 +77,7 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }
         </span>
       </td>
 
-      <td className="px-4 py-3 text-sm text-neutral-700 tabular-nums" dir="ltr">
+      <td className="px-4 py-3 text-sm text-neutral-700 tabular-nums">
         {row.nationalId ?? <span className="text-neutral-400">—</span>}
       </td>
 
