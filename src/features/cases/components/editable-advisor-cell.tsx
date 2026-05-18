@@ -98,10 +98,10 @@ export function EditableAdvisorCell({
       >
         {advisorName ? (
           <>
+            <span className="text-sm text-neutral-700 whitespace-nowrap">{advisorName}</span>
             <span className="size-7 rounded-full btn-gold flex items-center justify-center text-[10px] font-bold">
               {initials(advisorName)}
             </span>
-            <span className="text-sm text-neutral-700 whitespace-nowrap">{advisorName}</span>
           </>
         ) : (
           <span className="text-sm text-neutral-400">{tc('notAssigned')}</span>

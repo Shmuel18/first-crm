@@ -86,6 +86,12 @@ export function EditableBankCell({
       >
         {bank ? (
           <>
+            <span className="text-sm text-neutral-700 whitespace-nowrap">
+              {bank.name_he}
+              {secondaryCount > 0 && (
+                <span className="text-xs text-neutral-400 me-1">+{secondaryCount}</span>
+              )}
+            </span>
             <span
               className="size-7 rounded-md flex items-center justify-center text-[10px] font-bold text-white shrink-0"
               style={{ backgroundColor: bank.color }}
@@ -99,12 +105,6 @@ export function EditableBankCell({
                 />
               ) : (
                 bank.name_he.slice(0, 2)
-              )}
-            </span>
-            <span className="text-sm text-neutral-700 whitespace-nowrap">
-              {bank.name_he}
-              {secondaryCount > 0 && (
-                <span className="text-xs text-neutral-400 me-1">+{secondaryCount}</span>
               )}
             </span>
           </>

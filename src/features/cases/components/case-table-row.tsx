@@ -47,10 +47,10 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }
   const t = useTranslations('dashboard.rowState');
   const locale = useLocale() as Locale;
 
-  // Excel-style row separation: dark divider + strong zebra + breathing room
+  // Excel-style: subtle divider + zebra + breathing room
   const rowClasses = [
     'group transition-colors relative cursor-pointer h-14',
-    'border-b-2 border-neutral-800/90',
+    'border-b border-neutral-300',
     row.isStuck && 'bg-red-50 hover:bg-red-100',
     row.isFrozen && 'bg-neutral-200/70 text-neutral-500 hover:bg-neutral-300/70',
     !row.isStuck && !row.isFrozen && 'odd:bg-white even:bg-[#F4F4F2] hover:!bg-[#FAF6EC]',
