@@ -1,0 +1,310 @@
+{
+  "common": {
+    "save": "שמור",
+    "cancel": "ביטול",
+    "edit": "ערוך",
+    "delete": "מחק",
+    "add": "הוסף",
+    "back": "חזרה",
+    "loading": "טוען...",
+    "saving": "שומר...",
+    "search": "חיפוש",
+    "filter": "סינון",
+    "yes": "כן",
+    "no": "לא",
+    "none": "ללא",
+    "notSpecified": "לא צוין",
+    "notAssigned": "לא מוקצה",
+    "noName": "(ללא שם)",
+    "select": "— בחר —",
+    "showing": "מציג",
+    "all": "כל",
+    "more": "עוד",
+    "noteHint": "הוסף הערה...",
+    "copied": "הועתק!",
+    "savedAgo": "נשמר"
+  },
+  "nav": {
+    "dashboard": "דשבורד",
+    "tasks": "משימות",
+    "team": "צוות",
+    "templates": "תבניות",
+    "auditLog": "יומן שינויים",
+    "settings": "הגדרות"
+  },
+  "topbar": {
+    "searchPlaceholder": "חיפוש לפי שם, ת״ז, טלפון או מספר תיק...",
+    "newCase": "פתיחת תיק חדש",
+    "notifications": "התראות",
+    "logout": "התנתק"
+  },
+  "auth": {
+    "login": {
+      "title": "כניסה למערכת",
+      "subtitle": "ברוכים השבים. אנא הזינו את פרטי הכניסה.",
+      "emailLabel": "כתובת מייל",
+      "passwordLabel": "סיסמה",
+      "submitButton": "כניסה למערכת",
+      "submitting": "מתחבר...",
+      "forgotPassword": "שכחת סיסמה?",
+      "footer": "© 2026 Kaufman Finance Group · כל הזכויות שמורות",
+      "errors": {
+        "invalidInput": "אימייל או סיסמה לא תקינים",
+        "invalidCredentials": "אימייל או סיסמה שגויים",
+        "unknown": "שגיאה לא ידועה. נסה שוב."
+      }
+    }
+  },
+  "dashboard": {
+    "greetings": {
+      "morning": "בוקר טוב",
+      "afternoon": "צהריים טובים",
+      "evening": "ערב טוב",
+      "night": "לילה טוב"
+    },
+    "insights": {
+      "empty": "מתחילים נקי - צור את התיק הראשון שלך",
+      "stuckSingle": "יש תיק תקוע אחד שדורש תשומת לב",
+      "stuckMany": "יש {count} תיקים תקועים שדורשים תשומת לב",
+      "casesSingle": "תיק אחד פעיל במערכת",
+      "casesMany": "{count} תיקים פעילים במערכת - הכל זורם"
+    },
+    "viewTabs": {
+      "active": "תיקים פעילים",
+      "leads": "לידים",
+      "archive": "ארכיון"
+    },
+    "filters": {
+      "myCases": "התיקים שלי",
+      "stage": "שלב בתהליך",
+      "bank": "בנק",
+      "blocker": "גורם מעכב",
+      "onlyStuck": "רק תקועים",
+      "hideClosedFrozen": "הסתר בוצעו והוקפאו"
+    },
+    "savedViews": {
+      "saved": "תצוגות שמורות",
+      "saveCurrent": "שמור תצוגה נוכחית",
+      "exportExcel": "ייצוא לאקסל",
+      "exportPdf": "ייצוא ל-PDF"
+    },
+    "summary": {
+      "activeCases": "תיקים פעילים",
+      "stuck": "תקועים",
+      "newThisWeek": "חדשים השבוע"
+    },
+    "columns": {
+      "row": "#",
+      "clientName": "שם לקוח",
+      "nationalId": "ת״ז / דרכון",
+      "stage": "שלב בתהליך",
+      "bank": "בנק",
+      "advisor": "עובד מטפל",
+      "shortNote": "הערה קצרה"
+    },
+    "emptyState": {
+      "title": "אין עדיין תיקים פעילים",
+      "subtitle": "צור תיק ראשון או ייבא נתונים מ-Excel קיים",
+      "cta": "פתיחת תיק חדש"
+    },
+    "rowState": {
+      "noBorrowers": "(ללא לווים)",
+      "recentlyUpdated": "עודכן ב-24 שעות אחרונות",
+      "updatedOn": "עודכן ב-{date}"
+    }
+  },
+  "case": {
+    "actionBar": {
+      "backTooltip": "חזרה",
+      "caseLabel": "תיק",
+      "withBorrowers": "(לווים יתווספו)",
+      "actions": {
+        "calculator": "חישובים (LTV, יחס החזר)",
+        "history": "היסטוריה / Audit Log",
+        "documents": "מסמכים",
+        "sendMessage": "שלח הודעה ללקוח",
+        "assignTask": "הקצה משימה",
+        "calendar": "קבע פגישה",
+        "generatePdf": "הפק PDF לבנק",
+        "more": "עוד"
+      }
+    },
+    "blocks": {
+      "borrowers": "לווים",
+      "addBorrower": "+ הוסף לווה",
+      "addBorrowerFirst": "הוסף לווה ראשון",
+      "noBorrowers": "טרם נוספו לווים לתיק",
+      "property": "נכס ועסקה",
+      "banks": "בנקים",
+      "addBank": "+ הוסף בנק",
+      "noBanks": "טרם נוספו בנקים לתיק",
+      "admin": "מנהלה",
+      "tasks": "משימות",
+      "tasksComingSoon": "ניהול משימות יתווסף בקרוב",
+      "shortNote": "הערה קצרה",
+      "shortNoteEmpty": "ללא הערה. מוצגת בדשבורד מתחת לסטטוס - לתזכורות מהירות.",
+      "requestDetails": "פרטי הבקשה (סיפור התיק)",
+      "requestDetailsEmpty": "טרם נכתבו פרטי בקשה מלאים.",
+      "documents": "מסמכים",
+      "documentsComingSoon": "ניהול מסמכים + סנכרון Google Drive יתווסף בקרוב"
+    },
+    "fields": {
+      "propertyValue": "שווי הנכס",
+      "requestedMortgageAmount": "גובה משכנתא מבוקש",
+      "equity": "הון עצמי",
+      "ltv": "LTV",
+      "feeAmount": "שכ״ט סוכם",
+      "expectedIncome": "הכנסה צפויה",
+      "blocker": "גורם מעכב",
+      "insurance": "ביטוחים",
+      "referrer": "הופנה ע״י",
+      "advisor": "יועץ מטפל",
+      "createdAt": "תאריך פתיחה",
+      "primary": "ראשי",
+      "primaryBankMarker": "★ עיקרי",
+      "secondaryBanks": "+{count}"
+    },
+    "form": {
+      "title": {
+        "create": "תיק חדש",
+        "edit": "עריכת תיק {caseNumber}"
+      },
+      "sections": {
+        "caseInfo": "פרטי תיק",
+        "property": "פרטי הנכס והמשכנתא",
+        "financial": "כספים (מנהל בלבד)",
+        "admin": "מנהלה",
+        "notes": "הערות"
+      },
+      "fields": {
+        "casePrimaryType": "סוג תיק עיקרי",
+        "caseSecondaryType": "סוג תיק משני (אופציונלי)",
+        "noSecondary": "— ללא —",
+        "status": "סטטוס",
+        "advisor": "יועץ מטפל",
+        "propertyValue": "שווי נכס (₪)",
+        "requestedMortgageAmount": "גובה משכנתא מבוקש (₪)",
+        "equity": "הון עצמי (אופציונלי, ₪)",
+        "feeAmount": "שכ״ט סוכם (₪)",
+        "expectedIncome": "הכנסה צפויה (₪)",
+        "blocker": "גורם מעכב",
+        "insurance": "ביטוחים",
+        "insuranceNotSpecified": "— לא צוין —",
+        "referrer": "הופנה ע״י (שם המפנה)",
+        "referrerPlaceholder": "לדוגמה: דני כהן (לקוח קודם)",
+        "shortNote": "הערה קצרה (מוצגת בדשבורד)",
+        "shortNotePlaceholder": "לדוגמה: הלקוח חוזר ביום ב', יש בעיה עם תלוש שכר",
+        "requestDetails": "סיפור התיק / פרטי הבקשה (מלא)",
+        "requestDetailsPlaceholder": "לדוגמה: רוצה לקנות דירה ב-1.5M, יש לו חיסכון של 400K..."
+      },
+      "submit": {
+        "create": "צור תיק",
+        "update": "שמור שינויים"
+      },
+      "errors": {
+        "unauthorized": "אין הרשאה לבצע פעולה זו",
+        "generic": "שגיאה בשמירה. נסה שוב."
+      }
+    },
+    "blocker": {
+      "none": "לא מעוכב",
+      "client": "לקוח",
+      "bank": "בנק",
+      "office": "משרד",
+      "appraiser": "שמאי",
+      "lawyer": "עו״ד"
+    },
+    "insurance": {
+      "exists": "קיים",
+      "in_progress": "בתהליך",
+      "missing": "לא קיים"
+    },
+    "borrower": {
+      "borrower": "לווה",
+      "guarantor": "ערב",
+      "primarySuffix": "ראשי",
+      "id": "ת״ז",
+      "phone": "טלפון",
+      "email": "מייל",
+      "address": "כתובת"
+    }
+  },
+  "borrowerForm": {
+    "sections": {
+      "roleInCase": "תפקיד בתיק",
+      "personal": "פרטים אישיים",
+      "familyAddress": "מצב משפחתי וכתובת",
+      "citizenshipEmployment": "אזרחות ותעסוקה",
+      "extra": "נוסף"
+    },
+    "fields": {
+      "role": "תפקיד",
+      "isPrimary": "לווה ראשי",
+      "firstName": "שם פרטי",
+      "lastName": "שם משפחה",
+      "nationalId": "תעודת זהות",
+      "phone": "טלפון נייד",
+      "email": "אימייל",
+      "birthDate": "תאריך לידה",
+      "maritalStatus": "מצב משפחתי",
+      "childrenCount": "מספר ילדים",
+      "address": "כתובת מגורים",
+      "citizenship": "אזרחות",
+      "citizenshipPlaceholder": "ישראלית, אחר...",
+      "residency": "סוג תושבות",
+      "employmentStatus": "סטטוס תעסוקה",
+      "employerName": "שם מעסיק",
+      "creditRating": "דירוג אשראי / BDI",
+      "creditRatingPlaceholder": "לדוגמה: 750",
+      "ownsOtherProperty": "בעלות על דירה נוספת",
+      "ownsOtherPropertyUnknown": "— לא ידוע —",
+      "notes": "הערות"
+    },
+    "submit": {
+      "create": "הוסף לווה"
+    },
+    "errors": {
+      "unauthorized": "אין הרשאה",
+      "generic": "שגיאה בשמירה. נסה שוב."
+    },
+    "maritalStatuses": {
+      "single": "רווק/ה",
+      "married": "נשוי/אה",
+      "divorced": "גרוש/ה",
+      "widowed": "אלמן/ה",
+      "common_law": "ידוע/ה בציבור"
+    },
+    "residencyTypes": {
+      "resident": "תושב/ת ישראל",
+      "foreign_resident": "תושב/ת חוץ",
+      "returning_resident": "תושב/ת חוזר/ת"
+    },
+    "employmentStatuses": {
+      "employee": "שכיר/ה",
+      "self_employed": "עצמאי/ת",
+      "unemployed": "לא עובד/ת",
+      "pensioner": "פנסיונר/ית"
+    }
+  },
+  "caseBankForm": {
+    "fields": {
+      "bank": "בנק",
+      "bankStatus": "סטטוס בבנק",
+      "noStatus": "— ללא —",
+      "isPrimary": "בנק עיקרי בתיק",
+      "bankerName": "שם הבנקאי",
+      "bankerPhone": "טלפון הבנקאי",
+      "bankerEmail": "אימייל הבנקאי",
+      "submissionDate": "תאריך הגשה",
+      "responseDate": "תאריך תגובה",
+      "notes": "הערות"
+    },
+    "submit": {
+      "create": "הוסף בנק"
+    },
+    "errors": {
+      "unauthorized": "אין הרשאה",
+      "generic": "שגיאה בשמירה. נסה שוב."
+    }
+  }
+}

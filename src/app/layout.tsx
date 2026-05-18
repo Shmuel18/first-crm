@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
 import { Frank_Ruhl_Libre, Heebo, Inter } from 'next/font/google';
 
-import { DEFAULT_LOCALE, getDirection } from '@/lib/i18n/direction';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages } from 'next-intl/server';
+
+import { getDirection, type Locale } from '@/lib/i18n/direction';
 
 import './globals.css';
 
@@ -29,8 +32,13 @@ export const metadata: Metadata = {
   description: 'מערכת ניהול תיקי משכנתא',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const locale = DEFAULT_LOCALE;
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const locale = (await getLocale()) as Locale;
+  const messages = await getMessages();
   const dir = getDirection(locale);
 
   return (
@@ -39,7 +47,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       dir={dir}
       className={`${heebo.variable} ${inter.variable} ${frankRuhl.variable} h-full antialiased`}
     >
-      <body className="min-h-full font-sans">{children}</body>
+      <body className="min-h-full font-sans">
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          {children}
+        </NextIntlClientProvider>
+      </body>
     </html>
   );
 }

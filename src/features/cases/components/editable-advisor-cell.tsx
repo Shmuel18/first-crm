@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 
 import { Check, ChevronDown, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { quickUpdateCaseFieldAction } from '../actions/quick-update-case';
 
@@ -19,8 +20,8 @@ type EditableAdvisorCellProps = {
   options: ReadonlyArray<AdvisorOption>;
 };
 
-function fullName(a: AdvisorOption): string {
-  return [a.first_name, a.last_name].filter(Boolean).join(' ') || '(ללא שם)';
+function fullName(a: AdvisorOption, noNameFallback: string): string {
+  return [a.first_name, a.last_name].filter(Boolean).join(' ') || noNameFallback;
 }
 
 function initials(name: string | null): string {
@@ -37,6 +38,9 @@ export function EditableAdvisorCell({
   currentAdvisorName,
   options,
 }: EditableAdvisorCellProps) {
+  const tc = useTranslations('common');
+  const unassignedLabel = `— ${tc('notAssigned')} —`;
+  const noNameFallback = tc('noName');
   const [open, setOpen] = useState(false);
   const [advisorId, setAdvisorId] = useState(currentAdvisorId);
   const [advisorName, setAdvisorName] = useState(currentAdvisorName);
@@ -74,7 +78,7 @@ export function EditableAdvisorCell({
     const prevId = advisorId;
     const prevName = advisorName;
     setAdvisorId(newId);
-    setAdvisorName(option ? fullName(option) : null);
+    setAdvisorName(option ? fullName(option, noNameFallback) : null);
 
     startTransition(async () => {
       const result = await quickUpdateCaseFieldAction(caseId, 'assigned_advisor_id', newId);
@@ -102,7 +106,7 @@ export function EditableAdvisorCell({
             <span className="text-sm text-neutral-700 whitespace-nowrap">{advisorName}</span>
           </>
         ) : (
-          <span className="text-sm text-neutral-400">לא מוקצה</span>
+          <span className="text-sm text-neutral-400">{tc('notAssigned')}</span>
         )}
         {isPending ? (
           <Loader2 className="size-3 text-neutral-400 animate-spin" />
@@ -124,11 +128,11 @@ export function EditableAdvisorCell({
               onClick={() => handleSelect(null)}
               className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-right text-neutral-500 hover:bg-neutral-50"
             >
-              <span>— לא מוקצה —</span>
+              <span>{unassignedLabel}</span>
               {!advisorId && <Check className="size-3.5 text-[#C9A961]" />}
             </button>
             {options.map((opt) => {
-              const name = fullName(opt);
+              const name = fullName(opt, noNameFallback);
               const isSelected = opt.id === advisorId;
               return (
                 <button

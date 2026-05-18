@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import type { CaseId } from '@/lib/types/branded';
 
 import type { CaseRow, CaseWithRelations } from '../types';
 
@@ -44,7 +45,7 @@ export async function listCases(filters: CaseListFilters = {}): Promise<CaseWith
   return (data ?? []) as unknown as CaseWithRelations[];
 }
 
-export async function getCaseById(id: string): Promise<CaseWithRelations | null> {
+export async function getCaseById(id: CaseId): Promise<CaseWithRelations | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('cases')
@@ -57,7 +58,7 @@ export async function getCaseById(id: string): Promise<CaseWithRelations | null>
   return data as unknown as CaseWithRelations | null;
 }
 
-export async function getRawCaseById(id: string): Promise<CaseRow | null> {
+export async function getRawCaseById(id: CaseId): Promise<CaseRow | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('cases')

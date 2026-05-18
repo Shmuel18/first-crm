@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 
 import { Check, Loader2, Pencil } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { quickUpdateCaseFieldAction } from '../actions/quick-update-case';
 
@@ -18,9 +19,11 @@ export function EditableTextCell({
   caseId,
   field,
   initialValue,
-  placeholder = '',
+  placeholder,
   emptyLabel = '—',
 }: EditableTextCellProps) {
+  const tc = useTranslations('common');
+  const effectivePlaceholder = placeholder ?? tc('noteHint');
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(initialValue ?? '');
   const [savedValue, setSavedValue] = useState(initialValue ?? '');
@@ -80,7 +83,7 @@ export function EditableTextCell({
           if (e.key === 'Escape') cancel();
         }}
         onBlur={save}
-        placeholder={placeholder}
+        placeholder={effectivePlaceholder}
         className="block w-full px-2 py-0.5 text-sm border border-[#C9A961] rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#C9A961]/40"
       />
     );

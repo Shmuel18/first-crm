@@ -1,4 +1,5 @@
 import { Archive, FolderOpen, Sprout } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 type Props = {
   activeCount: number;
@@ -11,11 +12,13 @@ export function DashboardViewSelector({
   leadsCount = 0,
   archivedCount = 0,
 }: Props) {
+  const t = useTranslations('dashboard.viewTabs');
+
   return (
     <div className="bg-white px-6 py-3 border-b border-neutral-200 flex gap-2">
-      <ViewTab icon={FolderOpen} label="תיקים פעילים" count={activeCount} active />
-      <ViewTab icon={Sprout} label="לידים" count={leadsCount} />
-      <ViewTab icon={Archive} label="ארכיון" count={archivedCount} />
+      <ViewTab icon={FolderOpen} label={t('active')} count={activeCount} active />
+      <ViewTab icon={Sprout} label={t('leads')} count={leadsCount} />
+      <ViewTab icon={Archive} label={t('archive')} count={archivedCount} />
     </div>
   );
 }

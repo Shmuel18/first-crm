@@ -1,6 +1,8 @@
+import { useTranslations } from 'next-intl';
+
 import {
-  CASE_BLOCKER_LABELS,
-  INSURANCE_STATUS_LABELS,
+  CASE_BLOCKER_COLORS,
+  INSURANCE_STATUS_COLORS,
   type CaseBlocker,
   type InsuranceStatus,
 } from '../schemas/case.schema';
@@ -37,33 +39,37 @@ export function DataRow({ label, value, large, accent }: DataRowProps) {
 }
 
 export function BlockerRow({ blocker }: { blocker: CaseBlocker | null }) {
-  if (!blocker) return <DataRow label="גורם מעכב" value="לא צוין" />;
-  const config = CASE_BLOCKER_LABELS[blocker];
+  const t = useTranslations('case');
+  const tc = useTranslations('common');
+  if (!blocker) return <DataRow label={t('fields.blocker')} value={tc('notSpecified')} />;
+  const color = CASE_BLOCKER_COLORS[blocker];
   return (
     <div className="flex items-baseline justify-between gap-3 py-2 border-b border-neutral-100">
-      <span className="text-sm text-neutral-600">גורם מעכב</span>
+      <span className="text-sm text-neutral-600">{t('fields.blocker')}</span>
       <span
         className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium"
-        style={{ backgroundColor: `${config.color}25`, color: config.color }}
+        style={{ backgroundColor: `${color}25`, color }}
       >
-        <span className="size-1.5 rounded-full" style={{ backgroundColor: config.color }} />
-        {config.he}
+        <span className="size-1.5 rounded-full" style={{ backgroundColor: color }} />
+        {t(`blocker.${blocker}`)}
       </span>
     </div>
   );
 }
 
 export function InsuranceRow({ status }: { status: InsuranceStatus | null }) {
-  if (!status) return <DataRow label="ביטוחים" value="לא צוין" />;
-  const config = INSURANCE_STATUS_LABELS[status];
+  const t = useTranslations('case');
+  const tc = useTranslations('common');
+  if (!status) return <DataRow label={t('fields.insurance')} value={tc('notSpecified')} />;
+  const color = INSURANCE_STATUS_COLORS[status];
   return (
     <div className="flex items-baseline justify-between gap-3 py-2 border-b border-neutral-100">
-      <span className="text-sm text-neutral-600">ביטוחים</span>
+      <span className="text-sm text-neutral-600">{t('fields.insurance')}</span>
       <span
         className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium"
-        style={{ backgroundColor: `${config.color}25`, color: config.color }}
+        style={{ backgroundColor: `${color}25`, color }}
       >
-        {config.he}
+        {t(`insurance.${status}`)}
       </span>
     </div>
   );

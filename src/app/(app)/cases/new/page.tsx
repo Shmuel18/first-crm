@@ -1,12 +1,15 @@
 import Link from 'next/link';
 
 import { ArrowRight } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 
 import { CaseForm } from '@/features/cases/components/case-form';
 import { createClient } from '@/lib/supabase/server';
 
 export default async function NewCasePage() {
   const supabase = await createClient();
+  const t = await getTranslations('case.form');
+  const tc = await getTranslations('common');
 
   const [caseTypesRes, statusesRes, advisorsRes, isAdminRes] = await Promise.all([
     supabase
@@ -30,19 +33,16 @@ export default async function NewCasePage() {
   const canSeeFinancials = isAdminRes.data === true;
 
   return (
-    <div className="max-w-3xl space-y-6" dir="rtl">
+    <div className="max-w-3xl space-y-6">
       <div>
         <Link
           href="/cases"
           className="inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-900 mb-3"
         >
           <ArrowRight className="size-4" />
-          חזרה לרשימת תיקים
+          {tc('back')}
         </Link>
-        <h1 className="text-2xl font-light text-neutral-900">תיק חדש</h1>
-        <p className="text-sm text-neutral-500 mt-1">
-          ניתן לשמור גם עם פרטים חלקיים ולהשלים בהמשך
-        </p>
+        <h1 className="text-2xl font-light text-neutral-900">{t('title.create')}</h1>
       </div>
 
       <div className="bg-white border border-neutral-200 rounded-lg p-6">

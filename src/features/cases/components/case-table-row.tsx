@@ -2,7 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 
+import { useLocale, useTranslations } from 'next-intl';
+
 import { EditableBankCell } from '@/features/case-banks/components/editable-bank-cell';
+
+import type { Locale } from '@/lib/i18n/direction';
 
 import { CopyableIdCell } from './copyable-id-cell';
 import { EditableAdvisorCell } from './editable-advisor-cell';
@@ -41,6 +45,8 @@ type Props = {
 
 export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }: Props) {
   const router = useRouter();
+  const t = useTranslations('dashboard.rowState');
+  const locale = useLocale() as Locale;
 
   const rowClasses = [
     'group transition-colors relative border-b border-neutral-100 cursor-pointer',
@@ -52,8 +58,10 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }
     .join(' ');
 
   const navigateToCase = () => router.push(`/cases/${row.id}`);
-  const updatedDate = new Date(row.updatedAt).toLocaleDateString('he-IL');
-  const auditTooltip = `עודכן ב-${updatedDate}`;
+  const updatedDate = new Date(row.updatedAt).toLocaleDateString(
+    locale === 'he' ? 'he-IL' : 'en-GB',
+  );
+  const auditTooltip = t('updatedOn', { date: updatedDate });
 
   return (
     <tr className={rowClasses} onClick={navigateToCase} title={auditTooltip}>
@@ -62,7 +70,7 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }
       <td className="px-4 py-3">
         <span className="font-bold text-neutral-900 group-hover:text-[#C9A961] transition whitespace-nowrap">
           {row.clientLabel || (
-            <span className="italic font-normal text-neutral-400">(ללא לווים)</span>
+            <span className="italic font-normal text-neutral-400">{t('noBorrowers')}</span>
           )}
         </span>
       </td>
@@ -104,12 +112,11 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }
           caseId={row.id}
           field="short_note"
           initialValue={row.shortNote}
-          placeholder="הוסף הערה..."
         />
         {row.isRecent && !row.isStuck && !row.isFrozen && (
           <span
-            className="absolute right-0 top-0 bottom-0 w-1 bg-emerald-500"
-            title="עודכן ב-24 שעות אחרונות"
+            className="absolute end-0 top-0 bottom-0 w-1 bg-emerald-500"
+            title={t('recentlyUpdated')}
           />
         )}
       </td>

@@ -4,6 +4,7 @@ import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 
 import { Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,18 +31,23 @@ type CaseBankFormProps = {
 
 function SubmitButton({ isEdit }: { isEdit: boolean }) {
   const { pending } = useFormStatus();
+  const t = useTranslations('caseBankForm');
+  const tc = useTranslations('common');
   return (
     <Button
       type="submit"
       disabled={pending}
       className="bg-[#0A0A0A] hover:bg-neutral-800 text-white h-11 min-w-32"
     >
-      {pending ? <Loader2 className="size-4 animate-spin" /> : isEdit ? 'שמור' : 'הוסף בנק'}
+      {pending ? <Loader2 className="size-4 animate-spin" /> : isEdit ? tc('save') : t('submit.create')}
     </Button>
   );
 }
 
 export function CaseBankForm({ caseId, initial, banks, statuses }: CaseBankFormProps) {
+  const t = useTranslations('caseBankForm');
+  const tc = useTranslations('common');
+
   const [state, formAction] = useActionState<CaseBankActionState, FormData>(
     saveCaseBankAction,
     CASE_BANK_ACTION_INITIAL,
@@ -51,12 +57,14 @@ export function CaseBankForm({ caseId, initial, banks, statuses }: CaseBankFormP
     state.ok === false && state.error === 'validation' ? state.fieldErrors ?? {} : {};
   const submitted =
     state.ok === false && state.error !== 'idle' ? state.values : undefined;
+  const initialRecord = (initial ?? null) as Record<string, unknown> | null;
+  const val = (name: string) => fieldDefault(name, submitted, initialRecord);
 
   const genericError =
     state.ok === false && state.error !== 'idle' && state.error !== 'validation'
       ? state.error === 'unauthorized'
-        ? 'אין הרשאה'
-        : 'שגיאה בשמירה. נסה שוב.'
+        ? t('errors.unauthorized')
+        : t('errors.generic')
       : null;
 
   const isPrimaryDefault = submitted?.is_primary
@@ -64,36 +72,25 @@ export function CaseBankForm({ caseId, initial, banks, statuses }: CaseBankFormP
     : Boolean(initial?.is_primary);
 
   return (
-    <form action={formAction} className="space-y-5" dir="rtl" noValidate>
+    <form action={formAction} className="space-y-5" noValidate>
       <input type="hidden" name="case_id" value={caseId} />
       {initial && <input type="hidden" name="case_bank_id" value={initial.id} />}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField label="בנק" required error={fieldErrors.bank_id}>
-          <NativeSelect
-            name="bank_id"
-            defaultValue={fieldDefault('bank_id', submitted, initial)}
-            required
-          >
-            <option value="">— בחר —</option>
+        <FormField label={t('fields.bank')} required error={fieldErrors.bank_id}>
+          <NativeSelect name="bank_id" defaultValue={val('bank_id')} required>
+            <option value="">{tc('select')}</option>
             {banks.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name_he}
-              </option>
+              <option key={b.id} value={b.id}>{b.name_he}</option>
             ))}
           </NativeSelect>
         </FormField>
 
-        <FormField label="סטטוס בבנק" error={fieldErrors.bank_status_id}>
-          <NativeSelect
-            name="bank_status_id"
-            defaultValue={fieldDefault('bank_status_id', submitted, initial)}
-          >
-            <option value="">— ללא —</option>
+        <FormField label={t('fields.bankStatus')} error={fieldErrors.bank_status_id}>
+          <NativeSelect name="bank_status_id" defaultValue={val('bank_status_id')}>
+            <option value="">{t('fields.noStatus')}</option>
             {statuses.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name_he}
-              </option>
+              <option key={s.id} value={s.id}>{s.name_he}</option>
             ))}
           </NativeSelect>
         </FormField>
@@ -106,60 +103,35 @@ export function CaseBankForm({ caseId, initial, banks, statuses }: CaseBankFormP
           defaultChecked={isPrimaryDefault}
           className="size-4 accent-[#C9A961]"
         />
-        <span className="text-sm text-neutral-700">בנק עיקרי בתיק</span>
+        <span className="text-sm text-neutral-700">{t('fields.isPrimary')}</span>
       </label>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <FormField label="שם הבנקאי" error={fieldErrors.banker_name}>
-          <Input
-            name="banker_name"
-            defaultValue={fieldDefault('banker_name', submitted, initial)}
-          />
+        <FormField label={t('fields.bankerName')} error={fieldErrors.banker_name}>
+          <Input name="banker_name" defaultValue={val('banker_name')} />
         </FormField>
 
-        <FormField label="טלפון הבנקאי" error={fieldErrors.banker_phone}>
-          <Input
-            name="banker_phone"
-            type="tel"
-            dir="ltr"
-            defaultValue={fieldDefault('banker_phone', submitted, initial)}
-          />
+        <FormField label={t('fields.bankerPhone')} error={fieldErrors.banker_phone}>
+          <Input name="banker_phone" type="tel" dir="ltr" defaultValue={val('banker_phone')} />
         </FormField>
 
-        <FormField label="אימייל הבנקאי" error={fieldErrors.banker_email}>
-          <Input
-            name="banker_email"
-            type="email"
-            dir="ltr"
-            defaultValue={fieldDefault('banker_email', submitted, initial)}
-          />
+        <FormField label={t('fields.bankerEmail')} error={fieldErrors.banker_email}>
+          <Input name="banker_email" type="email" dir="ltr" defaultValue={val('banker_email')} />
         </FormField>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField label="תאריך הגשה" error={fieldErrors.submission_date}>
-          <Input
-            name="submission_date"
-            type="date"
-            defaultValue={fieldDefault('submission_date', submitted, initial)}
-          />
+        <FormField label={t('fields.submissionDate')} error={fieldErrors.submission_date}>
+          <Input name="submission_date" type="date" defaultValue={val('submission_date')} />
         </FormField>
 
-        <FormField label="תאריך תגובה" error={fieldErrors.response_date}>
-          <Input
-            name="response_date"
-            type="date"
-            defaultValue={fieldDefault('response_date', submitted, initial)}
-          />
+        <FormField label={t('fields.responseDate')} error={fieldErrors.response_date}>
+          <Input name="response_date" type="date" defaultValue={val('response_date')} />
         </FormField>
       </div>
 
-      <FormField label="הערות" error={fieldErrors.notes}>
-        <Textarea
-          name="notes"
-          rows={3}
-          defaultValue={fieldDefault('notes', submitted, initial)}
-        />
+      <FormField label={t('fields.notes')} error={fieldErrors.notes}>
+        <Textarea name="notes" rows={3} defaultValue={val('notes')} />
       </FormField>
 
       {genericError && (
@@ -174,4 +146,3 @@ export function CaseBankForm({ caseId, initial, banks, statuses }: CaseBankFormP
     </form>
   );
 }
-

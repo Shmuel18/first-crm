@@ -1,4 +1,5 @@
 import { FolderOpen, Sprout, Star } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 type Props = {
   total: number;
@@ -7,21 +8,26 @@ type Props = {
 };
 
 export function DashboardSummaryBar({ total, stuck, newThisWeek }: Props) {
+  const t = useTranslations('dashboard.summary');
+  const tc = useTranslations('common');
+
   return (
     <div className="bg-white px-6 py-3 border-b border-neutral-200">
       <div className="flex items-center gap-6 text-sm flex-wrap">
-        <SummaryItem icon={FolderOpen} label="תיקים פעילים" value={total} accent="#0A0A0A" />
+        <SummaryItem icon={FolderOpen} label={t('activeCases')} value={total} accent="#0A0A0A" />
         <Divider />
         <SummaryItem
           icon={Star}
-          label="תקועים"
+          label={t('stuck')}
           value={stuck}
           accent={stuck > 0 ? '#DC2626' : '#0A0A0A'}
         />
         <Divider />
-        <SummaryItem icon={Sprout} label="חדשים השבוע" value={newThisWeek} accent="#10B981" />
+        <SummaryItem icon={Sprout} label={t('newThisWeek')} value={newThisWeek} accent="#10B981" />
         <Divider />
-        <span className="text-neutral-500">מציג {total}</span>
+        <span className="text-neutral-500">
+          {tc('showing')} {total}
+        </span>
       </div>
     </div>
   );

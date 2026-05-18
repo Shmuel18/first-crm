@@ -1,14 +1,7 @@
-import {
-  getCaseClientLabel,
-  getPrimaryBank,
-  getPrimaryBorrowerNationalId,
-  getSecondaryBanksCount,
-} from '../services/cases.service';
-import {
-  isFrozenCase,
-  isRecentlyUpdated,
-  isStuckCase,
-} from '../domain/case-state';
+import { useTranslations } from 'next-intl';
+
+import { getCaseClientLabel, getPrimaryBank, getPrimaryBorrowerNationalId, getSecondaryBanksCount } from '../services/cases.service';
+import { isFrozenCase, isRecentlyUpdated, isStuckCase } from '../domain/case-state';
 import type { CaseWithRelations } from '../types';
 
 import { CaseTableRow, type CaseTableRowData } from './case-table-row';
@@ -25,6 +18,8 @@ type Props = {
 };
 
 export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }: Props) {
+  const t = useTranslations('dashboard.columns');
+
   return (
     <div className="overflow-x-auto scrollbar-thin">
       <table className="w-full table-fixed min-w-[1100px]">
@@ -39,13 +34,13 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
         </colgroup>
         <thead>
           <tr className="border-b-2 border-neutral-200">
-            <Th>#</Th>
-            <Th>שם לקוח</Th>
-            <Th>ת״ז / דרכון</Th>
-            <Th>שלב בתהליך</Th>
-            <Th>בנק</Th>
-            <Th>עובד מטפל</Th>
-            <Th>הערה קצרה</Th>
+            <Th>{t('row')}</Th>
+            <Th>{t('clientName')}</Th>
+            <Th>{t('nationalId')}</Th>
+            <Th>{t('stage')}</Th>
+            <Th>{t('bank')}</Th>
+            <Th>{t('advisor')}</Th>
+            <Th>{t('shortNote')}</Th>
           </tr>
         </thead>
         <tbody>
@@ -66,7 +61,7 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
 
 function Th({ children }: { children: React.ReactNode }) {
   return (
-    <th className="text-right text-xs font-semibold text-neutral-500 uppercase tracking-wider px-4 py-3">
+    <th className="text-start text-xs font-semibold text-neutral-500 uppercase tracking-wider px-4 py-3">
       {children}
     </th>
   );

@@ -12,6 +12,7 @@ import {
   MoreVertical,
   UserPlus,
 } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 
 import { CaseStatusBadge } from './case-status-badge';
 
@@ -26,7 +27,7 @@ type ActionBarProps = {
   lastSavedAt?: string;
 };
 
-export function CaseActionBar({
+export async function CaseActionBar({
   caseNumber,
   statusName,
   statusColor,
@@ -36,6 +37,9 @@ export function CaseActionBar({
   hasDocumentAlerts,
   lastSavedAt,
 }: ActionBarProps) {
+  const t = await getTranslations('case.actionBar');
+  const tc = await getTranslations('common');
+
   return (
     <div className="bg-[#0A0A0A] text-white sticky top-16 z-20 shadow-lg -mx-6 px-6 py-4 border-b border-neutral-800">
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -45,16 +49,18 @@ export function CaseActionBar({
             className="inline-flex items-center gap-1.5 px-3 py-1.5 mt-1 text-xs border border-neutral-700 hover:border-[#C9A961] rounded-lg transition shrink-0"
           >
             <ArrowRight className="size-3.5" />
-            חזרה
+            {tc('back')}
           </Link>
 
           <div className="flex flex-col gap-1.5 min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
               <span className="font-display text-xl font-medium truncate max-w-md">
-                {borrowerNames || '(לווים יתווספו)'}
+                {borrowerNames || t('withBorrowers')}
               </span>
               <span className="text-neutral-500">|</span>
-              <span className="text-[#C9A961] font-mono text-base">תיק {caseNumber}</span>
+              <span className="text-[#C9A961] font-mono text-base">
+                {t('caseLabel')} {caseNumber}
+              </span>
               <CaseStatusBadge name={statusName} color={statusColor} interactive />
             </div>
             {(caseTypePrimary || caseTypeSecondary) && (
@@ -75,21 +81,23 @@ export function CaseActionBar({
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
-          <ActionIcon icon={Calculator} title="חישובים (LTV, יחס החזר)" />
-          <ActionIcon icon={ClipboardList} title="היסטוריה / Audit Log" />
-          <ActionIcon icon={Folder} title="מסמכים" hasAlert={hasDocumentAlerts} />
-          <ActionIcon icon={MessageSquare} title="שלח הודעה ללקוח" />
-          <ActionIcon icon={UserPlus} title="הקצה משימה" />
-          <ActionIcon icon={Calendar} title="קבע פגישה" />
-          <ActionIcon icon={FileText} title="הפק PDF לבנק" />
-          <ActionIcon icon={MoreVertical} title="עוד" />
+          <ActionIcon icon={Calculator} title={t('actions.calculator')} />
+          <ActionIcon icon={ClipboardList} title={t('actions.history')} />
+          <ActionIcon icon={Folder} title={t('actions.documents')} hasAlert={hasDocumentAlerts} />
+          <ActionIcon icon={MessageSquare} title={t('actions.sendMessage')} />
+          <ActionIcon icon={UserPlus} title={t('actions.assignTask')} />
+          <ActionIcon icon={Calendar} title={t('actions.calendar')} />
+          <ActionIcon icon={FileText} title={t('actions.generatePdf')} />
+          <ActionIcon icon={MoreVertical} title={t('actions.more')} />
         </div>
       </div>
 
       {lastSavedAt && (
         <div className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-emerald-400">
           <Check className="size-3" />
-          <span>נשמר {lastSavedAt}</span>
+          <span>
+            {tc('savedAgo')} {lastSavedAt}
+          </span>
         </div>
       )}
     </div>

@@ -32,22 +32,24 @@ const optionalEnum = <T extends readonly [string, ...string[]]>(values: T) =>
 export const CASE_BLOCKER_VALUES = ['none', 'client', 'bank', 'office', 'appraiser', 'lawyer'] as const;
 export type CaseBlocker = (typeof CASE_BLOCKER_VALUES)[number];
 
-export const CASE_BLOCKER_LABELS: Record<CaseBlocker, { he: string; color: string }> = {
-  none: { he: 'לא מעוכב', color: '#10B981' },
-  client: { he: 'לקוח', color: '#EC4899' },
-  bank: { he: 'בנק', color: '#DC2626' },
-  office: { he: 'משרד', color: '#F97316' },
-  appraiser: { he: 'שמאי', color: '#EAB308' },
-  lawyer: { he: 'עו״ד', color: '#A855F7' },
+// Color per blocker - display labels come from i18n (case.blocker.<value>)
+export const CASE_BLOCKER_COLORS: Record<CaseBlocker, string> = {
+  none: '#10B981',
+  client: '#EC4899',
+  bank: '#DC2626',
+  office: '#F97316',
+  appraiser: '#EAB308',
+  lawyer: '#A855F7',
 };
 
 export const INSURANCE_STATUS_VALUES = ['exists', 'in_progress', 'missing'] as const;
 export type InsuranceStatus = (typeof INSURANCE_STATUS_VALUES)[number];
 
-export const INSURANCE_STATUS_LABELS: Record<InsuranceStatus, { he: string; color: string }> = {
-  exists: { he: 'קיים', color: '#10B981' },
-  in_progress: { he: 'בתהליך', color: '#EAB308' },
-  missing: { he: 'לא קיים', color: '#DC2626' },
+// Color per insurance status - display labels come from i18n (case.insurance.<value>)
+export const INSURANCE_STATUS_COLORS: Record<InsuranceStatus, string> = {
+  exists: '#10B981',
+  in_progress: '#EAB308',
+  missing: '#DC2626',
 };
 
 export const CaseFormSchema = z.object({

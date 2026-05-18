@@ -1,9 +1,10 @@
 import { createClient } from '@/lib/supabase/server';
+import type { BorrowerId, CaseId } from '@/lib/types/branded';
 
 import type { BorrowerRow, CaseBorrowerWithBorrower, RoleInCase } from '../types';
 
 export async function listBorrowersForCase(
-  caseId: string,
+  caseId: CaseId,
 ): Promise<CaseBorrowerWithBorrower[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -23,7 +24,7 @@ export async function listBorrowersForCase(
     }));
 }
 
-export async function getBorrowerById(id: string): Promise<BorrowerRow | null> {
+export async function getBorrowerById(id: BorrowerId): Promise<BorrowerRow | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('borrowers')
@@ -37,8 +38,8 @@ export async function getBorrowerById(id: string): Promise<BorrowerRow | null> {
 }
 
 export async function getCaseBorrowerLink(
-  caseId: string,
-  borrowerId: string,
+  caseId: CaseId,
+  borrowerId: BorrowerId,
 ): Promise<{ role_in_case: RoleInCase; is_primary: boolean } | null> {
   const supabase = await createClient();
   const { data, error } = await supabase

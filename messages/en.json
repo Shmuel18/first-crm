@@ -1,0 +1,310 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "add": "Add",
+    "back": "Back",
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "search": "Search",
+    "filter": "Filter",
+    "yes": "Yes",
+    "no": "No",
+    "none": "None",
+    "notSpecified": "Not specified",
+    "notAssigned": "Unassigned",
+    "noName": "(No name)",
+    "select": "— Select —",
+    "showing": "Showing",
+    "all": "All",
+    "more": "More",
+    "noteHint": "Add a note...",
+    "copied": "Copied!",
+    "savedAgo": "Saved"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "tasks": "Tasks",
+    "team": "Team",
+    "templates": "Templates",
+    "auditLog": "Audit Log",
+    "settings": "Settings"
+  },
+  "topbar": {
+    "searchPlaceholder": "Search by name, ID, phone or case number...",
+    "newCase": "New Case",
+    "notifications": "Notifications",
+    "logout": "Log out"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Welcome back. Please enter your credentials.",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "submitButton": "Sign in",
+      "submitting": "Signing in...",
+      "forgotPassword": "Forgot password?",
+      "footer": "© 2026 Kaufman Finance Group · All rights reserved",
+      "errors": {
+        "invalidInput": "Invalid email or password",
+        "invalidCredentials": "Incorrect email or password",
+        "unknown": "Unknown error. Please try again."
+      }
+    }
+  },
+  "dashboard": {
+    "greetings": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening",
+      "night": "Good night"
+    },
+    "insights": {
+      "empty": "Starting fresh - create your first case",
+      "stuckSingle": "There is one stuck case that needs attention",
+      "stuckMany": "{count} stuck cases need attention",
+      "casesSingle": "One active case in the system",
+      "casesMany": "{count} active cases - everything is flowing"
+    },
+    "viewTabs": {
+      "active": "Active cases",
+      "leads": "Leads",
+      "archive": "Archive"
+    },
+    "filters": {
+      "myCases": "My cases",
+      "stage": "Stage",
+      "bank": "Bank",
+      "blocker": "Blocker",
+      "onlyStuck": "Stuck only",
+      "hideClosedFrozen": "Hide closed & frozen"
+    },
+    "savedViews": {
+      "saved": "Saved views",
+      "saveCurrent": "Save current view",
+      "exportExcel": "Export to Excel",
+      "exportPdf": "Export to PDF"
+    },
+    "summary": {
+      "activeCases": "active cases",
+      "stuck": "stuck",
+      "newThisWeek": "new this week"
+    },
+    "columns": {
+      "row": "#",
+      "clientName": "Client Name",
+      "nationalId": "ID / Passport",
+      "stage": "Stage",
+      "bank": "Bank",
+      "advisor": "Advisor",
+      "shortNote": "Short Note"
+    },
+    "emptyState": {
+      "title": "No active cases yet",
+      "subtitle": "Create your first case or import data from Excel",
+      "cta": "New Case"
+    },
+    "rowState": {
+      "noBorrowers": "(No borrowers)",
+      "recentlyUpdated": "Updated within 24h",
+      "updatedOn": "Updated on {date}"
+    }
+  },
+  "case": {
+    "actionBar": {
+      "backTooltip": "Back",
+      "caseLabel": "Case",
+      "withBorrowers": "(Borrowers to be added)",
+      "actions": {
+        "calculator": "Calculations (LTV, DTI)",
+        "history": "History / Audit Log",
+        "documents": "Documents",
+        "sendMessage": "Send message to client",
+        "assignTask": "Assign task",
+        "calendar": "Schedule meeting",
+        "generatePdf": "Generate PDF for bank",
+        "more": "More"
+      }
+    },
+    "blocks": {
+      "borrowers": "Borrowers",
+      "addBorrower": "+ Add borrower",
+      "addBorrowerFirst": "Add first borrower",
+      "noBorrowers": "No borrowers added yet",
+      "property": "Property & Deal",
+      "banks": "Banks",
+      "addBank": "+ Add bank",
+      "noBanks": "No banks added yet",
+      "admin": "Administration",
+      "tasks": "Tasks",
+      "tasksComingSoon": "Task management coming soon",
+      "shortNote": "Short note",
+      "shortNoteEmpty": "No note yet. Shown in dashboard under status - for quick reminders.",
+      "requestDetails": "Request Details (full story)",
+      "requestDetailsEmpty": "No detailed request written yet.",
+      "documents": "Documents",
+      "documentsComingSoon": "Document management + Google Drive sync coming soon"
+    },
+    "fields": {
+      "propertyValue": "Property value",
+      "requestedMortgageAmount": "Requested mortgage",
+      "equity": "Down payment",
+      "ltv": "LTV",
+      "feeAmount": "Agreed fee",
+      "expectedIncome": "Expected income",
+      "blocker": "Blocker",
+      "insurance": "Insurance",
+      "referrer": "Referred by",
+      "advisor": "Assigned advisor",
+      "createdAt": "Opened on",
+      "primary": "Primary",
+      "primaryBankMarker": "★ Primary",
+      "secondaryBanks": "+{count}"
+    },
+    "form": {
+      "title": {
+        "create": "New case",
+        "edit": "Edit case {caseNumber}"
+      },
+      "sections": {
+        "caseInfo": "Case details",
+        "property": "Property & mortgage",
+        "financial": "Finance (manager only)",
+        "admin": "Administration",
+        "notes": "Notes"
+      },
+      "fields": {
+        "casePrimaryType": "Primary case type",
+        "caseSecondaryType": "Secondary case type (optional)",
+        "noSecondary": "— None —",
+        "status": "Status",
+        "advisor": "Assigned advisor",
+        "propertyValue": "Property value (₪)",
+        "requestedMortgageAmount": "Requested mortgage (₪)",
+        "equity": "Down payment (optional, ₪)",
+        "feeAmount": "Agreed fee (₪)",
+        "expectedIncome": "Expected income (₪)",
+        "blocker": "Blocker",
+        "insurance": "Insurance",
+        "insuranceNotSpecified": "— Not specified —",
+        "referrer": "Referred by (referrer name)",
+        "referrerPlaceholder": "e.g.: Dani Cohen (former client)",
+        "shortNote": "Short note (shown in dashboard)",
+        "shortNotePlaceholder": "e.g.: Client returns Monday, issue with payslip",
+        "requestDetails": "Case story / request details (full)",
+        "requestDetailsPlaceholder": "e.g.: Wants to buy a 1.5M apartment, has 400K savings..."
+      },
+      "submit": {
+        "create": "Create case",
+        "update": "Save changes"
+      },
+      "errors": {
+        "unauthorized": "Not authorized to perform this action",
+        "generic": "Error saving. Please try again."
+      }
+    },
+    "blocker": {
+      "none": "Not blocked",
+      "client": "Client",
+      "bank": "Bank",
+      "office": "Office",
+      "appraiser": "Appraiser",
+      "lawyer": "Lawyer"
+    },
+    "insurance": {
+      "exists": "Exists",
+      "in_progress": "In progress",
+      "missing": "Missing"
+    },
+    "borrower": {
+      "borrower": "Borrower",
+      "guarantor": "Guarantor",
+      "primarySuffix": "Primary",
+      "id": "ID",
+      "phone": "Phone",
+      "email": "Email",
+      "address": "Address"
+    }
+  },
+  "borrowerForm": {
+    "sections": {
+      "roleInCase": "Role in case",
+      "personal": "Personal details",
+      "familyAddress": "Family & address",
+      "citizenshipEmployment": "Citizenship & employment",
+      "extra": "Additional"
+    },
+    "fields": {
+      "role": "Role",
+      "isPrimary": "Primary borrower",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "nationalId": "ID number",
+      "phone": "Mobile",
+      "email": "Email",
+      "birthDate": "Date of birth",
+      "maritalStatus": "Marital status",
+      "childrenCount": "Number of children",
+      "address": "Residential address",
+      "citizenship": "Citizenship",
+      "citizenshipPlaceholder": "Israeli, other...",
+      "residency": "Residency type",
+      "employmentStatus": "Employment status",
+      "employerName": "Employer name",
+      "creditRating": "Credit rating / BDI",
+      "creditRatingPlaceholder": "e.g.: 750",
+      "ownsOtherProperty": "Owns other property",
+      "ownsOtherPropertyUnknown": "— Unknown —",
+      "notes": "Notes"
+    },
+    "submit": {
+      "create": "Add borrower"
+    },
+    "errors": {
+      "unauthorized": "Not authorized",
+      "generic": "Error saving. Please try again."
+    },
+    "maritalStatuses": {
+      "single": "Single",
+      "married": "Married",
+      "divorced": "Divorced",
+      "widowed": "Widowed",
+      "common_law": "Common-law"
+    },
+    "residencyTypes": {
+      "resident": "Israeli resident",
+      "foreign_resident": "Foreign resident",
+      "returning_resident": "Returning resident"
+    },
+    "employmentStatuses": {
+      "employee": "Employee",
+      "self_employed": "Self-employed",
+      "unemployed": "Unemployed",
+      "pensioner": "Pensioner"
+    }
+  },
+  "caseBankForm": {
+    "fields": {
+      "bank": "Bank",
+      "bankStatus": "Status at bank",
+      "noStatus": "— None —",
+      "isPrimary": "Primary bank for case",
+      "bankerName": "Banker name",
+      "bankerPhone": "Banker phone",
+      "bankerEmail": "Banker email",
+      "submissionDate": "Submission date",
+      "responseDate": "Response date",
+      "notes": "Notes"
+    },
+    "submit": {
+      "create": "Add bank"
+    },
+    "errors": {
+      "unauthorized": "Not authorized",
+      "generic": "Error saving. Please try again."
+    }
+  }
+}

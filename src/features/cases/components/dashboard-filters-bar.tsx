@@ -1,15 +1,18 @@
 import { ChevronDown, User } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export function DashboardFiltersBar() {
+  const t = useTranslations('dashboard.filters');
+
   return (
     <div className="bg-white px-6 py-3 border-b border-neutral-200 flex items-center gap-2 flex-wrap">
-      <FilterChip icon={User} label="התיקים שלי" />
-      <FilterChip label="שלב בתהליך" />
-      <FilterChip label="בנק" />
-      <FilterChip label="גורם מעכב" />
+      <FilterChip icon={User} label={t('myCases')} />
+      <FilterChip label={t('stage')} />
+      <FilterChip label={t('bank')} />
+      <FilterChip label={t('blocker')} />
       <div className="flex-1" />
-      <ToggleSwitch label="רק תקועים" />
-      <ToggleSwitch label="הסתר בוצעו והוקפאו" on />
+      <ToggleSwitch label={t('onlyStuck')} />
+      <ToggleSwitch label={t('hideClosedFrozen')} on />
     </div>
   );
 }
@@ -45,7 +48,7 @@ function ToggleSwitch({ label, on }: { label: string; on?: boolean }) {
         <span
           className={[
             'absolute top-0.5 size-4 rounded-full bg-white transition',
-            on ? 'right-0.5' : 'right-[18px]',
+            on ? 'end-0.5' : 'end-[18px]',
           ].join(' ')}
         />
       </span>

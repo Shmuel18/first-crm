@@ -2,17 +2,22 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { ArrowRight } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 
 import { CaseForm } from '@/features/cases/components/case-form';
 import { getRawCaseById } from '@/features/cases/services/cases.service';
 import { createClient } from '@/lib/supabase/server';
+import { asCaseId } from '@/lib/types/branded';
 
 type Props = { params: Promise<{ id: string }> };
 
 export default async function EditCasePage({ params }: Props) {
   const { id } = await params;
-  const caseData = await getRawCaseById(id);
+  const caseData = await getRawCaseById(asCaseId(id));
   if (!caseData) notFound();
+
+  const t = await getTranslations('case.form');
+  const tc = await getTranslations('common');
 
   const supabase = await createClient();
   const [caseTypesRes, statusesRes, advisorsRes, isAdminRes] = await Promise.all([
@@ -37,17 +42,17 @@ export default async function EditCasePage({ params }: Props) {
   const canSeeFinancials = isAdminRes.data === true;
 
   return (
-    <div className="max-w-3xl space-y-6" dir="rtl">
+    <div className="max-w-3xl space-y-6">
       <div>
         <Link
           href={`/cases/${caseData.id}`}
           className="inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-900 mb-3"
         >
           <ArrowRight className="size-4" />
-          חזרה לתיק
+          {tc('back')}
         </Link>
         <h1 className="text-2xl font-light text-neutral-900 font-mono">
-          עריכת תיק {caseData.case_number}
+          {t('title.edit', { caseNumber: caseData.case_number })}
         </h1>
       </div>
 

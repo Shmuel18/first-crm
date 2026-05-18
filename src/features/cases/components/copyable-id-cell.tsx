@@ -3,12 +3,14 @@
 import { useState } from 'react';
 
 import { Check, Copy } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 type CopyableIdCellProps = {
   value: string | null | undefined;
 };
 
 export function CopyableIdCell({ value }: CopyableIdCellProps) {
+  const tc = useTranslations('common');
   const [copied, setCopied] = useState(false);
 
   if (!value) {
@@ -30,7 +32,7 @@ export function CopyableIdCell({ value }: CopyableIdCellProps) {
     <button
       type="button"
       onClick={handleClick}
-      title="לחץ להעתקה"
+      title={tc('copied')}
       className="group inline-flex items-center gap-1.5 font-mono tabular-nums text-xs text-neutral-500 hover:text-[#C9A961] transition relative"
       dir="ltr"
     >
@@ -42,7 +44,7 @@ export function CopyableIdCell({ value }: CopyableIdCellProps) {
       )}
       {copied && (
         <span className="absolute top-full start-0 mt-1 px-2 py-0.5 bg-emerald-600 text-white text-[10px] rounded whitespace-nowrap pointer-events-none">
-          הועתק!
+          {tc('copied')}
         </span>
       )}
     </button>

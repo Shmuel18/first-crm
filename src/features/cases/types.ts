@@ -1,6 +1,14 @@
 import type { Database } from '@/types/database';
 
-export type CaseId = string & { readonly __brand: 'CaseId' };
+// Re-exports from branded type primitives - keeps imports nearby in feature files
+export type {
+  CaseId,
+  CaseTypeId,
+  StatusId,
+  UserId,
+  BankId,
+  BorrowerId,
+} from '@/lib/types/branded';
 
 export type CaseRow = Database['public']['Tables']['cases']['Row'];
 

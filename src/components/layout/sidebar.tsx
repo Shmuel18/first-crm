@@ -11,54 +11,64 @@ import {
   Settings,
   Users,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 type NavItem = {
   href: string;
-  labelHe: string;
+  labelKey: 'dashboard' | 'tasks' | 'team' | 'templates' | 'auditLog' | 'settings';
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
 };
 
 const TOP_ITEMS: readonly NavItem[] = [
-  { href: '/cases', labelHe: 'דשבורד', icon: LayoutDashboard },
-  { href: '/tasks', labelHe: 'משימות', icon: CheckSquare },
-  { href: '/team', labelHe: 'צוות', icon: Users },
-  { href: '/templates', labelHe: 'תבניות', icon: MessageSquare },
-  { href: '/audit-log', labelHe: 'יומן שינויים', icon: ScrollText },
+  { href: '/cases', labelKey: 'dashboard', icon: LayoutDashboard },
+  { href: '/tasks', labelKey: 'tasks', icon: CheckSquare },
+  { href: '/team', labelKey: 'team', icon: Users },
+  { href: '/templates', labelKey: 'templates', icon: MessageSquare },
+  { href: '/audit-log', labelKey: 'auditLog', icon: ScrollText },
 ] as const;
 
 const BOTTOM_ITEMS: readonly NavItem[] = [
-  { href: '/settings', labelHe: 'הגדרות', icon: Settings },
+  { href: '/settings', labelKey: 'settings', icon: Settings },
 ] as const;
 
 export function Sidebar() {
   const pathname = usePathname();
+  const t = useTranslations('nav');
 
   return (
     <aside className="hidden md:flex flex-col w-16 bg-[#0A0A0A] fixed start-0 top-16 bottom-0 z-20 border-l border-neutral-900 py-3">
       <nav className="flex-1 flex flex-col gap-1 px-2">
         {TOP_ITEMS.map((item) => (
-          <SidebarLink key={item.href} item={item} pathname={pathname} />
+          <SidebarLink key={item.href} item={item} pathname={pathname} label={t(item.labelKey)} />
         ))}
       </nav>
 
       <div className="flex flex-col gap-1 px-2 pt-3 border-t border-neutral-900">
         {BOTTOM_ITEMS.map((item) => (
-          <SidebarLink key={item.href} item={item} pathname={pathname} />
+          <SidebarLink key={item.href} item={item} pathname={pathname} label={t(item.labelKey)} />
         ))}
       </div>
     </aside>
   );
 }
 
-function SidebarLink({ item, pathname }: { item: NavItem; pathname: string }) {
+function SidebarLink({
+  item,
+  pathname,
+  label,
+}: {
+  item: NavItem;
+  pathname: string;
+  label: string;
+}) {
   const Icon = item.icon;
   const isActive = pathname.startsWith(item.href);
 
   return (
     <Link
       href={item.href}
-      title={item.labelHe}
+      title={label}
       className={[
         'group relative h-12 rounded-lg flex items-center justify-center transition-colors',
         isActive
@@ -74,9 +84,8 @@ function SidebarLink({ item, pathname }: { item: NavItem; pathname: string }) {
         </span>
       )}
 
-      {/* Tooltip on hover */}
       <span className="absolute start-full ms-2 px-2 py-1 bg-[#0A0A0A] border border-[#C9A961]/40 text-white text-xs rounded whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition pointer-events-none z-50">
-        {item.labelHe}
+        {label}
       </span>
     </Link>
   );

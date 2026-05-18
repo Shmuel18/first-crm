@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 
 import { Check, ChevronDown, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { setPrimaryBankAction } from '../actions/set-primary-bank';
 
@@ -26,6 +27,9 @@ export function EditableBankCell({
   secondaryCount,
   options,
 }: EditableBankCellProps) {
+  const tc = useTranslations('common');
+  const tf = useTranslations('case.fields');
+  const noBankLabel = `— ${tc('none')} —`;
   const [open, setOpen] = useState(false);
   const [bank, setBank] = useState<BankOption | null>(currentBank);
   const [isPending, startTransition] = useTransition();
@@ -103,7 +107,7 @@ export function EditableBankCell({
             </span>
           </>
         ) : (
-          <span className="text-sm text-neutral-400">— ללא בנק —</span>
+          <span className="text-sm text-neutral-400">{noBankLabel}</span>
         )}
         {isPending ? (
           <Loader2 className="size-3 text-neutral-400 animate-spin" />
@@ -125,7 +129,7 @@ export function EditableBankCell({
               onClick={() => handleSelect(null)}
               className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-right text-neutral-500 hover:bg-neutral-50"
             >
-              <span>— ללא בנק —</span>
+              <span>{noBankLabel}</span>
               {!bank && <Check className="size-3.5 text-[#C9A961]" />}
             </button>
             {options.map((opt) => (

@@ -4,6 +4,7 @@ import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 
 import { Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,72 +28,66 @@ type Props = {
   initialIsPrimary?: boolean;
 };
 
-const MARITAL_STATUSES = [
-  { value: 'single', label: 'רווק/ה' },
-  { value: 'married', label: 'נשוי/אה' },
-  { value: 'divorced', label: 'גרוש/ה' },
-  { value: 'widowed', label: 'אלמן/ה' },
-  { value: 'common_law', label: 'ידוע/ה בציבור' },
-] as const;
-
-const RESIDENCY_TYPES = [
-  { value: 'resident', label: 'תושב/ת ישראל' },
-  { value: 'foreign_resident', label: 'תושב/ת חוץ' },
-  { value: 'returning_resident', label: 'תושב/ת חוזר/ת' },
-] as const;
-
-const EMPLOYMENT_STATUSES = [
-  { value: 'employee', label: 'שכיר/ה' },
-  { value: 'self_employed', label: 'עצמאי/ת' },
-  { value: 'unemployed', label: 'לא עובד/ת' },
-  { value: 'pensioner', label: 'פנסיונר/ית' },
-] as const;
+const MARITAL_STATUS_VALUES = ['single', 'married', 'divorced', 'widowed', 'common_law'] as const;
+const RESIDENCY_TYPE_VALUES = ['resident', 'foreign_resident', 'returning_resident'] as const;
+const EMPLOYMENT_STATUS_VALUES = ['employee', 'self_employed', 'unemployed', 'pensioner'] as const;
 
 function SubmitButton({ isEdit }: { isEdit: boolean }) {
   const { pending } = useFormStatus();
+  const t = useTranslations('borrowerForm');
+  const tc = useTranslations('common');
   return (
     <Button
       type="submit"
       disabled={pending}
       className="bg-[#0A0A0A] hover:bg-neutral-800 text-white h-11 min-w-32"
     >
-      {pending ? <Loader2 className="size-4 animate-spin" /> : isEdit ? 'שמור' : 'הוסף לווה'}
+      {pending ? <Loader2 className="size-4 animate-spin" /> : isEdit ? tc('save') : t('submit.create')}
     </Button>
   );
 }
 
+export function BorrowerForm({
+  caseId,
+  initial,
+  initialRole = 'borrower',
+  initialIsPrimary = false,
+}: Props) {
+  const t = useTranslations('borrowerForm');
+  const tCase = useTranslations('case');
+  const tc = useTranslations('common');
 
-export function BorrowerForm({ caseId, initial, initialRole = 'borrower', initialIsPrimary = false }: Props) {
   const [state, formAction] = useActionState<BorrowerActionState, FormData>(
     saveBorrowerAction,
     BORROWER_ACTION_INITIAL,
   );
 
-  const errs =
-    state.ok === false && state.error === 'validation' ? state.fieldErrors ?? {} : {};
+  const errs = state.ok === false && state.error === 'validation' ? state.fieldErrors ?? {} : {};
   const sub = state.ok === false && state.error !== 'idle' ? state.values : undefined;
+  const initialRecord = (initial ?? null) as Record<string, unknown> | null;
 
   const genericError =
     state.ok === false && state.error !== 'idle' && state.error !== 'validation'
       ? state.error === 'unauthorized'
-        ? 'אין הרשאה'
-        : 'שגיאה בשמירה. נסה שוב.'
+        ? t('errors.unauthorized')
+        : t('errors.generic')
       : null;
 
   const roleDefault = sub?.role_in_case ?? initialRole;
   const isPrimaryDefault = sub?.is_primary ? sub.is_primary === 'on' : initialIsPrimary;
+  const val = (name: string) => fieldDefault(name, sub, initialRecord);
 
   return (
-    <form action={formAction} className="space-y-6" dir="rtl" noValidate>
+    <form action={formAction} className="space-y-6" noValidate>
       <input type="hidden" name="case_id" value={caseId} />
       {initial && <input type="hidden" name="borrower_id" value={initial.id} />}
 
-      <FormSection title="תפקיד בתיק">
+      <FormSection title={t('sections.roleInCase')}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField label="תפקיד" required error={errs.role_in_case}>
+          <FormField label={t('fields.role')} required error={errs.role_in_case}>
             <NativeSelect name="role_in_case" defaultValue={roleDefault}>
-              <option value="borrower">לווה</option>
-              <option value="guarantor">ערב</option>
+              <option value="borrower">{tCase('borrower.borrower')}</option>
+              <option value="guarantor">{tCase('borrower.guarantor')}</option>
             </NativeSelect>
           </FormField>
           <label className="flex items-center gap-2 cursor-pointer self-end pb-2">
@@ -102,116 +97,98 @@ export function BorrowerForm({ caseId, initial, initialRole = 'borrower', initia
               defaultChecked={isPrimaryDefault}
               className="size-4 accent-[#C9A961]"
             />
-            <span className="text-sm text-neutral-700">לווה ראשי</span>
+            <span className="text-sm text-neutral-700">{t('fields.isPrimary')}</span>
           </label>
         </div>
       </FormSection>
 
-      <FormSection title="פרטים אישיים">
-        <FormField label="שם פרטי" error={errs.first_name}>
-          <Input name="first_name" defaultValue={fieldDefault('first_name', sub, initial)} />
+      <FormSection title={t('sections.personal')}>
+        <FormField label={t('fields.firstName')} error={errs.first_name}>
+          <Input name="first_name" defaultValue={val('first_name')} />
         </FormField>
-        <FormField label="שם משפחה" error={errs.last_name}>
-          <Input name="last_name" defaultValue={fieldDefault('last_name', sub, initial)} />
+        <FormField label={t('fields.lastName')} error={errs.last_name}>
+          <Input name="last_name" defaultValue={val('last_name')} />
         </FormField>
-        <FormField label="תעודת זהות" error={errs.national_id}>
-          <Input name="national_id" dir="ltr" defaultValue={fieldDefault('national_id', sub, initial)} />
+        <FormField label={t('fields.nationalId')} error={errs.national_id}>
+          <Input name="national_id" dir="ltr" defaultValue={val('national_id')} />
         </FormField>
-        <FormField label="טלפון נייד" error={errs.phone}>
-          <Input name="phone" type="tel" dir="ltr" defaultValue={fieldDefault('phone', sub, initial)} />
+        <FormField label={t('fields.phone')} error={errs.phone}>
+          <Input name="phone" type="tel" dir="ltr" defaultValue={val('phone')} />
         </FormField>
-        <FormField label="אימייל" error={errs.email}>
-          <Input name="email" type="email" dir="ltr" defaultValue={fieldDefault('email', sub, initial)} />
+        <FormField label={t('fields.email')} error={errs.email}>
+          <Input name="email" type="email" dir="ltr" defaultValue={val('email')} />
         </FormField>
-        <FormField label="תאריך לידה" error={errs.birth_date}>
-          <Input name="birth_date" type="date" defaultValue={fieldDefault('birth_date', sub, initial)} />
+        <FormField label={t('fields.birthDate')} error={errs.birth_date}>
+          <Input name="birth_date" type="date" defaultValue={val('birth_date')} />
         </FormField>
       </FormSection>
 
-      <FormSection title="מצב משפחתי וכתובת">
-        <FormField label="מצב משפחתי" error={errs.marital_status}>
-          <NativeSelect name="marital_status" defaultValue={fieldDefault('marital_status', sub, initial)}>
-            <option value="">— בחר —</option>
-            {MARITAL_STATUSES.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.label}
-              </option>
+      <FormSection title={t('sections.familyAddress')}>
+        <FormField label={t('fields.maritalStatus')} error={errs.marital_status}>
+          <NativeSelect name="marital_status" defaultValue={val('marital_status')}>
+            <option value="">{tc('select')}</option>
+            {MARITAL_STATUS_VALUES.map((m) => (
+              <option key={m} value={m}>{t(`maritalStatuses.${m}`)}</option>
             ))}
           </NativeSelect>
         </FormField>
-        <FormField label="מספר ילדים" error={errs.children_count}>
-          <Input
-            name="children_count"
-            type="number"
-            min={0}
-            step="1"
-            defaultValue={fieldDefault('children_count', sub, initial)}
-          />
+        <FormField label={t('fields.childrenCount')} error={errs.children_count}>
+          <Input name="children_count" type="number" min={0} step="1" defaultValue={val('children_count')} />
         </FormField>
         <div className="md:col-span-2">
-          <FormField label="כתובת מגורים" error={errs.address}>
-            <Input name="address" defaultValue={fieldDefault('address', sub, initial)} />
+          <FormField label={t('fields.address')} error={errs.address}>
+            <Input name="address" defaultValue={val('address')} />
           </FormField>
         </div>
       </FormSection>
 
-      <FormSection title="אזרחות ותעסוקה">
-        <FormField label="אזרחות" error={errs.citizenship}>
+      <FormSection title={t('sections.citizenshipEmployment')}>
+        <FormField label={t('fields.citizenship')} error={errs.citizenship}>
           <Input
             name="citizenship"
-            placeholder="ישראלית, אחר..."
-            defaultValue={fieldDefault('citizenship', sub, initial)}
+            placeholder={t('fields.citizenshipPlaceholder')}
+            defaultValue={val('citizenship')}
           />
         </FormField>
-        <FormField label="סוג תושבות" error={errs.residency_type}>
-          <NativeSelect name="residency_type" defaultValue={fieldDefault('residency_type', sub, initial)}>
-            <option value="">— בחר —</option>
-            {RESIDENCY_TYPES.map((r) => (
-              <option key={r.value} value={r.value}>
-                {r.label}
-              </option>
+        <FormField label={t('fields.residency')} error={errs.residency_type}>
+          <NativeSelect name="residency_type" defaultValue={val('residency_type')}>
+            <option value="">{tc('select')}</option>
+            {RESIDENCY_TYPE_VALUES.map((r) => (
+              <option key={r} value={r}>{t(`residencyTypes.${r}`)}</option>
             ))}
           </NativeSelect>
         </FormField>
-        <FormField label="סטטוס תעסוקה" error={errs.employment_status}>
-          <NativeSelect
-            name="employment_status"
-            defaultValue={fieldDefault('employment_status', sub, initial)}
-          >
-            <option value="">— בחר —</option>
-            {EMPLOYMENT_STATUSES.map((e) => (
-              <option key={e.value} value={e.value}>
-                {e.label}
-              </option>
+        <FormField label={t('fields.employmentStatus')} error={errs.employment_status}>
+          <NativeSelect name="employment_status" defaultValue={val('employment_status')}>
+            <option value="">{tc('select')}</option>
+            {EMPLOYMENT_STATUS_VALUES.map((e) => (
+              <option key={e} value={e}>{t(`employmentStatuses.${e}`)}</option>
             ))}
           </NativeSelect>
         </FormField>
-        <FormField label="שם מעסיק" error={errs.employer_name}>
-          <Input name="employer_name" defaultValue={fieldDefault('employer_name', sub, initial)} />
+        <FormField label={t('fields.employerName')} error={errs.employer_name}>
+          <Input name="employer_name" defaultValue={val('employer_name')} />
         </FormField>
       </FormSection>
 
-      <FormSection title="נוסף">
-        <FormField label="דירוג אשראי / BDI" error={errs.credit_rating}>
+      <FormSection title={t('sections.extra')}>
+        <FormField label={t('fields.creditRating')} error={errs.credit_rating}>
           <Input
             name="credit_rating"
-            defaultValue={fieldDefault('credit_rating', sub, initial)}
-            placeholder="לדוגמה: 750"
+            defaultValue={val('credit_rating')}
+            placeholder={t('fields.creditRatingPlaceholder')}
           />
         </FormField>
-        <FormField label="בעלות על דירה נוספת" error={errs.owns_other_property}>
-          <NativeSelect
-            name="owns_other_property"
-            defaultValue={fieldDefault('owns_other_property', sub, initial)}
-          >
-            <option value="">— לא ידוע —</option>
-            <option value="true">כן</option>
-            <option value="false">לא</option>
+        <FormField label={t('fields.ownsOtherProperty')} error={errs.owns_other_property}>
+          <NativeSelect name="owns_other_property" defaultValue={val('owns_other_property')}>
+            <option value="">{t('fields.ownsOtherPropertyUnknown')}</option>
+            <option value="true">{tc('yes')}</option>
+            <option value="false">{tc('no')}</option>
           </NativeSelect>
         </FormField>
         <div className="md:col-span-2">
-          <FormField label="הערות" error={errs.notes}>
-            <Textarea name="notes" rows={3} defaultValue={fieldDefault('notes', sub, initial)} />
+          <FormField label={t('fields.notes')} error={errs.notes}>
+            <Textarea name="notes" rows={3} defaultValue={val('notes')} />
           </FormField>
         </div>
       </FormSection>
@@ -228,4 +205,3 @@ export function BorrowerForm({ caseId, initial, initialRole = 'borrower', initia
     </form>
   );
 }
-

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import type { CaseBankId, CaseId } from '@/lib/types/branded';
 
 import type { CaseBankRow, CaseBankWithRelations } from '../types';
 
@@ -8,7 +9,7 @@ const CASE_BANK_SELECT = `
   status:case_bank_statuses(id, key, name_he, color)
 ` as const;
 
-export async function listCaseBanks(caseId: string): Promise<CaseBankWithRelations[]> {
+export async function listCaseBanks(caseId: CaseId): Promise<CaseBankWithRelations[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('case_banks')
@@ -21,7 +22,7 @@ export async function listCaseBanks(caseId: string): Promise<CaseBankWithRelatio
   return (data ?? []) as unknown as CaseBankWithRelations[];
 }
 
-export async function getCaseBankById(id: string): Promise<CaseBankRow | null> {
+export async function getCaseBankById(id: CaseBankId): Promise<CaseBankRow | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('case_banks')

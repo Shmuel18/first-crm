@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+import { getTranslations } from 'next-intl/server';
+
 import { CaseStatusBadge } from '@/features/cases/components/case-status-badge';
 
 import type { CaseBankWithRelations } from '../types';
@@ -9,7 +11,9 @@ type Props = {
   caseBank: CaseBankWithRelations;
 };
 
-export function CaseBankRow({ caseId, caseBank: cb }: Props) {
+export async function CaseBankRow({ caseId, caseBank: cb }: Props) {
+  const t = await getTranslations('case.fields');
+
   return (
     <Link
       href={`/cases/${caseId}/banks/${cb.id}/edit`}
@@ -26,7 +30,9 @@ export function CaseBankRow({ caseId, caseBank: cb }: Props) {
           {cb.bank?.name_he ?? '—'}
         </span>
         {cb.is_primary && (
-          <span className="text-[10px] text-[#C9A961] font-bold">★ עיקרי</span>
+          <span className="text-[10px] text-[#C9A961] font-bold">
+            {t('primaryBankMarker')}
+          </span>
         )}
         {cb.banker_name && (
           <span className="text-xs text-neutral-500">· {cb.banker_name}</span>
