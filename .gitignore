@@ -43,3 +43,10 @@ next-env.d.ts
 
 # Claude Code
 .claude/
+
+# Supabase CLI internal cache - never commit
+supabase/.temp/
+supabase/.branches/
+
+# PR description scratchpad (used by the workflow, not part of the codebase)
+PR_BODY.md
