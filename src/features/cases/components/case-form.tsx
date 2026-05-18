@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 
 import { Loader2 } from 'lucide-react';
@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { FormField, FormSection, NativeSelect } from '@/components/shared/form-fields';
 
 import { fieldDefault } from '@/lib/utils/form-defaults';
@@ -50,6 +50,9 @@ export function CaseForm({
   const [state, formAction] = useActionState<CaseActionState, FormData>(
     action,
     CASE_ACTION_INITIAL,
+  );
+  const [requestDetailsHtml, setRequestDetailsHtml] = useState<string>(
+    String(initial?.request_details ?? ''),
   );
 
   const fieldErrors =
@@ -165,11 +168,12 @@ export function CaseForm({
         </div>
         <div className="md:col-span-2">
           <FormField label={t('fields.requestDetails')} error={fieldErrors.request_details}>
-            <Textarea
-              name="request_details"
-              rows={5}
-              defaultValue={value('request_details')}
+            <input type="hidden" name="request_details" value={requestDetailsHtml} />
+            <RichTextEditor
+              value={requestDetailsHtml}
+              onChange={setRequestDetailsHtml}
               placeholder={t('fields.requestDetailsPlaceholder')}
+              minRows={8}
             />
           </FormField>
         </div>

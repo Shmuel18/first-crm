@@ -194,9 +194,12 @@ export default async function CaseDetailPage({ params }: Props) {
 
         <CaseBlock title={t('blocks.requestDetails')} icon={<FileText />} fullWidth>
           {caseData.request_details ? (
-            <p className="text-sm text-neutral-700 whitespace-pre-wrap leading-relaxed">
-              {caseData.request_details}
-            </p>
+            <div
+              className="tiptap-content text-neutral-700"
+              // Content is authored by office staff only - no untrusted input.
+              // eslint-disable-next-line react/no-danger
+              dangerouslySetInnerHTML={{ __html: caseData.request_details }}
+            />
           ) : (
             <p className="text-sm text-neutral-400 italic">
               {t('blocks.requestDetailsEmpty')}

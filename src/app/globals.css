@@ -174,6 +174,64 @@
     font-family: var(--font-frank-ruhl), serif;
   }
 
+  /* Rich text editor (Tiptap) content */
+  .tiptap-content {
+    font-size: 0.9rem;
+  }
+  .tiptap-content h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0.75rem 0 0.5rem;
+    color: #0A0A0A;
+  }
+  .tiptap-content h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0.5rem 0 0.25rem;
+    color: #0A0A0A;
+  }
+  .tiptap-content p {
+    margin: 0.25rem 0;
+    line-height: 1.65;
+  }
+  .tiptap-content ul {
+    list-style: disc;
+    padding-inline-start: 1.5rem;
+    margin: 0.5rem 0;
+  }
+  .tiptap-content ol {
+    list-style: decimal;
+    padding-inline-start: 1.5rem;
+    margin: 0.5rem 0;
+  }
+  .tiptap-content li {
+    margin: 0.125rem 0;
+  }
+  .tiptap-content blockquote {
+    border-inline-start: 3px solid #C9A961;
+    padding-inline-start: 0.75rem;
+    margin: 0.5rem 0;
+    color: #525252;
+    font-style: italic;
+  }
+  .tiptap-content strong {
+    font-weight: 700;
+    color: #0A0A0A;
+  }
+  .tiptap-content em {
+    font-style: italic;
+  }
+  .tiptap-content u {
+    text-decoration: underline;
+  }
+  .tiptap-content p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    color: #9ca3af;
+    pointer-events: none;
+    float: inline-start;
+    height: 0;
+  }
+
   /* Scrollbar */
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;

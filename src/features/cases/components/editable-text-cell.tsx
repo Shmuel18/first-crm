@@ -15,6 +15,8 @@ type EditableTextCellProps = {
   emptyLabel?: string;
 };
 
+const POPOVER_WIDTH = 320;
+
 export function EditableTextCell({
   caseId,
   field,
@@ -29,12 +31,16 @@ export function EditableTextCell({
   const [savedValue, setSavedValue] = useState(initialValue ?? '');
   const [isPending, startTransition] = useTransition();
   const [showSaved, setShowSaved] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [popoverPos, setPopoverPos] = useState<{ top: number; left: number } | null>(null);
+  const anchorRef = useRef<HTMLButtonElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (editing) {
-      inputRef.current?.focus();
-      inputRef.current?.select();
+      requestAnimationFrame(() => {
+        textareaRef.current?.focus();
+        textareaRef.current?.select();
+      });
     }
   }, [editing]);
 
@@ -43,6 +49,18 @@ export function EditableTextCell({
     const t = setTimeout(() => setShowSaved(false), 1500);
     return () => clearTimeout(t);
   }, [showSaved]);
+
+  const openEditor = () => {
+    const r = anchorRef.current?.getBoundingClientRect();
+    if (r) {
+      // Anchor below the cell, right-aligned to cell's end (so it doesn't overflow the table)
+      const left = Math.max(8, Math.min(r.right - POPOVER_WIDTH, window.innerWidth - POPOVER_WIDTH - 8));
+      const top = r.bottom + 4;
+      setPopoverPos({ top, left });
+    }
+    setValue(savedValue);
+    setEditing(true);
+  };
 
   const save = () => {
     if (value === savedValue) {
@@ -59,7 +77,6 @@ export function EditableTextCell({
       if (result.ok) {
         setShowSaved(true);
       } else {
-        // Revert on failure
         setSavedValue(previousSaved);
         setValue(previousSaved);
       }
@@ -71,48 +88,76 @@ export function EditableTextCell({
     setEditing(false);
   };
 
-  if (editing) {
-    return (
-      <input
-        ref={inputRef}
-        type="text"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') save();
-          if (e.key === 'Escape') cancel();
-        }}
-        onBlur={save}
-        placeholder={effectivePlaceholder}
-        className="block w-full px-2 py-0.5 text-sm border border-[#C9A961] rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#C9A961]/40"
-      />
-    );
-  }
-
   const displayValue = savedValue || emptyLabel;
   const isEmpty = !savedValue;
 
   return (
-    <button
-      type="button"
-      onClick={() => setEditing(true)}
-      className="group inline-flex items-center gap-1.5 w-full text-right min-w-0"
-    >
-      <span
-        className={[
-          'truncate text-sm min-w-0 flex-1',
-          isEmpty ? 'text-neutral-400 italic' : 'text-neutral-700',
-        ].join(' ')}
+    <>
+      <button
+        ref={anchorRef}
+        type="button"
+        onClick={openEditor}
+        title={savedValue || effectivePlaceholder}
+        className="group inline-flex items-center gap-1.5 w-full text-right min-w-0"
       >
-        {displayValue}
-      </span>
-      {isPending ? (
-        <Loader2 className="size-3 text-[#C9A961] animate-spin shrink-0" />
-      ) : showSaved ? (
-        <Check className="size-3 text-emerald-500 shrink-0" />
-      ) : (
-        <Pencil className="size-3 text-neutral-400 opacity-0 group-hover:opacity-100 transition shrink-0" />
+        <span
+          className={[
+            'truncate text-sm min-w-0 flex-1',
+            isEmpty ? 'text-neutral-400 italic' : 'text-neutral-700',
+          ].join(' ')}
+        >
+          {displayValue}
+        </span>
+        {isPending ? (
+          <Loader2 className="size-3 text-[#C9A961] animate-spin shrink-0" />
+        ) : showSaved ? (
+          <Check className="size-3 text-emerald-500 shrink-0" />
+        ) : (
+          <Pencil className="size-3 text-neutral-400 opacity-0 group-hover:opacity-100 transition shrink-0" />
+        )}
+      </button>
+
+      {editing && popoverPos && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={cancel} />
+          <div
+            className="fixed z-50 bg-white shadow-2xl border border-neutral-200 rounded-lg p-2"
+            style={{ top: popoverPos.top, left: popoverPos.left, width: POPOVER_WIDTH }}
+          >
+            <textarea
+              ref={textareaRef}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) save();
+                if (e.key === 'Escape') cancel();
+              }}
+              rows={4}
+              placeholder={effectivePlaceholder}
+              className="w-full px-2 py-1.5 text-sm border border-neutral-200 rounded resize-none focus:outline-none focus:ring-2 focus:ring-[#C9A961]/40"
+            />
+            <div className="flex items-center justify-between gap-2 mt-1.5">
+              <span className="text-[10px] text-neutral-400">⌘↵ {tc('save')} · Esc {tc('cancel')}</span>
+              <div className="flex gap-1.5">
+                <button
+                  type="button"
+                  onClick={cancel}
+                  className="text-xs text-neutral-600 px-2.5 py-1 rounded hover:bg-neutral-100"
+                >
+                  {tc('cancel')}
+                </button>
+                <button
+                  type="button"
+                  onClick={save}
+                  className="text-xs bg-[#0A0A0A] text-white px-2.5 py-1 rounded hover:bg-neutral-800"
+                >
+                  {tc('save')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
       )}
-    </button>
+    </>
   );
 }

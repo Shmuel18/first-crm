@@ -82,29 +82,17 @@ export function EditableBankCell({
         type="button"
         onClick={() => (open ? setOpen(false) : handleOpen())}
         disabled={isPending}
-        className="inline-flex items-center gap-2 cursor-pointer disabled:opacity-50"
+        className="inline-flex items-center gap-2.5 cursor-pointer disabled:opacity-50 hover:bg-neutral-50 -mx-1 px-1 py-0.5 rounded-md transition"
       >
         {bank ? (
           <>
-            <span className="text-sm text-neutral-700 whitespace-nowrap">
+            <BankAvatar bank={bank} size="md" />
+            <span className="text-sm text-neutral-800 whitespace-nowrap font-medium">
               {bank.name_he}
               {secondaryCount > 0 && (
-                <span className="text-xs text-neutral-400 me-1">+{secondaryCount}</span>
-              )}
-            </span>
-            <span
-              className="size-7 rounded-md flex items-center justify-center text-[10px] font-bold text-white shrink-0"
-              style={{ backgroundColor: bank.color }}
-            >
-              {bank.logo_url ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
-                  src={bank.logo_url}
-                  alt={bank.name_he}
-                  className="size-full object-contain p-0.5 rounded-md bg-white"
-                />
-              ) : (
-                bank.name_he.slice(0, 2)
+                <span className="text-[11px] text-neutral-400 ms-1 font-normal">
+                  +{secondaryCount}
+                </span>
               )}
             </span>
           </>
@@ -123,37 +111,71 @@ export function EditableBankCell({
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden />
           <div
             ref={dropdownRef}
-            className="fixed z-50 bg-white border border-neutral-200 rounded-lg shadow-xl py-1 min-w-52 max-h-72 overflow-y-auto scrollbar-thin"
+            className="fixed z-50 bg-white border border-neutral-200 rounded-xl shadow-2xl py-1.5 min-w-60 max-h-80 overflow-y-auto scrollbar-thin"
             style={pos}
           >
             <button
               type="button"
               onClick={() => handleSelect(null)}
-              className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-right text-neutral-500 hover:bg-neutral-50"
+              className="w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-right text-neutral-500 hover:bg-neutral-50"
             >
               <span>{noBankLabel}</span>
               {!bank && <Check className="size-3.5 text-[#C9A961]" />}
             </button>
-            {options.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => handleSelect(opt)}
-                className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-right hover:bg-neutral-50"
-              >
-                <span className="inline-flex items-center gap-2">
-                  <span
-                    className="size-5 rounded shrink-0"
-                    style={{ backgroundColor: opt.color }}
-                  />
-                  {opt.name_he}
-                </span>
-                {opt.id === bank?.id && <Check className="size-3.5 text-[#C9A961]" />}
-              </button>
-            ))}
+            <div className="border-t border-neutral-100 my-0.5" />
+            {options.map((opt) => {
+              const selected = opt.id === bank?.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => handleSelect(opt)}
+                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-right transition ${
+                    selected ? 'bg-[#C9A961]/8' : 'hover:bg-neutral-50'
+                  }`}
+                >
+                  <span className="inline-flex items-center gap-2.5">
+                    <BankAvatar bank={opt} size="sm" />
+                    <span className={selected ? 'font-medium text-neutral-900' : 'text-neutral-700'}>
+                      {opt.name_he}
+                    </span>
+                  </span>
+                  {selected && <Check className="size-3.5 text-[#C9A961]" />}
+                </button>
+              );
+            })}
           </div>
         </>
       )}
     </>
+  );
+}
+
+function BankAvatar({ bank, size }: { bank: BankOption; size: 'sm' | 'md' }) {
+  const sizeClass = size === 'md' ? 'size-9' : 'size-7';
+  const fallbackText = size === 'md' ? 'text-[11px]' : 'text-[10px]';
+
+  if (bank.logo_url) {
+    return (
+      <span
+        className={`${sizeClass} rounded-lg bg-white border border-neutral-200 shadow-sm flex items-center justify-center shrink-0 overflow-hidden`}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={bank.logo_url}
+          alt={bank.name_he}
+          className="max-w-[85%] max-h-[85%] object-contain"
+        />
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className={`${sizeClass} rounded-lg flex items-center justify-center font-bold text-white shrink-0 shadow-sm ${fallbackText}`}
+      style={{ backgroundColor: bank.color }}
+    >
+      {bank.name_he.slice(0, 2)}
+    </span>
   );
 }
