@@ -32,9 +32,26 @@ export async function deleteDocumentAction(
       ? (doc.metadata as { storage_path?: string }).storage_path
       : undefined;
 
+  // Storage cleanup is PRIMARY. If it fails (RLS, network, race), refuse to
+  // soft-delete - otherwise the doc disappears from the UI while the file
+  // stays orphaned in the bucket (cost + compliance). User can retry.
   if (storagePath) {
-    await supabase.storage.from('case-documents').remove([storagePath]);
+    const { error: storageErr } = await supabase.storage
+      .from('case-documents')
+      .remove([storagePath]);
+    if (storageErr) {
+      console.error('document storage cleanup failed', {
+        documentId,
+        storagePath,
+        err: storageErr.message,
+      });
+      return { ok: false, error: 'unknown', message: storageErr.message };
+    }
   }
+
+  // Drive cleanup is SECONDARY (best-effort, swallowed internally). Don't
+  // block the soft-delete on it; an orphaned Drive file can be cleaned
+  // manually but a phantom doc row breaks UX.
   if (doc.drive_file_id) {
     await deleteCaseDocumentFromDrive(doc.drive_file_id);
   }
