@@ -134,13 +134,13 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenRes
 
 export async function fetchUserInfo(
   accessToken: string,
-): Promise<{ email: string; sub: string }> {
+): Promise<{ email: string; sub: string; hd?: string }> {
   const res = await fetch(USERINFO_URL, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (!res.ok) throw new Error('Failed to fetch Google user info');
-  const data = (await res.json()) as { email: string; sub: string };
-  return { email: data.email, sub: data.sub };
+  const data = (await res.json()) as { email: string; sub: string; hd?: string };
+  return { email: data.email, sub: data.sub, hd: data.hd };
 }
 
 /**

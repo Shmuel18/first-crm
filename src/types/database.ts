@@ -869,6 +869,45 @@ export type Database = {
         }
         Relationships: []
       }
+      document_drive_tombstones: {
+        Row: {
+          case_id: string
+          deleted_at: string
+          deleted_by: string | null
+          deleted_document_id: string | null
+          drive_file_id: string
+        }
+        Insert: {
+          case_id: string
+          deleted_at?: string
+          deleted_by?: string | null
+          deleted_document_id?: string | null
+          drive_file_id: string
+        }
+        Update: {
+          case_id?: string
+          deleted_at?: string
+          deleted_by?: string | null
+          deleted_document_id?: string | null
+          drive_file_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_drive_tombstones_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_drive_tombstones_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           borrower_id: string | null
@@ -1883,6 +1922,10 @@ export type Database = {
         Args: { p_bank_id: string; p_case_id: string; p_user_id: string }
         Returns: undefined
       }
+      soft_delete_document_with_tombstone: {
+        Args: { p_case_id: string; p_document_id: string; p_user_id: string }
+        Returns: undefined
+      }
       update_case_drive_meta: {
         Args: { p_case_id: string; p_patch: Json }
         Returns: undefined
@@ -1890,6 +1933,15 @@ export type Database = {
       update_document_metadata: {
         Args: { p_document_id: string; p_patch: Json }
         Returns: undefined
+      }
+      upsert_case_financials: {
+        Args: {
+          p_case_id: string
+          p_expected_income: number | null
+          p_fee_amount: number | null
+          p_user_id: string
+        }
+        Returns: boolean
       }
     }
     Enums: {

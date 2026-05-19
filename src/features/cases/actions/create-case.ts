@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
+import { userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import { sanitizeRichTextHtml } from '@/lib/utils/sanitize-html';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
@@ -43,9 +44,15 @@ export async function createCaseAction(
     return { ok: false, error: 'unauthorized', values };
   }
 
-  // Split financials off the cases payload - they live in case_financials
-  // (admin-only RLS). Non-admin submits with empty values, which we silently
-  // drop here; RLS would also reject the case_financials write.
+  // Defense-in-depth: explicit permission check before any DB work. RLS
+  // would also block, but failing fast here gives a clean unauthorized
+  // response instead of an opaque 'unknown' from the eventual RLS reject.
+  if (!(await userHasPermission('create_case'))) {
+    return { ok: false, error: 'unauthorized', values };
+  }
+
+  // Split financials off the cases payload (case_financials has its own
+  // permission gate, view_case_fee, per migration 027).
   const { fee_amount, expected_income, ...caseFields } = parsed.data;
 
   const { data, error } = await supabase
@@ -63,18 +70,21 @@ export async function createCaseAction(
     return { ok: false, error: 'unknown', values };
   }
 
+  // Financials via the upsert_case_financials RPC (migration 027). The RPC
+  // returns false silently when the caller lacks view_case_fee (the form
+  // hides fields for non-admins; ignored values aren't an error). Any other
+  // failure is a real bug that MUST surface - finance data can't fail quietly.
   if (fee_amount != null || expected_income != null) {
-    const { error: finErr } = await supabase
-      .from('case_financials')
-      .insert({
-        case_id: data.id,
-        fee_amount: fee_amount ?? null,
-        expected_income: expected_income ?? null,
-        created_by: userRes.user.id,
-        updated_by: userRes.user.id,
-      });
-    // Non-admin attempts hit RLS - we don't fail the whole create for that.
-    if (finErr) console.warn('case_financials insert skipped', { caseId: data.id, err: finErr.message });
+    const { error: finErr } = await supabase.rpc('upsert_case_financials', {
+      p_case_id: data.id,
+      p_fee_amount: fee_amount ?? null,
+      p_expected_income: expected_income ?? null,
+      p_user_id: userRes.user.id,
+    });
+    if (finErr) {
+      console.error('case_financials upsert failed', { caseId: data.id, err: finErr.message });
+      return { ok: false, error: 'unknown', values };
+    }
   }
 
   revalidatePath('/cases');

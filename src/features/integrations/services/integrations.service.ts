@@ -22,7 +22,16 @@ export async function getIntegration(
 }
 
 export async function getDriveIntegrationView(): Promise<DriveIntegrationView> {
-  const row = await getIntegration('google_drive');
+  const supabase = await createClient();
+  const { data: row, error } = await supabase
+    .from('office_integrations')
+    .select(
+      'provider, status, connected_email, connected_at, scopes, last_error, drive_root_folder_id, drive_root_folder_name',
+    )
+    .eq('provider', 'google_drive')
+    .maybeSingle();
+
+  if (error) throw error;
 
   return {
     provider: 'google_drive',

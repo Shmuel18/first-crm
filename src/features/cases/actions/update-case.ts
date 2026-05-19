@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 
 import { z } from 'zod';
 
+import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import { sanitizeRichTextHtml } from '@/lib/utils/sanitize-html';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
@@ -54,15 +55,11 @@ export async function updateCaseAction(
     return { ok: false, error: 'unauthorized', values };
   }
 
-  // Defense-in-depth: caller must be able to see the case before mutating
-  const { data: caseRow } = await supabase
-    .from('cases')
-    .select('id')
-    .eq('id', caseId)
-    .maybeSingle();
-  if (!caseRow) return { ok: false, error: 'unauthorized', values };
+  // Explicit case-scoped edit check (defense-in-depth; RLS would also reject).
+  if (!(await userCanEditCase(caseId))) return { ok: false, error: 'unauthorized', values };
 
-  // Split financials off the cases payload (case_financials is admin-only).
+  // Split financials off the cases payload (case_financials has its own
+  // permission gate, view_case_fee, per migration 027).
   const { fee_amount, expected_income, ...caseFields } = parsed.data;
 
   const { error } = await supabase
@@ -78,22 +75,20 @@ export async function updateCaseAction(
     return { ok: false, error: 'unknown', values };
   }
 
-  // Upsert into case_financials. RLS gates this to admins; a non-admin
-  // submitting an edit form (where the fields are hidden) sends them as
-  // null/empty which we silently skip here. Real admins succeed.
+  // Financials via RPC. Silent skip for non-admin (RPC returns false), but
+  // any other failure surfaces - admin-submitted financials must not fail
+  // silently (#5).
   if (fee_amount != null || expected_income != null) {
-    const { error: finErr } = await supabase
-      .from('case_financials')
-      .upsert(
-        {
-          case_id: caseId,
-          fee_amount: fee_amount ?? null,
-          expected_income: expected_income ?? null,
-          updated_by: userRes.user.id,
-        },
-        { onConflict: 'case_id' },
-      );
-    if (finErr) console.warn('case_financials upsert skipped', { caseId, err: finErr.message });
+    const { error: finErr } = await supabase.rpc('upsert_case_financials', {
+      p_case_id: caseId,
+      p_fee_amount: fee_amount ?? null,
+      p_expected_income: expected_income ?? null,
+      p_user_id: userRes.user.id,
+    });
+    if (finErr) {
+      console.error('case_financials upsert failed', { caseId, err: finErr.message });
+      return { ok: false, error: 'unknown', values };
+    }
   }
 
   revalidatePath('/cases');

@@ -2,11 +2,18 @@
 
 import { revalidatePath } from 'next/cache';
 
+import { z } from 'zod';
+
 import { createClient } from '@/lib/supabase/server';
 
 type Result =
   | { ok: true }
   | { ok: false; error: 'unauthorized' | 'not_found' | 'unknown'; message?: string };
+
+const DeleteDocumentSchema = z.object({
+  documentId: z.string().uuid(),
+  caseId: z.string().uuid(),
+});
 
 /**
  * Soft-delete: stamp documents.deleted_at and STOP. The blob in Supabase
@@ -26,6 +33,9 @@ export async function deleteDocumentAction(
   documentId: string,
   caseId: string,
 ): Promise<Result> {
+  const parsed = DeleteDocumentSchema.safeParse({ documentId, caseId });
+  if (!parsed.success) return { ok: false, error: 'not_found' };
+
   const supabase = await createClient();
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
@@ -34,22 +44,23 @@ export async function deleteDocumentAction(
   const { data: doc, error: fetchErr } = await supabase
     .from('documents')
     .select('id')
-    .eq('id', documentId)
-    .eq('case_id', caseId)
+    .eq('id', parsed.data.documentId)
+    .eq('case_id', parsed.data.caseId)
     .is('deleted_at', null)
     .maybeSingle();
 
   if (fetchErr) return { ok: false, error: 'unknown', message: fetchErr.message };
   if (!doc) return { ok: false, error: 'not_found' };
 
-  const { error: deleteErr } = await supabase
-    .from('documents')
-    .update({ deleted_at: new Date().toISOString() })
-    .eq('id', documentId);
+  const { error: deleteErr } = await supabase.rpc('soft_delete_document_with_tombstone', {
+    p_document_id: parsed.data.documentId,
+    p_case_id: parsed.data.caseId,
+    p_user_id: userRes.user.id,
+  });
 
   if (deleteErr) return { ok: false, error: 'unknown', message: deleteErr.message };
 
-  revalidatePath(`/cases/${caseId}/documents`);
-  revalidatePath(`/cases/${caseId}`);
+  revalidatePath(`/cases/${parsed.data.caseId}/documents`);
+  revalidatePath(`/cases/${parsed.data.caseId}`);
   return { ok: true };
 }

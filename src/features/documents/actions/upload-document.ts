@@ -5,7 +5,9 @@ import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 
 import { getTranslations } from 'next-intl/server';
+import { z } from 'zod';
 
+import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
 import {
@@ -19,6 +21,8 @@ import {
   type UploadBlobsContext,
 } from '../services/documents.service';
 import type { DocumentActionState } from '../types';
+
+const CaseIdSchema = z.string().uuid();
 
 /**
  * Blob-first upload (#13, #12 partial). Order:
@@ -43,9 +47,11 @@ export async function uploadDocumentAction(
   const caseId = formData.get('case_id');
   const file = formData.get('file');
 
-  if (typeof caseId !== 'string' || !caseId) {
+  const caseIdResult = CaseIdSchema.safeParse(caseId);
+  if (!caseIdResult.success) {
     return { ok: false, error: 'validation', message: t('caseIdMissing') };
   }
+  const parsedCaseId = caseIdResult.data;
   if (!(file instanceof File) || file.size === 0) {
     return { ok: false, error: 'validation', message: t('fileRequired') };
   }
@@ -75,9 +81,13 @@ export async function uploadDocumentAction(
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
 
+  if (!(await userHasPermission('upload_document')) || !(await userCanEditCase(parsedCaseId))) {
+    return { ok: false, error: 'unauthorized' };
+  }
+
   // Resolve Drive folder context BEFORE staging blobs - small parallel reads.
   const [caseRow, category, borrower] = await Promise.all([
-    supabase.from('cases').select('id, case_number').eq('id', caseId).maybeSingle(),
+    supabase.from('cases').select('id, case_number').eq('id', parsedCaseId).maybeSingle(),
     supabase
       .from('document_categories')
       .select('drive_folder')
@@ -102,14 +112,14 @@ export async function uploadDocumentAction(
   };
 
   const documentId = randomUUID();
-  const blobs = await uploadDocumentBlobs(documentId, caseId, file, ctx);
+  const blobs = await uploadDocumentBlobs(documentId, parsedCaseId, file, ctx);
   if (!blobs.ok) return { ok: false, error: 'storage', message: blobs.message };
 
   const { error: insertErr } = await supabase
     .from('documents')
     .insert({
       id: documentId,
-      case_id: caseId,
+      case_id: parsedCaseId,
       category_id: meta.data.category_id,
       borrower_id: meta.data.borrower_id ?? null,
       file_name: file.name,
@@ -132,7 +142,7 @@ export async function uploadDocumentAction(
     return { ok: false, error: 'storage', message: insertErr.message };
   }
 
-  revalidatePath(`/cases/${caseId}/documents`);
-  revalidatePath(`/cases/${caseId}`);
+  revalidatePath(`/cases/${parsedCaseId}/documents`);
+  revalidatePath(`/cases/${parsedCaseId}`);
   return { ok: true, documentId };
 }

@@ -126,6 +126,15 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
     .is('deleted_at', null)
     .not('drive_file_id', 'is', null);
 
+  const { data: tombstones, error: tombstonesErr } = await supabase
+    .from('document_drive_tombstones')
+    .select('drive_file_id')
+    .eq('case_id', caseId);
+  if (tombstonesErr) {
+    return { ok: false, reason: 'error', message: tombstonesErr.message };
+  }
+  const tombstonedDriveIds = new Set((tombstones ?? []).map((t) => t.drive_file_id));
+
   const existingByDriveId = new Map<
     string,
     {
@@ -165,6 +174,11 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
       categoryId: string | null,
       driveFolder: string | null,
     ) => {
+      if (tombstonedDriveIds.has(file.id)) {
+        skipped += 1;
+        return;
+      }
+
       seenDriveIds.add(file.id);
       const found = existingByDriveId.get(file.id);
       if (found) {

@@ -491,7 +491,7 @@
       "downloadOriginal": "Download original",
       "noPreview": "No preview available for this file type",
       "close": "Close",
-      "deleteConfirm": "Permanently delete this document? This cannot be undone."
+      "deleteConfirm": "Remove this document from the case? It will stay in retention storage for the configured recovery window."
     },
     "card": {
       "documentCount": "{count} documents",

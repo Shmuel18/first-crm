@@ -21,6 +21,20 @@ function redirectWithError(reason: string): Response {
   );
 }
 
+function isAllowedGoogleAccount(email: string, hostedDomain?: string): boolean {
+  const allowed = env.GOOGLE_OAUTH_ALLOWED_DOMAIN;
+  if (!allowed) return true;
+
+  const allowedDomains = allowed
+    .split(',')
+    .map((domain) => domain.trim().toLowerCase())
+    .filter(Boolean);
+  if (allowedDomains.length === 0) return true;
+
+  const emailDomain = email.split('@')[1]?.toLowerCase();
+  return allowedDomains.some((domain) => hostedDomain?.toLowerCase() === domain || emailDomain === domain);
+}
+
 export async function GET(request: Request): Promise<Response> {
   if (!isGoogleOAuthConfigured()) {
     return redirectWithError('oauth_not_configured');
@@ -61,6 +75,10 @@ export async function GET(request: Request): Promise<Response> {
     }
 
     const userInfo = await fetchUserInfo(tokens.access_token);
+    if (!isAllowedGoogleAccount(userInfo.email, userInfo.hd)) {
+      return redirectWithError('google_account_not_allowed');
+    }
+
     const expiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
 
     // Google only returns refresh_token on first consent. On re-consent it
@@ -83,7 +101,8 @@ export async function GET(request: Request): Promise<Response> {
       lastError: null,
     });
   } catch (err) {
-    return redirectWithError(err instanceof Error ? err.message : 'connect_failed');
+    console.error('Google Drive OAuth callback failed', { err });
+    return redirectWithError('connect_failed');
   }
 
   return NextResponse.redirect(
