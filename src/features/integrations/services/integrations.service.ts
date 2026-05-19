@@ -117,6 +117,28 @@ export async function persistRefreshedAccessToken(
   if (error) throw error;
 }
 
+/**
+ * Flip an integration to status='error' after a permanent OAuth failure
+ * (e.g., refresh token revoked, scope withdrawn). Clears the access token
+ * so subsequent calls don't try to use a stale one, stamps last_error so
+ * Settings UI can surface "reconnect required".
+ */
+export async function markIntegrationDisconnected(
+  provider: IntegrationProvider,
+  reason: string,
+): Promise<void> {
+  const supabase = await createClient();
+  await supabase
+    .from('office_integrations')
+    .update({
+      status: 'error',
+      access_token: null,
+      token_expires_at: null,
+      last_error: reason,
+    })
+    .eq('provider', provider);
+}
+
 /** Persist the root Drive folder ID (lazy-created on first upload). */
 export async function persistDriveRootFolderId(folderId: string): Promise<void> {
   const supabase = await createClient();

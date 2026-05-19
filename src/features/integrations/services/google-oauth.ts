@@ -86,6 +86,22 @@ export async function exchangeCodeForTokens(code: string): Promise<TokenResponse
   return (await res.json()) as TokenResponse;
 }
 
+/**
+ * Thrown by refreshAccessToken when Google rejects the refresh request.
+ * `permanent === true` for errors that won't recover by retrying
+ * (invalid_grant: refresh token revoked or expired; invalid_client: app
+ * credentials wrong). Callers should flip the integration to status='error'
+ * and require the admin to reconnect.
+ */
+export class RefreshTokenError extends Error {
+  readonly permanent: boolean;
+  constructor(message: string, permanent: boolean) {
+    super(message);
+    this.name = 'RefreshTokenError';
+    this.permanent = permanent;
+  }
+}
+
 export async function refreshAccessToken(refreshToken: string): Promise<TokenResponse> {
   if (!env.GOOGLE_OAUTH_CLIENT_ID || !env.GOOGLE_OAUTH_CLIENT_SECRET) {
     throw new Error('Google OAuth not configured');
@@ -105,7 +121,13 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenRes
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Google token refresh failed: ${res.status} ${text}`);
+    // Classify permanent failures so the caller can flip integration state
+    // to 'error' and require the admin to reconnect.
+    const permanent = /invalid_grant|invalid_client|invalid_scope/i.test(text);
+    throw new RefreshTokenError(
+      `Google token refresh failed: ${res.status} ${text}`,
+      permanent,
+    );
   }
   return (await res.json()) as TokenResponse;
 }

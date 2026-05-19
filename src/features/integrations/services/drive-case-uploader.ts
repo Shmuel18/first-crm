@@ -83,10 +83,23 @@ async function ensureCaseFolder(
   meta: CaseDriveMeta,
 ): Promise<string> {
   if (meta.case_folder_id) return meta.case_folder_id;
-  const id = await client.ensureFolder(caseFolderName(caseNumber, familyName), rootId);
+
+  // Look up by a stable appProperty (caseFolderId = our case UUID) instead
+  // of by display name. This protects against (a) the user renaming the
+  // folder in Drive, (b) folder-name conflicts inside the office's Drive,
+  // and (c) most of the duplicate-folder race window when two concurrent
+  // uploads first land for a freshly-created case. (A pure Drive-side
+  // mutex would close the rest; tracked as a follow-up.)
+  let id = await client.findFolderByAppProperty('caseFolderId', caseId, rootId);
+  if (!id) {
+    id = await client.createFolder(
+      caseFolderName(caseNumber, familyName),
+      rootId,
+      { caseFolderId: caseId },
+    );
+  }
+
   const nowIso = new Date().toISOString();
-  // Patch instead of full replace - other concurrent writers (e.g. a sync
-  // updating last_synced_at) merge cleanly via the RPC.
   await patchCaseDriveMeta(caseId, {
     case_folder_id: id,
     last_synced_at: nowIso,
