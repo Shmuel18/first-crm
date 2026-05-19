@@ -33,7 +33,6 @@ export function EditableBankCell({
   options,
 }: EditableBankCellProps) {
   const tc = useTranslations('common');
-  const tf = useTranslations('case.fields');
   const noBankLabel = `— ${tc('none')} —`;
   const [open, setOpen] = useState(false);
   const [bank, setBank] = useState<BankOption | null>(currentBank);

@@ -104,7 +104,10 @@ export function DocumentsPageContent({
         ))}
       </div>
 
+      {/* `key` forces a fresh mount on open/close so child state (fileName,
+          useActionState result, refs) resets without per-effect setState. */}
       <UploadDocumentModal
+        key={`upload-${String(uploadOpen)}`}
         open={uploadOpen}
         onOpenChange={setUploadOpen}
         caseId={caseId}
@@ -113,7 +116,10 @@ export function DocumentsPageContent({
         defaultFolder={uploadFolder}
       />
 
+      {/* Same idea: switching docs (or closing) gives the modal a fresh
+          mount so the URL fetch starts clean. */}
       <DocumentPreviewModal
+        key={`preview-${previewDoc?.id ?? 'none'}`}
         doc={previewDoc}
         caseId={caseId}
         onClose={() => setPreviewDoc(null)}

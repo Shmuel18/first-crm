@@ -100,23 +100,13 @@ export function UploadDocumentModal({
     DOCUMENT_ACTION_INITIAL,
   );
 
+  // On success, ask the parent to close. The parent should remount the
+  // modal via `key={String(open)}` so all internal state (form values,
+  // useActionState result, refs) resets cleanly without us needing to
+  // call setState here - which would trigger react-hooks/set-state-in-effect.
   useEffect(() => {
-    if (state.ok === true) {
-      onOpenChange(false);
-      setFileName(null);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
+    if (state.ok === true) onOpenChange(false);
   }, [state, onOpenChange]);
-
-  // Reset internal state whenever the modal is closed (X / Cancel / outside click)
-  useEffect(() => {
-    if (!open) {
-      setFileName(null);
-      setIsDragOver(false);
-      setClientFileError(null);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  }, [open]);
 
   const filteredCategories = defaultFolder
     ? categories.filter((c) => c.drive_folder === defaultFolder)

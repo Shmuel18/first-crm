@@ -12,7 +12,6 @@ import {
   UserCircle2,
   Wallet,
 } from 'lucide-react';
-import { useLocale } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 
 import { CaseBorrowerCard } from '@/features/borrowers/components/case-borrower-card';
@@ -200,7 +199,6 @@ export default async function CaseDetailPage({ params }: Props) {
               // Defense-in-depth: even though create/update actions sanitize
               // before INSERT, re-sanitize on read so older rows or any future
               // bypass (studio writes, audit replays, imports) can't XSS.
-              // eslint-disable-next-line react/no-danger
               dangerouslySetInnerHTML={{
                 __html: sanitizeRichTextHtml(caseData.request_details),
               }}
