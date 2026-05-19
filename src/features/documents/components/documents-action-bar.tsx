@@ -54,10 +54,19 @@ export function DocumentsActionBar({
         } else {
           toast.success(parts.join(' · '));
         }
-      } else {
-        const errKey = res.error === 'not_connected' ? 'errors.notConnected' : 'errors.generic';
-        toast.error(tSync(errKey));
+        return;
       }
+      // no_folder isn't really an error - the case just hasn't had a doc
+      // uploaded yet, so there's no Drive folder. Show an info toast (not red).
+      if (res.error === 'no_folder') {
+        toast(tSync('noFolderYet'));
+        return;
+      }
+      if (res.error === 'not_connected') {
+        toast.error(tSync('errors.notConnected'));
+        return;
+      }
+      toast.error(tSync('errors.generic'));
     });
 
   return (

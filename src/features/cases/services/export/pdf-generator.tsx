@@ -15,24 +15,22 @@ import { type ReactElement } from 'react';
 import type { ExportRow } from './build-export-rows';
 
 /**
- * On Vercel Serverless, `process.cwd()` isn't the repo root and `public/`
- * isn't necessarily co-located with cwd. Register the font lazily, reading
- * the bytes ourselves via fs so we don't depend on cwd at all.
+ * Register the font lazily as a base64 data URL. @react-pdf/renderer's
+ * `src` accepts a URL string and parses `data:` URLs by calling
+ * `.substring()` on them - passing a Node Buffer (which TypeScript can be
+ * cast past) crashes at runtime with "dataUrl.substring is not a function".
  *
- * The first call pays a one-time cost; subsequent renders reuse the registered
- * family until the function instance is recycled.
+ * data: URLs work in every environment - locally and on Vercel Serverless
+ * where `process.cwd()` isn't necessarily the repo root. The font (~80kB
+ * Heebo) is read once per lambda instance.
  */
 let fontRegistered = false;
 async function ensureFontRegistered(): Promise<void> {
   if (fontRegistered) return;
-  // Path is relative to the compiled output but `public/` ships to the
-  // runtime via Next's tracing. On Vercel, files under `public/` are
-  // accessible relative to the lambda root.
   const fontPath = path.join(process.cwd(), 'public', 'fonts', 'heebo-regular.ttf');
   const buffer = await readFile(fontPath);
-  // @react-pdf/renderer accepts a Buffer at runtime but its types only declare
-  // string | URL. The cast is the documented escape hatch.
-  Font.register({ family: 'Heebo', src: buffer as unknown as string });
+  const dataUrl = `data:font/ttf;base64,${buffer.toString('base64')}`;
+  Font.register({ family: 'Heebo', src: dataUrl });
   fontRegistered = true;
 }
 
