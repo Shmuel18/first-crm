@@ -64,8 +64,26 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }
   );
   const auditTooltip = t('updatedOn', { date: updatedDate });
 
+  // Keyboard a11y (#17): <tr onClick> alone is mouse-only. role="link" +
+  // tabIndex + Enter/Space handler makes the row operable from the keyboard
+  // without changing the table layout or onClick semantics for mouse users.
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTableRowElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      navigateToCase();
+    }
+  };
+
   return (
-    <tr className={rowClasses} onClick={navigateToCase} title={auditTooltip}>
+    <tr
+      className={`${rowClasses} focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A961] focus-visible:ring-inset`}
+      onClick={navigateToCase}
+      onKeyDown={handleKeyDown}
+      role="link"
+      tabIndex={0}
+      aria-label={row.clientLabel || t('noBorrowers')}
+      title={auditTooltip}
+    >
       <td className="px-4 py-3 text-xs text-neutral-400 tabular-nums">{row.index}</td>
 
       <td className="px-4 py-3">

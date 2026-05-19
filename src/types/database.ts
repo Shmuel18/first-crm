@@ -392,6 +392,7 @@ export type Database = {
           case_id: string
           created_at: string
           created_by: string | null
+          deleted_at: string | null
           id: string
           is_primary: boolean
           notes: string | null
@@ -409,6 +410,7 @@ export type Database = {
           case_id: string
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           id?: string
           is_primary?: boolean
           notes?: string | null
@@ -426,6 +428,7 @@ export type Database = {
           case_id?: string
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           id?: string
           is_primary?: boolean
           notes?: string | null
@@ -477,6 +480,7 @@ export type Database = {
           borrower_id: string
           case_id: string
           created_at: string
+          id: string
           is_primary: boolean
           role_in_case: string
         }
@@ -484,6 +488,7 @@ export type Database = {
           borrower_id: string
           case_id: string
           created_at?: string
+          id?: string
           is_primary?: boolean
           role_in_case?: string
         }
@@ -491,6 +496,7 @@ export type Database = {
           borrower_id?: string
           case_id?: string
           created_at?: string
+          id?: string
           is_primary?: boolean
           role_in_case?: string
         }
@@ -507,6 +513,58 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_financials: {
+        Row: {
+          case_id: string
+          created_at: string
+          created_by: string | null
+          expected_income: number | null
+          fee_amount: number | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          created_by?: string | null
+          expected_income?: number | null
+          fee_amount?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          created_by?: string | null
+          expected_income?: number | null
+          fee_amount?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_financials_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: true
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_financials_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_financials_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -658,8 +716,6 @@ export type Database = {
           created_by: string | null
           deleted_at: string | null
           equity: number | null
-          expected_income: number | null
-          fee_amount: number | null
           id: string
           insurance_status: string | null
           is_archived: boolean
@@ -684,8 +740,6 @@ export type Database = {
           created_by?: string | null
           deleted_at?: string | null
           equity?: number | null
-          expected_income?: number | null
-          fee_amount?: number | null
           id?: string
           insurance_status?: string | null
           is_archived?: boolean
@@ -710,8 +764,6 @@ export type Database = {
           created_by?: string | null
           deleted_at?: string | null
           equity?: number | null
-          expected_income?: number | null
-          fee_amount?: number | null
           id?: string
           insurance_status?: string | null
           is_archived?: boolean
@@ -816,6 +868,45 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      document_drive_tombstones: {
+        Row: {
+          case_id: string
+          deleted_at: string
+          deleted_by: string | null
+          deleted_document_id: string | null
+          drive_file_id: string
+        }
+        Insert: {
+          case_id: string
+          deleted_at?: string
+          deleted_by?: string | null
+          deleted_document_id?: string | null
+          drive_file_id: string
+        }
+        Update: {
+          case_id?: string
+          deleted_at?: string
+          deleted_by?: string | null
+          deleted_document_id?: string | null
+          drive_file_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_drive_tombstones_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_drive_tombstones_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documents: {
         Row: {
@@ -1655,6 +1746,7 @@ export type Database = {
           completed_by: string | null
           created_at: string
           created_by: string | null
+          deleted_at: string | null
           description: string | null
           due_date: string | null
           google_calendar_event_id: string | null
@@ -1677,6 +1769,7 @@ export type Database = {
           completed_by?: string | null
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           description?: string | null
           due_date?: string | null
           google_calendar_event_id?: string | null
@@ -1699,6 +1792,7 @@ export type Database = {
           completed_by?: string | null
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           description?: string | null
           due_date?: string | null
           google_calendar_event_id?: string | null
@@ -1827,6 +1921,27 @@ export type Database = {
       set_primary_bank: {
         Args: { p_bank_id: string; p_case_id: string; p_user_id: string }
         Returns: undefined
+      }
+      soft_delete_document_with_tombstone: {
+        Args: { p_case_id: string; p_document_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      update_case_drive_meta: {
+        Args: { p_case_id: string; p_patch: Json }
+        Returns: undefined
+      }
+      update_document_metadata: {
+        Args: { p_document_id: string; p_patch: Json }
+        Returns: undefined
+      }
+      upsert_case_financials: {
+        Args: {
+          p_case_id: string
+          p_expected_income: number | null
+          p_fee_amount: number | null
+          p_user_id: string
+        }
+        Returns: boolean
       }
     }
     Enums: {

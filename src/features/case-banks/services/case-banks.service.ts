@@ -15,6 +15,7 @@ export async function listCaseBanks(caseId: CaseId): Promise<CaseBankWithRelatio
     .from('case_banks')
     .select(CASE_BANK_SELECT)
     .eq('case_id', caseId)
+    .is('deleted_at', null)
     .order('is_primary', { ascending: false })
     .order('created_at', { ascending: true });
 
@@ -28,6 +29,7 @@ export async function getCaseBankById(id: CaseBankId): Promise<CaseBankRow | nul
     .from('case_banks')
     .select('*')
     .eq('id', id)
+    .is('deleted_at', null)
     .maybeSingle();
 
   if (error) throw error;

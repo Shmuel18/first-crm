@@ -20,6 +20,7 @@ import {
 import { FormField, NativeSelect } from '@/components/shared/form-fields';
 
 import { uploadDocumentAction } from '../actions/upload-document';
+import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE_BYTES } from '../schemas/document.schema';
 import {
   DOCUMENT_ACTION_INITIAL,
   type DocumentActionState,
@@ -63,12 +64,30 @@ export function UploadDocumentModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [clientFileError, setClientFileError] = useState<string | null>(null);
+
+  // Mirror of the server-side guards so the user sees the error before a
+  // 20 MB file uploads in full and gets rejected by the action.
+  const validateFile = (file: File): string | null => {
+    if (file.size === 0) return tErr('fileRequired');
+    if (file.size > MAX_FILE_SIZE_BYTES) return tErr('fileTooLarge');
+    if (!(ALLOWED_MIME_TYPES as readonly string[]).includes(file.type)) {
+      return tErr('fileTypeNotAllowed');
+    }
+    return null;
+  };
 
   const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
     setIsDragOver(false);
+    setClientFileError(null);
     const dropped = e.dataTransfer.files?.[0];
     if (!dropped || !fileInputRef.current) return;
+    const err = validateFile(dropped);
+    if (err) {
+      setClientFileError(err);
+      return;
+    }
     // Programmatically set the file input via DataTransfer
     const dt = new DataTransfer();
     dt.items.add(dropped);
@@ -81,22 +100,13 @@ export function UploadDocumentModal({
     DOCUMENT_ACTION_INITIAL,
   );
 
+  // On success, ask the parent to close. The parent should remount the
+  // modal via `key={String(open)}` so all internal state (form values,
+  // useActionState result, refs) resets cleanly without us needing to
+  // call setState here - which would trigger react-hooks/set-state-in-effect.
   useEffect(() => {
-    if (state.ok === true) {
-      onOpenChange(false);
-      setFileName(null);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
+    if (state.ok === true) onOpenChange(false);
   }, [state, onOpenChange]);
-
-  // Reset internal state whenever the modal is closed (X / Cancel / outside click)
-  useEffect(() => {
-    if (!open) {
-      setFileName(null);
-      setIsDragOver(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  }, [open]);
 
   const filteredCategories = defaultFolder
     ? categories.filter((c) => c.drive_folder === defaultFolder)
@@ -123,7 +133,7 @@ export function UploadDocumentModal({
         <form action={formAction} className="space-y-4" noValidate>
           <input type="hidden" name="case_id" value={caseId} />
 
-          <FormField label={t('fileLabel')} required>
+          <FormField label={t('fileLabel')} required error={clientFileError ?? undefined}>
             <div className="flex items-center gap-2">
               <label
                 htmlFor="file-input"
@@ -165,7 +175,17 @@ export function UploadDocumentModal({
               className="sr-only"
               required
               onChange={(e) => {
+                setClientFileError(null);
                 const f = e.target.files?.[0];
+                if (f) {
+                  const err = validateFile(f);
+                  if (err) {
+                    setClientFileError(err);
+                    e.target.value = '';
+                    setFileName(null);
+                    return;
+                  }
+                }
                 setFileName(f?.name ?? null);
               }}
             />

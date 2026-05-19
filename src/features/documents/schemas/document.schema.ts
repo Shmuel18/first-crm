@@ -1,24 +1,17 @@
 import { z } from 'zod';
 
-const optionalString = z.preprocess(
-  (v) => (v === '' || v === null ? undefined : v),
-  z.string().optional(),
-);
-
-const optionalUuid = z.preprocess(
-  (v) => (v === '' || v === null ? undefined : v),
-  z.string().uuid().optional(),
-);
-
-const optionalDate = z.preprocess(
-  (v) => (v === '' || v === null ? undefined : v),
-  z.string().optional(),
-);
+import {
+  NOTES_MAX,
+  optionalDate,
+  optionalNotes,
+  optionalUuid,
+  requiredUuid,
+} from '@/lib/validators/form-primitives';
 
 export const DocumentMetadataSchema = z.object({
-  category_id: z.string().uuid({ message: 'יש לבחור סוג מסמך' }),
+  category_id: requiredUuid('documents.errors.categoryRequired'),
   borrower_id: optionalUuid,
-  notes: optionalString,
+  notes: optionalNotes(NOTES_MAX),
   expiry_date: optionalDate,
 });
 

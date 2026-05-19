@@ -87,6 +87,8 @@ export function EditableStatusCell({
         type="button"
         onClick={() => (open ? setOpen(false) : handleOpen())}
         disabled={isPending}
+        aria-haspopup="listbox"
+        aria-expanded={open}
         className="inline-flex items-center gap-1 cursor-pointer disabled:opacity-50"
       >
         <CaseStatusBadge name={statusName} color={statusColor} />

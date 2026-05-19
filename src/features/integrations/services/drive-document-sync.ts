@@ -12,6 +12,18 @@ type CaseDriveMeta = {
 /** Auto-sync on page load only if last sync was older than this. */
 const MIN_AUTO_SYNC_INTERVAL_MS = 10_000;
 
+/**
+ * Grace period before a vanished Drive file is soft-deleted from our DB.
+ * If a file is missing across multiple syncs for less than this, we keep
+ * the doc record and just stamp drive_missing_since on its metadata. After
+ * the grace expires (still missing) → soft-delete. If the file reappears
+ * within the window → clear the flag, no harm done.
+ *
+ * Protects against accidental drag-out / cloud sync hiccups that would
+ * otherwise wipe real documents from the office's view in one cycle.
+ */
+const VANISHED_FILE_GRACE_PERIOD_MS = 48 * 60 * 60 * 1000; // 48h
+
 /** Best-effort auto-sync: skips if recently synced or Drive isn't connected. */
 export async function autoSyncIfStale(caseId: string): Promise<void> {
   const supabase = await createClient();
@@ -33,26 +45,26 @@ export async function autoSyncIfStale(caseId: string): Promise<void> {
     if (ageMs < MIN_AUTO_SYNC_INTERVAL_MS) return;
   }
 
-  await syncDriveDocumentsForCase(caseId).catch(() => undefined);
+  await syncDriveDocumentsForCase(caseId).catch((err) => {
+    // Auto-sync is best-effort but silent failure hides real problems
+    // (expired refresh, scope revoked, Drive outage). Log so it shows up
+    // in server logs / Sentry instead of vanishing.
+    console.error('drive auto-sync failed', { caseId, err });
+  });
 }
 
+/**
+ * Atomic stamp of cases.metadata.drive.last_synced_at via the dedicated RPC
+ * (migration 026). Replaces the previous read-modify-write that could lose
+ * concurrent writes to sibling drive.* keys.
+ */
 async function persistLastSyncedAt(caseId: string): Promise<void> {
   const supabase = await createClient();
-  const { data } = await supabase.from('cases').select('metadata').eq('id', caseId).maybeSingle();
-  const current =
-    data?.metadata && typeof data.metadata === 'object'
-      ? (data.metadata as Record<string, unknown>)
-      : {};
-  const drive =
-    current.drive && typeof current.drive === 'object'
-      ? (current.drive as Record<string, unknown>)
-      : {};
-  await supabase
-    .from('cases')
-    .update({
-      metadata: { ...current, drive: { ...drive, last_synced_at: new Date().toISOString() } },
-    })
-    .eq('id', caseId);
+  await supabase.rpc('update_case_drive_meta', {
+    p_case_id: caseId,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- patch object is structurally Json-compatible
+    p_patch: { last_synced_at: new Date().toISOString() } as any,
+  });
 }
 
 export type DriveSyncOutcome =
@@ -114,6 +126,15 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
     .is('deleted_at', null)
     .not('drive_file_id', 'is', null);
 
+  const { data: tombstones, error: tombstonesErr } = await supabase
+    .from('document_drive_tombstones')
+    .select('drive_file_id')
+    .eq('case_id', caseId);
+  if (tombstonesErr) {
+    return { ok: false, reason: 'error', message: tombstonesErr.message };
+  }
+  const tombstonedDriveIds = new Set((tombstones ?? []).map((t) => t.drive_file_id));
+
   const existingByDriveId = new Map<
     string,
     {
@@ -153,22 +174,44 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
       categoryId: string | null,
       driveFolder: string | null,
     ) => {
+      if (tombstonedDriveIds.has(file.id)) {
+        skipped += 1;
+        return;
+      }
+
       seenDriveIds.add(file.id);
       const found = existingByDriveId.get(file.id);
       if (found) {
-        // File already known - detect any move (between subfolders OR to/from root)
+        // If the file was previously marked missing, clear that flag now -
+        // it has reappeared, no need to keep counting toward soft-delete.
+        const wasMarkedMissing = 'drive_missing_since' in found.existingMetadata;
+        const metaWithoutMissing: Record<string, unknown> = { ...found.existingMetadata };
+        delete metaWithoutMissing.drive_missing_since;
+
         if (found.currentDriveFolder !== driveFolder) {
-          // Merge with existing metadata - replacing the whole JSONB would
-          // wipe storage_path (and any other keys) on app-uploaded files.
+          // Move detected. Merge with existing metadata - replacing the whole
+          // JSONB would wipe storage_path (and any other keys) on app-uploaded
+          // files.
           await supabase
             .from('documents')
             .update({
               category_id: categoryId,
-              metadata: { ...found.existingMetadata, source: 'drive_sync' },
+              metadata: { ...metaWithoutMissing, source: 'drive_sync' },
             })
             .eq('id', found.docId);
           updated += 1;
           found.currentDriveFolder = driveFolder;
+          found.existingMetadata = { ...metaWithoutMissing, source: 'drive_sync' };
+        } else if (wasMarkedMissing) {
+          // Same folder, but file is back. Clear the flag without bumping
+          // updated count (visually nothing changed for the advisor).
+          await supabase
+            .from('documents')
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Record<string, unknown> is structurally compatible with Json but TS can't prove it
+            .update({ metadata: metaWithoutMissing as any })
+            .eq('id', found.docId);
+          found.existingMetadata = metaWithoutMissing;
+          skipped += 1;
         } else {
           skipped += 1;
         }
@@ -236,20 +279,49 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
       await importOrUpdateFile(f, null, null);
     }
 
-    // Soft-delete docs whose Drive file vanished (deleted or moved outside
-    // our case folder hierarchy). Only run if ALL list calls succeeded -
-    // otherwise a transient API hiccup would soft-delete healthy docs whose
-    // folder we just couldn't enumerate this time.
-    if (!listingsComplete) {
-      // Skip deletion sweep this run; next sync will retry.
-    } else for (const [driveId, entry] of existingByDriveId) {
-      if (seenDriveIds.has(driveId)) continue;
-      if (!entry.docId) continue;
-      const { error } = await supabase
-        .from('documents')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', entry.docId);
-      if (!error) deleted += 1;
+    // Soft-delete docs whose Drive file vanished, with a grace period:
+    //   first time missing → stamp metadata.drive_missing_since = now, keep row
+    //   missing ≥ 48h     → soft-delete + clear the flag
+    // If the file reappears (importOrUpdateFile handles the found-after-missing
+    // case above), the flag is cleared and the clock resets.
+    //
+    // Only run if ALL list calls succeeded - otherwise a transient API hiccup
+    // could mark healthy docs as missing.
+    if (listingsComplete) {
+      const nowMs = Date.now();
+      const nowIso = new Date(nowMs).toISOString();
+
+      for (const [driveId, entry] of existingByDriveId) {
+        if (seenDriveIds.has(driveId)) continue;
+        if (!entry.docId) continue;
+
+        const missingSinceRaw = entry.existingMetadata.drive_missing_since;
+        const missingSince = typeof missingSinceRaw === 'string' ? missingSinceRaw : null;
+
+        if (!missingSince) {
+          // First sync that didn't see the file. Start the grace clock.
+          await supabase
+            .from('documents')
+            .update({
+              metadata: { ...entry.existingMetadata, drive_missing_since: nowIso },
+            })
+            .eq('id', entry.docId);
+          continue;
+        }
+
+        const missingForMs = nowMs - new Date(missingSince).getTime();
+        if (missingForMs < VANISHED_FILE_GRACE_PERIOD_MS) continue;
+
+        // Grace expired - soft-delete and clear the flag in one shot.
+        const cleared: Record<string, unknown> = { ...entry.existingMetadata };
+        delete cleared.drive_missing_since;
+        const { error } = await supabase
+          .from('documents')
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Record<string, unknown> is structurally compatible with Json but TS can't prove it
+          .update({ deleted_at: nowIso, metadata: cleared as any })
+          .eq('id', entry.docId);
+        if (!error) deleted += 1;
+      }
     }
   } catch (err) {
     return {

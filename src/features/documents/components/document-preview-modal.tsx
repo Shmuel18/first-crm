@@ -51,33 +51,40 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
   const tCommon = useTranslations('common');
   const locale = useLocale();
   const [url, setUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  // Initial loading is derived from doc: only true if we'll actually fetch
+  // a signed URL (i.e., this is a Supabase-only doc, not a Drive iframe one).
+  // Using an initializer instead of setLoading(true) inside an effect avoids
+  // react-hooks/set-state-in-effect.
+  const [loading, setLoading] = useState<boolean>(() =>
+    Boolean(doc && !doc.drive_file_id),
+  );
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
+    // Parent uses `key={doc?.id ?? 'none'}` so each preview mounts fresh -
+    // we don't need to clear url/error on doc change here, and starting the
+    // fetch in async callbacks (.then / .finally) sidesteps the
+    // set-state-in-effect rule.
+    if (!doc || doc.drive_file_id) return;
     let cancelled = false;
-    if (!doc) return;
-    setUrl(null);
-    setError(null);
-    // Drive-backed docs render via Drive iframe - no Supabase fetch needed
-    if (doc.drive_file_id) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
     getDocumentPreviewUrlAction(doc.id)
       .then((res) => {
         if (cancelled) return;
         if (res.ok) setUrl(res.url);
         else setError(res.message ?? tErr('unauthorized'));
       })
-      .finally(() => !cancelled && setLoading(false));
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
     return () => {
       cancelled = true;
     };
-  }, [doc, tErr]);
+    // tErr excluded - re-fetching on locale change would be wasteful and
+    // the fallback string is only used on failure.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [doc]);
 
   if (!doc) return null;
 

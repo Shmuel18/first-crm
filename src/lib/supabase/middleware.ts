@@ -39,17 +39,21 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Redirect unauthenticated users away from protected routes.
+  // Use exact-or-prefix-with-slash matching so /loginfake, /casesx etc. don't
+  // accidentally classify a future route into the wrong bucket.
   const pathname = request.nextUrl.pathname;
+  const matches = (p: string): boolean =>
+    pathname === p || pathname.startsWith(p + '/');
   const isProtectedRoute =
-    pathname.startsWith('/cases') ||
-    pathname.startsWith('/leads') ||
-    pathname.startsWith('/tasks') ||
-    pathname.startsWith('/team') ||
-    pathname.startsWith('/templates') ||
-    pathname.startsWith('/audit-log') ||
-    pathname.startsWith('/settings') ||
-    pathname.startsWith('/dashboard');
-  const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/signup');
+    matches('/cases') ||
+    matches('/leads') ||
+    matches('/tasks') ||
+    matches('/team') ||
+    matches('/templates') ||
+    matches('/audit-log') ||
+    matches('/settings') ||
+    matches('/dashboard');
+  const isAuthRoute = matches('/login') || matches('/signup');
 
   if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone();

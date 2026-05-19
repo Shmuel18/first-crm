@@ -46,6 +46,17 @@ export async function toggleArchiveAction(
   if (!(await ensureAccess(supabase, caseId))) {
     return { ok: false, error: 'unauthorized' };
   }
+
+  // Archiving and un-archiving are separate permissions per spec 3.6.5.
+  // ensureAccess only checks "can see the case" - this guards the action
+  // itself (someone with edit_own_case shouldn't necessarily be able to
+  // archive cases).
+  const permKey = archive ? 'archive_case' : 'restore_archived_case';
+  const { data: hasPerm } = await supabase.rpc('has_permission', {
+    perm_key: permKey,
+  });
+  if (hasPerm !== true) return { ok: false, error: 'unauthorized' };
+
   const { error } = await supabase
     .from('cases')
     .update({ is_archived: archive })

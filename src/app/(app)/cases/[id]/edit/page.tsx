@@ -20,7 +20,7 @@ export default async function EditCasePage({ params }: Props) {
   const tc = await getTranslations('common');
 
   const supabase = await createClient();
-  const [caseTypesRes, statusesRes, advisorsRes, isAdminRes] = await Promise.all([
+  const [caseTypesRes, statusesRes, advisorsRes, isAdminRes, financialsRes] = await Promise.all([
     supabase
       .from('case_types')
       .select('id, name_he')
@@ -37,9 +37,21 @@ export default async function EditCasePage({ params }: Props) {
       .eq('is_active', true)
       .order('first_name'),
     supabase.rpc('is_admin'),
+    // Manager-only fee / expected income live in case_financials (admin RLS)
+    // - non-admins simply get an empty row here.
+    supabase
+      .from('case_financials')
+      .select('fee_amount, expected_income')
+      .eq('case_id', caseData.id)
+      .maybeSingle(),
   ]);
 
   const canSeeFinancials = isAdminRes.data === true;
+  const initialWithFinancials = {
+    ...caseData,
+    fee_amount: financialsRes.data?.fee_amount ?? null,
+    expected_income: financialsRes.data?.expected_income ?? null,
+  };
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -59,7 +71,7 @@ export default async function EditCasePage({ params }: Props) {
       <div className="bg-white border border-neutral-200 rounded-lg p-6">
         <CaseForm
           mode="edit"
-          initial={caseData}
+          initial={initialWithFinancials}
           caseTypes={caseTypesRes.data ?? []}
           statuses={statusesRes.data ?? []}
           advisors={advisorsRes.data ?? []}

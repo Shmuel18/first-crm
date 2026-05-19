@@ -96,6 +96,8 @@ export function EditableAdvisorCell({
         type="button"
         onClick={() => (open ? setOpen(false) : handleOpen())}
         disabled={isPending}
+        aria-haspopup="listbox"
+        aria-expanded={open}
         className="inline-flex items-center gap-2 cursor-pointer disabled:opacity-50"
       >
         {advisorName ? (

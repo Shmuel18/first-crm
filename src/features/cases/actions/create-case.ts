@@ -3,8 +3,10 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
+import { userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import { sanitizeRichTextHtml } from '@/lib/utils/sanitize-html';
+import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
 import { CaseFormSchema } from '../schemas/case.schema';
 import type { CaseActionState, CaseFormValues } from '../types';
@@ -32,11 +34,7 @@ export async function createCaseAction(
   const values = formDataToValues(formData);
   const parsed = CaseFormSchema.safeParse(formDataToObject(formData));
   if (!parsed.success) {
-    const fieldErrors: Record<string, string> = {};
-    for (const issue of parsed.error.issues) {
-      const path = issue.path.join('.');
-      if (!fieldErrors[path]) fieldErrors[path] = issue.message;
-    }
+    const fieldErrors = await resolveSchemaErrors(parsed.error);
     return { ok: false, error: 'validation', fieldErrors, values };
   }
 
@@ -46,10 +44,21 @@ export async function createCaseAction(
     return { ok: false, error: 'unauthorized', values };
   }
 
+  // Defense-in-depth: explicit permission check before any DB work. RLS
+  // would also block, but failing fast here gives a clean unauthorized
+  // response instead of an opaque 'unknown' from the eventual RLS reject.
+  if (!(await userHasPermission('create_case'))) {
+    return { ok: false, error: 'unauthorized', values };
+  }
+
+  // Split financials off the cases payload (case_financials has its own
+  // permission gate, view_case_fee, per migration 027).
+  const { fee_amount, expected_income, ...caseFields } = parsed.data;
+
   const { data, error } = await supabase
     .from('cases')
     .insert({
-      ...parsed.data,
+      ...caseFields,
       request_details: sanitizeRichTextHtml(parsed.data.request_details ?? null),
       created_by: userRes.user.id,
       updated_by: userRes.user.id,
@@ -59,6 +68,23 @@ export async function createCaseAction(
 
   if (error || !data) {
     return { ok: false, error: 'unknown', values };
+  }
+
+  // Financials via the upsert_case_financials RPC (migration 027). The RPC
+  // returns false silently when the caller lacks view_case_fee (the form
+  // hides fields for non-admins; ignored values aren't an error). Any other
+  // failure is a real bug that MUST surface - finance data can't fail quietly.
+  if (fee_amount != null || expected_income != null) {
+    const { error: finErr } = await supabase.rpc('upsert_case_financials', {
+      p_case_id: data.id,
+      p_fee_amount: fee_amount ?? null,
+      p_expected_income: expected_income ?? null,
+      p_user_id: userRes.user.id,
+    });
+    if (finErr) {
+      console.error('case_financials upsert failed', { caseId: data.id, err: finErr.message });
+      return { ok: false, error: 'unknown', values };
+    }
   }
 
   revalidatePath('/cases');

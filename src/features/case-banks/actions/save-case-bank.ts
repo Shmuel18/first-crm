@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
+import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
 import { CaseBankFormSchema } from '../schemas/case-bank.schema';
 import type { CaseBankActionState } from '../types';
@@ -38,11 +39,7 @@ export async function saveCaseBankAction(
 
   const parsed = CaseBankFormSchema.safeParse(formDataToObject(formData));
   if (!parsed.success) {
-    const fieldErrors: Record<string, string> = {};
-    for (const issue of parsed.error.issues) {
-      const path = issue.path.join('.');
-      if (!fieldErrors[path]) fieldErrors[path] = issue.message;
-    }
+    const fieldErrors = await resolveSchemaErrors(parsed.error);
     return { ok: false, error: 'validation', fieldErrors, values };
   }
 
@@ -92,11 +89,14 @@ export async function deleteCaseBankAction(
     .maybeSingle();
   if (!caseRow) return { ok: false, error: 'unauthorized' };
 
+  // Soft-delete: hard DELETE is blocked by RLS (#37 hardening). Keeps history
+  // for audit and lets retention purge clean it up later.
   const { error } = await supabase
     .from('case_banks')
-    .delete()
+    .update({ deleted_at: new Date().toISOString(), updated_by: userRes.user.id })
     .eq('id', caseBankId)
-    .eq('case_id', caseId); // defense-in-depth: bank must belong to the supplied case
+    .eq('case_id', caseId)
+    .is('deleted_at', null);
   if (error) return { ok: false, error: 'unknown', message: error.message };
 
   revalidatePath(`/cases/${caseId}`);

@@ -23,7 +23,22 @@
     "noteHint": "הוסף הערה...",
     "copied": "הועתק!",
     "savedAgo": "נשמר",
-    "saveFailed": "השמירה נכשלה. נסה שוב."
+    "saveFailed": "השמירה נכשלה. נסה שוב.",
+    "errors": {
+      "required": "שדה חובה",
+      "invalidEmail": "כתובת מייל לא תקינה",
+      "invalidUuid": "מזהה לא תקין",
+      "invalidDate": "תאריך לא תקין",
+      "dateInFuture": "התאריך חייב להיות בעבר",
+      "invalidNumber": "ערך מספרי לא תקין",
+      "negative": "הערך חייב להיות חיובי",
+      "tooLarge": "הערך גבוה מדי",
+      "tooLong": "הטקסט ארוך מדי",
+      "invalidEnum": "ערך לא חוקי",
+      "invalidBoolean": "ערך כן/לא לא תקין",
+      "invalidIsraeliId": "תעודת זהות לא תקינה (9 ספרות + ספרת ביקורת)",
+      "invalidPhone": "מספר טלפון לא תקין"
+    }
   },
   "nav": {
     "dashboard": "דשבורד",
@@ -225,7 +240,8 @@
       },
       "errors": {
         "unauthorized": "אין הרשאה לבצע פעולה זו",
-        "generic": "שגיאה בשמירה. נסה שוב."
+        "generic": "שגיאה בשמירה. נסה שוב.",
+        "mortgageExceedsProperty": "סכום המשכנתא לא יכול לעלות על שווי הנכס"
       }
     },
     "blocker": {
@@ -377,6 +393,11 @@
       }
     }
   },
+  "caseBank": {
+    "errors": {
+      "bankRequired": "יש לבחור בנק"
+    }
+  },
   "documents": {
     "pageTitle": "מסמכי תיק",
     "backToCase": "חזרה לתיק",
@@ -470,7 +491,7 @@
       "downloadOriginal": "הורד מקור",
       "noPreview": "אין תצוגה מקדימה לסוג קובץ זה",
       "close": "סגור",
-      "deleteConfirm": "למחוק את המסמך לצמיתות? פעולה זו לא ניתנת לביטול."
+      "deleteConfirm": "להסיר את המסמך מהתיק? הוא יישאר באחסון שמור למשך חלון השחזור שהוגדר."
     },
     "card": {
       "documentCount": "{count} מסמכים",

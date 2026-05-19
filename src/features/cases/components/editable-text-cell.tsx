@@ -26,7 +26,9 @@ export function EditableTextCell({
   emptyLabel = '—',
 }: EditableTextCellProps) {
   const tc = useTranslations('common');
+  const tFields = useTranslations('case.fields');
   const effectivePlaceholder = placeholder ?? tc('noteHint');
+  const fieldLabel = field === 'short_note' ? tFields('shortNote') : tFields('referrer');
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(initialValue ?? '');
   const [savedValue, setSavedValue] = useState(initialValue ?? '');
@@ -123,9 +125,13 @@ export function EditableTextCell({
 
       {editing && popoverPos && (
         <>
+          {/* #18: click-outside CANCELS - silently saving partially-typed
+              text on accidental clicks was bad UX. Save still works via the
+              Save button or Ctrl/Cmd+Enter; close-without-save via Esc or
+              clicking outside. */}
           <div
             className="fixed inset-0 z-40"
-            onClick={save}
+            onClick={cancel}
             aria-hidden
             title=""
           />
@@ -142,6 +148,7 @@ export function EditableTextCell({
                 if (e.key === 'Escape') cancel();
               }}
               rows={4}
+              aria-label={fieldLabel}
               placeholder={effectivePlaceholder}
               className="w-full px-2 py-1.5 text-sm border border-neutral-200 rounded resize-none focus:outline-none focus:ring-2 focus:ring-[#C9A961]/40"
             />

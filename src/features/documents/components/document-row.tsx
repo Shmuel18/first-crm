@@ -13,11 +13,14 @@ type Props = {
   onClick: (doc: DocumentWithRelations) => void;
 };
 
-function fileIcon(mime: string | null) {
-  if (!mime) return FileType2;
-  if (mime.startsWith('image/')) return ImageIcon;
-  if (mime === 'application/pdf') return FileText;
-  return FileType2;
+// Declared at module scope (not inside the component) so the React runtime
+// sees a stable component type. Returning the Icon variable from a helper
+// then rendering <Icon /> triggers react-hooks/static-components.
+function FileTypeIcon({ mime, className }: { mime: string | null; className?: string }) {
+  if (!mime) return <FileType2 className={className} />;
+  if (mime.startsWith('image/')) return <ImageIcon className={className} />;
+  if (mime === 'application/pdf') return <FileText className={className} />;
+  return <FileType2 className={className} />;
 }
 
 function formatSize(bytes: number | null): string {
@@ -29,7 +32,6 @@ function formatSize(bytes: number | null): string {
 
 export function DocumentRow({ doc, onClick }: Props) {
   const tc = useTranslations('documents.card');
-  const Icon = fileIcon(doc.mime_type);
   const borrowerName = doc.borrower
     ? [doc.borrower.first_name, doc.borrower.last_name].filter(Boolean).join(' ')
     : tc('borrowerGeneral');
@@ -44,7 +46,7 @@ export function DocumentRow({ doc, onClick }: Props) {
         'border border-transparent hover:border-neutral-200',
       )}
     >
-      <Icon className="size-5 text-neutral-400 shrink-0" />
+      <FileTypeIcon mime={doc.mime_type} className="size-5 text-neutral-400 shrink-0" />
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">

@@ -1,35 +1,28 @@
 import { z } from 'zod';
 
-const optionalString = z.preprocess(
-  (v) => (v === '' || v === null ? undefined : v),
-  z.string().optional(),
-);
-
-const optionalUuid = z.preprocess(
-  (v) => (v === '' || v === null ? undefined : v),
-  z.string().uuid().optional(),
-);
-
-const optionalDate = z.preprocess(
-  (v) => (v === '' || v === null ? undefined : v),
-  z.string().optional(),
-);
-
-const boolFromForm = z.preprocess((v) => v === 'on' || v === 'true' || v === true, z.boolean());
+import {
+  boolFromForm,
+  NAME_MAX,
+  NOTES_MAX,
+  optionalDate,
+  optionalEmail,
+  optionalIsraeliPhone,
+  optionalNotes,
+  optionalShortString,
+  optionalUuid,
+  requiredUuid,
+} from '@/lib/validators/form-primitives';
 
 export const CaseBankFormSchema = z.object({
-  bank_id: z.string().uuid({ message: 'יש לבחור בנק' }),
+  bank_id: requiredUuid('caseBank.errors.bankRequired'),
   bank_status_id: optionalUuid,
   is_primary: boolFromForm,
-  banker_name: optionalString,
-  banker_phone: optionalString,
-  banker_email: z.preprocess(
-    (v) => (v === '' || v === null ? undefined : v),
-    z.string().email({ message: 'אימייל לא תקין' }).optional(),
-  ),
+  banker_name: optionalShortString(NAME_MAX),
+  banker_phone: optionalIsraeliPhone,
+  banker_email: optionalEmail,
   submission_date: optionalDate,
   response_date: optionalDate,
-  notes: optionalString,
+  notes: optionalNotes(NOTES_MAX),
 });
 
 export type CaseBankFormInput = z.infer<typeof CaseBankFormSchema>;

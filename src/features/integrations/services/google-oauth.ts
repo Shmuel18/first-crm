@@ -86,6 +86,22 @@ export async function exchangeCodeForTokens(code: string): Promise<TokenResponse
   return (await res.json()) as TokenResponse;
 }
 
+/**
+ * Thrown by refreshAccessToken when Google rejects the refresh request.
+ * `permanent === true` for errors that won't recover by retrying
+ * (invalid_grant: refresh token revoked or expired; invalid_client: app
+ * credentials wrong). Callers should flip the integration to status='error'
+ * and require the admin to reconnect.
+ */
+export class RefreshTokenError extends Error {
+  readonly permanent: boolean;
+  constructor(message: string, permanent: boolean) {
+    super(message);
+    this.name = 'RefreshTokenError';
+    this.permanent = permanent;
+  }
+}
+
 export async function refreshAccessToken(refreshToken: string): Promise<TokenResponse> {
   if (!env.GOOGLE_OAUTH_CLIENT_ID || !env.GOOGLE_OAUTH_CLIENT_SECRET) {
     throw new Error('Google OAuth not configured');
@@ -105,24 +121,43 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenRes
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Google token refresh failed: ${res.status} ${text}`);
+    // Classify permanent failures so the caller can flip integration state
+    // to 'error' and require the admin to reconnect.
+    const permanent = /invalid_grant|invalid_client|invalid_scope/i.test(text);
+    throw new RefreshTokenError(
+      `Google token refresh failed: ${res.status} ${text}`,
+      permanent,
+    );
   }
   return (await res.json()) as TokenResponse;
 }
 
 export async function fetchUserInfo(
   accessToken: string,
-): Promise<{ email: string; sub: string }> {
+): Promise<{ email: string; sub: string; hd?: string }> {
   const res = await fetch(USERINFO_URL, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (!res.ok) throw new Error('Failed to fetch Google user info');
-  const data = (await res.json()) as { email: string; sub: string };
-  return { email: data.email, sub: data.sub };
+  const data = (await res.json()) as { email: string; sub: string; hd?: string };
+  return { email: data.email, sub: data.sub, hd: data.hd };
 }
 
+/**
+ * Revoke a Google OAuth token. Never throws - the local disconnect should
+ * proceed even if Google is unreachable - but logs warnings so a stuck
+ * revoke is visible in server logs.
+ */
 export async function revokeToken(token: string): Promise<void> {
-  await fetch(`${REVOKE_URL}?token=${encodeURIComponent(token)}`, {
-    method: 'POST',
-  });
+  try {
+    const res = await fetch(`${REVOKE_URL}?token=${encodeURIComponent(token)}`, {
+      method: 'POST',
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      console.warn(`Google token revoke failed: ${res.status} ${res.statusText} ${body}`);
+    }
+  } catch (err) {
+    console.warn('Google token revoke threw:', err);
+  }
 }

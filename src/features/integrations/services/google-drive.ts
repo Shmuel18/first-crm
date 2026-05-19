@@ -1,6 +1,9 @@
 import type { IntegrationProvider, IntegrationRow } from '../types';
-import { refreshAccessToken } from './google-oauth';
-import { persistRefreshedAccessToken } from './integrations.service';
+import { refreshAccessToken, RefreshTokenError } from './google-oauth';
+import {
+  markIntegrationDisconnected,
+  persistRefreshedAccessToken,
+} from './integrations.service';
 
 const DRIVE_API = 'https://www.googleapis.com/drive/v3';
 const DRIVE_UPLOAD = 'https://www.googleapis.com/upload/drive/v3';
@@ -35,15 +38,30 @@ export class GoogleDriveClient {
     if (this.refreshPromise) return this.refreshPromise;
 
     this.refreshPromise = (async () => {
-      const tokens = await refreshAccessToken(this.integration.refresh_token!);
-      this.accessToken = tokens.access_token;
-      this.tokenExpiresAt = Date.now() + tokens.expires_in * 1000;
-      await persistRefreshedAccessToken(
-        this.integration.provider as IntegrationProvider,
-        this.accessToken,
-        new Date(this.tokenExpiresAt).toISOString(),
-      );
-      return this.accessToken;
+      try {
+        const tokens = await refreshAccessToken(this.integration.refresh_token!);
+        this.accessToken = tokens.access_token;
+        this.tokenExpiresAt = Date.now() + tokens.expires_in * 1000;
+        await persistRefreshedAccessToken(
+          this.integration.provider as IntegrationProvider,
+          this.accessToken,
+          new Date(this.tokenExpiresAt).toISOString(),
+        );
+        return this.accessToken;
+      } catch (err) {
+        // Permanent failure (invalid_grant etc.): admin must reconnect.
+        // Flip integration to status='error' so the UI shows it and we
+        // stop attempting silent refreshes on every request.
+        if (err instanceof RefreshTokenError && err.permanent) {
+          await markIntegrationDisconnected(
+            this.integration.provider as IntegrationProvider,
+            err.message,
+          ).catch((markErr) =>
+            console.error('failed to mark integration disconnected', markErr),
+          );
+        }
+        throw err;
+      }
     })();
 
     try {
@@ -64,8 +82,30 @@ export class GoogleDriveClient {
     });
   }
 
+  /**
+   * Retry transient Drive failures (429 rate limit, 5xx server errors) with
+   * exponential backoff. Honors Retry-After header when present. Read-only
+   * methods (GET) opt in; mutations bypass retry to stay idempotent.
+   */
+  private async authedFetchRetry(url: string, init: RequestInit = {}, retries = 2): Promise<Response> {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      const res = await this.authedFetch(url, init);
+      const transient = res.status === 429 || res.status === 502 || res.status === 503;
+      if (!transient || attempt === retries) return res;
+      const retryAfter = res.headers.get('Retry-After');
+      const delayMs = retryAfter
+        ? Math.min(Number(retryAfter) * 1000, 10_000)
+        : Math.min(500 * 2 ** attempt, 4_000);
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+    // Unreachable - the loop returns or throws - but TS doesn't infer it.
+    return this.authedFetch(url, init);
+  }
+
   async findFolder(name: string, parentId?: string): Promise<string | null> {
-    const escaped = name.replace(/'/g, "\\'");
+    // Escape backslashes first, then single quotes. Order matters - escaping
+    // quotes first would mangle the backslash we add.
+    const escaped = name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     const parts = [
       `name = '${escaped}'`,
       `mimeType = '${FOLDER_MIME}'`,
@@ -74,15 +114,20 @@ export class GoogleDriveClient {
     if (parentId) parts.push(`'${parentId}' in parents`);
     const q = parts.join(' and ');
     const url = `${DRIVE_API}/files?q=${encodeURIComponent(q)}&fields=files(id,name)&pageSize=1&spaces=drive`;
-    const res = await this.authedFetch(url);
+    const res = await this.authedFetchRetry(url);
     if (!res.ok) throw new Error(`Drive folder search failed: ${res.status}`);
     const data = (await res.json()) as { files: { id: string; name: string }[] };
     return data.files[0]?.id ?? null;
   }
 
-  async createFolder(name: string, parentId?: string): Promise<string> {
+  async createFolder(
+    name: string,
+    parentId?: string,
+    appProperties?: Record<string, string>,
+  ): Promise<string> {
     const body: Record<string, unknown> = { name, mimeType: FOLDER_MIME };
     if (parentId) body.parents = [parentId];
+    if (appProperties) body.appProperties = appProperties;
     const res = await this.authedFetch(`${DRIVE_API}/files?fields=id`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -97,6 +142,32 @@ export class GoogleDriveClient {
     const existing = await this.findFolder(name, parentId);
     if (existing) return existing;
     return this.createFolder(name, parentId);
+  }
+
+  /**
+   * Find a folder by an appProperty key/value pair. More reliable than
+   * name-based lookup: rename / reorganize on Drive doesn't break us, and
+   * the lookup matches a stable id we control.
+   */
+  async findFolderByAppProperty(
+    key: string,
+    value: string,
+    parentId?: string,
+  ): Promise<string | null> {
+    // Escape single quotes inside value for the Drive query DSL.
+    const safeValue = value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const parts = [
+      `mimeType = '${FOLDER_MIME}'`,
+      `trashed = false`,
+      `appProperties has { key='${key}' and value='${safeValue}' }`,
+    ];
+    if (parentId) parts.push(`'${parentId}' in parents`);
+    const q = parts.join(' and ');
+    const url = `${DRIVE_API}/files?q=${encodeURIComponent(q)}&fields=files(id,name)&pageSize=1&spaces=drive`;
+    const res = await this.authedFetchRetry(url);
+    if (!res.ok) throw new Error(`Drive appProperty lookup failed: ${res.status}`);
+    const data = (await res.json()) as { files: { id: string; name: string }[] };
+    return data.files[0]?.id ?? null;
   }
 
   async uploadFile(file: {
@@ -151,7 +222,7 @@ export class GoogleDriveClient {
     const q = `'${folderId}' in parents and trashed = false and mimeType != '${FOLDER_MIME}'`;
     const fields = 'files(id,name,mimeType,size,webViewLink,modifiedTime,createdTime)';
     const url = `${DRIVE_API}/files?q=${encodeURIComponent(q)}&fields=${encodeURIComponent(fields)}&pageSize=200&spaces=drive`;
-    const res = await this.authedFetch(url);
+    const res = await this.authedFetchRetry(url);
     if (!res.ok) throw new Error(`Drive list folder failed: ${res.status}`);
     const data = (await res.json()) as { files: DriveFileMeta[] };
     return data.files ?? [];
@@ -177,7 +248,7 @@ export class GoogleDriveClient {
         spaces: 'drive',
       });
       if (pageToken) params.set('pageToken', pageToken);
-      const res = await this.authedFetch(`${DRIVE_API}/files?${params.toString()}`);
+      const res = await this.authedFetchRetry(`${DRIVE_API}/files?${params.toString()}`);
       if (!res.ok) throw new Error(`Drive list folder failed: ${res.status}`);
       const data = (await res.json()) as {
         files: DriveFileMeta[];
@@ -192,7 +263,7 @@ export class GoogleDriveClient {
   async listSubfolders(parentId: string): Promise<{ id: string; name: string }[]> {
     const q = `'${parentId}' in parents and trashed = false and mimeType = '${FOLDER_MIME}'`;
     const url = `${DRIVE_API}/files?q=${encodeURIComponent(q)}&fields=files(id,name)&pageSize=200&spaces=drive`;
-    const res = await this.authedFetch(url);
+    const res = await this.authedFetchRetry(url);
     if (!res.ok) throw new Error(`Drive list subfolders failed: ${res.status}`);
     const data = (await res.json()) as { files: { id: string; name: string }[] };
     return data.files ?? [];

@@ -15,11 +15,13 @@ type Props = {
   onPreview: (doc: DocumentWithRelations) => void;
 };
 
-function fileIcon(mime: string | null): React.ComponentType<{ className?: string }> {
-  if (!mime) return FileType2;
-  if (mime.startsWith('image/')) return ImageIcon;
-  if (mime === 'application/pdf') return FileText;
-  return FileType2;
+// Declared at module scope (not inside the component) so the React runtime
+// sees a stable component type — see document-row.tsx for the same pattern.
+function FileTypeIcon({ mime, className }: { mime: string | null; className?: string }) {
+  if (!mime) return <FileType2 className={className} />;
+  if (mime.startsWith('image/')) return <ImageIcon className={className} />;
+  if (mime === 'application/pdf') return <FileText className={className} />;
+  return <FileType2 className={className} />;
 }
 
 export function UncategorizedCard({ documents, categories, caseId, onPreview }: Props) {
@@ -67,7 +69,6 @@ function UncategorizedRow({
 }) {
   const t = useTranslations('documents.uncategorized');
   const [isPending, startTransition] = useTransition();
-  const Icon = fileIcon(doc.mime_type);
 
   const handleChange = (categoryId: string) => {
     if (!categoryId) return;
@@ -83,7 +84,7 @@ function UncategorizedRow({
         onClick={() => onPreview(doc)}
         className="flex items-center gap-2 flex-1 min-w-0 text-start hover:opacity-80 transition"
       >
-        <Icon className="size-4 text-neutral-400 shrink-0" />
+        <FileTypeIcon mime={doc.mime_type} className="size-4 text-neutral-400 shrink-0" />
         <span className="text-sm text-neutral-900 truncate">{doc.file_name}</span>
       </button>
 

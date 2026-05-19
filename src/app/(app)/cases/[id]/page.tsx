@@ -10,9 +10,7 @@ import {
   Pencil,
   Settings,
   UserCircle2,
-  Wallet,
 } from 'lucide-react';
-import { useLocale } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 
 import { CaseBorrowerCard } from '@/features/borrowers/components/case-borrower-card';
@@ -20,8 +18,10 @@ import { listBorrowersForCase } from '@/features/borrowers/services/borrowers.se
 import { CaseBankRow } from '@/features/case-banks/components/case-bank-row';
 import { listCaseBanks } from '@/features/case-banks/services/case-banks.service';
 import { CaseActionBar } from '@/features/cases/components/case-action-bar';
+import { CaseAdminBlock } from '@/features/cases/components/case-admin-block';
 import { CaseBlock } from '@/features/cases/components/case-block';
-import { BlockerRow, DataRow, InsuranceRow } from '@/features/cases/components/case-info-rows';
+import { bandToAccent, EmptyBorrowers } from '@/features/cases/components/case-detail-helpers';
+import { DataRow } from '@/features/cases/components/case-info-rows';
 import { calculateLtv, ltvBand } from '@/features/cases/domain/calculations';
 import { formatMoney } from '@/features/cases/domain/format';
 import type { CaseBlocker, InsuranceStatus } from '@/features/cases/schemas/case.schema';
@@ -69,7 +69,6 @@ export default async function CaseDetailPage({ params }: Props) {
   const ltvAccent = ltv !== null ? bandToAccent(ltvBand(ltv)) : undefined;
 
   const locale = (await import('next-intl/server').then((m) => m.getLocale())) as Locale;
-  const dateLocale = locale === 'he' ? 'he-IL' : 'en-GB';
 
   return (
     <div className="space-y-5 -mt-6">
@@ -154,30 +153,17 @@ export default async function CaseDetailPage({ params }: Props) {
           )}
         </CaseBlock>
 
-        <CaseBlock title={t('blocks.admin')} icon={<Wallet />}>
-          <BlockerRow blocker={caseData.case_blocker as CaseBlocker | null} />
-          <InsuranceRow status={caseData.insurance_status as InsuranceStatus | null} />
-          <DataRow label={t('fields.referrer')} value={caseData.referrer_name ?? '—'} />
-          <DataRow label={t('fields.advisor')} value={advisor} />
-          <DataRow
-            label={t('fields.createdAt')}
-            value={new Date(caseData.created_at).toLocaleDateString(dateLocale)}
-          />
-          {canSeeFinancials && (
-            <>
-              <DataRow
-                label={t('fields.feeAmount')}
-                value={formatMoney(caseData.fee_amount)}
-                accent="gold"
-              />
-              <DataRow
-                label={t('fields.expectedIncome')}
-                value={formatMoney(caseData.expected_income)}
-                accent="gold"
-              />
-            </>
-          )}
-        </CaseBlock>
+        <CaseAdminBlock
+          blocker={caseData.case_blocker as CaseBlocker | null}
+          insurance={caseData.insurance_status as InsuranceStatus | null}
+          referrerName={caseData.referrer_name}
+          advisor={advisor}
+          createdAt={caseData.created_at}
+          feeAmount={caseData.case_financials?.fee_amount ?? null}
+          expectedIncome={caseData.case_financials?.expected_income ?? null}
+          canSeeFinancials={canSeeFinancials}
+          locale={locale}
+        />
 
         <CaseBlock title={t('blocks.tasks')} icon={<Briefcase />}>
           <p className="text-sm text-neutral-500 text-center py-4">
@@ -200,7 +186,6 @@ export default async function CaseDetailPage({ params }: Props) {
               // Defense-in-depth: even though create/update actions sanitize
               // before INSERT, re-sanitize on read so older rows or any future
               // bypass (studio writes, audit replays, imports) can't XSS.
-              // eslint-disable-next-line react/no-danger
               dangerouslySetInnerHTML={{
                 __html: sanitizeRichTextHtml(caseData.request_details),
               }}
@@ -246,30 +231,3 @@ export default async function CaseDetailPage({ params }: Props) {
   );
 }
 
-function bandToAccent(band: ReturnType<typeof ltvBand>): 'green' | 'yellow' | 'red' {
-  if (band === 'high') return 'red';
-  if (band === 'moderate') return 'yellow';
-  return 'green';
-}
-
-function EmptyBorrowers({
-  caseId,
-  emptyText,
-  ctaText,
-}: {
-  caseId: string;
-  emptyText: string;
-  ctaText: string;
-}) {
-  return (
-    <div className="text-center py-8">
-      <p className="text-sm text-neutral-500 mb-3">{emptyText}</p>
-      <Link
-        href={`/cases/${caseId}/borrowers/new`}
-        className="btn-gold inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm"
-      >
-        {ctaText}
-      </Link>
-    </div>
-  );
-}
