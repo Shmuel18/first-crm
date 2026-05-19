@@ -14,6 +14,15 @@ import {
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -45,6 +54,7 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -82,9 +92,9 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
       else onClose();
     });
 
-  const handleDelete = () =>
+  const handleDeleteConfirmed = () =>
     startTransition(async () => {
-      if (!window.confirm(t('deleteConfirm'))) return;
+      setConfirmDelete(false);
       const res = await deleteDocumentAction(doc.id, caseId);
       if (!res.ok) setError(tErr('deleteFailed'));
       else onClose();
@@ -212,7 +222,7 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
           <Button
             type="button"
             variant="destructive"
-            onClick={handleDelete}
+            onClick={() => setConfirmDelete(true)}
             disabled={isPending}
             className="h-9"
           >
@@ -221,6 +231,35 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
           </Button>
         </div>
       </DialogContent>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogTitle>{tCommon('delete')}</AlertDialogTitle>
+          <AlertDialogDescription>{t('deleteConfirm')}</AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              render={
+                <Button type="button" variant="ghost" className="h-10">
+                  {tCommon('cancel')}
+                </Button>
+              }
+            />
+            <AlertDialogAction
+              render={
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDeleteConfirmed}
+                  disabled={isPending}
+                  className="h-10"
+                >
+                  {tCommon('delete')}
+                </Button>
+              }
+            />
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

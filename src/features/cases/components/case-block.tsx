@@ -34,7 +34,7 @@ export function CaseBlock({
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="flex items-center gap-2.5 text-right group flex-1"
+          className="flex items-center gap-2.5 text-start group flex-1"
         >
           <span className="text-[#C9A961] [&_svg]:size-5">{icon}</span>
           <span className="font-display text-base font-medium text-neutral-900">{title}</span>

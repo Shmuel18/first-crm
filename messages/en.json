@@ -22,7 +22,8 @@
     "more": "More",
     "noteHint": "Add a note...",
     "copied": "Copied!",
-    "savedAgo": "Saved"
+    "savedAgo": "Saved",
+    "saveFailed": "Save failed. Try again."
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -370,6 +371,7 @@
           "admin_only": "Only an admin can connect integrations.",
           "missing_params": "Missing parameters on return from Google. Try again.",
           "access_denied": "You declined consent in Google. Connection not completed.",
+          "drive_scope_missing": "You did not grant Drive access. Check all permissions on Google's consent screen.",
           "generic": "Connection failed. Try again or contact the developer."
         }
       }

@@ -109,21 +109,30 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
 
   const { data: existing } = await supabase
     .from('documents')
-    .select('id, drive_file_id, category:category_id(drive_folder)')
+    .select('id, drive_file_id, metadata, category:category_id(drive_folder)')
     .eq('case_id', caseId)
     .is('deleted_at', null)
     .not('drive_file_id', 'is', null);
 
   const existingByDriveId = new Map<
     string,
-    { docId: string; currentDriveFolder: string | null }
+    {
+      docId: string;
+      currentDriveFolder: string | null;
+      existingMetadata: Record<string, unknown>;
+    }
   >();
   for (const e of existing ?? []) {
     if (!e.drive_file_id) continue;
     const cat = e.category as { drive_folder?: string } | null;
+    const meta =
+      e.metadata && typeof e.metadata === 'object' && !Array.isArray(e.metadata)
+        ? (e.metadata as Record<string, unknown>)
+        : {};
     existingByDriveId.set(e.drive_file_id, {
       docId: e.id,
       currentDriveFolder: cat?.drive_folder ?? null,
+      existingMetadata: meta,
     });
   }
 
@@ -131,9 +140,12 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
   let updated = 0;
   let skipped = 0;
   let deleted = 0;
-  // Track which existing drive_file_ids we actually saw this pass - the
-  // unseen ones were deleted from Drive (or moved out of our folders).
+  // Track which existing drive_file_ids we actually saw this pass.
   const seenDriveIds = new Set<string>();
+  // If a Drive list call fails for any subfolder/root, we must skip the
+  // deletion sweep - otherwise we'd soft-delete healthy docs whose folder
+  // we couldn't enumerate this time around.
+  let listingsComplete = true;
 
   try {
     const importOrUpdateFile = async (
@@ -146,11 +158,13 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
       if (found) {
         // File already known - detect any move (between subfolders OR to/from root)
         if (found.currentDriveFolder !== driveFolder) {
+          // Merge with existing metadata - replacing the whole JSONB would
+          // wipe storage_path (and any other keys) on app-uploaded files.
           await supabase
             .from('documents')
             .update({
               category_id: categoryId,
-              metadata: { source: 'drive_sync' },
+              metadata: { ...found.existingMetadata, source: 'drive_sync' },
             })
             .eq('id', found.docId);
           updated += 1;
@@ -177,23 +191,39 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
         .single();
       if (!error && inserted) {
         imported += 1;
-        // Track the inserted docId so a second sight of the same file_id
-        // (e.g. via shortcuts or shared files) updates the right row.
         existingByDriveId.set(file.id, {
           docId: inserted.id,
           currentDriveFolder: driveFolder,
+          existingMetadata: { source: 'drive_sync' },
         });
       }
     };
 
+    const safeListFiles = async (folderId: string) => {
+      try {
+        return await client.listFolderFilesPaginated(folderId);
+      } catch {
+        listingsComplete = false;
+        return [];
+      }
+    };
+    const safeListSubfolders = async (folderId: string) => {
+      try {
+        return await client.listSubfolders(folderId);
+      } catch {
+        listingsComplete = false;
+        return [];
+      }
+    };
+
     // Scan subfolders dynamically (matches even if our cache is stale)
-    const subfolders = await client.listSubfolders(drive.case_folder_id);
+    const subfolders = await safeListSubfolders(drive.case_folder_id);
     for (const sub of subfolders) {
       const folderKey = NAME_TO_FOLDER_KEY[sub.name];
       if (!folderKey) continue;
       const categoryId = firstCategoryPerFolder.get(folderKey);
       if (!categoryId) continue;
-      const files = await client.listFolderFiles(sub.id);
+      const files = await safeListFiles(sub.id);
       for (const f of files) {
         await importOrUpdateFile(f, categoryId, folderKey);
       }
@@ -201,15 +231,18 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
 
     // Files at the case-folder root → "uncategorized" (category_id = null)
     // The advisor categorizes them from the UI.
-    const rootFiles = await client.listFolderFiles(drive.case_folder_id);
+    const rootFiles = await safeListFiles(drive.case_folder_id);
     for (const f of rootFiles) {
       await importOrUpdateFile(f, null, null);
     }
 
     // Soft-delete docs whose Drive file vanished (deleted or moved outside
-    // our case folder hierarchy). The blob may still be in Supabase Storage
-    // but the doc record is hidden from the UI.
-    for (const [driveId, entry] of existingByDriveId) {
+    // our case folder hierarchy). Only run if ALL list calls succeeded -
+    // otherwise a transient API hiccup would soft-delete healthy docs whose
+    // folder we just couldn't enumerate this time.
+    if (!listingsComplete) {
+      // Skip deletion sweep this run; next sync will retry.
+    } else for (const [driveId, entry] of existingByDriveId) {
       if (seenDriveIds.has(driveId)) continue;
       if (!entry.docId) continue;
       const { error } = await supabase

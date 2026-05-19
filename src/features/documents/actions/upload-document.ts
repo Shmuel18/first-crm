@@ -76,7 +76,19 @@ export async function uploadDocumentAction(
 
   const result = await persistDocumentBlobs(inserted.id, caseId, file);
   if (!result.ok) {
-    await supabase.from('documents').delete().eq('id', inserted.id);
+    // Try to clean up the document row we just inserted. If the cleanup
+    // itself fails, flag the row as 'rejected' so the UI doesn't show an
+    // empty doc - that's better than a hard orphan with no signal.
+    const { error: cleanupErr } = await supabase
+      .from('documents')
+      .delete()
+      .eq('id', inserted.id);
+    if (cleanupErr) {
+      await supabase
+        .from('documents')
+        .update({ status: 'rejected', notes: `Upload failed: ${result.message}` })
+        .eq('id', inserted.id);
+    }
     return { ok: false, error: 'storage', message: result.message };
   }
 

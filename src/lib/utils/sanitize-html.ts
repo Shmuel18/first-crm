@@ -1,22 +1,6 @@
 import DOMPurify from 'isomorphic-dompurify';
 
-/**
- * Whitelist matches what the RichTextEditor (Tiptap StarterKit + Underline)
- * can produce - nothing else gets through.
- */
-const ALLOWED_TAGS = [
-  'p',
-  'br',
-  'strong',
-  'em',
-  'u',
-  'h2',
-  'h3',
-  'ul',
-  'ol',
-  'li',
-  'blockquote',
-] as const;
+import { RICH_TEXT_ALLOWED_TAGS } from '@/lib/constants/sanitize';
 
 /**
  * Sanitize HTML authored by office staff before storing it in the DB.
@@ -26,7 +10,7 @@ const ALLOWED_TAGS = [
 export function sanitizeRichTextHtml(html: string | null | undefined): string {
   if (!html) return '';
   return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: [...ALLOWED_TAGS],
+    ALLOWED_TAGS: [...RICH_TEXT_ALLOWED_TAGS],
     ALLOWED_ATTR: [],
     KEEP_CONTENT: true,
   });

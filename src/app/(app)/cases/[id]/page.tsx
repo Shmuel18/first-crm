@@ -29,6 +29,7 @@ import { getCaseById } from '@/features/cases/services/cases.service';
 import { createClient } from '@/lib/supabase/server';
 import type { Locale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
+import { sanitizeRichTextHtml } from '@/lib/utils/sanitize-html';
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -196,9 +197,13 @@ export default async function CaseDetailPage({ params }: Props) {
           {caseData.request_details ? (
             <div
               className="tiptap-content text-neutral-700"
-              // Content is authored by office staff only - no untrusted input.
+              // Defense-in-depth: even though create/update actions sanitize
+              // before INSERT, re-sanitize on read so older rows or any future
+              // bypass (studio writes, audit replays, imports) can't XSS.
               // eslint-disable-next-line react/no-danger
-              dangerouslySetInnerHTML={{ __html: caseData.request_details }}
+              dangerouslySetInnerHTML={{
+                __html: sanitizeRichTextHtml(caseData.request_details),
+              }}
             />
           ) : (
             <p className="text-sm text-neutral-400 italic">

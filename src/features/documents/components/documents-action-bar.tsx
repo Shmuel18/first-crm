@@ -4,7 +4,6 @@ import { useTransition } from 'react';
 import Link from 'next/link';
 
 import {
-  ArrowRight,
   ClipboardList,
   FolderOpen,
   Loader2,
@@ -12,8 +11,11 @@ import {
   RefreshCw,
   Upload,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+
+import { BackArrow } from '@/components/shared/back-arrow';
+import type { Locale } from '@/lib/i18n/direction';
 
 import { syncDriveDocumentsAction } from '../actions/sync-drive-documents';
 
@@ -36,6 +38,7 @@ export function DocumentsActionBar({
   const tPage = useTranslations('documents');
   const tCase = useTranslations('case.actionBar');
   const tSync = useTranslations('documents.sync');
+  const locale = useLocale() as Locale;
   const [isPending, startTransition] = useTransition();
 
   const handleSync = () =>
@@ -66,7 +69,7 @@ export function DocumentsActionBar({
             className="inline-flex items-center justify-center size-7 border border-neutral-300 hover:border-[#C9A961] text-neutral-600 hover:text-[#C9A961] bg-white/60 rounded-md transition shrink-0"
             title={tPage('backToCase')}
           >
-            <ArrowRight className="size-3.5" />
+            <BackArrow locale={locale} className="size-3.5" />
           </Link>
           <div className="flex items-center gap-2 flex-wrap min-w-0">
             <span className="font-display text-base font-semibold truncate max-w-md">

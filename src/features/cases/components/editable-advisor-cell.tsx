@@ -56,10 +56,12 @@ export function EditableAdvisorCell({
       if (dropdownRef.current?.contains(e.target as Node)) return;
       setOpen(false);
     };
+    const onResize = () => setOpen(false);
     window.addEventListener('scroll', onScroll, true);
-    window.addEventListener('resize', () => setOpen(false));
+    window.addEventListener('resize', onResize);
     return () => {
       window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', onResize);
     };
   }, [open]);
 
@@ -124,7 +126,7 @@ export function EditableAdvisorCell({
             <button
               type="button"
               onClick={() => handleSelect(null)}
-              className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-right text-neutral-500 hover:bg-neutral-50"
+              className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-start text-neutral-500 hover:bg-neutral-50"
             >
               <span>{unassignedLabel}</span>
               {!advisorId && <Check className="size-3.5 text-[#C9A961]" />}
@@ -137,7 +139,7 @@ export function EditableAdvisorCell({
                   key={opt.id}
                   type="button"
                   onClick={() => handleSelect(opt)}
-                  className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-right hover:bg-neutral-50"
+                  className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-start hover:bg-neutral-50"
                 >
                   <span className="inline-flex items-center gap-2">
                     <span className="size-5 rounded-full btn-gold flex items-center justify-center text-[9px] font-bold">

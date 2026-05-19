@@ -37,6 +37,7 @@ export type CaseWithRelations = CaseRow & {
       id: string;
       key: string;
       name_he: string;
+      name_en: string;
       color: string;
       logo_url: string | null;
     } | null;

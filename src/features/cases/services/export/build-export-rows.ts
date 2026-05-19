@@ -1,3 +1,5 @@
+import type { Locale } from '@/lib/i18n/direction';
+
 import {
   getCaseClientLabel,
   getPrimaryBank,
@@ -21,7 +23,13 @@ export type ExportRow = {
   shortNote: string;
 };
 
-export function buildExportRows(cases: ReadonlyArray<CaseWithRelations>): ExportRow[] {
+export function buildExportRows(
+  cases: ReadonlyArray<CaseWithRelations>,
+  locale: Locale = 'he',
+): ExportRow[] {
+  const pickName = <T extends { name_he: string; name_en: string }>(o: T): string =>
+    locale === 'he' ? o.name_he : o.name_en;
+
   return cases.map((c, index) => {
     const primaryBank = getPrimaryBank(c);
     const secondaryCount = getSecondaryBanksCount(c);
@@ -29,17 +37,18 @@ export function buildExportRows(cases: ReadonlyArray<CaseWithRelations>): Export
     const advisorName = advisor
       ? [advisor.first_name, advisor.last_name].filter(Boolean).join(' ').trim()
       : '';
+    const bankName = primaryBank ? pickName(primaryBank) : '';
     const bankLabel = primaryBank
       ? secondaryCount > 0
-        ? `${primaryBank.name_he} +${secondaryCount}`
-        : primaryBank.name_he
+        ? `${bankName} +${secondaryCount}`
+        : bankName
       : '';
 
     return {
       rowNumber: index + 1,
       clientName: getCaseClientLabel(c) || '',
       nationalId: getPrimaryBorrowerNationalId(c) ?? '',
-      stage: c.status?.name_he ?? '',
+      stage: c.status ? pickName(c.status) : '',
       bank: bankLabel,
       advisor: advisorName,
       shortNote: c.short_note ?? '',

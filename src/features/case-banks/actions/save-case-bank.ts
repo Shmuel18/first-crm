@@ -72,9 +72,33 @@ export async function saveCaseBankAction(
   redirect(`/cases/${caseId}`);
 }
 
-export async function deleteCaseBankAction(caseBankId: string, caseId: string): Promise<void> {
+type DeleteResult =
+  | { ok: true }
+  | { ok: false; error: 'unauthorized' | 'unknown'; message?: string };
+
+export async function deleteCaseBankAction(
+  caseBankId: string,
+  caseId: string,
+): Promise<DeleteResult> {
   const supabase = await createClient();
-  const { error } = await supabase.from('case_banks').delete().eq('id', caseBankId);
-  if (error) throw new Error(error.message);
+  const { data: userRes } = await supabase.auth.getUser();
+  if (!userRes.user) return { ok: false, error: 'unauthorized' };
+
+  // Defense-in-depth: caller must be able to see the case before mutating
+  const { data: caseRow } = await supabase
+    .from('cases')
+    .select('id')
+    .eq('id', caseId)
+    .maybeSingle();
+  if (!caseRow) return { ok: false, error: 'unauthorized' };
+
+  const { error } = await supabase
+    .from('case_banks')
+    .delete()
+    .eq('id', caseBankId)
+    .eq('case_id', caseId); // defense-in-depth: bank must belong to the supplied case
+  if (error) return { ok: false, error: 'unknown', message: error.message };
+
   revalidatePath(`/cases/${caseId}`);
+  return { ok: true };
 }

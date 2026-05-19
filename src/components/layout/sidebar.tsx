@@ -79,7 +79,7 @@ function SidebarLink({
       <Icon className="size-5" />
 
       {item.badge !== undefined && item.badge > 0 && (
-        <span className="absolute top-1.5 left-1.5 min-w-4 h-4 px-1 rounded-full bg-[#C9A961] text-[#0A0A0A] text-[10px] font-bold flex items-center justify-center">
+        <span className="absolute top-1.5 end-1.5 min-w-4 h-4 px-1 rounded-full bg-[#C9A961] text-[#0A0A0A] text-[10px] font-bold flex items-center justify-center">
           {item.badge}
         </span>
       )}

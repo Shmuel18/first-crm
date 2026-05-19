@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 
 import { Check, Loader2, Pencil } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
 import { quickUpdateCaseFieldAction } from '../actions/quick-update-case';
 
@@ -63,6 +64,8 @@ export function EditableTextCell({
   };
 
   const save = () => {
+    // Guard against double-save (outside-click + button-click can both fire)
+    if (isPending) return;
     if (value === savedValue) {
       setEditing(false);
       return;
@@ -79,6 +82,7 @@ export function EditableTextCell({
       } else {
         setSavedValue(previousSaved);
         setValue(previousSaved);
+        toast.error(tc('saveFailed'));
       }
     });
   };
@@ -98,7 +102,7 @@ export function EditableTextCell({
         type="button"
         onClick={openEditor}
         title={savedValue || effectivePlaceholder}
-        className="group inline-flex items-center gap-1.5 w-full text-right min-w-0"
+        className="group inline-flex items-center gap-1.5 w-full text-start min-w-0"
       >
         <span
           className={[

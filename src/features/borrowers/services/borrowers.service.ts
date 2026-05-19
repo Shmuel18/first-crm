@@ -15,8 +15,13 @@ export async function listBorrowersForCase(
 
   if (error) throw error;
 
+  // Filter out join rows whose borrower has been soft-deleted - the
+  // case_borrowers junction doesn't cascade with borrowers.deleted_at.
   return (data ?? [])
-    .filter((row): row is typeof row & { borrower: BorrowerRow } => row.borrower !== null)
+    .filter(
+      (row): row is typeof row & { borrower: BorrowerRow } =>
+        row.borrower !== null && row.borrower.deleted_at === null,
+    )
     .map((row) => ({
       role_in_case: row.role_in_case as RoleInCase,
       is_primary: row.is_primary,

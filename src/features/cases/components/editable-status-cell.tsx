@@ -45,10 +45,12 @@ export function EditableStatusCell({
       if (dropdownRef.current?.contains(e.target as Node)) return;
       setOpen(false);
     };
+    const onResize = () => setOpen(false);
     window.addEventListener('scroll', onScroll, true);
-    window.addEventListener('resize', () => setOpen(false));
+    window.addEventListener('resize', onResize);
     return () => {
       window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', onResize);
     };
   }, [open]);
 
@@ -112,7 +114,7 @@ export function EditableStatusCell({
                 key={opt.id}
                 type="button"
                 onClick={() => handleSelect(opt)}
-                className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-right hover:bg-neutral-50"
+                className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-start hover:bg-neutral-50"
               >
                 <span className="inline-flex items-center gap-2">
                   <span
