@@ -77,7 +77,11 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [doc, tErr]);
+    // tErr is intentionally excluded from deps - it's only used as a fallback
+    // error string when the request fails. Including it would re-fetch the
+    // preview every time the locale changes (and tErr changes identity).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [doc]);
 
   if (!doc) return null;
 
