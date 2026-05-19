@@ -392,6 +392,7 @@ export type Database = {
           case_id: string
           created_at: string
           created_by: string | null
+          deleted_at: string | null
           id: string
           is_primary: boolean
           notes: string | null
@@ -409,6 +410,7 @@ export type Database = {
           case_id: string
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           id?: string
           is_primary?: boolean
           notes?: string | null
@@ -426,6 +428,7 @@ export type Database = {
           case_id?: string
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           id?: string
           is_primary?: boolean
           notes?: string | null
@@ -477,6 +480,7 @@ export type Database = {
           borrower_id: string
           case_id: string
           created_at: string
+          id: string
           is_primary: boolean
           role_in_case: string
         }
@@ -484,6 +488,7 @@ export type Database = {
           borrower_id: string
           case_id: string
           created_at?: string
+          id?: string
           is_primary?: boolean
           role_in_case?: string
         }
@@ -491,6 +496,7 @@ export type Database = {
           borrower_id?: string
           case_id?: string
           created_at?: string
+          id?: string
           is_primary?: boolean
           role_in_case?: string
         }
@@ -1655,6 +1661,7 @@ export type Database = {
           completed_by: string | null
           created_at: string
           created_by: string | null
+          deleted_at: string | null
           description: string | null
           due_date: string | null
           google_calendar_event_id: string | null
@@ -1677,6 +1684,7 @@ export type Database = {
           completed_by?: string | null
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           description?: string | null
           due_date?: string | null
           google_calendar_event_id?: string | null
@@ -1699,6 +1707,7 @@ export type Database = {
           completed_by?: string | null
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
           description?: string | null
           due_date?: string | null
           google_calendar_event_id?: string | null

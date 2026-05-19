@@ -92,11 +92,14 @@ export async function deleteCaseBankAction(
     .maybeSingle();
   if (!caseRow) return { ok: false, error: 'unauthorized' };
 
+  // Soft-delete: hard DELETE is blocked by RLS (#37 hardening). Keeps history
+  // for audit and lets retention purge clean it up later.
   const { error } = await supabase
     .from('case_banks')
-    .delete()
+    .update({ deleted_at: new Date().toISOString(), updated_by: userRes.user.id })
     .eq('id', caseBankId)
-    .eq('case_id', caseId); // defense-in-depth: bank must belong to the supplied case
+    .eq('case_id', caseId)
+    .is('deleted_at', null);
   if (error) return { ok: false, error: 'unknown', message: error.message };
 
   revalidatePath(`/cases/${caseId}`);
