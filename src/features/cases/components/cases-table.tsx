@@ -1,6 +1,11 @@
 import { useTranslations } from 'next-intl';
 
-import { getCaseClientLabel, getPrimaryBank, getPrimaryBorrowerNationalId, getSecondaryBanksCount } from '../services/cases.service';
+import {
+  getCaseClientLabel,
+  getPrimaryBank,
+  getPrimaryBorrowerNationalId,
+  getSecondaryBanksCount,
+} from '../domain/case-derivations';
 import { isFrozenCase, isRecentlyUpdated, isStuckCase } from '../domain/case-state';
 import type { CaseWithRelations } from '../types';
 

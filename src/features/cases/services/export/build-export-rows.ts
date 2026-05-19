@@ -5,7 +5,7 @@ import {
   getPrimaryBank,
   getPrimaryBorrowerNationalId,
   getSecondaryBanksCount,
-} from '../cases.service';
+} from '../../domain/case-derivations';
 
 import type { CaseWithRelations } from '../../types';
 

@@ -71,96 +71,12 @@ export async function getRawCaseById(id: CaseId): Promise<CaseRow | null> {
   return data;
 }
 
-type CaseBorrowerJoin = {
-  is_primary: boolean;
-  borrower: {
-    first_name: string | null;
-    last_name: string | null;
-    national_id?: string | null;
-  } | null;
-};
-
-type CaseBankJoin = {
-  is_primary: boolean;
-  deleted_at: string | null;
-  bank: {
-    id: string;
-    name_he: string;
-    name_en: string;
-    color: string;
-    logo_url: string | null;
-    key: string;
-  } | null;
-};
-
-/**
- * Returns a short label like "ישראל ישראלי" or "ישראל ישראלי +1"
- * based on the borrowers in the case.
- */
-export function getCaseClientLabel(caseItem: {
-  case_borrowers?: ReadonlyArray<CaseBorrowerJoin> | null;
-}): string {
-  const borrowers = (caseItem.case_borrowers ?? [])
-    .filter((cb) => cb.borrower !== null)
-    .map((cb) => ({
-      isPrimary: cb.is_primary,
-      name:
-        [cb.borrower!.first_name, cb.borrower!.last_name].filter(Boolean).join(' ').trim(),
-    }))
-    .filter((b) => b.name);
-
-  if (borrowers.length === 0) return '';
-
-  borrowers.sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary));
-
-  const primaryName = borrowers[0]!.name;
-  const extra = borrowers.length - 1;
-
-  return extra > 0 ? `${primaryName} +${extra}` : primaryName;
-}
-
-/**
- * Returns the primary borrower's national_id (Israeli ID).
- */
-export function getPrimaryBorrowerNationalId(caseItem: {
-  case_borrowers?: ReadonlyArray<CaseBorrowerJoin> | null;
-}): string | null {
-  const borrowers = (caseItem.case_borrowers ?? []).filter((cb) => cb.borrower !== null);
-  if (borrowers.length === 0) return null;
-
-  const primary = borrowers.find((cb) => cb.is_primary) ?? borrowers[0];
-  return primary?.borrower?.national_id ?? null;
-}
-
-/**
- * Returns the primary bank info for the case.
- */
-export function getPrimaryBank(caseItem: {
-  case_banks?: ReadonlyArray<CaseBankJoin> | null;
-}): {
-  id: string;
-  name_he: string;
-  name_en: string;
-  color: string;
-  logo_url: string | null;
-  key: string;
-} | null {
-  const banks = (caseItem.case_banks ?? [])
-    .filter((cb) => cb.bank !== null && !cb.deleted_at);
-  if (banks.length === 0) return null;
-
-  const primary = banks.find((cb) => cb.is_primary) ?? banks[0];
-  return primary?.bank ?? null;
-}
-
-/**
- * Counts secondary banks (for "+N" indicator).
- */
-export function getSecondaryBanksCount(caseItem: {
-  case_banks?: ReadonlyArray<CaseBankJoin> | null;
-}): number {
-  const banks = (caseItem.case_banks ?? [])
-    .filter((cb) => cb.bank !== null && !cb.deleted_at);
-  if (banks.length <= 1) return 0;
-  return banks.length - 1;
-}
+// Pure derivations moved to ../domain/case-derivations.ts (layer boundary).
+// Re-export here for backward compatibility with any caller still importing
+// from the service path - new code should import from domain directly.
+export {
+  getCaseClientLabel,
+  getPrimaryBank,
+  getPrimaryBorrowerNationalId,
+  getSecondaryBanksCount,
+} from '../domain/case-derivations';
