@@ -53,23 +53,18 @@ export async function autoSyncIfStale(caseId: string): Promise<void> {
   });
 }
 
+/**
+ * Atomic stamp of cases.metadata.drive.last_synced_at via the dedicated RPC
+ * (migration 026). Replaces the previous read-modify-write that could lose
+ * concurrent writes to sibling drive.* keys.
+ */
 async function persistLastSyncedAt(caseId: string): Promise<void> {
   const supabase = await createClient();
-  const { data } = await supabase.from('cases').select('metadata').eq('id', caseId).maybeSingle();
-  const current =
-    data?.metadata && typeof data.metadata === 'object'
-      ? (data.metadata as Record<string, unknown>)
-      : {};
-  const drive =
-    current.drive && typeof current.drive === 'object'
-      ? (current.drive as Record<string, unknown>)
-      : {};
-  await supabase
-    .from('cases')
-    .update({
-      metadata: { ...current, drive: { ...drive, last_synced_at: new Date().toISOString() } },
-    })
-    .eq('id', caseId);
+  await supabase.rpc('update_case_drive_meta', {
+    p_case_id: caseId,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- patch object is structurally Json-compatible
+    p_patch: { last_synced_at: new Date().toISOString() } as any,
+  });
 }
 
 export type DriveSyncOutcome =

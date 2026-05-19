@@ -1883,6 +1883,14 @@ export type Database = {
         Args: { p_bank_id: string; p_case_id: string; p_user_id: string }
         Returns: undefined
       }
+      update_case_drive_meta: {
+        Args: { p_case_id: string; p_patch: Json }
+        Returns: undefined
+      }
+      update_document_metadata: {
+        Args: { p_document_id: string; p_patch: Json }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

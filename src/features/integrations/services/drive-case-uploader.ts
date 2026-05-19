@@ -48,15 +48,21 @@ async function getCaseDriveMeta(caseId: string): Promise<CaseDriveMeta> {
   return {};
 }
 
-async function persistCaseDriveMeta(caseId: string, drive: CaseDriveMeta): Promise<void> {
+/**
+ * Patch the case.metadata.drive subtree atomically via update_case_drive_meta
+ * RPC (migration 026). Concurrent calls serialize at the row lock; missing
+ * keys in the patch are preserved instead of being wiped by a stale read.
+ */
+async function patchCaseDriveMeta(
+  caseId: string,
+  patch: Partial<CaseDriveMeta>,
+): Promise<void> {
   const supabase = await createClient();
-  const { data } = await supabase.from('cases').select('metadata').eq('id', caseId).maybeSingle();
-  const current =
-    data?.metadata && typeof data.metadata === 'object' ? (data.metadata as Record<string, unknown>) : {};
-  await supabase
-    .from('cases')
-    .update({ metadata: { ...current, drive } })
-    .eq('id', caseId);
+  await supabase.rpc('update_case_drive_meta', {
+    p_case_id: caseId,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Partial<CaseDriveMeta> is structurally JSONB-compatible; Supabase types only declare Json.
+    p_patch: patch as any,
+  });
 }
 
 async function ensureRootFolder(client: GoogleDriveClient): Promise<string> {
@@ -78,12 +84,15 @@ async function ensureCaseFolder(
 ): Promise<string> {
   if (meta.case_folder_id) return meta.case_folder_id;
   const id = await client.ensureFolder(caseFolderName(caseNumber, familyName), rootId);
+  const nowIso = new Date().toISOString();
+  // Patch instead of full replace - other concurrent writers (e.g. a sync
+  // updating last_synced_at) merge cleanly via the RPC.
+  await patchCaseDriveMeta(caseId, {
+    case_folder_id: id,
+    last_synced_at: nowIso,
+  });
   meta.case_folder_id = id;
-  // Seed last_synced_at so the documents page doesn't kick off a redundant
-  // sync on first navigation right after an upload. The auto-sync rate limit
-  // will trigger a real sync only after MIN_AUTO_SYNC_INTERVAL_MS passes.
-  meta.last_synced_at = new Date().toISOString();
-  await persistCaseDriveMeta(caseId, meta);
+  meta.last_synced_at = nowIso;
   return id;
 }
 
@@ -99,8 +108,13 @@ async function ensureSubfolder(
   const cached = meta.subfolders?.[driveFolder];
   if (cached) return cached;
   const id = await client.ensureFolder(folderName, caseFolderId);
-  meta.subfolders = { ...(meta.subfolders ?? {}), [driveFolder]: id };
-  await persistCaseDriveMeta(caseId, meta);
+  const newSubfolders = { ...(meta.subfolders ?? {}), [driveFolder]: id };
+  // Note: this still has a small race vs another writer adding a different
+  // subfolder key at the same instant (we're sending the whole subfolders
+  // object). True per-key merge needs a deeper RPC; deferred since the
+  // realistic concurrency for sub-folder creation is very low.
+  await patchCaseDriveMeta(caseId, { subfolders: newSubfolders });
+  meta.subfolders = newSubfolders;
   return id;
 }
 
