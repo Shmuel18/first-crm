@@ -122,7 +122,7 @@ export async function signedUrlFor(
 
 const BUCKET = 'case-documents';
 
-export type PersistBlobsResult =
+export type UploadBlobsResult =
   | {
       ok: true;
       storagePath: string;
@@ -131,16 +131,25 @@ export type PersistBlobsResult =
     }
   | { ok: false; error: 'storage'; message: string };
 
+export type UploadBlobsContext = {
+  caseNumber: string;
+  familyName: string;
+  driveFolder: string | null;
+};
+
 /**
- * Upload the file blob to Supabase Storage (primary, required) and Drive
- * (secondary, best-effort), then persist all references on the documents row.
- * Drive failures are non-fatal - the document is usable from Supabase alone.
+ * Blob-first upload: stage the file to Supabase Storage (primary) and Drive
+ * (secondary, best-effort) using a pre-generated documentId. The caller
+ * INSERTs the documents row AFTER this resolves, passing the returned
+ * storage_path / drive_* refs. If that INSERT then fails, rollbackBlobs
+ * cleans up - either way we never leave an empty document row.
  */
-export async function persistDocumentBlobs(
+export async function uploadDocumentBlobs(
   documentId: string,
   caseId: string,
   file: File,
-): Promise<PersistBlobsResult> {
+  ctx: UploadBlobsContext,
+): Promise<UploadBlobsResult> {
   const supabase = await createClient();
   const path = storagePathFor(caseId, documentId, file.name);
 
@@ -149,30 +158,15 @@ export async function persistDocumentBlobs(
     .upload(path, file, { contentType: file.type, upsert: false });
   if (storageErr) return { ok: false, error: 'storage', message: storageErr.message };
 
-  // Drive upload (best-effort) - needs case + category context
-  const { data: ctx } = await supabase
-    .from('documents')
-    .select(
-      `id,
-       case:case_id(id, case_number, metadata),
-       category:category_id(drive_folder),
-       borrower:borrower_id(first_name, last_name)`,
-    )
-    .eq('id', documentId)
-    .maybeSingle();
-
   let driveFileId: string | null = null;
   let driveFileUrl: string | null = null;
-
-  if (ctx?.case && ctx.category) {
+  if (ctx.driveFolder) {
     const buf = await file.arrayBuffer();
-    const familyName =
-      [ctx.borrower?.first_name, ctx.borrower?.last_name].filter(Boolean).join('_') || 'Case';
     const out = await uploadCaseDocumentToDrive({
-      caseId: ctx.case.id,
-      caseNumber: ctx.case.case_number,
-      familyName,
-      driveFolder: ctx.category.drive_folder,
+      caseId,
+      caseNumber: ctx.caseNumber,
+      familyName: ctx.familyName,
+      driveFolder: ctx.driveFolder,
       file: { content: buf, name: file.name, mimeType: file.type },
     });
     if (out.ok) {
@@ -181,25 +175,21 @@ export async function persistDocumentBlobs(
     }
   }
 
-  const { error: updateErr } = await supabase
-    .from('documents')
-    .update({
-      metadata: { storage_path: path },
-      drive_file_id: driveFileId,
-      drive_file_url: driveFileUrl,
-    })
-    .eq('id', documentId);
-
-  // Rollback both stores if we fail to record the references on the row -
-  // otherwise the blobs become orphaned (Supabase path is recoverable,
-  // but the Drive file_id is gone forever once this function returns).
-  if (updateErr) {
-    await supabase.storage.from(BUCKET).remove([path]).catch(() => undefined);
-    if (driveFileId) {
-      await deleteCaseDocumentFromDrive(driveFileId);
-    }
-    return { ok: false, error: 'storage', message: updateErr.message };
-  }
-
   return { ok: true, storagePath: path, driveFileId, driveFileUrl };
+}
+
+/**
+ * Compensating cleanup if the documents INSERT after uploadDocumentBlobs
+ * fails. Both calls are best-effort - we already lost atomicity once the
+ * blobs landed; this just minimizes orphan cost.
+ */
+export async function rollbackDocumentBlobs(
+  storagePath: string,
+  driveFileId: string | null,
+): Promise<void> {
+  const supabase = await createClient();
+  await supabase.storage.from(BUCKET).remove([storagePath]).catch(() => undefined);
+  if (driveFileId) {
+    await deleteCaseDocumentFromDrive(driveFileId);
+  }
 }

@@ -1,5 +1,7 @@
 'use server';
 
+import { randomUUID } from 'node:crypto';
+
 import { revalidatePath } from 'next/cache';
 
 import { getTranslations } from 'next-intl/server';
@@ -11,9 +13,28 @@ import {
   DocumentMetadataSchema,
   MAX_FILE_SIZE_BYTES,
 } from '../schemas/document.schema';
-import { persistDocumentBlobs } from '../services/documents.service';
+import {
+  rollbackDocumentBlobs,
+  uploadDocumentBlobs,
+  type UploadBlobsContext,
+} from '../services/documents.service';
 import type { DocumentActionState } from '../types';
 
+/**
+ * Blob-first upload (#13, #12 partial). Order:
+ *   1. Validate input.
+ *   2. Resolve Drive folder context (case + category + borrower).
+ *   3. Pre-generate documentId so storage path and DB id stay in sync.
+ *   4. Upload blob to Supabase Storage (primary) + Drive (best-effort).
+ *   5. INSERT the documents row pointing to the staged blobs.
+ *   6. On INSERT failure → rollback both blobs.
+ *
+ * Why blob-first matters: after the RLS hardening in migration 022/024
+ * stripped FOR DELETE policies, the old "insert row → upload blob → on
+ * failure delete row" path falls back to setting status='rejected' (because
+ * .delete() is blocked) - leaving zombie rows behind. With blob-first, a
+ * storage failure short-circuits before any DB write so no orphan exists.
+ */
 export async function uploadDocumentAction(
   _prev: DocumentActionState,
   formData: FormData,
@@ -54,9 +75,40 @@ export async function uploadDocumentAction(
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
 
-  const { data: inserted, error: insertErr } = await supabase
+  // Resolve Drive folder context BEFORE staging blobs - small parallel reads.
+  const [caseRow, category, borrower] = await Promise.all([
+    supabase.from('cases').select('id, case_number').eq('id', caseId).maybeSingle(),
+    supabase
+      .from('document_categories')
+      .select('drive_folder')
+      .eq('id', meta.data.category_id)
+      .maybeSingle(),
+    meta.data.borrower_id
+      ? supabase
+          .from('borrowers')
+          .select('first_name, last_name')
+          .eq('id', meta.data.borrower_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+  if (!caseRow.data) return { ok: false, error: 'unauthorized' };
+
+  const familyName =
+    [borrower.data?.first_name, borrower.data?.last_name].filter(Boolean).join('_') || 'Case';
+  const ctx: UploadBlobsContext = {
+    caseNumber: caseRow.data.case_number,
+    familyName,
+    driveFolder: category.data?.drive_folder ?? null,
+  };
+
+  const documentId = randomUUID();
+  const blobs = await uploadDocumentBlobs(documentId, caseId, file, ctx);
+  if (!blobs.ok) return { ok: false, error: 'storage', message: blobs.message };
+
+  const { error: insertErr } = await supabase
     .from('documents')
     .insert({
+      id: documentId,
       case_id: caseId,
       category_id: meta.data.category_id,
       borrower_id: meta.data.borrower_id ?? null,
@@ -67,32 +119,20 @@ export async function uploadDocumentAction(
       expiry_date: meta.data.expiry_date ?? null,
       uploaded_by: userRes.user.id,
       status: 'new',
-    })
-    .select('id')
-    .single();
-  if (insertErr || !inserted) {
-    return { ok: false, error: 'unknown', message: insertErr?.message };
-  }
+      metadata: { storage_path: blobs.storagePath },
+      drive_file_id: blobs.driveFileId,
+      drive_file_url: blobs.driveFileUrl,
+    });
 
-  const result = await persistDocumentBlobs(inserted.id, caseId, file);
-  if (!result.ok) {
-    // Try to clean up the document row we just inserted. If the cleanup
-    // itself fails, flag the row as 'rejected' so the UI doesn't show an
-    // empty doc - that's better than a hard orphan with no signal.
-    const { error: cleanupErr } = await supabase
-      .from('documents')
-      .delete()
-      .eq('id', inserted.id);
-    if (cleanupErr) {
-      await supabase
-        .from('documents')
-        .update({ status: 'rejected', notes: `Upload failed: ${result.message}` })
-        .eq('id', inserted.id);
-    }
-    return { ok: false, error: 'storage', message: result.message };
+  if (insertErr) {
+    // INSERT failed (RLS, constraint, etc.) - blobs are orphaned. Clean up
+    // best-effort. No row is created, so the user sees an error and can
+    // retry without a stale "rejected" placeholder lingering.
+    await rollbackDocumentBlobs(blobs.storagePath, blobs.driveFileId);
+    return { ok: false, error: 'storage', message: insertErr.message };
   }
 
   revalidatePath(`/cases/${caseId}/documents`);
   revalidatePath(`/cases/${caseId}`);
-  return { ok: true, documentId: inserted.id };
+  return { ok: true, documentId };
 }
