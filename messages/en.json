@@ -23,7 +23,22 @@
     "noteHint": "Add a note...",
     "copied": "Copied!",
     "savedAgo": "Saved",
-    "saveFailed": "Save failed. Try again."
+    "saveFailed": "Save failed. Try again.",
+    "errors": {
+      "required": "Required",
+      "invalidEmail": "Invalid email address",
+      "invalidUuid": "Invalid identifier",
+      "invalidDate": "Invalid date",
+      "dateInFuture": "Date must be in the past",
+      "invalidNumber": "Invalid number",
+      "negative": "Must be a positive value",
+      "tooLarge": "Value too large",
+      "tooLong": "Text too long",
+      "invalidEnum": "Invalid value",
+      "invalidBoolean": "Invalid yes/no value",
+      "invalidIsraeliId": "Invalid Israeli ID (9 digits + checksum)",
+      "invalidPhone": "Invalid phone number"
+    }
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -225,7 +240,8 @@
       },
       "errors": {
         "unauthorized": "Not authorized to perform this action",
-        "generic": "Error saving. Please try again."
+        "generic": "Error saving. Please try again.",
+        "mortgageExceedsProperty": "Mortgage cannot exceed property value"
       }
     },
     "blocker": {
@@ -375,6 +391,11 @@
           "generic": "Connection failed. Try again or contact the developer."
         }
       }
+    }
+  },
+  "caseBank": {
+    "errors": {
+      "bankRequired": "Please select a bank"
     }
   },
   "documents": {

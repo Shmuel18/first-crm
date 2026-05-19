@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
+import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
 import { CaseBankFormSchema } from '../schemas/case-bank.schema';
 import type { CaseBankActionState } from '../types';
@@ -38,11 +39,7 @@ export async function saveCaseBankAction(
 
   const parsed = CaseBankFormSchema.safeParse(formDataToObject(formData));
   if (!parsed.success) {
-    const fieldErrors: Record<string, string> = {};
-    for (const issue of parsed.error.issues) {
-      const path = issue.path.join('.');
-      if (!fieldErrors[path]) fieldErrors[path] = issue.message;
-    }
+    const fieldErrors = await resolveSchemaErrors(parsed.error);
     return { ok: false, error: 'validation', fieldErrors, values };
   }
 

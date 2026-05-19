@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
 import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
+import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
 import { BorrowerFormSchema } from '../schemas/borrower.schema';
 import type { BorrowerActionState } from '../types';
@@ -23,11 +24,7 @@ export async function saveBorrowerAction(
 
   const parsed = BorrowerFormSchema.safeParse(formDataToObject(formData));
   if (!parsed.success) {
-    const fieldErrors: Record<string, string> = {};
-    for (const issue of parsed.error.issues) {
-      const path = issue.path.join('.');
-      if (!fieldErrors[path]) fieldErrors[path] = issue.message;
-    }
+    const fieldErrors = await resolveSchemaErrors(parsed.error);
     return { ok: false, error: 'validation', fieldErrors, values };
   }
 
