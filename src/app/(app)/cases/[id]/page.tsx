@@ -69,7 +69,6 @@ export default async function CaseDetailPage({ params }: Props) {
   const ltvAccent = ltv !== null ? bandToAccent(ltvBand(ltv)) : undefined;
 
   const locale = (await import('next-intl/server').then((m) => m.getLocale())) as Locale;
-  const dateLocale = locale === 'he' ? 'he-IL' : 'en-GB';
 
   return (
     <div className="space-y-5 -mt-6">
