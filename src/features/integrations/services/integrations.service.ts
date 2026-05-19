@@ -50,24 +50,36 @@ export type UpsertIntegrationInput = {
   lastError?: string | null;
 };
 
+/**
+ * Upsert an integration row. Only fields explicitly provided are written -
+ * `undefined` values are SKIPPED so existing data isn't wiped.
+ *
+ * Callers can pass `null` explicitly to clear a field (e.g. lastError: null).
+ * This matters for refresh_token: Google only returns it on first consent,
+ * so a refresh flow must NOT call this with refreshToken=undefined.
+ */
 export async function upsertIntegration(input: UpsertIntegrationInput): Promise<void> {
   const supabase = await createClient();
-  const payload = {
+
+  const payload: Record<string, unknown> = {
     provider: input.provider,
     status: input.status,
-    connected_email: input.connectedEmail ?? null,
-    connected_external_user_id: input.connectedExternalUserId ?? null,
-    refresh_token: input.refreshToken ?? null,
-    access_token: input.accessToken ?? null,
-    token_expires_at: input.tokenExpiresAt ?? null,
-    scopes: input.scopes ?? null,
-    connected_by: input.connectedBy ?? null,
-    connected_at: input.connectedAt ?? null,
-    last_error: input.lastError ?? null,
   };
+  if (input.connectedEmail !== undefined) payload.connected_email = input.connectedEmail;
+  if (input.connectedExternalUserId !== undefined)
+    payload.connected_external_user_id = input.connectedExternalUserId;
+  if (input.refreshToken !== undefined) payload.refresh_token = input.refreshToken;
+  if (input.accessToken !== undefined) payload.access_token = input.accessToken;
+  if (input.tokenExpiresAt !== undefined) payload.token_expires_at = input.tokenExpiresAt;
+  if (input.scopes !== undefined) payload.scopes = input.scopes;
+  if (input.connectedBy !== undefined) payload.connected_by = input.connectedBy;
+  if (input.connectedAt !== undefined) payload.connected_at = input.connectedAt;
+  if (input.lastError !== undefined) payload.last_error = input.lastError;
+
   const { error } = await supabase
     .from('office_integrations')
-    .upsert(payload, { onConflict: 'provider' });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic payload built from optional inputs
+    .upsert(payload as any, { onConflict: 'provider' });
   if (error) throw error;
 }
 

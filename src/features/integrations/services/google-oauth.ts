@@ -121,8 +121,21 @@ export async function fetchUserInfo(
   return { email: data.email, sub: data.sub };
 }
 
+/**
+ * Revoke a Google OAuth token. Never throws - the local disconnect should
+ * proceed even if Google is unreachable - but logs warnings so a stuck
+ * revoke is visible in server logs.
+ */
 export async function revokeToken(token: string): Promise<void> {
-  await fetch(`${REVOKE_URL}?token=${encodeURIComponent(token)}`, {
-    method: 'POST',
-  });
+  try {
+    const res = await fetch(`${REVOKE_URL}?token=${encodeURIComponent(token)}`, {
+      method: 'POST',
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      console.warn(`Google token revoke failed: ${res.status} ${res.statusText} ${body}`);
+    }
+  } catch (err) {
+    console.warn('Google token revoke threw:', err);
+  }
 }
