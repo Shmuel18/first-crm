@@ -195,6 +195,7 @@
       "blocker": "Blocker",
       "insurance": "Insurance",
       "referrer": "Referred by",
+      "shortNote": "Short note",
       "advisor": "Assigned advisor",
       "createdAt": "Opened on",
       "primary": "Primary",
