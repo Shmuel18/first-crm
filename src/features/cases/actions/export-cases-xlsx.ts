@@ -37,7 +37,7 @@ export async function exportCasesXlsxAction(): Promise<ExportResult> {
         advisor: t('columns.advisor'),
         shortNote: t('columns.shortNote'),
       },
-      t('savedViews.pdf.title'),
+      t('savedViews.xlsx.sheetName'),
     );
 
     return {

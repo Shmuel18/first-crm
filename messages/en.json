@@ -102,6 +102,9 @@
         "title": "Active Cases - Kaufman Finance Group",
         "subtitle": "Total {count} cases",
         "generatedAt": "Generated on: {date}"
+      },
+      "xlsx": {
+        "sheetName": "Active Cases"
       }
     },
     "summary": {
