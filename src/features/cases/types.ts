@@ -43,6 +43,8 @@ export type CaseWithRelations = CaseRow & {
       logo_url: string | null;
     } | null;
   }> | null;
+  /** Manager-only financials. RLS on case_financials returns null for non-admins. */
+  case_financials: { fee_amount: number | null; expected_income: number | null } | null;
 };
 
 export type CaseActionError = 'validation' | 'unauthorized' | 'not_found' | 'unknown';

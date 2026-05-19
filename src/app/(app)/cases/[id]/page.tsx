@@ -160,8 +160,8 @@ export default async function CaseDetailPage({ params }: Props) {
           referrerName={caseData.referrer_name}
           advisor={advisor}
           createdAt={caseData.created_at}
-          feeAmount={caseData.fee_amount}
-          expectedIncome={caseData.expected_income}
+          feeAmount={caseData.case_financials?.fee_amount ?? null}
+          expectedIncome={caseData.case_financials?.expected_income ?? null}
           canSeeFinancials={canSeeFinancials}
           locale={locale}
         />

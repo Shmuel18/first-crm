@@ -62,10 +62,13 @@ export async function updateCaseAction(
     .maybeSingle();
   if (!caseRow) return { ok: false, error: 'unauthorized', values };
 
+  // Split financials off the cases payload (case_financials is admin-only).
+  const { fee_amount, expected_income, ...caseFields } = parsed.data;
+
   const { error } = await supabase
     .from('cases')
     .update({
-      ...parsed.data,
+      ...caseFields,
       request_details: sanitizeRichTextHtml(parsed.data.request_details ?? null),
       updated_by: userRes.user.id,
     })
@@ -73,6 +76,24 @@ export async function updateCaseAction(
 
   if (error) {
     return { ok: false, error: 'unknown', values };
+  }
+
+  // Upsert into case_financials. RLS gates this to admins; a non-admin
+  // submitting an edit form (where the fields are hidden) sends them as
+  // null/empty which we silently skip here. Real admins succeed.
+  if (fee_amount != null || expected_income != null) {
+    const { error: finErr } = await supabase
+      .from('case_financials')
+      .upsert(
+        {
+          case_id: caseId,
+          fee_amount: fee_amount ?? null,
+          expected_income: expected_income ?? null,
+          updated_by: userRes.user.id,
+        },
+        { onConflict: 'case_id' },
+      );
+    if (finErr) console.warn('case_financials upsert skipped', { caseId, err: finErr.message });
   }
 
   revalidatePath('/cases');

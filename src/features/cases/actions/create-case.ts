@@ -43,10 +43,15 @@ export async function createCaseAction(
     return { ok: false, error: 'unauthorized', values };
   }
 
+  // Split financials off the cases payload - they live in case_financials
+  // (admin-only RLS). Non-admin submits with empty values, which we silently
+  // drop here; RLS would also reject the case_financials write.
+  const { fee_amount, expected_income, ...caseFields } = parsed.data;
+
   const { data, error } = await supabase
     .from('cases')
     .insert({
-      ...parsed.data,
+      ...caseFields,
       request_details: sanitizeRichTextHtml(parsed.data.request_details ?? null),
       created_by: userRes.user.id,
       updated_by: userRes.user.id,
@@ -56,6 +61,20 @@ export async function createCaseAction(
 
   if (error || !data) {
     return { ok: false, error: 'unknown', values };
+  }
+
+  if (fee_amount != null || expected_income != null) {
+    const { error: finErr } = await supabase
+      .from('case_financials')
+      .insert({
+        case_id: data.id,
+        fee_amount: fee_amount ?? null,
+        expected_income: expected_income ?? null,
+        created_by: userRes.user.id,
+        updated_by: userRes.user.id,
+      });
+    // Non-admin attempts hit RLS - we don't fail the whole create for that.
+    if (finErr) console.warn('case_financials insert skipped', { caseId: data.id, err: finErr.message });
   }
 
   revalidatePath('/cases');

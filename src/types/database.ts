@@ -517,6 +517,58 @@ export type Database = {
           },
         ]
       }
+      case_financials: {
+        Row: {
+          case_id: string
+          created_at: string
+          created_by: string | null
+          expected_income: number | null
+          fee_amount: number | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          created_by?: string | null
+          expected_income?: number | null
+          fee_amount?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          created_by?: string | null
+          expected_income?: number | null
+          fee_amount?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_financials_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: true
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_financials_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_financials_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_statuses: {
         Row: {
           color: string
@@ -664,8 +716,6 @@ export type Database = {
           created_by: string | null
           deleted_at: string | null
           equity: number | null
-          expected_income: number | null
-          fee_amount: number | null
           id: string
           insurance_status: string | null
           is_archived: boolean
@@ -690,8 +740,6 @@ export type Database = {
           created_by?: string | null
           deleted_at?: string | null
           equity?: number | null
-          expected_income?: number | null
-          fee_amount?: number | null
           id?: string
           insurance_status?: string | null
           is_archived?: boolean
@@ -716,8 +764,6 @@ export type Database = {
           created_by?: string | null
           deleted_at?: string | null
           equity?: number | null
-          expected_income?: number | null
-          fee_amount?: number | null
           id?: string
           insurance_status?: string | null
           is_archived?: boolean

@@ -25,9 +25,19 @@ import {
 type Option = { id: string; name_he: string };
 type AdvisorOption = { id: string; first_name: string | null; last_name: string | null };
 
+/**
+ * The form prefills financials from a separate fetch (case_financials table,
+ * admin-only RLS) since migration 025 moved them out of the cases row.
+ * Non-admin contexts pass them as null/missing - the form just shows blanks.
+ */
+type CaseFormInitial = CaseRow & Partial<{
+  fee_amount: number | null;
+  expected_income: number | null;
+}>;
+
 type CaseFormProps = {
   mode: 'create' | 'edit';
-  initial?: CaseRow | null;
+  initial?: CaseFormInitial | null;
   caseTypes: ReadonlyArray<Option>;
   statuses: ReadonlyArray<Option>;
   advisors: ReadonlyArray<AdvisorOption>;
