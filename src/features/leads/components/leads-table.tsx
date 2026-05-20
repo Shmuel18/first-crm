@@ -1,0 +1,76 @@
+import { useTranslations } from 'next-intl';
+
+import type { LeadRow } from '../types';
+
+type Props = { leads: ReadonlyArray<LeadRow> };
+
+export function LeadsTable({ leads }: Props) {
+  const t = useTranslations('leads');
+
+  return (
+    <div className="overflow-x-auto scrollbar-thin">
+      <table className="w-full table-fixed min-w-[900px]">
+        <colgroup>
+          <col className="w-12" />
+          <col className="w-48" />
+          <col className="w-36" />
+          <col className="w-56" />
+          <col className="w-32" />
+          <col className="w-28" />
+        </colgroup>
+        <thead>
+          <tr className="bg-neutral-100 border-b-2 border-neutral-300">
+            <Th>{t('columns.row')}</Th>
+            <Th>{t('columns.name')}</Th>
+            <Th>{t('columns.phone')}</Th>
+            <Th>{t('columns.email')}</Th>
+            <Th>{t('columns.nationalId')}</Th>
+            <Th>{t('columns.status')}</Th>
+          </tr>
+        </thead>
+        <tbody>
+          {leads.map((lead, i) => {
+            const name = [lead.first_name, lead.last_name].filter(Boolean).join(' ').trim();
+            return (
+              <tr key={lead.id} className="border-b border-neutral-100 hover:bg-neutral-50/60">
+                <Td className="text-neutral-400 tabular-nums">{i + 1}</Td>
+                <Td className="font-medium text-neutral-800">{name || '—'}</Td>
+                <Td className="tabular-nums" dir="ltr">{lead.phone ?? '—'}</Td>
+                <Td className="text-neutral-600 truncate" dir="ltr">{lead.email ?? '—'}</Td>
+                <Td className="tabular-nums" dir="ltr">{lead.national_id ?? '—'}</Td>
+                <Td>
+                  <span
+                    className={[
+                      'inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium',
+                      lead.status === 'converted'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-[#C9A961]/15 text-[#A88840]',
+                    ].join(' ')}
+                  >
+                    {t(`status.${lead.status === 'converted' ? 'converted' : 'active'}`)}
+                  </span>
+                </Td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function Th({ children }: { children: React.ReactNode }) {
+  return (
+    <th className="text-start px-4 py-2.5 text-xs font-semibold text-neutral-500 uppercase tracking-wide">
+      {children}
+    </th>
+  );
+}
+
+function Td({ children, className, dir }: { children: React.ReactNode; className?: string; dir?: 'ltr' }) {
+  return (
+    <td dir={dir} className={`px-4 py-3 text-sm ${className ?? ''}`}>
+      {children}
+    </td>
+  );
+}

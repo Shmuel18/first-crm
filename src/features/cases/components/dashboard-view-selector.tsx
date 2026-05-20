@@ -1,5 +1,10 @@
+'use client';
+
 import { Archive, FolderOpen, Sprout } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { parseAsStringEnum, useQueryState } from 'nuqs';
+
+import type { CaseView } from '../domain/case-filters';
 
 type Props = {
   activeCount: number;
@@ -7,18 +12,42 @@ type Props = {
   archivedCount?: number;
 };
 
+const VIEWS: CaseView[] = ['active', 'archive', 'leads'];
+
 export function DashboardViewSelector({
   activeCount,
   leadsCount = 0,
   archivedCount = 0,
 }: Props) {
   const t = useTranslations('dashboard.viewTabs');
+  const [view, setView] = useQueryState(
+    'view',
+    parseAsStringEnum(VIEWS).withDefault('active').withOptions({ shallow: false }),
+  );
 
   return (
     <div className="bg-white px-6 py-3 border-b border-neutral-200 flex gap-2">
-      <ViewTab icon={FolderOpen} label={t('active')} count={activeCount} active />
-      <ViewTab icon={Sprout} label={t('leads')} count={leadsCount} />
-      <ViewTab icon={Archive} label={t('archive')} count={archivedCount} />
+      <ViewTab
+        icon={FolderOpen}
+        label={t('active')}
+        count={activeCount}
+        active={view === 'active'}
+        onClick={() => setView('active')}
+      />
+      <ViewTab
+        icon={Sprout}
+        label={t('leads')}
+        count={leadsCount}
+        active={view === 'leads'}
+        onClick={() => setView('leads')}
+      />
+      <ViewTab
+        icon={Archive}
+        label={t('archive')}
+        count={archivedCount}
+        active={view === 'archive'}
+        onClick={() => setView('archive')}
+      />
     </div>
   );
 }
@@ -28,15 +57,19 @@ function ViewTab({
   label,
   count,
   active,
+  onClick,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   count: number;
   active?: boolean;
+  onClick: () => void;
 }) {
   return (
     <button
       type="button"
+      onClick={onClick}
+      aria-pressed={active}
       className={[
         'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition',
         active

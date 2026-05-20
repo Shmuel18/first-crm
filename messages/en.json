@@ -98,7 +98,8 @@
     "viewTabs": {
       "active": "Active cases",
       "leads": "Leads",
-      "archive": "Archive"
+      "archive": "Archive",
+      "leadsEmpty": "No leads to show"
     },
     "filters": {
       "myCases": "My cases",
@@ -114,6 +115,10 @@
     "savedViews": {
       "saved": "Saved views",
       "saveCurrent": "Save current view",
+      "none": "No saved views",
+      "namePrompt": "Name for this saved view:",
+      "savedToast": "View \"{name}\" saved",
+      "delete": "Delete view",
       "exportExcel": "Export to Excel",
       "exportPdf": "Export to PDF",
       "exporting": "Exporting...",
@@ -151,6 +156,20 @@
       "noBorrowers": "(No borrowers)",
       "recentlyUpdated": "Updated within 24h",
       "updatedOn": "Updated on {date}"
+    }
+  },
+  "leads": {
+    "columns": {
+      "row": "#",
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "nationalId": "ID number",
+      "status": "Status"
+    },
+    "status": {
+      "active": "Active",
+      "converted": "Converted"
     }
   },
   "case": {

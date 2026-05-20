@@ -50,6 +50,21 @@ export async function listCases(filters: CaseListFilters = {}): Promise<CaseWith
   return (data ?? []) as unknown as CaseWithRelations[];
 }
 
+export type CaseViewCounts = { active: number; archived: number };
+
+export async function getCaseViewCounts(): Promise<CaseViewCounts> {
+  const supabase = await createClient();
+  const countArchived = (isArchived: boolean) =>
+    supabase
+      .from('cases')
+      .select('id', { count: 'exact', head: true })
+      .is('deleted_at', null)
+      .eq('is_archived', isArchived);
+
+  const [active, archived] = await Promise.all([countArchived(false), countArchived(true)]);
+  return { active: active.count ?? 0, archived: archived.count ?? 0 };
+}
+
 export async function getCaseById(id: CaseId): Promise<CaseWithRelations | null> {
   const supabase = await createClient();
   const { data, error } = await supabase

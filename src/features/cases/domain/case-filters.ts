@@ -30,6 +30,15 @@ function first(v: string | string[] | undefined): string | null {
   return (Array.isArray(v) ? v[0] : v) ?? null;
 }
 
+export type CaseView = 'active' | 'archive' | 'leads';
+
+export function parseCaseView(
+  sp: Record<string, string | string[] | undefined>,
+): CaseView {
+  const v = first(sp.view);
+  return v === 'archive' || v === 'leads' ? v : 'active';
+}
+
 export function parseDashboardFilters(
   sp: Record<string, string | string[] | undefined>,
 ): DashboardFilters {

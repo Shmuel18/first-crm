@@ -98,7 +98,8 @@
     "viewTabs": {
       "active": "תיקים פעילים",
       "leads": "לידים",
-      "archive": "ארכיון"
+      "archive": "ארכיון",
+      "leadsEmpty": "אין לידים להצגה"
     },
     "filters": {
       "myCases": "התיקים שלי",
@@ -114,6 +115,10 @@
     "savedViews": {
       "saved": "תצוגות שמורות",
       "saveCurrent": "שמור תצוגה נוכחית",
+      "none": "אין תצוגות שמורות",
+      "namePrompt": "שם לתצוגה השמורה:",
+      "savedToast": "התצוגה \"{name}\" נשמרה",
+      "delete": "מחק תצוגה",
       "exportExcel": "ייצוא לאקסל",
       "exportPdf": "ייצוא ל-PDF",
       "exporting": "מייצא...",
@@ -151,6 +156,20 @@
       "noBorrowers": "(ללא לווים)",
       "recentlyUpdated": "עודכן ב-24 שעות אחרונות",
       "updatedOn": "עודכן ב-{date}"
+    }
+  },
+  "leads": {
+    "columns": {
+      "row": "#",
+      "name": "שם",
+      "phone": "טלפון",
+      "email": "אימייל",
+      "nationalId": "ת\"ז",
+      "status": "סטטוס"
+    },
+    "status": {
+      "active": "פעיל",
+      "converted": "הומר לתיק"
     }
   },
   "case": {
