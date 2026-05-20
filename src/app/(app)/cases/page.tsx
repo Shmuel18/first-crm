@@ -114,11 +114,7 @@ export default async function CasesListPage({ searchParams }: Props) {
 
   return (
     <div className="-mx-6 -mt-6" dir="rtl">
-      <DashboardWelcomeBanner
-        firstName={profile?.first_name ?? ''}
-        casesCount={counts.active}
-        stuckCount={countStuck(activeCases)}
-      />
+      <DashboardWelcomeBanner firstName={profile?.first_name ?? ''} />
       <DashboardViewSelector
         activeCount={counts.active}
         archivedCount={counts.archived}
