@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useRef, useState, useTransition } from 'react';
 
 import { Check, Globe, LogOut, Settings } from 'lucide-react';
@@ -92,14 +93,14 @@ export function UserMenu({ fullName, initials, roleName }: UserMenuProps) {
             </div>
           </div>
 
-          <button
-            type="button"
-            className="w-full px-4 py-2.5 text-sm text-start hover:bg-neutral-50 inline-flex items-center gap-2 text-neutral-700"
+          <Link
+            href="/settings"
             onClick={() => setOpen(false)}
+            className="w-full px-4 py-2.5 text-sm text-start hover:bg-neutral-50 inline-flex items-center gap-2 text-neutral-700"
           >
             <Settings className="size-4 text-neutral-400" />
             {t('settings')}
-          </button>
+          </Link>
 
           <form action={logoutAction} className="border-t border-neutral-100">
             <button
