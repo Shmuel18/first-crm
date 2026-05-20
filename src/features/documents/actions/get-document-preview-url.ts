@@ -1,5 +1,6 @@
 'use server';
 
+import { userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
 type Result =
@@ -12,6 +13,12 @@ export async function getDocumentPreviewUrlAction(
   const supabase = await createClient();
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
+
+  // Defense-in-depth fast-fail to match the other document actions; RLS
+  // (documents_select) is still the row-level control.
+  if (!(await userHasPermission('view_case_documents'))) {
+    return { ok: false, error: 'unauthorized' };
+  }
 
   const { data: doc, error } = await supabase
     .from('documents')
@@ -28,7 +35,7 @@ export async function getDocumentPreviewUrlAction(
       ? (doc.metadata as { storage_path?: string }).storage_path
       : undefined;
 
-  if (!storagePath) return { ok: false, error: 'not_found', message: 'אין קובץ מקושר' };
+  if (!storagePath) return { ok: false, error: 'not_found' };
 
   const { data, error: urlErr } = await supabase.storage
     .from('case-documents')

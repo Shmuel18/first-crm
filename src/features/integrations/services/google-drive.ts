@@ -210,7 +210,7 @@ export class GoogleDriveClient {
   }
 
   async deleteFile(fileId: string): Promise<void> {
-    const res = await this.authedFetch(`${DRIVE_API}/files/${fileId}`, {
+    const res = await this.authedFetch(`${DRIVE_API}/files/${encodeURIComponent(fileId)}`, {
       method: 'DELETE',
     });
     if (!res.ok && res.status !== 404) {

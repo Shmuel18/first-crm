@@ -38,7 +38,9 @@ export async function listCases(filters: CaseListFilters = {}): Promise<CaseWith
   if (filters.caseTypeId) query = query.eq('case_type_primary_id', filters.caseTypeId);
   if (filters.advisorId) query = query.eq('assigned_advisor_id', filters.advisorId);
   if (filters.search) {
-    query = query.ilike('case_number', `%${filters.search}%`);
+    // Escape LIKE wildcards so a user's % / _ / \ can't broaden the match.
+    const term = filters.search.replace(/[\\%_]/g, (c) => `\\${c}`);
+    query = query.ilike('case_number', `%${term}%`);
   }
 
   const { data, error } = await query;
