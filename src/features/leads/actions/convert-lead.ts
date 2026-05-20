@@ -24,7 +24,7 @@ export async function convertLeadAction(leadId: string): Promise<ConvertLeadResu
   // convert_lead_to_case (migration 031) isn't in the generated Database types
   // yet; call it through a narrowly-typed rpc view. SECURITY DEFINER + an
   // internal has_permission check make the conversion atomic and authorized.
-  const rpc = supabase.rpc as unknown as (
+  const rpc = supabase.rpc.bind(supabase) as unknown as (
     fn: 'convert_lead_to_case',
     args: { p_lead_id: string },
   ) => Promise<{ data: string | null; error: { message: string; code?: string } | null }>;

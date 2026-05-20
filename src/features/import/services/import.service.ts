@@ -33,7 +33,9 @@ export type CasesImportOutcome = { created: number; errors: ImportRowError[] };
 /** Call the import_cases RPC (migration 037; not in generated types yet). */
 export async function runCasesImport(rows: ImportRow[]): Promise<CasesImportOutcome | null> {
   const supabase = await createClient();
-  const rpc = supabase.rpc as unknown as (
+  // bind() keeps `this` — a bare supabase.rpc reference loses it and fails with
+  // "Cannot read properties of undefined (reading 'rest')".
+  const rpc = supabase.rpc.bind(supabase) as unknown as (
     fn: 'import_cases',
     args: { p_rows: ImportRow[] },
   ) => Promise<{ data: CasesImportOutcome | null; error: { message: string } | null }>;

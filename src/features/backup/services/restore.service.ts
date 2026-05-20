@@ -15,7 +15,7 @@ export async function restoreSnapshot(snapshot: BackupSnapshot): Promise<Restore
 
   // restore_backup_snapshot is introduced in migration 030 and isn't in the
   // generated Database types yet; call it through a narrowly-typed rpc view.
-  const rpc = supabase.rpc as unknown as (
+  const rpc = supabase.rpc.bind(supabase) as unknown as (
     fn: 'restore_backup_snapshot',
     args: { p_snapshot: BackupSnapshot },
   ) => Promise<{ data: RestoreCounts | null; error: { message: string } | null }>;
