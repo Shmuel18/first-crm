@@ -10,10 +10,20 @@ import type { Locale } from '@/lib/i18n/direction';
 
 import { TaskFormDialog } from './task-form-dialog';
 import { TaskRow } from './task-row';
-import type { TaskWithRelations } from '../types';
+import { TASK_STATUS_VALUES, type TaskStatus, type TaskWithRelations } from '../types';
 
 type Profile = { id: string; first_name: string | null; last_name: string | null };
 type CaseOption = { id: string; case_number: string; label: string };
+
+// Section order + accent dot for the grouped (full) list view.
+const GROUP_ORDER: readonly TaskStatus[] = TASK_STATUS_VALUES;
+const STATUS_COLOR: Record<TaskStatus, string> = {
+  pending: '#C9A961',
+  in_progress: '#6366F1',
+  snoozed: '#F59E0B',
+  completed: '#10B981',
+  cancelled: '#A1A1AA',
+};
 
 type Props = {
   tasks: ReadonlyArray<TaskWithRelations>;
@@ -37,11 +47,26 @@ export function TasksList({
   hideCreateButton = false,
 }: Props) {
   const t = useTranslations('tasks');
+  const ts = useTranslations('tasks.status');
   const [dialogState, setDialogState] = useState<
-    | { mode: 'create' }
-    | { mode: 'edit'; task: TaskWithRelations }
-    | null
+    { mode: 'create' } | { mode: 'edit'; task: TaskWithRelations } | null
   >(null);
+
+  const renderRow = (task: TaskWithRelations) => (
+    <TaskRow
+      key={task.id}
+      task={task}
+      locale={locale}
+      compact={compact}
+      onEdit={(target) => setDialogState({ mode: 'edit', task: target })}
+    />
+  );
+
+  // Full view groups by status; the compact (case-block) view stays flat.
+  const groups = GROUP_ORDER.map((status) => ({
+    status,
+    items: tasks.filter((task) => task.status === status),
+  })).filter((group) => group.items.length > 0);
 
   return (
     <div>
@@ -77,16 +102,28 @@ export function TasksList({
             </Button>
           )}
         </div>
-      ) : (
+      ) : compact ? (
         <div className="rounded-xl border border-neutral-200 bg-white divide-y divide-neutral-100 overflow-hidden shadow-sm">
-          {tasks.map((task) => (
-            <TaskRow
-              key={task.id}
-              task={task}
-              locale={locale}
-              compact={compact}
-              onEdit={(t) => setDialogState({ mode: 'edit', task: t })}
-            />
+          {tasks.map(renderRow)}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {groups.map((group) => (
+            <section key={group.status}>
+              <div className="flex items-center gap-2 px-1 mb-1.5">
+                <span
+                  className="size-2.5 rounded-full shrink-0"
+                  style={{ background: STATUS_COLOR[group.status] }}
+                />
+                <h3 className="text-sm font-semibold text-neutral-700">{ts(group.status)}</h3>
+                <span className="text-xs font-medium text-neutral-400 tabular-nums">
+                  {group.items.length}
+                </span>
+              </div>
+              <div className="rounded-xl border border-neutral-200 bg-white divide-y divide-neutral-100 overflow-hidden shadow-sm">
+                {group.items.map(renderRow)}
+              </div>
+            </section>
           ))}
         </div>
       )}
