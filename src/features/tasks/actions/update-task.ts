@@ -84,8 +84,12 @@ export async function updateTaskAction(
   }
 
   revalidatePath('/tasks');
-  const affectedCaseId = parsed.data.case_id ?? existing.case_id;
-  if (affectedCaseId) revalidatePath(`/cases/${affectedCaseId}`);
+  const newCaseId = parsed.data.case_id ?? null;
+  if (newCaseId) revalidatePath(`/cases/${newCaseId}`);
+  // On a move (A→B) also refresh the old case so the task stops showing there.
+  if (existing.case_id && existing.case_id !== newCaseId) {
+    revalidatePath(`/cases/${existing.case_id}`);
+  }
 
   return { ok: true, taskId };
 }

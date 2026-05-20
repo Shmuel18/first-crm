@@ -1,9 +1,22 @@
 import type { TaskPriority, TaskRow, TaskStatus } from '../types';
 
+/** Local calendar date as YYYY-MM-DD (lexicographically comparable). */
+function todayLocalDate(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 export function isOverdue(task: Pick<TaskRow, 'due_date' | 'status'>): boolean {
   if (task.status !== 'pending') return false;
   if (!task.due_date) return false;
-  return new Date(task.due_date) < new Date();
+  // due_date is a DATE-only value; a task is overdue only once its day has
+  // fully passed in local time. `new Date('YYYY-MM-DD')` parses as UTC midnight,
+  // which would flag a task due today as overdue from ~02:00 local — so compare
+  // zero-padded YYYY-MM-DD strings lexicographically instead.
+  return task.due_date.slice(0, 10) < todayLocalDate();
 }
 
 export function isCompleted(status: TaskStatus): boolean {
@@ -47,10 +60,13 @@ export function statusBadgeClass(status: TaskStatus): string {
 
 export function formatDueDate(due: string | null, locale: 'he' | 'en'): string {
   if (!due) return '';
-  const d = new Date(due);
+  // Parse the date-only value as a LOCAL calendar date — `new Date('YYYY-MM-DD')`
+  // is UTC midnight and can render the wrong day in negative-offset zones.
+  const parts = due.slice(0, 10).split('-').map(Number);
+  const date = new Date(parts[0] ?? 1970, (parts[1] ?? 1) - 1, parts[2] ?? 1);
   return new Intl.DateTimeFormat(locale === 'he' ? 'he-IL' : 'en-US', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
-  }).format(d);
+  }).format(date);
 }

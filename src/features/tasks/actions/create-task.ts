@@ -44,7 +44,7 @@ export async function createTaskAction(
       title: parsed.data.title,
       description: parsed.data.description ?? null,
       priority: parsed.data.priority ?? 'normal',
-      assigned_to: parsed.data.assigned_to ?? userId,
+      assigned_to: parsed.data.assigned_to ?? null,
       case_id: parsed.data.case_id ?? null,
       due_date: parsed.data.due_date ?? null,
       created_by: userId,
@@ -55,8 +55,8 @@ export async function createTaskAction(
 
   if (error || !inserted) return { ok: false, error: 'unknown', values };
 
-  const assignee = parsed.data.assigned_to ?? userId;
-  if (assignee !== userId) {
+  const assignee = parsed.data.assigned_to ?? null;
+  if (assignee && assignee !== userId) {
     await sendTaskNotificationEmail({
       recipientId: assignee,
       actorId: userId,

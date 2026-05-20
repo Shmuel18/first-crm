@@ -139,8 +139,12 @@ export function TaskFormDialog({
           </FormField>
 
           <FormField label={t('fields.case')} error={fieldErrors.case_id}>
+            {/* A disabled <select> is omitted from FormData, so when the case is
+                preset (locked) we submit it via a hidden input and leave the
+                visible select purely presentational (no name). */}
+            {presetCaseId && <input type="hidden" name="case_id" value={presetCaseId} />}
             <NativeSelect
-              name="case_id"
+              name={presetCaseId ? undefined : 'case_id'}
               defaultValue={presetCase || value('case_id')}
               disabled={!!presetCaseId}
             >
