@@ -7,12 +7,21 @@ import { Bookmark, ChevronDown, Star, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 
 import { DashboardExportButtons } from './dashboard-export-buttons';
 
@@ -40,21 +49,25 @@ function persistViews(views: SavedView[]): void {
 
 export function DashboardSavedViews() {
   const t = useTranslations('dashboard.savedViews');
+  const tc = useTranslations('common');
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [views, setViews] = useState<SavedView[]>(loadViews);
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [name, setName] = useState('');
 
-  const saveCurrent = () => {
-    const name = window.prompt(t('namePrompt'))?.trim();
-    if (!name) return;
+  const handleSave = () => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
     const next = [
-      ...views.filter((v) => v.name !== name),
-      { id: crypto.randomUUID(), name, query: searchParams.toString() },
+      ...views.filter((v) => v.name !== trimmed),
+      { id: crypto.randomUUID(), name: trimmed, query: searchParams.toString() },
     ];
     setViews(next);
     persistViews(next);
-    toast.success(t('savedToast', { name }));
+    setSaveOpen(false);
+    toast.success(t('savedToast', { name: trimmed }));
   };
 
   const applyView = (v: SavedView) => {
@@ -109,7 +122,11 @@ export function DashboardSavedViews() {
       </DropdownMenu>
 
       <button
-        onClick={saveCurrent}
+        type="button"
+        onClick={() => {
+          setName('');
+          setSaveOpen(true);
+        }}
         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[#C9A961] hover:bg-[#C9A961]/10 transition"
       >
         <Star className="size-3.5" />
@@ -118,6 +135,41 @@ export function DashboardSavedViews() {
 
       <div className="flex-1" />
       <DashboardExportButtons />
+
+      <Dialog open={saveOpen} onOpenChange={setSaveOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('saveCurrent')}</DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSave();
+            }}
+            className="space-y-4"
+          >
+            <Input
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={t('namePlaceholder')}
+              maxLength={60}
+            />
+            <DialogFooter>
+              <Button
+                type="submit"
+                disabled={!name.trim()}
+                className="bg-[#C9A961] hover:bg-[#E8D5A2] text-[#0A0A0A] font-semibold"
+              >
+                {tc('save')}
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setSaveOpen(false)}>
+                {tc('cancel')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

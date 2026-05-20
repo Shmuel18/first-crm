@@ -116,7 +116,7 @@
       "saved": "Saved views",
       "saveCurrent": "Save current view",
       "none": "No saved views",
-      "namePrompt": "Name for this saved view:",
+      "namePlaceholder": "View name",
       "savedToast": "View \"{name}\" saved",
       "delete": "Delete view",
       "exportExcel": "Export to Excel",

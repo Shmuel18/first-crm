@@ -116,7 +116,7 @@
       "saved": "תצוגות שמורות",
       "saveCurrent": "שמור תצוגה נוכחית",
       "none": "אין תצוגות שמורות",
-      "namePrompt": "שם לתצוגה השמורה:",
+      "namePlaceholder": "שם לתצוגה",
       "savedToast": "התצוגה \"{name}\" נשמרה",
       "delete": "מחק תצוגה",
       "exportExcel": "ייצוא לאקסל",
