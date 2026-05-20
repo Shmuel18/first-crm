@@ -201,6 +201,48 @@
       "alreadyConverted": "Lead is already converted"
     }
   },
+  "templates": {
+    "title": "Message templates",
+    "subtitle": "WhatsApp and email templates for clients. Add variables that get filled in automatically when sending.",
+    "new": "New template",
+    "empty": "No templates yet. Create your first one.",
+    "channels": {
+      "whatsapp": "WhatsApp",
+      "email": "Email",
+      "general": "General"
+    },
+    "fields": {
+      "name": "Template name",
+      "channel": "Channel",
+      "subject": "Subject (email)",
+      "body": "Message body"
+    },
+    "variablesHint": "Click to insert a variable:",
+    "variables": {
+      "client_name": "Client name",
+      "case_number": "Case number",
+      "advisor_name": "Advisor name",
+      "office_name": "Office name",
+      "date": "Date"
+    },
+    "form": {
+      "create": "New template",
+      "edit": "Edit template",
+      "namePlaceholder": "e.g. Welcome message",
+      "bodyPlaceholder": "Write the message body..."
+    },
+    "submit": {
+      "create": "Create template",
+      "update": "Update"
+    },
+    "deleteConfirm": "Delete the template \"{name}\"?",
+    "toast": {
+      "created": "Template created",
+      "updated": "Template updated",
+      "deleted": "Template deleted",
+      "failed": "Action failed. Please try again."
+    }
+  },
   "case": {
     "actionBar": {
       "backTooltip": "Back",

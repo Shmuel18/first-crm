@@ -201,6 +201,48 @@
       "alreadyConverted": "הליד כבר הומר לתיק"
     }
   },
+  "templates": {
+    "title": "תבניות הודעות",
+    "subtitle": "תבניות לוואטסאפ ולמייל ללקוחות. הוסף משתנים שיוחלפו אוטומטית בעת השליחה.",
+    "new": "תבנית חדשה",
+    "empty": "עדיין אין תבניות. צור את הראשונה.",
+    "channels": {
+      "whatsapp": "וואטסאפ",
+      "email": "אימייל",
+      "general": "כללי"
+    },
+    "fields": {
+      "name": "שם התבנית",
+      "channel": "ערוץ",
+      "subject": "נושא (למייל)",
+      "body": "תוכן ההודעה"
+    },
+    "variablesHint": "לחץ כדי להוסיף משתנה:",
+    "variables": {
+      "client_name": "שם הלקוח",
+      "case_number": "מספר תיק",
+      "advisor_name": "שם היועץ",
+      "office_name": "שם המשרד",
+      "date": "תאריך"
+    },
+    "form": {
+      "create": "תבנית חדשה",
+      "edit": "עריכת תבנית",
+      "namePlaceholder": "לדוגמה: ברוכים הבאים",
+      "bodyPlaceholder": "כתוב את תוכן ההודעה..."
+    },
+    "submit": {
+      "create": "צור תבנית",
+      "update": "עדכן"
+    },
+    "deleteConfirm": "למחוק את התבנית \"{name}\"?",
+    "toast": {
+      "created": "התבנית נוצרה",
+      "updated": "התבנית עודכנה",
+      "deleted": "התבנית נמחקה",
+      "failed": "הפעולה נכשלה. נסה שוב."
+    }
+  },
   "case": {
     "actionBar": {
       "backTooltip": "חזרה",
