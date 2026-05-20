@@ -26,6 +26,7 @@ import { calculateLtv, ltvBand } from '@/features/cases/domain/calculations';
 import { formatMoney } from '@/features/cases/domain/format';
 import type { CaseBlocker, InsuranceStatus } from '@/features/cases/schemas/case.schema';
 import { getCaseById } from '@/features/cases/services/cases.service';
+import { CaseTasksBlock } from '@/features/tasks/components/case-tasks-block';
 import { createClient } from '@/lib/supabase/server';
 import type { Locale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
@@ -166,9 +167,7 @@ export default async function CaseDetailPage({ params }: Props) {
         />
 
         <CaseBlock title={t('blocks.tasks')} icon={<Briefcase />}>
-          <p className="text-sm text-neutral-500 text-center py-4">
-            {t('blocks.tasksComingSoon')}
-          </p>
+          <CaseTasksBlock caseId={caseData.id} locale={locale} />
         </CaseBlock>
 
         <CaseBlock title={t('blocks.shortNote')} icon={<Briefcase />} fullWidth>

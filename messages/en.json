@@ -175,7 +175,6 @@
       "noBanks": "No banks added yet",
       "admin": "Administration",
       "tasks": "Tasks",
-      "tasksComingSoon": "Task management coming soon",
       "shortNote": "Short note",
       "shortNoteEmpty": "No note yet. Shown in dashboard under status - for quick reminders.",
       "requestDetails": "Request Details (full story)",
@@ -522,5 +521,70 @@
     "bulletList": "Bullet list",
     "orderedList": "Ordered list",
     "blockquote": "Quote"
+  },
+  "tasks": {
+    "title": "Tasks",
+    "subtitle": "Daily task management — for yourself, the team, and cases",
+    "newTask": "+ New task",
+    "createFirst": "Create your first task",
+    "empty": "No tasks in this view",
+    "emptyCase": "No tasks for this case yet. Click below to create one.",
+    "unassigned": "Unassigned",
+    "overdue": "Overdue",
+    "showAll": "Show {count} more →",
+    "views": {
+      "mine": "My tasks",
+      "assigned-by-me": "Assigned by me",
+      "all": "Whole office"
+    },
+    "priority": {
+      "high": "Urgent",
+      "normal": "Medium",
+      "low": "Normal"
+    },
+    "status": {
+      "pending": "Open",
+      "completed": "Completed",
+      "snoozed": "Snoozed",
+      "cancelled": "Cancelled"
+    },
+    "action": {
+      "complete": "Mark as completed",
+      "reopen": "Reopen"
+    },
+    "toast": {
+      "completed": "Task marked as completed",
+      "reopened": "Task reopened",
+      "deleted": "Task deleted",
+      "actionFailed": "Action failed. Please try again.",
+      "deleteFailed": "Delete failed. Please try again."
+    },
+    "form": {
+      "title": {
+        "create": "New task",
+        "edit": "Edit task"
+      },
+      "fields": {
+        "title": "Title",
+        "titlePlaceholder": "What needs to be done?",
+        "description": "Description",
+        "descriptionPlaceholder": "Additional details (optional)",
+        "priority": "Priority",
+        "dueDate": "Due date",
+        "assignee": "Assigned to",
+        "assigneeUnassigned": "— Unassigned —",
+        "case": "Related case",
+        "caseNone": "— No case —"
+      },
+      "submit": {
+        "create": "Create task",
+        "update": "Save changes"
+      },
+      "errors": {
+        "unauthorized": "You don't have permission to perform this action.",
+        "notFound": "Task not found or you don't have access.",
+        "generic": "Save failed. Please try again."
+      }
+    }
   }
 }

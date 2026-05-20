@@ -175,7 +175,6 @@
       "noBanks": "טרם נוספו בנקים לתיק",
       "admin": "מנהלה",
       "tasks": "משימות",
-      "tasksComingSoon": "ניהול משימות יתווסף בקרוב",
       "shortNote": "הערה קצרה",
       "shortNoteEmpty": "ללא הערה. מוצגת בדשבורד מתחת לסטטוס - לתזכורות מהירות.",
       "requestDetails": "פרטי הבקשה (סיפור התיק)",
@@ -522,5 +521,70 @@
     "bulletList": "רשימה בולטים",
     "orderedList": "רשימה ממוספרת",
     "blockquote": "ציטוט"
+  },
+  "tasks": {
+    "title": "משימות",
+    "subtitle": "ניהול משימות יומיומי - לעצמך, לצוות, ולתיקים",
+    "newTask": "+ משימה חדשה",
+    "createFirst": "צור משימה ראשונה",
+    "empty": "אין משימות בתצוגה זו",
+    "emptyCase": "אין עדיין משימות לתיק. לחץ למטה ליצירה.",
+    "unassigned": "לא מוקצה",
+    "overdue": "באיחור",
+    "showAll": "הצג עוד {count} →",
+    "views": {
+      "mine": "המשימות שלי",
+      "assigned-by-me": "שהקציתי",
+      "all": "כל המשרד"
+    },
+    "priority": {
+      "high": "דחופה",
+      "normal": "בינונית",
+      "low": "רגילה"
+    },
+    "status": {
+      "pending": "פתוחה",
+      "completed": "הושלמה",
+      "snoozed": "מושהית",
+      "cancelled": "בוטלה"
+    },
+    "action": {
+      "complete": "סמן כהושלם",
+      "reopen": "פתח מחדש"
+    },
+    "toast": {
+      "completed": "המשימה סומנה כהושלמה",
+      "reopened": "המשימה נפתחה מחדש",
+      "deleted": "המשימה נמחקה",
+      "actionFailed": "הפעולה נכשלה. נסה שוב.",
+      "deleteFailed": "המחיקה נכשלה. נסה שוב."
+    },
+    "form": {
+      "title": {
+        "create": "משימה חדשה",
+        "edit": "ערוך משימה"
+      },
+      "fields": {
+        "title": "כותרת",
+        "titlePlaceholder": "מה צריך לעשות?",
+        "description": "תיאור",
+        "descriptionPlaceholder": "פרטים נוספים (אופציונלי)",
+        "priority": "עדיפות",
+        "dueDate": "דדליין",
+        "assignee": "מוקצה ל",
+        "assigneeUnassigned": "— ללא הקצאה —",
+        "case": "תיק קשור",
+        "caseNone": "— ללא תיק —"
+      },
+      "submit": {
+        "create": "צור משימה",
+        "update": "שמור שינויים"
+      },
+      "errors": {
+        "unauthorized": "אין הרשאה לבצע פעולה זו.",
+        "notFound": "המשימה לא נמצאה או שאין לך גישה.",
+        "generic": "שמירה נכשלה. נסה שוב."
+      }
+    }
   }
 }

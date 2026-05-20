@@ -20,7 +20,7 @@ type NavItem = {
   badge?: number;
 };
 
-const TOP_ITEMS: readonly NavItem[] = [
+const BASE_TOP_ITEMS: readonly NavItem[] = [
   { href: '/cases', labelKey: 'dashboard', icon: LayoutDashboard },
   { href: '/tasks', labelKey: 'tasks', icon: CheckSquare },
   { href: '/team', labelKey: 'team', icon: Users },
@@ -32,14 +32,22 @@ const BOTTOM_ITEMS: readonly NavItem[] = [
   { href: '/settings', labelKey: 'settings', icon: Settings },
 ] as const;
 
-export function Sidebar() {
+type SidebarProps = {
+  tasksBadge?: number;
+};
+
+export function Sidebar({ tasksBadge }: SidebarProps) {
   const pathname = usePathname();
   const t = useTranslations('nav');
+
+  const topItems = BASE_TOP_ITEMS.map((item) =>
+    item.labelKey === 'tasks' ? { ...item, badge: tasksBadge } : item,
+  );
 
   return (
     <aside className="hidden md:flex flex-col w-16 bg-[#0A0A0A] fixed start-0 top-16 bottom-0 z-20 border-l border-neutral-900 py-3">
       <nav className="flex-1 flex flex-col gap-1 px-2">
-        {TOP_ITEMS.map((item) => (
+        {topItems.map((item) => (
           <SidebarLink key={item.href} item={item} pathname={pathname} label={t(item.labelKey)} />
         ))}
       </nav>
