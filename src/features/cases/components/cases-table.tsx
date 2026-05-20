@@ -1,3 +1,5 @@
+'use client';
+
 import { useTranslations } from 'next-intl';
 
 import {
@@ -7,12 +9,13 @@ import {
   getSecondaryBanksCount,
 } from '../domain/case-derivations';
 import { isFrozenCase, isRecentlyUpdated, isStuckCase } from '../domain/case-state';
+import { useCaseQueryFilter } from '../hooks/use-case-query-filter';
 import type { CaseWithRelations } from '../types';
 
 import { CaseTableRow, type CaseTableRowData } from './case-table-row';
 
 type StatusOption = { id: string; name_he: string; color: string };
-type BankOption = { id: string; name_he: string; color: string; logo_url: string | null };
+type BankOption = { id: string; key: string; name_he: string; color: string; logo_url: string | null };
 type AdvisorOption = { id: string; first_name: string | null; last_name: string | null };
 
 type Props = {
@@ -24,9 +27,15 @@ type Props = {
 
 export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }: Props) {
   const t = useTranslations('dashboard.columns');
+  const tf = useTranslations('dashboard.filters');
+  const filtered = useCaseQueryFilter(cases);
+
+  if (filtered.length === 0) {
+    return <p className="px-6 py-12 text-center text-sm text-neutral-500">{tf('noMatches')}</p>;
+  }
 
   return (
-    <div className="overflow-x-auto scrollbar-thin">
+    <div>
       <table className="w-full table-fixed min-w-[1100px]">
         <colgroup>
           <col className="w-12" />
@@ -37,7 +46,7 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
           <col className="w-44" />
           <col />
         </colgroup>
-        <thead>
+        <thead className="sticky top-0 z-10">
           <tr className="bg-neutral-100 border-b-2 border-neutral-300">
             <Th>{t('row')}</Th>
             <Th>{t('clientName')}</Th>
@@ -49,7 +58,7 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
           </tr>
         </thead>
         <tbody>
-          {cases.map((c, index) => (
+          {filtered.map((c, index) => (
             <CaseTableRow
               key={c.id}
               row={toRowData(c, index + 1)}
@@ -90,6 +99,7 @@ function toRowData(c: CaseWithRelations, index: number): CaseTableRowData {
     primaryBank: primaryBank
       ? {
           id: primaryBank.id,
+          key: primaryBank.key,
           name_he: primaryBank.name_he,
           color: primaryBank.color,
           logo_url: primaryBank.logo_url,

@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronDown, X } from 'lucide-react';
+import { ChevronDown, Search, X } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { parseAsBoolean, parseAsString, useQueryState } from 'nuqs';
 
@@ -23,6 +23,9 @@ type Props = {
   // Only users who can see other advisors' cases (view_all_cases) get the
   // advisor picker; a regular advisor only sees their own cases anyway.
   canFilterByAdvisor: boolean;
+  // The archive intentionally shows closed/frozen cases, so the
+  // "hide closed & frozen" toggle is suppressed there.
+  isArchiveView?: boolean;
 };
 
 const ALL = '__all';
@@ -33,6 +36,7 @@ export function DashboardFiltersBar({
   bankOptions,
   advisorOptions,
   canFilterByAdvisor,
+  isArchiveView = false,
 }: Props) {
   const t = useTranslations('dashboard.filters');
   const tBlocker = useTranslations('case.blocker');
@@ -46,6 +50,9 @@ export function DashboardFiltersBar({
     'hideClosedFrozen',
     parseAsBoolean.withDefault(true).withOptions(urlOpts),
   );
+  // Free-text search filters client-side (see useCaseQueryFilter), so it uses a
+  // shallow URL update — no server round-trip, instant as you type.
+  const [query, setQuery] = useQueryState('q', parseAsString.withOptions({ shallow: true }));
 
   const stages: Option[] = statusOptions.map((s) => ({ id: s.id, name: s.name_he }));
   const banks: Option[] = bankOptions.map((b) => ({ id: b.id, name: b.name_he }));
@@ -58,6 +65,7 @@ export function DashboardFiltersBar({
   const showAdvisor = canFilterByAdvisor && advisors.length > 0;
 
   const anyActive =
+    Boolean(query) ||
     !hideClosedFrozen ||
     advisor !== null ||
     stage !== null ||
@@ -65,6 +73,7 @@ export function DashboardFiltersBar({
     blocker !== null;
 
   const clearAll = () => {
+    setQuery(null);
     setHide(true);
     setAdvisor(null);
     setStage(null);
@@ -77,6 +86,16 @@ export function DashboardFiltersBar({
       dir={locale === 'he' ? 'rtl' : 'ltr'}
       className="bg-white px-6 py-3 border-b border-neutral-200 flex items-center gap-2 flex-wrap"
     >
+      <div className="relative">
+        <Search className="absolute end-2.5 top-1/2 -translate-y-1/2 size-3.5 text-neutral-400 pointer-events-none" />
+        <input
+          type="search"
+          value={query ?? ''}
+          onChange={(e) => setQuery(e.target.value || null)}
+          placeholder={t('search')}
+          className="w-48 rounded-full border border-neutral-200 bg-white ps-3 pe-8 py-1.5 text-sm placeholder:text-neutral-400 focus:outline-none focus:border-[#C9A961] transition"
+        />
+      </div>
       {showAdvisor && (
         <FilterSelect
           label={t('advisor')}
@@ -102,7 +121,13 @@ export function DashboardFiltersBar({
       )}
 
       <div className="flex-1" />
-      <ToggleSwitch label={t('hideClosedFrozen')} on={hideClosedFrozen} onClick={() => setHide(!hideClosedFrozen)} />
+      {!isArchiveView && (
+        <ToggleSwitch
+          label={t('hideClosedFrozen')}
+          on={hideClosedFrozen}
+          onClick={() => setHide(!hideClosedFrozen)}
+        />
+      )}
     </div>
   );
 }

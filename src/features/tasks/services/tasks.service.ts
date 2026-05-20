@@ -2,7 +2,7 @@ import { getTranslations } from 'next-intl/server';
 
 import { createClient } from '@/lib/supabase/server';
 import type { Locale } from '@/lib/i18n/direction';
-import type { CaseId, TaskId } from '@/lib/types/branded';
+import type { CaseId } from '@/lib/types/branded';
 
 import type { TaskListFilters } from '../schemas/task.schema';
 import type { TaskAssignee, TaskCaseOption, TaskStatus, TaskView, TaskWithRelations } from '../types';
@@ -72,20 +72,6 @@ export async function listTasks(filters: TaskListFilters): Promise<TaskWithRelat
 
 export async function listTasksForCase(caseId: CaseId): Promise<TaskWithRelations[]> {
   return listTasks({ view: 'all', caseId });
-}
-
-export async function getTaskById(id: TaskId): Promise<TaskWithRelations | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('tasks')
-    .select(TASK_SELECT)
-    .eq('id', id)
-    .is('deleted_at', null)
-    .maybeSingle();
-
-  if (error) throw error;
-  // PostgREST embedded-relation typing gap; shape per the select string above.
-  return data as unknown as TaskWithRelations | null;
 }
 
 export async function countPendingTasksForUser(): Promise<number> {

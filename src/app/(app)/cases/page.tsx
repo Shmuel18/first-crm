@@ -1,10 +1,10 @@
 import { getTranslations } from 'next-intl/server';
 
+import { CasesCardList } from '@/features/cases/components/cases-card-list';
 import { CasesEmptyState } from '@/features/cases/components/cases-empty-state';
 import { CasesTable } from '@/features/cases/components/cases-table';
 import { DashboardFiltersBar } from '@/features/cases/components/dashboard-filters-bar';
 import { DashboardSavedViews } from '@/features/cases/components/dashboard-saved-views';
-import { DashboardSummaryBar } from '@/features/cases/components/dashboard-summary-bar';
 import { DashboardViewSelector } from '@/features/cases/components/dashboard-view-selector';
 import { DashboardWelcomeBanner } from '@/features/cases/components/dashboard-welcome-banner';
 import { listBankOptions } from '@/features/case-banks/services/case-banks.service';
@@ -18,7 +18,6 @@ import {
   listAdvisorOptions,
   listCaseStatusOptions,
 } from '@/features/cases/services/case-lookups.service';
-import { countNewThisWeek, countStuck } from '@/features/cases/domain/case-state';
 import { getCaseViewCounts, listCases } from '@/features/cases/services/cases.service';
 import { userHasPermission } from '@/lib/auth/permissions';
 import { LeadsTable } from '@/features/leads/components/leads-table';
@@ -60,64 +59,75 @@ export default async function CasesListPage({ searchParams }: Props) {
     getTranslations('dashboard'),
   ]);
 
-  let body: React.ReactNode;
+  let chrome: React.ReactNode = null;
+  let scrollContent: React.ReactNode;
   if (view === 'leads') {
     const leads = await listLeads();
-    body = (
-      <div className="bg-white">
-        <LeadsToolbar assignees={advisorOptions} />
-        {leads.length === 0 ? (
-          <EmptyMessage text={t('viewTabs.leadsEmpty')} />
-        ) : (
-          <LeadsTable leads={leads} />
-        )}
-      </div>
-    );
+    chrome = <LeadsToolbar assignees={advisorOptions} />;
+    scrollContent =
+      leads.length === 0 ? (
+        <EmptyMessage text={t('viewTabs.leadsEmpty')} />
+      ) : (
+        <LeadsTable leads={leads} />
+      );
   } else {
-    const cases = view === 'archive' ? await listCases({ isArchived: true }) : activeCases;
-    const visible = filterCases(cases, filters);
-    body = (
+    const isArchive = view === 'archive';
+    const cases = isArchive ? await listCases({ isArchived: true }) : activeCases;
+    // In the archive, "hide closed & frozen" would hide exactly the cases that
+    // were archived (completed / on-hold), so don't apply it there.
+    const visible = filterCases(
+      cases,
+      isArchive ? { ...filters, hideClosedFrozen: false } : filters,
+    );
+    chrome = (
       <>
         <DashboardFiltersBar
           statusOptions={statusOptions}
           bankOptions={bankOptions}
           advisorOptions={advisorOptions}
           canFilterByAdvisor={canViewAll}
+          isArchiveView={isArchive}
         />
         <DashboardSavedViews />
-        <DashboardSummaryBar
-          total={cases.length}
-          showing={visible.length}
-          stuck={countStuck(cases)}
-          newThisWeek={countNewThisWeek(cases)}
-        />
-        <div className="bg-white">
-          {cases.length === 0 ? (
-            <CasesEmptyState />
-          ) : visible.length === 0 ? (
-            <EmptyMessage text={t('filters.noMatches')} />
-          ) : (
+      </>
+    );
+    scrollContent =
+      cases.length === 0 ? (
+        <CasesEmptyState />
+      ) : visible.length === 0 ? (
+        <EmptyMessage text={t('filters.noMatches')} />
+      ) : (
+        <>
+          {/* Narrow screens: cards (the table needs ~1100px). md+: full table. */}
+          <div className="md:hidden">
+            <CasesCardList cases={visible} />
+          </div>
+          <div className="hidden md:block">
             <CasesTable
               cases={visible}
               statusOptions={statusOptions}
               bankOptions={bankOptions}
               advisorOptions={advisorOptions}
             />
-          )}
-        </div>
-      </>
-    );
+          </div>
+        </>
+      );
   }
 
+  // The whole dashboard scrolls inside a viewport-height pane (under the fixed
+  // 4rem topbar); the greeting/tabs/filters scroll away and only the table
+  // header stays (sticky, in CasesTable). -m-6 cancels the layout p-6 so the
+  // bars stay full-bleed.
   return (
-    <div className="-mx-6 -mt-6" dir="rtl">
+    <div className="-m-6 h-[calc(100dvh_-_4rem)] overflow-auto scrollbar-thin bg-white">
       <DashboardWelcomeBanner firstName={profile?.first_name ?? ''} />
       <DashboardViewSelector
         activeCount={counts.active}
         archivedCount={counts.archived}
         leadsCount={leadsCount}
       />
-      {body}
+      {chrome}
+      {scrollContent}
     </div>
   );
 }

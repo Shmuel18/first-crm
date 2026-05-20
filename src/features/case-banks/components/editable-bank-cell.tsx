@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 
 import { Check, ChevronDown, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
 import {
   calcDropdownPos,
@@ -14,6 +15,7 @@ import { setPrimaryBankAction } from '../actions/set-primary-bank';
 
 type BankOption = {
   id: string;
+  key: string;
   name_he: string;
   color: string;
   logo_url: string | null;
@@ -72,6 +74,7 @@ export function EditableBankCell({
       const result = await setPrimaryBankAction(caseId, option?.id ?? null);
       if (!result.ok) {
         setBank(prevBank);
+        toast.error(tc('saveFailed'));
       }
     });
   };
@@ -87,7 +90,7 @@ export function EditableBankCell({
       >
         {bank ? (
           <>
-            <BankAvatar bank={bank} size="md" />
+            <BankAvatar key={bank.id} bank={bank} size="md" />
             <span className="text-sm text-neutral-800 whitespace-nowrap font-medium">
               {bank.name_he}
               {secondaryCount > 0 && (
@@ -155,19 +158,24 @@ export function EditableBankCell({
 function BankAvatar({ bank, size }: { bank: BankOption; size: 'sm' | 'md' }) {
   const sizeClass = size === 'md' ? 'size-9' : 'size-7';
   const fallbackText = size === 'md' ? 'text-[11px]' : 'text-[10px]';
-  const [logoFailed, setLogoFailed] = useState(false);
-  const showLogo = bank.logo_url && !logoFailed;
+  // Prefer a self-hosted logo at /public/banks/<key>.svg, then the stored
+  // logo_url, then a branded monogram. onError advances to the next source.
+  const sources = [bank.key ? `/banks/${bank.key}.svg` : null, bank.logo_url].filter(
+    (s): s is string => Boolean(s),
+  );
+  const [srcIndex, setSrcIndex] = useState(0);
+  const src = sources[srcIndex];
 
-  if (showLogo) {
+  if (src) {
     return (
       <span
         className={`${sizeClass} rounded-lg bg-white border border-neutral-200 shadow-sm flex items-center justify-center shrink-0 overflow-hidden`}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={bank.logo_url ?? ''}
+          src={src}
           alt={bank.name_he}
-          onError={() => setLogoFailed(true)}
+          onError={() => setSrcIndex((i) => i + 1)}
           className="max-w-[85%] max-h-[85%] object-contain"
         />
       </span>

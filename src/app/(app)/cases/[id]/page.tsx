@@ -27,7 +27,7 @@ import { formatMoney } from '@/features/cases/domain/format';
 import type { CaseBlocker, InsuranceStatus } from '@/features/cases/schemas/case.schema';
 import { getCaseById } from '@/features/cases/services/cases.service';
 import { CaseTasksBlock } from '@/features/tasks/components/case-tasks-block';
-import { isCurrentUserAdmin } from '@/lib/auth/permissions';
+import { isCurrentUserAdmin, userHasPermission } from '@/lib/auth/permissions';
 import type { Locale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
 import { sanitizeRichTextHtml } from '@/lib/utils/sanitize-html';
@@ -49,7 +49,11 @@ export default async function CaseDetailPage({ params }: Props) {
 
   if (!caseData) notFound();
 
-  const canSeeFinancials = await isCurrentUserAdmin();
+  const [canSeeFinancials, canArchive, canRestore] = await Promise.all([
+    isCurrentUserAdmin(),
+    userHasPermission('archive_case'),
+    userHasPermission('restore_archived_case'),
+  ]);
 
   const borrowerNames =
     borrowers
@@ -80,6 +84,9 @@ export default async function CaseDetailPage({ params }: Props) {
         caseTypePrimary={caseData.case_type_primary?.name_he ?? null}
         caseTypeSecondary={caseData.case_type_secondary?.name_he ?? null}
         borrowerNames={borrowerNames}
+        isArchived={caseData.is_archived}
+        canArchive={canArchive}
+        canRestore={canRestore}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

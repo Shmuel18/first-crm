@@ -1,4 +1,12 @@
 {
+  "error": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred. You can try again.",
+    "retry": "Try again",
+    "notFoundTitle": "Page not found",
+    "notFoundDescription": "The page you're looking for doesn't exist or was removed.",
+    "backHome": "Back to cases"
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -26,6 +34,7 @@
     "done": "Done",
     "savedAgo": "Saved",
     "saveFailed": "Save failed. Try again.",
+    "noStatus": "No status",
     "errors": {
       "required": "Required",
       "invalidEmail": "Invalid email address",
@@ -95,6 +104,7 @@
       "leadsEmpty": "No leads to show"
     },
     "filters": {
+      "search": "Search by name / ID / number",
       "advisor": "Advisor",
       "stage": "Stage",
       "bank": "Bank",
@@ -285,6 +295,9 @@
       "minutes": "{count} min",
       "open": "Open in Google Calendar"
     },
+    "history": {
+      "title": "Case history"
+    },
     "blocks": {
       "borrowers": "Borrowers",
       "addBorrower": "+ Add borrower",
@@ -389,6 +402,12 @@
     }
   },
   "borrowerForm": {
+    "returning": {
+      "check": "Check returning client",
+      "found": "Existing client found: {name}",
+      "fill": "Autofill details",
+      "none": "No client found with this ID"
+    },
     "sections": {
       "roleInCase": "Role in case",
       "personal": "Personal details",
@@ -687,6 +706,19 @@
         "notConnected": "Drive not connected. Go to Settings → Integrations.",
         "generic": "Sync failed. Try again or check the Drive connection."
       }
+    },
+    "request": {
+      "confirm": "Email the client a request to complete their documents?",
+      "send": "Send request",
+      "sent": "Request sent to the client",
+      "noEmail": "The client has no email address on file",
+      "notConfigured": "Email sending isn't configured",
+      "unauthorized": "You don't have permission for this action",
+      "failed": "Sending failed. Please try again.",
+      "emailSubject": "Document request",
+      "emailGreeting": "Hello {name},",
+      "emailBody": "We'd be glad if you could send us the remaining documents so we can continue handling your case.",
+      "emailSignoff": "Thank you, {office}"
     },
     "actions": {
       "upload": "Upload document",

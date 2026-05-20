@@ -2,6 +2,7 @@
 
 import { getLocale, getTranslations } from 'next-intl/server';
 
+import { logCasesExport } from '@/features/audit/services/audit-writer';
 import { listCases } from '@/features/cases/services/cases.service';
 import { buildExportRows } from '@/features/cases/services/export/build-export-rows';
 import { generateCasesPdf } from '@/features/cases/services/export/pdf-generator';
@@ -51,6 +52,8 @@ export async function exportCasesPdfAction(): Promise<ExportResult> {
       advisor: t('columns.advisor'),
       shortNote: t('columns.shortNote'),
     });
+
+    await logCasesExport({ userId: userRes.user.id, format: 'pdf', count: cases.length });
 
     return {
       ok: true,

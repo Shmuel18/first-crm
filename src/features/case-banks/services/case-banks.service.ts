@@ -39,6 +39,7 @@ export async function getCaseBankById(id: CaseBankId): Promise<CaseBankRow | nul
 
 export type BankOption = {
   id: string;
+  key: string;
   name_he: string;
   color: string;
   logo_url: string | null;
@@ -49,7 +50,7 @@ export async function listBankOptions(): Promise<BankOption[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from('banks')
-    .select('id, name_he, color, logo_url')
+    .select('id, key, name_he, color, logo_url')
     .eq('is_active', true)
     .order('sort_order');
   return data ?? [];

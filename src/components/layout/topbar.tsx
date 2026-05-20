@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { Plus, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import { UserMenu } from '@/components/layout/user-menu';
@@ -10,27 +10,15 @@ import {
   countUnreadNotifications,
   listRecentNotifications,
 } from '@/features/notifications/services/notifications.service';
-import { createClient } from '@/lib/supabase/server';
+import { getMyProfile } from '@/features/settings/services/settings.service';
 import type { Locale } from '@/lib/i18n/direction';
 
 export async function Topbar() {
   const t = await getTranslations('topbar');
   const locale = (await getLocale()) as Locale;
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   const [profile, unread, notifications] = await Promise.all([
-    user
-      ? supabase
-          .from('profiles')
-          .select('first_name, last_name, email, roles(name_he)')
-          .eq('id', user.id)
-          .single()
-          .then((r) => r.data)
-      : Promise.resolve(null),
+    getMyProfile(),
     countUnreadNotifications(),
     listRecentNotifications(),
   ]);
@@ -40,7 +28,7 @@ export async function Topbar() {
     profile?.email ||
     '';
   const initials = getInitials(profile?.first_name, profile?.last_name, profile?.email);
-  const roleName = profile?.roles?.name_he ?? '';
+  const roleName = (locale === 'en' ? profile?.roleNameEn : profile?.roleNameHe) ?? '';
 
   return (
     <header className="h-16 bg-[#0A0A0A] text-white sticky top-0 z-30 shadow-md">
@@ -55,15 +43,6 @@ export async function Topbar() {
             className="h-10 w-auto"
           />
         </Link>
-
-        <div className="relative flex-1 max-w-2xl">
-          <Search className="absolute end-3 top-1/2 -translate-y-1/2 size-4 text-[#C9A961] pointer-events-none" />
-          <input
-            type="search"
-            placeholder={t('searchPlaceholder')}
-            className="w-full bg-[#1A1A1A] border border-[#333] rounded-lg ps-4 pe-10 py-2 text-sm placeholder:text-neutral-500 focus:outline-none focus:border-[#C9A961] focus:bg-[#222] transition"
-          />
-        </div>
 
         <div className="flex items-center gap-2 shrink-0 ms-auto">
           <Link

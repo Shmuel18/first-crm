@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 
 import { Check, ChevronDown, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
 import { quickUpdateCaseFieldAction } from '../actions/quick-update-case';
 import { calcDropdownPos, type DropdownPosition } from './dropdown-position';
@@ -85,6 +86,7 @@ export function EditableAdvisorCell({
       if (!result.ok) {
         setAdvisorId(prevId);
         setAdvisorName(prevName);
+        toast.error(tc('saveFailed'));
       }
     });
   };

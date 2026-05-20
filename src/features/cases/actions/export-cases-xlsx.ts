@@ -2,6 +2,7 @@
 
 import { getLocale, getTranslations } from 'next-intl/server';
 
+import { logCasesExport } from '@/features/audit/services/audit-writer';
 import { listCases } from '@/features/cases/services/cases.service';
 import { buildExportRows } from '@/features/cases/services/export/build-export-rows';
 import { generateCasesXlsx } from '@/features/cases/services/export/xlsx-generator';
@@ -48,6 +49,8 @@ export async function exportCasesXlsxAction(): Promise<ExportResult> {
       },
       t('savedViews.xlsx.sheetName'),
     );
+
+    await logCasesExport({ userId: userRes.user.id, format: 'xlsx', count: cases.length });
 
     return {
       ok: true,

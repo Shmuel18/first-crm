@@ -2,13 +2,11 @@ import Link from 'next/link';
 
 import {
   Calculator,
-  Calendar,
   Check,
   ClipboardList,
   FileText,
   Folder,
   MessageSquare,
-  MoreVertical,
 } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 
@@ -17,7 +15,9 @@ import { CaseActionTaskButton } from '@/features/tasks/components/case-action-ta
 import { listAssignableProfiles } from '@/features/tasks/services/tasks.service';
 import type { Locale } from '@/lib/i18n/direction';
 
+import { CaseMoreMenu } from './case-more-menu';
 import { CaseStatusBadge } from './case-status-badge';
+import { ScheduleMeetingButton } from './schedule-meeting-button';
 
 type ActionBarProps = {
   caseId: string;
@@ -29,6 +29,9 @@ type ActionBarProps = {
   borrowerNames: string;
   hasDocumentAlerts?: boolean;
   lastSavedAt?: string;
+  isArchived: boolean;
+  canArchive: boolean;
+  canRestore: boolean;
 };
 
 export async function CaseActionBar({
@@ -41,6 +44,9 @@ export async function CaseActionBar({
   borrowerNames,
   hasDocumentAlerts,
   lastSavedAt,
+  isArchived,
+  canArchive,
+  canRestore,
 }: ActionBarProps) {
   const t = await getTranslations('case.actionBar');
   const tc = await getTranslations('common');
@@ -101,9 +107,17 @@ export async function CaseActionBar({
             assignees={assignees}
             title={t('actions.assignTask')}
           />
-          <ActionIcon icon={Calendar} title={t('actions.calendar')} />
+          <ScheduleMeetingButton
+            title={t('actions.calendar')}
+            clientLabel={borrowerNames || `${t('caseLabel')} ${caseNumber}`}
+          />
           <ActionIcon icon={FileText} title={t('actions.generatePdf')} />
-          <ActionIcon icon={MoreVertical} title={t('actions.more')} />
+          <CaseMoreMenu
+            caseId={caseId}
+            isArchived={isArchived}
+            canArchive={canArchive}
+            canRestore={canRestore}
+          />
         </div>
       </div>
 

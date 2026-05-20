@@ -7,7 +7,6 @@ import {
   ClipboardList,
   FolderOpen,
   Loader2,
-  MessageSquare,
   RefreshCw,
   Upload,
 } from 'lucide-react';
@@ -18,6 +17,7 @@ import { BackArrow } from '@/components/shared/back-arrow';
 import type { Locale } from '@/lib/i18n/direction';
 
 import { syncDriveDocumentsAction } from '../actions/sync-drive-documents';
+import { SendDocRequestButton } from './send-doc-request-button';
 
 type Props = {
   caseId: string;
@@ -117,14 +117,20 @@ export function DocumentsActionBar({
             )}
             <span className="hidden lg:inline">{tSync('button')}</span>
           </button>
-          <BarIcon icon={MessageSquare} title={t('sendRequest')} disabled />
+          <SendDocRequestButton caseId={caseId} title={t('sendRequest')} />
           <BarIcon
             icon={FolderOpen}
             title={t('openDrive')}
             href={driveFolderId ? `https://drive.google.com/drive/folders/${driveFolderId}` : undefined}
             disabled={!driveFolderId}
           />
-          <BarIcon icon={ClipboardList} title={t('history')} disabled />
+          <Link
+            href={`/cases/${caseId}/history`}
+            title={t('history')}
+            className="flex size-8 items-center justify-center rounded-md text-neutral-500 transition hover:bg-white hover:text-[#C9A961]"
+          >
+            <ClipboardList className="size-3.5" />
+          </Link>
         </div>
       </div>
     </div>

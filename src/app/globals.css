@@ -134,6 +134,13 @@
   }
   html {
     @apply font-sans;
+    /* Scrollbars hidden app-wide (per request); content still scrolls
+       via wheel / trackpad / touch / keyboard. */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  ::-webkit-scrollbar {
+    display: none;
   }
 }
 
@@ -247,4 +254,14 @@
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: #a3a3a3;
   }
+}
+
+/* Hide every scrollbar app-wide (per request). scrollbar-width does NOT inherit,
+   so it must be set on every element; unlayered so it beats .scrollbar-thin.
+   Content still scrolls via wheel / trackpad / touch / keyboard. */
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
 }

@@ -49,6 +49,7 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
   const tActions = useTranslations('documents.statusActions');
   const tErr = useTranslations('documents.errors');
   const tCommon = useTranslations('common');
+  const tError = useTranslations('error');
   const locale = useLocale();
   const [url, setUrl] = useState<string | null>(null);
   // Initial loading is derived from doc: only true if we'll actually fetch
@@ -92,6 +93,18 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
   const dateLocale = locale === 'he' ? 'he-IL' : 'en-GB';
   const uploadDate = new Date(doc.upload_date).toLocaleDateString(dateLocale);
 
+  const handleRetry = () => {
+    if (doc.drive_file_id) return;
+    setError(null);
+    setLoading(true);
+    getDocumentPreviewUrlAction(doc.id)
+      .then((res) => {
+        if (res.ok) setUrl(res.url);
+        else setError(res.message ?? tErr('unauthorized'));
+      })
+      .finally(() => setLoading(false));
+  };
+
   const updateStatus = (next: DocumentStatus) =>
     startTransition(async () => {
       const res = await updateDocumentStatusAction(doc.id, caseId, next);
@@ -131,7 +144,20 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
         <div className="rounded-xl border border-neutral-200 bg-neutral-50 overflow-hidden min-h-[280px] max-h-[60vh] flex items-center justify-center">
           {loading && <Loader2 className="size-5 animate-spin text-neutral-400" aria-label="Loading" />}
           {!loading && error && (
-            <p className="text-sm text-rose-600 px-4 py-6 text-center">{error}</p>
+            <div className="px-4 py-6 text-center">
+              <p className="text-sm text-rose-600">{error}</p>
+              {!url && !doc.drive_file_id && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleRetry}
+                  className="mt-3 h-8"
+                >
+                  <RotateCw className="size-3.5 me-1" />
+                  {tError('retry')}
+                </Button>
+              )}
+            </div>
           )}
           {!loading && !error && drivePreviewUrl && (
             <iframe

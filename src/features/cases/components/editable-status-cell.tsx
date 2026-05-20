@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 
 import { Check, ChevronDown, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
 import { quickUpdateCaseFieldAction } from '../actions/quick-update-case';
 
@@ -30,6 +32,7 @@ export function EditableStatusCell({
   currentStatusColor,
   options,
 }: EditableStatusCellProps) {
+  const tc = useTranslations('common');
   const [open, setOpen] = useState(false);
   const [statusName, setStatusName] = useState(currentStatusName);
   const [statusColor, setStatusColor] = useState(currentStatusColor);
@@ -76,6 +79,7 @@ export function EditableStatusCell({
         setStatusId(prevId);
         setStatusName(prevName);
         setStatusColor(prevColor);
+        toast.error(tc('saveFailed'));
       }
     });
   };

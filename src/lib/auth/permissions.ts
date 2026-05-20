@@ -22,14 +22,6 @@ export async function userHasPermission(permKey: string): Promise<boolean> {
   return data === true;
 }
 
-/** True if either of the two permissions is granted. */
-export async function userHasAnyPermission(...keys: string[]): Promise<boolean> {
-  for (const k of keys) {
-    if (await userHasPermission(k)) return true;
-  }
-  return false;
-}
-
 export async function userHasAllPermissions(...keys: string[]): Promise<boolean> {
   for (const k of keys) {
     if (!(await userHasPermission(k))) return false;

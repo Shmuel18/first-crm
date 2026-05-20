@@ -1,4 +1,7 @@
+'use client';
+
 import { ChevronDown } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 type CaseStatusBadgeProps = {
   name: string | null | undefined;
@@ -7,10 +10,12 @@ type CaseStatusBadgeProps = {
 };
 
 export function CaseStatusBadge({ name, color, interactive }: CaseStatusBadgeProps) {
+  const tc = useTranslations('common');
+
   if (!name) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2.5 py-1 text-xs text-neutral-500">
-        ללא סטטוס
+        {tc('noStatus')}
       </span>
     );
   }

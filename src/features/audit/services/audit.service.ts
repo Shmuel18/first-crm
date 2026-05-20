@@ -12,27 +12,27 @@ export type AuditEntry = {
   changedFields: string[];
 };
 
+type AuditRow = {
+  id: string;
+  action: string;
+  table_name: string;
+  record_id: string;
+  timestamp: string;
+  changed_fields: Json | null;
+  user_id: string | null;
+};
+
 function extractChangedFields(changed: Json | null): string[] {
   if (!changed || typeof changed !== 'object' || Array.isArray(changed)) return [];
   return Object.keys(changed);
 }
 
-/**
- * Most-recent audit entries with the actor's name resolved. Read via the
- * service-role client so the full log is visible regardless of per-table RLS —
- * the /audit-log page verifies admin before calling this.
- */
-export async function listAuditEntries(limit = 100): Promise<AuditEntry[]> {
+/** Resolve actor names and map raw audit rows to display entries. */
+async function resolveEntries(rows: AuditRow[]): Promise<AuditEntry[]> {
+  if (rows.length === 0) return [];
   const admin = createAdminClient();
 
-  const { data, error } = await admin
-    .from('audit_log')
-    .select('id, action, table_name, record_id, timestamp, changed_fields, user_id')
-    .order('timestamp', { ascending: false })
-    .limit(limit);
-  if (error || !data) return [];
-
-  const userIds = [...new Set(data.map((r) => r.user_id).filter((v): v is string => !!v))];
+  const userIds = [...new Set(rows.map((r) => r.user_id).filter((v): v is string => !!v))];
   const nameById = new Map<string, string | null>();
   if (userIds.length > 0) {
     const { data: profiles } = await admin
@@ -44,7 +44,7 @@ export async function listAuditEntries(limit = 100): Promise<AuditEntry[]> {
     }
   }
 
-  return data.map((row) => ({
+  return rows.map((row) => ({
     id: row.id,
     action: row.action,
     tableName: row.table_name,
@@ -53,4 +53,41 @@ export async function listAuditEntries(limit = 100): Promise<AuditEntry[]> {
     actorName: row.user_id ? nameById.get(row.user_id) ?? null : null,
     changedFields: extractChangedFields(row.changed_fields),
   }));
+}
+
+/**
+ * Most-recent audit entries (whole system). Read via the service-role client so
+ * the full log is visible regardless of per-table RLS — the /audit-log page
+ * verifies admin before calling this.
+ */
+export async function listAuditEntries(limit = 100): Promise<AuditEntry[]> {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from('audit_log')
+    .select('id, action, table_name, record_id, timestamp, changed_fields, user_id')
+    .order('timestamp', { ascending: false })
+    .limit(limit);
+  if (error || !data) return [];
+  return resolveEntries(data);
+}
+
+/**
+ * Audit entries for a single case row (status changes, field edits, archive,
+ * etc.). The caller must verify the case is viewable first — this reads via the
+ * service-role client to bypass audit_log RLS, scoped to the one record_id.
+ */
+export async function listAuditEntriesForCase(
+  caseId: string,
+  limit = 50,
+): Promise<AuditEntry[]> {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from('audit_log')
+    .select('id, action, table_name, record_id, timestamp, changed_fields, user_id')
+    .eq('table_name', 'cases')
+    .eq('record_id', caseId)
+    .order('timestamp', { ascending: false })
+    .limit(limit);
+  if (error || !data) return [];
+  return resolveEntries(data);
 }

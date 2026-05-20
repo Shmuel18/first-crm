@@ -13,7 +13,7 @@ import { EditableStatusCell } from './editable-status-cell';
 import { EditableTextCell } from './editable-text-cell';
 
 type StatusOption = { id: string; name_he: string; color: string };
-type BankOption = { id: string; name_he: string; color: string; logo_url: string | null };
+type BankOption = { id: string; key: string; name_he: string; color: string; logo_url: string | null };
 type AdvisorOption = { id: string; first_name: string | null; last_name: string | null };
 
 export type CaseTableRowData = {

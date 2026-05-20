@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
 
 import { Loader2 } from 'lucide-react';
@@ -14,6 +14,7 @@ import { FormField, FormSection, NativeSelect } from '@/components/shared/form-f
 import { fieldDefault } from '@/lib/utils/form-defaults';
 
 import { saveBorrowerAction } from '../actions/save-borrower';
+import { ReturningClientAutofill } from './returning-client-autofill';
 import {
   BORROWER_ACTION_INITIAL,
   type BorrowerActionState,
@@ -61,6 +62,7 @@ export function BorrowerForm({
     saveBorrowerAction,
     BORROWER_ACTION_INITIAL,
   );
+  const formRef = useRef<HTMLFormElement>(null);
 
   const errs = state.ok === false && state.error === 'validation' ? state.fieldErrors ?? {} : {};
   const sub = state.ok === false && state.error !== 'idle' ? state.values : undefined;
@@ -78,7 +80,7 @@ export function BorrowerForm({
   const val = (name: string) => fieldDefault(name, sub, initialRecord);
 
   return (
-    <form action={formAction} className="space-y-6" noValidate>
+    <form ref={formRef} action={formAction} className="space-y-6" noValidate>
       <input type="hidden" name="case_id" value={caseId} />
       {initial && <input type="hidden" name="borrower_id" value={initial.id} />}
 
@@ -112,6 +114,11 @@ export function BorrowerForm({
         <FormField label={t('fields.nationalId')} error={errs.national_id}>
           <Input name="national_id" dir="ltr" defaultValue={val('national_id')} />
         </FormField>
+        {!initial && (
+          <div className="md:col-span-2">
+            <ReturningClientAutofill formRef={formRef} />
+          </div>
+        )}
         <FormField label={t('fields.phone')} error={errs.phone}>
           <Input name="phone" type="tel" dir="ltr" defaultValue={val('phone')} />
         </FormField>

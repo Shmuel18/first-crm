@@ -2,13 +2,13 @@
 
 import { useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
+import dynamic from 'next/dynamic';
 
 import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { FormField, FormSection, NativeSelect } from '@/components/shared/form-fields';
 
 import { fieldDefault } from '@/lib/utils/form-defaults';
@@ -21,6 +21,21 @@ import {
   type CaseActionState,
   type CaseRow,
 } from '../types';
+
+// TipTap is a heavy dependency (~370KB). Load it only when the form actually
+// renders so it stays out of the initial client bundle.
+const RichTextEditor = dynamic(
+  () => import('@/components/ui/rich-text-editor').then((m) => m.RichTextEditor),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="rounded-md border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-400"
+        style={{ minHeight: '15rem' }}
+      />
+    ),
+  },
+);
 
 type Option = { id: string; name_he: string };
 type AdvisorOption = { id: string; first_name: string | null; last_name: string | null };

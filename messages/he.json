@@ -1,4 +1,12 @@
 {
+  "error": {
+    "title": "משהו השתבש",
+    "description": "אירעה שגיאה בלתי צפויה. אפשר לנסות שוב.",
+    "retry": "נסה שוב",
+    "notFoundTitle": "הדף לא נמצא",
+    "notFoundDescription": "הדף שחיפשת לא קיים או שהוסר.",
+    "backHome": "חזרה לתיקים"
+  },
   "common": {
     "save": "שמור",
     "cancel": "ביטול",
@@ -26,6 +34,7 @@
     "done": "סיום",
     "savedAgo": "נשמר",
     "saveFailed": "השמירה נכשלה. נסה שוב.",
+    "noStatus": "ללא סטטוס",
     "errors": {
       "required": "שדה חובה",
       "invalidEmail": "כתובת מייל לא תקינה",
@@ -95,6 +104,7 @@
       "leadsEmpty": "אין לידים להצגה"
     },
     "filters": {
+      "search": "חיפוש לפי שם / ת״ז / מספר",
       "advisor": "יועץ מטפל",
       "stage": "שלב בתהליך",
       "bank": "בנק",
@@ -285,6 +295,9 @@
       "minutes": "{count} דק׳",
       "open": "פתח בגוגל קלנדר"
     },
+    "history": {
+      "title": "היסטוריית התיק"
+    },
     "blocks": {
       "borrowers": "לווים",
       "addBorrower": "+ הוסף לווה",
@@ -389,6 +402,12 @@
     }
   },
   "borrowerForm": {
+    "returning": {
+      "check": "בדוק לקוח חוזר",
+      "found": "נמצא לקוח קיים: {name}",
+      "fill": "מלא פרטים",
+      "none": "לא נמצא לקוח עם ת״ז זו"
+    },
     "sections": {
       "roleInCase": "תפקיד בתיק",
       "personal": "פרטים אישיים",
@@ -687,6 +706,19 @@
         "notConnected": "Drive לא מחובר. גש להגדרות → אינטגרציות.",
         "generic": "הסנכרון נכשל. נסה שוב או בדוק את החיבור ל-Drive."
       }
+    },
+    "request": {
+      "confirm": "לשלוח ללקוח בקשה להשלמת המסמכים באימייל?",
+      "send": "שלח בקשה",
+      "sent": "הבקשה נשלחה ללקוח",
+      "noEmail": "ללקוח אין כתובת אימייל",
+      "notConfigured": "שליחת אימייל לא מוגדרת במערכת",
+      "unauthorized": "אין לך הרשאה לפעולה זו",
+      "failed": "השליחה נכשלה. נסה שוב.",
+      "emailSubject": "בקשה להשלמת מסמכים",
+      "emailGreeting": "שלום {name},",
+      "emailBody": "נשמח אם תוכל/י לשלוח לנו את המסמכים הנותרים כדי שנמשיך בטיפול בתיק.",
+      "emailSignoff": "תודה, {office}"
     },
     "actions": {
       "upload": "העלאת מסמך",
