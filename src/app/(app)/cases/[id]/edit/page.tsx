@@ -5,8 +5,14 @@ import { ArrowRight } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 import { CaseForm } from '@/features/cases/components/case-form';
+import {
+  getCaseFinancials,
+  listAdvisorOptions,
+  listCaseStatusOptions,
+  listCaseTypeOptions,
+} from '@/features/cases/services/case-lookups.service';
 import { getRawCaseById } from '@/features/cases/services/cases.service';
-import { createClient } from '@/lib/supabase/server';
+import { isCurrentUserAdmin } from '@/lib/auth/permissions';
 import { asCaseId } from '@/lib/types/branded';
 
 type Props = { params: Promise<{ id: string }> };
@@ -19,38 +25,18 @@ export default async function EditCasePage({ params }: Props) {
   const t = await getTranslations('case.form');
   const tc = await getTranslations('common');
 
-  const supabase = await createClient();
-  const [caseTypesRes, statusesRes, advisorsRes, isAdminRes, financialsRes] = await Promise.all([
-    supabase
-      .from('case_types')
-      .select('id, name_he')
-      .eq('is_active', true)
-      .order('sort_order'),
-    supabase
-      .from('case_statuses')
-      .select('id, name_he')
-      .eq('is_active', true)
-      .order('sort_order'),
-    supabase
-      .from('profiles')
-      .select('id, first_name, last_name')
-      .eq('is_active', true)
-      .order('first_name'),
-    supabase.rpc('is_admin'),
-    // Manager-only fee / expected income live in case_financials (admin RLS)
-    // - non-admins simply get an empty row here.
-    supabase
-      .from('case_financials')
-      .select('fee_amount, expected_income')
-      .eq('case_id', caseData.id)
-      .maybeSingle(),
+  const [caseTypes, statuses, advisors, canSeeFinancials, financials] = await Promise.all([
+    listCaseTypeOptions(),
+    listCaseStatusOptions(),
+    listAdvisorOptions(),
+    isCurrentUserAdmin(),
+    getCaseFinancials(asCaseId(caseData.id)),
   ]);
 
-  const canSeeFinancials = isAdminRes.data === true;
   const initialWithFinancials = {
     ...caseData,
-    fee_amount: financialsRes.data?.fee_amount ?? null,
-    expected_income: financialsRes.data?.expected_income ?? null,
+    fee_amount: financials?.fee_amount ?? null,
+    expected_income: financials?.expected_income ?? null,
   };
 
   return (
@@ -72,9 +58,9 @@ export default async function EditCasePage({ params }: Props) {
         <CaseForm
           mode="edit"
           initial={initialWithFinancials}
-          caseTypes={caseTypesRes.data ?? []}
-          statuses={statusesRes.data ?? []}
-          advisors={advisorsRes.data ?? []}
+          caseTypes={caseTypes}
+          statuses={statuses}
+          advisors={advisors}
           canSeeFinancials={canSeeFinancials}
         />
       </div>

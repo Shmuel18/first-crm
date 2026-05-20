@@ -36,3 +36,31 @@ export async function getCaseBankById(id: CaseBankId): Promise<CaseBankRow | nul
   if (error) throw error;
   return data;
 }
+
+export type BankOption = {
+  id: string;
+  name_he: string;
+  color: string;
+  logo_url: string | null;
+};
+export type CaseBankStatusOption = { id: string; name_he: string };
+
+export async function listBankOptions(): Promise<BankOption[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('banks')
+    .select('id, name_he, color, logo_url')
+    .eq('is_active', true)
+    .order('sort_order');
+  return data ?? [];
+}
+
+export async function listCaseBankStatusOptions(): Promise<CaseBankStatusOption[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('case_bank_statuses')
+    .select('id, name_he')
+    .eq('is_active', true)
+    .order('sort_order');
+  return data ?? [];
+}

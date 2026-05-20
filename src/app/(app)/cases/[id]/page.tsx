@@ -27,7 +27,7 @@ import { formatMoney } from '@/features/cases/domain/format';
 import type { CaseBlocker, InsuranceStatus } from '@/features/cases/schemas/case.schema';
 import { getCaseById } from '@/features/cases/services/cases.service';
 import { CaseTasksBlock } from '@/features/tasks/components/case-tasks-block';
-import { createClient } from '@/lib/supabase/server';
+import { isCurrentUserAdmin } from '@/lib/auth/permissions';
 import type { Locale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
 import { sanitizeRichTextHtml } from '@/lib/utils/sanitize-html';
@@ -49,9 +49,7 @@ export default async function CaseDetailPage({ params }: Props) {
 
   if (!caseData) notFound();
 
-  const supabase = await createClient();
-  const { data: isAdmin } = await supabase.rpc('is_admin');
-  const canSeeFinancials = isAdmin === true;
+  const canSeeFinancials = await isCurrentUserAdmin();
 
   const borrowerNames =
     borrowers

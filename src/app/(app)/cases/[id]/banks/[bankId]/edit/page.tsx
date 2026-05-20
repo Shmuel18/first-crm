@@ -5,9 +5,12 @@ import { ArrowRight } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 import { CaseBankForm } from '@/features/case-banks/components/case-bank-form';
-import { getCaseBankById } from '@/features/case-banks/services/case-banks.service';
+import {
+  getCaseBankById,
+  listBankOptions,
+  listCaseBankStatusOptions,
+} from '@/features/case-banks/services/case-banks.service';
 import { getRawCaseById } from '@/features/cases/services/cases.service';
-import { createClient } from '@/lib/supabase/server';
 import { asCaseBankId, asCaseId } from '@/lib/types/branded';
 
 type Props = { params: Promise<{ id: string; bankId: string }> };
@@ -25,18 +28,9 @@ export default async function EditCaseBankPage({ params }: Props) {
   const t = await getTranslations('case');
   const tc = await getTranslations('common');
 
-  const supabase = await createClient();
-  const [banksRes, statusesRes] = await Promise.all([
-    supabase
-      .from('banks')
-      .select('id, name_he')
-      .eq('is_active', true)
-      .order('sort_order'),
-    supabase
-      .from('case_bank_statuses')
-      .select('id, name_he')
-      .eq('is_active', true)
-      .order('sort_order'),
+  const [banks, statuses] = await Promise.all([
+    listBankOptions(),
+    listCaseBankStatusOptions(),
   ]);
 
   return (
@@ -58,8 +52,8 @@ export default async function EditCaseBankPage({ params }: Props) {
         <CaseBankForm
           caseId={id}
           initial={caseBank}
-          banks={banksRes.data ?? []}
-          statuses={statusesRes.data ?? []}
+          banks={banks}
+          statuses={statuses}
         />
       </div>
     </div>

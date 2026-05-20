@@ -37,6 +37,13 @@ export async function userHasAllPermissions(...keys: string[]): Promise<boolean>
   return true;
 }
 
+/** True if the current user has the admin role (wraps the is_admin RPC). */
+export async function isCurrentUserAdmin(): Promise<boolean> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc('is_admin');
+  return data === true;
+}
+
 export async function userCanEditCase(caseId: string): Promise<boolean> {
   const supabase = await createClient();
 
