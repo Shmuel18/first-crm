@@ -435,6 +435,23 @@
         "mismatch": "Passwords don't match"
       }
     },
+    "roles": {
+      "title": "Roles & permissions",
+      "subtitle": "Manage which permissions each role has in the system",
+      "adminLocked": "The manager role includes all permissions and cannot be edited.",
+      "categories": {
+        "view": "Viewing",
+        "cases": "Cases",
+        "leads": "Leads",
+        "documents": "Documents",
+        "financial": "Financial data",
+        "system": "System"
+      },
+      "toast": {
+        "failed": "Failed to update permission. Please try again.",
+        "adminLocked": "The manager's permissions cannot be edited."
+      }
+    },
     "integrations": {
       "title": "Integrations & connections",
       "subtitle": "Connect the system to external tools — Google Drive, Google Calendar, WhatsApp, email.",

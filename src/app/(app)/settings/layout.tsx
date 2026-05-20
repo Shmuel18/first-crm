@@ -42,7 +42,6 @@ const NAV: SettingsNavItem[] = [
     labelKey: 'roles',
     icon: KeyRound,
     adminOnly: true,
-    disabled: true,
   },
   {
     href: '/settings/integrations',
