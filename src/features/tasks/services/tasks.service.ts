@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+
 import { createClient } from '@/lib/supabase/server';
 import type { Locale } from '@/lib/i18n/direction';
 import type { CaseId, TaskId } from '@/lib/types/branded';
@@ -118,6 +120,7 @@ export async function listAssignableProfiles(): Promise<TaskAssignee[]> {
 
 export async function listCaseOptions(locale: Locale): Promise<TaskCaseOption[]> {
   const supabase = await createClient();
+  const noName = await resolveNoName(locale);
   // Non-inner join so cases without a primary borrower (e.g. brand-new cases)
   // still appear in the picker.
   const { data } = await supabase
@@ -130,7 +133,7 @@ export async function listCaseOptions(locale: Locale): Promise<TaskCaseOption[]>
   return (data ?? []).map((row) => ({
     id: row.id,
     case_number: row.case_number,
-    label: caseOptionLabel(row.case_number, primaryBorrower(row.case_borrowers), locale),
+    label: caseOptionLabel(row.case_number, primaryBorrower(row.case_borrowers), noName),
   }));
 }
 
@@ -139,6 +142,7 @@ export async function getCaseOption(
   locale: Locale,
 ): Promise<TaskCaseOption | null> {
   const supabase = await createClient();
+  const noName = await resolveNoName(locale);
   const { data } = await supabase
     .from('cases')
     .select(CASE_OPTION_SELECT)
@@ -150,8 +154,13 @@ export async function getCaseOption(
   return {
     id: data.id,
     case_number: data.case_number,
-    label: caseOptionLabel(data.case_number, primaryBorrower(data.case_borrowers), locale),
+    label: caseOptionLabel(data.case_number, primaryBorrower(data.case_borrowers), noName),
   };
+}
+
+async function resolveNoName(locale: Locale): Promise<string> {
+  const tc = await getTranslations({ locale, namespace: 'common' });
+  return tc('noName');
 }
 
 export async function getCaseNumberLabel(caseId: CaseId): Promise<string | null> {
@@ -175,9 +184,8 @@ function primaryBorrower(links: CaseBorrowerLink[] | null): BorrowerName | null 
 function caseOptionLabel(
   caseNumber: string,
   borrower: BorrowerName | null,
-  locale: Locale,
+  noName: string,
 ): string {
-  const placeholder = locale === 'he' ? 'ללא שם' : 'No name';
-  const name = [borrower?.first_name, borrower?.last_name].filter(Boolean).join(' ') || placeholder;
+  const name = [borrower?.first_name, borrower?.last_name].filter(Boolean).join(' ') || noName;
   return `#${caseNumber} · ${name}`;
 }
