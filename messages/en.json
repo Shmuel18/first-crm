@@ -231,6 +231,24 @@
       "failed": "Action failed. Please try again."
     }
   },
+  "auditLog": {
+    "title": "Audit log",
+    "subtitle": "Track system activity — who changed what and when",
+    "empty": "No audit entries",
+    "system": "System",
+    "columns": {
+      "time": "When",
+      "user": "User",
+      "action": "Action",
+      "table": "Table",
+      "changes": "Changed fields"
+    },
+    "actions": {
+      "insert": "Created",
+      "update": "Updated",
+      "delete": "Deleted"
+    }
+  },
   "case": {
     "actionBar": {
       "backTooltip": "Back",
@@ -252,6 +270,20 @@
       "restoreSuccess": "Case restored from archive",
       "archiveError": "Action failed. Please try again.",
       "archiveUnauthorized": "You don't have permission for this action"
+    },
+    "scheduleMeeting": {
+      "dialogTitle": "Schedule meeting",
+      "eventTitle": "Meeting with {client}",
+      "fields": {
+        "title": "Title",
+        "date": "Date",
+        "time": "Time",
+        "duration": "Duration",
+        "location": "Location",
+        "notes": "Notes"
+      },
+      "minutes": "{count} min",
+      "open": "Open in Google Calendar"
     },
     "blocks": {
       "borrowers": "Borrowers",

@@ -231,6 +231,24 @@
       "failed": "הפעולה נכשלה. נסה שוב."
     }
   },
+  "auditLog": {
+    "title": "יומן שינויים",
+    "subtitle": "מעקב אחר פעולות במערכת — מי שינה מה ומתי",
+    "empty": "אין רשומות ביומן",
+    "system": "מערכת",
+    "columns": {
+      "time": "מתי",
+      "user": "משתמש",
+      "action": "פעולה",
+      "table": "טבלה",
+      "changes": "שדות שהשתנו"
+    },
+    "actions": {
+      "insert": "יצירה",
+      "update": "עדכון",
+      "delete": "מחיקה"
+    }
+  },
   "case": {
     "actionBar": {
       "backTooltip": "חזרה",
@@ -252,6 +270,20 @@
       "restoreSuccess": "התיק שוחזר מהארכיון",
       "archiveError": "הפעולה נכשלה. נסה שוב.",
       "archiveUnauthorized": "אין לך הרשאה לפעולה זו"
+    },
+    "scheduleMeeting": {
+      "dialogTitle": "קביעת פגישה",
+      "eventTitle": "פגישה עם {client}",
+      "fields": {
+        "title": "כותרת",
+        "date": "תאריך",
+        "time": "שעה",
+        "duration": "משך",
+        "location": "מיקום",
+        "notes": "הערות"
+      },
+      "minutes": "{count} דק׳",
+      "open": "פתח בגוגל קלנדר"
     },
     "blocks": {
       "borrowers": "לווים",
