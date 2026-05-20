@@ -533,6 +533,11 @@
     "unassigned": "Unassigned",
     "overdue": "Overdue",
     "showAll": "Show {count} more →",
+    "stats": {
+      "open": "Open",
+      "overdue": "Overdue",
+      "done": "Done"
+    },
     "filteredByCase": "Filtered to tasks for case {label}",
     "clearCaseFilter": "Clear filter",
     "views": {

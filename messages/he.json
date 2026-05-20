@@ -533,6 +533,11 @@
     "unassigned": "לא מוקצה",
     "overdue": "באיחור",
     "showAll": "הצג עוד {count} →",
+    "stats": {
+      "open": "פתוחות",
+      "overdue": "באיחור",
+      "done": "הושלמו"
+    },
     "filteredByCase": "מסונן למשימות של תיק {label}",
     "clearCaseFilter": "נקה סינון",
     "views": {

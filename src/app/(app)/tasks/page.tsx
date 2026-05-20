@@ -6,7 +6,9 @@ import { z } from 'zod';
 
 import { PageHeader } from '@/components/shared/page-header';
 import { TasksList } from '@/features/tasks/components/tasks-list';
+import { TasksStatStrip } from '@/features/tasks/components/tasks-stat-strip';
 import { TasksViewTabs } from '@/features/tasks/components/tasks-view-tabs';
+import { isOverdue } from '@/features/tasks/domain/task-state';
 import {
   countPendingByView,
   getCaseNumberLabel,
@@ -55,6 +57,10 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
       caseId ? getCaseNumberLabel(asCaseId(caseId)) : Promise.resolve(null),
     ]);
 
+  const openCount = tasks.filter((task) => task.status === 'pending').length;
+  const overdueCount = tasks.filter((task) => isOverdue(task)).length;
+  const doneCount = tasks.filter((task) => task.status === 'completed').length;
+
   return (
     <div className="space-y-5">
       <PageHeader icon={<CheckSquare />} title={t('title')} subtitle={t('subtitle')} />
@@ -64,6 +70,8 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
         isAdmin={isAdmin === true}
         counts={{ mine: mineCount, 'assigned-by-me': assignedByMeCount, all: allCount }}
       />
+
+      <TasksStatStrip open={openCount} overdue={overdueCount} done={doneCount} />
 
       {caseId && caseLabel && (
         <div className="flex items-center justify-between gap-3 rounded-lg border border-[#C9A961]/40 bg-[#FAF8F3] px-3 py-2">

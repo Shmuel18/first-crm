@@ -17,11 +17,13 @@ export function PageHeader({ icon, title, subtitle, rightSlot }: PageHeaderProps
     <div className="-mx-6 -mt-6 bg-gradient-to-l from-[#FAFAFA] via-white to-[#FAFAFA] px-6 py-5 border-b border-neutral-200">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
-          <span className="size-11 rounded-xl bg-[#0A0A0A] text-[#C9A961] flex items-center justify-center shadow-sm [&_svg]:size-5">
+          <span className="size-11 rounded-xl bg-[#FFF8E7] text-[#A88840] border border-[#E8D5A2] flex items-center justify-center [&_svg]:size-5">
             {icon}
           </span>
           <div>
-            <h1 className="font-display text-2xl text-neutral-900 leading-tight">{title}</h1>
+            <h1 className="font-display text-2xl font-semibold tracking-tight text-neutral-900 leading-tight">
+              {title}
+            </h1>
             {subtitle && <p className="text-sm text-neutral-500 mt-0.5">{subtitle}</p>}
           </div>
         </div>

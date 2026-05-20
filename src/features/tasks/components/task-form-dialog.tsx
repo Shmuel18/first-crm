@@ -203,7 +203,7 @@ function SubmitButton({ mode }: { mode: 'create' | 'edit' }) {
   const { pending } = useFormStatus();
   const t = useTranslations('tasks.form.submit');
   return (
-    <Button type="submit" disabled={pending} className="bg-[#0A0A0A] hover:bg-neutral-800 text-white">
+    <Button type="submit" disabled={pending} className="bg-[#C9A961] hover:bg-[#E8D5A2] text-[#0A0A0A] font-semibold">
       {pending ? <Loader2 className="size-4 animate-spin" /> : mode === 'create' ? t('create') : t('update')}
     </Button>
   );

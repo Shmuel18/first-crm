@@ -29,7 +29,7 @@ export function TeamTable({ members, roles, currentUserId, locale }: Props) {
         <Button
           type="button"
           onClick={() => setInviteOpen(true)}
-          className="bg-[#0A0A0A] hover:bg-neutral-800 text-white"
+          className="bg-[#C9A961] hover:bg-[#E8D5A2] text-[#0A0A0A] font-semibold"
           size="sm"
         >
           <UserPlus className="size-3.5 me-1.5" />

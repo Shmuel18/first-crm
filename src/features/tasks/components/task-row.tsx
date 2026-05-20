@@ -115,19 +115,21 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
           </p>
           <span
             className={[
-              'inline-flex items-center px-1.5 h-5 rounded-full text-[10px] font-medium border',
+              'inline-flex items-center gap-1.5 ps-1.5 pe-2 h-5 rounded-full text-[10px] font-medium border',
               priorityBadgeClass(task.priority as TaskPriority),
             ].join(' ')}
           >
+            <span className="size-1.5 rounded-full bg-current opacity-55" />
             {tp(task.priority as TaskPriority)}
           </span>
           {!compact && (
             <span
               className={[
-                'inline-flex items-center px-1.5 h-5 rounded-full text-[10px] font-medium border',
+                'inline-flex items-center gap-1.5 ps-1.5 pe-2 h-5 rounded-full text-[10px] font-medium border',
                 statusBadgeClass(task.status as TaskStatus),
               ].join(' ')}
             >
+              <span className="size-1.5 rounded-full bg-current opacity-55" />
               {ts(task.status as TaskStatus)}
             </span>
           )}
@@ -161,7 +163,7 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
           {task.case && !compact && (
             <Link
               href={`/cases/${task.case.id}`}
-              className="hover:text-[#C9A961] hover:underline"
+              className="hover:text-[#A88840] hover:underline decoration-[#C9A961] underline-offset-2"
             >
               #{task.case.case_number}
             </Link>
