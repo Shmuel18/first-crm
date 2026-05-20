@@ -41,7 +41,23 @@ const BACKUP_TABLES = [
 
 type BackupTable = (typeof BACKUP_TABLES)[number];
 
+/**
+ * Columns stripped from the backup even though their table is included. These
+ * hold live credentials (OAuth refresh tokens) that must never be written to a
+ * Drive file — a restore re-authenticates rather than replaying a stale token.
+ */
+const REDACTED_COLUMNS: Partial<Record<BackupTable, readonly string[]>> = {
+  profiles: ['google_calendar_refresh_token'],
+};
+
 const PAGE_SIZE = 1000;
+
+function redactRow(row: unknown, columns: readonly string[]): unknown {
+  if (!row || typeof row !== 'object') return row;
+  const copy = { ...(row as Record<string, unknown>) };
+  for (const c of columns) delete copy[c];
+  return copy;
+}
 
 export type BackupSnapshot = {
   data: Record<string, unknown[]>;
@@ -77,7 +93,8 @@ export async function buildBackupSnapshot(): Promise<BackupSnapshot> {
   const counts: Record<string, number> = {};
   for (const table of BACKUP_TABLES) {
     const rows = await fetchAllRows(db, table);
-    data[table] = rows;
+    const redacted = REDACTED_COLUMNS[table];
+    data[table] = redacted ? rows.map((r) => redactRow(r, redacted)) : rows;
     counts[table] = rows.length;
   }
   return { data, counts };
