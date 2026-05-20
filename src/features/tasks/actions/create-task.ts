@@ -7,8 +7,9 @@ import { createClient } from '@/lib/supabase/server';
 import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
+import { parseTaskTags } from '../domain/task-tags';
 import { TaskFormSchema } from '../schemas/task.schema';
-import type { TaskActionState } from '../types';
+import type { TaskActionState, TaskInsert } from '../types';
 
 export async function createTaskAction(
   _prevState: TaskActionState,
@@ -38,18 +39,23 @@ export async function createTaskAction(
     if (!caseRow) return { ok: false, error: 'unauthorized', values };
   }
 
+  // `tags` is a column from migration 034, not yet in the generated types; the
+  // typed insert rejects excess keys, so cast (the value is still sent at runtime).
+  const payload = {
+    title: parsed.data.title,
+    description: parsed.data.description ?? null,
+    priority: parsed.data.priority ?? 'normal',
+    assigned_to: parsed.data.assigned_to ?? null,
+    case_id: parsed.data.case_id ?? null,
+    due_date: parsed.data.due_date ?? null,
+    tags: parseTaskTags(formData.getAll('tags').map(String)),
+    created_by: userId,
+    updated_by: userId,
+  } as TaskInsert;
+
   const { data: inserted, error } = await supabase
     .from('tasks')
-    .insert({
-      title: parsed.data.title,
-      description: parsed.data.description ?? null,
-      priority: parsed.data.priority ?? 'normal',
-      assigned_to: parsed.data.assigned_to ?? null,
-      case_id: parsed.data.case_id ?? null,
-      due_date: parsed.data.due_date ?? null,
-      created_by: userId,
-      updated_by: userId,
-    })
+    .insert(payload)
     .select('id')
     .single();
 

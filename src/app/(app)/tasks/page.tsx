@@ -10,8 +10,10 @@ import { TasksBoard } from '@/features/tasks/components/tasks-board';
 import { TasksLayoutToggle } from '@/features/tasks/components/tasks-layout-toggle';
 import { TasksList } from '@/features/tasks/components/tasks-list';
 import { TasksStatStrip } from '@/features/tasks/components/tasks-stat-strip';
+import { TasksTagFilter } from '@/features/tasks/components/tasks-tag-filter';
 import { TasksViewTabs } from '@/features/tasks/components/tasks-view-tabs';
 import { capCompletedTasks, isOverdue } from '@/features/tasks/domain/task-state';
+import { filterTasksByTag } from '@/features/tasks/domain/task-tags';
 import {
   countPendingByView,
   getCaseNumberLabel,
@@ -29,7 +31,13 @@ import { createClient } from '@/lib/supabase/server';
 import { asCaseId } from '@/lib/types/branded';
 import type { Locale } from '@/lib/i18n/direction';
 
-type SearchParams = Promise<{ view?: string; status?: string; case?: string; display?: string }>;
+type SearchParams = Promise<{
+  view?: string;
+  status?: string;
+  case?: string;
+  display?: string;
+  tag?: string;
+}>;
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('tasks');
@@ -72,9 +80,10 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
       caseId ? getCaseNumberLabel(asCaseId(caseId)) : Promise.resolve(null),
     ]);
 
-  const openCount = tasks.filter((task) => task.status === 'pending').length;
-  const overdueCount = tasks.filter((task) => isOverdue(task)).length;
-  const doneCount = tasks.filter((task) => task.status === 'completed').length;
+  const visibleTasks = filterTasksByTag(tasks, sp.tag ?? null);
+  const openCount = visibleTasks.filter((task) => task.status === 'pending').length;
+  const overdueCount = visibleTasks.filter((task) => isOverdue(task)).length;
+  const doneCount = visibleTasks.filter((task) => task.status === 'completed').length;
 
   return (
     <div className="space-y-5">
@@ -88,6 +97,8 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
         />
         <TasksLayoutToggle />
       </div>
+
+      <TasksTagFilter />
 
       <TasksStatStrip open={openCount} overdue={overdueCount} done={doneCount} />
 
@@ -107,10 +118,10 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
       )}
 
       {display === 'board' ? (
-        <TasksBoard tasks={capCompletedTasks(tasks, 50)} locale={locale} />
+        <TasksBoard tasks={capCompletedTasks(visibleTasks, 50)} locale={locale} />
       ) : (
         <TasksList
-          tasks={tasks}
+          tasks={visibleTasks}
           assignees={assignees}
           cases={cases}
           locale={locale}

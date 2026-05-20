@@ -26,6 +26,7 @@ import {
   priorityEdgeColor,
   statusBadgeClass,
 } from '../domain/task-state';
+import { TaskTagChips } from './task-tag-chips';
 import type { TaskWithRelations } from '../types';
 
 type Props = {
@@ -165,6 +166,12 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
             </Link>
           )}
         </div>
+
+        {task.tags.length > 0 && (
+          <div className="mt-1.5">
+            <TaskTagChips tags={task.tags} />
+          </div>
+        )}
       </div>
 
       <DropdownMenu>

@@ -9,6 +9,7 @@ import { AlertTriangle, GripVertical } from 'lucide-react';
 import type { Locale } from '@/lib/i18n/direction';
 
 import { formatDueDate, isOverdue, priorityEdgeColor } from '../domain/task-state';
+import { TaskTagChips } from './task-tag-chips';
 import type { TaskWithRelations } from '../types';
 
 type Props = { task: TaskWithRelations; locale: Locale };
@@ -44,6 +45,12 @@ export function TaskBoardCard({ task, locale }: Props) {
         <GripVertical className="size-3.5 text-neutral-300 mt-0.5 shrink-0 group-hover:text-neutral-400" />
         <p className="text-sm font-medium text-neutral-800 leading-snug flex-1">{task.title}</p>
       </div>
+
+      {task.tags.length > 0 && (
+        <div className="mt-2 ps-5">
+          <TaskTagChips tags={task.tags} />
+        </div>
+      )}
 
       <div className="flex items-center justify-between gap-2 mt-2 ps-5">
         <div className="flex items-center gap-2 min-w-0">

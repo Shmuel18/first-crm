@@ -8,8 +8,9 @@ import { createClient } from '@/lib/supabase/server';
 import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
+import { parseTaskTags } from '../domain/task-tags';
 import { TaskFormSchema } from '../schemas/task.schema';
-import type { TaskActionState } from '../types';
+import type { TaskActionState, TaskUpdate } from '../types';
 
 const taskIdSchema = z.uuid({ error: 'common.errors.invalidUuid' });
 
@@ -59,17 +60,22 @@ export async function updateTaskAction(
 
   // tasks_select is broader than tasks_update, so an RLS-denied UPDATE affects
   // 0 rows with no error — confirm via .select() instead of false success.
+  // `tags` is a column from migration 034, not yet in the generated types; the
+  // typed update rejects excess keys, so cast (the value is still sent at runtime).
+  const patch = {
+    title: parsed.data.title,
+    description: parsed.data.description ?? null,
+    priority: parsed.data.priority ?? 'normal',
+    assigned_to: parsed.data.assigned_to ?? null,
+    case_id: parsed.data.case_id ?? null,
+    due_date: parsed.data.due_date ?? null,
+    tags: parseTaskTags(formData.getAll('tags').map(String)),
+    updated_by: userRes.user.id,
+  } as TaskUpdate;
+
   const { data: updated, error } = await supabase
     .from('tasks')
-    .update({
-      title: parsed.data.title,
-      description: parsed.data.description ?? null,
-      priority: parsed.data.priority ?? 'normal',
-      assigned_to: parsed.data.assigned_to ?? null,
-      case_id: parsed.data.case_id ?? null,
-      due_date: parsed.data.due_date ?? null,
-      updated_by: userRes.user.id,
-    })
+    .update(patch)
     .eq('id', taskId)
     .select('id');
 

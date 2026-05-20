@@ -732,6 +732,17 @@
       "board": "לוח",
       "empty": "אין משימות"
     },
+    "tags": {
+      "label": "תגיות",
+      "all": "הכל",
+      "meeting": "פגישה",
+      "lead": "ליד",
+      "export": "ייצוא",
+      "legal": "משפטי",
+      "docs": "מסמכים",
+      "followup": "מעקב",
+      "bank": "בנק"
+    },
     "action": {
       "complete": "סמן כהושלם",
       "reopen": "פתח מחדש"

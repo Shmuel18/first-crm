@@ -732,6 +732,17 @@
       "board": "Board",
       "empty": "No tasks"
     },
+    "tags": {
+      "label": "Tags",
+      "all": "All",
+      "meeting": "Meeting",
+      "lead": "Lead",
+      "export": "Export",
+      "legal": "Legal",
+      "docs": "Docs",
+      "followup": "Follow-up",
+      "bank": "Bank"
+    },
     "action": {
       "complete": "Mark as completed",
       "reopen": "Reopen"

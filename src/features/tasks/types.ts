@@ -16,6 +16,17 @@ export type TaskStatus = (typeof TASK_STATUS_VALUES)[number];
 export const TASK_PRIORITY_VALUES = ['low', 'normal', 'high'] as const;
 export type TaskPriority = (typeof TASK_PRIORITY_VALUES)[number];
 
+export const TASK_TAG_VALUES = [
+  'meeting',
+  'lead',
+  'export',
+  'legal',
+  'docs',
+  'followup',
+  'bank',
+] as const;
+export type TaskTag = (typeof TASK_TAG_VALUES)[number];
+
 export const TASK_VIEW_VALUES = ['mine', 'assigned-by-me', 'all'] as const;
 export type TaskView = (typeof TASK_VIEW_VALUES)[number];
 
@@ -42,6 +53,7 @@ export type TaskCaseOption = {
 export type TaskWithRelations = Omit<TaskRow, 'priority' | 'status'> & {
   priority: TaskPriority;
   status: TaskStatus;
+  tags: TaskTag[];
   assignee: TaskAssignee | null;
   creator: TaskAssignee | null;
   case: TaskCaseRef | null;
