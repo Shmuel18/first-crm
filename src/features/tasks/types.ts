@@ -31,7 +31,11 @@ export type TaskCaseOption = {
   label: string;
 };
 
-export type TaskWithRelations = TaskRow & {
+// priority/status are CHECK-constrained strings in the DB; narrow them to their
+// unions here so consumers don't need per-use `as` casts.
+export type TaskWithRelations = Omit<TaskRow, 'priority' | 'status'> & {
+  priority: TaskPriority;
+  status: TaskStatus;
   assignee: TaskAssignee | null;
   creator: TaskAssignee | null;
   case: TaskCaseRef | null;

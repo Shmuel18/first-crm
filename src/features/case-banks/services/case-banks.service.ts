@@ -20,6 +20,7 @@ export async function listCaseBanks(caseId: CaseId): Promise<CaseBankWithRelatio
     .order('created_at', { ascending: true });
 
   if (error) throw error;
+  // PostgREST embedded-relation typing gap; shape per CASE_BANK_SELECT.
   return (data ?? []) as unknown as CaseBankWithRelations[];
 }
 

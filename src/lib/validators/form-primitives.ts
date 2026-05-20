@@ -120,7 +120,7 @@ export const optionalEnum = <T extends readonly [string, ...string[]]>(values: T
   z.preprocess(
     emptyToNull,
     z
-      .enum(values as unknown as [string, ...string[]], {
+      .enum(values, {
         error: 'common.errors.invalidEnum',
       })
       .nullable()

@@ -11,7 +11,7 @@ import {
   Settings,
   UserCircle2,
 } from 'lucide-react';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 
 import { CaseBorrowerCard } from '@/features/borrowers/components/case-borrower-card';
 import { listBorrowersForCase } from '@/features/borrowers/services/borrowers.service';
@@ -69,7 +69,8 @@ export default async function CaseDetailPage({ params }: Props) {
   const ltv = calculateLtv(caseData.property_value, caseData.requested_mortgage_amount);
   const ltvAccent = ltv !== null ? bandToAccent(ltvBand(ltv)) : undefined;
 
-  const locale = (await import('next-intl/server').then((m) => m.getLocale())) as Locale;
+  // getLocale() returns string; the app locale is always the he|en union.
+  const locale = (await getLocale()) as Locale;
 
   return (
     <div className="space-y-5 -mt-6">
@@ -154,6 +155,7 @@ export default async function CaseDetailPage({ params }: Props) {
           )}
         </CaseBlock>
 
+        {/* blocker/insurance are CHECK-constrained DB strings; narrow to unions. */}
         <CaseAdminBlock
           blocker={caseData.case_blocker as CaseBlocker | null}
           insurance={caseData.insurance_status as InsuranceStatus | null}

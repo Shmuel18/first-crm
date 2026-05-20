@@ -10,10 +10,15 @@ const DIVISIONS: Array<{ amount: number; unit: Intl.RelativeTimeFormatUnit }> = 
   { amount: Number.POSITIVE_INFINITY, unit: 'year' },
 ];
 
+// Cached at module level — constructing per call (once per notification row)
+// is wasteful.
+const RTF: Record<'he' | 'en', Intl.RelativeTimeFormat> = {
+  he: new Intl.RelativeTimeFormat('he-IL', { numeric: 'auto' }),
+  en: new Intl.RelativeTimeFormat('en-US', { numeric: 'auto' }),
+};
+
 export function formatRelativeTime(iso: string, locale: Locale): string {
-  const rtf = new Intl.RelativeTimeFormat(locale === 'he' ? 'he-IL' : 'en-US', {
-    numeric: 'auto',
-  });
+  const rtf = RTF[locale === 'he' ? 'he' : 'en'];
   let duration = (new Date(iso).getTime() - Date.now()) / 1000;
 
   for (const division of DIVISIONS) {

@@ -58,15 +58,18 @@ export function statusBadgeClass(status: TaskStatus): string {
   return STATUS_BADGE[status];
 }
 
+// Cached at module level — constructing Intl.DateTimeFormat per render (once
+// per task row) is expensive.
+const DUE_DATE_FORMAT: Record<'he' | 'en', Intl.DateTimeFormat> = {
+  he: new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: 'short', year: 'numeric' }),
+  en: new Intl.DateTimeFormat('en-US', { day: '2-digit', month: 'short', year: 'numeric' }),
+};
+
 export function formatDueDate(due: string | null, locale: 'he' | 'en'): string {
   if (!due) return '';
   // Parse the date-only value as a LOCAL calendar date — `new Date('YYYY-MM-DD')`
   // is UTC midnight and can render the wrong day in negative-offset zones.
   const parts = due.slice(0, 10).split('-').map(Number);
   const date = new Date(parts[0] ?? 1970, (parts[1] ?? 1) - 1, parts[2] ?? 1);
-  return new Intl.DateTimeFormat(locale === 'he' ? 'he-IL' : 'en-US', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(date);
+  return DUE_DATE_FORMAT[locale].format(date);
 }

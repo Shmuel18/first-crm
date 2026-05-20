@@ -61,10 +61,11 @@ export async function listTasks(filters: TaskListFilters): Promise<TaskWithRelat
   const { data, error } = await query;
   if (error) throw error;
 
+  // PostgREST can't infer the embedded-relation shape; the select string above
+  // is the contract, and DB CHECKs guarantee the narrowed priority/status.
   const rows = (data ?? []) as unknown as TaskWithRelations[];
   return rows.sort(
-    (a, b) =>
-      (STATUS_ORDER[a.status as TaskStatus] ?? 9) - (STATUS_ORDER[b.status as TaskStatus] ?? 9),
+    (a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9),
   );
 }
 
@@ -82,6 +83,7 @@ export async function getTaskById(id: TaskId): Promise<TaskWithRelations | null>
     .maybeSingle();
 
   if (error) throw error;
+  // PostgREST embedded-relation typing gap; shape per the select string above.
   return data as unknown as TaskWithRelations | null;
 }
 

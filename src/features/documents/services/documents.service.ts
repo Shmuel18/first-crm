@@ -33,6 +33,7 @@ export async function listDocumentsForCase(
     .order('upload_date', { ascending: false });
 
   if (error) throw error;
+  // PostgREST embedded-relation typing gap; shape per DOCUMENT_SELECT.
   return (data ?? []) as unknown as DocumentWithRelations[];
 }
 
@@ -48,6 +49,7 @@ export async function getDocumentById(
     .maybeSingle();
 
   if (error) throw error;
+  // PostgREST embedded-relation typing gap; shape per DOCUMENT_SELECT.
   return (data ?? null) as unknown as DocumentWithRelations | null;
 }
 

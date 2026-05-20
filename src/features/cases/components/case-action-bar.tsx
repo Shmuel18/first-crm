@@ -129,7 +129,7 @@ function ActionIcon({
     <>
       <Icon className="size-3.5" />
       {hasAlert && (
-        <span className="absolute top-1 left-1 size-1.5 bg-[#C9A961] rounded-full ring-2 ring-[#FAF8F3]" />
+        <span className="absolute top-1 start-1 size-1.5 bg-[#C9A961] rounded-full ring-2 ring-[#FAF8F3]" />
       )}
     </>
   );

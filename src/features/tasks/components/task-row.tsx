@@ -26,11 +26,7 @@ import {
   priorityEdgeColor,
   statusBadgeClass,
 } from '../domain/task-state';
-import type {
-  TaskPriority,
-  TaskStatus,
-  TaskWithRelations,
-} from '../types';
+import type { TaskWithRelations } from '../types';
 
 type Props = {
   task: TaskWithRelations;
@@ -80,7 +76,7 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
     <div
       style={{
         borderInlineStartWidth: '3px',
-        borderInlineStartColor: priorityEdgeColor(task.priority as TaskPriority),
+        borderInlineStartColor: priorityEdgeColor(task.priority),
       }}
       className={[
         'group flex items-start gap-3 px-3 py-3 hover:bg-neutral-50/60 transition-colors',
@@ -116,21 +112,21 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
           <span
             className={[
               'inline-flex items-center gap-1.5 ps-1.5 pe-2 h-5 rounded-full text-[10px] font-medium border',
-              priorityBadgeClass(task.priority as TaskPriority),
+              priorityBadgeClass(task.priority),
             ].join(' ')}
           >
             <span className="size-1.5 rounded-full bg-current opacity-55" />
-            {tp(task.priority as TaskPriority)}
+            {tp(task.priority)}
           </span>
           {!compact && (
             <span
               className={[
                 'inline-flex items-center gap-1.5 ps-1.5 pe-2 h-5 rounded-full text-[10px] font-medium border',
-                statusBadgeClass(task.status as TaskStatus),
+                statusBadgeClass(task.status),
               ].join(' ')}
             >
               <span className="size-1.5 rounded-full bg-current opacity-55" />
-              {ts(task.status as TaskStatus)}
+              {ts(task.status)}
             </span>
           )}
           {overdue && (

@@ -45,6 +45,8 @@ export async function listCases(filters: CaseListFilters = {}): Promise<CaseWith
 
   const { data, error } = await query;
   if (error) throw error;
+  // PostgREST can't type the embedded-relation select; CASE_SELECT_WITH_RELATIONS
+  // above is the shape contract.
   return (data ?? []) as unknown as CaseWithRelations[];
 }
 
@@ -58,6 +60,7 @@ export async function getCaseById(id: CaseId): Promise<CaseWithRelations | null>
     .maybeSingle();
 
   if (error) throw error;
+  // PostgREST embedded-relation typing gap; shape per CASE_SELECT_WITH_RELATIONS.
   return data as unknown as CaseWithRelations | null;
 }
 
