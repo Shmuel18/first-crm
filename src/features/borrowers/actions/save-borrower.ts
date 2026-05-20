@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
+import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
@@ -36,22 +37,30 @@ export async function saveBorrowerAction(
     return { ok: false, error: 'unauthorized', values };
   }
 
-  // Defense-in-depth: confirm caller can see the case before any mutation
-  const { data: caseRow } = await supabase
-    .from('cases')
-    .select('id')
-    .eq('id', caseId)
-    .maybeSingle();
-  if (!caseRow) return { ok: false, error: 'unauthorized', values };
+  // Defense-in-depth: caller must be able to edit this case before any mutation.
+  if (!(await userCanEditCase(caseId))) return { ok: false, error: 'unauthorized', values };
 
   let finalBorrowerId: string;
 
   if (typeof borrowerId === 'string' && borrowerId) {
-    const { error } = await supabase
+    // The borrower must already be linked to THIS case — otherwise a caller
+    // with access to one case could overwrite a borrower belonging to another.
+    const { data: link } = await supabase
+      .from('case_borrowers')
+      .select('borrower_id')
+      .eq('case_id', caseId)
+      .eq('borrower_id', borrowerId)
+      .maybeSingle();
+    if (!link) return { ok: false, error: 'unauthorized', values };
+
+    // .select() confirms the update landed (0 rows = RLS denied → fail).
+    const { data: updated, error } = await supabase
       .from('borrowers')
       .update({ ...borrowerFields, updated_by: userRes.user.id })
-      .eq('id', borrowerId);
+      .eq('id', borrowerId)
+      .select('id');
     if (error) return { ok: false, error: 'unknown', values };
+    if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized', values };
 
     const { error: linkError } = await supabase
       .from('case_borrowers')

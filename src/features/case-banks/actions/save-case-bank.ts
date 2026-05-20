@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
+import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
@@ -49,6 +50,11 @@ export async function saveCaseBankAction(
     return { ok: false, error: 'unauthorized', values };
   }
 
+  // Defense-in-depth: caller must be able to edit the owning case.
+  if (!(await userCanEditCase(caseId))) {
+    return { ok: false, error: 'unauthorized', values };
+  }
+
   const payload = {
     case_id: caseId,
     ...parsed.data,
@@ -56,8 +62,16 @@ export async function saveCaseBankAction(
   };
 
   if (typeof caseBankId === 'string' && caseBankId) {
-    const { error } = await supabase.from('case_banks').update(payload).eq('id', caseBankId);
+    // Scope the update to this case and confirm a row changed (0 rows = RLS
+    // denied / wrong case → fail instead of false success).
+    const { data: updated, error } = await supabase
+      .from('case_banks')
+      .update(payload)
+      .eq('id', caseBankId)
+      .eq('case_id', caseId)
+      .select('id');
     if (error) return { ok: false, error: 'unknown', values };
+    if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized', values };
   } else {
     const { error } = await supabase
       .from('case_banks')
@@ -81,23 +95,20 @@ export async function deleteCaseBankAction(
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
 
-  // Defense-in-depth: caller must be able to see the case before mutating
-  const { data: caseRow } = await supabase
-    .from('cases')
-    .select('id')
-    .eq('id', caseId)
-    .maybeSingle();
-  if (!caseRow) return { ok: false, error: 'unauthorized' };
+  // Defense-in-depth: caller must be able to edit the owning case.
+  if (!(await userCanEditCase(caseId))) return { ok: false, error: 'unauthorized' };
 
   // Soft-delete: hard DELETE is blocked by RLS (#37 hardening). Keeps history
   // for audit and lets retention purge clean it up later.
-  const { error } = await supabase
+  const { data: deleted, error } = await supabase
     .from('case_banks')
     .update({ deleted_at: new Date().toISOString(), updated_by: userRes.user.id })
     .eq('id', caseBankId)
     .eq('case_id', caseId)
-    .is('deleted_at', null);
+    .is('deleted_at', null)
+    .select('id');
   if (error) return { ok: false, error: 'unknown', message: error.message };
+  if (!deleted || deleted.length === 0) return { ok: false, error: 'unauthorized' };
 
   revalidatePath(`/cases/${caseId}`);
   return { ok: true };

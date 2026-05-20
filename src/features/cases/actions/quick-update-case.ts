@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
+import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import type { Database } from '@/types/database';
 
@@ -39,15 +40,10 @@ export async function quickUpdateCaseFieldAction(
     return { ok: false, error: 'unauthorized' };
   }
 
-  // Defense-in-depth: confirm caller can actually see this case before
-  // mutating - RLS is enforced too, but a permission regression in a
-  // future migration shouldn't silently let this action through.
-  const { data: caseRow } = await supabase
-    .from('cases')
-    .select('id')
-    .eq('id', caseId)
-    .maybeSingle();
-  if (!caseRow) {
+  // Defense-in-depth: caller must be able to EDIT this case (not merely see
+  // it). RLS is enforced too, but this fails fast and keeps a view-only role
+  // from relying on RLS alone.
+  if (!(await userCanEditCase(caseId))) {
     return { ok: false, error: 'unauthorized' };
   }
 
@@ -57,13 +53,19 @@ export async function quickUpdateCaseFieldAction(
     updated_by: userRes.user.id,
   };
 
-  const { error } = await supabase
+  // .select() confirms a row was actually updated — an RLS-denied write
+  // affects 0 rows with no error, which must surface as a failure.
+  const { data: updated, error } = await supabase
     .from('cases')
     .update(updatePayload)
-    .eq('id', caseId);
+    .eq('id', caseId)
+    .select('id');
 
   if (error) {
     return { ok: false, error: error.message };
+  }
+  if (!updated || updated.length === 0) {
+    return { ok: false, error: 'unauthorized' };
   }
 
   revalidatePath('/cases');

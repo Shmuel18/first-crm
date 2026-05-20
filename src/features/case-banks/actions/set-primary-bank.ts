@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
+import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
 type Result = { ok: true } | { ok: false; error: string };
@@ -20,13 +21,10 @@ export async function setPrimaryBankAction(
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
 
-  // Defense-in-depth: confirm caller can see the case
-  const { data: caseRow } = await supabase
-    .from('cases')
-    .select('id')
-    .eq('id', caseId)
-    .maybeSingle();
-  if (!caseRow) return { ok: false, error: 'unauthorized' };
+  // Defense-in-depth: caller must be able to edit the case. The RPC is
+  // SECURITY DEFINER (migration 021) so it bypasses RLS — this is the only
+  // app-layer authorization gate.
+  if (!(await userCanEditCase(caseId))) return { ok: false, error: 'unauthorized' };
 
   // RPC handles bankId === null internally (clears primary). Supabase types
   // mark the param as non-null because PG signatures don't express
