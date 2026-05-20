@@ -1,3 +1,4 @@
+import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 
 import type {
@@ -7,10 +8,16 @@ import type {
   IntegrationStatus,
 } from '../types';
 
+// office_integrations is admin-only under RLS, but Drive upload/sync are run by
+// non-admin advisors (authorized upstream via userCanEditCase + upload
+// permission). The office-wide OAuth token is server-only and never returned to
+// the client, so token read/write during Drive flows uses the service-role
+// client; otherwise a non-admin's request client silently no-ops (null reads,
+// 0-row writes), breaking Drive for every advisor.
 export async function getIntegration(
   provider: IntegrationProvider,
 ): Promise<IntegrationRow | null> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from('office_integrations')
     .select('*')
@@ -118,7 +125,8 @@ export async function persistRefreshedAccessToken(
   accessToken: string,
   tokenExpiresAt: string,
 ): Promise<void> {
-  const supabase = await createClient();
+  // Service-role: runs inside a non-admin advisor's Drive flow (see getIntegration).
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from('office_integrations')
     .update({ access_token: accessToken, token_expires_at: tokenExpiresAt })
@@ -136,7 +144,8 @@ export async function markIntegrationDisconnected(
   provider: IntegrationProvider,
   reason: string,
 ): Promise<void> {
-  const supabase = await createClient();
+  // Service-role: runs inside a non-admin advisor's Drive flow (see getIntegration).
+  const supabase = createAdminClient();
   await supabase
     .from('office_integrations')
     .update({
@@ -150,7 +159,9 @@ export async function markIntegrationDisconnected(
 
 /** Persist the root Drive folder ID (lazy-created on first upload). */
 export async function persistDriveRootFolderId(folderId: string): Promise<void> {
-  const supabase = await createClient();
+  // Service-role: lazy folder creation happens during a non-admin advisor's
+  // first upload (see getIntegration).
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from('office_integrations')
     .update({ drive_root_folder_id: folderId })
