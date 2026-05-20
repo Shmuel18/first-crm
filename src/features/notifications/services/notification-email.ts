@@ -5,6 +5,7 @@ import { escapeHtml, renderBrandedEmail } from '@/lib/email/render';
 import { sendEmail } from '@/lib/email/send';
 import { createAdminClient } from '@/lib/supabase/admin';
 
+import { shouldEmailUser } from './preferences.service';
 import type { NotificationType } from '../types';
 
 type TaskEmailInput = {
@@ -24,6 +25,8 @@ type TaskEmailInput = {
 export async function sendTaskNotificationEmail(input: TaskEmailInput): Promise<void> {
   if (!isEmailConfigured()) return;
   if (input.recipientId === input.actorId) return;
+  // Respect the recipient's email preference for this notification type.
+  if (!(await shouldEmailUser(input.recipientId, input.kind))) return;
 
   try {
     const admin = createAdminClient();

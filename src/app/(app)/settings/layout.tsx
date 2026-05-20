@@ -29,7 +29,6 @@ const NAV: SettingsNavItem[] = [
     href: '/settings/notifications',
     labelKey: 'notifications',
     icon: Bell,
-    disabled: true,
   },
   {
     href: '/settings/office',

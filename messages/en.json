@@ -88,13 +88,6 @@
       "evening": "Good evening",
       "night": "Good night"
     },
-    "insights": {
-      "empty": "Starting fresh - create your first case",
-      "stuckSingle": "There is one stuck case that needs attention",
-      "stuckMany": "{count} stuck cases need attention",
-      "casesSingle": "One active case in the system",
-      "casesMany": "{count} active cases - everything is flowing"
-    },
     "viewTabs": {
       "active": "Active cases",
       "leads": "Leads",
@@ -102,7 +95,6 @@
       "leadsEmpty": "No leads to show"
     },
     "filters": {
-      "myCases": "My cases",
       "advisor": "Advisor",
       "stage": "Stage",
       "bank": "Bank",
@@ -527,6 +519,17 @@
         "needsLower": "Password must contain a lowercase letter",
         "needsDigit": "Password must contain a digit",
         "mismatch": "Passwords don't match"
+      }
+    },
+    "notifications": {
+      "title": "Notifications",
+      "subtitle": "Choose which email notifications you receive",
+      "emailHint": "In-app notifications (the bell) are always on. These control email notifications only.",
+      "emailTaskAssigned": "Email when a task is assigned to me",
+      "emailTaskCompleted": "Email when a task I created is completed",
+      "saved": "Preferences saved",
+      "errors": {
+        "generic": "Save failed. Please try again."
       }
     },
     "roles": {
