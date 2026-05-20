@@ -31,12 +31,17 @@ export async function updateMemberRoleAction(userId: string, roleId: string): Pr
     return { ok: false, error: 'self_role_change' };
   }
 
-  const { error } = await supabase
+  // .select() lets us confirm a row actually changed. If RLS (manage_users)
+  // blocks the write it affects 0 rows with no error — surface that instead of
+  // reporting a false success.
+  const { data: updated, error } = await supabase
     .from('profiles')
     .update({ role_id: parsed.data.roleId })
-    .eq('id', parsed.data.userId);
+    .eq('id', parsed.data.userId)
+    .select('id');
 
   if (error) return { ok: false, error: 'unknown', message: error.message };
+  if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
 
   revalidatePath('/team');
   return { ok: true };

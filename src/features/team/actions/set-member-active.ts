@@ -30,12 +30,16 @@ export async function setMemberActiveAction(userId: string, isActive: boolean): 
     return { ok: false, error: 'self_deactivate' };
   }
 
-  const { error } = await supabase
+  // .select() confirms a row changed; 0 rows means RLS (manage_users) blocked
+  // the write, which we surface rather than reporting a false success.
+  const { data: updated, error } = await supabase
     .from('profiles')
     .update({ is_active: parsed.data.isActive })
-    .eq('id', parsed.data.userId);
+    .eq('id', parsed.data.userId)
+    .select('id');
 
   if (error) return { ok: false, error: 'unknown', message: error.message };
+  if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
 
   revalidatePath('/team');
   return { ok: true };
