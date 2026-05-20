@@ -1,0 +1,106 @@
+'use client';
+
+import { useRef, useState, useTransition } from 'react';
+
+import { AlertCircle, CheckCircle2, FileSpreadsheet, Loader2, Upload } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
+
+import { importCasesAction } from '../actions/import-cases';
+import type { ImportResult } from '../types';
+
+export function ImportPanel() {
+  const t = useTranslations('settings.import');
+  const [pending, startTransition] = useTransition();
+  const [result, setResult] = useState<ImportResult | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const file = inputRef.current?.files?.[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    setResult(null);
+    startTransition(async () => {
+      const res = await importCasesAction(formData);
+      setResult(res);
+      if (res.ok) toast.success(t('done', { count: res.created }));
+      else toast.error(t(`errors.${res.error}`));
+    });
+  };
+
+  return (
+    <div className="space-y-5">
+      <section className="rounded-xl border border-[#C9A961]/30 bg-[#FAF8F3] p-4">
+        <p className="text-sm text-neutral-700">{t('instructions')}</p>
+        <p className="mt-2 text-xs text-neutral-500 font-mono" dir="ltr">
+          {t('columns')}
+        </p>
+      </section>
+
+      <form onSubmit={onSubmit} className="space-y-3">
+        <label className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-neutral-300 bg-white px-4 py-8 cursor-pointer hover:border-[#C9A961] transition">
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".csv,.xlsx,.xls"
+            onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
+            className="sr-only"
+          />
+          {fileName ? (
+            <span className="inline-flex items-center gap-2 text-sm text-neutral-800">
+              <FileSpreadsheet className="size-4 text-[#C9A961]" />
+              {fileName}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-2 text-sm text-neutral-500">
+              <Upload className="size-4" />
+              {t('choose')}
+            </span>
+          )}
+        </label>
+
+        <button
+          type="submit"
+          disabled={pending || !fileName}
+          className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-[#C9A961] hover:bg-[#B8985A] disabled:opacity-60 text-[#0A0A0A] font-medium text-sm transition"
+        >
+          {pending ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+          {pending ? t('importing') : t('upload')}
+        </button>
+      </form>
+
+      {result?.ok && (
+        <section className="space-y-3">
+          <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+            <CheckCircle2 className="size-4 shrink-0" />
+            {t('summary', { created: result.created, total: result.total })}
+          </div>
+          {result.errors.length > 0 && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+              <p className="text-sm font-medium text-amber-900 mb-1">
+                {t('errorsTitle', { count: result.errors.length })}
+              </p>
+              <ul className="space-y-0.5 max-h-60 overflow-y-auto">
+                {result.errors.map((err) => (
+                  <li key={err.row} className="text-xs text-amber-800">
+                    {t('rowError', { row: err.row, message: err.message })}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+      )}
+
+      {result && !result.ok && (
+        <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+          <AlertCircle className="size-4 shrink-0" />
+          {t(`errors.${result.error}`)}
+        </div>
+      )}
+    </div>
+  );
+}

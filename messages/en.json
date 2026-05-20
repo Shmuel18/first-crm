@@ -126,11 +126,6 @@
         "sheetName": "Active Cases"
       }
     },
-    "summary": {
-      "activeCases": "active cases",
-      "stuck": "stuck",
-      "newThisWeek": "new this week"
-    },
     "columns": {
       "row": "#",
       "clientName": "Client Name",
@@ -249,8 +244,14 @@
         "assignTask": "Assign task",
         "calendar": "Schedule meeting",
         "generatePdf": "Generate PDF for bank",
-        "more": "More"
-      }
+        "more": "More",
+        "archive": "Move to archive",
+        "restore": "Restore from archive"
+      },
+      "archiveSuccess": "Case moved to archive",
+      "restoreSuccess": "Case restored from archive",
+      "archiveError": "Action failed. Please try again.",
+      "archiveUnauthorized": "You don't have permission for this action"
     },
     "blocks": {
       "borrowers": "Borrowers",
@@ -574,6 +575,27 @@
         "restoreDone": "Restore complete — {count} records restored",
         "restoreInvalid": "This file isn't a valid backup.",
         "restoreFailed": "Restore failed. Please try again."
+      }
+    },
+    "import": {
+      "title": "Data import",
+      "subtitle": "Import cases from a CSV or Excel file",
+      "instructions": "Upload a CSV or Excel file with a header row. Each row creates a new case with a primary borrower. An unrecognized status opens as 'Case opened', and the advisor is matched by email address.",
+      "columns": "Supported columns: first_name, last_name, national_id, phone, email, status, advisor_email, short_note",
+      "choose": "Choose a file (CSV / Excel)",
+      "upload": "Import",
+      "importing": "Importing...",
+      "done": "Import complete — {count} cases created",
+      "summary": "Created {created} of {total} rows",
+      "errorsTitle": "{count} rows failed:",
+      "rowError": "Row {row}: {message}",
+      "errors": {
+        "unauthorized": "Not authorized to import",
+        "no_file": "No file selected",
+        "empty": "File is empty or has no recognized columns",
+        "too_large": "File is too large",
+        "parse": "Couldn't read the file",
+        "unknown": "Import failed. Please try again."
       }
     },
     "integrations": {

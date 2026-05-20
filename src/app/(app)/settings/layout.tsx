@@ -53,7 +53,6 @@ const NAV: SettingsNavItem[] = [
     labelKey: 'import',
     icon: Upload,
     adminOnly: true,
-    disabled: true,
   },
   {
     href: '/settings/backup',

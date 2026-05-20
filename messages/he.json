@@ -126,11 +126,6 @@
         "sheetName": "תיקים פעילים"
       }
     },
-    "summary": {
-      "activeCases": "תיקים פעילים",
-      "stuck": "תקועים",
-      "newThisWeek": "חדשים השבוע"
-    },
     "columns": {
       "row": "#",
       "clientName": "שם לקוח",
@@ -249,8 +244,14 @@
         "assignTask": "הקצה משימה",
         "calendar": "קבע פגישה",
         "generatePdf": "הפק PDF לבנק",
-        "more": "עוד"
-      }
+        "more": "עוד",
+        "archive": "העבר לארכיון",
+        "restore": "שחזר מארכיון"
+      },
+      "archiveSuccess": "התיק הועבר לארכיון",
+      "restoreSuccess": "התיק שוחזר מהארכיון",
+      "archiveError": "הפעולה נכשלה. נסה שוב.",
+      "archiveUnauthorized": "אין לך הרשאה לפעולה זו"
     },
     "blocks": {
       "borrowers": "לווים",
@@ -574,6 +575,27 @@
         "restoreDone": "השחזור הושלם — {count} רשומות הוחזרו",
         "restoreInvalid": "הקובץ אינו גיבוי תקין.",
         "restoreFailed": "השחזור נכשל. נסה שוב."
+      }
+    },
+    "import": {
+      "title": "ייבוא נתונים",
+      "subtitle": "ייבוא תיקים מקובץ CSV או Excel",
+      "instructions": "העלה קובץ CSV או Excel עם שורת כותרות. כל שורה תיצור תיק חדש עם לווה ראשי. סטטוס שלא זוהה ייפתח כ\"פתיחת תיק\", ויועץ מזוהה לפי כתובת האימייל.",
+      "columns": "עמודות נתמכות: שם פרטי, שם משפחה, ת\"ז, טלפון, אימייל, סטטוס, אימייל יועץ, הערה",
+      "choose": "בחר קובץ (CSV / Excel)",
+      "upload": "ייבא",
+      "importing": "מייבא...",
+      "done": "הייבוא הושלם — {count} תיקים נוצרו",
+      "summary": "נוצרו {created} מתוך {total} שורות",
+      "errorsTitle": "{count} שורות נכשלו:",
+      "rowError": "שורה {row}: {message}",
+      "errors": {
+        "unauthorized": "אין הרשאה לייבא",
+        "no_file": "לא נבחר קובץ",
+        "empty": "הקובץ ריק או ללא עמודות מזוהות",
+        "too_large": "הקובץ גדול מדי",
+        "parse": "שגיאה בקריאת הקובץ",
+        "unknown": "הייבוא נכשל. נסה שוב."
       }
     },
     "integrations": {
