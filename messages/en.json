@@ -103,6 +103,7 @@
     },
     "filters": {
       "myCases": "My cases",
+      "advisor": "Advisor",
       "stage": "Stage",
       "bank": "Bank",
       "blocker": "Blocker",

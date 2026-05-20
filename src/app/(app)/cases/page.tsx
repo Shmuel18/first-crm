@@ -78,7 +78,11 @@ export default async function CasesListPage({ searchParams }: Props) {
     const visible = filterCases(cases, filters, currentUserId);
     body = (
       <>
-        <DashboardFiltersBar statusOptions={statusOptions} bankOptions={bankOptions} />
+        <DashboardFiltersBar
+          statusOptions={statusOptions}
+          bankOptions={bankOptions}
+          advisorOptions={advisorOptions}
+        />
         <DashboardSavedViews />
         <DashboardSummaryBar
           total={cases.length}

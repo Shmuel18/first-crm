@@ -19,12 +19,13 @@ type Option = { id: string; name: string };
 type Props = {
   statusOptions: ReadonlyArray<{ id: string; name_he: string }>;
   bankOptions: ReadonlyArray<{ id: string; name_he: string }>;
+  advisorOptions: ReadonlyArray<{ id: string; first_name: string | null; last_name: string | null }>;
 };
 
 const ALL = '__all';
 const urlOpts = { shallow: false } as const;
 
-export function DashboardFiltersBar({ statusOptions, bankOptions }: Props) {
+export function DashboardFiltersBar({ statusOptions, bankOptions, advisorOptions }: Props) {
   const t = useTranslations('dashboard.filters');
   const tBlocker = useTranslations('case.blocker');
   const locale = useLocale();
@@ -38,18 +39,30 @@ export function DashboardFiltersBar({ statusOptions, bankOptions }: Props) {
     'hideClosedFrozen',
     parseAsBoolean.withDefault(true).withOptions(urlOpts),
   );
+  const [advisor, setAdvisor] = useQueryState('advisor', parseAsString.withOptions(urlOpts));
 
   const stages: Option[] = statusOptions.map((s) => ({ id: s.id, name: s.name_he }));
   const banks: Option[] = bankOptions.map((b) => ({ id: b.id, name: b.name_he }));
   const blockers: Option[] = BLOCKER_VALUES.map((v) => ({ id: v, name: tBlocker(v) }));
+  const advisors: Option[] = advisorOptions.map((a) => ({
+    id: a.id,
+    name: [a.first_name, a.last_name].filter(Boolean).join(' ').trim() || '—',
+  }));
 
   const anyActive =
-    mine || stuck || !hideClosedFrozen || stage !== null || bank !== null || blocker !== null;
+    mine ||
+    stuck ||
+    !hideClosedFrozen ||
+    advisor !== null ||
+    stage !== null ||
+    bank !== null ||
+    blocker !== null;
 
   const clearAll = () => {
     setMine(false);
     setStuck(false);
     setHide(true);
+    setAdvisor(null);
     setStage(null);
     setBank(null);
     setBlocker(null);
@@ -61,6 +74,15 @@ export function DashboardFiltersBar({ statusOptions, bankOptions }: Props) {
       className="bg-white px-6 py-3 border-b border-neutral-200 flex items-center gap-2 flex-wrap"
     >
       <ChipToggle icon={User} label={t('myCases')} on={mine} onClick={() => setMine(!mine)} />
+      {advisors.length > 0 && (
+        <FilterSelect
+          label={t('advisor')}
+          value={advisor}
+          onChange={setAdvisor}
+          options={advisors}
+          allLabel={t('all')}
+        />
+      )}
       <FilterSelect label={t('stage')} value={stage} onChange={setStage} options={stages} allLabel={t('all')} />
       <FilterSelect label={t('bank')} value={bank} onChange={setBank} options={banks} allLabel={t('all')} />
       <FilterSelect label={t('blocker')} value={blocker} onChange={setBlocker} options={blockers} allLabel={t('all')} />

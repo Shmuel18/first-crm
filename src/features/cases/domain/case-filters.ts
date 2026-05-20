@@ -19,6 +19,7 @@ export const BLOCKER_VALUES = [
 
 export type DashboardFilters = {
   mine: boolean;
+  advisor: string | null;
   stage: string | null;
   bank: string | null;
   blocker: string | null;
@@ -44,6 +45,7 @@ export function parseDashboardFilters(
 ): DashboardFilters {
   return {
     mine: first(sp.mine) === 'true',
+    advisor: first(sp.advisor),
     stage: first(sp.stage),
     bank: first(sp.bank),
     blocker: first(sp.blocker),
@@ -60,6 +62,7 @@ export function filterCases(
 ): CaseWithRelations[] {
   return cases.filter((c) => {
     if (f.mine && (!currentUserId || c.assigned_advisor?.id !== currentUserId)) return false;
+    if (f.advisor && c.assigned_advisor?.id !== f.advisor) return false;
     if (f.stage && c.status?.id !== f.stage) return false;
     if (f.blocker && c.case_blocker !== f.blocker) return false;
     if (
