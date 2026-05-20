@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { CheckSquare, X } from 'lucide-react';
@@ -27,6 +28,11 @@ import { asCaseId } from '@/lib/types/branded';
 import type { Locale } from '@/lib/i18n/direction';
 
 type SearchParams = Promise<{ view?: string; status?: string; case?: string }>;
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('tasks');
+  return { title: t('title'), description: t('subtitle') };
+}
 
 export default async function TasksPage({ searchParams }: { searchParams: SearchParams }) {
   const sp = await searchParams;

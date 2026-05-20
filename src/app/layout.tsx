@@ -28,7 +28,10 @@ const frankRuhl = Frank_Ruhl_Libre({
 });
 
 export const metadata: Metadata = {
-  title: 'Kaufman Finance Group',
+  title: {
+    default: 'Kaufman Finance Group',
+    template: '%s · Kaufman Finance Group',
+  },
   description: 'מערכת ניהול תיקי משכנתא',
 };
 

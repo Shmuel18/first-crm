@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
 import { Users } from 'lucide-react';
@@ -8,6 +9,11 @@ import { TeamTable } from '@/features/team/components/team-table';
 import { listRoles, listTeamMembers } from '@/features/team/services/team.service';
 import { createClient } from '@/lib/supabase/server';
 import type { Locale } from '@/lib/i18n/direction';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('team');
+  return { title: t('title'), description: t('subtitle') };
+}
 
 export default async function TeamPage() {
   const supabase = await createClient();
