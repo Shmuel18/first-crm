@@ -3,8 +3,11 @@ import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
-import { listTasksForCase } from '@/features/tasks/services/tasks.service';
-import { createClient } from '@/lib/supabase/server';
+import {
+  getCaseOption,
+  listAssignableProfiles,
+  listTasksForCase,
+} from '@/features/tasks/services/tasks.service';
 import type { Locale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
 
@@ -19,8 +22,8 @@ export async function CaseTasksBlock({ caseId, locale }: Props) {
 
   const [tasks, assignees, caseOption] = await Promise.all([
     listTasksForCase(asCaseId(caseId)),
-    fetchAssignees(),
-    fetchSingleCaseOption(caseId, locale),
+    listAssignableProfiles(),
+    getCaseOption(asCaseId(caseId), locale),
   ]);
 
   const visible = tasks.slice(0, VISIBLE_LIMIT);
@@ -52,40 +55,4 @@ export async function CaseTasksBlock({ caseId, locale }: Props) {
       )}
     </div>
   );
-}
-
-async function fetchAssignees() {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from('profiles')
-    .select('id, first_name, last_name')
-    .eq('is_active', true)
-    .order('first_name');
-  return data ?? [];
-}
-
-async function fetchSingleCaseOption(caseId: string, locale: Locale) {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from('cases')
-    .select(`
-      id,
-      case_number,
-      case_borrowers(is_primary, borrower:borrowers(first_name, last_name))
-    `)
-    .eq('id', caseId)
-    .is('deleted_at', null)
-    .maybeSingle();
-
-  if (!data) return null;
-
-  const primary = data.case_borrowers?.find((cb) => cb.is_primary)?.borrower;
-  const placeholder = locale === 'he' ? 'ללא שם' : 'No name';
-  const name = [primary?.first_name, primary?.last_name].filter(Boolean).join(' ') || placeholder;
-
-  return {
-    id: data.id,
-    case_number: data.case_number,
-    label: `#${data.case_number} · ${name}`,
-  };
 }

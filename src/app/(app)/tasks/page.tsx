@@ -7,7 +7,13 @@ import { z } from 'zod';
 import { PageHeader } from '@/components/shared/page-header';
 import { TasksList } from '@/features/tasks/components/tasks-list';
 import { TasksViewTabs } from '@/features/tasks/components/tasks-view-tabs';
-import { listTasks } from '@/features/tasks/services/tasks.service';
+import {
+  countPendingByView,
+  getCaseNumberLabel,
+  listAssignableProfiles,
+  listCaseOptions,
+  listTasks,
+} from '@/features/tasks/services/tasks.service';
 import {
   TASK_STATUS_VALUES,
   TASK_VIEW_VALUES,
@@ -41,12 +47,12 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
   const [tasks, mineCount, assignedByMeCount, allCount, assignees, cases, caseLabel] =
     await Promise.all([
       listTasks({ view, status, caseId: caseId ? asCaseId(caseId) : undefined }),
-      countByView('mine'),
-      countByView('assigned-by-me'),
-      isAdmin === true ? countByView('all') : Promise.resolve(0),
-      fetchAssignees(),
-      fetchCaseOptions(locale),
-      caseId ? fetchCaseLabel(caseId) : Promise.resolve(null),
+      countPendingByView('mine'),
+      countPendingByView('assigned-by-me'),
+      isAdmin === true ? countPendingByView('all') : Promise.resolve(0),
+      listAssignableProfiles(),
+      listCaseOptions(locale),
+      caseId ? getCaseNumberLabel(asCaseId(caseId)) : Promise.resolve(null),
     ]);
 
   return (
@@ -83,75 +89,4 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
       />
     </div>
   );
-}
-
-async function countByView(view: TaskView): Promise<number> {
-  const supabase = await createClient();
-  const { data: userRes } = await supabase.auth.getUser();
-  if (!userRes.user) return 0;
-
-  let query = supabase
-    .from('tasks')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'pending')
-    .is('deleted_at', null);
-
-  if (view === 'mine') query = query.eq('assigned_to', userRes.user.id);
-  else if (view === 'assigned-by-me') query = query.eq('created_by', userRes.user.id);
-
-  const { count, error } = await query;
-  if (error) return 0;
-  return count ?? 0;
-}
-
-async function fetchAssignees() {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from('profiles')
-    .select('id, first_name, last_name')
-    .eq('is_active', true)
-    .order('first_name');
-  return data ?? [];
-}
-
-async function fetchCaseOptions(locale: Locale) {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from('cases')
-    .select(`
-      id,
-      case_number,
-      case_borrowers!inner(
-        is_primary,
-        borrower:borrowers(first_name, last_name)
-      )
-    `)
-    .is('deleted_at', null)
-    .eq('case_borrowers.is_primary', true)
-    .order('case_number', { ascending: false })
-    .limit(200);
-
-  const placeholder = locale === 'he' ? 'ללא שם' : 'No name';
-
-  return (data ?? []).map((row) => {
-    const primary = row.case_borrowers?.[0]?.borrower;
-    const name =
-      [primary?.first_name, primary?.last_name].filter(Boolean).join(' ') || placeholder;
-    return {
-      id: row.id,
-      case_number: row.case_number,
-      label: `#${row.case_number} · ${name}`,
-    };
-  });
-}
-
-async function fetchCaseLabel(caseId: string): Promise<string | null> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from('cases')
-    .select('case_number')
-    .eq('id', caseId)
-    .is('deleted_at', null)
-    .maybeSingle();
-  return data ? `#${data.case_number}` : null;
 }

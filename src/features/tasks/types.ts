@@ -24,6 +24,13 @@ export type TaskCaseRef = {
   case_number: string;
 };
 
+/** Option shape for the "related case" picker in the task form. */
+export type TaskCaseOption = {
+  id: string;
+  case_number: string;
+  label: string;
+};
+
 export type TaskWithRelations = TaskRow & {
   assignee: TaskAssignee | null;
   creator: TaskAssignee | null;
