@@ -96,6 +96,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_notify_task_change ON public.tasks;
 CREATE TRIGGER trg_notify_task_change
   AFTER INSERT OR UPDATE ON public.tasks
   FOR EACH ROW EXECUTE FUNCTION public.notify_task_change();
