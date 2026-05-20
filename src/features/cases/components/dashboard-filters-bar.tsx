@@ -42,7 +42,6 @@ export function DashboardFiltersBar({
   const [stage, setStage] = useQueryState('stage', parseAsString.withOptions(urlOpts));
   const [bank, setBank] = useQueryState('bank', parseAsString.withOptions(urlOpts));
   const [blocker, setBlocker] = useQueryState('blocker', parseAsString.withOptions(urlOpts));
-  const [stuck, setStuck] = useQueryState('stuck', parseAsBoolean.withDefault(false).withOptions(urlOpts));
   const [hideClosedFrozen, setHide] = useQueryState(
     'hideClosedFrozen',
     parseAsBoolean.withDefault(true).withOptions(urlOpts),
@@ -59,7 +58,6 @@ export function DashboardFiltersBar({
   const showAdvisor = canFilterByAdvisor && advisors.length > 0;
 
   const anyActive =
-    stuck ||
     !hideClosedFrozen ||
     advisor !== null ||
     stage !== null ||
@@ -67,7 +65,6 @@ export function DashboardFiltersBar({
     blocker !== null;
 
   const clearAll = () => {
-    setStuck(false);
     setHide(true);
     setAdvisor(null);
     setStage(null);
@@ -105,7 +102,6 @@ export function DashboardFiltersBar({
       )}
 
       <div className="flex-1" />
-      <ToggleSwitch label={t('onlyStuck')} on={stuck} onClick={() => setStuck(!stuck)} />
       <ToggleSwitch label={t('hideClosedFrozen')} on={hideClosedFrozen} onClick={() => setHide(!hideClosedFrozen)} />
     </div>
   );
