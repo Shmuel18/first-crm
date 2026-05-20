@@ -130,18 +130,12 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }
         />
       </td>
 
-      <td className="px-4 py-3 relative" onClick={(e) => e.stopPropagation()}>
+      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
         <EditableTextCell
           caseId={row.id}
           field="short_note"
           initialValue={row.shortNote}
         />
-        {row.isRecent && !row.isStuck && !row.isFrozen && (
-          <span
-            className="absolute end-0 top-0 bottom-0 w-1 bg-emerald-500"
-            title={t('recentlyUpdated')}
-          />
-        )}
       </td>
     </tr>
   );
