@@ -1,4 +1,8 @@
+import Link from 'next/link';
+
+import { X } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
+import { z } from 'zod';
 
 import { TasksList } from '@/features/tasks/components/tasks-list';
 import { TasksViewTabs } from '@/features/tasks/components/tasks-view-tabs';
@@ -10,9 +14,10 @@ import {
   type TaskView,
 } from '@/features/tasks/types';
 import { createClient } from '@/lib/supabase/server';
+import { asCaseId } from '@/lib/types/branded';
 import type { Locale } from '@/lib/i18n/direction';
 
-type SearchParams = Promise<{ view?: string; status?: string }>;
+type SearchParams = Promise<{ view?: string; status?: string; case?: string }>;
 
 export default async function TasksPage({ searchParams }: { searchParams: SearchParams }) {
   const sp = await searchParams;
@@ -24,6 +29,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
   )
     ? (sp.status as TaskStatus)
     : undefined;
+  const caseId = z.uuid().safeParse(sp.case).success ? sp.case : undefined;
 
   const t = await getTranslations('tasks');
   const locale = (await getLocale()) as Locale;
@@ -31,14 +37,16 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
   const supabase = await createClient();
   const { data: isAdmin } = await supabase.rpc('is_admin');
 
-  const [tasks, mineCount, assignedByMeCount, allCount, assignees, cases] = await Promise.all([
-    listTasks({ view, status }),
-    countByView('mine'),
-    countByView('assigned-by-me'),
-    isAdmin === true ? countByView('all') : Promise.resolve(0),
-    fetchAssignees(),
-    fetchCaseOptions(locale),
-  ]);
+  const [tasks, mineCount, assignedByMeCount, allCount, assignees, cases, caseLabel] =
+    await Promise.all([
+      listTasks({ view, status, caseId: caseId ? asCaseId(caseId) : undefined }),
+      countByView('mine'),
+      countByView('assigned-by-me'),
+      isAdmin === true ? countByView('all') : Promise.resolve(0),
+      fetchAssignees(),
+      fetchCaseOptions(locale),
+      caseId ? fetchCaseLabel(caseId) : Promise.resolve(null),
+    ]);
 
   return (
     <div className="space-y-5 -mt-6">
@@ -53,7 +61,28 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
         counts={{ mine: mineCount, 'assigned-by-me': assignedByMeCount, all: allCount }}
       />
 
-      <TasksList tasks={tasks} assignees={assignees} cases={cases} locale={locale} />
+      {caseId && caseLabel && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-[#C9A961]/40 bg-[#FAF8F3] px-3 py-2">
+          <span className="text-sm text-neutral-700">
+            {t('filteredByCase', { label: caseLabel })}
+          </span>
+          <Link
+            href="/tasks?view=all"
+            className="inline-flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-900"
+          >
+            <X className="size-3.5" />
+            {t('clearCaseFilter')}
+          </Link>
+        </div>
+      )}
+
+      <TasksList
+        tasks={tasks}
+        assignees={assignees}
+        cases={cases}
+        locale={locale}
+        presetCaseId={caseId ?? null}
+      />
     </div>
   );
 }
@@ -116,4 +145,15 @@ async function fetchCaseOptions(locale: Locale) {
       label: `#${row.case_number} · ${name}`,
     };
   });
+}
+
+async function fetchCaseLabel(caseId: string): Promise<string | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('cases')
+    .select('case_number')
+    .eq('id', caseId)
+    .is('deleted_at', null)
+    .maybeSingle();
+  return data ? `#${data.case_number}` : null;
 }

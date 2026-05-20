@@ -532,6 +532,8 @@
     "unassigned": "לא מוקצה",
     "overdue": "באיחור",
     "showAll": "הצג עוד {count} →",
+    "filteredByCase": "מסונן למשימות של תיק {label}",
+    "clearCaseFilter": "נקה סינון",
     "views": {
       "mine": "המשימות שלי",
       "assigned-by-me": "שהקציתי",

@@ -532,6 +532,8 @@
     "unassigned": "Unassigned",
     "overdue": "Overdue",
     "showAll": "Show {count} more →",
+    "filteredByCase": "Filtered to tasks for case {label}",
+    "clearCaseFilter": "Clear filter",
     "views": {
       "mine": "My tasks",
       "assigned-by-me": "Assigned by me",
