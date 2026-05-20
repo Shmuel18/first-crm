@@ -39,7 +39,8 @@
       "invalidEnum": "Invalid value",
       "invalidBoolean": "Invalid yes/no value",
       "invalidIsraeliId": "Invalid Israeli ID (9 digits + checksum)",
-      "invalidPhone": "Invalid phone number"
+      "invalidPhone": "Invalid phone number",
+      "invalidUrl": "Invalid website URL"
     }
   },
   "nav": {
@@ -359,6 +360,80 @@
       "integrations": "Integrations",
       "import": "Data import",
       "backup": "Backup & restore"
+    },
+    "profile": {
+      "title": "Personal profile",
+      "subtitle": "Your details and interface language",
+      "saved": "Profile saved",
+      "sections": {
+        "personal": "Personal details",
+        "account": "Account"
+      },
+      "fields": {
+        "firstName": "First name",
+        "lastName": "Last name",
+        "phone": "Phone",
+        "language": "Interface language",
+        "email": "Email",
+        "role": "Role"
+      },
+      "languages": {
+        "he": "Hebrew",
+        "en": "English"
+      },
+      "errors": {
+        "generic": "Save failed. Please try again."
+      }
+    },
+    "office": {
+      "title": "Office details",
+      "subtitle": "Office name, contact details and address",
+      "saved": "Office details saved",
+      "sections": {
+        "identity": "Identity",
+        "contact": "Contact",
+        "address": "Address"
+      },
+      "fields": {
+        "officeName": "Office name",
+        "tagline": "Tagline",
+        "taxId": "Tax ID",
+        "phoneMain": "Main phone",
+        "phoneFax": "Fax",
+        "emailMain": "Email",
+        "website": "Website",
+        "street": "Street & number",
+        "city": "City",
+        "postalCode": "Postal code"
+      },
+      "errors": {
+        "generic": "Save failed. Please try again."
+      }
+    },
+    "security": {
+      "title": "Security",
+      "subtitle": "Password and sessions",
+      "passwordChanged": "Password changed",
+      "changePassword": "Change password",
+      "passwordHint": "At least 8 characters, an uppercase letter, a lowercase letter and a digit.",
+      "signOutEverywhere": "Sign out everywhere",
+      "signOutEverywhereHint": "Ends all your active sessions on every device.",
+      "sections": {
+        "password": "Change password",
+        "sessions": "Sessions"
+      },
+      "fields": {
+        "newPassword": "New password",
+        "confirmPassword": "Confirm password"
+      },
+      "errors": {
+        "generic": "Action failed. Please try again.",
+        "tooShort": "Password must be at least 8 characters",
+        "needsUpper": "Password must contain an uppercase letter",
+        "needsLower": "Password must contain a lowercase letter",
+        "needsDigit": "Password must contain a digit",
+        "mismatch": "Passwords don't match"
+      }
     },
     "integrations": {
       "title": "Integrations & connections",

@@ -39,7 +39,8 @@
       "invalidEnum": "ערך לא חוקי",
       "invalidBoolean": "ערך כן/לא לא תקין",
       "invalidIsraeliId": "תעודת זהות לא תקינה (9 ספרות + ספרת ביקורת)",
-      "invalidPhone": "מספר טלפון לא תקין"
+      "invalidPhone": "מספר טלפון לא תקין",
+      "invalidUrl": "כתובת אתר לא תקינה"
     }
   },
   "nav": {
@@ -359,6 +360,80 @@
       "integrations": "אינטגרציות",
       "import": "ייבוא נתונים",
       "backup": "גיבוי ושחזור"
+    },
+    "profile": {
+      "title": "פרופיל אישי",
+      "subtitle": "פרטים אישיים ושפת ממשק",
+      "saved": "הפרופיל נשמר",
+      "sections": {
+        "personal": "פרטים אישיים",
+        "account": "חשבון"
+      },
+      "fields": {
+        "firstName": "שם פרטי",
+        "lastName": "שם משפחה",
+        "phone": "טלפון",
+        "language": "שפת ממשק",
+        "email": "אימייל",
+        "role": "תפקיד"
+      },
+      "languages": {
+        "he": "עברית",
+        "en": "אנגלית"
+      },
+      "errors": {
+        "generic": "השמירה נכשלה. נסה שוב."
+      }
+    },
+    "office": {
+      "title": "פרטי המשרד",
+      "subtitle": "שם, פרטי קשר וכתובת המשרד",
+      "saved": "פרטי המשרד נשמרו",
+      "sections": {
+        "identity": "זהות",
+        "contact": "פרטי קשר",
+        "address": "כתובת"
+      },
+      "fields": {
+        "officeName": "שם המשרד",
+        "tagline": "סלוגן",
+        "taxId": "ח.פ / עוסק מורשה",
+        "phoneMain": "טלפון ראשי",
+        "phoneFax": "פקס",
+        "emailMain": "אימייל",
+        "website": "אתר אינטרנט",
+        "street": "רחוב ומספר",
+        "city": "עיר",
+        "postalCode": "מיקוד"
+      },
+      "errors": {
+        "generic": "השמירה נכשלה. נסה שוב."
+      }
+    },
+    "security": {
+      "title": "אבטחה",
+      "subtitle": "סיסמה והתחברויות",
+      "passwordChanged": "הסיסמה שונתה",
+      "changePassword": "שנה סיסמה",
+      "passwordHint": "לפחות 8 תווים, אות גדולה, אות קטנה וספרה.",
+      "signOutEverywhere": "התנתק מכל המכשירים",
+      "signOutEverywhereHint": "מסיים את כל ההתחברויות הפעילות שלך בכל המכשירים.",
+      "sections": {
+        "password": "שינוי סיסמה",
+        "sessions": "התחברויות"
+      },
+      "fields": {
+        "newPassword": "סיסמה חדשה",
+        "confirmPassword": "אימות סיסמה"
+      },
+      "errors": {
+        "generic": "הפעולה נכשלה. נסה שוב.",
+        "tooShort": "הסיסמה חייבת להכיל לפחות 8 תווים",
+        "needsUpper": "הסיסמה חייבת להכיל אות גדולה",
+        "needsLower": "הסיסמה חייבת להכיל אות קטנה",
+        "needsDigit": "הסיסמה חייבת להכיל ספרה",
+        "mismatch": "הסיסמאות אינן תואמות"
+      }
     },
     "integrations": {
       "title": "אינטגרציות וחיבורים",

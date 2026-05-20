@@ -23,8 +23,8 @@ type SettingsNavItem = {
 };
 
 const NAV: SettingsNavItem[] = [
-  { href: '/settings/profile', labelKey: 'profile', icon: UserCog, disabled: true },
-  { href: '/settings/security', labelKey: 'security', icon: ShieldCheck, disabled: true },
+  { href: '/settings/profile', labelKey: 'profile', icon: UserCog },
+  { href: '/settings/security', labelKey: 'security', icon: ShieldCheck },
   {
     href: '/settings/notifications',
     labelKey: 'notifications',
@@ -36,7 +36,6 @@ const NAV: SettingsNavItem[] = [
     labelKey: 'office',
     icon: Building2,
     adminOnly: true,
-    disabled: true,
   },
   {
     href: '/settings/roles',
