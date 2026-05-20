@@ -3,6 +3,7 @@ import { Frank_Ruhl_Libre, Heebo, Inter } from 'next/font/google';
 
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 import { getDirection, type Locale } from '@/lib/i18n/direction';
 
@@ -51,9 +52,11 @@ export default async function RootLayout({
       className={`${heebo.variable} ${inter.variable} ${frankRuhl.variable} h-full antialiased`}
     >
       <body className="min-h-full font-sans">
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          {children}
-        </NextIntlClientProvider>
+        <NuqsAdapter>
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            {children}
+          </NextIntlClientProvider>
+        </NuqsAdapter>
       </body>
     </html>
   );

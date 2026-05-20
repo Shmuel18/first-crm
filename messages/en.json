@@ -106,7 +106,10 @@
       "bank": "Bank",
       "blocker": "Blocker",
       "onlyStuck": "Stuck only",
-      "hideClosedFrozen": "Hide closed & frozen"
+      "hideClosedFrozen": "Hide closed & frozen",
+      "all": "All",
+      "clear": "Clear",
+      "noMatches": "No cases match the current filters"
     },
     "savedViews": {
       "saved": "Saved views",

@@ -106,7 +106,10 @@
       "bank": "בנק",
       "blocker": "גורם מעכב",
       "onlyStuck": "רק תקועים",
-      "hideClosedFrozen": "הסתר בוצעו והוקפאו"
+      "hideClosedFrozen": "הסתר בוצעו והוקפאו",
+      "all": "הכל",
+      "clear": "נקה",
+      "noMatches": "לא נמצאו תיקים התואמים את הסינון"
     },
     "savedViews": {
       "saved": "תצוגות שמורות",

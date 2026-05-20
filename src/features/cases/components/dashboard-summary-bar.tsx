@@ -3,11 +3,12 @@ import { useTranslations } from 'next-intl';
 
 type Props = {
   total: number;
+  showing: number;
   stuck: number;
   newThisWeek: number;
 };
 
-export function DashboardSummaryBar({ total, stuck, newThisWeek }: Props) {
+export function DashboardSummaryBar({ total, showing, stuck, newThisWeek }: Props) {
   const t = useTranslations('dashboard.summary');
   const tc = useTranslations('common');
 
@@ -26,7 +27,7 @@ export function DashboardSummaryBar({ total, stuck, newThisWeek }: Props) {
         <SummaryItem icon={Sprout} label={t('newThisWeek')} value={newThisWeek} accent="#10B981" />
         <Divider />
         <span className="text-neutral-500">
-          {tc('showing')} {total}
+          {tc('showing')} {showing}
         </span>
       </div>
     </div>

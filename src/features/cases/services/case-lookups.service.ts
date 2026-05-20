@@ -60,3 +60,10 @@ export async function getCurrentProfileName(): Promise<ProfileName | null> {
     .single();
   return data;
 }
+
+/** Auth user id (== profiles.id). Used to resolve the "my cases" filter. */
+export async function getCurrentUserId(): Promise<string | null> {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getUser();
+  return data.user?.id ?? null;
+}
