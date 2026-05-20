@@ -13,7 +13,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   ]);
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
+    <div className="min-h-dvh bg-[#FAFAFA]">
       <Topbar />
       <Sidebar tasksBadge={pendingTasks} isAdmin={isAdminRes.data === true} />
       <main className="md:ms-16 p-6">{children}</main>
