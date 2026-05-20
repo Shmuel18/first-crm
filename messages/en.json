@@ -21,7 +21,9 @@
     "all": "All",
     "more": "More",
     "noteHint": "Add a note...",
+    "copy": "Copy",
     "copied": "Copied!",
+    "done": "Done",
     "savedAgo": "Saved",
     "saveFailed": "Save failed. Try again.",
     "errors": {
@@ -586,6 +588,54 @@
         "unauthorized": "You don't have permission to perform this action.",
         "notFound": "Task not found or you don't have access.",
         "generic": "Save failed. Please try again."
+      }
+    }
+  },
+  "team": {
+    "title": "Team",
+    "subtitle": "Manage team members, roles, and access",
+    "memberCount": "{count} team members",
+    "addMember": "+ Add member",
+    "you": "you",
+    "columns": {
+      "cases": "Active cases",
+      "tasks": "Open tasks"
+    },
+    "status": {
+      "inactive": "Inactive"
+    },
+    "action": {
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate"
+    },
+    "deactivateConfirm": {
+      "title": "Deactivate this member?",
+      "body": "{name} won't be able to sign in until reactivated. Their history and cases are preserved."
+    },
+    "toast": {
+      "roleUpdated": "Role updated",
+      "deactivated": "Member deactivated",
+      "reactivated": "Member reactivated",
+      "selfDeactivate": "You can't deactivate yourself",
+      "actionFailed": "Action failed. Please try again."
+    },
+    "invite": {
+      "title": "Add team member",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "phone": "Phone",
+      "role": "Role",
+      "tempPasswordNote": "A temporary password will be generated for you to share with the new member. Once email is configured this will become an automatic invite.",
+      "submit": "Create account",
+      "successTitle": "Account created!",
+      "successBody": "An account was created for {email}. Share the temporary password with them — they can change it after signing in.",
+      "tempPasswordLabel": "Temporary password",
+      "tempPasswordWarning": "This password is shown only once. Copy it now.",
+      "errors": {
+        "unauthorized": "Only an admin can add team members.",
+        "emailExists": "This email is already registered.",
+        "generic": "Account creation failed. Please try again."
       }
     }
   }

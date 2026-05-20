@@ -18,14 +18,15 @@ type NavItem = {
   labelKey: 'dashboard' | 'tasks' | 'team' | 'templates' | 'auditLog' | 'settings';
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
+  adminOnly?: boolean;
 };
 
 const BASE_TOP_ITEMS: readonly NavItem[] = [
   { href: '/cases', labelKey: 'dashboard', icon: LayoutDashboard },
   { href: '/tasks', labelKey: 'tasks', icon: CheckSquare },
-  { href: '/team', labelKey: 'team', icon: Users },
-  { href: '/templates', labelKey: 'templates', icon: MessageSquare },
-  { href: '/audit-log', labelKey: 'auditLog', icon: ScrollText },
+  { href: '/team', labelKey: 'team', icon: Users, adminOnly: true },
+  { href: '/templates', labelKey: 'templates', icon: MessageSquare, adminOnly: true },
+  { href: '/audit-log', labelKey: 'auditLog', icon: ScrollText, adminOnly: true },
 ] as const;
 
 const BOTTOM_ITEMS: readonly NavItem[] = [
@@ -34,13 +35,14 @@ const BOTTOM_ITEMS: readonly NavItem[] = [
 
 type SidebarProps = {
   tasksBadge?: number;
+  isAdmin?: boolean;
 };
 
-export function Sidebar({ tasksBadge }: SidebarProps) {
+export function Sidebar({ tasksBadge, isAdmin = false }: SidebarProps) {
   const pathname = usePathname();
   const t = useTranslations('nav');
 
-  const topItems = BASE_TOP_ITEMS.map((item) =>
+  const topItems = BASE_TOP_ITEMS.filter((item) => !item.adminOnly || isAdmin).map((item) =>
     item.labelKey === 'tasks' ? { ...item, badge: tasksBadge } : item,
   );
 
