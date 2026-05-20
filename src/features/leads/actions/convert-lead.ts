@@ -27,16 +27,23 @@ export async function convertLeadAction(leadId: string): Promise<ConvertLeadResu
   const rpc = supabase.rpc as unknown as (
     fn: 'convert_lead_to_case',
     args: { p_lead_id: string },
-  ) => Promise<{ data: string | null; error: { message: string } | null }>;
+  ) => Promise<{ data: string | null; error: { message: string; code?: string } | null }>;
 
   const { data: caseId, error } = await rpc('convert_lead_to_case', { p_lead_id: leadId });
 
   if (error || !caseId) {
-    const msg = error?.message ?? '';
-    if (msg.includes('already converted')) return { ok: false, error: 'already_converted' };
-    if (msg.includes('not found')) return { ok: false, error: 'not_found' };
-    if (msg.includes('not authorized')) return { ok: false, error: 'unauthorized' };
-    return { ok: false, error: 'unknown' };
+    // The RPC raises with explicit SQLSTATEs — match those rather than the
+    // (translatable / changeable) message text.
+    switch (error?.code) {
+      case '22023':
+        return { ok: false, error: 'already_converted' };
+      case 'P0002':
+        return { ok: false, error: 'not_found' };
+      case '42501':
+        return { ok: false, error: 'unauthorized' };
+      default:
+        return { ok: false, error: 'unknown' };
+    }
   }
 
   revalidatePath('/cases');

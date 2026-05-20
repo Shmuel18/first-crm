@@ -11,7 +11,7 @@ import { TasksLayoutToggle } from '@/features/tasks/components/tasks-layout-togg
 import { TasksList } from '@/features/tasks/components/tasks-list';
 import { TasksStatStrip } from '@/features/tasks/components/tasks-stat-strip';
 import { TasksViewTabs } from '@/features/tasks/components/tasks-view-tabs';
-import { isOverdue } from '@/features/tasks/domain/task-state';
+import { capCompletedTasks, isOverdue } from '@/features/tasks/domain/task-state';
 import {
   countPendingByView,
   getCaseNumberLabel,
@@ -107,7 +107,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
       )}
 
       {display === 'board' ? (
-        <TasksBoard tasks={tasks} locale={locale} />
+        <TasksBoard tasks={capCompletedTasks(tasks, 50)} locale={locale} />
       ) : (
         <TasksList
           tasks={tasks}

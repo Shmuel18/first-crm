@@ -1,4 +1,4 @@
-import type { TaskPriority, TaskRow, TaskStatus } from '../types';
+import type { TaskPriority, TaskRow, TaskStatus, TaskWithRelations } from '../types';
 
 /** Local calendar date as YYYY-MM-DD (lexicographically comparable). */
 function todayLocalDate(): string {
@@ -73,4 +73,21 @@ export function formatDueDate(due: string | null, locale: 'he' | 'en'): string {
   const parts = due.slice(0, 10).split('-').map(Number);
   const date = new Date(parts[0] ?? 1970, (parts[1] ?? 1) - 1, parts[2] ?? 1);
   return DUE_DATE_FORMAT[locale].format(date);
+}
+
+/**
+ * Keep the board's "completed" column bounded: all active tasks pass through,
+ * but only the first `limit` completed tasks are kept (the list is already
+ * sorted, so these are the most relevant). Pure — safe to unit test.
+ */
+export function capCompletedTasks(
+  tasks: ReadonlyArray<TaskWithRelations>,
+  limit: number,
+): TaskWithRelations[] {
+  let completed = 0;
+  return tasks.filter((task) => {
+    if (task.status !== 'completed') return true;
+    completed += 1;
+    return completed <= limit;
+  });
 }
