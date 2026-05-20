@@ -49,12 +49,14 @@ export function TeamTable({ members, roles, currentUserId, locale }: Props) {
         ))}
       </div>
 
-      <InviteMemberDialog
-        open={inviteOpen}
-        onOpenChange={setInviteOpen}
-        roles={roles}
-        locale={locale}
-      />
+      {inviteOpen && (
+        <InviteMemberDialog
+          open
+          onOpenChange={(o) => !o && setInviteOpen(false)}
+          roles={roles}
+          locale={locale}
+        />
+      )}
     </div>
   );
 }
