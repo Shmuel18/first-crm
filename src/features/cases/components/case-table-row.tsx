@@ -68,6 +68,10 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }
   // tabIndex + Enter/Space handler makes the row operable from the keyboard
   // without changing the table layout or onClick semantics for mouse users.
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTableRowElement>) => {
+    // Only activate when the row itself is focused. Without this guard, a key
+    // pressed inside an editable cell (e.g. Space in the note textarea) bubbles
+    // up here, gets preventDefault'd, and navigates away instead of typing.
+    if (e.target !== e.currentTarget) return;
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       navigateToCase();
