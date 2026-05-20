@@ -28,15 +28,19 @@ export async function deleteTaskAction(taskId: string): Promise<Result> {
     .maybeSingle();
   if (!existing) return { ok: false, error: 'not_found' };
 
-  const { error } = await supabase
+  // tasks_select is broader than tasks_update, so an RLS-denied soft-delete
+  // affects 0 rows with no error — confirm via .select() instead of false success.
+  const { data: updated, error } = await supabase
     .from('tasks')
     .update({
       deleted_at: new Date().toISOString(),
       updated_by: userRes.user.id,
     })
-    .eq('id', idParsed.data);
+    .eq('id', idParsed.data)
+    .select('id');
 
   if (error) return { ok: false, error: 'unknown', message: error.message };
+  if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
 
   revalidatePath('/tasks');
   if (existing.case_id) revalidatePath(`/cases/${existing.case_id}`);

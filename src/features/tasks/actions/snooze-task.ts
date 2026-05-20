@@ -33,16 +33,20 @@ export async function snoozeTaskAction(
     .maybeSingle();
   if (!existing) return { ok: false, error: 'not_found' };
 
-  const { error } = await supabase
+  // tasks_select is broader than tasks_update, so an RLS-denied UPDATE affects
+  // 0 rows with no error — confirm via .select() instead of false success.
+  const { data: updated, error } = await supabase
     .from('tasks')
     .update({
       status: 'snoozed',
       snoozed_until: parsed.data.snoozedUntil,
       updated_by: userRes.user.id,
     })
-    .eq('id', parsed.data.taskId);
+    .eq('id', parsed.data.taskId)
+    .select('id');
 
   if (error) return { ok: false, error: 'unknown', message: error.message };
+  if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
 
   revalidatePath('/tasks');
   if (existing.case_id) revalidatePath(`/cases/${existing.case_id}`);

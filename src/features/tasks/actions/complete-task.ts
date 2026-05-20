@@ -28,7 +28,10 @@ export async function completeTaskAction(taskId: string): Promise<Result> {
     .maybeSingle();
   if (!existing) return { ok: false, error: 'not_found' };
 
-  const { error } = await supabase
+  // .select() confirms the row was actually updated. tasks_select is broader
+  // than tasks_update (view_all_cases can see tasks they can't modify), so an
+  // RLS-denied UPDATE affects 0 rows with no error — surface that as a failure.
+  const { data: updated, error } = await supabase
     .from('tasks')
     .update({
       status: 'completed',
@@ -36,9 +39,11 @@ export async function completeTaskAction(taskId: string): Promise<Result> {
       completed_by: userRes.user.id,
       updated_by: userRes.user.id,
     })
-    .eq('id', idParsed.data);
+    .eq('id', idParsed.data)
+    .select('id');
 
   if (error) return { ok: false, error: 'unknown', message: error.message };
+  if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
 
   // Notify the creator when someone else completes their task (skip if it was
   // already completed, to avoid re-sending on a redundant click).
@@ -77,7 +82,7 @@ export async function reopenTaskAction(taskId: string): Promise<Result> {
     .maybeSingle();
   if (!existing) return { ok: false, error: 'not_found' };
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from('tasks')
     .update({
       status: 'pending',
@@ -85,9 +90,11 @@ export async function reopenTaskAction(taskId: string): Promise<Result> {
       completed_by: null,
       updated_by: userRes.user.id,
     })
-    .eq('id', idParsed.data);
+    .eq('id', idParsed.data)
+    .select('id');
 
   if (error) return { ok: false, error: 'unknown', message: error.message };
+  if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
 
   revalidatePath('/tasks');
   if (existing.case_id) revalidatePath(`/cases/${existing.case_id}`);

@@ -57,7 +57,9 @@ export async function updateTaskAction(
     if (!caseRow) return { ok: false, error: 'unauthorized', values };
   }
 
-  const { error } = await supabase
+  // tasks_select is broader than tasks_update, so an RLS-denied UPDATE affects
+  // 0 rows with no error — confirm via .select() instead of false success.
+  const { data: updated, error } = await supabase
     .from('tasks')
     .update({
       title: parsed.data.title,
@@ -68,9 +70,11 @@ export async function updateTaskAction(
       due_date: parsed.data.due_date ?? null,
       updated_by: userRes.user.id,
     })
-    .eq('id', taskId);
+    .eq('id', taskId)
+    .select('id');
 
   if (error) return { ok: false, error: 'unknown', values };
+  if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized', values };
 
   const newAssignee = parsed.data.assigned_to ?? null;
   if (newAssignee && newAssignee !== existing.assigned_to && newAssignee !== userRes.user.id) {

@@ -75,6 +75,28 @@ export function TaskFormDialog({
   const presetCase = presetCaseId ?? task?.case_id ?? '';
   const genericError = getGenericError(state, t);
 
+  // The option lists are bounded (newest 200 cases, active profiles only). In
+  // edit mode, make sure the task's current case/assignee is always selectable
+  // so a routine save doesn't silently null out a value missing from the list.
+  const currentAssignee = task?.assignee ?? null;
+  const effectiveAssignees =
+    currentAssignee && !assignees.some((a) => a.id === currentAssignee.id)
+      ? [currentAssignee, ...assignees]
+      : assignees;
+
+  const currentCase = task?.case ?? null;
+  const effectiveCases =
+    currentCase && !cases.some((c) => c.id === currentCase.id)
+      ? [
+          {
+            id: currentCase.id,
+            case_number: currentCase.case_number,
+            label: `#${currentCase.case_number}`,
+          },
+          ...cases,
+        ]
+      : cases;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
@@ -131,7 +153,7 @@ export function TaskFormDialog({
           <FormField label={t('fields.assignee')} error={fieldErrors.assigned_to}>
             <NativeSelect name="assigned_to" defaultValue={value('assigned_to')}>
               <option value="">{t('fields.assigneeUnassigned')}</option>
-              {assignees.map((p) => {
+              {effectiveAssignees.map((p) => {
                 const name = [p.first_name, p.last_name].filter(Boolean).join(' ') || tc('noName');
                 return <option key={p.id} value={p.id}>{name}</option>;
               })}
@@ -149,7 +171,7 @@ export function TaskFormDialog({
               disabled={!!presetCaseId}
             >
               <option value="">{t('fields.caseNone')}</option>
-              {cases.map((c) => (
+              {effectiveCases.map((c) => (
                 <option key={c.id} value={c.id}>{c.label}</option>
               ))}
             </NativeSelect>
