@@ -16,7 +16,7 @@ export async function TasksViewTabs({ currentView, isAdmin, counts }: Props) {
   const views = TASK_VIEW_VALUES.filter((v) => (v === 'all' ? isAdmin : true));
 
   return (
-    <div className="inline-flex items-center gap-1 p-1 bg-neutral-100 rounded-lg">
+    <div className="flex flex-wrap gap-2">
       {views.map((view) => {
         const active = view === currentView;
         const count = counts?.[view];
@@ -26,18 +26,18 @@ export async function TasksViewTabs({ currentView, isAdmin, counts }: Props) {
             href={view === 'mine' ? '/tasks' : `/tasks?view=${view}`}
             scroll={false}
             className={[
-              'inline-flex items-center gap-1.5 px-3 h-8 rounded-md text-sm font-medium transition-colors',
+              'inline-flex items-center gap-2 px-4 h-9 rounded-lg text-sm font-medium transition',
               active
-                ? 'bg-white text-neutral-900 shadow-sm'
-                : 'text-neutral-600 hover:text-neutral-900',
+                ? 'bg-[#0A0A0A] text-white shadow-sm'
+                : 'bg-neutral-50 border border-neutral-200 text-neutral-600 hover:border-[#C9A961] hover:text-[#0A0A0A]',
             ].join(' ')}
           >
             {t(view)}
             {count !== undefined && count > 0 && (
               <span
                 className={[
-                  'inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full text-[10px] font-semibold',
-                  active ? 'bg-[#C9A961] text-white' : 'bg-neutral-200 text-neutral-700',
+                  'inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[10px] font-bold tabular-nums',
+                  active ? 'bg-[#C9A961] text-[#0A0A0A]' : 'bg-neutral-200 text-neutral-700',
                 ].join(' ')}
               >
                 {count}

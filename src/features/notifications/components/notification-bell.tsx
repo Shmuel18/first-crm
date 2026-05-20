@@ -77,8 +77,15 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-80 max-h-[28rem] overflow-y-auto p-0">
-        <div className="flex items-center justify-between px-3 py-2 border-b border-neutral-100 sticky top-0 bg-popover">
-          <span className="text-sm font-medium text-neutral-900">{t('title')}</span>
+        <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-neutral-100 sticky top-0 bg-popover">
+          <span className="inline-flex items-center gap-2 font-display text-sm font-medium text-neutral-900">
+            {t('title')}
+            {unread > 0 && (
+              <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-[#C9A961] text-[#0A0A0A] text-[10px] font-bold tabular-nums">
+                {unread}
+              </span>
+            )}
+          </span>
           {unread > 0 && (
             <button
               type="button"
@@ -92,7 +99,12 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
         </div>
 
         {items.length === 0 ? (
-          <div className="px-4 py-10 text-center text-sm text-neutral-500">{t('empty')}</div>
+          <div className="px-4 py-10 text-center">
+            <span className="size-12 rounded-full bg-[#C9A961]/10 flex items-center justify-center mx-auto mb-3">
+              <Bell className="size-6 text-[#C9A961]" />
+            </span>
+            <p className="text-sm text-neutral-500">{t('empty')}</p>
+          </div>
         ) : (
           <ul>
             {items.map((n) => (

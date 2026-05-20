@@ -37,7 +37,7 @@ export function TeamTable({ members, roles, currentUserId, locale }: Props) {
         </Button>
       </div>
 
-      <div className="rounded-lg border border-neutral-200 bg-white divide-y divide-neutral-100 overflow-hidden">
+      <div className="rounded-xl border border-neutral-200 bg-white divide-y divide-neutral-100 overflow-hidden shadow-sm">
         {members.map((member) => (
           <TeamMemberRow
             key={member.id}

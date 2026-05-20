@@ -60,8 +60,10 @@ export function TasksList({
       )}
 
       {tasks.length === 0 ? (
-        <div className="flex flex-col items-center justify-center text-center py-12 px-4">
-          <ClipboardList className="size-10 text-neutral-300 mb-3" />
+        <div className="flex flex-col items-center justify-center text-center py-14 px-4 rounded-xl border border-dashed border-neutral-200 bg-white">
+          <span className="size-14 rounded-full bg-[#C9A961]/10 flex items-center justify-center mb-4">
+            <ClipboardList className="size-7 text-[#C9A961]" />
+          </span>
           <p className="text-sm text-neutral-500 mb-4">{t(emptyKey)}</p>
           {!hideCreateButton && (
             <Button
@@ -76,7 +78,7 @@ export function TasksList({
           )}
         </div>
       ) : (
-        <div className="rounded-lg border border-neutral-200 bg-white divide-y divide-neutral-100 overflow-hidden">
+        <div className="rounded-xl border border-neutral-200 bg-white divide-y divide-neutral-100 overflow-hidden shadow-sm">
           {tasks.map((task) => (
             <TaskRow
               key={task.id}

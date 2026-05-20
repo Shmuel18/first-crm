@@ -68,11 +68,11 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
   return (
     <div
       className={[
-        'flex items-center gap-3 px-3 py-3 border-b border-neutral-100 last:border-0',
+        'flex items-center gap-3 px-4 py-3.5 hover:bg-neutral-50/60 transition-colors',
         member.is_active ? '' : 'opacity-60 bg-neutral-50/60',
       ].join(' ')}
     >
-      <div className="size-9 rounded-full bg-[#0A0A0A] text-[#C9A961] flex items-center justify-center text-sm font-semibold shrink-0">
+      <div className="size-10 rounded-full bg-[#0A0A0A] text-[#C9A961] flex items-center justify-center text-sm font-semibold shrink-0 ring-2 ring-[#C9A961]/30">
         {initials}
       </div>
 
@@ -89,13 +89,19 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
         <p className="text-xs text-neutral-500 truncate" dir="ltr">{member.email}</p>
       </div>
 
-      <div className="hidden sm:flex items-center gap-4 text-[11px] text-neutral-500">
-        <span className="inline-flex items-center gap-1" title={t('columns.cases')}>
-          <Briefcase className="size-3.5" />
+      <div className="hidden sm:flex items-center gap-2 text-[11px] text-neutral-600">
+        <span
+          className="inline-flex items-center gap-1 rounded-md bg-neutral-50 border border-neutral-200 px-2 py-1 tabular-nums"
+          title={t('columns.cases')}
+        >
+          <Briefcase className="size-3.5 text-[#C9A961]" />
           {member.activeCasesCount}
         </span>
-        <span className="inline-flex items-center gap-1" title={t('columns.tasks')}>
-          <CheckSquare className="size-3.5" />
+        <span
+          className="inline-flex items-center gap-1 rounded-md bg-neutral-50 border border-neutral-200 px-2 py-1 tabular-nums"
+          title={t('columns.tasks')}
+        >
+          <CheckSquare className="size-3.5 text-[#C9A961]" />
           {member.openTasksCount}
         </span>
       </div>

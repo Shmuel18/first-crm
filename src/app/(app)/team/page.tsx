@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation';
 
+import { Users } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 
+import { PageHeader } from '@/components/shared/page-header';
 import { TeamTable } from '@/features/team/components/team-table';
 import { listRoles, listTeamMembers } from '@/features/team/services/team.service';
 import { createClient } from '@/lib/supabase/server';
@@ -21,11 +23,8 @@ export default async function TeamPage() {
   const [members, roles] = await Promise.all([listTeamMembers(), listRoles()]);
 
   return (
-    <div className="space-y-5 -mt-6">
-      <div>
-        <h1 className="text-2xl font-light text-neutral-900">{t('title')}</h1>
-        <p className="text-sm text-neutral-500 mt-1">{t('subtitle')}</p>
-      </div>
+    <div className="space-y-5">
+      <PageHeader icon={<Users />} title={t('title')} subtitle={t('subtitle')} />
 
       <TeamTable
         members={members}

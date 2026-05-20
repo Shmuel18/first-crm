@@ -24,6 +24,16 @@ export function priorityBadgeClass(priority: TaskPriority): string {
   return PRIORITY_BADGE[priority];
 }
 
+const PRIORITY_EDGE_COLOR: Record<TaskPriority, string> = {
+  high: '#F87171',
+  normal: '#C9A961',
+  low: '#E5E5E5',
+};
+
+export function priorityEdgeColor(priority: TaskPriority): string {
+  return PRIORITY_EDGE_COLOR[priority];
+}
+
 const STATUS_BADGE: Record<TaskStatus, string> = {
   pending: 'bg-blue-50 text-blue-800 border-blue-200',
   completed: 'bg-green-50 text-green-800 border-green-200',

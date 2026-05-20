@@ -23,6 +23,7 @@ import {
   formatDueDate,
   isOverdue,
   priorityBadgeClass,
+  priorityEdgeColor,
   statusBadgeClass,
 } from '../domain/task-state';
 import type {
@@ -77,8 +78,12 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
 
   return (
     <div
+      style={{
+        borderInlineStartWidth: '3px',
+        borderInlineStartColor: priorityEdgeColor(task.priority as TaskPriority),
+      }}
       className={[
-        'group flex items-start gap-3 px-3 py-3 border-b border-neutral-100 last:border-0 hover:bg-neutral-50/60 transition-colors',
+        'group flex items-start gap-3 px-3 py-3 hover:bg-neutral-50/60 transition-colors',
         completed ? 'opacity-60' : '',
         overdue ? 'bg-red-50/30' : '',
       ].join(' ')}

@@ -1,9 +1,10 @@
 import Link from 'next/link';
 
-import { X } from 'lucide-react';
+import { CheckSquare, X } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 
+import { PageHeader } from '@/components/shared/page-header';
 import { TasksList } from '@/features/tasks/components/tasks-list';
 import { TasksViewTabs } from '@/features/tasks/components/tasks-view-tabs';
 import { listTasks } from '@/features/tasks/services/tasks.service';
@@ -49,11 +50,8 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
     ]);
 
   return (
-    <div className="space-y-5 -mt-6">
-      <div>
-        <h1 className="text-2xl font-light text-neutral-900">{t('title')}</h1>
-        <p className="text-sm text-neutral-500 mt-1">{t('subtitle')}</p>
-      </div>
+    <div className="space-y-5">
+      <PageHeader icon={<CheckSquare />} title={t('title')} subtitle={t('subtitle')} />
 
       <TasksViewTabs
         currentView={view}
