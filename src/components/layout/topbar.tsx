@@ -45,14 +45,14 @@ export async function Topbar() {
   return (
     <header className="h-16 bg-[#0A0A0A] text-white sticky top-0 z-30 shadow-md">
       <div className="h-full px-4 flex items-center gap-3">
-        <Link href="/cases" className="relative block h-10 w-32 shrink-0" aria-label="Kaufman Finance Group">
+        <Link href="/cases" className="shrink-0" aria-label="Kaufman Finance Group">
           <Image
-            src="/logo.png"
+            src="/logo-mark.png"
             alt="Kaufman Finance Group"
-            fill
+            width={1152}
+            height={740}
             priority
-            sizes="128px"
-            className="object-contain object-start"
+            className="h-10 w-auto"
           />
         </Link>
 
