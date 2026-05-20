@@ -21,6 +21,7 @@ import {
 } from '@/features/cases/services/case-lookups.service';
 import { countNewThisWeek, countStuck } from '@/features/cases/domain/case-state';
 import { getCaseViewCounts, listCases } from '@/features/cases/services/cases.service';
+import { userHasPermission } from '@/lib/auth/permissions';
 import { LeadsTable } from '@/features/leads/components/leads-table';
 import { LeadsToolbar } from '@/features/leads/components/leads-toolbar';
 import { countLeads, listLeads } from '@/features/leads/services/leads.service';
@@ -47,6 +48,7 @@ export default async function CasesListPage({ searchParams }: Props) {
     currentUserId,
     counts,
     leadsCount,
+    canViewAll,
     t,
   ] = await Promise.all([
     listCases({ isArchived: false }),
@@ -57,6 +59,7 @@ export default async function CasesListPage({ searchParams }: Props) {
     getCurrentUserId(),
     getCaseViewCounts(),
     countLeads(),
+    userHasPermission('view_all_cases'),
     getTranslations('dashboard'),
   ]);
 
@@ -82,6 +85,7 @@ export default async function CasesListPage({ searchParams }: Props) {
           statusOptions={statusOptions}
           bankOptions={bankOptions}
           advisorOptions={advisorOptions}
+          canFilterByAdvisor={canViewAll}
         />
         <DashboardSavedViews />
         <DashboardSummaryBar

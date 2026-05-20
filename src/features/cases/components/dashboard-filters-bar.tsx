@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronDown, User, X } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { parseAsBoolean, parseAsString, useQueryState } from 'nuqs';
 
@@ -20,17 +20,25 @@ type Props = {
   statusOptions: ReadonlyArray<{ id: string; name_he: string }>;
   bankOptions: ReadonlyArray<{ id: string; name_he: string }>;
   advisorOptions: ReadonlyArray<{ id: string; first_name: string | null; last_name: string | null }>;
+  // Only users who can see other advisors' cases (view_all_cases) get the
+  // advisor picker; a regular advisor only sees their own cases anyway.
+  canFilterByAdvisor: boolean;
 };
 
 const ALL = '__all';
 const urlOpts = { shallow: false } as const;
 
-export function DashboardFiltersBar({ statusOptions, bankOptions, advisorOptions }: Props) {
+export function DashboardFiltersBar({
+  statusOptions,
+  bankOptions,
+  advisorOptions,
+  canFilterByAdvisor,
+}: Props) {
   const t = useTranslations('dashboard.filters');
   const tBlocker = useTranslations('case.blocker');
   const locale = useLocale();
 
-  const [mine, setMine] = useQueryState('mine', parseAsBoolean.withDefault(false).withOptions(urlOpts));
+  const [advisor, setAdvisor] = useQueryState('advisor', parseAsString.withOptions(urlOpts));
   const [stage, setStage] = useQueryState('stage', parseAsString.withOptions(urlOpts));
   const [bank, setBank] = useQueryState('bank', parseAsString.withOptions(urlOpts));
   const [blocker, setBlocker] = useQueryState('blocker', parseAsString.withOptions(urlOpts));
@@ -39,7 +47,6 @@ export function DashboardFiltersBar({ statusOptions, bankOptions, advisorOptions
     'hideClosedFrozen',
     parseAsBoolean.withDefault(true).withOptions(urlOpts),
   );
-  const [advisor, setAdvisor] = useQueryState('advisor', parseAsString.withOptions(urlOpts));
 
   const stages: Option[] = statusOptions.map((s) => ({ id: s.id, name: s.name_he }));
   const banks: Option[] = bankOptions.map((b) => ({ id: b.id, name: b.name_he }));
@@ -49,8 +56,9 @@ export function DashboardFiltersBar({ statusOptions, bankOptions, advisorOptions
     name: [a.first_name, a.last_name].filter(Boolean).join(' ').trim() || '—',
   }));
 
+  const showAdvisor = canFilterByAdvisor && advisors.length > 0;
+
   const anyActive =
-    mine ||
     stuck ||
     !hideClosedFrozen ||
     advisor !== null ||
@@ -59,7 +67,6 @@ export function DashboardFiltersBar({ statusOptions, bankOptions, advisorOptions
     blocker !== null;
 
   const clearAll = () => {
-    setMine(false);
     setStuck(false);
     setHide(true);
     setAdvisor(null);
@@ -73,8 +80,7 @@ export function DashboardFiltersBar({ statusOptions, bankOptions, advisorOptions
       dir={locale === 'he' ? 'rtl' : 'ltr'}
       className="bg-white px-6 py-3 border-b border-neutral-200 flex items-center gap-2 flex-wrap"
     >
-      <ChipToggle icon={User} label={t('myCases')} on={mine} onClick={() => setMine(!mine)} />
-      {advisors.length > 0 && (
+      {showAdvisor && (
         <FilterSelect
           label={t('advisor')}
           value={advisor}
@@ -112,25 +118,6 @@ function chipClass(active: boolean): string {
       ? 'border-[#C9A961] bg-[#FAF8F3] text-[#0A0A0A]'
       : 'border-neutral-200 text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50',
   ].join(' ');
-}
-
-function ChipToggle({
-  icon: Icon,
-  label,
-  on,
-  onClick,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  on: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button type="button" role="switch" aria-checked={on} onClick={onClick} className={chipClass(on)}>
-      <Icon className={on ? 'size-3.5 text-[#C9A961]' : 'size-3.5 text-neutral-400'} />
-      <span>{label}</span>
-    </button>
-  );
 }
 
 function FilterSelect({
