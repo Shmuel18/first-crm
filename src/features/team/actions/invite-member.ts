@@ -4,12 +4,15 @@ import { randomInt } from 'crypto';
 
 import { revalidatePath } from 'next/cache';
 
+import { getLocale } from 'next-intl/server';
+
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
 import { InviteMemberSchema } from '../schemas/team.schema';
+import { sendInviteEmail } from '../services/team-email';
 import type { InviteActionState } from '../types';
 
 export async function inviteMemberAction(
@@ -59,8 +62,14 @@ export async function inviteMemberAction(
     return { ok: false, error: 'unknown', values };
   }
 
+  // Best-effort: email the credentials. If it doesn't go out (email not
+  // configured or send failed), the dialog still shows the temp password so
+  // the admin can share it manually.
+  const locale = (await getLocale()) === 'en' ? 'en' : 'he';
+  const emailed = await sendInviteEmail({ to: email, firstName: first_name, tempPassword, locale });
+
   revalidatePath('/team');
-  return { ok: true, tempPassword, email };
+  return { ok: true, tempPassword, email, emailed };
 }
 
 function generateTempPassword(): string {

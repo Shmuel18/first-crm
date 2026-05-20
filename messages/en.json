@@ -601,6 +601,33 @@
       "task_completed": "{actor} completed a task you assigned: {task}"
     }
   },
+  "email": {
+    "someone": "Someone",
+    "footer": "Kaufman Finance Group · Automatic system message",
+    "cta": {
+      "openTask": "Open in app"
+    },
+    "task_assigned": {
+      "subject": "A new task was assigned to you",
+      "heading": "You have a new task",
+      "body": "{actor} assigned you a task: {task}"
+    },
+    "task_completed": {
+      "subject": "A task you assigned was completed",
+      "heading": "Task completed",
+      "body": "{actor} completed a task you assigned: {task}"
+    },
+    "invite": {
+      "subject": "You've been invited to Kaufman Finance Group",
+      "heading": "Welcome to Kaufman Finance Group",
+      "greeting": "Hi {name},",
+      "intro": "An account was created for you. Here are your temporary login details:",
+      "emailLabel": "Email",
+      "passwordLabel": "Temporary password",
+      "changeNote": "We recommend changing your password after your first login.",
+      "cta": "Sign in"
+    }
+  },
   "team": {
     "title": "Team",
     "subtitle": "Manage team members, roles, and access",
@@ -641,6 +668,7 @@
       "successTitle": "Account created!",
       "successBody": "An account was created for {email}. Share the temporary password with them — they can change it after signing in.",
       "tempPasswordLabel": "Temporary password",
+      "emailedNote": "Details were also sent to {email}",
       "tempPasswordWarning": "This password is shown only once. Copy it now.",
       "errors": {
         "unauthorized": "Only an admin can add team members.",

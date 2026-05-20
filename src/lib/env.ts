@@ -16,6 +16,10 @@ export const env = createEnv({
     GOOGLE_OAUTH_CLIENT_SECRET: z.string().optional(),
     GOOGLE_OAUTH_REDIRECT_URI: z.string().url().optional(),
     GOOGLE_OAUTH_ALLOWED_DOMAIN: z.string().optional(),
+    // Email (Resend) - OPTIONAL. When unset, email sending is skipped and
+    // dependent flows (task emails, team invite emails) fall back gracefully.
+    RESEND_API_KEY: z.string().optional(),
+    EMAIL_FROM: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_SUPABASE_URL: z.string().url('NEXT_PUBLIC_SUPABASE_URL must be a valid URL'),
@@ -31,6 +35,8 @@ export const env = createEnv({
     GOOGLE_OAUTH_CLIENT_SECRET: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
     GOOGLE_OAUTH_REDIRECT_URI: process.env.GOOGLE_OAUTH_REDIRECT_URI,
     GOOGLE_OAUTH_ALLOWED_DOMAIN: process.env.GOOGLE_OAUTH_ALLOWED_DOMAIN,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    EMAIL_FROM: process.env.EMAIL_FROM,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
@@ -49,4 +55,12 @@ export function isGoogleOAuthConfigured(): boolean {
       env.GOOGLE_OAUTH_CLIENT_SECRET &&
       env.GOOGLE_OAUTH_REDIRECT_URI,
   );
+}
+
+/**
+ * Returns true if email sending is wired up (Resend key + a from-address).
+ * When false, sendEmail() no-ops and dependent flows fall back gracefully.
+ */
+export function isEmailConfigured(): boolean {
+  return Boolean(env.RESEND_API_KEY && env.EMAIL_FROM);
 }

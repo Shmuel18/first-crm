@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
+import { sendTaskNotificationEmail } from '@/features/notifications/services/notification-email';
 import { createClient } from '@/lib/supabase/server';
 import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
@@ -53,6 +54,17 @@ export async function createTaskAction(
     .single();
 
   if (error || !inserted) return { ok: false, error: 'unknown', values };
+
+  const assignee = parsed.data.assigned_to ?? userId;
+  if (assignee !== userId) {
+    await sendTaskNotificationEmail({
+      recipientId: assignee,
+      actorId: userId,
+      kind: 'task_assigned',
+      taskTitle: parsed.data.title,
+      caseId: parsed.data.case_id ?? null,
+    });
+  }
 
   revalidatePath('/tasks');
   if (parsed.data.case_id) revalidatePath(`/cases/${parsed.data.case_id}`);

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
+import { sendTaskNotificationEmail } from '@/features/notifications/services/notification-email';
 import { createClient } from '@/lib/supabase/server';
 import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
@@ -39,7 +40,7 @@ export async function updateTaskAction(
   // but explicit fetch lets us surface "not_found" cleanly).
   const { data: existing } = await supabase
     .from('tasks')
-    .select('id, case_id')
+    .select('id, case_id, assigned_to')
     .eq('id', taskId)
     .is('deleted_at', null)
     .maybeSingle();
@@ -70,6 +71,17 @@ export async function updateTaskAction(
     .eq('id', taskId);
 
   if (error) return { ok: false, error: 'unknown', values };
+
+  const newAssignee = parsed.data.assigned_to ?? null;
+  if (newAssignee && newAssignee !== existing.assigned_to && newAssignee !== userRes.user.id) {
+    await sendTaskNotificationEmail({
+      recipientId: newAssignee,
+      actorId: userRes.user.id,
+      kind: 'task_assigned',
+      taskTitle: parsed.data.title,
+      caseId: parsed.data.case_id ?? existing.case_id,
+    });
+  }
 
   revalidatePath('/tasks');
   const affectedCaseId = parsed.data.case_id ?? existing.case_id;

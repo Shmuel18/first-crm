@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
+import { sendTaskNotificationEmail } from '@/features/notifications/services/notification-email';
 import { createClient } from '@/lib/supabase/server';
 
 type Result =
@@ -21,7 +22,7 @@ export async function completeTaskAction(taskId: string): Promise<Result> {
 
   const { data: existing } = await supabase
     .from('tasks')
-    .select('id, case_id, status')
+    .select('id, case_id, status, title, created_by')
     .eq('id', idParsed.data)
     .is('deleted_at', null)
     .maybeSingle();
@@ -38,6 +39,22 @@ export async function completeTaskAction(taskId: string): Promise<Result> {
     .eq('id', idParsed.data);
 
   if (error) return { ok: false, error: 'unknown', message: error.message };
+
+  // Notify the creator when someone else completes their task (skip if it was
+  // already completed, to avoid re-sending on a redundant click).
+  if (
+    existing.status !== 'completed' &&
+    existing.created_by &&
+    existing.created_by !== userRes.user.id
+  ) {
+    await sendTaskNotificationEmail({
+      recipientId: existing.created_by,
+      actorId: userRes.user.id,
+      kind: 'task_completed',
+      taskTitle: existing.title,
+      caseId: existing.case_id,
+    });
+  }
 
   revalidatePath('/tasks');
   if (existing.case_id) revalidatePath(`/cases/${existing.case_id}`);

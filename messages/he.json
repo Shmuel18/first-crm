@@ -601,6 +601,33 @@
       "task_completed": "{actor} השלים משימה שהקצית: {task}"
     }
   },
+  "email": {
+    "someone": "מישהו",
+    "footer": "Kaufman Finance Group · הודעה אוטומטית מהמערכת",
+    "cta": {
+      "openTask": "פתח במערכת"
+    },
+    "task_assigned": {
+      "subject": "משימה חדשה הוקצתה לך",
+      "heading": "הוקצתה לך משימה חדשה",
+      "body": "{actor} הקצה לך משימה: {task}"
+    },
+    "task_completed": {
+      "subject": "משימה שהקצית הושלמה",
+      "heading": "משימה הושלמה",
+      "body": "{actor} השלים משימה שהקצית: {task}"
+    },
+    "invite": {
+      "subject": "הוזמנת ל-Kaufman Finance Group",
+      "heading": "ברוך הבא ל-Kaufman Finance Group",
+      "greeting": "שלום {name},",
+      "intro": "נוצר עבורך חשבון במערכת. אלו פרטי הכניסה הזמניים שלך:",
+      "emailLabel": "אימייל",
+      "passwordLabel": "סיסמה זמנית",
+      "changeNote": "מומלץ לשנות את הסיסמה אחרי הכניסה הראשונה.",
+      "cta": "התחבר למערכת"
+    }
+  },
   "team": {
     "title": "צוות",
     "subtitle": "ניהול חברי הצוות, תפקידים והרשאות גישה",
@@ -641,6 +668,7 @@
       "successTitle": "החשבון נוצר!",
       "successBody": "נוצר חשבון עבור {email}. מסור לעובד את הסיסמה הזמנית — הוא יוכל לשנות אותה אחרי ההתחברות.",
       "tempPasswordLabel": "סיסמה זמנית",
+      "emailedNote": "הפרטים נשלחו גם למייל {email}",
       "tempPasswordWarning": "הסיסמה מוצגת פעם אחת בלבד. העתק אותה עכשיו.",
       "errors": {
         "unauthorized": "רק מנהל יכול להוסיף חברי צוות.",

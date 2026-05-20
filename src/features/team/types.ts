@@ -15,7 +15,7 @@ export type TeamMember = Pick<
 };
 
 export type InviteActionState =
-  | { ok: true; tempPassword: string; email: string }
+  | { ok: true; tempPassword: string; email: string; emailed: boolean }
   | {
       ok: false;
       error: 'validation' | 'unauthorized' | 'email_exists' | 'unknown';

@@ -50,6 +50,7 @@ export function InviteMemberDialog({ open, onOpenChange, roles, locale }: Props)
           <InviteSuccess
             email={state.email}
             tempPassword={state.tempPassword}
+            emailed={state.emailed}
             onDone={() => onOpenChange(false)}
           />
         ) : (
@@ -111,10 +112,12 @@ export function InviteMemberDialog({ open, onOpenChange, roles, locale }: Props)
 function InviteSuccess({
   email,
   tempPassword,
+  emailed,
   onDone,
 }: {
   email: string;
   tempPassword: string;
+  emailed: boolean;
   onDone: () => void;
 }) {
   const t = useTranslations('team.invite');
@@ -133,6 +136,12 @@ function InviteSuccess({
         <DialogTitle>{t('successTitle')}</DialogTitle>
       </DialogHeader>
       <p className="text-sm text-neutral-600">{t('successBody', { email })}</p>
+      {emailed && (
+        <p className="inline-flex items-center gap-1.5 text-sm text-green-700">
+          <Check className="size-4" />
+          {t('emailedNote', { email })}
+        </p>
+      )}
       <div className="rounded-lg border border-[#C9A961]/40 bg-[#FAF8F3] p-3 space-y-2">
         <p className="text-xs text-neutral-500">{t('tempPasswordLabel')}</p>
         <div className="flex items-center justify-between gap-3">
