@@ -165,11 +165,40 @@
       "phone": "טלפון",
       "email": "אימייל",
       "nationalId": "ת\"ז",
-      "status": "סטטוס"
+      "status": "סטטוס",
+      "actions": "פעולות"
     },
     "status": {
       "active": "פעיל",
       "converted": "הומר לתיק"
+    },
+    "new": "ליד חדש",
+    "convert": "המר לתיק",
+    "convertTitle": "המרת ליד לתיק",
+    "convertBody": "ליצור תיק חדש מהליד הזה? פרטי הליד יועתקו ללווה הראשי בתיק, והליד יסומן כ\"הומר\".",
+    "form": {
+      "title": "ליד חדש",
+      "fields": {
+        "firstName": "שם פרטי",
+        "lastName": "שם משפחה",
+        "phone": "טלפון",
+        "email": "אימייל",
+        "nationalId": "ת\"ז",
+        "notes": "הערות",
+        "assignee": "משויך ל",
+        "assigneeUnassigned": "ללא שיוך"
+      },
+      "submit": "צור ליד"
+    },
+    "errors": {
+      "nameRequired": "שם פרטי הוא שדה חובה",
+      "generic": "הפעולה נכשלה. נסה שוב.",
+      "unauthorized": "אין לך הרשאה לפעולה זו"
+    },
+    "toast": {
+      "created": "הליד נוצר",
+      "convertFailed": "המרת הליד נכשלה",
+      "alreadyConverted": "הליד כבר הומר לתיק"
     }
   },
   "case": {

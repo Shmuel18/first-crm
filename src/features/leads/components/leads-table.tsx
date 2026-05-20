@@ -2,6 +2,8 @@ import { useTranslations } from 'next-intl';
 
 import type { LeadRow } from '../types';
 
+import { ConvertLeadButton } from './convert-lead-button';
+
 type Props = { leads: ReadonlyArray<LeadRow> };
 
 export function LeadsTable({ leads }: Props) {
@@ -17,6 +19,7 @@ export function LeadsTable({ leads }: Props) {
           <col className="w-56" />
           <col className="w-32" />
           <col className="w-28" />
+          <col className="w-28" />
         </colgroup>
         <thead>
           <tr className="bg-neutral-100 border-b-2 border-neutral-300">
@@ -26,6 +29,7 @@ export function LeadsTable({ leads }: Props) {
             <Th>{t('columns.email')}</Th>
             <Th>{t('columns.nationalId')}</Th>
             <Th>{t('columns.status')}</Th>
+            <Th>{t('columns.actions')}</Th>
           </tr>
         </thead>
         <tbody>
@@ -49,6 +53,13 @@ export function LeadsTable({ leads }: Props) {
                   >
                     {t(`status.${lead.status === 'converted' ? 'converted' : 'active'}`)}
                   </span>
+                </Td>
+                <Td>
+                  {lead.status === 'converted' ? (
+                    <span className="text-xs text-neutral-400">—</span>
+                  ) : (
+                    <ConvertLeadButton leadId={lead.id} />
+                  )}
                 </Td>
               </tr>
             );

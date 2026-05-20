@@ -165,11 +165,40 @@
       "phone": "Phone",
       "email": "Email",
       "nationalId": "ID number",
-      "status": "Status"
+      "status": "Status",
+      "actions": "Actions"
     },
     "status": {
       "active": "Active",
       "converted": "Converted"
+    },
+    "new": "New lead",
+    "convert": "Convert to case",
+    "convertTitle": "Convert lead to case",
+    "convertBody": "Create a new case from this lead? The lead's details will be copied to the case's primary borrower, and the lead will be marked as converted.",
+    "form": {
+      "title": "New lead",
+      "fields": {
+        "firstName": "First name",
+        "lastName": "Last name",
+        "phone": "Phone",
+        "email": "Email",
+        "nationalId": "ID number",
+        "notes": "Notes",
+        "assignee": "Assigned to",
+        "assigneeUnassigned": "Unassigned"
+      },
+      "submit": "Create lead"
+    },
+    "errors": {
+      "nameRequired": "First name is required",
+      "generic": "Action failed. Please try again.",
+      "unauthorized": "You don't have permission for this action"
+    },
+    "toast": {
+      "created": "Lead created",
+      "convertFailed": "Lead conversion failed",
+      "alreadyConverted": "Lead is already converted"
     }
   },
   "case": {

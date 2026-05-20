@@ -22,6 +22,7 @@ import {
 import { countNewThisWeek, countStuck } from '@/features/cases/domain/case-state';
 import { getCaseViewCounts, listCases } from '@/features/cases/services/cases.service';
 import { LeadsTable } from '@/features/leads/components/leads-table';
+import { LeadsToolbar } from '@/features/leads/components/leads-toolbar';
 import { countLeads, listLeads } from '@/features/leads/services/leads.service';
 
 type Props = {
@@ -62,14 +63,16 @@ export default async function CasesListPage({ searchParams }: Props) {
   let body: React.ReactNode;
   if (view === 'leads') {
     const leads = await listLeads();
-    body =
-      leads.length === 0 ? (
-        <EmptyMessage text={t('viewTabs.leadsEmpty')} />
-      ) : (
-        <div className="bg-white">
+    body = (
+      <div className="bg-white">
+        <LeadsToolbar assignees={advisorOptions} />
+        {leads.length === 0 ? (
+          <EmptyMessage text={t('viewTabs.leadsEmpty')} />
+        ) : (
           <LeadsTable leads={leads} />
-        </div>
-      );
+        )}
+      </div>
+    );
   } else {
     const cases = view === 'archive' ? await listCases({ isArchived: true }) : activeCases;
     const visible = filterCases(cases, filters, currentUserId);
