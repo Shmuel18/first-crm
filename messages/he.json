@@ -452,6 +452,27 @@
         "adminLocked": "לא ניתן לערוך את הרשאות המנהל."
       }
     },
+    "backup": {
+      "title": "גיבוי ושחזור",
+      "subtitle": "צור גיבוי מלא של נתוני המערכת ושמור אותו ב-Google Drive",
+      "notConfiguredTitle": "האינטגרציה לא הוגדרה במערכת",
+      "notConfiguredBody": "חיבור Google Drive טרם הוגדר על ידי המפתח. עד שזה ייעשה, לא ניתן ליצור גיבויים ל-Drive.",
+      "notConnectedTitle": "Google Drive לא מחובר",
+      "notConnectedBody": "כדי לגבות את נתוני המערכת ל-Drive, חבר תחילה את חשבון ה-Google Drive של המשרד.",
+      "goToIntegrations": "עבור להגדרות אינטגרציות",
+      "dataNote": "הגיבוי כולל את כל נתוני המערכת — תיקים, לווים, בנקים, משימות, לידים והגדרות. קבצי המסמכים עצמם נשמרים בנפרד ב-Drive וב-Storage.",
+      "lastBackup": "גיבוי אחרון: {date}",
+      "never": "עדיין לא בוצע גיבוי",
+      "backupNow": "גבה עכשיו",
+      "backingUp": "מגבה...",
+      "recent": "גיבויים אחרונים",
+      "open": "פתח ב-Drive",
+      "toast": {
+        "done": "הגיבוי הושלם — {count} רשומות נשמרו ב-Drive",
+        "notConnected": "Google Drive לא מחובר",
+        "failed": "הגיבוי נכשל. נסה שוב."
+      }
+    },
     "integrations": {
       "title": "אינטגרציות וחיבורים",
       "subtitle": "חבר את המערכת לכלים חיצוניים - Google Drive, יומן Google, וואטסאפ, מייל.",

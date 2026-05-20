@@ -61,7 +61,6 @@ const NAV: SettingsNavItem[] = [
     labelKey: 'backup',
     icon: HardDrive,
     adminOnly: true,
-    disabled: true,
   },
 ];
 

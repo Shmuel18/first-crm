@@ -452,6 +452,27 @@
         "adminLocked": "The manager's permissions cannot be edited."
       }
     },
+    "backup": {
+      "title": "Backup & restore",
+      "subtitle": "Create a full backup of your system data and store it in Google Drive",
+      "notConfiguredTitle": "Integration not configured",
+      "notConfiguredBody": "Google Drive hasn't been set up by the developer yet. Until then, backups to Drive can't be created.",
+      "notConnectedTitle": "Google Drive not connected",
+      "notConnectedBody": "To back up your system data to Drive, first connect the office's Google Drive account.",
+      "goToIntegrations": "Go to integration settings",
+      "dataNote": "The backup includes all system data — cases, borrowers, banks, tasks, leads and settings. The document files themselves are stored separately in Drive and Storage.",
+      "lastBackup": "Last backup: {date}",
+      "never": "No backups yet",
+      "backupNow": "Back up now",
+      "backingUp": "Backing up...",
+      "recent": "Recent backups",
+      "open": "Open in Drive",
+      "toast": {
+        "done": "Backup complete — {count} records saved to Drive",
+        "notConnected": "Google Drive is not connected",
+        "failed": "Backup failed. Please try again."
+      }
+    },
     "integrations": {
       "title": "Integrations & connections",
       "subtitle": "Connect the system to external tools — Google Drive, Google Calendar, WhatsApp, email.",
