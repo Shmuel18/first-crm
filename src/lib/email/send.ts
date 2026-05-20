@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 
-import { env, isEmailConfigured } from '@/lib/env';
+import { env } from '@/lib/env';
 
 export type SendEmailResult =
   | { ok: true; skipped?: false }
@@ -22,18 +22,17 @@ type SendEmailInput = {
  * that triggered it.
  */
 export async function sendEmail({ to, subject, html }: SendEmailInput): Promise<SendEmailResult> {
-  if (!isEmailConfigured()) {
+  const apiKey = env.RESEND_API_KEY;
+  const from = env.EMAIL_FROM;
+  // Narrowing both here (rather than trusting isEmailConfigured) removes the
+  // need for non-null assertions below.
+  if (!apiKey || !from) {
     return { ok: true, skipped: true };
   }
 
   try {
-    const resend = new Resend(env.RESEND_API_KEY);
-    const { error } = await resend.emails.send({
-      from: env.EMAIL_FROM as string,
-      to,
-      subject,
-      html,
-    });
+    const resend = new Resend(apiKey);
+    const { error } = await resend.emails.send({ from, to, subject, html });
 
     if (error) return { ok: false, error: error.message };
     return { ok: true };
