@@ -1,28 +1,38 @@
 import Link from 'next/link';
 
-import { Bell, Plus, Search } from 'lucide-react';
-import { getTranslations } from 'next-intl/server';
+import { Plus, Search } from 'lucide-react';
+import { getLocale, getTranslations } from 'next-intl/server';
 
 import { UserMenu } from '@/components/layout/user-menu';
-
+import { NotificationBell } from '@/features/notifications/components/notification-bell';
+import {
+  countUnreadNotifications,
+  listRecentNotifications,
+} from '@/features/notifications/services/notifications.service';
 import { createClient } from '@/lib/supabase/server';
+import type { Locale } from '@/lib/i18n/direction';
 
 export async function Topbar() {
   const t = await getTranslations('topbar');
+  const locale = (await getLocale()) as Locale;
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const profile = user
-    ? await supabase
-        .from('profiles')
-        .select('first_name, last_name, email, roles(name_he)')
-        .eq('id', user.id)
-        .single()
-        .then((r) => r.data)
-    : null;
+  const [profile, unread, notifications] = await Promise.all([
+    user
+      ? supabase
+          .from('profiles')
+          .select('first_name, last_name, email, roles(name_he)')
+          .eq('id', user.id)
+          .single()
+          .then((r) => r.data)
+      : Promise.resolve(null),
+    countUnreadNotifications(),
+    listRecentNotifications(),
+  ]);
 
   const fullName =
     [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') ||
@@ -57,14 +67,11 @@ export async function Topbar() {
             <span className="hidden md:inline">{t('newCase')}</span>
           </Link>
 
-          <button
-            type="button"
-            className="relative size-10 rounded-lg border border-[#333] hover:border-[#C9A961] hover:bg-[#1A1A1A] transition flex items-center justify-center"
-            title={t('notifications')}
-            aria-label={t('notifications')}
-          >
-            <Bell className="size-4" />
-          </button>
+          <NotificationBell
+            initialUnread={unread}
+            notifications={notifications}
+            locale={locale}
+          />
 
           <UserMenu fullName={fullName} initials={initials} roleName={roleName} />
         </div>

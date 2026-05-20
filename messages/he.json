@@ -53,7 +53,6 @@
   "topbar": {
     "searchPlaceholder": "חיפוש לפי שם, ת״ז, טלפון או מספר תיק...",
     "newCase": "פתיחת תיק חדש",
-    "notifications": "התראות",
     "logout": "התנתק",
     "userMenu": {
       "open": "תפריט משתמש",
@@ -589,6 +588,17 @@
         "notFound": "המשימה לא נמצאה או שאין לך גישה.",
         "generic": "שמירה נכשלה. נסה שוב."
       }
+    }
+  },
+  "notifications": {
+    "title": "התראות",
+    "empty": "אין התראות חדשות",
+    "markAllRead": "סמן הכל כנקרא",
+    "someone": "מישהו",
+    "aTask": "משימה",
+    "message": {
+      "task_assigned": "{actor} הקצה לך משימה: {task}",
+      "task_completed": "{actor} השלים משימה שהקצית: {task}"
     }
   },
   "team": {

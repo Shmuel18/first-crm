@@ -53,7 +53,6 @@
   "topbar": {
     "searchPlaceholder": "Search by name, ID, phone or case number...",
     "newCase": "New Case",
-    "notifications": "Notifications",
     "logout": "Log out",
     "userMenu": {
       "open": "User menu",
@@ -589,6 +588,17 @@
         "notFound": "Task not found or you don't have access.",
         "generic": "Save failed. Please try again."
       }
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No new notifications",
+    "markAllRead": "Mark all read",
+    "someone": "Someone",
+    "aTask": "a task",
+    "message": {
+      "task_assigned": "{actor} assigned you a task: {task}",
+      "task_completed": "{actor} completed a task you assigned: {task}"
     }
   },
   "team": {
