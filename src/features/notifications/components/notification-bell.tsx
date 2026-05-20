@@ -34,6 +34,18 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
   const [items, setItems] = useState(notifications);
   const [unread, setUnread] = useState(initialUnread);
 
+  // The bell lives in the persistent (app) layout's Topbar, which isn't
+  // remounted on navigation. Reconcile to fresh server props during render
+  // (React's "adjust state on prop change" pattern) so new server
+  // notifications appear; local optimistic updates still give instant feedback
+  // between server renders. `notifications` is a fresh array each server render.
+  const [syncedRef, setSyncedRef] = useState(notifications);
+  if (syncedRef !== notifications) {
+    setSyncedRef(notifications);
+    setItems(notifications);
+    setUnread(initialUnread);
+  }
+
   const message = (n: Notification): string => {
     const actor = n.data.actorName || t('someone');
     const task = n.data.taskTitle || t('aTask');
