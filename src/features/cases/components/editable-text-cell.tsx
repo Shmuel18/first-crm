@@ -125,13 +125,12 @@ export function EditableTextCell({
 
       {editing && popoverPos && (
         <>
-          {/* #18: click-outside CANCELS - silently saving partially-typed
-              text on accidental clicks was bad UX. Save still works via the
-              Save button or Ctrl/Cmd+Enter; close-without-save via Esc or
-              clicking outside. */}
+          {/* Exit saves: clicking outside commits the note (same as the Save
+              button / Ctrl+Enter). save() is a no-op when nothing changed, so
+              an accidental click can't blank a note. Esc / Cancel still discard. */}
           <div
             className="fixed inset-0 z-40"
-            onClick={cancel}
+            onClick={save}
             aria-hidden
             title=""
           />
