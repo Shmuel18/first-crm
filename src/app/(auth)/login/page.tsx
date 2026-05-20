@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 import { getTranslations } from 'next-intl/server';
 
 import { LoginForm } from './login-form';
@@ -7,9 +9,17 @@ export default async function LoginPage() {
 
   return (
     <div className="w-full">
-      <div className="text-center mb-10">
-        <div className="brand-logo text-5xl mb-2 leading-none">KAUFMAN</div>
-        <div className="brand-tagline">FINANCE · TRUST · EXCELLENCE</div>
+      <div className="flex justify-center mb-10">
+        <div className="relative h-40 w-full max-w-[280px]">
+          <Image
+            src="/logo.png"
+            alt="Kaufman Finance Group"
+            fill
+            priority
+            sizes="280px"
+            className="object-contain"
+          />
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-2xl p-8" dir="auto">
