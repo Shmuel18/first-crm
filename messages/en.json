@@ -467,10 +467,16 @@
       "backingUp": "Backing up...",
       "recent": "Recent backups",
       "open": "Open in Drive",
+      "restore": "Restore",
+      "restoreTitle": "Restore from backup",
+      "restoreConfirm": "Restore data from {name}? This only re-adds records currently missing from the database — existing records won't be changed or deleted.",
       "toast": {
         "done": "Backup complete — {count} records saved to Drive",
         "notConnected": "Google Drive is not connected",
-        "failed": "Backup failed. Please try again."
+        "failed": "Backup failed. Please try again.",
+        "restoreDone": "Restore complete — {count} records restored",
+        "restoreInvalid": "This file isn't a valid backup.",
+        "restoreFailed": "Restore failed. Please try again."
       }
     },
     "integrations": {

@@ -209,6 +209,15 @@ export class GoogleDriveClient {
     return data;
   }
 
+  /** Download a file's raw text content (used to read a backup JSON back). */
+  async downloadFileText(fileId: string): Promise<string> {
+    const res = await this.authedFetchRetry(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?alt=media`,
+    );
+    if (!res.ok) throw new Error(`Drive download failed: ${res.status}`);
+    return res.text();
+  }
+
   async deleteFile(fileId: string): Promise<void> {
     const res = await this.authedFetch(`${DRIVE_API}/files/${encodeURIComponent(fileId)}`, {
       method: 'DELETE',

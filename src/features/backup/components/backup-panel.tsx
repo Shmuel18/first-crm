@@ -18,6 +18,8 @@ import { toast } from 'sonner';
 import { runBackupAction } from '../actions/run-backup';
 import type { BackupView } from '../types';
 
+import { BackupRestoreButton } from './backup-restore-button';
+
 type Props = { view: BackupView };
 
 export function BackupPanel({ view }: Props) {
@@ -115,15 +117,18 @@ export function BackupPanel({ view }: Props) {
                     {b.size != null && ` · ${formatSize(b.size)}`}
                   </p>
                 </div>
-                <a
-                  href={b.webViewLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-neutral-500 hover:text-[#A88840] transition shrink-0"
-                >
-                  {t('open')}
-                  <ExternalLink className="size-3.5" />
-                </a>
+                <div className="flex items-center gap-3 shrink-0">
+                  <BackupRestoreButton fileId={b.id} fileName={b.name} />
+                  <a
+                    href={b.webViewLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-neutral-500 hover:text-[#A88840] transition"
+                  >
+                    {t('open')}
+                    <ExternalLink className="size-3.5" />
+                  </a>
+                </div>
               </li>
             ))}
           </ul>

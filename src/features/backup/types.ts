@@ -15,3 +15,17 @@ export type BackupView = {
 export type RunBackupResult =
   | { ok: true; filename: string; webViewLink: string; totalRows: number }
   | { ok: false; error: 'unauthorized' | 'not_connected' | 'unknown'; message?: string };
+
+export type RestoreBackupResult =
+  | { ok: true; restored: number }
+  | {
+      ok: false;
+      error:
+        | 'unauthorized'
+        | 'not_connected'
+        | 'validation'
+        | 'invalid_file'
+        | 'too_large'
+        | 'unknown';
+      message?: string;
+    };

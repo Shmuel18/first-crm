@@ -467,10 +467,16 @@
       "backingUp": "מגבה...",
       "recent": "גיבויים אחרונים",
       "open": "פתח ב-Drive",
+      "restore": "שחזר",
+      "restoreTitle": "שחזור מגיבוי",
+      "restoreConfirm": "לשחזר נתונים מהקובץ {name}? הפעולה תחזיר רק רשומות שחסרות כרגע במסד — רשומות קיימות לא ישתנו ולא יימחקו.",
       "toast": {
         "done": "הגיבוי הושלם — {count} רשומות נשמרו ב-Drive",
         "notConnected": "Google Drive לא מחובר",
-        "failed": "הגיבוי נכשל. נסה שוב."
+        "failed": "הגיבוי נכשל. נסה שוב.",
+        "restoreDone": "השחזור הושלם — {count} רשומות הוחזרו",
+        "restoreInvalid": "הקובץ אינו גיבוי תקין.",
+        "restoreFailed": "השחזור נכשל. נסה שוב."
       }
     },
     "integrations": {
