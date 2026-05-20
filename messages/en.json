@@ -654,6 +654,7 @@
       "deactivated": "Member deactivated",
       "reactivated": "Member reactivated",
       "selfDeactivate": "You can't deactivate yourself",
+      "selfRoleChange": "You can't change your own role. Ask another admin.",
       "actionFailed": "Action failed. Please try again."
     },
     "invite": {

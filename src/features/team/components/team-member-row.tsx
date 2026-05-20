@@ -42,7 +42,13 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
   const handleRoleChange = (roleId: string) => {
     startTransition(async () => {
       const res = await updateMemberRoleAction(member.id, roleId);
-      toast[res.ok ? 'success' : 'error'](res.ok ? t('toast.roleUpdated') : t('toast.actionFailed'));
+      if (res.ok) {
+        toast.success(t('toast.roleUpdated'));
+      } else if (res.error === 'self_role_change') {
+        toast.error(t('toast.selfRoleChange'));
+      } else {
+        toast.error(t('toast.actionFailed'));
+      }
     });
   };
 
@@ -97,7 +103,8 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
       <NativeSelect
         value={member.role?.id ?? ''}
         onChange={(e) => handleRoleChange(e.target.value)}
-        disabled={pending || !member.is_active}
+        disabled={pending || !member.is_active || isSelf}
+        title={isSelf ? t('toast.selfRoleChange') : undefined}
         className="w-36 h-8 text-xs"
       >
         {!member.role && <option value="">—</option>}

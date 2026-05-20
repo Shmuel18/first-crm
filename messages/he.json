@@ -654,6 +654,7 @@
       "deactivated": "חבר הצוות הושבת",
       "reactivated": "חבר הצוות הופעל מחדש",
       "selfDeactivate": "אי אפשר להשבית את עצמך",
+      "selfRoleChange": "אי אפשר לשנות את התפקיד של עצמך. בקש ממנהל אחר.",
       "actionFailed": "הפעולה נכשלה. נסה שוב."
     },
     "invite": {
