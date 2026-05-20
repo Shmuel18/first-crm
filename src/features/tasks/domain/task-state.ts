@@ -49,6 +49,7 @@ export function priorityEdgeColor(priority: TaskPriority): string {
 
 const STATUS_BADGE: Record<TaskStatus, string> = {
   pending: 'bg-blue-50 text-blue-800 border-blue-200',
+  in_progress: 'bg-indigo-50 text-indigo-800 border-indigo-200',
   completed: 'bg-green-50 text-green-800 border-green-200',
   snoozed: 'bg-orange-50 text-orange-800 border-orange-200',
   cancelled: 'bg-neutral-100 text-neutral-500 border-neutral-200',

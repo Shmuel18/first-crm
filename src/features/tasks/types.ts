@@ -4,7 +4,13 @@ export type TaskRow = Database['public']['Tables']['tasks']['Row'];
 export type TaskInsert = Database['public']['Tables']['tasks']['Insert'];
 export type TaskUpdate = Database['public']['Tables']['tasks']['Update'];
 
-export const TASK_STATUS_VALUES = ['pending', 'completed', 'snoozed', 'cancelled'] as const;
+export const TASK_STATUS_VALUES = [
+  'pending',
+  'in_progress',
+  'completed',
+  'snoozed',
+  'cancelled',
+] as const;
 export type TaskStatus = (typeof TASK_STATUS_VALUES)[number];
 
 export const TASK_PRIORITY_VALUES = ['low', 'normal', 'high'] as const;

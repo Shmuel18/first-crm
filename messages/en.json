@@ -722,9 +722,15 @@
     },
     "status": {
       "pending": "Open",
+      "in_progress": "In progress",
       "completed": "Completed",
       "snoozed": "Snoozed",
       "cancelled": "Cancelled"
+    },
+    "board": {
+      "list": "List",
+      "board": "Board",
+      "empty": "No tasks"
     },
     "action": {
       "complete": "Mark as completed",

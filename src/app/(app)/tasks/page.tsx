@@ -6,6 +6,8 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 
 import { PageHeader } from '@/components/shared/page-header';
+import { TasksBoard } from '@/features/tasks/components/tasks-board';
+import { TasksLayoutToggle } from '@/features/tasks/components/tasks-layout-toggle';
 import { TasksList } from '@/features/tasks/components/tasks-list';
 import { TasksStatStrip } from '@/features/tasks/components/tasks-stat-strip';
 import { TasksViewTabs } from '@/features/tasks/components/tasks-view-tabs';
@@ -27,7 +29,7 @@ import { createClient } from '@/lib/supabase/server';
 import { asCaseId } from '@/lib/types/branded';
 import type { Locale } from '@/lib/i18n/direction';
 
-type SearchParams = Promise<{ view?: string; status?: string; case?: string }>;
+type SearchParams = Promise<{ view?: string; status?: string; case?: string; display?: string }>;
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('tasks');
@@ -45,6 +47,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
     ? (sp.status as TaskStatus)
     : undefined;
   const caseId = z.uuid().safeParse(sp.case).success ? sp.case : undefined;
+  const display: 'board' | 'list' = sp.display === 'list' ? 'list' : 'board';
 
   const t = await getTranslations('tasks');
   const locale = (await getLocale()) as Locale;
@@ -52,9 +55,15 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
   const supabase = await createClient();
   const { data: isAdmin } = await supabase.rpc('is_admin');
 
+  // The board groups by status into columns, so it needs every status; the
+  // status filter only applies to the list view.
   const [tasks, mineCount, assignedByMeCount, allCount, assignees, cases, caseLabel] =
     await Promise.all([
-      listTasks({ view, status, caseId: caseId ? asCaseId(caseId) : undefined }),
+      listTasks({
+        view,
+        status: display === 'board' ? undefined : status,
+        caseId: caseId ? asCaseId(caseId) : undefined,
+      }),
       countPendingByView('mine'),
       countPendingByView('assigned-by-me'),
       isAdmin === true ? countPendingByView('all') : Promise.resolve(0),
@@ -71,11 +80,14 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
     <div className="space-y-5">
       <PageHeader icon={<CheckSquare />} title={t('title')} subtitle={t('subtitle')} />
 
-      <TasksViewTabs
-        currentView={view}
-        isAdmin={isAdmin === true}
-        counts={{ mine: mineCount, 'assigned-by-me': assignedByMeCount, all: allCount }}
-      />
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <TasksViewTabs
+          currentView={view}
+          isAdmin={isAdmin === true}
+          counts={{ mine: mineCount, 'assigned-by-me': assignedByMeCount, all: allCount }}
+        />
+        <TasksLayoutToggle />
+      </div>
 
       <TasksStatStrip open={openCount} overdue={overdueCount} done={doneCount} />
 
@@ -94,13 +106,17 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
         </div>
       )}
 
-      <TasksList
-        tasks={tasks}
-        assignees={assignees}
-        cases={cases}
-        locale={locale}
-        presetCaseId={caseId ?? null}
-      />
+      {display === 'board' ? (
+        <TasksBoard tasks={tasks} locale={locale} />
+      ) : (
+        <TasksList
+          tasks={tasks}
+          assignees={assignees}
+          cases={cases}
+          locale={locale}
+          presetCaseId={caseId ?? null}
+        />
+      )}
     </div>
   );
 }

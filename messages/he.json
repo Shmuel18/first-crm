@@ -722,9 +722,15 @@
     },
     "status": {
       "pending": "פתוחה",
+      "in_progress": "בעבודה",
       "completed": "הושלמה",
       "snoozed": "מושהית",
       "cancelled": "בוטלה"
+    },
+    "board": {
+      "list": "רשימה",
+      "board": "לוח",
+      "empty": "אין משימות"
     },
     "action": {
       "complete": "סמן כהושלם",

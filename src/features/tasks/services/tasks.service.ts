@@ -25,9 +25,10 @@ const CASE_OPTION_SELECT = `
 // active tasks surface first.
 const STATUS_ORDER: Record<TaskStatus, number> = {
   pending: 0,
-  snoozed: 1,
-  completed: 2,
-  cancelled: 3,
+  in_progress: 1,
+  snoozed: 2,
+  completed: 3,
+  cancelled: 4,
 };
 
 export async function listTasks(filters: TaskListFilters): Promise<TaskWithRelations[]> {
