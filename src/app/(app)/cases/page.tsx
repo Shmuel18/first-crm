@@ -15,7 +15,6 @@ import {
 } from '@/features/cases/domain/case-filters';
 import {
   getCurrentProfileName,
-  getCurrentUserId,
   listAdvisorOptions,
   listCaseStatusOptions,
 } from '@/features/cases/services/case-lookups.service';
@@ -45,7 +44,6 @@ export default async function CasesListPage({ searchParams }: Props) {
     statusOptions,
     bankOptions,
     advisorOptions,
-    currentUserId,
     counts,
     leadsCount,
     canViewAll,
@@ -56,7 +54,6 @@ export default async function CasesListPage({ searchParams }: Props) {
     listCaseStatusOptions(),
     listBankOptions(),
     listAdvisorOptions(),
-    getCurrentUserId(),
     getCaseViewCounts(),
     countLeads(),
     userHasPermission('view_all_cases'),
@@ -78,7 +75,7 @@ export default async function CasesListPage({ searchParams }: Props) {
     );
   } else {
     const cases = view === 'archive' ? await listCases({ isArchived: true }) : activeCases;
-    const visible = filterCases(cases, filters, currentUserId);
+    const visible = filterCases(cases, filters);
     body = (
       <>
         <DashboardFiltersBar
