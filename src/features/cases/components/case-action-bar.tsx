@@ -9,11 +9,12 @@ import {
   Folder,
   MessageSquare,
   MoreVertical,
-  UserPlus,
 } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import { BackArrow } from '@/components/shared/back-arrow';
+import { CaseActionTaskButton } from '@/features/tasks/components/case-action-task-button';
+import { listAssignableProfiles } from '@/features/tasks/services/tasks.service';
 import type { Locale } from '@/lib/i18n/direction';
 
 import { CaseStatusBadge } from './case-status-badge';
@@ -44,6 +45,7 @@ export async function CaseActionBar({
   const t = await getTranslations('case.actionBar');
   const tc = await getTranslations('common');
   const locale = (await getLocale()) as Locale;
+  const assignees = await listAssignableProfiles();
 
   return (
     <div className="bg-[#FAF8F3] text-neutral-900 sticky top-16 z-20 shadow-sm -mx-6 px-6 py-3 border-b border-[#C9A961]/20">
@@ -93,7 +95,12 @@ export async function CaseActionBar({
             href={`/cases/${caseId}/documents`}
           />
           <ActionIcon icon={MessageSquare} title={t('actions.sendMessage')} />
-          <ActionIcon icon={UserPlus} title={t('actions.assignTask')} />
+          <CaseActionTaskButton
+            caseId={caseId}
+            caseNumber={caseNumber}
+            assignees={assignees}
+            title={t('actions.assignTask')}
+          />
           <ActionIcon icon={Calendar} title={t('actions.calendar')} />
           <ActionIcon icon={FileText} title={t('actions.generatePdf')} />
           <ActionIcon icon={MoreVertical} title={t('actions.more')} />
