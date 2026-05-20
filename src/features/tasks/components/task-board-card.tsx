@@ -12,9 +12,13 @@ import { formatDueDate, isOverdue, priorityEdgeColor } from '../domain/task-stat
 import { TaskTagChips } from './task-tag-chips';
 import type { TaskWithRelations } from '../types';
 
-type Props = { task: TaskWithRelations; locale: Locale };
+type Props = {
+  task: TaskWithRelations;
+  locale: Locale;
+  onOpen: (task: TaskWithRelations) => void;
+};
 
-export function TaskBoardCard({ task, locale }: Props) {
+export function TaskBoardCard({ task, locale, onOpen }: Props) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task.id,
   });
@@ -39,7 +43,8 @@ export function TaskBoardCard({ task, locale }: Props) {
       style={style}
       {...listeners}
       {...attributes}
-      className="group rounded-lg border border-neutral-200 border-s-4 bg-white p-3 shadow-sm cursor-grab active:cursor-grabbing touch-none"
+      onClick={() => onOpen(task)}
+      className="group rounded-lg border border-neutral-200 border-s-4 bg-white p-3 shadow-sm cursor-pointer active:cursor-grabbing touch-none"
     >
       <div className="flex items-start gap-1.5">
         <GripVertical className="size-3.5 text-neutral-300 mt-0.5 shrink-0 group-hover:text-neutral-400" />
@@ -58,6 +63,7 @@ export function TaskBoardCard({ task, locale }: Props) {
             <Link
               href={`/cases/${task.case.id}`}
               onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
               className="text-xs font-mono text-[#A88840] hover:text-[#0A0A0A] transition shrink-0"
             >
               #{task.case.case_number}

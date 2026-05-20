@@ -21,9 +21,10 @@ type Props = {
   tasks: ReadonlyArray<TaskWithRelations>;
   locale: Locale;
   emptyLabel: string;
+  onOpen: (task: TaskWithRelations) => void;
 };
 
-export function TaskBoardColumn({ status, label, tasks, locale, emptyLabel }: Props) {
+export function TaskBoardColumn({ status, label, tasks, locale, emptyLabel, onOpen }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
@@ -46,7 +47,9 @@ export function TaskBoardColumn({ status, label, tasks, locale, emptyLabel }: Pr
         {tasks.length === 0 ? (
           <p className="px-2 py-6 text-center text-xs text-neutral-300">{emptyLabel}</p>
         ) : (
-          tasks.map((task) => <TaskBoardCard key={task.id} task={task} locale={locale} />)
+          tasks.map((task) => (
+            <TaskBoardCard key={task.id} task={task} locale={locale} onOpen={onOpen} />
+          ))
         )}
       </div>
     </div>

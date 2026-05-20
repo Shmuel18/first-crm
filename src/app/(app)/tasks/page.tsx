@@ -118,7 +118,12 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
       )}
 
       {display === 'board' ? (
-        <TasksBoard tasks={capCompletedTasks(visibleTasks, 50)} locale={locale} />
+        <TasksBoard
+          tasks={capCompletedTasks(visibleTasks, 50)}
+          locale={locale}
+          assignees={assignees}
+          cases={cases}
+        />
       ) : (
         <TasksList
           tasks={visibleTasks}
