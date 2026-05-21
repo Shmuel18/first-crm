@@ -14,9 +14,9 @@ export function DashboardWelcomeBanner({ firstName }: Props) {
   const greetingKey = getGreetingKey();
 
   return (
-    <div className="bg-gradient-to-l from-[#FAFAFA] via-white to-[#FAFAFA] px-6 py-5 border-b border-neutral-200">
+    <div className="bg-gradient-to-l from-[#FAFAFA] via-white to-[#FAFAFA] px-6 py-2.5 border-b border-neutral-200">
       <div className="flex items-end justify-between flex-wrap gap-3">
-        <h1 className="font-display text-2xl text-neutral-900 leading-tight">
+        <h1 className="font-display text-xl text-neutral-900 leading-tight">
           {t(`greetings.${greetingKey}`)}
           {firstName && (
             <>

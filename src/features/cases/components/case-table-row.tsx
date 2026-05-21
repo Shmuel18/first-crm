@@ -49,7 +49,7 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }
 
   // Excel-style: subtle divider + zebra + breathing room
   const rowClasses = [
-    'group transition-colors relative cursor-pointer h-14',
+    'group transition-colors relative cursor-pointer',
     'border-b border-neutral-300',
     row.isStuck && 'bg-red-50 hover:bg-red-100',
     row.isFrozen && 'bg-neutral-200/70 text-neutral-500 hover:bg-neutral-300/70',

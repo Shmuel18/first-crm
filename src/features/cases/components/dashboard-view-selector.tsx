@@ -1,8 +1,8 @@
 'use client';
 
-import { Archive, FolderOpen, Sprout } from 'lucide-react';
+import { Archive, FolderOpen, Search, Sprout } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { parseAsStringEnum, useQueryState } from 'nuqs';
+import { parseAsString, parseAsStringEnum, useQueryState } from 'nuqs';
 
 import type { CaseView } from '../domain/case-filters';
 
@@ -20,34 +20,51 @@ export function DashboardViewSelector({
   archivedCount = 0,
 }: Props) {
   const t = useTranslations('dashboard.viewTabs');
+  const tf = useTranslations('dashboard.filters');
   const [view, setView] = useQueryState(
     'view',
     parseAsStringEnum(VIEWS).withDefault('active').withOptions({ shallow: false }),
   );
+  // Same `q` param the table/cards filter on (see useCaseQueryFilter); shallow
+  // update keeps typing instant with no server round-trip.
+  const [query, setQuery] = useQueryState('q', parseAsString.withOptions({ shallow: true }));
 
   return (
-    <div className="bg-white px-6 py-3 border-b border-neutral-200 flex gap-2">
-      <ViewTab
-        icon={FolderOpen}
-        label={t('active')}
-        count={activeCount}
-        active={view === 'active'}
-        onClick={() => setView('active')}
-      />
-      <ViewTab
-        icon={Sprout}
-        label={t('leads')}
-        count={leadsCount}
-        active={view === 'leads'}
-        onClick={() => setView('leads')}
-      />
-      <ViewTab
-        icon={Archive}
-        label={t('archive')}
-        count={archivedCount}
-        active={view === 'archive'}
-        onClick={() => setView('archive')}
-      />
+    <div className="bg-white px-6 py-2.5 border-b border-neutral-200 flex items-center gap-3 flex-wrap">
+      <div className="flex gap-2">
+        <ViewTab
+          icon={FolderOpen}
+          label={t('active')}
+          count={activeCount}
+          active={view === 'active'}
+          onClick={() => setView('active')}
+        />
+        <ViewTab
+          icon={Sprout}
+          label={t('leads')}
+          count={leadsCount}
+          active={view === 'leads'}
+          onClick={() => setView('leads')}
+        />
+        <ViewTab
+          icon={Archive}
+          label={t('archive')}
+          count={archivedCount}
+          active={view === 'archive'}
+          onClick={() => setView('archive')}
+        />
+      </div>
+
+      <div className="relative ms-auto w-full sm:w-auto sm:flex-1 sm:max-w-md">
+        <Search className="absolute end-3 top-1/2 -translate-y-1/2 size-4 text-[#C9A961] pointer-events-none" />
+        <input
+          type="search"
+          value={query ?? ''}
+          onChange={(e) => setQuery(e.target.value || null)}
+          placeholder={tf('search')}
+          className="w-full rounded-xl border border-neutral-300 bg-white ps-4 pe-10 py-2.5 text-sm placeholder:text-neutral-400 shadow-sm focus:outline-none focus:border-[#C9A961] focus:ring-2 focus:ring-[#C9A961]/25 transition"
+        />
+      </div>
     </div>
   );
 }

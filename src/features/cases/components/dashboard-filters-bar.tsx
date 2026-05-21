@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronDown, Search, X } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { parseAsBoolean, parseAsString, useQueryState } from 'nuqs';
 
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import { BLOCKER_VALUES } from '../domain/case-filters';
+import { RowDensityControl } from './row-density-control';
 
 type Option = { id: string; name: string };
 
@@ -84,23 +85,8 @@ export function DashboardFiltersBar({
   return (
     <div
       dir={locale === 'he' ? 'rtl' : 'ltr'}
-      className="bg-white border-b border-neutral-200"
+      className="bg-white px-6 py-2.5 border-b border-neutral-200 flex items-center gap-2 flex-wrap"
     >
-      {/* Search gets its own prominent row above the filter chips. */}
-      <div className="px-6 pt-3 pb-2">
-        <div className="relative w-full max-w-lg">
-          <Search className="absolute end-3 top-1/2 -translate-y-1/2 size-4 text-neutral-400 pointer-events-none" />
-          <input
-            type="search"
-            value={query ?? ''}
-            onChange={(e) => setQuery(e.target.value || null)}
-            placeholder={t('search')}
-            className="w-full rounded-xl border border-neutral-200 bg-white ps-4 pe-10 py-2.5 text-sm placeholder:text-neutral-400 shadow-sm focus:outline-none focus:border-[#C9A961] focus:ring-2 focus:ring-[#C9A961]/20 transition"
-          />
-        </div>
-      </div>
-
-      <div className="px-6 pb-3 flex items-center gap-2 flex-wrap">
       {showAdvisor && (
         <FilterSelect
           label={t('advisor')}
@@ -125,15 +111,17 @@ export function DashboardFiltersBar({
         </button>
       )}
 
-        <div className="flex-1" />
-        {!isArchiveView && (
-          <ToggleSwitch
-            label={t('hideClosedFrozen')}
-            on={hideClosedFrozen}
-            onClick={() => setHide(!hideClosedFrozen)}
-          />
-        )}
+      <div className="flex-1" />
+      <div className="hidden md:block">
+        <RowDensityControl />
       </div>
+      {!isArchiveView && (
+        <ToggleSwitch
+          label={t('hideClosedFrozen')}
+          on={hideClosedFrozen}
+          onClick={() => setHide(!hideClosedFrozen)}
+        />
+      )}
     </div>
   );
 }

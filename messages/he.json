@@ -115,6 +115,12 @@
       "clear": "נקה",
       "noMatches": "לא נמצאו תיקים התואמים את הסינון"
     },
+    "density": {
+      "label": "צפיפות שורות",
+      "compact": "צפוף",
+      "normal": "רגיל",
+      "comfortable": "מרווח"
+    },
     "savedViews": {
       "saved": "תצוגות שמורות",
       "saveCurrent": "שמור תצוגה נוכחית",

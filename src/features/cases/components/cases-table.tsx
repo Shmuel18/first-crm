@@ -10,6 +10,7 @@ import {
 } from '../domain/case-derivations';
 import { isFrozenCase, isRecentlyUpdated, isStuckCase } from '../domain/case-state';
 import { useCaseQueryFilter } from '../hooks/use-case-query-filter';
+import { useRowDensity } from '../hooks/use-row-density';
 import type { CaseWithRelations } from '../types';
 
 import { CaseTableRow, type CaseTableRowData } from './case-table-row';
@@ -29,6 +30,16 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
   const t = useTranslations('dashboard.columns');
   const tf = useTranslations('dashboard.filters');
   const filtered = useCaseQueryFilter(cases);
+  const density = useRowDensity();
+  // Row height is enforced on the CELLS (td height is reliable for tables;
+  // tr height is not), so every row is the same height regardless of whether a
+  // cell holds a tall logo or short text. Vertical-align centers the content.
+  const densityClass =
+    density === 'compact'
+      ? '[&_td]:h-10 [&_td]:py-1.5'
+      : density === 'comfortable'
+        ? '[&_td]:h-16 [&_td]:py-4'
+        : '[&_td]:h-14';
 
   if (filtered.length === 0) {
     return <p className="px-6 py-12 text-center text-sm text-neutral-500">{tf('noMatches')}</p>;
@@ -57,7 +68,7 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
             <Th>{t('shortNote')}</Th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className={densityClass}>
           {filtered.map((c, index) => (
             <CaseTableRow
               key={c.id}

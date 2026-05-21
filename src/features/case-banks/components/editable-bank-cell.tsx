@@ -10,6 +10,7 @@ import {
   calcDropdownPos,
   type DropdownPosition,
 } from '@/features/cases/components/dropdown-position';
+import { useRowDensity } from '@/features/cases/hooks/use-row-density';
 
 import { setPrimaryBankAction } from '../actions/set-primary-bank';
 
@@ -86,7 +87,7 @@ export function EditableBankCell({
         type="button"
         onClick={() => (open ? setOpen(false) : handleOpen())}
         disabled={isPending}
-        className="inline-flex items-center gap-2.5 cursor-pointer disabled:opacity-50 hover:bg-neutral-50 -mx-1 px-1 py-0.5 rounded-md transition"
+        className="inline-flex items-center gap-2.5 cursor-pointer disabled:opacity-50 hover:bg-neutral-50 -mx-1 px-1 rounded-md transition"
       >
         {bank ? (
           <>
@@ -156,7 +157,10 @@ export function EditableBankCell({
 }
 
 function BankAvatar({ bank, size }: { bank: BankOption; size: 'sm' | 'md' }) {
-  const sizeClass = size === 'md' ? 'size-9' : 'size-7';
+  const density = useRowDensity();
+  // Row height is enforced on the cells (see CasesTable), so the logo just has
+  // to fit: a touch smaller in the tight compact row, larger otherwise.
+  const sizeClass = size === 'md' && density === 'compact' ? 'size-6' : 'size-7';
   const fallbackText = size === 'md' ? 'text-[11px]' : 'text-[10px]';
   // Prefer a self-hosted logo at /public/banks/<key>.svg, then the stored
   // logo_url, then a branded monogram. onError advances to the next source.
@@ -176,7 +180,9 @@ function BankAvatar({ bank, size }: { bank: BankOption; size: 'sm' | 'md' }) {
           src={src}
           alt={bank.name_he}
           onError={() => setSrcIndex((i) => i + 1)}
-          className="max-w-[85%] max-h-[85%] object-contain"
+          // Fixed, reserved box (not content-sized) so loading / switching a
+          // logo never reflows the row — the image just fades into a stable box.
+          className="size-full object-contain p-0.5"
         />
       </span>
     );

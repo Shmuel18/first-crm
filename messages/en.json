@@ -115,6 +115,12 @@
       "clear": "Clear",
       "noMatches": "No cases match the current filters"
     },
+    "density": {
+      "label": "Row density",
+      "compact": "Compact",
+      "normal": "Normal",
+      "comfortable": "Comfortable"
+    },
     "savedViews": {
       "saved": "Saved views",
       "saveCurrent": "Save current view",
