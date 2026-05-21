@@ -1,6 +1,6 @@
 'use client';
 
-import { FileSpreadsheet, FileText } from 'lucide-react';
+import { FileSpreadsheet, FileText, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 
@@ -16,6 +16,7 @@ export function DashboardExportButtons() {
   const [error, setError] = useState<string | null>(null);
 
   const handleExport = (format: Format) => {
+    if (isPending) return; // block a second export without disabling the other button
     setError(null);
     setActiveFormat(format);
     startTransition(async () => {
@@ -39,14 +40,14 @@ export function DashboardExportButtons() {
     <div className="inline-flex items-center gap-2 relative">
       <ExportButton
         icon={FileSpreadsheet}
-        label={isPending && activeFormat === 'xlsx' ? t('exporting') : t('exportExcel')}
-        disabled={isPending}
+        label={t('exportExcel')}
+        loading={isPending && activeFormat === 'xlsx'}
         onClick={() => handleExport('xlsx')}
       />
       <ExportButton
         icon={FileText}
-        label={isPending && activeFormat === 'pdf' ? t('exporting') : t('exportPdf')}
-        disabled={isPending}
+        label={t('exportPdf')}
+        loading={isPending && activeFormat === 'pdf'}
         onClick={() => handleExport('pdf')}
       />
       {error && (
@@ -61,22 +62,23 @@ export function DashboardExportButtons() {
 function ExportButton({
   icon: Icon,
   label,
-  disabled,
+  loading,
   onClick,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
-  disabled: boolean;
+  loading: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
-      disabled={disabled}
+      disabled={loading}
       onClick={onClick}
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 text-xs text-neutral-700 hover:bg-neutral-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+      aria-busy={loading}
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 text-xs text-neutral-700 hover:bg-neutral-50 transition"
     >
-      <Icon className="size-3.5" />
+      {loading ? <Loader2 className="size-3.5 animate-spin" /> : <Icon className="size-3.5" />}
       {label}
     </button>
   );
