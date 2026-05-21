@@ -23,6 +23,12 @@ export const env = createEnv({
     // Secret for the nightly backup cron. OPTIONAL: when unset, the cron route
     // rejects every call, so the endpoint can't be triggered by anyone.
     CRON_SECRET: z.string().optional(),
+    // Key for encrypting office_integrations OAuth tokens at rest (AES-256-GCM).
+    // OPTIONAL so it can't break a live deploy: when unset, tokens are stored
+    // as-is (legacy) and reads pass through. Set any string >=16 chars (a 32+
+    // char random value is best) to activate encryption — tokens then encrypt
+    // on the next write/refresh; existing plaintext keeps working.
+    INTEGRATION_ENCRYPTION_KEY: z.string().min(16).optional(),
   },
   client: {
     NEXT_PUBLIC_SUPABASE_URL: z.string().url('NEXT_PUBLIC_SUPABASE_URL must be a valid URL'),
@@ -41,6 +47,7 @@ export const env = createEnv({
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     EMAIL_FROM: process.env.EMAIL_FROM,
     CRON_SECRET: process.env.CRON_SECRET,
+    INTEGRATION_ENCRYPTION_KEY: process.env.INTEGRATION_ENCRYPTION_KEY,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,

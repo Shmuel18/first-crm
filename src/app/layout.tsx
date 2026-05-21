@@ -5,7 +5,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
-import { getDirection, type Locale } from '@/lib/i18n/direction';
+import { getDirection, parseLocale } from '@/lib/i18n/direction';
 
 import './globals.css';
 
@@ -41,7 +41,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const locale = (await getLocale()) as Locale;
+  const locale = parseLocale(await getLocale());
   const messages = await getMessages();
   const dir = getDirection(locale);
 

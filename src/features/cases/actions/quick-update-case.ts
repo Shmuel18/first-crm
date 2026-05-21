@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
-import { userCanEditCase } from '@/lib/auth/permissions';
+import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import type { Database } from '@/types/database';
 
@@ -44,6 +44,16 @@ export async function quickUpdateCaseFieldAction(
   // it). RLS is enforced too, but this fails fast and keeps a view-only role
   // from relying on RLS alone.
   if (!(await userCanEditCase(caseId))) {
+    return { ok: false, error: 'unauthorized' };
+  }
+
+  // Granular gates: these dedicated permissions (migration 002) are NOT implied
+  // by generic edit, so enforce them server-side — a role with edit but without
+  // these can't change status / reassign via the inline cells.
+  if (field === 'status_id' && !(await userHasPermission('change_case_status'))) {
+    return { ok: false, error: 'unauthorized' };
+  }
+  if (field === 'assigned_advisor_id' && !(await userHasPermission('assign_case_to_user'))) {
     return { ok: false, error: 'unauthorized' };
   }
 

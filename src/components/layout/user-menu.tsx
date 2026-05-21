@@ -9,7 +9,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { logoutAction } from '@/features/auth/actions/logout';
 import { switchLocaleAction } from '@/features/auth/actions/switch-locale';
 
-import type { Locale } from '@/lib/i18n/direction';
+import { parseLocale, type Locale } from '@/lib/i18n/direction';
 
 type UserMenuProps = {
   fullName: string;
@@ -19,7 +19,7 @@ type UserMenuProps = {
 
 export function UserMenu({ fullName, initials, roleName }: UserMenuProps) {
   const t = useTranslations('topbar.userMenu');
-  const currentLocale = useLocale() as Locale;
+  const currentLocale = parseLocale(useLocale());
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const menuRef = useRef<HTMLDivElement>(null);

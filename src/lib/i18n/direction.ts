@@ -16,3 +16,16 @@ export function getDirection(locale: Locale): Direction {
 
 export const SUPPORTED_LOCALES: readonly Locale[] = ['he', 'en'] as const;
 export const DEFAULT_LOCALE: Locale = 'he';
+
+/**
+ * Narrows an arbitrary value (a cookie, or next-intl's getLocale()/useLocale()
+ * which are typed as plain string) to a supported Locale, falling back to the
+ * default. This is the single, justified narrowing point so call sites never
+ * need an unchecked `as Locale`.
+ */
+export function parseLocale(value: unknown): Locale {
+  // Safe cast: only reached after verifying value is one of SUPPORTED_LOCALES.
+  return typeof value === 'string' && (SUPPORTED_LOCALES as readonly string[]).includes(value)
+    ? (value as Locale)
+    : DEFAULT_LOCALE;
+}

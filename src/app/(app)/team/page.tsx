@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/shared/page-header';
 import { TeamTable } from '@/features/team/components/team-table';
 import { listRoles, listTeamMembers } from '@/features/team/services/team.service';
 import { createClient } from '@/lib/supabase/server';
-import type { Locale } from '@/lib/i18n/direction';
+import { parseLocale } from '@/lib/i18n/direction';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('team');
@@ -24,7 +24,7 @@ export default async function TeamPage() {
   if (isAdmin !== true) redirect('/cases');
 
   const t = await getTranslations('team');
-  const locale = (await getLocale()) as Locale;
+  const locale = parseLocale(await getLocale());
 
   const [members, roles] = await Promise.all([listTeamMembers(), listRoles()]);
 

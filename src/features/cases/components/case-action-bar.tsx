@@ -13,7 +13,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { BackArrow } from '@/components/shared/back-arrow';
 import { CaseActionTaskButton } from '@/features/tasks/components/case-action-task-button';
 import { listAssignableProfiles } from '@/features/tasks/services/tasks.service';
-import type { Locale } from '@/lib/i18n/direction';
+import { parseLocale } from '@/lib/i18n/direction';
 
 import { CaseMoreMenu } from './case-more-menu';
 import { CaseStatusBadge } from './case-status-badge';
@@ -50,7 +50,7 @@ export async function CaseActionBar({
 }: ActionBarProps) {
   const t = await getTranslations('case.actionBar');
   const tc = await getTranslations('common');
-  const locale = (await getLocale()) as Locale;
+  const locale = parseLocale(await getLocale());
   const assignees = await listAssignableProfiles();
 
   return (

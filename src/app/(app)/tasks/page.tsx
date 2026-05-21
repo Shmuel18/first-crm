@@ -29,7 +29,7 @@ import {
 } from '@/features/tasks/types';
 import { createClient } from '@/lib/supabase/server';
 import { asCaseId } from '@/lib/types/branded';
-import type { Locale } from '@/lib/i18n/direction';
+import { parseLocale } from '@/lib/i18n/direction';
 
 type SearchParams = Promise<{
   view?: string;
@@ -58,7 +58,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
   const display: 'board' | 'list' = sp.display === 'list' ? 'list' : 'board';
 
   const t = await getTranslations('tasks');
-  const locale = (await getLocale()) as Locale;
+  const locale = parseLocale(await getLocale());
 
   const supabase = await createClient();
   const { data: isAdmin } = await supabase.rpc('is_admin');

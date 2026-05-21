@@ -1,3 +1,5 @@
+import { timingSafeEqual } from 'node:crypto';
+
 import { NextResponse } from 'next/server';
 
 import { buildBackupSnapshot } from '@/features/backup/services/backup-snapshot.service';
@@ -20,7 +22,9 @@ export async function GET(request: Request): Promise<Response> {
   if (!env.CRON_SECRET) {
     return NextResponse.json({ ok: false, error: 'not_configured' }, { status: 503 });
   }
-  if (request.headers.get('authorization') !== `Bearer ${env.CRON_SECRET}`) {
+  const provided = Buffer.from(request.headers.get('authorization') ?? '');
+  const expected = Buffer.from(`Bearer ${env.CRON_SECRET}`);
+  if (provided.length !== expected.length || !timingSafeEqual(provided, expected)) {
     return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
   }
 

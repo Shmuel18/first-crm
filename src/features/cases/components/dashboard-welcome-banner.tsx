@@ -1,6 +1,6 @@
 import { useLocale, useTranslations } from 'next-intl';
 
-import type { Locale } from '@/lib/i18n/direction';
+import { parseLocale } from '@/lib/i18n/direction';
 
 import { getGreetingKey } from '../domain/greeting';
 
@@ -10,7 +10,7 @@ type Props = {
 
 export function DashboardWelcomeBanner({ firstName }: Props) {
   const t = useTranslations('dashboard');
-  const locale = useLocale() as Locale;
+  const locale = parseLocale(useLocale());
   const greetingKey = getGreetingKey();
 
   return (

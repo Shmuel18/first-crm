@@ -8,7 +8,7 @@ import {
   getPrimaryBorrowerNationalId,
   getSecondaryBanksCount,
 } from '../domain/case-derivations';
-import { isFrozenCase, isRecentlyUpdated, isStuckCase } from '../domain/case-state';
+import { isFrozenCase, isStuckCase } from '../domain/case-state';
 import { useCaseQueryFilter } from '../hooks/use-case-query-filter';
 import { useRowDensity } from '../hooks/use-row-density';
 import type { CaseWithRelations } from '../types';
@@ -122,7 +122,6 @@ function toRowData(c: CaseWithRelations, index: number): CaseTableRowData {
     shortNote: c.short_note ?? null,
     isStuck: isStuckCase(c),
     isFrozen: isFrozenCase(c),
-    isRecent: isRecentlyUpdated(c),
     updatedAt: c.updated_at,
   };
 }

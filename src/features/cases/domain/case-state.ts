@@ -11,11 +11,6 @@ export function isFrozenCase(c: { status: { key: string } | null }): boolean {
   return c.status?.key === 'on_hold' || c.status?.key === 'closed';
 }
 
-export function isRecentlyUpdated(c: { updated_at: string }, withinHours = 24): boolean {
-  const diff = Date.now() - new Date(c.updated_at).getTime();
-  return diff / 3_600_000 < withinHours;
-}
-
 export function getInitials(
   first: string | null | undefined,
   last: string | null | undefined,

@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-import { toggleArchiveAction } from '../actions/delete-case';
+import { toggleArchiveAction } from '../actions/toggle-archive';
 
 type Props = {
   caseId: string;

@@ -7,7 +7,7 @@ import { BackArrow } from '@/components/shared/back-arrow';
 import { AuditLogTable } from '@/features/audit/components/audit-log-table';
 import { listAuditEntriesForCase } from '@/features/audit/services/audit.service';
 import { getCaseById } from '@/features/cases/services/cases.service';
-import type { Locale } from '@/lib/i18n/direction';
+import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
 
 type Props = { params: Promise<{ id: string }> };
@@ -20,7 +20,7 @@ export default async function CaseHistoryPage({ params }: Props) {
 
   const t = await getTranslations('case');
   const tc = await getTranslations('common');
-  const locale = (await getLocale()) as Locale;
+  const locale = parseLocale(await getLocale());
   const entries = await listAuditEntriesForCase(caseId);
 
   return (

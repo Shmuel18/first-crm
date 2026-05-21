@@ -11,11 +11,11 @@ import {
   listRecentNotifications,
 } from '@/features/notifications/services/notifications.service';
 import { getMyProfile } from '@/features/settings/services/settings.service';
-import type { Locale } from '@/lib/i18n/direction';
+import { parseLocale } from '@/lib/i18n/direction';
 
 export async function Topbar() {
   const t = await getTranslations('topbar');
-  const locale = (await getLocale()) as Locale;
+  const locale = parseLocale(await getLocale());
 
   const [profile, unread, notifications] = await Promise.all([
     getMyProfile(),

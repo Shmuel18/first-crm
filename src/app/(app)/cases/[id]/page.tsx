@@ -28,7 +28,7 @@ import type { CaseBlocker, InsuranceStatus } from '@/features/cases/schemas/case
 import { getCaseById } from '@/features/cases/services/cases.service';
 import { CaseTasksBlock } from '@/features/tasks/components/case-tasks-block';
 import { isCurrentUserAdmin, userHasPermission } from '@/lib/auth/permissions';
-import type { Locale } from '@/lib/i18n/direction';
+import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
 import { sanitizeRichTextHtml } from '@/lib/utils/sanitize-html';
 
@@ -71,8 +71,7 @@ export default async function CaseDetailPage({ params }: Props) {
   const ltv = calculateLtv(caseData.property_value, caseData.requested_mortgage_amount);
   const ltvAccent = ltv !== null ? bandToAccent(ltvBand(ltv)) : undefined;
 
-  // getLocale() returns string; the app locale is always the he|en union.
-  const locale = (await getLocale()) as Locale;
+  const locale = parseLocale(await getLocale());
 
   return (
     <div className="space-y-5 -mt-6">

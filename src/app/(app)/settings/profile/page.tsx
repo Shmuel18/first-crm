@@ -4,14 +4,14 @@ import { getLocale, getTranslations } from 'next-intl/server';
 
 import { ProfileForm } from '@/features/settings/components/profile-form';
 import { getMyProfile } from '@/features/settings/services/settings.service';
-import type { Locale } from '@/lib/i18n/direction';
+import { parseLocale } from '@/lib/i18n/direction';
 
 export default async function ProfileSettingsPage() {
   const profile = await getMyProfile();
   if (!profile) redirect('/login');
 
   const t = await getTranslations('settings.profile');
-  const locale = (await getLocale()) as Locale;
+  const locale = parseLocale(await getLocale());
   const roleName =
     (locale === 'he' ? profile.roleNameHe : profile.roleNameEn) ?? '';
 

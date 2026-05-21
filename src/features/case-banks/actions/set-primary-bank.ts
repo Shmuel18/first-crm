@@ -22,8 +22,8 @@ export async function setPrimaryBankAction(
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
 
   // Defense-in-depth: caller must be able to edit the case. The RPC is
-  // SECURITY DEFINER (migration 021) so it bypasses RLS — this is the only
-  // app-layer authorization gate.
+  // SECURITY INVOKER (migration 021), so case_banks RLS still applies
+  // underneath; this app-layer check just fails fast before the RPC call.
   if (!(await userCanEditCase(caseId))) return { ok: false, error: 'unauthorized' };
 
   // RPC handles bankId === null internally (clears primary). Supabase types

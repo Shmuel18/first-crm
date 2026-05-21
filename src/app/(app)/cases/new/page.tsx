@@ -10,12 +10,12 @@ import {
   listCaseTypeOptions,
 } from '@/features/cases/services/case-lookups.service';
 import { isCurrentUserAdmin } from '@/lib/auth/permissions';
-import type { Locale } from '@/lib/i18n/direction';
+import { parseLocale } from '@/lib/i18n/direction';
 
 export default async function NewCasePage() {
   const t = await getTranslations('case.form');
   const tc = await getTranslations('common');
-  const locale = (await getLocale()) as Locale;
+  const locale = parseLocale(await getLocale());
 
   const [caseTypes, statuses, advisors, canSeeFinancials] = await Promise.all([
     listCaseTypeOptions(),

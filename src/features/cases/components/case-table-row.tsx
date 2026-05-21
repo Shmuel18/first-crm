@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from 'next-intl';
 
 import { EditableBankCell } from '@/features/case-banks/components/editable-bank-cell';
 
-import type { Locale } from '@/lib/i18n/direction';
+import { parseLocale } from '@/lib/i18n/direction';
 
 import { EditableAdvisorCell } from './editable-advisor-cell';
 import { EditableStatusCell } from './editable-status-cell';
@@ -31,7 +31,6 @@ export type CaseTableRowData = {
   shortNote: string | null;
   isStuck: boolean;
   isFrozen: boolean;
-  isRecent: boolean;
   updatedAt: string;
 };
 
@@ -45,7 +44,7 @@ type Props = {
 export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }: Props) {
   const router = useRouter();
   const t = useTranslations('dashboard.rowState');
-  const locale = useLocale() as Locale;
+  const locale = parseLocale(useLocale());
 
   // Excel-style: subtle divider + zebra + breathing room
   const rowClasses = [

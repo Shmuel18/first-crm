@@ -1,3 +1,5 @@
+import { decryptWithKey, encryptWithKey } from '@/lib/crypto/secrets';
+import { env } from '@/lib/env';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 
@@ -7,6 +9,19 @@ import type {
   IntegrationRow,
   IntegrationStatus,
 } from '../types';
+
+// OAuth tokens are encrypted at rest when INTEGRATION_ENCRYPTION_KEY is set.
+// Legacy plaintext rows decrypt as a no-op, so enabling the key is non-breaking;
+// tokens encrypt on the next write/refresh.
+function encryptToken<T extends string | null | undefined>(value: T): T {
+  if (typeof value !== 'string' || !env.INTEGRATION_ENCRYPTION_KEY) return value;
+  return encryptWithKey(value, env.INTEGRATION_ENCRYPTION_KEY) as T;
+}
+
+function decryptToken<T extends string | null | undefined>(value: T): T {
+  if (typeof value !== 'string' || !env.INTEGRATION_ENCRYPTION_KEY) return value;
+  return decryptWithKey(value, env.INTEGRATION_ENCRYPTION_KEY) as T;
+}
 
 // office_integrations is admin-only under RLS, but Drive upload/sync are run by
 // non-admin advisors (authorized upstream via userCanEditCase + upload
@@ -25,6 +40,10 @@ export async function getIntegration(
     .maybeSingle();
 
   if (error) throw error;
+  if (data) {
+    data.refresh_token = decryptToken(data.refresh_token);
+    data.access_token = decryptToken(data.access_token);
+  }
   return data;
 }
 
@@ -84,8 +103,8 @@ export async function upsertIntegration(input: UpsertIntegrationInput): Promise<
   if (input.connectedEmail !== undefined) payload.connected_email = input.connectedEmail;
   if (input.connectedExternalUserId !== undefined)
     payload.connected_external_user_id = input.connectedExternalUserId;
-  if (input.refreshToken !== undefined) payload.refresh_token = input.refreshToken;
-  if (input.accessToken !== undefined) payload.access_token = input.accessToken;
+  if (input.refreshToken !== undefined) payload.refresh_token = encryptToken(input.refreshToken);
+  if (input.accessToken !== undefined) payload.access_token = encryptToken(input.accessToken);
   if (input.tokenExpiresAt !== undefined) payload.token_expires_at = input.tokenExpiresAt;
   if (input.scopes !== undefined) payload.scopes = input.scopes;
   if (input.connectedBy !== undefined) payload.connected_by = input.connectedBy;
@@ -129,7 +148,7 @@ export async function persistRefreshedAccessToken(
   const supabase = createAdminClient();
   const { error } = await supabase
     .from('office_integrations')
-    .update({ access_token: accessToken, token_expires_at: tokenExpiresAt })
+    .update({ access_token: encryptToken(accessToken), token_expires_at: tokenExpiresAt })
     .eq('provider', provider);
   if (error) throw error;
 }

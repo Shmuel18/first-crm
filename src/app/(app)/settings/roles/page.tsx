@@ -5,14 +5,14 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { RolesPermissionsEditor } from '@/features/settings/components/roles-permissions-editor';
 import { getRolesPermissions } from '@/features/settings/services/permissions.service';
 import { isCurrentUserAdmin } from '@/lib/auth/permissions';
-import type { Locale } from '@/lib/i18n/direction';
+import { parseLocale } from '@/lib/i18n/direction';
 
 export default async function RolesSettingsPage() {
   if (!(await isCurrentUserAdmin())) redirect('/settings/profile');
 
   const { roles, permissions, granted } = await getRolesPermissions();
   const t = await getTranslations('settings.roles');
-  const locale = (await getLocale()) as Locale;
+  const locale = parseLocale(await getLocale());
 
   return (
     <div className="max-w-3xl">

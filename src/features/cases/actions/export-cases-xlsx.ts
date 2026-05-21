@@ -6,7 +6,7 @@ import { logCasesExport } from '@/features/audit/services/audit-writer';
 import { listCases } from '@/features/cases/services/cases.service';
 import { buildExportRows } from '@/features/cases/services/export/build-export-rows';
 import { generateCasesXlsx } from '@/features/cases/services/export/xlsx-generator';
-import type { Locale } from '@/lib/i18n/direction';
+import { parseLocale } from '@/lib/i18n/direction';
 import { createClient } from '@/lib/supabase/server';
 import { dateStamp } from '@/lib/utils/date-stamp';
 
@@ -32,7 +32,7 @@ export async function exportCasesXlsxAction(): Promise<ExportResult> {
     const cases = await listCases({ isArchived: false });
     if (cases.length === 0) return { ok: false, error: 'empty' };
 
-    const locale = (await getLocale()) as Locale;
+    const locale = parseLocale(await getLocale());
     const t = await getTranslations({ locale, namespace: 'dashboard' });
     const rows = buildExportRows(cases, locale);
 

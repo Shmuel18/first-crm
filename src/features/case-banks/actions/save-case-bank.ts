@@ -102,7 +102,8 @@ export async function deleteCaseBankAction(
   // for audit and lets retention purge clean it up later.
   const { data: deleted, error } = await supabase
     .from('case_banks')
-    .update({ deleted_at: new Date().toISOString(), updated_by: userRes.user.id })
+    // Clear is_primary on removal so a deleted row is never left flagged primary.
+    .update({ deleted_at: new Date().toISOString(), is_primary: false, updated_by: userRes.user.id })
     .eq('id', caseBankId)
     .eq('case_id', caseId)
     .is('deleted_at', null)

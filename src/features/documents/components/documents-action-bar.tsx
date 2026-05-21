@@ -14,7 +14,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { BackArrow } from '@/components/shared/back-arrow';
-import type { Locale } from '@/lib/i18n/direction';
+import { parseLocale } from '@/lib/i18n/direction';
 
 import { syncDriveDocumentsAction } from '../actions/sync-drive-documents';
 import { SendDocRequestButton } from './send-doc-request-button';
@@ -38,7 +38,7 @@ export function DocumentsActionBar({
   const tPage = useTranslations('documents');
   const tCase = useTranslations('case.actionBar');
   const tSync = useTranslations('documents.sync');
-  const locale = useLocale() as Locale;
+  const locale = parseLocale(useLocale());
   const [isPending, startTransition] = useTransition();
 
   const handleSync = () =>

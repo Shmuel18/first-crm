@@ -62,13 +62,19 @@ export async function changeTaskStatusAction(taskId: string, status: string): Pr
     existing.created_by &&
     existing.created_by !== userId
   ) {
-    await sendTaskNotificationEmail({
-      recipientId: existing.created_by,
-      actorId: userId,
-      kind: 'task_completed',
-      taskTitle: existing.title,
-      caseId: existing.case_id,
-    });
+    // Best-effort: the status change already committed, so a notification
+    // failure must not surface as a failed action (which would prompt a retry).
+    try {
+      await sendTaskNotificationEmail({
+        recipientId: existing.created_by,
+        actorId: userId,
+        kind: 'task_completed',
+        taskTitle: existing.title,
+        caseId: existing.case_id,
+      });
+    } catch (err) {
+      console.error('task-completed notification failed', err);
+    }
   }
 
   revalidatePath('/tasks');
