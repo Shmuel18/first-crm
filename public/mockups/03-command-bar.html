@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<title>3 · Command bar</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@500;700;900&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body { font-family: 'Heebo', system-ui, sans-serif; background: #fafafa; }
+  .font-display { font-family: 'Frank Ruhl Libre', serif; }
+  .brand-logo { background:linear-gradient(135deg,#C9A961,#E8C77B); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .btn-gold { background:linear-gradient(135deg,#C9A961,#B8945A); color:#0A0A0A; font-weight:700; }
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-thumb { background-color: rgba(10,10,10,.22); background-clip: padding-box; border: 3px solid transparent; border-radius: 999px; min-height: 48px; }
+  *::-webkit-scrollbar-thumb:hover { background-color: rgba(168,136,64,.6); }
+  *::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+  html, body { height: 100dvh; overflow: hidden; }
+  kbd { font-family: ui-monospace, 'Cascadia Code', monospace; font-size: 10px; padding: 1px 5px; border: 1px solid #d4d4d4; border-bottom-width: 2px; border-radius: 4px; background: #fafafa; color: #525252; }
+</style>
+</head>
+<body class="text-neutral-900">
+
+<header class="h-16 bg-[#0A0A0A] text-white sticky top-0 z-30 flex items-center px-4 gap-3">
+  <span class="brand-logo font-display text-2xl tracking-widest">KFG</span>
+  <div class="ms-auto flex items-center gap-2">
+    <button class="btn-gold inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm">
+      <i data-lucide="plus" class="size-4"></i><span class="hidden md:inline">פתיחת תיק חדש</span>
+    </button>
+    <button class="relative size-10 rounded-lg border border-[#333] hover:border-[#C9A961] flex items-center justify-center">
+      <i data-lucide="bell" class="size-4"></i>
+      <span class="absolute -top-1 -end-1 min-w-4 h-4 px-1 rounded-full bg-[#C9A961] text-[#0A0A0A] text-[10px] font-bold flex items-center justify-center">3</span>
+    </button>
+    <button class="flex items-center gap-2.5 px-3 py-1.5 border border-[#333] rounded-lg">
+      <span class="size-8 rounded-full btn-gold flex items-center justify-center font-bold text-xs">מק</span>
+      <span class="hidden md:flex flex-col leading-tight items-start">
+        <span class="text-xs font-medium">משה קופמן</span>
+        <span class="text-[10px] text-neutral-300">מנהל</span>
+      </span>
+    </button>
+  </div>
+</header>
+
+<aside class="hidden md:flex flex-col w-16 bg-[#0A0A0A] fixed end-0 top-16 bottom-0 z-20 border-s border-neutral-900 py-3">
+  <nav class="flex-1 flex flex-col gap-1 px-2">
+    <a class="h-12 rounded-lg flex items-center justify-center bg-[#C9A961]/20 text-[#E8C77B]"><i data-lucide="layout-dashboard" class="size-5"></i></a>
+    <a class="h-12 rounded-lg flex items-center justify-center text-neutral-300"><i data-lucide="check-square" class="size-5"></i></a>
+    <a class="h-12 rounded-lg flex items-center justify-center text-neutral-300"><i data-lucide="users" class="size-5"></i></a>
+    <a class="h-12 rounded-lg flex items-center justify-center text-neutral-300"><i data-lucide="message-square" class="size-5"></i></a>
+    <a class="h-12 rounded-lg flex items-center justify-center text-neutral-300"><i data-lucide="scroll-text" class="size-5"></i></a>
+  </nav>
+  <a class="h-12 mx-2 rounded-lg flex items-center justify-center text-neutral-300"><i data-lucide="settings" class="size-5"></i></a>
+</aside>
+
+<main class="me-16 h-[calc(100dvh-4rem)] overflow-y-auto">
+  <div class="bg-white">
+
+    <!-- HEADER: greeting + Cmd+K invitation + secondary actions -->
+    <div class="bg-white px-6 py-3 border-b border-neutral-200 flex items-center gap-3">
+      <h1 class="font-display text-base font-medium text-neutral-800">
+        צהריים טובים, <span class="text-[#A88840]">משה</span>
+      </h1>
+
+      <!-- The Cmd+K pseudo-input — visually a search but acts as an opener -->
+      <button class="ms-4 flex-1 max-w-lg flex items-center gap-2 px-3 py-1.5 rounded-md border border-neutral-200 bg-neutral-50 text-sm text-neutral-500 hover:bg-white hover:border-[#A88840]">
+        <i data-lucide="search" class="size-4"></i>
+        <span class="flex-1 text-start">חיפוש מהיר, פעולה או ניווט…</span>
+        <kbd>Ctrl K</kbd>
+      </button>
+
+      <div class="ms-auto flex items-center gap-1.5">
+        <button class="size-8 rounded-md text-neutral-700 hover:bg-neutral-100 inline-flex items-center justify-center" title="צפיפות">
+          <i data-lucide="rows-3" class="size-4"></i>
+        </button>
+        <button class="size-8 rounded-md text-neutral-700 hover:bg-neutral-100 inline-flex items-center justify-center" title="תצוגות שמורות">
+          <i data-lucide="bookmark" class="size-4"></i>
+        </button>
+        <button class="size-8 rounded-md text-neutral-700 hover:bg-neutral-100 inline-flex items-center justify-center" title="ייצוא">
+          <i data-lucide="download" class="size-4"></i>
+        </button>
+        <button class="size-8 rounded-md text-neutral-700 hover:bg-neutral-100 inline-flex items-center justify-center" title="עוד">
+          <i data-lucide="more-horizontal" class="size-4"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- TABS as a tall vertical bar | filter-as-sentence -->
+    <div class="bg-white px-6 py-2.5 border-b border-neutral-200">
+      <!-- Tab indicators with vertical bar markers -->
+      <div class="flex items-baseline gap-5 mb-2">
+        <button class="font-display text-base font-semibold text-[#0A0A0A] relative">
+          תיקים פעילים
+          <span class="ms-1 text-xs text-neutral-500 font-sans font-medium">46</span>
+          <span class="absolute -bottom-2 inset-x-0 h-0.5 bg-[#A88840] rounded-full"></span>
+        </button>
+        <button class="font-display text-base text-neutral-500 hover:text-neutral-700">
+          לידים <span class="text-xs text-neutral-400 font-sans">1</span>
+        </button>
+        <button class="font-display text-base text-neutral-500 hover:text-neutral-700">
+          ארכיון <span class="text-xs text-neutral-400 font-sans">1</span>
+        </button>
+      </div>
+
+      <!-- Filters as a readable sentence -->
+      <div class="text-xs text-neutral-600 leading-relaxed">
+        מציג
+        <button class="text-neutral-900 font-medium border-b border-dashed border-neutral-400 hover:border-[#A88840]">כל היועצים</button>
+        ·
+        <button class="text-neutral-900 font-medium border-b border-dashed border-neutral-400 hover:border-[#A88840]">כל השלבים</button>
+        ·
+        <button class="text-neutral-900 font-medium border-b border-dashed border-neutral-400 hover:border-[#A88840]">כל הבנקים</button>
+        ·
+        <button class="text-neutral-900 font-medium border-b border-dashed border-neutral-400 hover:border-[#A88840]">ללא גורם מעכב</button>
+        <span class="mx-2 text-neutral-300">|</span>
+        <label class="inline-flex items-center gap-1 cursor-pointer">
+          <input type="checkbox" checked class="size-3 accent-[#A88840]" />
+          <span>הסתר בוצעו והוקפאו</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <table class="w-full table-fixed min-w-[1100px]">
+      <colgroup>
+        <col class="w-12" /><col class="w-52" /><col class="w-32" /><col class="w-48" /><col class="w-44" /><col class="w-44" /><col />
+      </colgroup>
+      <thead class="bg-neutral-100 border-b-2 border-neutral-300">
+        <tr>
+          <th class="text-start text-xs font-semibold text-neutral-600 uppercase tracking-wider px-4 py-3">#</th>
+          <th class="text-start text-xs font-semibold text-neutral-600 uppercase tracking-wider px-4 py-3">שם לקוח</th>
+          <th class="text-start text-xs font-semibold text-neutral-600 uppercase tracking-wider px-4 py-3">ת״ז / דרכון</th>
+          <th class="text-start text-xs font-semibold text-neutral-600 uppercase tracking-wider px-4 py-3">שלב</th>
+          <th class="text-start text-xs font-semibold text-neutral-600 uppercase tracking-wider px-4 py-3">בנק</th>
+          <th class="text-start text-xs font-semibold text-neutral-600 uppercase tracking-wider px-4 py-3">יועץ</th>
+          <th class="text-start text-xs font-semibold text-neutral-600 uppercase tracking-wider px-4 py-3">הערה</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-b border-neutral-100 hover:bg-neutral-50/60">
+          <td class="px-4 py-3 text-xs text-neutral-600 tabular-nums">1</td>
+          <td class="px-4 py-3 text-sm font-medium text-neutral-900">נתן הלוי</td>
+          <td class="px-4 py-3 text-xs text-neutral-700 tabular-nums" dir="ltr">075-009-211</td>
+          <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px]" style="background:#fef3c7;color:#92400e">איסוף מסמכים</span></td>
+          <td class="px-4 py-3 text-sm text-neutral-700">מזרחי טפחות</td>
+          <td class="px-4 py-3 text-sm text-neutral-700">משה ק׳</td>
+          <td class="px-4 py-3 text-xs text-neutral-500 truncate">חוזר ביום ב׳</td>
+        </tr>
+        <tr class="border-b border-neutral-100 hover:bg-neutral-50/60">
+          <td class="px-4 py-3 text-xs text-neutral-600 tabular-nums">2</td>
+          <td class="px-4 py-3 text-sm font-medium text-neutral-900">שירה כהן</td>
+          <td class="px-4 py-3 text-xs text-neutral-700 tabular-nums" dir="ltr">311-554-228</td>
+          <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px]" style="background:#dbeafe;color:#1e40af">הוגש לבנק</span></td>
+          <td class="px-4 py-3 text-sm text-neutral-700">הפועלים</td>
+          <td class="px-4 py-3 text-sm text-neutral-700">דנ׳</td>
+          <td class="px-4 py-3 text-xs text-neutral-500 truncate">ממתינה לתלוש 106</td>
+        </tr>
+        <tr class="border-b border-neutral-100 hover:bg-neutral-50/60">
+          <td class="px-4 py-3 text-xs text-neutral-600 tabular-nums">3</td>
+          <td class="px-4 py-3 text-sm font-medium text-neutral-900">אברהם מזרחי</td>
+          <td class="px-4 py-3 text-xs text-neutral-700 tabular-nums" dir="ltr">228-119-441</td>
+          <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px]" style="background:#dcfce7;color:#166534">אושר עקרונית</span></td>
+          <td class="px-4 py-3 text-sm text-neutral-700">דיסקונט</td>
+          <td class="px-4 py-3 text-sm text-neutral-700">משה ק׳</td>
+          <td class="px-4 py-3 text-xs text-neutral-500 truncate">פגישה ביום ה׳ בבנק</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script>lucide.createIcons();</script>
+</body>
+</html>

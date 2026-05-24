@@ -1,6 +1,6 @@
 'use client';
 
-import { Archive, FolderOpen, Search, Sprout } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { parseAsString, parseAsStringEnum, useQueryState } from 'nuqs';
 
@@ -31,23 +31,27 @@ export function DashboardViewSelector({
 
   return (
     <div className="bg-white px-6 py-2.5 border-b border-neutral-200 flex items-center gap-3 flex-wrap">
-      <div className="flex gap-2">
+      {/* Segmented control: one shared track, active tab is a dark pill, the
+          inactive tabs are flat text. Replaces the previous three individual
+          bordered pills. */}
+      <div
+        role="tablist"
+        aria-label={t('active')}
+        className="inline-flex items-center bg-neutral-100 rounded-lg p-0.5"
+      >
         <ViewTab
-          icon={FolderOpen}
           label={t('active')}
           count={activeCount}
           active={view === 'active'}
           onClick={() => setView('active')}
         />
         <ViewTab
-          icon={Sprout}
           label={t('leads')}
           count={leadsCount}
           active={view === 'leads'}
           onClick={() => setView('leads')}
         />
         <ViewTab
-          icon={Archive}
           label={t('archive')}
           count={archivedCount}
           active={view === 'archive'}
@@ -77,13 +81,11 @@ export function DashboardViewSelector({
 }
 
 function ViewTab({
-  icon: Icon,
   label,
   count,
   active,
   onClick,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
   label: string;
   count: number;
   active?: boolean;
@@ -92,21 +94,23 @@ function ViewTab({
   return (
     <button
       type="button"
+      role="tab"
+      aria-selected={active}
       onClick={onClick}
-      aria-pressed={active}
       className={[
-        'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition',
+        'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50',
         active
-          ? 'bg-[#0A0A0A] text-white'
-          : 'bg-neutral-50 border border-neutral-200 text-neutral-600 hover:border-[#C9A961] hover:text-[#0A0A0A]',
+          ? 'bg-[#0A0A0A] text-white shadow-sm'
+          : 'text-neutral-700 hover:text-[#0A0A0A] hover:bg-white/70',
       ].join(' ')}
     >
-      <Icon className="size-4" />
       <span>{label}</span>
       {count > 0 && (
         <span
+          aria-hidden="true"
           className={[
-            'inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[10px] font-bold',
+            'inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[10px] font-bold tabular-nums',
             active ? 'bg-[#C9A961] text-[#0A0A0A]' : 'bg-neutral-200 text-neutral-700',
           ].join(' ')}
         >
