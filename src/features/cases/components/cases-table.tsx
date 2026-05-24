@@ -66,6 +66,23 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
     [filtered, sortCol, sortDir, statusOptions],
   );
 
+  // Chronological rank within the filtered set: newest case = #1, oldest = #N.
+  // The number is a property of the case (not the row position), so when the
+  // user flips the sort direction the same case keeps the same number — it
+  // just moves up or down the page. That's how you can tell at a glance
+  // which way the sort is pointed.
+  const chronoRank = useMemo(() => {
+    const byCreated = [...filtered].sort((a, b) => {
+      const ac = a.created_at ?? '';
+      const bc = b.created_at ?? '';
+      if (ac === bc) return 0;
+      return ac > bc ? -1 : 1; // DESC
+    });
+    const map = new Map<string, number>();
+    byCreated.forEach((c, idx) => map.set(c.id, idx + 1));
+    return map;
+  }, [filtered]);
+
   const densityClass =
     density === 'compact'
       ? '[&_td]:h-10 [&_td]:py-1.5'
@@ -100,7 +117,8 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
       <table className="w-full table-fixed min-w-[1100px]">
         <caption className="sr-only">{tf('tableCaption', { count: filtered.length })}</caption>
         <colgroup>
-          <col className="w-12" />
+          {/* # column needs room for the sort arrow next to the digit. */}
+          <col className="w-16" />
           <col className="w-52" />
           <col className="w-32" />
           <col className="w-48" />
@@ -120,10 +138,10 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
           </tr>
         </thead>
         <tbody className={densityClass}>
-          {ordered.map((c, index) => (
+          {ordered.map((c) => (
             <Fragment key={c.id}>
               <CaseTableRow
-                row={toRowData(c, index + 1)}
+                row={toRowData(c, chronoRank.get(c.id) ?? 0)}
                 statusOptions={statusOptions}
                 bankOptions={bankOptions}
                 advisorOptions={advisorOptions}
