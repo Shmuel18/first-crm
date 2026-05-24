@@ -123,13 +123,21 @@
       "normal": "רגיל",
       "comfortable": "מרווח"
     },
+    "layout": {
+      "triggerLabel": "תצוגת רשימה",
+      "triggerPrefix": "תצוגה",
+      "sortGroup": "מיון",
+      "groupGroup": "קיבוץ",
+      "options": {
+        "default": "רשימה רגילה",
+        "alphabetical": "לפי א-ב",
+        "pipeline": "לפי שלב בתהליך",
+        "by-advisor": "קיבוץ לפי יועץ",
+        "by-bank": "קיבוץ לפי בנק",
+        "by-stage": "קיבוץ לפי שלב"
+      }
+    },
     "savedViews": {
-      "saved": "תצוגות שמורות",
-      "saveCurrent": "שמור תצוגה נוכחית",
-      "none": "אין תצוגות שמורות",
-      "namePlaceholder": "שם לתצוגה",
-      "savedToast": "התצוגה \"{name}\" נשמרה",
-      "delete": "מחק תצוגה \"{name}\"",
       "exportExcel": "ייצוא לאקסל",
       "exportPdf": "ייצוא ל-PDF",
       "exporting": "מייצא...",

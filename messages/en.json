@@ -123,13 +123,21 @@
       "normal": "Normal",
       "comfortable": "Comfortable"
     },
+    "layout": {
+      "triggerLabel": "List layout",
+      "triggerPrefix": "View",
+      "sortGroup": "Sort",
+      "groupGroup": "Group by",
+      "options": {
+        "default": "Default list",
+        "alphabetical": "Alphabetical",
+        "pipeline": "By pipeline stage",
+        "by-advisor": "Group by advisor",
+        "by-bank": "Group by bank",
+        "by-stage": "Group by stage"
+      }
+    },
     "savedViews": {
-      "saved": "Saved views",
-      "saveCurrent": "Save current view",
-      "none": "No saved views",
-      "namePlaceholder": "View name",
-      "savedToast": "View \"{name}\" saved",
-      "delete": "Delete view \"{name}\"",
       "exportExcel": "Export to Excel",
       "exportPdf": "Export to PDF",
       "exporting": "Exporting...",

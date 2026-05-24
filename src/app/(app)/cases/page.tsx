@@ -4,7 +4,7 @@ import { CasesCardList } from '@/features/cases/components/cases-card-list';
 import { CasesEmptyState } from '@/features/cases/components/cases-empty-state';
 import { CasesTable } from '@/features/cases/components/cases-table';
 import { DashboardFiltersBar } from '@/features/cases/components/dashboard-filters-bar';
-import { DashboardSavedViews } from '@/features/cases/components/dashboard-saved-views';
+import { DashboardLayoutControls } from '@/features/cases/components/dashboard-layout-controls';
 import { DashboardViewSelector } from '@/features/cases/components/dashboard-view-selector';
 import { DashboardWelcomeBanner } from '@/features/cases/components/dashboard-welcome-banner';
 import { listBankOptions } from '@/features/case-banks/services/case-banks.service';
@@ -13,6 +13,7 @@ import {
   parseCaseView,
   parseDashboardFilters,
 } from '@/features/cases/domain/case-filters';
+import { parseCaseLayout } from '@/features/cases/domain/case-layout';
 import {
   getCurrentProfileName,
   listAdvisorOptions,
@@ -42,6 +43,7 @@ export default async function CasesListPage({ searchParams }: Props) {
   const sp = await searchParams;
   const view = parseCaseView(sp);
   const filters = parseDashboardFilters(sp);
+  const layout = parseCaseLayout(sp);
 
   const [
     activeCases,
@@ -106,7 +108,7 @@ export default async function CasesListPage({ searchParams }: Props) {
           canFilterByAdvisor={canViewAll}
           isArchiveView={isArchive}
         />
-        <DashboardSavedViews />
+        <DashboardLayoutControls />
       </>
     );
     scrollContent =
@@ -126,6 +128,7 @@ export default async function CasesListPage({ searchParams }: Props) {
               statusOptions={statusOptions}
               bankOptions={bankOptions}
               advisorOptions={advisorOptions}
+              layout={layout}
             />
           </div>
         </>
