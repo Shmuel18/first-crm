@@ -71,16 +71,14 @@ export function DashboardFiltersBar({
 
   const showAdvisor = canFilterByAdvisor && advisors.length > 0;
 
+  // The "hide completed & frozen" toggle is an independent display preference,
+  // not a filter the user "applied" — clearing other filters shouldn't reset
+  // it, and toggling it off shouldn't surface the clear button.
   const anyActive =
-    Boolean(query) ||
-    !hideClosedFrozen ||
-    advisor !== null ||
-    stage !== null ||
-    bank !== null;
+    Boolean(query) || advisor !== null || stage !== null || bank !== null;
 
   const clearAll = () => {
     setQuery(null);
-    setHide(true);
     setAdvisor(null);
     setStage(null);
     setBank(null);
