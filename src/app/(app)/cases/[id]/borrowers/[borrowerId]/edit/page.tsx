@@ -49,7 +49,11 @@ export default async function EditBorrowerPage({ params }: Props) {
       </div>
 
       <div className="bg-white border border-neutral-200 rounded-lg p-6">
+        {/* `key` forces a fresh mount when navigating between borrowers, so
+            the form's `useState`-snapshotted defaults are recaptured for the
+            new entity (rather than re-using the previous one's). */}
         <BorrowerForm
+          key={borrower.id}
           caseId={id}
           initial={borrower}
           initialRole={link.role_in_case}

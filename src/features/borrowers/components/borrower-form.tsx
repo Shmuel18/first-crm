@@ -66,18 +66,21 @@ export function BorrowerForm({
 
   const errs = state.ok === false && state.error === 'validation' ? state.fieldErrors ?? {} : {};
 
-  // Snapshot the input defaults at mount. The inputs are uncontrolled, so
-  // after the first render they keep their own DOM state across submissions —
-  // re-deriving `defaultValue` on every render would change the prop and
-  // trigger a base-ui warning ("default value state changing on an
-  // uncontrolled FieldControl"). We *do* still re-render errors per submit.
+  // Snapshot everything that feeds an `defaultValue` / `defaultChecked` at
+  // mount. After the first render the inputs are uncontrolled and keep their
+  // DOM state on their own — re-deriving defaults from props on each render
+  // would change those props and base-ui warns ("default value state changing
+  // on an uncontrolled FieldControl"). Errors / generic-error banner still
+  // re-render per submit because they read from `state` directly.
+  //
+  // The callers also pass `key={initial?.id ?? 'new'}` so navigating to a
+  // different borrower forces a fresh remount with fresh defaults — that's
+  // the canonical way to "reset" the form for a new entity in React.
   const [snapshot] = useState(() => ({
-    sub:
-      state.ok === false && state.error !== 'idle' ? state.values : undefined,
+    sub: state.ok === false && state.error !== 'idle' ? state.values : undefined,
     initialRecord: (initial ?? null) as Record<string, unknown> | null,
-    role: state.ok === false && state.error !== 'idle' ? state.values?.role_in_case : undefined,
-    isPrimary:
-      state.ok === false && state.error !== 'idle' ? state.values?.is_primary : undefined,
+    initialRole,
+    initialIsPrimary,
   }));
 
   const genericError =
@@ -87,8 +90,10 @@ export function BorrowerForm({
         : t('errors.generic')
       : null;
 
-  const roleDefault = snapshot.role ?? initialRole;
-  const isPrimaryDefault = snapshot.isPrimary ? snapshot.isPrimary === 'on' : initialIsPrimary;
+  const roleDefault = snapshot.sub?.role_in_case ?? snapshot.initialRole;
+  const isPrimaryDefault = snapshot.sub?.is_primary
+    ? snapshot.sub.is_primary === 'on'
+    : snapshot.initialIsPrimary;
   const val = (name: string) => fieldDefault(name, snapshot.sub, snapshot.initialRecord);
 
   return (

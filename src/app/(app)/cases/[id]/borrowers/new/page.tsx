@@ -34,7 +34,10 @@ export default async function NewBorrowerPage({ params }: Props) {
       </div>
 
       <div className="bg-white border border-neutral-200 rounded-lg p-6">
-        <BorrowerForm caseId={id} />
+        {/* `key="new"` mirrors the edit page — even though there's no real
+            entity to key off, this keeps the pattern consistent and makes
+            navigation from edit→new force a remount with clean defaults. */}
+        <BorrowerForm key="new" caseId={id} />
       </div>
     </div>
   );
