@@ -128,11 +128,11 @@ export function DashboardFiltersBar({
 
 function chipClass(active: boolean): string {
   return [
-    'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm transition',
+    'inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border text-xs transition',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40',
     active
-      ? 'border-[#A88840] bg-[#FAF8F3] text-[#0A0A0A]'
-      : 'border-neutral-200 text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50',
+      ? 'border-[#A88840] bg-[#FAF8F3] text-[#0A0A0A] font-medium'
+      : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50',
   ].join(' ');
 }
 
@@ -162,7 +162,7 @@ function FilterSelect({
             className={chipClass(value !== null)}
           >
             <span>{selected ? selected.name : label}</span>
-            <ChevronDown className="size-3.5 text-neutral-500" aria-hidden="true" />
+            <ChevronDown className="size-3 text-neutral-500" aria-hidden="true" />
           </button>
         }
       />
