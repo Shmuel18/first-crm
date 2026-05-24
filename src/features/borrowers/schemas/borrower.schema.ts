@@ -13,6 +13,7 @@ import {
   optionalNotes,
   optionalPastDate,
   optionalShortString,
+  requiredShortString,
 } from '@/lib/validators/form-primitives';
 
 export const MARITAL_STATUS_VALUES = [
@@ -43,8 +44,11 @@ export const ROLE_IN_CASE_VALUES = ['borrower', 'guarantor'] as const;
 export type RoleInCase = (typeof ROLE_IN_CASE_VALUES)[number];
 
 export const BorrowerFormSchema = z.object({
-  first_name: optionalShortString(NAME_MAX),
-  last_name: optionalShortString(NAME_MAX),
+  // Both name parts are mandatory — the dashboard's A-Z sort uses the surname
+  // as the primary key, and call-the-client UX leans on the first name. We'd
+  // rather fail at save time than silently ship "(ללא שם)" rows.
+  first_name: requiredShortString(NAME_MAX),
+  last_name: requiredShortString(NAME_MAX),
   national_id: optionalIsraeliId,
   phone: optionalIsraeliPhone,
   email: optionalEmail,

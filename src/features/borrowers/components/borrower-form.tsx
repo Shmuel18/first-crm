@@ -106,10 +106,10 @@ export function BorrowerForm({
       </FormSection>
 
       <FormSection title={t('sections.personal')}>
-        <FormField label={t('fields.firstName')} error={errs.first_name}>
+        <FormField label={t('fields.firstName')} required error={errs.first_name}>
           <Input name="first_name" defaultValue={val('first_name')} />
         </FormField>
-        <FormField label={t('fields.lastName')} error={errs.last_name}>
+        <FormField label={t('fields.lastName')} required error={errs.last_name}>
           <Input name="last_name" defaultValue={val('last_name')} />
         </FormField>
         <FormField label={t('fields.nationalId')} error={errs.national_id}>

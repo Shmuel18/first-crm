@@ -41,6 +41,16 @@ const emptyToNull = (v: unknown): unknown => (v === '' || v === null ? null : v)
 export const optionalShortString = (max: number = NAME_MAX) =>
   z.preprocess(emptyToNull, z.string().max(max).nullable().optional());
 
+/** Required name-shaped string — trims whitespace, rejects empty. */
+export const requiredShortString = (max: number = NAME_MAX) =>
+  z.preprocess(
+    (v) => (typeof v === 'string' ? v.trim() : v),
+    z
+      .string({ error: 'common.errors.required' })
+      .min(1, { error: 'common.errors.required' })
+      .max(max, { error: 'common.errors.tooLong' }),
+  );
+
 /** Optional notes/description (longer cap). */
 export const optionalNotes = (max: number = NOTES_MAX) =>
   z.preprocess(emptyToNull, z.string().max(max).nullable().optional());
