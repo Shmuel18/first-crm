@@ -127,7 +127,7 @@
       "triggerLabel": "List view",
       "triggerPrefix": "View",
       "options": {
-        "default": "Default (most recently updated)",
+        "default": "Newest → oldest",
         "alphabetical": "A-Z (by surname)",
         "by-stage": "Pipeline stage"
       }
