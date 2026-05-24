@@ -1,26 +1,33 @@
 import { Toaster } from 'sonner';
+import { getLocale } from 'next-intl/server';
 
 import { Sidebar } from '@/components/layout/sidebar';
 import { Topbar } from '@/components/layout/topbar';
 import { countPendingTasksForUser } from '@/features/tasks/services/tasks.service';
+import { getDirection, parseLocale } from '@/lib/i18n/direction';
 import { createClient } from '@/lib/supabase/server';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
-  const [pendingTasks, isAdminRes] = await Promise.all([
+  const [pendingTasks, isAdminRes, rawLocale] = await Promise.all([
     countPendingTasksForUser(),
     supabase.rpc('is_admin'),
+    getLocale(),
   ]);
+  const dir = getDirection(parseLocale(rawLocale));
 
   return (
     <div className="h-dvh overflow-hidden bg-[#FAFAFA]">
       <Topbar />
       <Sidebar tasksBadge={pendingTasks} isAdmin={isAdminRes.data === true} />
-      {/* Only this main element scrolls — height is the viewport minus the
-          fixed topbar (h-16 = 4rem). The browser-chrome scrollbar stays
-          hidden; users see a slim branded scrollbar inside this region. */}
-      <main className="md:ms-16 p-6 h-[calc(100dvh-4rem)] overflow-y-auto scrollbar-thin">
-        {children}
+      {/* The inner viewport owns scrolling. Sticky subheaders compensate for
+          viewport padding so they pin flush under the fixed topbar. */}
+      <main className="md:ms-16 h-[calc(100dvh-4rem)] overflow-hidden">
+        <div className="app-scrollbar app-scroll-viewport h-full overflow-y-auto p-4 sm:p-6">
+          <div dir={dir} className="min-w-0">
+            {children}
+          </div>
+        </div>
       </main>
       <Toaster
         position="bottom-center"

@@ -101,7 +101,7 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }
         {row.nationalId ?? <span className="text-neutral-400">—</span>}
       </td>
 
-      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+      <td className="px-4 py-0 align-middle" onClick={(e) => e.stopPropagation()}>
         <EditableStatusCell
           caseId={row.id}
           currentStatusId={row.statusId}
@@ -111,7 +111,7 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }
         />
       </td>
 
-      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+      <td className="px-4 py-0 align-middle" onClick={(e) => e.stopPropagation()}>
         <EditableBankCell
           caseId={row.id}
           currentBank={row.primaryBank}
@@ -120,7 +120,7 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }
         />
       </td>
 
-      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+      <td className="px-4 py-0 align-middle" onClick={(e) => e.stopPropagation()}>
         <EditableAdvisorCell
           caseId={row.id}
           currentAdvisorId={row.advisorId}

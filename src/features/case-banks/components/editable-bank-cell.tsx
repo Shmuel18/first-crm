@@ -92,27 +92,32 @@ export function EditableBankCell({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={triggerLabel}
-        className="inline-flex items-center gap-2.5 cursor-pointer disabled:opacity-50 hover:bg-neutral-50 -mx-1 px-1 rounded-md transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
+        className="grid h-8 w-full max-w-full min-w-0 cursor-pointer grid-cols-[1.75rem_minmax(0,1fr)_0.75rem] items-center gap-2 overflow-hidden rounded-md px-1 leading-none transition hover:bg-neutral-50 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
       >
         {bank ? (
           <>
             <BankAvatar key={bank.id} bank={bank} size="md" />
-            <span className="text-sm text-neutral-800 whitespace-nowrap font-medium">
-              {bank.name_he}
+            <span className="flex h-5 min-w-0 flex-1 items-center text-start text-sm font-medium leading-none text-neutral-800">
+              <span className="min-w-0 truncate leading-none">{bank.name_he}</span>
               {secondaryCount > 0 && (
-                <span className="text-[11px] text-neutral-600 ms-1 font-normal">
+                <span className="ms-1 shrink-0 text-[11px] font-normal leading-none text-neutral-600">
                   +{secondaryCount}
                 </span>
               )}
             </span>
           </>
         ) : (
-          <span className="text-sm text-neutral-600">{noBankLabel}</span>
+          <>
+            <EmptyBankAvatar />
+            <span className="flex h-5 min-w-0 items-center truncate text-start text-sm leading-none text-neutral-600">
+              {noBankLabel}
+            </span>
+          </>
         )}
         {isPending ? (
-          <Loader2 className="size-3 text-neutral-500 animate-spin" aria-hidden="true" />
+          <Loader2 className="size-3 shrink-0 animate-spin text-neutral-500" aria-hidden="true" />
         ) : (
-          <ChevronDown className="size-3 text-neutral-500" aria-hidden="true" />
+          <ChevronDown className="size-3 shrink-0 text-neutral-500" aria-hidden="true" />
         )}
       </button>
 
@@ -174,13 +179,10 @@ function BankAvatar({ bank, size }: { bank: BankOption; size: 'sm' | 'md' }) {
   // Row height is enforced on the cells (see CasesTable), so the logo just has
   // to fit: a touch smaller in the tight compact row, larger otherwise.
   const sizeClass = size === 'md' && density === 'compact' ? 'size-6' : 'size-7';
-  const fallbackText = size === 'md' ? 'text-[11px]' : 'text-[10px]';
-  // Prefer a self-hosted logo at /public/banks/<key>.svg, then the stored
-  // logo_url, then a branded monogram. onError advances to the next source.
-  const sources = [bank.key ? `/banks/${bank.key}.svg` : null, bank.logo_url].filter(
-    (s): s is string => Boolean(s),
-  );
+  const fallbackText = size === 'md' ? 'text-[10px]' : 'text-[10px]';
+  const sources = [bank.logo_url].filter((s): s is string => Boolean(s));
   const [srcIndex, setSrcIndex] = useState(0);
+
   const src = sources[srcIndex];
 
   if (src) {
@@ -203,10 +205,21 @@ function BankAvatar({ bank, size }: { bank: BankOption; size: 'sm' | 'md' }) {
 
   return (
     <span
-      className={`${sizeClass} rounded-lg flex items-center justify-center font-bold text-white shrink-0 shadow-sm ${fallbackText}`}
+      className={`${sizeClass} rounded-lg border border-neutral-200 flex items-center justify-center font-bold text-white shrink-0 shadow-sm leading-none ${fallbackText}`}
       style={{ backgroundColor: bank.color }}
     >
-      {bank.name_he.slice(0, 2)}
+      <span className="block w-full truncate px-0.5 text-center leading-none">
+        {bank.name_he.slice(0, 2)}
+      </span>
     </span>
+  );
+}
+
+function EmptyBankAvatar() {
+  return (
+    <span
+      aria-hidden="true"
+      className="size-7 shrink-0 rounded-lg border border-neutral-200 bg-neutral-100 shadow-sm"
+    />
   );
 }

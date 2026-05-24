@@ -58,7 +58,7 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
           <col className="w-44" />
           <col />
         </colgroup>
-        <thead className="sticky top-0 z-10">
+        <thead className="sticky top-[-1rem] z-10 sm:top-[-1.5rem]">
           <tr className="bg-neutral-100 border-b-2 border-neutral-300">
             <Th>{t('row')}</Th>
             <Th>{t('clientName')}</Th>

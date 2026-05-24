@@ -25,7 +25,7 @@ export default async function CaseHistoryPage({ params }: Props) {
 
   return (
     <div className="space-y-5 -mt-6">
-      <div className="bg-[#FAF8F3] text-neutral-900 sticky top-16 z-20 -mx-6 border-b border-[#C9A961]/20 px-6 py-3 shadow-sm">
+      <div className="bg-[#FAF8F3] text-neutral-900 sticky top-[-1rem] sm:top-[-1.5rem] z-20 -mx-4 border-b border-[#C9A961]/20 px-4 py-3 shadow-sm sm:-mx-6 sm:px-6">
         <div className="flex items-center gap-3">
           <Link
             href={`/cases/${caseData.id}`}
