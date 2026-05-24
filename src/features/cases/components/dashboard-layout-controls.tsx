@@ -1,25 +1,20 @@
 'use client';
 
-import { ChevronDown, LayoutList } from 'lucide-react';
+import { ChevronDown, ArrowDownUp } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
 
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
 import { CASE_LAYOUTS, type CaseLayout } from '../domain/case-layout';
 
 import { DashboardExportButtons } from './dashboard-export-buttons';
-
-const SORT_LAYOUTS: CaseLayout[] = ['default', 'alphabetical', 'pipeline'];
-const GROUP_LAYOUTS: CaseLayout[] = ['by-advisor', 'by-bank', 'by-stage'];
 
 export function DashboardLayoutControls() {
   const t = useTranslations('dashboard.layout');
@@ -43,7 +38,7 @@ export function DashboardLayoutControls() {
               aria-label={t('triggerLabel')}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 bg-white text-xs text-neutral-700 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50 transition"
             >
-              <LayoutList className="size-3.5 text-neutral-500" aria-hidden="true" />
+              <ArrowDownUp className="size-3.5 text-neutral-500" aria-hidden="true" />
               <span>
                 {t('triggerPrefix')}:{' '}
                 <span className="font-medium text-neutral-900">{t(`options.${layout}`)}</span>
@@ -52,20 +47,12 @@ export function DashboardLayoutControls() {
             </button>
           }
         />
-        <DropdownMenuContent align="start" className="min-w-56">
+        <DropdownMenuContent align="start" className="min-w-48">
           <DropdownMenuRadioGroup
             value={layout}
             onValueChange={(v) => setLayout(v as CaseLayout)}
           >
-            <DropdownMenuLabel>{t('sortGroup')}</DropdownMenuLabel>
-            {SORT_LAYOUTS.map((l) => (
-              <DropdownMenuRadioItem key={l} value={l}>
-                {t(`options.${l}`)}
-              </DropdownMenuRadioItem>
-            ))}
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel>{t('groupGroup')}</DropdownMenuLabel>
-            {GROUP_LAYOUTS.map((l) => (
+            {CASE_LAYOUTS.map((l) => (
               <DropdownMenuRadioItem key={l} value={l}>
                 {t(`options.${l}`)}
               </DropdownMenuRadioItem>

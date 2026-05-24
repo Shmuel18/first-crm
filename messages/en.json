@@ -124,17 +124,14 @@
       "comfortable": "Comfortable"
     },
     "layout": {
-      "triggerLabel": "List layout",
-      "triggerPrefix": "View",
-      "sortGroup": "Sort",
-      "groupGroup": "Group by",
+      "triggerLabel": "List sort",
+      "triggerPrefix": "Sort",
       "options": {
-        "default": "Default list",
+        "default": "Default (updated last)",
         "alphabetical": "Alphabetical",
-        "pipeline": "By pipeline stage",
-        "by-advisor": "Group by advisor",
-        "by-bank": "Group by bank",
-        "by-stage": "Group by stage"
+        "by-stage": "By pipeline stage",
+        "by-advisor": "By advisor",
+        "by-bank": "By bank"
       }
     },
     "savedViews": {

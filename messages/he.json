@@ -124,17 +124,14 @@
       "comfortable": "מרווח"
     },
     "layout": {
-      "triggerLabel": "תצוגת רשימה",
-      "triggerPrefix": "תצוגה",
-      "sortGroup": "מיון",
-      "groupGroup": "קיבוץ",
+      "triggerLabel": "מיון הרשימה",
+      "triggerPrefix": "מיון",
       "options": {
-        "default": "רשימה רגילה",
+        "default": "רגיל (עודכן אחרון)",
         "alphabetical": "לפי א-ב",
-        "pipeline": "לפי שלב בתהליך",
-        "by-advisor": "קיבוץ לפי יועץ",
-        "by-bank": "קיבוץ לפי בנק",
-        "by-stage": "קיבוץ לפי שלב"
+        "by-stage": "לפי שלב בתהליך",
+        "by-advisor": "לפי יועץ",
+        "by-bank": "לפי בנק"
       }
     },
     "savedViews": {
