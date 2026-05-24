@@ -65,19 +65,22 @@ export function DashboardExportButtons() {
             </button>
           }
         />
-        {/* min-w-0 + a tight default = the popup hugs its content rather than
-            sitting in a 100px-wide box around a 2-letter "אקסל" / "PDF". */}
-        <DropdownMenuContent align="end" className="min-w-0 w-fit">
+        {/* `w-(--anchor-width)` (base-ui CSS var) makes the popup exactly
+            the trigger's width; `min-w-0` overrides the default min-w-32 so
+            it can actually shrink down to the trigger. Inside each item,
+            justify-between pushes the icon to one end and the label to the
+            other so the white space sits between them, not around them. */}
+        <DropdownMenuContent align="end" className="min-w-0 w-(--anchor-width)">
           <DropdownMenuItem
             onClick={() => handleExport('xlsx')}
-            className="text-xs py-1 pe-2 ps-2.5"
+            className="text-xs py-1 px-2.5 justify-between"
           >
             <FileSpreadsheet className="size-3.5" aria-hidden="true" />
             {t('formatExcel')}
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => handleExport('pdf')}
-            className="text-xs py-1 pe-2 ps-2.5"
+            className="text-xs py-1 px-2.5 justify-between"
           >
             <FileText className="size-3.5" aria-hidden="true" />
             {t('formatPdf')}
