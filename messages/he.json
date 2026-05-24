@@ -124,14 +124,12 @@
       "comfortable": "מרווח"
     },
     "layout": {
-      "triggerLabel": "מיון הרשימה",
-      "triggerPrefix": "מיון",
+      "triggerLabel": "תצוגת רשימה",
+      "triggerPrefix": "תצוגה",
       "options": {
         "default": "רגיל (עודכן אחרון)",
-        "alphabetical": "לפי א-ב",
-        "by-stage": "לפי שלב בתהליך",
-        "by-advisor": "לפי יועץ",
-        "by-bank": "לפי בנק"
+        "alphabetical": "לפי א-ב (שם משפחה)",
+        "by-stage": "לפי שלב בתהליך"
       }
     },
     "savedViews": {

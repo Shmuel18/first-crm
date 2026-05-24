@@ -66,6 +66,23 @@ export function getPrimaryBorrowerNationalId(caseItem: {
   return primary?.borrower?.national_id ?? null;
 }
 
+/**
+ * Sort key for the primary borrower — "last_name first_name" so an A-B sort
+ * orders by surname first (as a phone book does) and uses the first name only
+ * to break ties between people who share a surname.
+ */
+export function getPrimaryBorrowerSortKey(caseItem: {
+  case_borrowers?: ReadonlyArray<CaseBorrowerJoin> | null;
+}): string {
+  const borrowers = (caseItem.case_borrowers ?? []).filter((cb) => cb.borrower !== null);
+  if (borrowers.length === 0) return '';
+  const primary = borrowers.find((cb) => cb.is_primary) ?? borrowers[0];
+  if (!primary?.borrower) return '';
+  const last = primary.borrower.last_name?.trim() ?? '';
+  const first = primary.borrower.first_name?.trim() ?? '';
+  return [last, first].filter(Boolean).join(' ');
+}
+
 /** Primary bank metadata (excludes soft-deleted bank links). */
 export function getPrimaryBank(caseItem: {
   case_banks?: ReadonlyArray<CaseBankJoin> | null;
