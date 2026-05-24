@@ -45,18 +45,22 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
   const filtered = useCaseQueryFilter(cases);
   const density = useRowDensity();
 
-  // shallow:true — sort runs entirely client-side; no server round-trip on
-  // every header click.
-  const [sortCol, setSortCol] = useQueryState(
+  // Read raw URL values (no `.withDefault`) so we can tell whether the user
+  // has *explicitly* chosen a sort. Null = URL is clean = treat as untouched;
+  // we still sort by DEFAULT_SORT but suppress the active indicator on the
+  // default column so the header row stays visually quiet until the user
+  // engages with it. shallow:true keeps each header click client-side.
+  const [sortColRaw, setSortCol] = useQueryState(
     'sort',
-    parseAsStringEnum(SORT_COLUMNS as unknown as SortColumn[])
-      .withDefault(DEFAULT_SORT.column)
-      .withOptions({ shallow: true }),
+    parseAsStringEnum(SORT_COLUMNS as unknown as SortColumn[]).withOptions({ shallow: true }),
   );
-  const [sortDir, setSortDir] = useQueryState(
+  const [sortDirRaw, setSortDir] = useQueryState(
     'dir',
-    parseAsStringEnum(SORT_DIRS).withDefault(DEFAULT_SORT.dir).withOptions({ shallow: true }),
+    parseAsStringEnum(SORT_DIRS).withOptions({ shallow: true }),
   );
+  const hasUserSorted = sortColRaw !== null || sortDirRaw !== null;
+  const sortCol = sortColRaw ?? DEFAULT_SORT.column;
+  const sortDir = sortDirRaw ?? DEFAULT_SORT.dir;
   const sort = { column: sortCol, dir: sortDir };
 
   const ordered = useMemo(
@@ -123,10 +127,28 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
         </colgroup>
         <thead className="sticky top-[-1rem] z-10 sm:top-[-1.5rem]">
           <tr className="bg-neutral-100 border-b-2 border-neutral-300">
-            <SortableTh label={t('row')} column="created" sort={sort} onSort={handleSort} />
-            <SortableTh label={t('clientName')} column="name" sort={sort} onSort={handleSort} />
+            <SortableTh
+              label={t('row')}
+              column="created"
+              sort={sort}
+              isUserSort={hasUserSorted}
+              onSort={handleSort}
+            />
+            <SortableTh
+              label={t('clientName')}
+              column="name"
+              sort={sort}
+              isUserSort={hasUserSorted}
+              onSort={handleSort}
+            />
             <Th>{t('nationalId')}</Th>
-            <SortableTh label={t('stage')} column="stage" sort={sort} onSort={handleSort} />
+            <SortableTh
+              label={t('stage')}
+              column="stage"
+              sort={sort}
+              isUserSort={hasUserSorted}
+              onSort={handleSort}
+            />
             <Th>{t('bank')}</Th>
             <Th>{t('advisor')}</Th>
             <Th>{t('shortNote')}</Th>
@@ -153,14 +175,19 @@ function SortableTh({
   label,
   column,
   sort,
+  isUserSort,
   onSort,
 }: {
   label: string;
   column: SortColumn;
   sort: { column: SortColumn; dir: SortDir };
+  /** True only when the user has explicitly chosen a sort (URL has ?sort or
+   * ?dir). When false, every column shows the inactive ↕ even though the
+   * data is still ordered by DEFAULT_SORT under the hood. */
+  isUserSort: boolean;
   onSort: (column: SortColumn) => void;
 }) {
-  const isActive = sort.column === column;
+  const isActive = isUserSort && sort.column === column;
   const ariaSort = isActive ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none';
   const ArrowIcon = !isActive ? ArrowUpDown : sort.dir === 'asc' ? ArrowUp : ArrowDown;
 
