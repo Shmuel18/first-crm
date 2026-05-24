@@ -12,7 +12,6 @@ import {
   parseCaseView,
   parseDashboardFilters,
 } from '@/features/cases/domain/case-filters';
-import { parseCaseLayout } from '@/features/cases/domain/case-layout';
 import {
   getCurrentProfileName,
   listAdvisorOptions,
@@ -42,7 +41,6 @@ export default async function CasesListPage({ searchParams }: Props) {
   const sp = await searchParams;
   const view = parseCaseView(sp);
   const filters = parseDashboardFilters(sp);
-  const layout = parseCaseLayout(sp);
 
   const [
     activeCases,
@@ -124,7 +122,6 @@ export default async function CasesListPage({ searchParams }: Props) {
               statusOptions={statusOptions}
               bankOptions={bankOptions}
               advisorOptions={advisorOptions}
-              layout={layout}
             />
           </div>
         </>

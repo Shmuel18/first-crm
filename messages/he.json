@@ -123,16 +123,6 @@
       "normal": "רגיל",
       "comfortable": "מרווח"
     },
-    "layout": {
-      "triggerLabel": "מיין את הרשימה",
-      "triggerPrefix": "מיין לפי",
-      "options": {
-        "newest": "חדש → ישן",
-        "oldest": "ישן → חדש",
-        "alphabetical": "א-ב (שם משפחה)",
-        "by-stage": "שלב בתהליך"
-      }
-    },
     "savedViews": {
       "export": "ייצוא",
       "formatExcel": "אקסל",

@@ -1,8 +1,10 @@
 'use client';
 
-import { useMemo } from 'react';
+import { Fragment, useMemo } from 'react';
 
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { parseAsStringEnum, useQueryState } from 'nuqs';
 
 import {
   getCaseClientLabel,
@@ -10,7 +12,13 @@ import {
   getPrimaryBorrowerNationalId,
   getSecondaryBanksCount,
 } from '../domain/case-derivations';
-import { applyLayout, type CaseLayout } from '../domain/case-layout';
+import {
+  applySort,
+  DEFAULT_SORT,
+  SORT_COLUMNS,
+  type SortColumn,
+  type SortDir,
+} from '../domain/case-sort';
 import { isFrozenCase, isStuckCase } from '../domain/case-state';
 import { useCaseQueryFilter } from '../hooks/use-case-query-filter';
 import { useRowDensity } from '../hooks/use-row-density';
@@ -27,38 +35,61 @@ type Props = {
   statusOptions: ReadonlyArray<StatusOption>;
   bankOptions: ReadonlyArray<BankOption>;
   advisorOptions: ReadonlyArray<AdvisorOption>;
-  layout: CaseLayout;
 };
 
-export function CasesTable({
-  cases,
-  statusOptions,
-  bankOptions,
-  advisorOptions,
-  layout,
-}: Props) {
+const SORT_DIRS: SortDir[] = ['asc', 'desc'];
+
+export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }: Props) {
   const t = useTranslations('dashboard.columns');
   const tf = useTranslations('dashboard.filters');
   const filtered = useCaseQueryFilter(cases);
   const density = useRowDensity();
 
-  // Sort happens AFTER the client-side q-filter so search-as-you-type stays
-  // instant. statusOptions carries the pipeline sort_order needed for the
-  // by-stage layout.
+  // shallow:true — sort runs entirely client-side; no server round-trip on
+  // every header click.
+  const [sortCol, setSortCol] = useQueryState(
+    'sort',
+    parseAsStringEnum(SORT_COLUMNS as unknown as SortColumn[])
+      .withDefault(DEFAULT_SORT.column)
+      .withOptions({ shallow: true }),
+  );
+  const [sortDir, setSortDir] = useQueryState(
+    'dir',
+    parseAsStringEnum(SORT_DIRS).withDefault(DEFAULT_SORT.dir).withOptions({ shallow: true }),
+  );
+  const sort = { column: sortCol, dir: sortDir };
+
   const ordered = useMemo(
-    () => applyLayout(filtered, layout, statusOptions),
-    [filtered, layout, statusOptions],
+    () => applySort(filtered, sort, statusOptions),
+    // sort is recreated each render but its parts are stable in deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [filtered, sortCol, sortDir, statusOptions],
   );
 
-  // Row height is enforced on the CELLS (td height is reliable for tables;
-  // tr height is not), so every row is the same height regardless of whether a
-  // cell holds a tall logo or short text. Vertical-align centers the content.
   const densityClass =
     density === 'compact'
       ? '[&_td]:h-10 [&_td]:py-1.5'
       : density === 'comfortable'
         ? '[&_td]:h-16 [&_td]:py-4'
         : '[&_td]:h-14';
+
+  // Header click — same column flips direction, different column starts ASC.
+  // Special case: clicking the active column twice brings the user back to
+  // the default sort (#↓ = newest first) rather than spinning forever.
+  const handleSort = (column: SortColumn) => {
+    if (column !== sortCol) {
+      setSortCol(column);
+      setSortDir('asc');
+      return;
+    }
+    if (sortDir === 'asc') {
+      setSortDir('desc');
+      return;
+    }
+    // active + already desc → reset to default
+    setSortCol(DEFAULT_SORT.column);
+    setSortDir(DEFAULT_SORT.dir);
+  };
 
   if (filtered.length === 0) {
     return <p className="px-6 py-12 text-center text-sm text-neutral-600">{tf('noMatches')}</p>;
@@ -79,28 +110,68 @@ export function CasesTable({
         </colgroup>
         <thead className="sticky top-[-1rem] z-10 sm:top-[-1.5rem]">
           <tr className="bg-neutral-100 border-b-2 border-neutral-300">
-            <Th>{t('row')}</Th>
-            <Th>{t('clientName')}</Th>
+            <SortableTh label={t('row')} column="created" sort={sort} onSort={handleSort} />
+            <SortableTh label={t('clientName')} column="name" sort={sort} onSort={handleSort} />
             <Th>{t('nationalId')}</Th>
-            <Th>{t('stage')}</Th>
-            <Th>{t('bank')}</Th>
-            <Th>{t('advisor')}</Th>
+            <SortableTh label={t('stage')} column="stage" sort={sort} onSort={handleSort} />
+            <SortableTh label={t('bank')} column="bank" sort={sort} onSort={handleSort} />
+            <SortableTh label={t('advisor')} column="advisor" sort={sort} onSort={handleSort} />
             <Th>{t('shortNote')}</Th>
           </tr>
         </thead>
         <tbody className={densityClass}>
           {ordered.map((c, index) => (
-            <CaseTableRow
-              key={c.id}
-              row={toRowData(c, index + 1)}
-              statusOptions={statusOptions}
-              bankOptions={bankOptions}
-              advisorOptions={advisorOptions}
-            />
+            <Fragment key={c.id}>
+              <CaseTableRow
+                row={toRowData(c, index + 1)}
+                statusOptions={statusOptions}
+                bankOptions={bankOptions}
+                advisorOptions={advisorOptions}
+              />
+            </Fragment>
           ))}
         </tbody>
       </table>
     </div>
+  );
+}
+
+function SortableTh({
+  label,
+  column,
+  sort,
+  onSort,
+}: {
+  label: string;
+  column: SortColumn;
+  sort: { column: SortColumn; dir: SortDir };
+  onSort: (column: SortColumn) => void;
+}) {
+  const isActive = sort.column === column;
+  const ariaSort = isActive ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none';
+  const ArrowIcon = !isActive ? ArrowUpDown : sort.dir === 'asc' ? ArrowUp : ArrowDown;
+
+  return (
+    <th scope="col" aria-sort={ariaSort} className="px-4 py-3">
+      <button
+        type="button"
+        onClick={() => onSort(column)}
+        className={[
+          'group inline-flex items-center gap-1 text-start text-xs font-semibold uppercase tracking-wider transition-colors rounded',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40',
+          isActive ? 'text-neutral-900' : 'text-neutral-600 hover:text-neutral-900',
+        ].join(' ')}
+      >
+        {label}
+        <ArrowIcon
+          aria-hidden="true"
+          className={[
+            'size-3 shrink-0 transition-opacity',
+            isActive ? 'text-[#A88840] opacity-100' : 'text-neutral-400 opacity-40 group-hover:opacity-100',
+          ].join(' ')}
+        />
+      </button>
+    </th>
   );
 }
 

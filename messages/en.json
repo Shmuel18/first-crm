@@ -123,16 +123,6 @@
       "normal": "Normal",
       "comfortable": "Comfortable"
     },
-    "layout": {
-      "triggerLabel": "Sort the list",
-      "triggerPrefix": "Sort by",
-      "options": {
-        "newest": "Newest → oldest",
-        "oldest": "Oldest → newest",
-        "alphabetical": "A-Z (by surname)",
-        "by-stage": "Pipeline stage"
-      }
-    },
     "savedViews": {
       "export": "Export",
       "formatExcel": "Excel",
