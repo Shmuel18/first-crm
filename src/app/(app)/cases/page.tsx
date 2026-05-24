@@ -32,6 +32,12 @@ function EmptyMessage({ text }: { text: string }) {
   return <p className="px-6 py-12 text-center text-sm text-neutral-500">{text}</p>;
 }
 
+// Safety bound on the dashboard fetch until true server-side pagination lands.
+// Well above realistic active-case counts — purely a guard against an unbounded
+// query at scale. The common advisor/stage filters are pushed to SQL so the
+// fetched set shrinks when they're active.
+const DASHBOARD_CASE_CAP = 1000;
+
 export default async function CasesListPage({ searchParams }: Props) {
   const sp = await searchParams;
   const view = parseCaseView(sp);
@@ -48,7 +54,12 @@ export default async function CasesListPage({ searchParams }: Props) {
     canViewAll,
     t,
   ] = await Promise.all([
-    listCases({ isArchived: false }),
+    listCases({
+      isArchived: false,
+      advisorId: filters.advisor ?? undefined,
+      statusId: filters.stage ?? undefined,
+      limit: DASHBOARD_CASE_CAP,
+    }),
     getCurrentProfileName(),
     listCaseStatusOptions(),
     listBankOptions(),
@@ -72,7 +83,14 @@ export default async function CasesListPage({ searchParams }: Props) {
       );
   } else {
     const isArchive = view === 'archive';
-    const cases = isArchive ? await listCases({ isArchived: true }) : activeCases;
+    const cases = isArchive
+      ? await listCases({
+          isArchived: true,
+          advisorId: filters.advisor ?? undefined,
+          statusId: filters.stage ?? undefined,
+          limit: DASHBOARD_CASE_CAP,
+        })
+      : activeCases;
     // In the archive, "hide closed & frozen" would hide exactly the cases that
     // were archived (completed / on-hold), so don't apply it there.
     const visible = filterCases(

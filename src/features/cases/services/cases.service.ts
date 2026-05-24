@@ -20,6 +20,8 @@ export type CaseListFilters = {
   advisorId?: string;
   isArchived?: boolean;
   search?: string;
+  /** Safety bound on rows returned (newest first). Unset = unbounded (exports). */
+  limit?: number;
 };
 
 export async function listCases(filters: CaseListFilters = {}): Promise<CaseWithRelations[]> {
@@ -42,6 +44,7 @@ export async function listCases(filters: CaseListFilters = {}): Promise<CaseWith
     const term = filters.search.replace(/[\\%_]/g, (c) => `\\${c}`);
     query = query.ilike('case_number', `%${term}%`);
   }
+  if (filters.limit) query = query.limit(filters.limit);
 
   const { data, error } = await query;
   if (error) throw error;
