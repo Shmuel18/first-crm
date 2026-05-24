@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 
 import { Loader2 } from 'lucide-react';
@@ -32,9 +32,13 @@ export function ProfileForm({ profile, roleName }: Props) {
 
   const fieldErrors =
     state.ok === false && state.error === 'validation' ? state.fieldErrors ?? {} : {};
-  const submitted = state.ok === false && state.error !== 'idle' ? state.values : undefined;
-  const initialRecord = profile as unknown as Record<string, unknown>;
-  const value = (name: string) => fieldDefault(name, submitted, initialRecord);
+
+  // Snapshot input defaults at mount; see BorrowerForm for full rationale.
+  const [snapshot] = useState(() => ({
+    submitted: state.ok === false && state.error !== 'idle' ? state.values : undefined,
+    initialRecord: profile as unknown as Record<string, unknown>,
+  }));
+  const value = (name: string) => fieldDefault(name, snapshot.submitted, snapshot.initialRecord);
 
   const genericError =
     state.ok === false && (state.error === 'unauthorized' || state.error === 'unknown')

@@ -50,6 +50,7 @@ export default async function EditCaseBankPage({ params }: Props) {
 
       <div className="bg-white border border-neutral-200 rounded-lg p-6">
         <CaseBankForm
+          key={caseBank.id}
           caseId={id}
           initial={caseBank}
           banks={banks}

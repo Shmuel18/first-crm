@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 
 import { Loader2 } from 'lucide-react';
@@ -55,10 +55,17 @@ export function CaseBankForm({ caseId, initial, banks, statuses }: CaseBankFormP
 
   const fieldErrors =
     state.ok === false && state.error === 'validation' ? state.fieldErrors ?? {} : {};
-  const submitted =
-    state.ok === false && state.error !== 'idle' ? state.values : undefined;
-  const initialRecord = (initial ?? null) as Record<string, unknown> | null;
-  const val = (name: string) => fieldDefault(name, submitted, initialRecord);
+
+  // Snapshot all defaultValue / defaultChecked inputs at mount — see
+  // BorrowerForm for the full rationale. Call sites pass `key={initial?.id ?? 'new'}`
+  // so navigating between case-banks remounts cleanly.
+  const [snapshot] = useState(() => ({
+    submitted: state.ok === false && state.error !== 'idle' ? state.values : undefined,
+    initialRecord: (initial ?? null) as Record<string, unknown> | null,
+    initialIsPrimary: Boolean(initial?.is_primary),
+  }));
+
+  const val = (name: string) => fieldDefault(name, snapshot.submitted, snapshot.initialRecord);
 
   const genericError =
     state.ok === false && state.error !== 'idle' && state.error !== 'validation'
@@ -67,9 +74,9 @@ export function CaseBankForm({ caseId, initial, banks, statuses }: CaseBankFormP
         : t('errors.generic')
       : null;
 
-  const isPrimaryDefault = submitted?.is_primary
-    ? submitted.is_primary === 'on'
-    : Boolean(initial?.is_primary);
+  const isPrimaryDefault = snapshot.submitted?.is_primary
+    ? snapshot.submitted.is_primary === 'on'
+    : snapshot.initialIsPrimary;
 
   return (
     <form action={formAction} className="space-y-5" noValidate>
