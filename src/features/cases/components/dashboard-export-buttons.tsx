@@ -65,12 +65,20 @@ export function DashboardExportButtons() {
             </button>
           }
         />
-        <DropdownMenuContent align="end" className="min-w-28">
-          <DropdownMenuItem onClick={() => handleExport('xlsx')}>
+        {/* min-w-0 + a tight default = the popup hugs its content rather than
+            sitting in a 100px-wide box around a 2-letter "אקסל" / "PDF". */}
+        <DropdownMenuContent align="end" className="min-w-0 w-fit">
+          <DropdownMenuItem
+            onClick={() => handleExport('xlsx')}
+            className="text-xs py-1 pe-2 ps-2.5"
+          >
             <FileSpreadsheet className="size-3.5" aria-hidden="true" />
             {t('formatExcel')}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleExport('pdf')}>
+          <DropdownMenuItem
+            onClick={() => handleExport('pdf')}
+            className="text-xs py-1 pe-2 ps-2.5"
+          >
             <FileText className="size-3.5" aria-hidden="true" />
             {t('formatPdf')}
           </DropdownMenuItem>
