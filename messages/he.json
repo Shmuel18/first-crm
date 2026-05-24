@@ -107,7 +107,7 @@
     },
     "filters": {
       "search": "חיפוש לפי שם / ת״ז / מספר",
-      "advisor": "יועץ מטפל",
+      "advisor": "יועץ אחראי",
       "stage": "שלב בתהליך",
       "bank": "בנק",
       "onlyStuck": "רק תקועים",
@@ -153,7 +153,7 @@
       "nationalId": "ת״ז / דרכון",
       "stage": "שלב בתהליך",
       "bank": "בנק",
-      "advisor": "עובד מטפל",
+      "advisor": "יועץ אחראי",
       "shortNote": "הערה קצרה"
     },
     "emptyState": {
@@ -340,7 +340,7 @@
       "insurance": "ביטוחים",
       "referrer": "הופנה ע״י",
       "shortNote": "הערה קצרה",
-      "advisor": "יועץ מטפל",
+      "advisor": "יועץ אחראי",
       "createdAt": "תאריך פתיחה",
       "primary": "ראשי",
       "primaryBankMarker": "★ עיקרי",
@@ -363,7 +363,7 @@
         "caseSecondaryType": "סוג תיק משני (אופציונלי)",
         "noSecondary": "— ללא —",
         "status": "סטטוס",
-        "advisor": "יועץ מטפל",
+        "advisor": "יועץ אחראי",
         "propertyValue": "שווי נכס (₪)",
         "requestedMortgageAmount": "גובה משכנתא מבוקש (₪)",
         "equity": "הון עצמי (אופציונלי, ₪)",
