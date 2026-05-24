@@ -89,6 +89,19 @@ export function DashboardFiltersBar({
       dir={locale === 'he' ? 'rtl' : 'ltr'}
       className="bg-white px-6 py-2.5 border-b border-neutral-200 flex items-center gap-2 flex-wrap"
     >
+      {/* View dropdown — leads the row (rightmost in RTL) per the user's
+          request; how-to-display feels like the first thing they reach for. */}
+      <LayoutDropdown
+        layout={layout}
+        onChange={(v) => setLayout(v)}
+        triggerLabel={tLayout('triggerLabel')}
+        triggerPrefix={tLayout('triggerPrefix')}
+        currentLabel={tLayout(`options.${layout}`)}
+        optionLabels={Object.fromEntries(
+          CASE_LAYOUTS.map((l) => [l, tLayout(`options.${l}`)]),
+        )}
+      />
+
       {/* === FILTERING (what data) === */}
       {showAdvisor && (
         <FilterSelect
@@ -123,17 +136,7 @@ export function DashboardFiltersBar({
 
       <div className="flex-1" />
 
-      {/* === PRESENTATION + OUTPUT (how data + export) === */}
-      <LayoutDropdown
-        layout={layout}
-        onChange={(v) => setLayout(v)}
-        triggerLabel={tLayout('triggerLabel')}
-        triggerPrefix={tLayout('triggerPrefix')}
-        currentLabel={tLayout(`options.${layout}`)}
-        optionLabels={Object.fromEntries(
-          CASE_LAYOUTS.map((l) => [l, tLayout(`options.${l}`)]),
-        )}
-      />
+      {/* === SECONDARY (density + export) === */}
       <div className="hidden md:block">
         <RowDensityControl />
       </div>
