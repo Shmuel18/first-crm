@@ -244,22 +244,34 @@
     height: 0;
   }
 
-  /* Slim scrollbar for opt-in scroll viewports. Webkit/Chromium ignores the
-     `scrollbar-width: thin` Firefox property, so the pseudo-elements below
-     handle Chrome / Edge / Safari. */
+  /* Slim scrollbar for opt-in scroll viewports — Gmail-style: comfortable
+     12px hit area, ~6px visible thumb with rounded corners and a transparent
+     inset, no arrow buttons. Webkit/Chromium ignores `scrollbar-width:thin`,
+     so these pseudo-elements drive the look in Chrome / Edge / Safari. */
   .scrollbar-thin::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 12px;
+    height: 12px;
   }
   .scrollbar-thin::-webkit-scrollbar-track {
     background: transparent;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: rgba(10, 10, 10, 0.18);
-    border-radius: 4px;
+    background-color: rgba(10, 10, 10, 0.22);
+    /* background-clip + transparent border = the thumb visually shrinks while
+       the 12px hit area stays comfortable for the mouse. */
+    background-clip: padding-box;
+    border: 3px solid transparent;
+    border-radius: 8px;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(168, 136, 64, 0.55);
+    background-color: rgba(168, 136, 64, 0.6);
+  }
+  /* Some Chromium builds render up/down arrow buttons by default. */
+  .scrollbar-thin::-webkit-scrollbar-button {
+    display: none;
+  }
+  .scrollbar-thin::-webkit-scrollbar-corner {
+    background: transparent;
   }
 }
 
