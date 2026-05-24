@@ -91,21 +91,16 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
         : '[&_td]:h-14';
 
   // Header click — same column flips direction, different column starts ASC.
-  // Special case: clicking the active column twice brings the user back to
-  // the default sort (#↓ = newest first) rather than spinning forever.
+  // (Previous version tried to "reset to default on a third click" but that
+  // broke the # column: # *is* the default, so reset-to-default looked like
+  // nothing happened. Plain toggle is simpler and works for every column.)
   const handleSort = (column: SortColumn) => {
     if (column !== sortCol) {
       setSortCol(column);
       setSortDir('asc');
       return;
     }
-    if (sortDir === 'asc') {
-      setSortDir('desc');
-      return;
-    }
-    // active + already desc → reset to default
-    setSortCol(DEFAULT_SORT.column);
-    setSortDir(DEFAULT_SORT.dir);
+    setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
   };
 
   if (filtered.length === 0) {
