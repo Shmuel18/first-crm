@@ -14,7 +14,6 @@ import {
 } from '../domain/case-derivations';
 import {
   applySort,
-  DEFAULT_SORT,
   SORT_COLUMNS,
   type SortColumn,
   type SortDir,
@@ -45,12 +44,9 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
   const filtered = useCaseQueryFilter(cases);
   const density = useRowDensity();
 
-  // Read raw URL values (no `.withDefault`) so we can tell whether the user
-  // has *explicitly* chosen a sort. Null = URL is clean = treat as untouched;
-  // we still sort by DEFAULT_SORT but suppress the active indicator on the
-  // default column so the header row stays visually quiet until the user
-  // engages with it. shallow:true keeps each header click client-side.
-  const [sortColRaw, setSortCol] = useQueryState(
+  // Sort is opt-in: URL is clean → null → table keeps its incoming order
+  // (which `listCases` returns newest-first). Click a header to activate.
+  const [sortCol, setSortCol] = useQueryState(
     'sort',
     parseAsStringEnum(SORT_COLUMNS as unknown as SortColumn[]).withOptions({ shallow: true }),
   );
@@ -58,16 +54,13 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
     'dir',
     parseAsStringEnum(SORT_DIRS).withOptions({ shallow: true }),
   );
-  const hasUserSorted = sortColRaw !== null || sortDirRaw !== null;
-  const sortCol = sortColRaw ?? DEFAULT_SORT.column;
-  const sortDir = sortDirRaw ?? DEFAULT_SORT.dir;
-  const sort = { column: sortCol, dir: sortDir };
+  const sort = sortCol ? { column: sortCol, dir: sortDirRaw ?? 'asc' } : null;
 
   const ordered = useMemo(
     () => applySort(filtered, sort, statusOptions),
-    // sort is recreated each render but its parts are stable in deps
+    // sort is recreated each render; its parts are the real deps.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [filtered, sortCol, sortDir, statusOptions],
+    [filtered, sortCol, sortDirRaw, statusOptions],
   );
 
   const densityClass =
@@ -77,17 +70,13 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
         ? '[&_td]:h-16 [&_td]:py-4'
         : '[&_td]:h-14';
 
-  // Header click — same column flips direction, different column starts ASC.
-  // (Previous version tried to "reset to default on a third click" but that
-  // broke the # column: # *is* the default, so reset-to-default looked like
-  // nothing happened. Plain toggle is simpler and works for every column.)
   const handleSort = (column: SortColumn) => {
     if (column !== sortCol) {
       setSortCol(column);
       setSortDir('asc');
       return;
     }
-    setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    setSortDir(sortDirRaw === 'asc' ? 'desc' : 'asc');
   };
 
   if (filtered.length === 0) {
@@ -99,8 +88,7 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
       <table className="w-full table-fixed min-w-[1100px]">
         <caption className="sr-only">{tf('tableCaption', { count: filtered.length })}</caption>
         <colgroup>
-          {/* # column needs room for the sort arrow next to the digit. */}
-          <col className="w-16" />
+          <col className="w-12" />
           <col className="w-52" />
           <col className="w-32" />
           <col className="w-48" />
@@ -110,28 +98,10 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
         </colgroup>
         <thead className="sticky top-[-1rem] z-10 sm:top-[-1.5rem]">
           <tr className="bg-neutral-100 border-b-2 border-neutral-300">
-            <SortableTh
-              label={t('row')}
-              column="created"
-              sort={sort}
-              isUserSort={hasUserSorted}
-              onSort={handleSort}
-            />
-            <SortableTh
-              label={t('clientName')}
-              column="name"
-              sort={sort}
-              isUserSort={hasUserSorted}
-              onSort={handleSort}
-            />
+            <Th>{t('row')}</Th>
+            <SortableTh label={t('clientName')} column="name" sort={sort} onSort={handleSort} />
             <Th>{t('nationalId')}</Th>
-            <SortableTh
-              label={t('stage')}
-              column="stage"
-              sort={sort}
-              isUserSort={hasUserSorted}
-              onSort={handleSort}
-            />
+            <SortableTh label={t('stage')} column="stage" sort={sort} onSort={handleSort} />
             <Th>{t('bank')}</Th>
             <Th>{t('advisor')}</Th>
             <Th>{t('shortNote')}</Th>
@@ -158,25 +128,17 @@ function SortableTh({
   label,
   column,
   sort,
-  isUserSort,
   onSort,
 }: {
   label: string;
   column: SortColumn;
-  sort: { column: SortColumn; dir: SortDir };
-  /** True only when the user has explicitly chosen a sort (URL has ?sort or
-   * ?dir). When false, every column shows the inactive ↕ even though the
-   * data is still ordered by DEFAULT_SORT under the hood. */
-  isUserSort: boolean;
+  sort: { column: SortColumn; dir: SortDir } | null;
   onSort: (column: SortColumn) => void;
 }) {
-  const isActive = isUserSort && sort.column === column;
-  const ariaSort = isActive ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none';
-  const ArrowIcon = !isActive ? ArrowUpDown : sort.dir === 'asc' ? ArrowUp : ArrowDown;
+  const isActive = sort?.column === column;
+  const ariaSort = isActive ? (sort!.dir === 'asc' ? 'ascending' : 'descending') : 'none';
+  const ArrowIcon = !isActive ? ArrowUpDown : sort!.dir === 'asc' ? ArrowUp : ArrowDown;
 
-  // Padding lives on the BUTTON, not the <th>, so the entire cell area is
-  // clickable — without this trick the cell padding sits over an unclickable
-  // <th> and a tap near the digit (instead of dead-centre on it) does nothing.
   return (
     <th scope="col" aria-sort={ariaSort} className="p-0">
       <button

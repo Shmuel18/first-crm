@@ -1,36 +1,29 @@
 /**
  * Dashboard sort state — column-header sorting (Excel/Sheets-style).
  *
- * Three sortable columns:
- *   - created : case-opening date. Doubles as the # column header
- *               (newest first by default).
- *   - name    : surname then first name of the primary borrower.
- *   - stage   : pipeline order (status.sort_order).
+ * Two sortable columns:
+ *   - name  : surname then first name of the primary borrower.
+ *   - stage : pipeline order (status.sort_order).
  *
- * Bank and advisor columns are intentionally NOT sortable — both have
- * narrow practical use (a manager rarely sorts by either) and keeping
- * them inert keeps the header row visually quieter.
+ * Everything else — including the # column — is non-sortable. When no
+ * sort is active the table shows cases in the DB-returned order, which
+ * `listCases` already orders newest-first.
  *
  * Empty / missing keys (case with no borrowers, no stage) always sink
- * to the bottom — independent of the sort direction. The naive
- * "multiply by -1 for desc" approach also flips that handling, which
- * is why we apply direction to the body of the comparison only after
- * the empty-checks have already returned.
+ * to the bottom — independent of the sort direction. Direction is
+ * applied to the body of the comparison only after the empty checks
+ * have already returned.
  */
 
 import { getPrimaryBorrowerSortKey } from './case-derivations';
 
 import type { CaseWithRelations } from '../types';
 
-export const SORT_COLUMNS = ['created', 'name', 'stage'] as const;
+export const SORT_COLUMNS = ['name', 'stage'] as const;
 export type SortColumn = (typeof SORT_COLUMNS)[number];
 export type SortDir = 'asc' | 'desc';
 
 export type CaseSort = { column: SortColumn; dir: SortDir };
-
-// 'asc' on the # column means "small numbers first" (#1, #2, #3 ...). #1 is
-// the newest case, so 'asc' on # is the natural default (newest at top).
-export const DEFAULT_SORT: CaseSort = { column: 'created', dir: 'asc' };
 
 type StatusRef = { id: string; sort_order: number };
 
@@ -38,23 +31,20 @@ function first(v: string | string[] | undefined): string | null {
   return (Array.isArray(v) ? v[0] : v) ?? null;
 }
 
+/** Returns the active sort, or null when no sort URL params are set. */
 export function parseCaseSort(
   sp: Record<string, string | string[] | undefined>,
-): CaseSort {
+): CaseSort | null {
   const col = first(sp.sort);
+  if (!(SORT_COLUMNS as readonly string[]).includes(col ?? '')) return null;
   const dir = first(sp.dir);
   return {
-    column: (SORT_COLUMNS as readonly string[]).includes(col ?? '')
-      ? (col as SortColumn)
-      : DEFAULT_SORT.column,
-    dir: dir === 'asc' || dir === 'desc' ? dir : DEFAULT_SORT.dir,
+    column: col as SortColumn,
+    dir: dir === 'desc' ? 'desc' : 'asc',
   };
 }
 
-/**
- * String comparator that pins empty values to the end (always), then applies
- * direction to the body of the comparison.
- */
+/** String comparator that pins empty values to the end (always). */
 function cmpStr(a: string, b: string, dir: SortDir): number {
   if (!a && !b) return 0;
   if (!a) return 1;
@@ -75,45 +65,24 @@ function cmpNum(a: number, b: number, dir: SortDir): number {
   return dir === 'desc' ? -cmp : cmp;
 }
 
-/** ISO timestamps sort lexicographically — same treatment as cmpStr. */
-function cmpDate(a: string, b: string, dir: SortDir): number {
-  if (!a && !b) return 0;
-  if (!a) return 1;
-  if (!b) return -1;
-  if (a === b) return 0;
-  const cmp = a < b ? -1 : 1;
-  return dir === 'desc' ? -cmp : cmp;
-}
-
 function stagePos(c: CaseWithRelations, order: Map<string, number>): number {
   return c.status?.id ? order.get(c.status.id) ?? Number.POSITIVE_INFINITY : Number.POSITIVE_INFINITY;
 }
 
 export function applySort(
   cases: ReadonlyArray<CaseWithRelations>,
-  sort: CaseSort,
+  sort: CaseSort | null,
   statusOptions: ReadonlyArray<StatusRef>,
 ): CaseWithRelations[] {
   if (cases.length === 0) return [];
+  if (!sort) return [...cases]; // no active sort — keep the DB order
 
   const sorted = [...cases];
-  // Secondary tiebreaker — always asc surname, so equal primary keys keep a
-  // predictable A-B order regardless of the primary direction.
+  // Secondary tiebreaker — always asc surname.
   const tieBySurname = (a: CaseWithRelations, b: CaseWithRelations) =>
     cmpStr(getPrimaryBorrowerSortKey(a), getPrimaryBorrowerSortKey(b), 'asc');
 
   switch (sort.column) {
-    case 'created': {
-      // The # column displays a chronological rank where 1 = newest case.
-      // So "asc by #" (small numbers at top) corresponds to "desc by date"
-      // (newest first). Flip the direction here so the arrow the user sees
-      // on the header matches the direction the numbers go in the column.
-      const dateDir: SortDir = sort.dir === 'asc' ? 'desc' : 'asc';
-      sorted.sort(
-        (a, b) => cmpDate(a.created_at ?? '', b.created_at ?? '', dateDir) || tieBySurname(a, b),
-      );
-      break;
-    }
     case 'name':
       sorted.sort((a, b) =>
         cmpStr(getPrimaryBorrowerSortKey(a), getPrimaryBorrowerSortKey(b), sort.dir),
