@@ -134,6 +134,9 @@
       }
     },
     "savedViews": {
+      "export": "Export",
+      "formatExcel": "Excel",
+      "formatPdf": "PDF",
       "exportExcel": "Export to Excel",
       "exportPdf": "Export to PDF",
       "exporting": "Exporting...",

@@ -134,6 +134,9 @@
       }
     },
     "savedViews": {
+      "export": "ייצוא",
+      "formatExcel": "אקסל",
+      "formatPdf": "PDF",
       "exportExcel": "ייצוא לאקסל",
       "exportPdf": "ייצוא ל-PDF",
       "exporting": "מייצא...",
