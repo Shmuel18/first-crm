@@ -49,7 +49,10 @@ export function Sidebar({ tasksBadge, isAdmin = false }: SidebarProps) {
   return (
     <aside
       aria-label={t('primary')}
-      className="hidden md:flex flex-col w-16 bg-[#0A0A0A] fixed start-0 top-16 bottom-0 z-20 border-e border-neutral-900 py-3"
+      // z-30 (same as the topbar — they sit on different rows so they never
+      // overlap visually) so the icon-hover tooltips render above the sticky
+      // case / documents action bars in the main scroll area (which use z-20).
+      className="hidden md:flex flex-col w-16 bg-[#0A0A0A] fixed start-0 top-16 bottom-0 z-30 border-e border-neutral-900 py-3"
     >
       <nav aria-label={t('primary')} className="flex-1 flex flex-col gap-1 px-2">
         {topItems.map((item) => (
