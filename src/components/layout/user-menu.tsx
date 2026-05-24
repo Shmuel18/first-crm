@@ -46,12 +46,16 @@ export function UserMenu({ fullName, initials, roleName }: UserMenuProps) {
     setOpen(false);
   };
 
-  // Restore focus to the trigger when the menu closes — without this, mouse
-  // users land back where they were but keyboard users get focus reset to <body>.
+  // Restore focus to the trigger only on the open→closed transition. Without
+  // the `wasOpen` ref, this would `focus()` on initial mount too, which —
+  // because programmatic focus also triggers :focus-visible — would draw a
+  // gold ring around the avatar on every page refresh.
+  const wasOpen = useRef(false);
   useEffect(() => {
-    if (!open && document.activeElement === document.body) {
+    if (wasOpen.current && !open && document.activeElement === document.body) {
       buttonRef.current?.focus();
     }
+    wasOpen.current = open;
   }, [open]);
 
   return (
