@@ -253,13 +253,22 @@
 /* Slim, branded scrollbars on EVERY scroll container in the app — Gmail /
    Linear / Notion style. The page itself doesn't scroll (html/body are
    overflow:hidden above), so this only affects internal scroll viewports
-   like <main>, dropdowns, dialogs, sidebars, code blocks, etc. Doing it
-   globally avoids the platform-default scrollbar leaking through on any
-   container we forgot to mark `.scrollbar-thin`. */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(10, 10, 10, 0.22) transparent;
+   like <main>, dropdowns, dialogs, sidebars, code blocks, etc.
+
+   IMPORTANT: do NOT set `scrollbar-width` on the universal selector here.
+   Modern Chrome on Windows ships native support for `scrollbar-width: thin`,
+   and once it's set Chrome paints the OS-native thin scrollbar (which still
+   has arrow buttons) and ignores every `::-webkit-scrollbar-*` rule below.
+   We confine `scrollbar-width` to Firefox (which is the only engine without
+   webkit-scrollbar support) so Chrome / Edge / Safari honour the custom
+   styling instead. */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(10, 10, 10, 0.22) transparent;
+  }
 }
+
 *::-webkit-scrollbar {
   width: 12px;
   height: 12px;
