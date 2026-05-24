@@ -13,7 +13,6 @@ type BankLink = { deleted_at: string | null; bank: { id: string } | null };
 type TestCase = {
   assigned_advisor: { id: string } | null;
   status: { id: string; key: string } | null;
-  case_blocker: string | null;
   case_banks: BankLink[];
 };
 
@@ -23,7 +22,6 @@ function makeCase(o: Partial<TestCase> = {}): CaseWithRelations {
   return {
     assigned_advisor: o.assigned_advisor ?? null,
     status: o.status ?? { id: 'open', key: 'open' },
-    case_blocker: o.case_blocker ?? 'none',
     case_banks: o.case_banks ?? [],
   } as unknown as CaseWithRelations;
 }
@@ -32,7 +30,6 @@ const NO_FILTERS: DashboardFilters = {
   advisor: null,
   stage: null,
   bank: null,
-  blocker: null,
   stuck: false,
   hideClosedFrozen: false,
 };
@@ -55,7 +52,6 @@ describe('parseDashboardFilters', () => {
       advisor: null,
       stage: null,
       bank: null,
-      blocker: null,
       stuck: false,
       hideClosedFrozen: true,
     });
@@ -68,7 +64,6 @@ describe('parseDashboardFilters', () => {
       advisor: 'a1',
       stage: null,
       bank: null,
-      blocker: null,
       stuck: true,
       hideClosedFrozen: false,
     });
@@ -95,12 +90,6 @@ describe('filterCases', () => {
     const a = makeCase({ status: { id: 's1', key: 'open' } });
     const b = makeCase({ status: { id: 's2', key: 'open' } });
     expect(filterCases([a, b], { ...NO_FILTERS, stage: 's2' })).toEqual([b]);
-  });
-
-  it('filters by blocker', () => {
-    const a = makeCase({ case_blocker: 'bank' });
-    const b = makeCase({ case_blocker: 'none' });
-    expect(filterCases([a, b], { ...NO_FILTERS, blocker: 'bank' })).toEqual([a]);
   });
 
   it('matches a bank only through non-deleted links', () => {

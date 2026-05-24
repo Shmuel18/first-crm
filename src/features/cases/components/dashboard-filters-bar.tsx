@@ -12,7 +12,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-import { BLOCKER_VALUES } from '../domain/case-filters';
 import { RowDensityControl } from './row-density-control';
 
 type Option = { id: string; name: string };
@@ -40,13 +39,11 @@ export function DashboardFiltersBar({
   isArchiveView = false,
 }: Props) {
   const t = useTranslations('dashboard.filters');
-  const tBlocker = useTranslations('case.blocker');
   const locale = useLocale();
 
   const [advisor, setAdvisor] = useQueryState('advisor', parseAsString.withOptions(urlOpts));
   const [stage, setStage] = useQueryState('stage', parseAsString.withOptions(urlOpts));
   const [bank, setBank] = useQueryState('bank', parseAsString.withOptions(urlOpts));
-  const [blocker, setBlocker] = useQueryState('blocker', parseAsString.withOptions(urlOpts));
   const [hideClosedFrozen, setHide] = useQueryState(
     'hideClosedFrozen',
     parseAsBoolean.withDefault(true).withOptions(urlOpts),
@@ -57,7 +54,6 @@ export function DashboardFiltersBar({
 
   const stages: Option[] = statusOptions.map((s) => ({ id: s.id, name: s.name_he }));
   const banks: Option[] = bankOptions.map((b) => ({ id: b.id, name: b.name_he }));
-  const blockers: Option[] = BLOCKER_VALUES.map((v) => ({ id: v, name: tBlocker(v) }));
   const advisors: Option[] = advisorOptions.map((a) => ({
     id: a.id,
     name: [a.first_name, a.last_name].filter(Boolean).join(' ').trim() || '—',
@@ -70,8 +66,7 @@ export function DashboardFiltersBar({
     !hideClosedFrozen ||
     advisor !== null ||
     stage !== null ||
-    bank !== null ||
-    blocker !== null;
+    bank !== null;
 
   const clearAll = () => {
     setQuery(null);
@@ -79,7 +74,6 @@ export function DashboardFiltersBar({
     setAdvisor(null);
     setStage(null);
     setBank(null);
-    setBlocker(null);
   };
 
   return (
@@ -98,7 +92,6 @@ export function DashboardFiltersBar({
       )}
       <FilterSelect label={t('stage')} value={stage} onChange={setStage} options={stages} allLabel={t('all')} />
       <FilterSelect label={t('bank')} value={bank} onChange={setBank} options={banks} allLabel={t('all')} />
-      <FilterSelect label={t('blocker')} value={blocker} onChange={setBlocker} options={blockers} allLabel={t('all')} />
 
       {anyActive && (
         <button

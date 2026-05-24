@@ -8,20 +8,10 @@ import { isFrozenCase, isStuckCase } from './case-state';
 
 import type { CaseWithRelations } from '../types';
 
-export const BLOCKER_VALUES = [
-  'none',
-  'client',
-  'bank',
-  'office',
-  'appraiser',
-  'lawyer',
-] as const;
-
 export type DashboardFilters = {
   advisor: string | null;
   stage: string | null;
   bank: string | null;
-  blocker: string | null;
   stuck: boolean;
   hideClosedFrozen: boolean;
 };
@@ -46,7 +36,6 @@ export function parseDashboardFilters(
     advisor: first(sp.advisor),
     stage: first(sp.stage),
     bank: first(sp.bank),
-    blocker: first(sp.blocker),
     stuck: first(sp.stuck) === 'true',
     // Hiding done/frozen is the default view; only an explicit "false" disables it.
     hideClosedFrozen: first(sp.hideClosedFrozen) !== 'false',
@@ -60,7 +49,6 @@ export function filterCases(
   return cases.filter((c) => {
     if (f.advisor && c.assigned_advisor?.id !== f.advisor) return false;
     if (f.stage && c.status?.id !== f.stage) return false;
-    if (f.blocker && c.case_blocker !== f.blocker) return false;
     if (
       f.bank &&
       !c.case_banks?.some((cb) => !cb.deleted_at && cb.bank?.id === f.bank)
