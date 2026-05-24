@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useRef, useState } from 'react';
+import { useActionState, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
 
 import { Loader2 } from 'lucide-react';
@@ -65,23 +65,19 @@ export function BorrowerForm({
   const formRef = useRef<HTMLFormElement>(null);
 
   const errs = state.ok === false && state.error === 'validation' ? state.fieldErrors ?? {} : {};
+  const sub = state.ok === false && state.error !== 'idle' ? state.values : undefined;
+  const initialRecord = (initial ?? null) as Record<string, unknown> | null;
 
-  // Snapshot everything that feeds an `defaultValue` / `defaultChecked` at
-  // mount. After the first render the inputs are uncontrolled and keep their
-  // DOM state on their own — re-deriving defaults from props on each render
-  // would change those props and base-ui warns ("default value state changing
-  // on an uncontrolled FieldControl"). Errors / generic-error banner still
-  // re-render per submit because they read from `state` directly.
-  //
-  // The callers also pass `key={initial?.id ?? 'new'}` so navigating to a
-  // different borrower forces a fresh remount with fresh defaults — that's
-  // the canonical way to "reset" the form for a new entity in React.
-  const [snapshot] = useState(() => ({
-    sub: state.ok === false && state.error !== 'idle' ? state.values : undefined,
-    initialRecord: (initial ?? null) as Record<string, unknown> | null,
-    initialRole,
-    initialIsPrimary,
-  }));
+  // NB: we deliberately do NOT snapshot the defaults here. base-ui's
+  // FieldControl appears to sync its DOM back to `defaultValue` on every
+  // change of that prop — so freezing it lets the DOM end up locked to the
+  // initial value (user's edits get wiped on the next re-render). Letting
+  // `defaultValue` track state.values means the sync targets the user's
+  // typed-in value, which is a no-op visually. The console warning that
+  // accompanies it is annoying but harmless; the proper fix is to migrate
+  // the affected fields to controlled components, which is a bigger lift.
+  // (key={borrower.id} on the parent still gives a clean remount when the
+  // user navigates between borrowers.)
 
   const genericError =
     state.ok === false && state.error !== 'idle' && state.error !== 'validation'
@@ -90,11 +86,9 @@ export function BorrowerForm({
         : t('errors.generic')
       : null;
 
-  const roleDefault = snapshot.sub?.role_in_case ?? snapshot.initialRole;
-  const isPrimaryDefault = snapshot.sub?.is_primary
-    ? snapshot.sub.is_primary === 'on'
-    : snapshot.initialIsPrimary;
-  const val = (name: string) => fieldDefault(name, snapshot.sub, snapshot.initialRecord);
+  const roleDefault = sub?.role_in_case ?? initialRole;
+  const isPrimaryDefault = sub?.is_primary ? sub.is_primary === 'on' : initialIsPrimary;
+  const val = (name: string) => fieldDefault(name, sub, initialRecord);
 
   return (
     <form ref={formRef} action={formAction} className="space-y-6" noValidate>

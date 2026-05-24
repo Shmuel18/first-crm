@@ -82,20 +82,14 @@ export function CaseForm({
 
   const fieldErrors =
     state.ok === false && state.error === 'validation' ? state.fieldErrors ?? {} : {};
+  const submitted =
+    state.ok === false && state.error !== 'idle' ? state.values : undefined;
+  const initialRecord = (initial ?? null) as Record<string, unknown> | null;
 
-  // Snapshot the `defaultValue` sources at mount so a re-render (e.g. after a
-  // validation error sets state.values) doesn't shift the inputs' defaults —
-  // base-ui warns about that on its FieldControl. Inputs are uncontrolled,
-  // so DOM state survives re-renders without our help. Call sites should pass
-  // `key={initial?.id ?? 'new'}` so a navigation to a different case forces a
-  // fresh remount and a fresh snapshot.
-  const [snapshot] = useState(() => ({
-    submitted:
-      state.ok === false && state.error !== 'idle' ? state.values : undefined,
-    initialRecord: (initial ?? null) as Record<string, unknown> | null,
-  }));
-
-  const value = (name: string) => fieldDefault(name, snapshot.submitted, snapshot.initialRecord);
+  // See BorrowerForm for the long version — snapshotting defaultValue with
+  // useState breaks editing because base-ui re-syncs the DOM to it. So we
+  // keep the live `submitted` lookup and accept the console warning.
+  const value = (name: string) => fieldDefault(name, submitted, initialRecord);
 
   const genericError = getGenericError(state, t);
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
 
 import { Loader2 } from 'lucide-react';
@@ -32,13 +32,11 @@ export function OfficeForm({ office }: Props) {
 
   const fieldErrors =
     state.ok === false && state.error === 'validation' ? state.fieldErrors ?? {} : {};
-
-  // Snapshot input defaults at mount; see BorrowerForm for full rationale.
-  const [snapshot] = useState(() => ({
-    submitted: state.ok === false && state.error !== 'idle' ? state.values : undefined,
-    initialRecord: office as unknown as Record<string, unknown>,
-  }));
-  const value = (name: string) => fieldDefault(name, snapshot.submitted, snapshot.initialRecord);
+  const submitted = state.ok === false && state.error !== 'idle' ? state.values : undefined;
+  const initialRecord = office as unknown as Record<string, unknown>;
+  // Snapshot caused a base-ui DOM re-sync that locked the inputs; see
+  // BorrowerForm. Reverted to the live lookup.
+  const value = (name: string) => fieldDefault(name, submitted, initialRecord);
 
   const genericError =
     state.ok === false && (state.error === 'unauthorized' || state.error === 'unknown')
