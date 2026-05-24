@@ -114,12 +114,11 @@ export default async function CasesListPage({ searchParams }: Props) {
       );
   }
 
-  // The whole dashboard scrolls inside a viewport-height pane (under the fixed
-  // 4rem topbar); the greeting/tabs/filters scroll away and only the table
-  // header stays (sticky, in CasesTable). -m-6 cancels the layout p-6 so the
-  // bars stay full-bleed.
+  // The (app) layout's <main> is the scroll viewport now, so the dashboard
+  // just goes full-bleed by cancelling the layout's p-6 with -m-6. Sticky
+  // bits (the table header) anchor to the layout's scroll container.
   return (
-    <div className="-m-6 h-[calc(100dvh_-_4rem)] overflow-auto scrollbar-thin bg-white">
+    <div className="-m-6 bg-white">
       <DashboardWelcomeBanner firstName={profile?.first_name ?? ''} />
       <DashboardViewSelector
         activeCount={counts.active}

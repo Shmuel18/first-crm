@@ -13,10 +13,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   ]);
 
   return (
-    <div className="min-h-dvh bg-[#FAFAFA]">
+    <div className="h-dvh overflow-hidden bg-[#FAFAFA]">
       <Topbar />
       <Sidebar tasksBadge={pendingTasks} isAdmin={isAdminRes.data === true} />
-      <main className="md:ms-16 p-6">{children}</main>
+      {/* Only this main element scrolls — height is the viewport minus the
+          fixed topbar (h-16 = 4rem). The browser-chrome scrollbar stays
+          hidden; users see a slim branded scrollbar inside this region. */}
+      <main className="md:ms-16 p-6 h-[calc(100dvh-4rem)] overflow-y-auto scrollbar-thin">
+        {children}
+      </main>
       <Toaster
         position="bottom-center"
         toastOptions={{

@@ -139,6 +139,14 @@
   html {
     @apply font-sans;
   }
+  /* The (app) layout owns the scroll viewport — keep the document itself
+     non-scrolling so the browser-chrome scrollbar never appears. Auth/public
+     pages opt back in via `overflow-auto` on their own root. */
+  html,
+  body {
+    height: 100dvh;
+    overflow: hidden;
+  }
 }
 
 @layer utilities {
@@ -236,51 +244,29 @@
     height: 0;
   }
 
-  /* Scrollbar */
+  /* Slim scrollbar for opt-in scroll viewports. Webkit/Chromium ignores the
+     `scrollbar-width: thin` Firefox property, so the pseudo-elements below
+     handle Chrome / Edge / Safari. */
   .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
   .scrollbar-thin::-webkit-scrollbar-track {
     background: transparent;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: #d4d4d4;
-    border-radius: 3px;
+    background-color: rgba(10, 10, 10, 0.18);
+    border-radius: 4px;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: #a3a3a3;
+    background-color: rgba(168, 136, 64, 0.55);
   }
 }
 
-/* Slim, branded scrollbars — same pattern used by Linear / Notion / Vercel:
-   subtle enough to feel premium, visible enough to signal "there is more
-   below" (which the old display:none rule hid). Firefox picks up scrollbar-*;
-   Chromium/WebKit use the ::-webkit-scrollbar pseudos. */
-* {
+/* Slim, branded scrollbars for any container marked .scrollbar-thin.
+   The page itself doesn't scroll (see html/body overflow:hidden above) —
+   only opt-in scroll viewports do, and they get this subtle treatment. */
+.scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: rgba(10, 10, 10, 0.22) transparent;
-}
-*::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
-*::-webkit-scrollbar-thumb {
-  background-color: rgba(10, 10, 10, 0.22);
-  border-radius: 4px;
-}
-*::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(168, 136, 64, 0.55);
-}
-/* Dark surfaces (topbar / sidebar) — lighter thumb so it stays visible. */
-.dark *,
-[data-theme='dark'] * {
-  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
-}
-.dark *::-webkit-scrollbar-thumb,
-[data-theme='dark'] *::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.25);
+  scrollbar-color: rgba(10, 10, 10, 0.2) transparent;
 }
