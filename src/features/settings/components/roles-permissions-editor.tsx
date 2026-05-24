@@ -73,63 +73,78 @@ export function RolesPermissionsEditor({ roles, permissions, granted, locale }: 
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap gap-2">
+      <div
+        role="tablist"
+        aria-label={t('title')}
+        className="flex flex-wrap gap-2"
+      >
         {roles.map((r) => {
           const active = r.id === selectedRoleId;
           return (
             <button
               key={r.id}
               type="button"
+              role="tab"
+              aria-selected={active}
               onClick={() => setSelectedRoleId(r.id)}
               className={[
                 'inline-flex items-center gap-1.5 px-3 h-9 rounded-lg text-sm font-medium border transition',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50',
                 active
                   ? 'bg-[#0A0A0A] text-white border-[#0A0A0A]'
-                  : 'bg-white border-neutral-200 text-neutral-600 hover:border-[#C9A961]',
+                  : 'bg-white border-neutral-200 text-neutral-700 hover:border-[#A88840]',
               ].join(' ')}
             >
               {roleName(r)}
-              {r.key === 'admin' && <Lock className="size-3" />}
+              {r.key === 'admin' && <Lock className="size-3" aria-hidden="true" />}
             </button>
           );
         })}
       </div>
 
       {isAdminRole && (
-        <div className="rounded-lg border border-[#C9A961]/40 bg-[#FAF8F3] px-3 py-2 text-sm text-neutral-700">
+        <div
+          role="note"
+          className="rounded-lg border border-[#C9A961]/40 bg-[#FAF8F3] px-3 py-2 text-sm text-neutral-800"
+        >
           {t('adminLocked')}
         </div>
       )}
 
       <div className="rounded-xl border border-neutral-200 bg-white divide-y divide-neutral-100 overflow-hidden">
         {CATEGORY_ORDER.filter((c) => grouped[c]?.length).map((category) => (
-          <div key={category}>
-            <div className="px-4 py-2 bg-neutral-50/70 text-xs font-semibold text-neutral-500 uppercase tracking-wide">
+          <div key={category} role="group" aria-labelledby={`perm-cat-${category}`}>
+            <div
+              id={`perm-cat-${category}`}
+              className="px-4 py-2 bg-neutral-50/70 text-xs font-semibold text-neutral-700 uppercase tracking-wide"
+            >
               {t(`categories.${category}`)}
             </div>
             {grouped[category]!.map((perm) => {
               const on = isOn(perm.id);
+              const permLabel = locale === 'he' ? perm.name_he : perm.name_en;
               return (
                 <div
                   key={perm.id}
                   className="flex items-center justify-between px-4 py-2.5 hover:bg-neutral-50/60"
                 >
-                  <span className="text-sm text-neutral-800">
-                    {locale === 'he' ? perm.name_he : perm.name_en}
-                  </span>
+                  <span className="text-sm text-neutral-800">{permLabel}</span>
                   <button
                     type="button"
                     role="switch"
                     aria-checked={on}
+                    aria-label={permLabel}
                     disabled={isAdminRole || pending}
                     onClick={() => toggle(perm.id)}
                     className={[
                       'relative w-10 h-6 rounded-full transition-colors shrink-0',
-                      on ? 'bg-[#C9A961]' : 'bg-neutral-300',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40',
+                      on ? 'bg-[#A88840]' : 'bg-neutral-400',
                       isAdminRole ? 'opacity-60 cursor-not-allowed' : '',
                     ].join(' ')}
                   >
                     <span
+                      aria-hidden="true"
                       className={[
                         'absolute top-0.5 size-5 rounded-full bg-white shadow flex items-center justify-center transition-all',
                         on ? 'start-[1.125rem]' : 'start-0.5',

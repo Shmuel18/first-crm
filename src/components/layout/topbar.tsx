@@ -47,9 +47,10 @@ export async function Topbar() {
         <div className="flex items-center gap-2 shrink-0 ms-auto">
           <Link
             href="/cases/new"
-            className="btn-gold inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm whitespace-nowrap"
+            aria-label={t('newCase')}
+            className="btn-gold inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8C77B] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
           >
-            <Plus className="size-4" />
+            <Plus className="size-4" aria-hidden="true" />
             <span className="hidden md:inline">{t('newCase')}</span>
           </Link>
 

@@ -88,12 +88,15 @@ export function InviteMemberDialog({ open, onOpenChange, roles, locale }: Props)
               </div>
 
               {getGenericError(state, t) && (
-                <div className="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+                <div
+                  role="alert"
+                  className="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700"
+                >
                   {getGenericError(state, t)}
                 </div>
               )}
 
-              <p className="text-xs text-neutral-500">{t('tempPasswordNote')}</p>
+              <p className="text-xs text-neutral-600">{t('tempPasswordNote')}</p>
 
               <DialogFooter>
                 <SubmitButton />
@@ -135,26 +138,49 @@ function InviteSuccess({
       <DialogHeader>
         <DialogTitle>{t('successTitle')}</DialogTitle>
       </DialogHeader>
-      <p className="text-sm text-neutral-600">{t('successBody', { email })}</p>
+      <p className="text-sm text-neutral-700">{t('successBody', { email })}</p>
       {emailed && (
-        <p className="inline-flex items-center gap-1.5 text-sm text-green-700">
-          <Check className="size-4" />
+        <p className="inline-flex items-center gap-1.5 text-sm text-green-800">
+          <Check className="size-4" aria-hidden="true" />
           {t('emailedNote', { email })}
         </p>
       )}
-      <div className="rounded-lg border border-[#C9A961]/40 bg-[#FAF8F3] p-3 space-y-2">
-        <p className="text-xs text-neutral-500">{t('tempPasswordLabel')}</p>
+      <div
+        role="region"
+        aria-label={t('tempPasswordLabel')}
+        className="rounded-lg border border-[#C9A961]/40 bg-[#FAF8F3] p-3 space-y-2"
+      >
+        <p id="temp-password-label" className="text-xs text-neutral-700">
+          {t('tempPasswordLabel')}
+        </p>
         <div className="flex items-center justify-between gap-3">
-          <code className="text-base font-mono font-semibold text-neutral-900" dir="ltr">
+          <code
+            aria-labelledby="temp-password-label"
+            className="text-base font-mono font-semibold text-neutral-900"
+            dir="ltr"
+          >
             {tempPassword}
           </code>
-          <Button type="button" variant="outline" size="sm" onClick={copy}>
-            {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={copy}
+            aria-label={copied ? tc('copied') : tc('copy')}
+          >
+            {copied ? (
+              <Check className="size-3.5" aria-hidden="true" />
+            ) : (
+              <Copy className="size-3.5" aria-hidden="true" />
+            )}
             {copied ? tc('copied') : tc('copy')}
           </Button>
         </div>
+        <span role="status" aria-live="polite" className="sr-only">
+          {copied ? tc('copied') : ''}
+        </span>
       </div>
-      <p className="text-xs text-amber-700">{t('tempPasswordWarning')}</p>
+      <p className="text-xs text-amber-800">{t('tempPasswordWarning')}</p>
       <DialogFooter>
         <Button type="button" onClick={onDone} className="bg-[#C9A961] hover:bg-[#E8D5A2] text-[#0A0A0A] font-semibold">
           {tc('done')}

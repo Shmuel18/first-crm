@@ -8,7 +8,6 @@ import {
   FolderArchive,
   Home,
   Pencil,
-  Settings,
   UserCircle2,
 } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
@@ -96,7 +95,7 @@ export default async function CaseDetailPage({ params }: Props) {
           rightSlot={
             <Link
               href={`/cases/${caseData.id}/borrowers/new`}
-              className="text-xs text-[#C9A961] hover:underline font-medium"
+              className="text-xs text-[#A88840] hover:underline font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
             >
               {t('blocks.addBorrower')}
             </Link>
@@ -142,14 +141,14 @@ export default async function CaseDetailPage({ params }: Props) {
           rightSlot={
             <Link
               href={`/cases/${caseData.id}/banks/new`}
-              className="text-xs text-[#C9A961] hover:underline font-medium"
+              className="text-xs text-[#A88840] hover:underline font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
             >
               {t('blocks.addBank')}
             </Link>
           }
         >
           {banks.length === 0 ? (
-            <p className="text-sm text-neutral-500 text-center py-6">{t('blocks.noBanks')}</p>
+            <p className="text-sm text-neutral-600 text-center py-6">{t('blocks.noBanks')}</p>
           ) : (
             <div className="space-y-2">
               {banks.map((cb) => (
@@ -180,7 +179,7 @@ export default async function CaseDetailPage({ params }: Props) {
           {caseData.short_note ? (
             <p className="text-sm text-neutral-800 leading-relaxed">{caseData.short_note}</p>
           ) : (
-            <p className="text-sm text-neutral-400 italic">{t('blocks.shortNoteEmpty')}</p>
+            <p className="text-sm text-neutral-600 italic">{t('blocks.shortNoteEmpty')}</p>
           )}
         </CaseBlock>
 
@@ -196,7 +195,7 @@ export default async function CaseDetailPage({ params }: Props) {
               }}
             />
           ) : (
-            <p className="text-sm text-neutral-400 italic">
+            <p className="text-sm text-neutral-600 italic">
               {t('blocks.requestDetailsEmpty')}
             </p>
           )}
@@ -209,28 +208,26 @@ export default async function CaseDetailPage({ params }: Props) {
           rightSlot={
             <Link
               href={`/cases/${caseData.id}/documents`}
-              className="text-xs text-[#C9A961] hover:underline font-medium"
+              className="text-xs text-[#A88840] hover:underline font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
             >
               {t('blocks.openDocuments')}
             </Link>
           }
         >
-          <p className="text-sm text-neutral-500 text-center py-4">
+          <p className="text-sm text-neutral-600 text-center py-4">
             {t('blocks.documentsHint')}
           </p>
         </CaseBlock>
       </div>
 
-      <div className="text-center text-xs text-neutral-400 pt-4">
+      <div className="text-center text-xs text-neutral-600 pt-4">
         <Link
           href={`/cases/${caseData.id}/edit`}
-          className="inline-flex items-center gap-1 hover:text-[#C9A961] transition"
+          className="inline-flex items-center gap-1 hover:text-[#A88840] rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40 transition"
         >
-          <Pencil className="size-3" />
+          <Pencil className="size-3" aria-hidden="true" />
           {tc('edit')}
         </Link>
-        <span className="mx-2">·</span>
-        <Settings className="size-3 inline-block align-middle" />
       </div>
     </div>
   );

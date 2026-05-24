@@ -51,9 +51,14 @@ export function BackupRestoreButton({ fileId, fileName }: Props) {
         type="button"
         onClick={() => setOpen(true)}
         disabled={pending}
-        className="inline-flex items-center gap-1 text-xs text-neutral-500 hover:text-[#A88840] disabled:opacity-60 transition shrink-0"
+        aria-busy={pending}
+        className="inline-flex items-center gap-1 text-xs text-neutral-700 hover:text-[#A88840] disabled:opacity-60 transition shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
       >
-        {pending ? <Loader2 className="size-3.5 animate-spin" /> : <History className="size-3.5" />}
+        {pending ? (
+          <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+        ) : (
+          <History className="size-3.5" aria-hidden="true" />
+        )}
         {t('restore')}
       </button>
 

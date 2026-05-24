@@ -46,6 +46,14 @@ export function UserMenu({ fullName, initials, roleName }: UserMenuProps) {
     setOpen(false);
   };
 
+  // Restore focus to the trigger when the menu closes — without this, mouse
+  // users land back where they were but keyboard users get focus reset to <body>.
+  useEffect(() => {
+    if (!open && document.activeElement === document.body) {
+      buttonRef.current?.focus();
+    }
+  }, [open]);
+
   return (
     <div className="relative">
       <button
@@ -53,33 +61,40 @@ export function UserMenu({ fullName, initials, roleName }: UserMenuProps) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={t('open')}
-        className="flex items-center gap-2.5 px-3 py-1.5 border border-[#333] rounded-lg hover:border-[#C9A961] hover:bg-[#1A1A1A] transition cursor-pointer"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="flex items-center gap-2.5 px-3 py-1.5 border border-[#333] rounded-lg hover:border-[#C9A961] hover:bg-[#1A1A1A] transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8C77B] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
       >
-        <div className="size-8 rounded-full btn-gold flex items-center justify-center font-bold text-xs">
+        <div
+          aria-hidden="true"
+          className="size-8 rounded-full btn-gold flex items-center justify-center font-bold text-xs"
+        >
           {initials}
         </div>
         <div className="hidden md:flex flex-col leading-tight items-start">
           <span className="text-xs font-medium">{fullName}</span>
-          <span className="text-[10px] text-neutral-500">{roleName}</span>
+          <span className="text-[10px] text-neutral-300">{roleName}</span>
         </div>
       </button>
 
       {open && (
         <div
           ref={menuRef}
+          role="menu"
+          aria-label={t('open')}
           className="absolute end-0 top-full mt-2 w-64 bg-white text-neutral-900 rounded-lg shadow-2xl border border-neutral-200 z-50 overflow-hidden"
         >
           <div className="px-4 py-3 border-b border-neutral-100 bg-neutral-50">
             <div className="text-sm font-medium text-neutral-900">{fullName}</div>
-            <div className="text-xs text-neutral-500 mt-0.5">{roleName}</div>
+            <div className="text-xs text-neutral-600 mt-0.5">{roleName}</div>
           </div>
 
           <div className="px-4 py-3 border-b border-neutral-100">
-            <div className="inline-flex items-center gap-1.5 text-xs text-neutral-500 mb-2">
-              <Globe className="size-3.5" />
+            <div className="inline-flex items-center gap-1.5 text-xs text-neutral-600 mb-2">
+              <Globe className="size-3.5" aria-hidden="true" />
               {t('language')}
             </div>
-            <div className="flex gap-1">
+            <div className="flex gap-1" role="group" aria-label={t('language')}>
               <LocaleOption
                 label={t('languageHebrew')}
                 active={currentLocale === 'he'}
@@ -95,19 +110,21 @@ export function UserMenu({ fullName, initials, roleName }: UserMenuProps) {
 
           <Link
             href="/settings"
+            role="menuitem"
             onClick={() => setOpen(false)}
-            className="w-full px-4 py-2.5 text-sm text-start hover:bg-neutral-50 inline-flex items-center gap-2 text-neutral-700"
+            className="w-full px-4 py-2.5 text-sm text-start hover:bg-neutral-50 focus-visible:outline-none focus-visible:bg-neutral-50 inline-flex items-center gap-2 text-neutral-700"
           >
-            <Settings className="size-4 text-neutral-400" />
+            <Settings className="size-4 text-neutral-500" aria-hidden="true" />
             {t('settings')}
           </Link>
 
           <form action={logoutAction} className="border-t border-neutral-100">
             <button
               type="submit"
-              className="w-full px-4 py-2.5 text-sm text-start hover:bg-red-50 inline-flex items-center gap-2 text-red-600"
+              role="menuitem"
+              className="w-full px-4 py-2.5 text-sm text-start hover:bg-red-50 focus-visible:outline-none focus-visible:bg-red-50 inline-flex items-center gap-2 text-red-700"
             >
-              <LogOut className="size-4" />
+              <LogOut className="size-4" aria-hidden="true" />
               {t('logout')}
             </button>
           </form>
@@ -130,14 +147,16 @@ function LocaleOption({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={[
         'flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40',
         active
           ? 'bg-[#C9A961] text-black'
           : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200',
       ].join(' ')}
     >
-      {active && <Check className="size-3" />}
+      {active && <Check className="size-3" aria-hidden="true" />}
       {label}
     </button>
   );

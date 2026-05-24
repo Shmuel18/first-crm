@@ -51,7 +51,10 @@ export function DashboardExportButtons() {
         onClick={() => handleExport('pdf')}
       />
       {error && (
-        <span className="absolute top-full end-0 mt-1 text-xs text-red-600 whitespace-nowrap">
+        <span
+          role="alert"
+          className="absolute top-full end-0 mt-1 text-xs text-red-700 whitespace-nowrap"
+        >
           {error}
         </span>
       )}
@@ -65,7 +68,7 @@ function ExportButton({
   loading,
   onClick,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; 'aria-hidden'?: 'true' }>;
   label: string;
   loading: boolean;
   onClick: () => void;
@@ -76,9 +79,13 @@ function ExportButton({
       disabled={loading}
       onClick={onClick}
       aria-busy={loading}
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 text-xs text-neutral-700 hover:bg-neutral-50 transition"
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 text-xs text-neutral-700 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40 disabled:opacity-60 transition"
     >
-      {loading ? <Loader2 className="size-3.5 animate-spin" /> : <Icon className="size-3.5" />}
+      {loading ? (
+        <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+      ) : (
+        <Icon className="size-3.5" aria-hidden="true" />
+      )}
       {label}
     </button>
   );

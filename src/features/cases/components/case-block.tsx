@@ -34,13 +34,17 @@ export function CaseBlock({
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="flex items-center gap-2.5 text-start group flex-1"
+          aria-expanded={open}
+          className="flex items-center gap-2.5 text-start group flex-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
         >
-          <span className="text-[#C9A961] [&_svg]:size-5">{icon}</span>
+          <span aria-hidden="true" className="text-[#A88840] [&_svg]:size-5">
+            {icon}
+          </span>
           <span className="font-display text-base font-medium text-neutral-900">{title}</span>
           <ChevronDown
+            aria-hidden="true"
             className={[
-              'size-4 text-neutral-400 transition-transform',
+              'size-4 text-neutral-500 transition-transform',
               open ? 'rotate-180' : '',
             ].join(' ')}
           />

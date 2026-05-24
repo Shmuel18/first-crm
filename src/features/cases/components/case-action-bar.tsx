@@ -59,18 +59,18 @@ export async function CaseActionBar({
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <Link
             href="/cases"
-            title={tc('back')}
-            className="inline-flex items-center justify-center size-7 border border-neutral-300 hover:border-[#C9A961] text-neutral-600 hover:text-[#C9A961] bg-white/60 rounded-md transition shrink-0"
+            aria-label={tc('back')}
+            className="inline-flex items-center justify-center size-7 border border-neutral-300 hover:border-[#A88840] text-neutral-700 hover:text-[#A88840] bg-white/60 rounded-md transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
           >
-            <BackArrow locale={locale} className="size-3.5" />
+            <BackArrow locale={locale} className="size-3.5" aria-hidden="true" />
           </Link>
 
           <div className="flex items-center gap-2 flex-wrap min-w-0">
             <span className="font-display text-base font-semibold truncate max-w-md">
               {borrowerNames || t('withBorrowers')}
             </span>
-            <span className="text-neutral-300">·</span>
-            <span className="text-[#C9A961] font-mono text-sm">
+            <span aria-hidden="true" className="text-neutral-400">·</span>
+            <span className="text-[#A88840] font-mono text-sm">
               {t('caseLabel')} {caseNumber}
             </span>
             <CaseStatusBadge name={statusName} color={statusColor} interactive />
@@ -143,32 +143,35 @@ function ActionIcon({
   hasAlert,
   href,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; 'aria-hidden'?: 'true' }>;
   title: string;
   hasAlert?: boolean;
   href?: string;
 }) {
   const className =
-    'relative size-8 rounded-md text-neutral-500 hover:bg-white hover:text-[#C9A961] transition flex items-center justify-center';
+    'relative size-8 rounded-md text-neutral-600 hover:bg-white hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50 transition flex items-center justify-center';
   const content = (
     <>
-      <Icon className="size-3.5" />
+      <Icon className="size-3.5" aria-hidden="true" />
       {hasAlert && (
-        <span className="absolute top-1 start-1 size-1.5 bg-[#C9A961] rounded-full ring-2 ring-[#FAF8F3]" />
+        <span
+          aria-hidden="true"
+          className="absolute top-1 start-1 size-1.5 bg-[#A88840] rounded-full ring-2 ring-[#FAF8F3]"
+        />
       )}
     </>
   );
 
   if (href) {
     return (
-      <Link href={href} title={title} className={className}>
+      <Link href={href} aria-label={title} className={className}>
         {content}
       </Link>
     );
   }
 
   return (
-    <button type="button" title={title} className={className}>
+    <button type="button" aria-label={title} className={className}>
       {content}
     </button>
   );

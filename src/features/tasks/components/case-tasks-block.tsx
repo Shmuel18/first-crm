@@ -46,10 +46,10 @@ export async function CaseTasksBlock({ caseId, locale }: Props) {
         <div className="pt-2 text-end">
           <Link
             href={`/tasks?view=all&case=${caseId}`}
-            className="inline-flex items-center gap-1 text-xs text-[#C9A961] hover:underline"
+            className="inline-flex items-center gap-1 text-xs text-[#A88840] hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
           >
             {t('showAll', { count: hidden })}
-            <ArrowUpRight className="size-3" />
+            <ArrowUpRight className="size-3" aria-hidden="true" />
           </Link>
         </div>
       )}

@@ -34,20 +34,23 @@ export function TemplateRow({ template, onEdit }: Props) {
 
   return (
     <li className="flex items-start gap-3 px-4 py-3 hover:bg-neutral-50/60">
-      <span className="size-9 rounded-lg bg-[#FAF8F3] text-[#C9A961] flex items-center justify-center shrink-0">
+      <span
+        aria-hidden="true"
+        className="size-9 rounded-lg bg-[#FAF8F3] text-[#A88840] flex items-center justify-center shrink-0"
+      >
         <Icon className="size-4" />
       </span>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="text-sm font-medium text-neutral-900">{template.name}</p>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-neutral-100 text-neutral-500">
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-neutral-100 text-neutral-700">
             {t(`channels.${template.channel}`)}
           </span>
         </div>
         {template.subject && (
-          <p className="text-xs text-neutral-500 mt-0.5 truncate">{template.subject}</p>
+          <p className="text-xs text-neutral-600 mt-0.5 truncate">{template.subject}</p>
         )}
-        <p className="text-xs text-neutral-600 mt-1 line-clamp-2 whitespace-pre-wrap">
+        <p className="text-xs text-neutral-700 mt-1 line-clamp-2 whitespace-pre-wrap">
           {template.body}
         </p>
       </div>
@@ -55,19 +58,19 @@ export function TemplateRow({ template, onEdit }: Props) {
         <button
           type="button"
           onClick={() => onEdit(template)}
-          aria-label={tc('edit')}
-          className="size-8 rounded-md text-neutral-500 hover:bg-neutral-100 hover:text-[#C9A961] flex items-center justify-center transition"
+          aria-label={`${tc('edit')} — ${template.name}`}
+          className="size-8 rounded-md text-neutral-600 hover:bg-neutral-100 hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50 flex items-center justify-center transition"
         >
-          <Pencil className="size-3.5" />
+          <Pencil className="size-3.5" aria-hidden="true" />
         </button>
         <button
           type="button"
           onClick={handleDelete}
           disabled={pending}
-          aria-label={tc('delete')}
-          className="size-8 rounded-md text-neutral-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50 flex items-center justify-center transition"
+          aria-label={`${tc('delete')} — ${template.name}`}
+          className="size-8 rounded-md text-neutral-600 hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300 disabled:opacity-50 flex items-center justify-center transition"
         >
-          <Trash2 className="size-3.5" />
+          <Trash2 className="size-3.5" aria-hidden="true" />
         </button>
       </div>
     </li>

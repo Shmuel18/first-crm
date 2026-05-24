@@ -79,29 +79,29 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <p className="text-sm font-medium text-neutral-900 truncate">{fullName}</p>
-          {isSelf && <span className="text-[10px] text-neutral-400">({t('you')})</span>}
+          {isSelf && <span className="text-[10px] text-neutral-600">({t('you')})</span>}
           {!member.is_active && (
-            <span className="inline-flex items-center px-1.5 h-5 rounded-full text-[10px] font-medium bg-neutral-200 text-neutral-600">
+            <span className="inline-flex items-center px-1.5 h-5 rounded-full text-[10px] font-medium bg-neutral-200 text-neutral-800">
               {t('status.inactive')}
             </span>
           )}
         </div>
-        <p className="text-xs text-neutral-500 truncate" dir="ltr">{member.email}</p>
+        <p className="text-xs text-neutral-600 truncate" dir="ltr">{member.email}</p>
       </div>
 
-      <div className="hidden sm:flex items-center gap-2 text-[11px] text-neutral-600">
+      <div className="hidden sm:flex items-center gap-2 text-[11px] text-neutral-700">
         <span
+          aria-label={`${t('columns.cases')}: ${member.activeCasesCount}`}
           className="inline-flex items-center gap-1 rounded-md bg-neutral-50 border border-neutral-200 px-2 py-1 tabular-nums"
-          title={t('columns.cases')}
         >
-          <Briefcase className="size-3.5 text-[#C9A961]" />
+          <Briefcase className="size-3.5 text-[#A88840]" aria-hidden="true" />
           {member.activeCasesCount}
         </span>
         <span
+          aria-label={`${t('columns.tasks')}: ${member.openTasksCount}`}
           className="inline-flex items-center gap-1 rounded-md bg-neutral-50 border border-neutral-200 px-2 py-1 tabular-nums"
-          title={t('columns.tasks')}
         >
-          <CheckSquare className="size-3.5 text-[#C9A961]" />
+          <CheckSquare className="size-3.5 text-[#A88840]" aria-hidden="true" />
           {member.openTasksCount}
         </span>
       </div>
@@ -110,6 +110,7 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
         value={member.role?.id ?? ''}
         onChange={(e) => handleRoleChange(e.target.value)}
         disabled={pending || !member.is_active || isSelf}
+        aria-label={`${t('invite.role')} — ${fullName}`}
         title={isSelf ? t('toast.selfRoleChange') : undefined}
         className="w-36 h-8 text-xs"
       >

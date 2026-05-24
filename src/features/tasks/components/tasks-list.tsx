@@ -86,10 +86,13 @@ export function TasksList({
 
       {tasks.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-center py-14 px-4 rounded-xl border border-dashed border-neutral-200 bg-white">
-          <span className="size-14 rounded-full bg-[#C9A961]/10 flex items-center justify-center mb-4">
-            <ClipboardList className="size-7 text-[#C9A961]" />
+          <span
+            aria-hidden="true"
+            className="size-14 rounded-full bg-[#C9A961]/15 flex items-center justify-center mb-4"
+          >
+            <ClipboardList className="size-7 text-[#A88840]" />
           </span>
-          <p className="text-sm text-neutral-500 mb-4">{t(emptyKey)}</p>
+          <p className="text-sm text-neutral-600 mb-4">{t(emptyKey)}</p>
           {!hideCreateButton && (
             <Button
               type="button"
@@ -112,11 +115,12 @@ export function TasksList({
             <section key={group.status}>
               <div className="flex items-center gap-2 px-1 mb-1.5">
                 <span
+                  aria-hidden="true"
                   className="size-2.5 rounded-full shrink-0"
                   style={{ background: STATUS_COLOR[group.status] }}
                 />
                 <h3 className="text-sm font-semibold text-neutral-700">{ts(group.status)}</h3>
-                <span className="text-xs font-medium text-neutral-400 tabular-nums">
+                <span className="text-xs font-medium text-neutral-600 tabular-nums">
                   {group.items.length}
                 </span>
               </div>

@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 import { DashboardExportButtons } from './dashboard-export-buttons';
 
@@ -92,30 +93,28 @@ export function DashboardSavedViews() {
             </button>
           }
         />
-        <DropdownMenuContent align="start" className="min-w-52">
+        <DropdownMenuContent align="start" className="min-w-60">
           {views.length === 0 ? (
-            <div className="px-2 py-1.5 text-xs text-neutral-400">{t('none')}</div>
+            <div className="px-2 py-1.5 text-xs text-neutral-500">{t('none')}</div>
           ) : (
             views.map((v) => (
-              <DropdownMenuItem
-                key={v.id}
-                onClick={() => applyView(v)}
-                className="justify-between gap-2"
-              >
-                <span className="truncate">{v.name}</span>
-                <span
-                  role="button"
-                  tabIndex={-1}
-                  aria-label={t('delete')}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeView(v.id);
-                  }}
-                  className="text-neutral-400 hover:text-rose-600"
+              // Two adjacent menu items per row — both arrow-reachable. Wrapper div
+              // is layout-only; base-ui finds menu items by role, not by nesting.
+              <div key={v.id} className="flex items-center gap-0.5">
+                <DropdownMenuItem
+                  onClick={() => applyView(v)}
+                  className="flex-1 min-w-0"
                 >
-                  <X className="size-3.5" />
-                </span>
-              </DropdownMenuItem>
+                  <span className="truncate">{v.name}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => removeView(v.id)}
+                  aria-label={t('delete', { name: v.name })}
+                  className="shrink-0 text-neutral-500 hover:bg-rose-50 hover:text-rose-700 focus:bg-rose-50 focus:text-rose-700 px-2"
+                >
+                  <X className="size-3.5" aria-hidden="true" />
+                </DropdownMenuItem>
+              </div>
             ))
           )}
         </DropdownMenuContent>
@@ -127,9 +126,9 @@ export function DashboardSavedViews() {
           setName('');
           setSaveOpen(true);
         }}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[#C9A961] hover:bg-[#C9A961]/10 transition"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[#A88840] hover:bg-[#C9A961]/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840] transition"
       >
-        <Star className="size-3.5" />
+        <Star className="size-3.5" aria-hidden="true" />
         {t('saveCurrent')}
       </button>
 
@@ -148,13 +147,17 @@ export function DashboardSavedViews() {
             }}
             className="space-y-4"
           >
-            <Input
-              autoFocus
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t('namePlaceholder')}
-              maxLength={60}
-            />
+            <div className="space-y-1.5">
+              <Label htmlFor="saved-view-name">{t('namePlaceholder')}</Label>
+              <Input
+                id="saved-view-name"
+                autoFocus
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={t('namePlaceholder')}
+                maxLength={60}
+              />
+            </div>
             <DialogFooter>
               <Button
                 type="submit"

@@ -48,11 +48,11 @@ export function SendDocRequestButton({ caseId, title }: { caseId: string; title:
     <>
       <button
         type="button"
-        title={title}
+        aria-label={title}
         onClick={() => setOpen(true)}
-        className="flex size-8 items-center justify-center rounded-md text-neutral-500 transition hover:bg-white hover:text-[#C9A961]"
+        className="flex size-8 items-center justify-center rounded-md text-neutral-700 transition hover:bg-white hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
       >
-        <MessageSquare className="size-3.5" />
+        <MessageSquare className="size-3.5" aria-hidden="true" />
       </button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-sm">

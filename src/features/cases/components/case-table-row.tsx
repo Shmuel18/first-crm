@@ -79,7 +79,7 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }
 
   return (
     <tr
-      className={`${rowClasses} focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A961] focus-visible:ring-inset`}
+      className={`${rowClasses} focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840] focus-visible:ring-inset`}
       onClick={navigateToCase}
       onKeyDown={handleKeyDown}
       role="link"
@@ -87,12 +87,12 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }
       aria-label={row.clientLabel || t('noBorrowers')}
       title={auditTooltip}
     >
-      <td className="px-4 py-3 text-xs text-neutral-400 tabular-nums">{row.index}</td>
+      <td className="px-4 py-3 text-xs text-neutral-600 tabular-nums">{row.index}</td>
 
       <td className="px-4 py-3">
-        <span className="font-medium text-sm text-neutral-900 group-hover:text-[#C9A961] transition whitespace-nowrap">
+        <span className="font-medium text-sm text-neutral-900 group-hover:text-[#A88840] transition whitespace-nowrap">
           {row.clientLabel || (
-            <span className="italic font-normal text-neutral-400">{t('noBorrowers')}</span>
+            <span className="italic font-normal text-neutral-500">{t('noBorrowers')}</span>
           )}
         </span>
       </td>

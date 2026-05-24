@@ -58,7 +58,9 @@
     "team": "Team",
     "templates": "Templates",
     "auditLog": "Audit Log",
-    "settings": "Settings"
+    "settings": "Settings",
+    "primary": "Primary navigation",
+    "unreadTasks": "{count, plural, =1 {1 open task} other {# open tasks}}"
   },
   "topbar": {
     "searchPlaceholder": "Search by name, ID, phone or case number...",
@@ -81,7 +83,7 @@
       "passwordLabel": "Password",
       "submitButton": "Sign in",
       "submitting": "Signing in...",
-      "forgotPassword": "Forgot password?",
+      "forgotPassword": "Forgot password? Contact the system administrator to reset it.",
       "footer": "© 2026 Kaufman Finance Group · All rights reserved",
       "errors": {
         "invalidInput": "Invalid email or password",
@@ -113,7 +115,8 @@
       "hideClosedFrozen": "Hide closed & frozen",
       "all": "All",
       "clear": "Clear",
-      "noMatches": "No cases match the current filters"
+      "noMatches": "No cases match the current filters",
+      "tableCaption": "Cases table — {count, plural, =1 {1 case} other {# cases}}"
     },
     "density": {
       "label": "Row density",
@@ -127,7 +130,7 @@
       "none": "No saved views",
       "namePlaceholder": "View name",
       "savedToast": "View \"{name}\" saved",
-      "delete": "Delete view",
+      "delete": "Delete view \"{name}\"",
       "exportExcel": "Export to Excel",
       "exportPdf": "Export to PDF",
       "exporting": "Exporting...",
@@ -924,6 +927,8 @@
     "title": "Notifications",
     "empty": "No new notifications",
     "markAllRead": "Mark all read",
+    "unreadCount": "{count, plural, =1 {1 unread notification} other {# unread notifications}}",
+    "unreadIndicator": "Unread",
     "someone": "Someone",
     "aTask": "a task",
     "message": {

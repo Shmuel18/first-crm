@@ -42,12 +42,13 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
         : '[&_td]:h-14';
 
   if (filtered.length === 0) {
-    return <p className="px-6 py-12 text-center text-sm text-neutral-500">{tf('noMatches')}</p>;
+    return <p className="px-6 py-12 text-center text-sm text-neutral-600">{tf('noMatches')}</p>;
   }
 
   return (
     <div>
       <table className="w-full table-fixed min-w-[1100px]">
+        <caption className="sr-only">{tf('tableCaption', { count: filtered.length })}</caption>
         <colgroup>
           <col className="w-12" />
           <col className="w-52" />
@@ -86,7 +87,10 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
 
 function Th({ children }: { children: React.ReactNode }) {
   return (
-    <th className="text-start text-xs font-semibold text-neutral-500 uppercase tracking-wider px-4 py-3">
+    <th
+      scope="col"
+      className="text-start text-xs font-semibold text-neutral-600 uppercase tracking-wider px-4 py-3"
+    >
       {children}
     </th>
   );

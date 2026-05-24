@@ -17,10 +17,10 @@ type DataRowProps = {
 };
 
 const ACCENT_CLASSES: Record<Accent, string> = {
-  gold: 'text-[#C9A961]',
-  red: 'text-red-600',
-  green: 'text-emerald-600',
-  yellow: 'text-amber-600',
+  gold: 'text-[#A88840]',
+  red: 'text-red-700',
+  green: 'text-emerald-700',
+  yellow: 'text-amber-700',
 };
 
 export function DataRow({ label, value, large, accent }: DataRowProps) {

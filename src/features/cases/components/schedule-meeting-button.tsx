@@ -68,11 +68,11 @@ export function ScheduleMeetingButton({ title, clientLabel }: Props) {
     <>
       <button
         type="button"
-        title={title}
+        aria-label={title}
         onClick={openDialog}
-        className="relative flex size-8 items-center justify-center rounded-md text-neutral-500 transition hover:bg-white hover:text-[#C9A961]"
+        className="relative flex size-8 items-center justify-center rounded-md text-neutral-600 transition hover:bg-white hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
       >
-        <Calendar className="size-3.5" />
+        <Calendar className="size-3.5" aria-hidden="true" />
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -102,7 +102,7 @@ export function ScheduleMeetingButton({ title, clientLabel }: Props) {
               <select
                 value={duration}
                 onChange={(e) => setDuration(Number(e.target.value))}
-                className="h-9 w-full rounded-md border border-neutral-200 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C9A961]/40"
+                className="h-9 w-full rounded-md border border-neutral-200 px-2 text-sm focus:outline-none focus-visible:border-[#A88840] focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
               >
                 {DURATIONS.map((m) => (
                   <option key={m} value={m}>
@@ -119,7 +119,7 @@ export function ScheduleMeetingButton({ title, clientLabel }: Props) {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}
-                className="w-full resize-none rounded-md border border-neutral-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#C9A961]/40"
+                className="w-full resize-none rounded-md border border-neutral-200 px-2 py-1.5 text-sm focus:outline-none focus-visible:border-[#A88840] focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
               />
             </Field>
             <DialogFooter>
@@ -150,9 +150,11 @@ function Field({
   className?: string;
   children: React.ReactNode;
 }) {
+  // <label> wraps the control directly, so no `htmlFor` is needed — the implicit
+  // association still works for screen readers and click-to-focus.
   return (
     <label className={['block', className].filter(Boolean).join(' ')}>
-      <span className="mb-1 block text-xs text-neutral-500">{label}</span>
+      <span className="mb-1 block text-xs text-neutral-600">{label}</span>
       {children}
     </label>
   );

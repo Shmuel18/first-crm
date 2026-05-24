@@ -55,14 +55,21 @@ export function DashboardViewSelector({
         />
       </div>
 
-      <div className="relative ms-auto w-full sm:w-auto sm:flex-1 sm:max-w-md">
-        <Search className="absolute end-3 top-1/2 -translate-y-1/2 size-4 text-[#C9A961] pointer-events-none" />
+      <div
+        role="search"
+        className="relative ms-auto w-full sm:w-auto sm:flex-1 sm:max-w-md"
+      >
+        <Search
+          aria-hidden="true"
+          className="absolute end-3 top-1/2 -translate-y-1/2 size-4 text-[#A88840] pointer-events-none"
+        />
         <input
           type="search"
+          aria-label={tf('search')}
           value={query ?? ''}
           onChange={(e) => setQuery(e.target.value || null)}
           placeholder={tf('search')}
-          className="w-full rounded-xl border border-neutral-300 bg-white ps-4 pe-10 py-2.5 text-sm placeholder:text-neutral-400 shadow-sm focus:outline-none focus:border-[#C9A961] focus:ring-2 focus:ring-[#C9A961]/25 transition"
+          className="w-full rounded-xl border border-neutral-300 bg-white ps-4 pe-10 py-2.5 text-sm placeholder:text-neutral-500 shadow-sm focus:outline-none focus-visible:border-[#A88840] focus-visible:ring-2 focus-visible:ring-[#A88840]/40 transition"
         />
       </div>
     </div>

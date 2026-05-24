@@ -84,6 +84,8 @@ export function EditableStatusCell({
     });
   };
 
+  const triggerLabel = statusName ?? tc('noStatus');
+
   return (
     <>
       <button
@@ -93,13 +95,14 @@ export function EditableStatusCell({
         disabled={isPending}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="inline-flex items-center gap-1 cursor-pointer disabled:opacity-50"
+        aria-label={triggerLabel}
+        className="inline-flex items-center gap-1 cursor-pointer rounded-md disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
       >
         <CaseStatusBadge name={statusName} color={statusColor} />
         {isPending ? (
-          <Loader2 className="size-3 text-neutral-400 animate-spin" />
+          <Loader2 className="size-3 text-neutral-500 animate-spin" aria-hidden="true" />
         ) : (
-          <ChevronDown className="size-3 text-neutral-400" />
+          <ChevronDown className="size-3 text-neutral-500" aria-hidden="true" />
         )}
       </button>
 
@@ -108,30 +111,40 @@ export function EditableStatusCell({
           <div
             className="fixed inset-0 z-40"
             onClick={() => setOpen(false)}
-            aria-hidden
+            aria-hidden="true"
           />
           <div
             ref={dropdownRef}
+            role="listbox"
+            aria-label={triggerLabel}
             className="fixed z-50 bg-white border border-neutral-200 rounded-lg shadow-xl py-1 min-w-48 max-h-72 overflow-y-auto scrollbar-thin"
             style={pos}
           >
-            {options.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => handleSelect(opt)}
-                className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-start hover:bg-neutral-50"
-              >
-                <span className="inline-flex items-center gap-2">
-                  <span
-                    className="size-2 rounded-full shrink-0"
-                    style={{ backgroundColor: opt.color }}
-                  />
-                  {opt.name_he}
-                </span>
-                {opt.id === statusId && <Check className="size-3.5 text-[#C9A961]" />}
-              </button>
-            ))}
+            {options.map((opt) => {
+              const selected = opt.id === statusId;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  onClick={() => handleSelect(opt)}
+                  className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-start hover:bg-neutral-50 focus-visible:outline-none focus-visible:bg-[#FAF8F3]"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <span
+                      aria-hidden="true"
+                      className="size-2 rounded-full shrink-0"
+                      style={{ backgroundColor: opt.color }}
+                    />
+                    {opt.name_he}
+                  </span>
+                  {selected && (
+                    <Check className="size-3.5 text-[#A88840]" aria-hidden="true" />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </>
       )}

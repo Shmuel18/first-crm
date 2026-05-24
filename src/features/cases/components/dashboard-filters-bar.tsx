@@ -104,9 +104,9 @@ export function DashboardFiltersBar({
         <button
           type="button"
           onClick={clearAll}
-          className="inline-flex items-center gap-1 px-2 py-1.5 text-xs text-neutral-500 hover:text-[#A88840] transition"
+          className="inline-flex items-center gap-1 px-2 py-1.5 text-xs text-neutral-600 hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40 rounded transition"
         >
-          <X className="size-3.5" />
+          <X className="size-3.5" aria-hidden="true" />
           {t('clear')}
         </button>
       )}
@@ -129,8 +129,9 @@ export function DashboardFiltersBar({
 function chipClass(active: boolean): string {
   return [
     'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm transition',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40',
     active
-      ? 'border-[#C9A961] bg-[#FAF8F3] text-[#0A0A0A]'
+      ? 'border-[#A88840] bg-[#FAF8F3] text-[#0A0A0A]'
       : 'border-neutral-200 text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50',
   ].join(' ');
 }
@@ -149,13 +150,19 @@ function FilterSelect({
   allLabel: string;
 }) {
   const selected = options.find((o) => o.id === value);
+  const accessibleName = selected ? `${label}: ${selected.name}` : label;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <button type="button" className={chipClass(value !== null)}>
+          <button
+            type="button"
+            aria-label={accessibleName}
+            aria-pressed={value !== null}
+            className={chipClass(value !== null)}
+          >
             <span>{selected ? selected.name : label}</span>
-            <ChevronDown className="size-3.5 text-neutral-400" />
+            <ChevronDown className="size-3.5 text-neutral-500" aria-hidden="true" />
           </button>
         }
       />
@@ -182,11 +189,13 @@ function ToggleSwitch({ label, on, onClick }: { label: string; on: boolean; onCl
       type="button"
       role="switch"
       aria-checked={on}
+      aria-label={label}
       onClick={onClick}
-      className="inline-flex items-center gap-2 text-sm"
+      className="inline-flex items-center gap-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40 rounded-full"
     >
       <span
-        className={['relative w-9 h-5 rounded-full transition', on ? 'bg-[#C9A961]' : 'bg-neutral-300'].join(' ')}
+        aria-hidden="true"
+        className={['relative w-9 h-5 rounded-full transition', on ? 'bg-[#A88840]' : 'bg-neutral-400'].join(' ')}
       >
         <span
           className={[
@@ -195,7 +204,9 @@ function ToggleSwitch({ label, on, onClick }: { label: string; on: boolean; onCl
           ].join(' ')}
         />
       </span>
-      <span className="text-neutral-700">{label}</span>
+      <span aria-hidden="true" className="text-neutral-700">
+        {label}
+      </span>
     </button>
   );
 }

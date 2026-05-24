@@ -31,9 +31,13 @@ export function NotificationPreferencesForm({ preferences }: Props) {
 
   return (
     <form action={formAction} className="space-y-4">
-      <p className="text-sm text-neutral-500">{t('emailHint')}</p>
+      <p className="text-sm text-neutral-600">{t('emailHint')}</p>
 
-      <div className="rounded-xl border border-neutral-200 bg-white divide-y divide-neutral-100 overflow-hidden">
+      <div
+        role="group"
+        aria-label={t('title')}
+        className="rounded-xl border border-neutral-200 bg-white divide-y divide-neutral-100 overflow-hidden"
+      >
         <ToggleRow
           name="email_task_assigned"
           label={t('emailTaskAssigned')}
@@ -60,11 +64,22 @@ function ToggleRow({
   label: string;
   defaultChecked: boolean;
 }) {
+  // The peer/peer-checked selector relies on the checkbox preceding the visual
+  // track in the DOM, so the input goes first; the label wraps both for an
+  // implicit association and a clickable row.
   return (
-    <label className="flex items-center justify-between gap-3 px-4 py-3 cursor-pointer">
+    <label className="flex items-center justify-between gap-3 px-4 py-3 cursor-pointer group has-[:focus-visible]:bg-neutral-50">
+      <input
+        type="checkbox"
+        name={name}
+        defaultChecked={defaultChecked}
+        className="peer sr-only"
+      />
       <span className="text-sm text-neutral-800">{label}</span>
-      <input type="checkbox" name={name} defaultChecked={defaultChecked} className="peer sr-only" />
-      <span className="relative w-10 h-6 rounded-full bg-neutral-300 shrink-0 transition-colors peer-checked:bg-[#C9A961] before:content-[''] before:absolute before:top-0.5 before:start-0.5 before:size-5 before:rounded-full before:bg-white before:shadow before:transition-all peer-checked:before:start-[1.125rem]" />
+      <span
+        aria-hidden="true"
+        className="relative w-10 h-6 rounded-full bg-neutral-400 shrink-0 transition-colors peer-checked:bg-[#A88840] peer-focus-visible:ring-2 peer-focus-visible:ring-[#A88840]/40 before:content-[''] before:absolute before:top-0.5 before:start-0.5 before:size-5 before:rounded-full before:bg-white before:shadow before:transition-all peer-checked:before:start-[1.125rem]"
+      />
     </label>
   );
 }

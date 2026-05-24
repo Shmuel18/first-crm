@@ -75,20 +75,20 @@ export function DocumentsActionBar({
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <Link
             href={`/cases/${caseId}`}
-            className="inline-flex items-center justify-center size-7 border border-neutral-300 hover:border-[#C9A961] text-neutral-600 hover:text-[#C9A961] bg-white/60 rounded-md transition shrink-0"
-            title={tPage('backToCase')}
+            aria-label={tPage('backToCase')}
+            className="inline-flex items-center justify-center size-7 border border-neutral-300 hover:border-[#A88840] text-neutral-700 hover:text-[#A88840] bg-white/60 rounded-md transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
           >
-            <BackArrow locale={locale} className="size-3.5" />
+            <BackArrow locale={locale} className="size-3.5" aria-hidden="true" />
           </Link>
           <div className="flex items-center gap-2 flex-wrap min-w-0">
             <span className="font-display text-base font-semibold truncate max-w-md">
               {borrowerNames || tCase('withBorrowers')}
             </span>
-            <span className="text-neutral-300">·</span>
-            <span className="text-[#C9A961] font-mono text-sm">
+            <span aria-hidden="true" className="text-neutral-400">·</span>
+            <span className="text-[#A88840] font-mono text-sm">
               {tCase('caseLabel')} {caseNumber}
             </span>
-            <span className="hidden md:inline-flex text-[10px] px-1.5 py-0.5 rounded bg-white border border-neutral-200 text-neutral-600 uppercase tracking-wider">
+            <span className="hidden md:inline-flex text-[10px] px-1.5 py-0.5 rounded bg-white border border-neutral-200 text-neutral-700 uppercase tracking-wider">
               {tPage('pageTitle')}
             </span>
           </div>
@@ -98,22 +98,23 @@ export function DocumentsActionBar({
           <button
             type="button"
             onClick={onUpload}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#C9A961] hover:bg-[#B8985A] text-[#0A0A0A] font-medium text-xs transition"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#C9A961] hover:bg-[#B8985A] text-[#0A0A0A] font-medium text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]"
           >
-            <Upload className="size-3.5" />
+            <Upload className="size-3.5" aria-hidden="true" />
             {t('upload')}
           </button>
           <button
             type="button"
             onClick={handleSync}
             disabled={isPending}
-            title={tSync('button')}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-neutral-300 hover:border-[#C9A961] text-neutral-700 hover:text-[#C9A961] bg-white/60 text-xs transition disabled:opacity-50"
+            aria-busy={isPending}
+            aria-label={tSync('button')}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-neutral-300 hover:border-[#A88840] text-neutral-700 hover:text-[#A88840] bg-white/60 text-xs transition disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
           >
             {isPending ? (
-              <Loader2 className="size-3.5 animate-spin" />
+              <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
             ) : (
-              <RefreshCw className="size-3.5" />
+              <RefreshCw className="size-3.5" aria-hidden="true" />
             )}
             <span className="hidden lg:inline">{tSync('button')}</span>
           </button>
@@ -126,10 +127,10 @@ export function DocumentsActionBar({
           />
           <Link
             href={`/cases/${caseId}/history`}
-            title={t('history')}
-            className="flex size-8 items-center justify-center rounded-md text-neutral-500 transition hover:bg-white hover:text-[#C9A961]"
+            aria-label={t('history')}
+            className="flex size-8 items-center justify-center rounded-md text-neutral-700 transition hover:bg-white hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
           >
-            <ClipboardList className="size-3.5" />
+            <ClipboardList className="size-3.5" aria-hidden="true" />
           </Link>
         </div>
       </div>
@@ -143,23 +144,29 @@ function BarIcon({
   disabled,
   href,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; 'aria-hidden'?: 'true' }>;
   title: string;
   disabled?: boolean;
   href?: string;
 }) {
   const className =
-    'size-8 rounded-md text-neutral-500 hover:bg-white hover:text-[#C9A961] transition flex items-center justify-center disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-neutral-500 disabled:cursor-not-allowed';
+    'size-8 rounded-md text-neutral-700 hover:bg-white hover:text-[#A88840] transition flex items-center justify-center disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-neutral-700 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50';
   if (href && !disabled) {
     return (
-      <a href={href} target="_blank" rel="noopener noreferrer" title={title} className={className}>
-        <Icon className="size-3.5" />
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={title}
+        className={className}
+      >
+        <Icon className="size-3.5" aria-hidden="true" />
       </a>
     );
   }
   return (
-    <button type="button" disabled={disabled} title={title} className={className}>
-      <Icon className="size-3.5" />
+    <button type="button" disabled={disabled} aria-label={title} className={className}>
+      <Icon className="size-3.5" aria-hidden="true" />
     </button>
   );
 }

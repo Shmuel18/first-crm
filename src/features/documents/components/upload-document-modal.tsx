@@ -143,10 +143,10 @@ export function UploadDocumentModal({
                 }}
                 onDragLeave={() => setIsDragOver(false)}
                 onDrop={handleDrop}
-                className={`flex-1 flex items-center gap-2 px-3 h-10 rounded-md border border-dashed transition cursor-pointer text-sm ${
+                className={`flex-1 flex items-center gap-2 px-3 h-10 rounded-md border border-dashed transition cursor-pointer text-sm focus-within:border-[#A88840] focus-within:ring-2 focus-within:ring-[#A88840]/30 ${
                   isDragOver
-                    ? 'border-[#C9A961] bg-[#C9A961]/10 text-[#C9A961]'
-                    : 'border-neutral-300 bg-neutral-50 hover:border-[#C9A961] hover:bg-[#C9A961]/5 text-neutral-600'
+                    ? 'border-[#A88840] bg-[#C9A961]/15 text-[#A88840]'
+                    : 'border-neutral-300 bg-neutral-50 hover:border-[#A88840] hover:bg-[#C9A961]/8 text-neutral-700'
                 }`}
               >
                 <UploadIcon className="size-4 shrink-0" />

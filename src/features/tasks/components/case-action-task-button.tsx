@@ -22,11 +22,11 @@ export function CaseActionTaskButton({ caseId, caseNumber, assignees, title }: P
     <>
       <button
         type="button"
-        title={title}
+        aria-label={title}
         onClick={() => setOpen(true)}
-        className="relative size-8 rounded-md text-neutral-500 hover:bg-white hover:text-[#C9A961] transition flex items-center justify-center"
+        className="relative size-8 rounded-md text-neutral-700 hover:bg-white hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50 transition flex items-center justify-center"
       >
-        <UserPlus className="size-3.5" />
+        <UserPlus className="size-3.5" aria-hidden="true" />
       </button>
 
       <TaskFormDialog

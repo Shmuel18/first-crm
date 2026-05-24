@@ -26,10 +26,10 @@ export function RowDensityControl() {
         render={
           <button
             type="button"
-            title={t('label')}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-neutral-200 text-sm text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50 transition"
+            aria-label={t('label')}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-neutral-200 text-sm text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50 transition"
           >
-            <Rows3 className="size-3.5 text-neutral-400" />
+            <Rows3 className="size-3.5 text-neutral-500" aria-hidden="true" />
             <span className="hidden sm:inline">{t(density)}</span>
           </button>
         }

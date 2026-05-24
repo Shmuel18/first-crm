@@ -71,22 +71,22 @@ export function FolderCard({ folder, documents, onUpload, onPreview }: Props) {
         <button
           type="button"
           onClick={() => onUpload(folder)}
-          title={tc('addDocument')}
-          className="size-9 inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-600 hover:text-[#C9A961] hover:border-[#C9A961] transition shrink-0"
+          aria-label={tc('addDocument')}
+          className="size-9 inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-700 hover:text-[#A88840] hover:border-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50 transition shrink-0"
         >
-          <Plus className="size-4" />
+          <Plus className="size-4" aria-hidden="true" />
         </button>
       </header>
 
       {documents.length > 0 && (
-        <div className="text-[11px] text-neutral-500 mb-2 px-1 inline-flex items-center gap-2">
-          <FileText className="size-3" />
+        <div className="text-[11px] text-neutral-700 mb-2 px-1 inline-flex items-center gap-2">
+          <FileText className="size-3" aria-hidden="true" />
           {tc('documentCount', { count: documents.length })}
           {verifiedCount > 0 && (
             <>
-              <span className="text-neutral-300">·</span>
-              <span className="inline-flex items-center gap-1 text-emerald-700">
-                <CheckCircle2 className="size-3" />
+              <span aria-hidden="true" className="text-neutral-400">·</span>
+              <span className="inline-flex items-center gap-1 text-emerald-800">
+                <CheckCircle2 className="size-3" aria-hidden="true" />
                 {verifiedCount}
               </span>
             </>
@@ -96,7 +96,7 @@ export function FolderCard({ folder, documents, onUpload, onPreview }: Props) {
 
       <div className="space-y-1">
         {documents.length === 0 ? (
-          <p className="text-sm text-neutral-400 text-center py-6 italic">
+          <p className="text-sm text-neutral-600 text-center py-6 italic">
             {tc('noDocuments')}
           </p>
         ) : (

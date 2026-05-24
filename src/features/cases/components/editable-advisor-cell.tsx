@@ -91,6 +91,8 @@ export function EditableAdvisorCell({
     });
   };
 
+  const triggerLabel = advisorName ?? tc('notAssigned');
+
   return (
     <>
       <button
@@ -100,40 +102,48 @@ export function EditableAdvisorCell({
         disabled={isPending}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="inline-flex items-center gap-2 cursor-pointer disabled:opacity-50"
+        aria-label={triggerLabel}
+        className="inline-flex items-center gap-2 cursor-pointer rounded-md disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
       >
         {advisorName ? (
           <>
             <span className="text-sm text-neutral-700 whitespace-nowrap">{advisorName}</span>
-            <span className="size-7 rounded-full btn-gold flex items-center justify-center text-[10px] font-bold">
+            <span
+              aria-hidden="true"
+              className="size-7 rounded-full btn-gold flex items-center justify-center text-[10px] font-bold"
+            >
               {initials(advisorName)}
             </span>
           </>
         ) : (
-          <span className="text-sm text-neutral-400">{tc('notAssigned')}</span>
+          <span className="text-sm text-neutral-600">{tc('notAssigned')}</span>
         )}
         {isPending ? (
-          <Loader2 className="size-3 text-neutral-400 animate-spin" />
+          <Loader2 className="size-3 text-neutral-500 animate-spin" aria-hidden="true" />
         ) : (
-          <ChevronDown className="size-3 text-neutral-400" />
+          <ChevronDown className="size-3 text-neutral-500" aria-hidden="true" />
         )}
       </button>
 
       {open && pos && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden />
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden="true" />
           <div
             ref={dropdownRef}
+            role="listbox"
+            aria-label={triggerLabel}
             className="fixed z-50 bg-white border border-neutral-200 rounded-lg shadow-xl py-1 min-w-48 max-h-72 overflow-y-auto scrollbar-thin"
             style={pos}
           >
             <button
               type="button"
+              role="option"
+              aria-selected={!advisorId}
               onClick={() => handleSelect(null)}
-              className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-start text-neutral-500 hover:bg-neutral-50"
+              className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-start text-neutral-600 hover:bg-neutral-50 focus-visible:outline-none focus-visible:bg-[#FAF8F3]"
             >
               <span>{unassignedLabel}</span>
-              {!advisorId && <Check className="size-3.5 text-[#C9A961]" />}
+              {!advisorId && <Check className="size-3.5 text-[#A88840]" aria-hidden="true" />}
             </button>
             {options.map((opt) => {
               const name = fullName(opt, noNameFallback);
@@ -142,16 +152,23 @@ export function EditableAdvisorCell({
                 <button
                   key={opt.id}
                   type="button"
+                  role="option"
+                  aria-selected={isSelected}
                   onClick={() => handleSelect(opt)}
-                  className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-start hover:bg-neutral-50"
+                  className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-start hover:bg-neutral-50 focus-visible:outline-none focus-visible:bg-[#FAF8F3]"
                 >
                   <span className="inline-flex items-center gap-2">
-                    <span className="size-5 rounded-full btn-gold flex items-center justify-center text-[9px] font-bold">
+                    <span
+                      aria-hidden="true"
+                      className="size-5 rounded-full btn-gold flex items-center justify-center text-[9px] font-bold"
+                    >
                       {initials(name)}
                     </span>
                     {name}
                   </span>
-                  {isSelected && <Check className="size-3.5 text-[#C9A961]" />}
+                  {isSelected && (
+                    <Check className="size-3.5 text-[#A88840]" aria-hidden="true" />
+                  )}
                 </button>
               );
             })}

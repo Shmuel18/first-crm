@@ -192,7 +192,7 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
               href={doc.drive_file_url ?? url ?? '#'}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs text-neutral-600 hover:text-[#C9A961] transition"
+              className="inline-flex items-center gap-1.5 text-xs text-neutral-700 hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40 rounded transition"
             >
               <ExternalLink className="size-3" />
               {t('openNewTab')}
@@ -203,7 +203,7 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
                 <a
                   href={url}
                   download={doc.file_name}
-                  className="inline-flex items-center gap-1.5 text-xs text-neutral-600 hover:text-[#C9A961] transition"
+                  className="inline-flex items-center gap-1.5 text-xs text-neutral-700 hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40 rounded transition"
                 >
                   <Download className="size-3" />
                   {t('downloadOriginal')}

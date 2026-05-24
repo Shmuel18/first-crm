@@ -29,15 +29,15 @@ export default async function CaseHistoryPage({ params }: Props) {
         <div className="flex items-center gap-3">
           <Link
             href={`/cases/${caseData.id}`}
-            title={tc('back')}
-            className="inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-neutral-300 bg-white/60 text-neutral-600 transition hover:border-[#C9A961] hover:text-[#C9A961]"
+            aria-label={tc('back')}
+            className="inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-neutral-300 bg-white/60 text-neutral-700 transition hover:border-[#A88840] hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
           >
-            <BackArrow locale={locale} className="size-3.5" />
+            <BackArrow locale={locale} className="size-3.5" aria-hidden="true" />
           </Link>
           <div className="flex items-center gap-2">
             <span className="font-display text-base font-semibold">{t('history.title')}</span>
-            <span className="text-neutral-300">·</span>
-            <span className="font-mono text-sm text-[#C9A961]">
+            <span aria-hidden="true" className="text-neutral-400">·</span>
+            <span className="font-mono text-sm text-[#A88840]">
               {t('actionBar.caseLabel')} {caseData.case_number}
             </span>
           </div>

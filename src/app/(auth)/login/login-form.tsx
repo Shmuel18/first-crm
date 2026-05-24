@@ -49,8 +49,13 @@ export function LoginForm() {
         <Label htmlFor="email" className="text-neutral-700 text-sm font-medium">
           {t('emailLabel')}
         </Label>
-        <div className="relative">
-          <Mail className="absolute end-3 top-1/2 -translate-y-1/2 size-4 text-neutral-400 pointer-events-none" />
+        {/* The wrapper is dir="ltr" so logical `start-3` and `ps-10` line up on the
+            same side — icon at left, padding at left — in both Hebrew and English. */}
+        <div className="relative" dir="ltr">
+          <Mail
+            aria-hidden="true"
+            className="absolute start-3 top-1/2 -translate-y-1/2 size-4 text-neutral-500 pointer-events-none"
+          />
           <Input
             id="email"
             name="email"
@@ -58,7 +63,7 @@ export function LoginForm() {
             required
             autoComplete="email"
             dir="ltr"
-            className="ps-10 h-12 text-base bg-neutral-50 border-neutral-200 focus:border-[#C9A961] focus:ring-[#C9A961]/30"
+            className="ps-10 h-12 text-base bg-neutral-50 border-neutral-200 focus:border-[#A88840] focus-visible:border-[#A88840] focus-visible:ring-[#A88840]/40"
             placeholder="moshe@kaufman.co.il"
           />
         </div>
@@ -68,8 +73,11 @@ export function LoginForm() {
         <Label htmlFor="password" className="text-neutral-700 text-sm font-medium">
           {t('passwordLabel')}
         </Label>
-        <div className="relative">
-          <Lock className="absolute end-3 top-1/2 -translate-y-1/2 size-4 text-neutral-400 pointer-events-none" />
+        <div className="relative" dir="ltr">
+          <Lock
+            aria-hidden="true"
+            className="absolute start-3 top-1/2 -translate-y-1/2 size-4 text-neutral-500 pointer-events-none"
+          />
           <Input
             id="password"
             name="password"
@@ -77,25 +85,24 @@ export function LoginForm() {
             required
             autoComplete="current-password"
             dir="ltr"
-            className="ps-10 h-12 text-base bg-neutral-50 border-neutral-200 focus:border-[#C9A961] focus:ring-[#C9A961]/30"
+            className="ps-10 h-12 text-base bg-neutral-50 border-neutral-200 focus:border-[#A88840] focus-visible:border-[#A88840] focus-visible:ring-[#A88840]/40"
             placeholder="••••••••"
           />
         </div>
       </div>
 
       {state.error && (
-        <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2.5 text-sm text-red-700">
+        <div
+          role="alert"
+          className="rounded-lg bg-red-50 border border-red-200 px-3 py-2.5 text-sm text-red-700"
+        >
           {t(errorKeyMap[state.error])}
         </div>
       )}
 
       <SubmitButton />
 
-      <div className="text-center pt-2">
-        <a href="#" className="text-sm text-[#C9A961] hover:underline font-medium">
-          {t('forgotPassword')}
-        </a>
-      </div>
+      <p className="text-center pt-2 text-sm text-neutral-600">{t('forgotPassword')}</p>
     </form>
   );
 }

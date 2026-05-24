@@ -53,10 +53,10 @@ export function CaseMoreMenu({ caseId, isArchived, canArchive, canRestore }: Pro
         render={
           <button
             type="button"
-            title={t('actions.more')}
-            className="relative flex size-8 items-center justify-center rounded-md text-neutral-500 transition hover:bg-white hover:text-[#C9A961]"
+            aria-label={t('actions.more')}
+            className="relative flex size-8 items-center justify-center rounded-md text-neutral-600 transition hover:bg-white hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
           >
-            <MoreVertical className="size-3.5" />
+            <MoreVertical className="size-3.5" aria-hidden="true" />
           </button>
         }
       />

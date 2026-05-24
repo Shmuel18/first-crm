@@ -70,7 +70,7 @@ export function DriveIntegrationCard({
             <h2 className="font-display text-lg font-semibold text-neutral-900">
               {t('title')}
             </h2>
-            <p className="text-xs text-neutral-500 mt-0.5">{t('subtitle')}</p>
+            <p className="text-xs text-neutral-600 mt-0.5">{t('subtitle')}</p>
           </div>
           <StatusBadge status={view.status} />
         </div>
@@ -100,23 +100,23 @@ export function DriveIntegrationCard({
 
         {oauthConfigured && isConnected && (
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-            <dt className="text-neutral-500">{t('connectedAs')}</dt>
+            <dt className="text-neutral-700">{t('connectedAs')}</dt>
             <dd className="font-medium text-neutral-900 text-end">{view.connectedEmail}</dd>
 
             {connectedAt && (
               <>
-                <dt className="text-neutral-500">{t('connectedAt')}</dt>
+                <dt className="text-neutral-700">{t('connectedAt')}</dt>
                 <dd className="text-neutral-700 text-end">{connectedAt}</dd>
               </>
             )}
 
-            <dt className="text-neutral-500">{t('rootFolder')}</dt>
+            <dt className="text-neutral-700">{t('rootFolder')}</dt>
             <dd className="text-neutral-700 text-end font-mono">{view.rootFolderName}/</dd>
           </dl>
         )}
 
         {oauthConfigured && !isConnected && (
-          <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-600 leading-relaxed">
+          <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700 leading-relaxed">
             {t('connectIntro')}
           </div>
         )}
@@ -125,9 +125,9 @@ export function DriveIntegrationCard({
           {oauthConfigured && !isConnected && (
             <a
               href="/api/auth/google/start"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#C9A961] hover:bg-[#B8985A] text-[#0A0A0A] font-medium text-sm transition"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#C9A961] hover:bg-[#B8985A] text-[#0A0A0A] font-medium text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840] focus-visible:ring-offset-2"
             >
-              <Link2 className="size-4" />
+              <Link2 className="size-4" aria-hidden="true" />
               {t('connect')}
             </a>
           )}
@@ -175,7 +175,7 @@ export function DriveIntegrationCard({
         </AlertDialog>
 
         {oauthConfigured && (
-          <p className="text-[11px] text-neutral-400 leading-relaxed pt-2 border-t border-neutral-100">
+          <p className="text-[11px] text-neutral-600 leading-relaxed pt-2 border-t border-neutral-100">
             {t('scopeNote')}
           </p>
         )}

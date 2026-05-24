@@ -58,7 +58,9 @@
     "team": "צוות",
     "templates": "תבניות",
     "auditLog": "יומן שינויים",
-    "settings": "הגדרות"
+    "settings": "הגדרות",
+    "primary": "ניווט ראשי",
+    "unreadTasks": "{count, plural, =1 {משימה אחת פתוחה} other {# משימות פתוחות}}"
   },
   "topbar": {
     "searchPlaceholder": "חיפוש לפי שם, ת״ז, טלפון או מספר תיק...",
@@ -81,7 +83,7 @@
       "passwordLabel": "סיסמה",
       "submitButton": "כניסה למערכת",
       "submitting": "מתחבר...",
-      "forgotPassword": "שכחת סיסמה?",
+      "forgotPassword": "שכחת סיסמה? פנה למנהל המערכת לאיפוס.",
       "footer": "© 2026 Kaufman Finance Group · כל הזכויות שמורות",
       "errors": {
         "invalidInput": "אימייל או סיסמה לא תקינים",
@@ -113,7 +115,8 @@
       "hideClosedFrozen": "הסתר בוצעו והוקפאו",
       "all": "הכל",
       "clear": "נקה",
-      "noMatches": "לא נמצאו תיקים התואמים את הסינון"
+      "noMatches": "לא נמצאו תיקים התואמים את הסינון",
+      "tableCaption": "טבלת תיקים — {count, plural, =1 {תיק אחד} other {# תיקים}}"
     },
     "density": {
       "label": "צפיפות שורות",
@@ -127,7 +130,7 @@
       "none": "אין תצוגות שמורות",
       "namePlaceholder": "שם לתצוגה",
       "savedToast": "התצוגה \"{name}\" נשמרה",
-      "delete": "מחק תצוגה",
+      "delete": "מחק תצוגה \"{name}\"",
       "exportExcel": "ייצוא לאקסל",
       "exportPdf": "ייצוא ל-PDF",
       "exporting": "מייצא...",
@@ -924,6 +927,8 @@
     "title": "התראות",
     "empty": "אין התראות חדשות",
     "markAllRead": "סמן הכל כנקרא",
+    "unreadCount": "{count, plural, =1 {התראה אחת לא נקראה} other {# התראות לא נקראו}}",
+    "unreadIndicator": "לא נקראה",
     "someone": "מישהו",
     "aTask": "משימה",
     "message": {

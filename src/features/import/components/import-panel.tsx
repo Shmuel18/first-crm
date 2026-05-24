@@ -34,29 +34,34 @@ export function ImportPanel() {
   return (
     <div className="space-y-5">
       <section className="rounded-xl border border-[#C9A961]/30 bg-[#FAF8F3] p-4">
-        <p className="text-sm text-neutral-700">{t('instructions')}</p>
-        <p className="mt-2 text-xs text-neutral-500 font-mono" dir="ltr">
+        <p className="text-sm text-neutral-800">{t('instructions')}</p>
+        <p className="mt-2 text-xs text-neutral-700 font-mono" dir="ltr">
           {t('columns')}
         </p>
       </section>
 
       <form onSubmit={onSubmit} className="space-y-3">
-        <label className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-neutral-300 bg-white px-4 py-8 cursor-pointer hover:border-[#C9A961] transition">
+        <label
+          htmlFor="import-file"
+          className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-neutral-300 bg-white px-4 py-8 cursor-pointer hover:border-[#A88840] focus-within:border-[#A88840] focus-within:ring-2 focus-within:ring-[#A88840]/40 transition"
+        >
           <input
+            id="import-file"
             ref={inputRef}
             type="file"
             accept=".csv,.xlsx,.xls"
+            aria-label={t('choose')}
             onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
             className="sr-only"
           />
           {fileName ? (
             <span className="inline-flex items-center gap-2 text-sm text-neutral-800">
-              <FileSpreadsheet className="size-4 text-[#C9A961]" />
+              <FileSpreadsheet className="size-4 text-[#A88840]" aria-hidden="true" />
               {fileName}
             </span>
           ) : (
-            <span className="inline-flex items-center gap-2 text-sm text-neutral-500">
-              <Upload className="size-4" />
+            <span className="inline-flex items-center gap-2 text-sm text-neutral-700">
+              <Upload className="size-4" aria-hidden="true" />
               {t('choose')}
             </span>
           )}
@@ -65,9 +70,14 @@ export function ImportPanel() {
         <button
           type="submit"
           disabled={pending || !fileName}
-          className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-[#C9A961] hover:bg-[#B8985A] disabled:opacity-60 text-[#0A0A0A] font-medium text-sm transition"
+          aria-busy={pending}
+          className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-[#C9A961] hover:bg-[#B8985A] disabled:opacity-60 text-[#0A0A0A] font-medium text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]"
         >
-          {pending ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+          {pending ? (
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Upload className="size-4" aria-hidden="true" />
+          )}
           {pending ? t('importing') : t('upload')}
         </button>
       </form>

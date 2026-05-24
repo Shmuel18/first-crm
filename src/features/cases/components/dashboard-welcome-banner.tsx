@@ -20,11 +20,11 @@ export function DashboardWelcomeBanner({ firstName }: Props) {
           {t(`greetings.${greetingKey}`)}
           {firstName && (
             <>
-              , <span className="text-[#C9A961]">{firstName}</span>
+              , <span className="text-[#A88840]">{firstName}</span>
             </>
           )}
         </h1>
-        <div className="text-xs text-neutral-400">
+        <div className="text-xs text-neutral-600">
           {new Date().toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-GB', {
             weekday: 'long',
             day: 'numeric',

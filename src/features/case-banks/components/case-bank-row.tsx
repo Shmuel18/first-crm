@@ -17,11 +17,12 @@ export async function CaseBankRow({ caseId, caseBank: cb }: Props) {
   return (
     <Link
       href={`/cases/${caseId}/banks/${cb.id}/edit`}
-      className="flex items-center justify-between gap-3 p-3 border border-neutral-200 rounded-lg hover:border-[#C9A961]/30 hover:bg-[#C9A961]/5 transition"
+      className="flex items-center justify-between gap-3 p-3 border border-neutral-200 rounded-lg hover:border-[#A88840]/40 hover:bg-[#C9A961]/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50 transition"
     >
       <div className="flex items-center gap-3 flex-1">
         {cb.bank?.color && (
           <span
+            aria-hidden="true"
             className="size-3 rounded-full shrink-0"
             style={{ backgroundColor: cb.bank.color }}
           />
@@ -30,12 +31,14 @@ export async function CaseBankRow({ caseId, caseBank: cb }: Props) {
           {cb.bank?.name_he ?? '—'}
         </span>
         {cb.is_primary && (
-          <span className="text-[10px] text-[#C9A961] font-bold">
+          <span className="text-[10px] text-[#A88840] font-bold">
             {t('primaryBankMarker')}
           </span>
         )}
         {cb.banker_name && (
-          <span className="text-xs text-neutral-500">· {cb.banker_name}</span>
+          <span aria-hidden="true" className="text-xs text-neutral-600">
+            · {cb.banker_name}
+          </span>
         )}
       </div>
       <CaseStatusBadge name={cb.status?.name_he ?? null} color={cb.status?.color ?? null} />

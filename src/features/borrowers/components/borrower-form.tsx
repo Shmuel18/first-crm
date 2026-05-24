@@ -92,12 +92,13 @@ export function BorrowerForm({
               <option value="guarantor">{tCase('borrower.guarantor')}</option>
             </NativeSelect>
           </FormField>
-          <label className="flex items-center gap-2 cursor-pointer self-end pb-2">
+          <label htmlFor="borrower-is-primary" className="flex items-center gap-2 cursor-pointer self-end pb-2">
             <input
+              id="borrower-is-primary"
               type="checkbox"
               name="is_primary"
               defaultChecked={isPrimaryDefault}
-              className="size-4 accent-[#C9A961]"
+              className="size-4 accent-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40 rounded"
             />
             <span className="text-sm text-neutral-700">{t('fields.isPrimary')}</span>
           </label>
@@ -201,7 +202,10 @@ export function BorrowerForm({
       </FormSection>
 
       {genericError && (
-        <div className="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+        <div
+          role="alert"
+          className="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700"
+        >
           {genericError}
         </div>
       )}

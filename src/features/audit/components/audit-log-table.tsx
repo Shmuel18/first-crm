@@ -17,12 +17,13 @@ export function AuditLogTable({ entries }: { entries: ReadonlyArray<AuditEntry> 
     new Date(iso).toLocaleString(locale === 'he' ? 'he-IL' : 'en-GB');
 
   if (entries.length === 0) {
-    return <p className="px-6 py-12 text-center text-sm text-neutral-500">{t('empty')}</p>;
+    return <p className="px-6 py-12 text-center text-sm text-neutral-600">{t('empty')}</p>;
   }
 
   return (
     <div className="overflow-x-auto scrollbar-thin">
       <table className="w-full table-fixed min-w-[820px]">
+        <caption className="sr-only">{t('title')}</caption>
         <colgroup>
           <col className="w-44" />
           <col className="w-40" />
@@ -42,7 +43,7 @@ export function AuditLogTable({ entries }: { entries: ReadonlyArray<AuditEntry> 
         <tbody>
           {entries.map((entry) => (
             <tr key={entry.id} className="border-b border-neutral-100 hover:bg-neutral-50/60">
-              <Td className="text-neutral-500 tabular-nums" dir="ltr">
+              <Td className="text-neutral-600 tabular-nums" dir="ltr">
                 {fmt(entry.timestamp)}
               </Td>
               <Td className="text-neutral-800">{entry.actorName ?? t('system')}</Td>
@@ -56,8 +57,8 @@ export function AuditLogTable({ entries }: { entries: ReadonlyArray<AuditEntry> 
                   {actionLabel(t, entry.action)}
                 </span>
               </Td>
-              <Td className="font-mono text-xs text-neutral-600">{entry.tableName}</Td>
-              <Td className="text-xs text-neutral-500 truncate">
+              <Td className="font-mono text-xs text-neutral-700">{entry.tableName}</Td>
+              <Td className="text-xs text-neutral-600 truncate">
                 {entry.changedFields.join(', ') || '—'}
               </Td>
             </tr>
@@ -76,7 +77,10 @@ function actionLabel(t: ReturnType<typeof useTranslations>, action: string): str
 
 function Th({ children }: { children: React.ReactNode }) {
   return (
-    <th className="text-start px-4 py-2.5 text-xs font-semibold text-neutral-500 uppercase tracking-wide">
+    <th
+      scope="col"
+      className="text-start px-4 py-2.5 text-xs font-semibold text-neutral-600 uppercase tracking-wide"
+    >
       {children}
     </th>
   );

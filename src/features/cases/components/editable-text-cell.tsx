@@ -97,29 +97,35 @@ export function EditableTextCell({
   const displayValue = savedValue || emptyLabel;
   const isEmpty = !savedValue;
 
+  const triggerLabel = savedValue ? `${fieldLabel}: ${savedValue}` : fieldLabel;
+
   return (
     <>
       <button
         ref={anchorRef}
         type="button"
         onClick={openEditor}
-        title={savedValue || effectivePlaceholder}
-        className="group inline-flex items-center gap-1.5 w-full text-start min-w-0"
+        aria-label={triggerLabel}
+        className="group inline-flex items-center gap-1.5 w-full text-start min-w-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
       >
         <span
+          aria-hidden="true"
           className={[
             'truncate text-sm min-w-0 flex-1',
-            isEmpty ? 'text-neutral-400 italic' : 'text-neutral-700',
+            isEmpty ? 'text-neutral-500 italic' : 'text-neutral-700',
           ].join(' ')}
         >
           {displayValue}
         </span>
         {isPending ? (
-          <Loader2 className="size-3 text-[#C9A961] animate-spin shrink-0" />
+          <Loader2 className="size-3 text-[#A88840] animate-spin shrink-0" aria-hidden="true" />
         ) : showSaved ? (
-          <Check className="size-3 text-emerald-500 shrink-0" />
+          <Check className="size-3 text-emerald-600 shrink-0" aria-hidden="true" />
         ) : (
-          <Pencil className="size-3 text-neutral-400 opacity-0 group-hover:opacity-100 transition shrink-0" />
+          <Pencil
+            aria-hidden="true"
+            className="size-3 text-neutral-500 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition shrink-0"
+          />
         )}
       </button>
 
@@ -128,13 +134,10 @@ export function EditableTextCell({
           {/* Exit saves: clicking outside commits the note (same as the Save
               button / Ctrl+Enter). save() is a no-op when nothing changed, so
               an accidental click can't blank a note. Esc / Cancel still discard. */}
+          <div className="fixed inset-0 z-40" onClick={save} aria-hidden="true" />
           <div
-            className="fixed inset-0 z-40"
-            onClick={save}
-            aria-hidden
-            title=""
-          />
-          <div
+            role="dialog"
+            aria-label={fieldLabel}
             className="fixed z-50 bg-white shadow-2xl border border-neutral-200 rounded-lg p-2"
             style={{ top: popoverPos.top, left: popoverPos.left, width: POPOVER_WIDTH }}
           >
@@ -149,22 +152,24 @@ export function EditableTextCell({
               rows={4}
               aria-label={fieldLabel}
               placeholder={effectivePlaceholder}
-              className="w-full px-2 py-1.5 text-sm border border-neutral-200 rounded resize-none focus:outline-none focus:ring-2 focus:ring-[#C9A961]/40"
+              className="w-full px-2 py-1.5 text-sm border border-neutral-200 rounded resize-none focus:outline-none focus-visible:border-[#A88840] focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
             />
             <div className="flex items-center justify-between gap-2 mt-1.5">
-              <span className="text-[10px] text-neutral-400">Ctrl+Enter {tc('save')} · Esc {tc('cancel')}</span>
+              <span className="text-[10px] text-neutral-600">
+                Ctrl+Enter {tc('save')} · Esc {tc('cancel')}
+              </span>
               <div className="flex gap-1.5">
                 <button
                   type="button"
                   onClick={cancel}
-                  className="text-xs text-neutral-600 px-2.5 py-1 rounded hover:bg-neutral-100"
+                  className="text-xs text-neutral-700 px-2.5 py-1 rounded hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
                 >
                   {tc('cancel')}
                 </button>
                 <button
                   type="button"
                   onClick={save}
-                  className="text-xs bg-[#0A0A0A] text-white px-2.5 py-1 rounded hover:bg-neutral-800"
+                  className="text-xs bg-[#0A0A0A] text-white px-2.5 py-1 rounded hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]"
                 >
                   {tc('save')}
                 </button>

@@ -80,6 +80,8 @@ export function EditableBankCell({
     });
   };
 
+  const triggerLabel = bank?.name_he ?? noBankLabel;
+
   return (
     <>
       <button
@@ -87,7 +89,10 @@ export function EditableBankCell({
         type="button"
         onClick={() => (open ? setOpen(false) : handleOpen())}
         disabled={isPending}
-        className="inline-flex items-center gap-2.5 cursor-pointer disabled:opacity-50 hover:bg-neutral-50 -mx-1 px-1 rounded-md transition"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={triggerLabel}
+        className="inline-flex items-center gap-2.5 cursor-pointer disabled:opacity-50 hover:bg-neutral-50 -mx-1 px-1 rounded-md transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
       >
         {bank ? (
           <>
@@ -95,48 +100,54 @@ export function EditableBankCell({
             <span className="text-sm text-neutral-800 whitespace-nowrap font-medium">
               {bank.name_he}
               {secondaryCount > 0 && (
-                <span className="text-[11px] text-neutral-400 ms-1 font-normal">
+                <span className="text-[11px] text-neutral-600 ms-1 font-normal">
                   +{secondaryCount}
                 </span>
               )}
             </span>
           </>
         ) : (
-          <span className="text-sm text-neutral-400">{noBankLabel}</span>
+          <span className="text-sm text-neutral-600">{noBankLabel}</span>
         )}
         {isPending ? (
-          <Loader2 className="size-3 text-neutral-400 animate-spin" />
+          <Loader2 className="size-3 text-neutral-500 animate-spin" aria-hidden="true" />
         ) : (
-          <ChevronDown className="size-3 text-neutral-400" />
+          <ChevronDown className="size-3 text-neutral-500" aria-hidden="true" />
         )}
       </button>
 
       {open && pos && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden />
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden="true" />
           <div
             ref={dropdownRef}
+            role="listbox"
+            aria-label={triggerLabel}
             className="fixed z-50 bg-white border border-neutral-200 rounded-xl shadow-2xl py-1.5 min-w-60 max-h-80 overflow-y-auto scrollbar-thin"
             style={pos}
           >
             <button
               type="button"
+              role="option"
+              aria-selected={!bank}
               onClick={() => handleSelect(null)}
-              className="w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-start text-neutral-500 hover:bg-neutral-50"
+              className="w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-start text-neutral-600 hover:bg-neutral-50 focus-visible:outline-none focus-visible:bg-[#FAF8F3]"
             >
               <span>{noBankLabel}</span>
-              {!bank && <Check className="size-3.5 text-[#C9A961]" />}
+              {!bank && <Check className="size-3.5 text-[#A88840]" aria-hidden="true" />}
             </button>
-            <div className="border-t border-neutral-100 my-0.5" />
+            <div className="border-t border-neutral-100 my-0.5" aria-hidden="true" />
             {options.map((opt) => {
               const selected = opt.id === bank?.id;
               return (
                 <button
                   key={opt.id}
                   type="button"
+                  role="option"
+                  aria-selected={selected}
                   onClick={() => handleSelect(opt)}
-                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-start transition ${
-                    selected ? 'bg-[#C9A961]/8' : 'hover:bg-neutral-50'
+                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-start transition focus-visible:outline-none focus-visible:bg-[#FAF8F3] ${
+                    selected ? 'bg-[#C9A961]/15' : 'hover:bg-neutral-50'
                   }`}
                 >
                   <span className="inline-flex items-center gap-2.5">
@@ -145,7 +156,9 @@ export function EditableBankCell({
                       {opt.name_he}
                     </span>
                   </span>
-                  {selected && <Check className="size-3.5 text-[#C9A961]" />}
+                  {selected && (
+                    <Check className="size-3.5 text-[#A88840]" aria-hidden="true" />
+                  )}
                 </button>
               );
             })}
