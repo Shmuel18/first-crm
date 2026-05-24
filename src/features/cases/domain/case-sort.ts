@@ -28,7 +28,9 @@ export type SortDir = 'asc' | 'desc';
 
 export type CaseSort = { column: SortColumn; dir: SortDir };
 
-export const DEFAULT_SORT: CaseSort = { column: 'created', dir: 'desc' };
+// 'asc' on the # column means "small numbers first" (#1, #2, #3 ...). #1 is
+// the newest case, so 'asc' on # is the natural default (newest at top).
+export const DEFAULT_SORT: CaseSort = { column: 'created', dir: 'asc' };
 
 type StatusRef = { id: string; sort_order: number };
 
@@ -101,11 +103,17 @@ export function applySort(
     cmpStr(getPrimaryBorrowerSortKey(a), getPrimaryBorrowerSortKey(b), 'asc');
 
   switch (sort.column) {
-    case 'created':
+    case 'created': {
+      // The # column displays a chronological rank where 1 = newest case.
+      // So "asc by #" (small numbers at top) corresponds to "desc by date"
+      // (newest first). Flip the direction here so the arrow the user sees
+      // on the header matches the direction the numbers go in the column.
+      const dateDir: SortDir = sort.dir === 'asc' ? 'desc' : 'asc';
       sorted.sort(
-        (a, b) => cmpDate(a.created_at ?? '', b.created_at ?? '', sort.dir) || tieBySurname(a, b),
+        (a, b) => cmpDate(a.created_at ?? '', b.created_at ?? '', dateDir) || tieBySurname(a, b),
       );
       break;
+    }
     case 'name':
       sorted.sort((a, b) =>
         cmpStr(getPrimaryBorrowerSortKey(a), getPrimaryBorrowerSortKey(b), sort.dir),
