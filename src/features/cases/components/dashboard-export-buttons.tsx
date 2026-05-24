@@ -65,7 +65,7 @@ export function DashboardExportButtons() {
             </button>
           }
         />
-        <DropdownMenuContent align="start" className="min-w-36">
+        <DropdownMenuContent align="end" className="min-w-28">
           <DropdownMenuItem onClick={() => handleExport('xlsx')}>
             <FileSpreadsheet className="size-3.5" aria-hidden="true" />
             {t('formatExcel')}
