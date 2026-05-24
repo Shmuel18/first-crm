@@ -1,6 +1,5 @@
 /**
- * Dashboard sort state — replaces the old "layout preset" dropdown with
- * column-header sorting (Excel/Sheets-style).
+ * Dashboard sort state — column-header sorting (Excel/Sheets-style).
  *
  * Five sortable columns:
  *   - created : case-opening date. Doubles as the # column header
@@ -10,8 +9,11 @@
  *   - bank    : alphabetical by primary bank name.
  *   - advisor : alphabetical by advisor name.
  *
- * Cases missing the sort key (no advisor, no primary bank) sink to the
- * end via a Unicode sentinel that sorts last under localeCompare.
+ * Empty / missing keys (case with no borrowers, no advisor, no primary
+ * bank, no stage) always sink to the bottom — independent of the sort
+ * direction. The naive "multiply by -1 for desc" approach also flips
+ * that handling, which is why we apply direction to the body of the
+ * comparison only after the empty-checks have already returned.
  */
 
 import { getPrimaryBank, getPrimaryBorrowerSortKey } from './case-derivations';
@@ -27,9 +29,6 @@ export type CaseSort = { column: SortColumn; dir: SortDir };
 export const DEFAULT_SORT: CaseSort = { column: 'created', dir: 'desc' };
 
 type StatusRef = { id: string; sort_order: number };
-
-// Unicode sentinel — sorts after any real character in localeCompare.
-const LAST = '￿';
 
 function first(v: string | string[] | undefined): string | null {
   return (Array.isArray(v) ? v[0] : v) ?? null;
@@ -48,32 +47,53 @@ export function parseCaseSort(
   };
 }
 
-function compareSortKeys(a: string, b: string): number {
+/**
+ * String comparator that pins empty values to the end (always), then applies
+ * direction to the body of the comparison.
+ */
+function cmpStr(a: string, b: string, dir: SortDir): number {
   if (!a && !b) return 0;
   if (!a) return 1;
   if (!b) return -1;
-  return a.localeCompare(b, 'he', { sensitivity: 'base' });
+  const cmp = a.localeCompare(b, 'he', { sensitivity: 'base' });
+  return dir === 'desc' ? -cmp : cmp;
+}
+
+/** Same idea for numeric keys (stage position). Infinity = "missing" → end. */
+function cmpNum(a: number, b: number, dir: SortDir): number {
+  const aInf = !Number.isFinite(a);
+  const bInf = !Number.isFinite(b);
+  if (aInf && bInf) return 0;
+  if (aInf) return 1;
+  if (bInf) return -1;
+  if (a === b) return 0;
+  const cmp = a < b ? -1 : 1;
+  return dir === 'desc' ? -cmp : cmp;
+}
+
+/** ISO timestamps sort lexicographically — same treatment as cmpStr. */
+function cmpDate(a: string, b: string, dir: SortDir): number {
+  if (!a && !b) return 0;
+  if (!a) return 1;
+  if (!b) return -1;
+  if (a === b) return 0;
+  const cmp = a < b ? -1 : 1;
+  return dir === 'desc' ? -cmp : cmp;
 }
 
 function advisorName(c: CaseWithRelations): string {
-  return (
-    [c.assigned_advisor?.first_name, c.assigned_advisor?.last_name]
-      .filter(Boolean)
-      .join(' ')
-      .trim() || LAST
-  );
+  return [c.assigned_advisor?.first_name, c.assigned_advisor?.last_name]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
 }
 
 function bankName(c: CaseWithRelations): string {
-  return getPrimaryBank(c)?.name_he ?? LAST;
+  return getPrimaryBank(c)?.name_he ?? '';
 }
 
-function compareByCreatedAt(a: CaseWithRelations, b: CaseWithRelations): number {
-  // ISO timestamps sort lexicographically.
-  const ac = a.created_at ?? '';
-  const bc = b.created_at ?? '';
-  if (ac === bc) return 0;
-  return ac < bc ? -1 : 1;
+function stagePos(c: CaseWithRelations, order: Map<string, number>): number {
+  return c.status?.id ? order.get(c.status.id) ?? Number.POSITIVE_INFINITY : Number.POSITIVE_INFINITY;
 }
 
 export function applySort(
@@ -84,37 +104,35 @@ export function applySort(
   if (cases.length === 0) return [];
 
   const sorted = [...cases];
-  const mult = sort.dir === 'desc' ? -1 : 1;
-
-  // Secondary key — surname A-B — so equal primary keys still get a stable
-  // human-friendly order, in both directions.
-  const bySurname = (a: CaseWithRelations, b: CaseWithRelations) =>
-    compareSortKeys(getPrimaryBorrowerSortKey(a), getPrimaryBorrowerSortKey(b));
+  // Secondary tiebreaker — always asc surname, so equal primary keys keep a
+  // predictable A-B order regardless of the primary direction.
+  const tieBySurname = (a: CaseWithRelations, b: CaseWithRelations) =>
+    cmpStr(getPrimaryBorrowerSortKey(a), getPrimaryBorrowerSortKey(b), 'asc');
 
   switch (sort.column) {
     case 'created':
-      sorted.sort((a, b) => mult * compareByCreatedAt(a, b) || bySurname(a, b));
+      sorted.sort(
+        (a, b) => cmpDate(a.created_at ?? '', b.created_at ?? '', sort.dir) || tieBySurname(a, b),
+      );
       break;
     case 'name':
-      sorted.sort((a, b) => mult * bySurname(a, b));
+      sorted.sort((a, b) =>
+        cmpStr(getPrimaryBorrowerSortKey(a), getPrimaryBorrowerSortKey(b), sort.dir),
+      );
       break;
     case 'stage': {
-      const stageOrder = new Map(statusOptions.map((s) => [s.id, s.sort_order]));
-      const stagePos = (c: CaseWithRelations) =>
-        c.status?.id
-          ? stageOrder.get(c.status.id) ?? Number.POSITIVE_INFINITY
-          : Number.POSITIVE_INFINITY;
-      sorted.sort((a, b) => mult * (stagePos(a) - stagePos(b)) || bySurname(a, b));
+      const order = new Map(statusOptions.map((s) => [s.id, s.sort_order]));
+      sorted.sort(
+        (a, b) => cmpNum(stagePos(a, order), stagePos(b, order), sort.dir) || tieBySurname(a, b),
+      );
       break;
     }
     case 'bank':
-      sorted.sort(
-        (a, b) => mult * compareSortKeys(bankName(a), bankName(b)) || bySurname(a, b),
-      );
+      sorted.sort((a, b) => cmpStr(bankName(a), bankName(b), sort.dir) || tieBySurname(a, b));
       break;
     case 'advisor':
       sorted.sort(
-        (a, b) => mult * compareSortKeys(advisorName(a), advisorName(b)) || bySurname(a, b),
+        (a, b) => cmpStr(advisorName(a), advisorName(b), sort.dir) || tieBySurname(a, b),
       );
       break;
   }
