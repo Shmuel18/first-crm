@@ -109,10 +109,10 @@ export function DashboardFiltersBar({
         <RowDensityControl />
       </div>
       {!isArchiveView && (
-        <ToggleSwitch
+        <HideClosedCheckbox
           label={t('hideClosedFrozen')}
           on={hideClosedFrozen}
-          onClick={() => setHide(!hideClosedFrozen)}
+          onChange={(next) => setHide(next)}
         />
       )}
     </div>
@@ -176,30 +176,24 @@ function FilterSelect({
   );
 }
 
-function ToggleSwitch({ label, on, onClick }: { label: string; on: boolean; onClick: () => void }) {
+function HideClosedCheckbox({
+  label,
+  on,
+  onChange,
+}: {
+  label: string;
+  on: boolean;
+  onChange: (next: boolean) => void;
+}) {
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      aria-label={label}
-      onClick={onClick}
-      className="inline-flex items-center gap-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40 rounded-full"
-    >
-      <span
-        aria-hidden="true"
-        className={['relative w-9 h-5 rounded-full transition', on ? 'bg-[#A88840]' : 'bg-neutral-400'].join(' ')}
-      >
-        <span
-          className={[
-            'absolute top-0.5 size-4 rounded-full bg-white transition',
-            on ? 'end-0.5' : 'end-[18px]',
-          ].join(' ')}
-        />
-      </span>
-      <span aria-hidden="true" className="text-neutral-700">
-        {label}
-      </span>
-    </button>
+    <label className="inline-flex items-center gap-1.5 text-xs text-neutral-700 cursor-pointer select-none">
+      <input
+        type="checkbox"
+        checked={on}
+        onChange={(e) => onChange(e.target.checked)}
+        className="size-4 rounded accent-[#A88840] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
+      />
+      {label}
+    </label>
   );
 }

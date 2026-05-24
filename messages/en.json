@@ -111,7 +111,7 @@
       "stage": "Stage",
       "bank": "Bank",
       "onlyStuck": "Stuck only",
-      "hideClosedFrozen": "Hide closed & frozen",
+      "hideClosedFrozen": "Hide completed",
       "all": "All",
       "clear": "Clear",
       "noMatches": "No cases match the current filters",
