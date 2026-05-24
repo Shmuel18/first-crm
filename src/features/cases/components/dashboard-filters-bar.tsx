@@ -167,14 +167,17 @@ function LayoutDropdown({
           <button
             type="button"
             aria-label={triggerLabel}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 bg-white text-xs text-neutral-700 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50 transition"
+            // Fixed min-width so the toolbar doesn't reshuffle each time the
+            // user picks a different (and differently-wide) sort option.
+            // Sized for the widest label ("מיין לפי: א-ב (שם משפחה)").
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 bg-white text-xs text-neutral-700 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50 transition min-w-56"
           >
-            <ArrowDownUp className="size-3.5 text-neutral-500" aria-hidden="true" />
-            <span>
+            <ArrowDownUp className="size-3.5 text-neutral-500 shrink-0" aria-hidden="true" />
+            <span className="flex-1 text-start truncate">
               {triggerPrefix}:{' '}
               <span className="font-medium text-neutral-900">{currentLabel}</span>
             </span>
-            <ChevronDown className="size-3 text-neutral-500" aria-hidden="true" />
+            <ChevronDown className="size-3 text-neutral-500 shrink-0" aria-hidden="true" />
           </button>
         }
       />
