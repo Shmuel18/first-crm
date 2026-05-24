@@ -4,7 +4,6 @@ import { CasesCardList } from '@/features/cases/components/cases-card-list';
 import { CasesEmptyState } from '@/features/cases/components/cases-empty-state';
 import { CasesTable } from '@/features/cases/components/cases-table';
 import { DashboardFiltersBar } from '@/features/cases/components/dashboard-filters-bar';
-import { DashboardLayoutControls } from '@/features/cases/components/dashboard-layout-controls';
 import { DashboardViewSelector } from '@/features/cases/components/dashboard-view-selector';
 import { DashboardWelcomeBanner } from '@/features/cases/components/dashboard-welcome-banner';
 import { listBankOptions } from '@/features/case-banks/services/case-banks.service';
@@ -100,16 +99,13 @@ export default async function CasesListPage({ searchParams }: Props) {
       isArchive ? { ...filters, hideClosedFrozen: false } : filters,
     );
     chrome = (
-      <>
-        <DashboardFiltersBar
-          statusOptions={statusOptions}
-          bankOptions={bankOptions}
-          advisorOptions={advisorOptions}
-          canFilterByAdvisor={canViewAll}
-          isArchiveView={isArchive}
-        />
-        <DashboardLayoutControls />
-      </>
+      <DashboardFiltersBar
+        statusOptions={statusOptions}
+        bankOptions={bankOptions}
+        advisorOptions={advisorOptions}
+        canFilterByAdvisor={canViewAll}
+        isArchiveView={isArchive}
+      />
     );
     scrollContent =
       cases.length === 0 ? (

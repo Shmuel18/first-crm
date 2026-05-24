@@ -1,8 +1,8 @@
 'use client';
 
-import { ChevronDown, X } from 'lucide-react';
+import { ArrowDownUp, ChevronDown, X } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { parseAsBoolean, parseAsString, useQueryState } from 'nuqs';
+import { parseAsBoolean, parseAsString, parseAsStringEnum, useQueryState } from 'nuqs';
 
 import {
   DropdownMenu,
@@ -12,6 +12,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
+import { CASE_LAYOUTS, type CaseLayout } from '../domain/case-layout';
+
+import { DashboardExportButtons } from './dashboard-export-buttons';
 import { RowDensityControl } from './row-density-control';
 
 type Option = { id: string; name: string };
@@ -39,6 +42,7 @@ export function DashboardFiltersBar({
   isArchiveView = false,
 }: Props) {
   const t = useTranslations('dashboard.filters');
+  const tLayout = useTranslations('dashboard.layout');
   const locale = useLocale();
 
   const [advisor, setAdvisor] = useQueryState('advisor', parseAsString.withOptions(urlOpts));
@@ -47,6 +51,12 @@ export function DashboardFiltersBar({
   const [hideClosedFrozen, setHide] = useQueryState(
     'hideClosedFrozen',
     parseAsBoolean.withDefault(true).withOptions(urlOpts),
+  );
+  const [layout, setLayout] = useQueryState(
+    'layout',
+    parseAsStringEnum(CASE_LAYOUTS as unknown as CaseLayout[])
+      .withDefault('default')
+      .withOptions(urlOpts),
   );
   // Free-text search filters client-side (see useCaseQueryFilter), so it uses a
   // shallow URL update — no server round-trip, instant as you type.
@@ -81,6 +91,7 @@ export function DashboardFiltersBar({
       dir={locale === 'he' ? 'rtl' : 'ltr'}
       className="bg-white px-6 py-2.5 border-b border-neutral-200 flex items-center gap-2 flex-wrap"
     >
+      {/* === FILTERING (what data) === */}
       {showAdvisor && (
         <FilterSelect
           label={t('advisor')}
@@ -104,10 +115,6 @@ export function DashboardFiltersBar({
         </button>
       )}
 
-      <div className="flex-1" />
-      <div className="hidden md:block">
-        <RowDensityControl />
-      </div>
       {!isArchiveView && (
         <HideClosedCheckbox
           label={t('hideClosedFrozen')}
@@ -115,7 +122,74 @@ export function DashboardFiltersBar({
           onChange={(next) => setHide(next)}
         />
       )}
+
+      <div className="flex-1" />
+
+      {/* === PRESENTATION + OUTPUT (how data + export) === */}
+      <LayoutDropdown
+        layout={layout}
+        onChange={(v) => setLayout(v)}
+        triggerLabel={tLayout('triggerLabel')}
+        triggerPrefix={tLayout('triggerPrefix')}
+        currentLabel={tLayout(`options.${layout}`)}
+        optionLabels={Object.fromEntries(
+          CASE_LAYOUTS.map((l) => [l, tLayout(`options.${l}`)]),
+        )}
+      />
+      <div className="hidden md:block">
+        <RowDensityControl />
+      </div>
+      <DashboardExportButtons />
     </div>
+  );
+}
+
+function LayoutDropdown({
+  layout,
+  onChange,
+  triggerLabel,
+  triggerPrefix,
+  currentLabel,
+  optionLabels,
+}: {
+  layout: CaseLayout;
+  onChange: (v: CaseLayout) => void;
+  triggerLabel: string;
+  triggerPrefix: string;
+  currentLabel: string;
+  optionLabels: Record<string, string>;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <button
+            type="button"
+            aria-label={triggerLabel}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 bg-white text-xs text-neutral-700 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50 transition"
+          >
+            <ArrowDownUp className="size-3.5 text-neutral-500" aria-hidden="true" />
+            <span>
+              {triggerPrefix}:{' '}
+              <span className="font-medium text-neutral-900">{currentLabel}</span>
+            </span>
+            <ChevronDown className="size-3 text-neutral-500" aria-hidden="true" />
+          </button>
+        }
+      />
+      <DropdownMenuContent align="start" className="min-w-48">
+        <DropdownMenuRadioGroup
+          value={layout}
+          onValueChange={(v) => onChange(v as CaseLayout)}
+        >
+          {CASE_LAYOUTS.map((l) => (
+            <DropdownMenuRadioItem key={l} value={l}>
+              {optionLabels[l]}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
