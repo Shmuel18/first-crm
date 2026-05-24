@@ -129,7 +129,7 @@
       "options": {
         "default": "Default (most recently updated)",
         "alphabetical": "A-Z (by surname)",
-        "by-stage": "By pipeline stage"
+        "by-stage": "Pipeline stage"
       }
     },
     "savedViews": {

@@ -128,8 +128,8 @@
       "triggerPrefix": "תצוגה",
       "options": {
         "default": "רגיל (עודכן אחרון)",
-        "alphabetical": "לפי א-ב (שם משפחה)",
-        "by-stage": "לפי שלב בתהליך"
+        "alphabetical": "א-ב (שם משפחה)",
+        "by-stage": "שלב בתהליך"
       }
     },
     "savedViews": {
