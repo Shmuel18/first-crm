@@ -55,7 +55,7 @@ export function DashboardFiltersBar({
   const [layout, setLayout] = useQueryState(
     'layout',
     parseAsStringEnum(CASE_LAYOUTS as unknown as CaseLayout[])
-      .withDefault('default')
+      .withDefault('newest')
       .withOptions(urlOpts),
   );
   // Free-text search filters client-side (see useCaseQueryFilter), so it uses a

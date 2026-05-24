@@ -1,19 +1,22 @@
 /**
  * Dashboard layout presets — pure sort orderings of the case list.
  *
- * Three views, each returning the same set of cases in a different order:
- *   - default       : updated_at DESC (already how the DB returns them)
- *   - alphabetical  : last name then first name of the primary borrower
- *   - by-stage      : pipeline order; within a stage, A-B by last name
+ * Four views, each returning the same set of cases in a different order:
+ *   - newest       : created_at DESC (case-opening date, newest first)
+ *   - oldest       : created_at ASC  (oldest case first)
+ *   - alphabetical : last name then first name of the primary borrower
+ *   - by-stage     : pipeline order; within a stage, A-B by surname
  *
- * No grouping, no section headers — the table stays a flat list.
+ * Sorting is by created_at (when the case was opened), NOT updated_at —
+ * so editing a case won't bounce its row to the top of the list. No
+ * grouping, no section headers — the table stays a flat list.
  */
 
 import { getPrimaryBorrowerSortKey } from './case-derivations';
 
 import type { CaseWithRelations } from '../types';
 
-export const CASE_LAYOUTS = ['default', 'alphabetical', 'by-stage'] as const;
+export const CASE_LAYOUTS = ['newest', 'oldest', 'alphabetical', 'by-stage'] as const;
 
 export type CaseLayout = (typeof CASE_LAYOUTS)[number];
 
@@ -29,7 +32,7 @@ export function parseCaseLayout(
   const v = first(sp.layout);
   return (CASE_LAYOUTS as readonly string[]).includes(v ?? '')
     ? (v as CaseLayout)
-    : 'default';
+    : 'newest';
 }
 
 /** Hebrew-aware A-B comparator. Empty keys sort to the end. */
@@ -40,19 +43,36 @@ function compareSortKeys(a: string, b: string): number {
   return a.localeCompare(b, 'he', { sensitivity: 'base' });
 }
 
+function compareByCreatedAt(
+  a: CaseWithRelations,
+  b: CaseWithRelations,
+  direction: 'desc' | 'asc',
+): number {
+  // ISO timestamps sort lexicographically, so a simple string compare works.
+  const ac = a.created_at ?? '';
+  const bc = b.created_at ?? '';
+  if (ac === bc) return 0;
+  return direction === 'desc' ? (bc < ac ? -1 : 1) : ac < bc ? -1 : 1;
+}
+
 export function applyLayout(
   cases: ReadonlyArray<CaseWithRelations>,
   layout: CaseLayout,
   statusOptions: ReadonlyArray<StatusRef>,
 ): CaseWithRelations[] {
   if (cases.length === 0) return [];
-  if (layout === 'default') return [...cases]; // already updated_at DESC from the DB
 
   const byLastName = (a: CaseWithRelations, b: CaseWithRelations) =>
     compareSortKeys(getPrimaryBorrowerSortKey(a), getPrimaryBorrowerSortKey(b));
 
   const sorted = [...cases];
   switch (layout) {
+    case 'newest':
+      sorted.sort((a, b) => compareByCreatedAt(a, b, 'desc') || byLastName(a, b));
+      break;
+    case 'oldest':
+      sorted.sort((a, b) => compareByCreatedAt(a, b, 'asc') || byLastName(a, b));
+      break;
     case 'alphabetical':
       sorted.sort(byLastName);
       break;
