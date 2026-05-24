@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useRef } from 'react';
+import { useActionState, useRef, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 
 import { Loader2 } from 'lucide-react';
@@ -65,8 +65,20 @@ export function BorrowerForm({
   const formRef = useRef<HTMLFormElement>(null);
 
   const errs = state.ok === false && state.error === 'validation' ? state.fieldErrors ?? {} : {};
-  const sub = state.ok === false && state.error !== 'idle' ? state.values : undefined;
-  const initialRecord = (initial ?? null) as Record<string, unknown> | null;
+
+  // Snapshot the input defaults at mount. The inputs are uncontrolled, so
+  // after the first render they keep their own DOM state across submissions —
+  // re-deriving `defaultValue` on every render would change the prop and
+  // trigger a base-ui warning ("default value state changing on an
+  // uncontrolled FieldControl"). We *do* still re-render errors per submit.
+  const [snapshot] = useState(() => ({
+    sub:
+      state.ok === false && state.error !== 'idle' ? state.values : undefined,
+    initialRecord: (initial ?? null) as Record<string, unknown> | null,
+    role: state.ok === false && state.error !== 'idle' ? state.values?.role_in_case : undefined,
+    isPrimary:
+      state.ok === false && state.error !== 'idle' ? state.values?.is_primary : undefined,
+  }));
 
   const genericError =
     state.ok === false && state.error !== 'idle' && state.error !== 'validation'
@@ -75,9 +87,9 @@ export function BorrowerForm({
         : t('errors.generic')
       : null;
 
-  const roleDefault = sub?.role_in_case ?? initialRole;
-  const isPrimaryDefault = sub?.is_primary ? sub.is_primary === 'on' : initialIsPrimary;
-  const val = (name: string) => fieldDefault(name, sub, initialRecord);
+  const roleDefault = snapshot.role ?? initialRole;
+  const isPrimaryDefault = snapshot.isPrimary ? snapshot.isPrimary === 'on' : initialIsPrimary;
+  const val = (name: string) => fieldDefault(name, snapshot.sub, snapshot.initialRecord);
 
   return (
     <form ref={formRef} action={formAction} className="space-y-6" noValidate>
