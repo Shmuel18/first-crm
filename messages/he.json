@@ -124,8 +124,8 @@
       "comfortable": "מרווח"
     },
     "layout": {
-      "triggerLabel": "תצוגת רשימה",
-      "triggerPrefix": "תצוגה",
+      "triggerLabel": "מיין את הרשימה",
+      "triggerPrefix": "מיין לפי",
       "options": {
         "newest": "חדש → ישן",
         "oldest": "ישן → חדש",

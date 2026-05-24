@@ -124,8 +124,8 @@
       "comfortable": "Comfortable"
     },
     "layout": {
-      "triggerLabel": "List view",
-      "triggerPrefix": "View",
+      "triggerLabel": "Sort the list",
+      "triggerPrefix": "Sort by",
       "options": {
         "newest": "Newest → oldest",
         "oldest": "Oldest → newest",
