@@ -127,7 +127,7 @@
       "triggerLabel": "תצוגת רשימה",
       "triggerPrefix": "תצוגה",
       "options": {
-        "default": "חדשים → ישנים",
+        "default": "טריים → ישנים",
         "alphabetical": "א-ב (שם משפחה)",
         "by-stage": "שלב בתהליך"
       }
