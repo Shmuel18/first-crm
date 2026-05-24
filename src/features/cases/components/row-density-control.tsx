@@ -1,54 +1,56 @@
 'use client';
 
-import { useState } from 'react';
-
-import { Rows3 } from 'lucide-react';
+import { Menu, Rows2, Rows3 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+  ROW_DENSITIES,
+  setRowDensity,
+  useRowDensity,
+  type RowDensity,
+} from '../hooks/use-row-density';
 
-import { ROW_DENSITIES, setRowDensity, useRowDensity, type RowDensity } from '../hooks/use-row-density';
+// Icon per density. Higher visible-rows-in-icon ↔ tighter spacing in the table.
+const DENSITY_ICON: Record<RowDensity, React.ComponentType<{ className?: string }>> = {
+  compact: Menu, // hamburger feels like a tight list
+  normal: Rows3,
+  comfortable: Rows2, // fewer/larger rows = more breathing room
+};
 
 export function RowDensityControl() {
   const t = useTranslations('dashboard.density');
   const density = useRowDensity();
-  const [open, setOpen] = useState(false);
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger
-        render={
+    <div
+      role="radiogroup"
+      aria-label={t('label')}
+      className="inline-flex items-center bg-white border border-neutral-200 rounded-md p-0.5"
+    >
+      {ROW_DENSITIES.map((d) => {
+        const Icon = DENSITY_ICON[d];
+        const selected = density === d;
+        return (
           <button
+            key={d}
             type="button"
-            aria-label={t('label')}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-neutral-200 text-sm text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50 transition"
+            role="radio"
+            aria-checked={selected}
+            aria-label={t(d)}
+            title={t(d)}
+            onClick={() => setRowDensity(d)}
+            className={[
+              'size-7 rounded inline-flex items-center justify-center transition',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50',
+              selected
+                ? 'bg-neutral-100 text-neutral-900 shadow-sm'
+                : 'text-neutral-500 hover:text-neutral-800 hover:bg-neutral-50',
+            ].join(' ')}
           >
-            <Rows3 className="size-3.5 text-neutral-500" aria-hidden="true" />
-            <span className="hidden sm:inline">{t(density)}</span>
+            <Icon className="size-3.5" aria-hidden="true" />
           </button>
-        }
-      />
-      <DropdownMenuContent align="end" className="min-w-36">
-        <DropdownMenuRadioGroup
-          value={density}
-          onValueChange={(v) => {
-            setRowDensity(v as RowDensity);
-            setOpen(false);
-          }}
-        >
-          {ROW_DENSITIES.map((d) => (
-            <DropdownMenuRadioItem key={d} value={d}>
-              {t(d)}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        );
+      })}
+    </div>
   );
 }
