@@ -70,23 +70,6 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
     [filtered, sortCol, sortDir, statusOptions],
   );
 
-  // Chronological rank within the filtered set: newest case = #1, oldest = #N.
-  // The number is a property of the case (not the row position), so when the
-  // user flips the sort direction the same case keeps the same number — it
-  // just moves up or down the page. That's how you can tell at a glance
-  // which way the sort is pointed.
-  const chronoRank = useMemo(() => {
-    const byCreated = [...filtered].sort((a, b) => {
-      const ac = a.created_at ?? '';
-      const bc = b.created_at ?? '';
-      if (ac === bc) return 0;
-      return ac > bc ? -1 : 1; // DESC
-    });
-    const map = new Map<string, number>();
-    byCreated.forEach((c, idx) => map.set(c.id, idx + 1));
-    return map;
-  }, [filtered]);
-
   const densityClass =
     density === 'compact'
       ? '[&_td]:h-10 [&_td]:py-1.5'
@@ -155,10 +138,10 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
           </tr>
         </thead>
         <tbody className={densityClass}>
-          {ordered.map((c) => (
+          {ordered.map((c, index) => (
             <Fragment key={c.id}>
               <CaseTableRow
-                row={toRowData(c, chronoRank.get(c.id) ?? 0)}
+                row={toRowData(c, index + 1)}
                 statusOptions={statusOptions}
                 bankOptions={bankOptions}
                 advisorOptions={advisorOptions}
