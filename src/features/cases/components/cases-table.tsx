@@ -169,15 +169,20 @@ function SortableTh({
   const ariaSort = isActive ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none';
   const ArrowIcon = !isActive ? ArrowUpDown : sort.dir === 'asc' ? ArrowUp : ArrowDown;
 
+  // Padding lives on the BUTTON, not the <th>, so the entire cell area is
+  // clickable — without this trick the cell padding sits over an unclickable
+  // <th> and a tap near the digit (instead of dead-centre on it) does nothing.
   return (
-    <th scope="col" aria-sort={ariaSort} className="px-4 py-3">
+    <th scope="col" aria-sort={ariaSort} className="p-0">
       <button
         type="button"
         onClick={() => onSort(column)}
         className={[
-          'group inline-flex items-center gap-1 text-start text-xs font-semibold uppercase tracking-wider transition-colors rounded',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40',
-          isActive ? 'text-neutral-900' : 'text-neutral-600 hover:text-neutral-900',
+          'group flex w-full items-center gap-1 px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider transition-colors',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#A88840]/40',
+          isActive
+            ? 'text-neutral-900'
+            : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50',
         ].join(' ')}
       >
         {label}
@@ -185,7 +190,9 @@ function SortableTh({
           aria-hidden="true"
           className={[
             'size-3 shrink-0 transition-opacity',
-            isActive ? 'text-[#A88840] opacity-100' : 'text-neutral-400 opacity-40 group-hover:opacity-100',
+            isActive
+              ? 'text-[#A88840] opacity-100'
+              : 'text-neutral-400 opacity-40 group-hover:opacity-100',
           ].join(' ')}
         />
       </button>
