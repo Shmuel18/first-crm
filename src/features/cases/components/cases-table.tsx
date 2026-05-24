@@ -114,8 +114,8 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
             <SortableTh label={t('clientName')} column="name" sort={sort} onSort={handleSort} />
             <Th>{t('nationalId')}</Th>
             <SortableTh label={t('stage')} column="stage" sort={sort} onSort={handleSort} />
-            <SortableTh label={t('bank')} column="bank" sort={sort} onSort={handleSort} />
-            <SortableTh label={t('advisor')} column="advisor" sort={sort} onSort={handleSort} />
+            <Th>{t('bank')}</Th>
+            <Th>{t('advisor')}</Th>
             <Th>{t('shortNote')}</Th>
           </tr>
         </thead>

@@ -1,26 +1,28 @@
 /**
  * Dashboard sort state — column-header sorting (Excel/Sheets-style).
  *
- * Five sortable columns:
+ * Three sortable columns:
  *   - created : case-opening date. Doubles as the # column header
  *               (newest first by default).
  *   - name    : surname then first name of the primary borrower.
  *   - stage   : pipeline order (status.sort_order).
- *   - bank    : alphabetical by primary bank name.
- *   - advisor : alphabetical by advisor name.
  *
- * Empty / missing keys (case with no borrowers, no advisor, no primary
- * bank, no stage) always sink to the bottom — independent of the sort
- * direction. The naive "multiply by -1 for desc" approach also flips
- * that handling, which is why we apply direction to the body of the
- * comparison only after the empty-checks have already returned.
+ * Bank and advisor columns are intentionally NOT sortable — both have
+ * narrow practical use (a manager rarely sorts by either) and keeping
+ * them inert keeps the header row visually quieter.
+ *
+ * Empty / missing keys (case with no borrowers, no stage) always sink
+ * to the bottom — independent of the sort direction. The naive
+ * "multiply by -1 for desc" approach also flips that handling, which
+ * is why we apply direction to the body of the comparison only after
+ * the empty-checks have already returned.
  */
 
-import { getPrimaryBank, getPrimaryBorrowerSortKey } from './case-derivations';
+import { getPrimaryBorrowerSortKey } from './case-derivations';
 
 import type { CaseWithRelations } from '../types';
 
-export const SORT_COLUMNS = ['created', 'name', 'stage', 'bank', 'advisor'] as const;
+export const SORT_COLUMNS = ['created', 'name', 'stage'] as const;
 export type SortColumn = (typeof SORT_COLUMNS)[number];
 export type SortDir = 'asc' | 'desc';
 
@@ -81,17 +83,6 @@ function cmpDate(a: string, b: string, dir: SortDir): number {
   return dir === 'desc' ? -cmp : cmp;
 }
 
-function advisorName(c: CaseWithRelations): string {
-  return [c.assigned_advisor?.first_name, c.assigned_advisor?.last_name]
-    .filter(Boolean)
-    .join(' ')
-    .trim();
-}
-
-function bankName(c: CaseWithRelations): string {
-  return getPrimaryBank(c)?.name_he ?? '';
-}
-
 function stagePos(c: CaseWithRelations, order: Map<string, number>): number {
   return c.status?.id ? order.get(c.status.id) ?? Number.POSITIVE_INFINITY : Number.POSITIVE_INFINITY;
 }
@@ -127,14 +118,6 @@ export function applySort(
       );
       break;
     }
-    case 'bank':
-      sorted.sort((a, b) => cmpStr(bankName(a), bankName(b), sort.dir) || tieBySurname(a, b));
-      break;
-    case 'advisor':
-      sorted.sort(
-        (a, b) => cmpStr(advisorName(a), advisorName(b), sort.dir) || tieBySurname(a, b),
-      );
-      break;
   }
   return sorted;
 }
