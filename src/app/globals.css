@@ -253,6 +253,34 @@
   }
 }
 
-/* Slim scrollbar that still appears on scrollable viewports. Hiding scrollbars
-   entirely removes the affordance keyboard/mouse users rely on to know "there
-   is more below" — apply .scrollbar-thin to scroll containers explicitly. */
+/* Slim, branded scrollbars — same pattern used by Linear / Notion / Vercel:
+   subtle enough to feel premium, visible enough to signal "there is more
+   below" (which the old display:none rule hid). Firefox picks up scrollbar-*;
+   Chromium/WebKit use the ::-webkit-scrollbar pseudos. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(10, 10, 10, 0.22) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: rgba(10, 10, 10, 0.22);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(168, 136, 64, 0.55);
+}
+/* Dark surfaces (topbar / sidebar) — lighter thumb so it stays visible. */
+.dark *,
+[data-theme='dark'] * {
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+.dark *::-webkit-scrollbar-thumb,
+[data-theme='dark'] *::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.25);
+}
