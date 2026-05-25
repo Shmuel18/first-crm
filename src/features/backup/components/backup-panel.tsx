@@ -40,6 +40,8 @@ export function BackupPanel({ view }: Props) {
         router.refresh();
       } else if (res.error === 'not_connected') {
         toast.error(t('toast.notConnected'));
+      } else if (res.error === 'rate_limited') {
+        toast.error(t('toast.rateLimited'));
       } else {
         toast.error(t('toast.failed'));
       }

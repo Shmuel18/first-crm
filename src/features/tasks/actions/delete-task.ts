@@ -39,7 +39,10 @@ export async function deleteTaskAction(taskId: string): Promise<Result> {
     .eq('id', idParsed.data)
     .select('id');
 
-  if (error) return { ok: false, error: 'unknown', message: error.message };
+  if (error) {
+    console.error('[deleteTask] db error', error);
+    return { ok: false, error: 'unknown' };
+  }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
 
   revalidatePath('/tasks');

@@ -42,7 +42,10 @@ export async function completeTaskAction(taskId: string): Promise<Result> {
     .eq('id', idParsed.data)
     .select('id');
 
-  if (error) return { ok: false, error: 'unknown', message: error.message };
+  if (error) {
+    console.error('[completeTask] db error', error);
+    return { ok: false, error: 'unknown' };
+  }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
 
   // Notify the creator when someone else completes their task (skip if it was
@@ -93,7 +96,10 @@ export async function reopenTaskAction(taskId: string): Promise<Result> {
     .eq('id', idParsed.data)
     .select('id');
 
-  if (error) return { ok: false, error: 'unknown', message: error.message };
+  if (error) {
+    console.error('[reopenTask] db error', error);
+    return { ok: false, error: 'unknown' };
+  }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
 
   revalidatePath('/tasks');

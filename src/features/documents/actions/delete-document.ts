@@ -49,7 +49,10 @@ export async function deleteDocumentAction(
     .is('deleted_at', null)
     .maybeSingle();
 
-  if (fetchErr) return { ok: false, error: 'unknown', message: fetchErr.message };
+  if (fetchErr) {
+    console.error('[deleteDocument] fetch failed', fetchErr);
+    return { ok: false, error: 'unknown' };
+  }
   if (!doc) return { ok: false, error: 'not_found' };
 
   const { error: deleteErr } = await supabase.rpc('soft_delete_document_with_tombstone', {
@@ -58,7 +61,10 @@ export async function deleteDocumentAction(
     p_user_id: userRes.user.id,
   });
 
-  if (deleteErr) return { ok: false, error: 'unknown', message: deleteErr.message };
+  if (deleteErr) {
+    console.error('[deleteDocument] rpc failed', deleteErr);
+    return { ok: false, error: 'unknown' };
+  }
 
   revalidatePath(`/cases/${parsed.data.caseId}/documents`);
   revalidatePath(`/cases/${parsed.data.caseId}`);

@@ -66,6 +66,10 @@ export function DocumentsActionBar({
         toast.error(tSync('errors.notConnected'));
         return;
       }
+      if (res.error === 'rate_limited') {
+        toast.error(tSync('errors.rateLimited'));
+        return;
+      }
       toast.error(tSync('errors.generic'));
     });
 

@@ -27,7 +27,10 @@ export async function getDocumentPreviewUrlAction(
     .is('deleted_at', null)
     .maybeSingle();
 
-  if (error) return { ok: false, error: 'unknown', message: error.message };
+  if (error) {
+    console.error('[getDocumentPreviewUrl] doc fetch failed', error);
+    return { ok: false, error: 'unknown' };
+  }
   if (!doc) return { ok: false, error: 'not_found' };
 
   const storagePath =
@@ -42,7 +45,8 @@ export async function getDocumentPreviewUrlAction(
     .createSignedUrl(storagePath, 300);
 
   if (urlErr || !data) {
-    return { ok: false, error: 'unknown', message: urlErr?.message };
+    console.error('[getDocumentPreviewUrl] signed URL failed', urlErr);
+    return { ok: false, error: 'unknown' };
   }
 
   return {

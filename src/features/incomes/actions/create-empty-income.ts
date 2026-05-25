@@ -41,7 +41,10 @@ export async function createEmptyIncomeAction(
     .select('id')
     .single();
 
-  if (error || !created) return { ok: false, error: 'unknown', message: error?.message };
+  if (error || !created) {
+    console.error('[createEmptyIncome] db error', error);
+    return { ok: false, error: 'unknown' };
+  }
 
   revalidatePath(`/cases/${caseId}`);
   return { ok: true, incomeId: created.id };

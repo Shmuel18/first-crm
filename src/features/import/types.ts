@@ -19,6 +19,12 @@ export type ImportResult =
   | { ok: true; created: number; total: number; errors: ImportRowError[] }
   | {
       ok: false;
-      error: 'unauthorized' | 'no_file' | 'empty' | 'too_large' | 'parse' | 'unknown';
-      message?: string;
+      error:
+        | 'unauthorized'
+        | 'no_file'
+        | 'empty'
+        | 'too_large'
+        | 'parse'
+        | 'rate_limited'
+        | 'unknown';
     };

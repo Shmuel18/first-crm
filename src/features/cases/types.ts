@@ -73,4 +73,4 @@ export const CASE_ACTION_INITIAL: CaseActionState = { ok: false, error: 'idle' }
 /** Server action result for xlsx/pdf export of the cases list. */
 export type ExportResult =
   | { ok: true; filename: string; mimeType: string; base64: string }
-  | { ok: false; error: 'unauthorized' | 'empty' | 'unknown' };
+  | { ok: false; error: 'unauthorized' | 'empty' | 'rate_limited' | 'unknown' };

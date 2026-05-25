@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import { isCurrentUserAdmin } from '@/lib/auth/permissions';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 
 import { mapRows } from '../domain/parse-table';
@@ -17,6 +18,17 @@ export async function importCasesAction(formData: FormData): Promise<ImportResul
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
   if (!(await isCurrentUserAdmin())) return { ok: false, error: 'unauthorized' };
+
+  // Imports create N borrowers + N cases in a single RPC. Even with the 2000-
+  // row cap, a loop of imports could mass-create or DoS the import_cases RPC.
+  // 5/hour gives plenty of headroom for a real bulk-onboarding session.
+  const allowed = await checkRateLimit({
+    action: 'import_cases',
+    subject: `user:${userRes.user.id}`,
+    max: 5,
+    windowSeconds: 3600,
+  });
+  if (!allowed) return { ok: false, error: 'rate_limited' };
 
   const file = formData.get('file');
   if (!(file instanceof File) || file.size === 0) return { ok: false, error: 'no_file' };

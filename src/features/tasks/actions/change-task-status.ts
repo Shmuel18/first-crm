@@ -53,7 +53,10 @@ export async function changeTaskStatusAction(taskId: string, status: string): Pr
     .update(patch)
     .eq('id', parsed.data.taskId)
     .select('id');
-  if (error) return { ok: false, error: 'unknown', message: error.message };
+  if (error) {
+    console.error('[changeTaskStatus] db error', error);
+    return { ok: false, error: 'unknown' };
+  }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
 
   if (

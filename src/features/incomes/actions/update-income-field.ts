@@ -89,7 +89,10 @@ export async function updateIncomeFieldAction(
     .eq('id', incomeId)
     .select('id');
 
-  if (error) return { ok: false, error: 'unknown', message: error.message };
+  if (error) {
+    console.error('[updateIncomeField] db error', error);
+    return { ok: false, error: 'unknown' };
+  }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
 
   revalidatePath(`/cases/${caseId}`);

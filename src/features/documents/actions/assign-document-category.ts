@@ -37,7 +37,10 @@ export async function assignDocumentCategoryAction(
     .eq('id', documentId)
     .eq('case_id', caseId); // defense-in-depth: doc must belong to the supplied case
 
-  if (error) return { ok: false, error: 'unknown', message: error.message };
+  if (error) {
+    console.error('[assignDocumentCategory] db error', error);
+    return { ok: false, error: 'unknown' };
+  }
 
   revalidatePath(`/cases/${caseId}/documents`);
   return { ok: true };

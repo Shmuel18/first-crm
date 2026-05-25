@@ -7,6 +7,7 @@ import { listCases } from '@/features/cases/services/cases.service';
 import { buildExportRows } from '@/features/cases/services/export/build-export-rows';
 import { generateCasesPdf } from '@/features/cases/services/export/pdf-generator';
 import { parseLocale } from '@/lib/i18n/direction';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 import { dateStamp } from '@/lib/utils/date-stamp';
 
@@ -27,6 +28,17 @@ export async function exportCasesPdfAction(): Promise<ExportResult> {
     if (canView !== true && canViewOwn !== true) {
       return { ok: false, error: 'unauthorized' };
     }
+
+    // PDF generation is expensive (react-pdf renders in-process). 5/hour per
+    // user is more than enough for legitimate analyst use, and prevents a
+    // loop or compromised session from burning the function quota.
+    const allowed = await checkRateLimit({
+      action: 'export_cases_pdf',
+      subject: `user:${userRes.user.id}`,
+      max: 5,
+      windowSeconds: 3600,
+    });
+    if (!allowed) return { ok: false, error: 'rate_limited' };
 
     const cases = await listCases({ isArchived: false });
     if (cases.length === 0) return { ok: false, error: 'empty' };

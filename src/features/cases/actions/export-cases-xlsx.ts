@@ -7,6 +7,7 @@ import { listCases } from '@/features/cases/services/cases.service';
 import { buildExportRows } from '@/features/cases/services/export/build-export-rows';
 import { generateCasesXlsx } from '@/features/cases/services/export/xlsx-generator';
 import { parseLocale } from '@/lib/i18n/direction';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 import { dateStamp } from '@/lib/utils/date-stamp';
 
@@ -28,6 +29,17 @@ export async function exportCasesXlsxAction(): Promise<ExportResult> {
     if (canView !== true && canViewOwn !== true) {
       return { ok: false, error: 'unauthorized' };
     }
+
+    // XLSX is cheaper than PDF but still streams every visible case + bank
+    // data. 10/hour per user is comfortable for an analyst, painful for
+    // an exfiltration loop.
+    const allowed = await checkRateLimit({
+      action: 'export_cases_xlsx',
+      subject: `user:${userRes.user.id}`,
+      max: 10,
+      windowSeconds: 3600,
+    });
+    if (!allowed) return { ok: false, error: 'rate_limited' };
 
     const cases = await listCases({ isArchived: false });
     if (cases.length === 0) return { ok: false, error: 'empty' };

@@ -122,7 +122,10 @@ export async function updateBorrowerFieldAction(
     .eq('id', borrowerId)
     .select('id');
 
-  if (error) return { ok: false, error: 'unknown', message: error.message };
+  if (error) {
+    console.error('[updateBorrowerField] db error', error);
+    return { ok: false, error: 'unknown' };
+  }
   if (!updated || updated.length === 0) {
     // 0 rows usually means RLS denied the write even though the auth-layer
     // checks above passed — surface as unauthorized rather than silent success.

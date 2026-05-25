@@ -38,7 +38,10 @@ export async function setMemberActiveAction(userId: string, isActive: boolean): 
     .eq('id', parsed.data.userId)
     .select('id');
 
-  if (error) return { ok: false, error: 'unknown', message: error.message };
+  if (error) {
+    console.error('[setMemberActive] db error', error);
+    return { ok: false, error: 'unknown' };
+  }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
 
   revalidatePath('/team');

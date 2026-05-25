@@ -2,6 +2,7 @@
 
 import { z } from 'zod';
 
+import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 
 export type ReturningBorrower = {
@@ -43,6 +44,18 @@ export async function lookupReturningBorrowerAction(
   const supabase = await createClient();
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return null;
+
+  // Lookup is an enumeration oracle (national_id → exists?). Even though RLS
+  // limits results to borrowers on the caller's cases, a malicious advisor
+  // could probe many IDs to map out their case roster faster than legitimate
+  // use. 10/min is generous for a real "is this a returning client?" flow.
+  const allowed = await checkRateLimit({
+    action: 'lookup_borrower',
+    subject: `user:${userRes.user.id}`,
+    max: 10,
+    windowSeconds: 60,
+  });
+  if (!allowed) return null;
 
   const { data } = await supabase
     .from('borrowers')

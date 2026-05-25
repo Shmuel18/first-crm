@@ -30,7 +30,10 @@ export async function toggleArchiveAction(
     .eq('id', caseId)
     .select('id');
 
-  if (error) return { ok: false, error: 'unknown', message: error.message };
+  if (error) {
+    console.error('[toggleArchive] db error', error);
+    return { ok: false, error: 'unknown' };
+  }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
   revalidatePath('/cases');
   revalidatePath(`/cases/${caseId}`);

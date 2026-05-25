@@ -31,7 +31,13 @@ export function DashboardExportButtons() {
         if (result.ok) {
           downloadBase64(result.base64, result.filename, result.mimeType);
         } else {
-          setError(result.error === 'empty' ? t('exportEmpty') : t('exportFailed'));
+          setError(
+            result.error === 'empty'
+              ? t('exportEmpty')
+              : result.error === 'rate_limited'
+                ? t('exportRateLimited')
+                : t('exportFailed'),
+          );
         }
       } catch {
         setError(t('exportFailed'));

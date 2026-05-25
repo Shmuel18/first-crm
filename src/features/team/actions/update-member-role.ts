@@ -40,7 +40,10 @@ export async function updateMemberRoleAction(userId: string, roleId: string): Pr
     .eq('id', parsed.data.userId)
     .select('id');
 
-  if (error) return { ok: false, error: 'unknown', message: error.message };
+  if (error) {
+    console.error('[updateMemberRole] db error', error);
+    return { ok: false, error: 'unknown' };
+  }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
 
   revalidatePath('/team');

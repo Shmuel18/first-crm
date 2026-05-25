@@ -28,11 +28,8 @@ export async function disconnectGoogleDriveAction(): Promise<Result> {
     }
     await clearIntegration('google_drive');
   } catch (err) {
-    return {
-      ok: false,
-      error: 'unknown',
-      message: err instanceof Error ? err.message : 'unknown',
-    };
+    console.error('[disconnectGoogleDrive] failed', err);
+    return { ok: false, error: 'unknown' };
   }
 
   revalidatePath('/settings/integrations');
