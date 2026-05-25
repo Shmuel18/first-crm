@@ -33,11 +33,15 @@ export async function listDocumentsForCase(
   return (data ?? []) as unknown as DocumentWithRelations[];
 }
 
+// Explicit column list (audit-driven) — gates schema-add propagation.
+const DOCUMENT_CATEGORY_FULL_COLUMNS =
+  'id, key, name_he, name_en, drive_folder, is_active, is_system, sort_order, created_at, updated_at' as const;
+
 export async function listDocumentCategories(): Promise<DocumentCategoryRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('document_categories')
-    .select('*')
+    .select(DOCUMENT_CATEGORY_FULL_COLUMNS)
     .eq('is_active', true)
     .order('sort_order');
 

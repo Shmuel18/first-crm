@@ -19,9 +19,18 @@ export type TemplateInput = {
   body: string;
 };
 
+// Explicit column list (audit-driven). message_templates is reached via the
+// untyped client (no generated Database type for migration 035 yet), so the
+// list is hand-maintained — adding a column to the table requires updating
+// the MessageTemplate type AND this list.
+const TEMPLATE_FULL_COLUMNS =
+  'id, name, channel, subject, body, is_active, created_at, created_by, updated_at, updated_by' as const;
+
 export async function listMessageTemplates(): Promise<MessageTemplate[]> {
   const table = await templatesTable();
-  const { data, error } = await table.select('*').order('updated_at', { ascending: false });
+  const { data, error } = await table
+    .select(TEMPLATE_FULL_COLUMNS)
+    .order('updated_at', { ascending: false });
   if (error) throw error;
   return (data ?? []) as MessageTemplate[];
 }

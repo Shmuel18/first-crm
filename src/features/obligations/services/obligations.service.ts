@@ -4,6 +4,12 @@ import type { CaseId, ObligationId } from '@/lib/types/branded';
 import { sumMonthlyPayments, sumRemainingDebt } from '../domain/totals';
 import type { BorrowerObligationsGroup, ObligationRow } from '../types';
 
+// Explicit column list (audit-driven). Mirrors the borrower_obligations Row
+// type — schema additions are gated by listing them here rather than
+// auto-flowing through select('*').
+const OBLIGATION_FULL_COLUMNS =
+  'id, borrower_id, lender, description, loan_amount, monthly_payment, months_remaining, end_date, metadata, created_at, created_by, updated_at, updated_by' as const;
+
 /**
  * Lists all obligations belonging to borrowers on a case, grouped per borrower
  * with precomputed monthly and remaining-debt totals.
@@ -36,7 +42,7 @@ export async function listObligationsForCase(
   if (borrowerIds.length > 0) {
     const { data, error } = await supabase
       .from('borrower_obligations')
-      .select('*')
+      .select(OBLIGATION_FULL_COLUMNS)
       .in('borrower_id', borrowerIds)
       .order('created_at', { ascending: true });
     if (error) throw error;
@@ -60,7 +66,7 @@ export async function getObligationById(id: ObligationId): Promise<ObligationRow
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('borrower_obligations')
-    .select('*')
+    .select(OBLIGATION_FULL_COLUMNS)
     .eq('id', id)
     .maybeSingle();
 

@@ -35,6 +35,12 @@ export async function getIntegration(
   provider: IntegrationProvider,
 ): Promise<IntegrationRow | null> {
   const supabase = createAdminClient();
+  // select('*') is intentional here: getIntegration is the canonical
+  // "give me the full row including encrypted token columns" entry point,
+  // and decryptToken() below depends on access_token / refresh_token being
+  // present. Adding a column to office_integrations should auto-include it
+  // here — gating that propagation per-column would just create a stale
+  // allowlist for the next schema bump.
   const { data, error } = await supabase
     .from('office_integrations')
     .select('*')

@@ -87,11 +87,18 @@ export async function getCaseById(id: CaseId): Promise<CaseWithRelations | null>
   return data as unknown as CaseWithRelations | null;
 }
 
+// Explicit column list (audit-driven). Mirrors the cases Row type — schema
+// additions go through an intentional update here rather than auto-flowing
+// to clients. Excludes embedded relations; getCaseById() above is the
+// "with relations" variant.
+const CASE_FULL_COLUMNS =
+  'id, case_number, status_id, assigned_advisor_id, primary_borrower_id, case_type_primary_id, case_type_secondary_id, property_value, equity, requested_mortgage_amount, request_details, short_note, referrer_name, case_blocker, insurance_status, is_archived, metadata, deleted_at, created_at, created_by, updated_at, updated_by' as const;
+
 export async function getRawCaseById(id: CaseId): Promise<CaseRow | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('cases')
-    .select('*')
+    .select(CASE_FULL_COLUMNS)
     .eq('id', id)
     .is('deleted_at', null)
     .maybeSingle();

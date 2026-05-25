@@ -32,10 +32,13 @@ function EmptyMessage({ text }: { text: string }) {
   return <p className="px-6 py-12 text-center text-sm text-neutral-500">{text}</p>;
 }
 
-// Safety bound on the dashboard fetch until true server-side pagination lands.
-// Well above realistic active-case counts — purely a guard against an unbounded
-// query at scale. The common advisor/stage filters are pushed to SQL so the
-// fetched set shrinks when they're active.
+// Safety bound on the dashboard fetch. Kept at 1000 for the MVP — Kaufman
+// runs ~80 active cases, so a full-list-in-one-go UX beats cursor pagination
+// at this scale (the user expects to scroll the whole pipeline at a glance).
+// Audit-driven SQL pagination is the right move past ~300 cases; document
+// the threshold here so the next person doesn't reflexively re-flag it.
+// The common advisor/stage filters are pushed to SQL so the fetched set
+// shrinks when they're active.
 const DASHBOARD_CASE_CAP = 1000;
 
 export default async function CasesListPage({ searchParams }: Props) {

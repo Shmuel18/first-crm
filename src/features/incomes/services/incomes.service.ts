@@ -64,11 +64,18 @@ export async function listIncomesForCase(caseId: CaseId): Promise<BorrowerIncome
   });
 }
 
+// Explicit column list (audit-driven). Mirrors the borrower_incomes Row
+// type — when a new column is added to the schema, listing it here is
+// what gates whether it flows to the client. Updating both stays a
+// conscious step instead of an auto-propagation.
+const INCOME_FULL_COLUMNS =
+  'id, borrower_id, income_type_id, amount_monthly, source_name, tenure_months, is_primary, notes, metadata, created_at, created_by, updated_at, updated_by' as const;
+
 export async function getIncomeById(id: IncomeId): Promise<IncomeRow | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('borrower_incomes')
-    .select('*')
+    .select(INCOME_FULL_COLUMNS)
     .eq('id', id)
     .maybeSingle();
 

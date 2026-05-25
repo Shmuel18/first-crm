@@ -3,8 +3,14 @@ import type { CaseBankId, CaseId } from '@/lib/types/branded';
 
 import type { CaseBankRow, CaseBankWithRelations } from '../types';
 
+// Explicit column list (audit-driven). Mirrors the case_banks Row type so
+// schema additions are gated by an intentional update here rather than
+// auto-propagating to clients via `*`.
+const CASE_BANK_COLUMNS =
+  'id, case_id, bank_id, bank_status_id, banker_name, banker_email, banker_phone, submission_date, response_date, notes, is_primary, deleted_at, created_at, created_by, updated_at, updated_by' as const;
+
 const CASE_BANK_SELECT = `
-  *,
+  ${CASE_BANK_COLUMNS},
   bank:banks(id, key, name_he, color, logo_url),
   status:case_bank_statuses(id, key, name_he, color)
 ` as const;
@@ -28,7 +34,7 @@ export async function getCaseBankById(id: CaseBankId): Promise<CaseBankRow | nul
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('case_banks')
-    .select('*')
+    .select(CASE_BANK_COLUMNS)
     .eq('id', id)
     .is('deleted_at', null)
     .maybeSingle();

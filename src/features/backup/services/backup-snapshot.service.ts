@@ -72,6 +72,10 @@ export type BackupSnapshot = {
 async function fetchAllRows(db: SupabaseClient, table: BackupTable): Promise<unknown[]> {
   const out: unknown[] = [];
   for (let from = 0; ; from += PAGE_SIZE) {
+    // select('*') is intentional here: a backup snapshot needs EVERY column
+    // for restore to round-trip cleanly. New columns should auto-include
+    // (REDACTED_COLUMNS + the file-level encryption are the real safety
+    // net, not an allowlist). Re-check that net when adding sensitive cols.
     const { data, error } = await db
       .from(table)
       .select('*')

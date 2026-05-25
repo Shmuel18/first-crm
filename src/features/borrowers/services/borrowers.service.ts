@@ -3,13 +3,19 @@ import type { BorrowerId, CaseId } from '@/lib/types/branded';
 
 import type { BorrowerRow, CaseBorrowerWithBorrower, RoleInCase } from '../types';
 
+// Explicit column list (audit-driven). Mirrors the borrowers Row type so
+// schema additions go through an intentional update here. Used for both the
+// nested embed in listBorrowersForCase and the standalone getBorrowerById.
+const BORROWER_FULL_COLUMNS =
+  'id, first_name, last_name, national_id, id_issue_date, id_expiry_date, birth_date, gender, marital_status, children_count, relationship_in_case, phone, landline_phone, email, preferred_language, address, city, citizenship, additional_citizenships, residency_type, employment_status, employer_name, credit_rating, owns_other_property, related_to_sellers, notes, metadata, deleted_at, created_at, created_by, updated_at, updated_by' as const;
+
 export async function listBorrowersForCase(
   caseId: CaseId,
 ): Promise<CaseBorrowerWithBorrower[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('case_borrowers')
-    .select(`role_in_case, is_primary, borrower:borrowers(*)`)
+    .select(`role_in_case, is_primary, borrower:borrowers(${BORROWER_FULL_COLUMNS})`)
     .eq('case_id', caseId)
     .order('is_primary', { ascending: false });
 
@@ -33,7 +39,7 @@ export async function getBorrowerById(id: BorrowerId): Promise<BorrowerRow | nul
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('borrowers')
-    .select('*')
+    .select(BORROWER_FULL_COLUMNS)
     .eq('id', id)
     .is('deleted_at', null)
     .maybeSingle();

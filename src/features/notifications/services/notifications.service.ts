@@ -4,6 +4,10 @@ import type { Notification, NotificationData, NotificationType } from '../types'
 
 const RECENT_LIMIT = 15;
 
+// Explicit column list (audit-driven) — gates schema-add propagation.
+const NOTIFICATION_FULL_COLUMNS =
+  'id, user_id, actor_id, type, case_id, task_id, data, read_at, created_at' as const;
+
 export async function listRecentNotifications(): Promise<Notification[]> {
   const supabase = await createClient();
   const { data: userRes } = await supabase.auth.getUser();
@@ -11,7 +15,7 @@ export async function listRecentNotifications(): Promise<Notification[]> {
 
   const { data, error } = await supabase
     .from('notifications')
-    .select('*')
+    .select(NOTIFICATION_FULL_COLUMNS)
     .eq('user_id', userRes.user.id)
     .order('created_at', { ascending: false })
     .limit(RECENT_LIMIT);
