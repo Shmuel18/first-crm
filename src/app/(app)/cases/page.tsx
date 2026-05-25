@@ -115,11 +115,14 @@ export default async function CasesListPage({ searchParams }: Props) {
         <EmptyMessage text={t('filters.noMatches')} />
       ) : (
         <>
-          {/* Narrow screens: cards (the table needs ~1100px). md+: full table. */}
-          <div className="md:hidden">
+          {/* Cards up to ~iPad landscape; the table needs ~1100px of comfort
+              width, so we only switch at xl (1280px). Between md (768) and
+              xl the table used to horizontally-scroll without indication,
+              clipping the bank + advisor columns out of sight. */}
+          <div className="xl:hidden">
             <CasesCardList cases={visible} />
           </div>
-          <div className="hidden md:block">
+          <div className="hidden xl:block">
             <CasesTable
               cases={visible}
               statusOptions={statusOptions}
