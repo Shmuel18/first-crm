@@ -17,6 +17,14 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '21mb',
     },
   },
+  images: {
+    // Bank logos (migration 019_bank_logos.sql) point at upload.wikimedia.org.
+    // Allowlisted here so <Image> can serve them through Next's optimizer
+    // instead of forcing every consumer to drop back to <img>.
+    remotePatterns: [
+      { protocol: 'https', hostname: 'upload.wikimedia.org', pathname: '/wikipedia/**' },
+    ],
+  },
 };
 
 export default withNextIntl(nextConfig);

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 
+import Image from 'next/image';
+
 import { Check, ChevronDown, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
@@ -188,16 +190,20 @@ function BankAvatar({ bank, size }: { bank: BankOption; size: 'sm' | 'md' }) {
   if (src) {
     return (
       <span
-        className={`${sizeClass} rounded-lg bg-white border border-neutral-200 shadow-sm flex items-center justify-center shrink-0 overflow-hidden`}
+        className={`${sizeClass} relative rounded-lg bg-white border border-neutral-200 shadow-sm flex items-center justify-center shrink-0 overflow-hidden`}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={src}
           alt={bank.name_he}
+          fill
+          // Logos are 24–28px in the table; the smallest available size of
+          // the Wikimedia SVG already covers any pixel-density we'll hit.
+          sizes="32px"
           onError={() => setSrcIndex((i) => i + 1)}
           // Fixed, reserved box (not content-sized) so loading / switching a
           // logo never reflows the row — the image just fades into a stable box.
-          className="size-full object-contain p-0.5"
+          className="object-contain p-0.5"
+          unoptimized={src.endsWith('.svg')}
         />
       </span>
     );
