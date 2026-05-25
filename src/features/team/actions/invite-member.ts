@@ -15,18 +15,10 @@ import { sendInviteEmail } from '../services/team-email';
 import type { InviteActionState } from '../types';
 
 /**
- * Invite a new team member via Supabase's single-use invite link.
- *
- * Flow:
- *   1. Admin gate (rpc is_admin).
- *   2. `admin.auth.admin.generateLink({type:'invite'})` creates the auth user
- *      AND returns a one-time, time-limited link. The handle_new_user trigger
- *      creates the matching profile row (default junior_advisor).
- *   3. We update the profile with the chosen name/phone/role.
- *   4. Best-effort: email the link via Resend. If email isn't configured or
- *      sending failed, the link is returned to the dialog so the admin can
- *      copy-share it. The link forces the new user to set their OWN password
- *      via /auth/set-password — admin never sees the password.
+ * Invite a new team member via Supabase's single-use invite link. The new
+ * user picks their OWN password at /auth/set-password — admin never sees
+ * it. On email failure the one-time link is returned to the dialog so the
+ * admin can share it manually (still single-use, still short-lived).
  */
 export async function inviteMemberAction(
   _prev: InviteActionState,

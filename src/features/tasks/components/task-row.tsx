@@ -17,8 +17,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { Locale } from '@/lib/i18n/direction';
 
-import { completeTaskAction, reopenTaskAction } from '../actions/complete-task';
+import { completeTaskAction } from '../actions/complete-task';
 import { deleteTaskAction } from '../actions/delete-task';
+import { reopenTaskAction } from '../actions/reopen-task';
 import {
   formatDueDate,
   isOverdue,

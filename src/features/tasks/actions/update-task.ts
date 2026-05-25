@@ -20,11 +20,8 @@ export async function updateTaskAction(
 ): Promise<TaskActionState> {
   const values = formDataToValues(formData);
 
-  const taskIdRaw = formData.get('task_id');
-  const taskIdParsed = taskIdSchema.safeParse(taskIdRaw);
-  if (!taskIdParsed.success) {
-    return { ok: false, error: 'validation', values };
-  }
+  const taskIdParsed = taskIdSchema.safeParse(formData.get('task_id'));
+  if (!taskIdParsed.success) return { ok: false, error: 'validation', values };
   const taskId = taskIdParsed.data;
 
   const parsed = TaskFormSchema.safeParse(formDataToObject(formData));
@@ -37,8 +34,7 @@ export async function updateTaskAction(
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized', values };
 
-  // Confirm caller can see the task before mutating (RLS already restricts,
-  // but explicit fetch lets us surface "not_found" cleanly).
+  // Surface "not_found" cleanly before mutating; RLS would also catch this.
   const { data: existing } = await supabase
     .from('tasks')
     .select('id, case_id, assigned_to')
@@ -47,7 +43,7 @@ export async function updateTaskAction(
     .maybeSingle();
   if (!existing) return { ok: false, error: 'not_found', values };
 
-  // If reassigning to a different case, verify case visibility.
+  // Reassign to a different case → confirm visibility.
   if (parsed.data.case_id && parsed.data.case_id !== existing.case_id) {
     const { data: caseRow } = await supabase
       .from('cases')
@@ -58,10 +54,7 @@ export async function updateTaskAction(
     if (!caseRow) return { ok: false, error: 'unauthorized', values };
   }
 
-  // tasks_select is broader than tasks_update, so an RLS-denied UPDATE affects
-  // 0 rows with no error — confirm via .select() instead of false success.
-  // `tags` is a column from migration 034, not yet in the generated types; the
-  // typed update rejects excess keys, so cast (the value is still sent at runtime).
+  // `tags` (mig 034) isn't typed yet; cast bypasses the excess-key check.
   const patch = {
     title: parsed.data.title,
     description: parsed.data.description ?? null,
@@ -96,7 +89,7 @@ export async function updateTaskAction(
   revalidatePath('/tasks');
   const newCaseId = parsed.data.case_id ?? null;
   if (newCaseId) revalidatePath(`/cases/${newCaseId}`);
-  // On a move (A→B) also refresh the old case so the task stops showing there.
+  // On a case move, refresh the old case too so the task stops showing there.
   if (existing.case_id && existing.case_id !== newCaseId) {
     revalidatePath(`/cases/${existing.case_id}`);
   }

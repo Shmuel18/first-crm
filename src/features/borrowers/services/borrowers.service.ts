@@ -81,3 +81,94 @@ export async function borrowerIsOnCase(
     .maybeSingle();
   return data !== null;
 }
+
+export type SaveBorrowerInput = {
+  caseId: string;
+  borrowerId: string | null;
+  /** All editable borrower-table fields. Junction fields (role/primary) live
+   *  on case_borrowers and are passed separately below. */
+  borrowerFields: Record<string, unknown>;
+  roleInCase: string;
+  isPrimary: boolean;
+  userId: string;
+};
+
+export type SaveBorrowerResult =
+  | { ok: true; borrowerId: string }
+  | { ok: false; error: 'unauthorized' | 'unknown' };
+
+/**
+ * Persist a borrower for a case in one of two modes:
+ *   - borrowerId set    → update existing row + its case_borrowers junction.
+ *                         Junction must already exist; missing = unauthorized.
+ *   - borrowerId null   → insert a fresh borrower + a junction row.
+ *
+ * On is_primary=true, also syncs cases.primary_borrower_id so the join table
+ * and the case row never disagree silently.
+ */
+export async function saveBorrowerForCase(
+  input: SaveBorrowerInput,
+): Promise<SaveBorrowerResult> {
+  const supabase = await createClient();
+  // Typing the dynamic borrower-fields object would force every caller to
+  // re-spread into Update / Insert shapes — the action layer already gates
+  // these fields with BorrowerFormSchema, so a cast here is bounded.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- bounded by BorrowerFormSchema upstream
+  const fields = input.borrowerFields as any;
+
+  let finalBorrowerId: string;
+
+  if (input.borrowerId) {
+    const { data: link } = await supabase
+      .from('case_borrowers')
+      .select('borrower_id')
+      .eq('case_id', input.caseId)
+      .eq('borrower_id', input.borrowerId)
+      .maybeSingle();
+    if (!link) return { ok: false, error: 'unauthorized' };
+
+    const { data: updated, error } = await supabase
+      .from('borrowers')
+      .update({ ...fields, updated_by: input.userId })
+      .eq('id', input.borrowerId)
+      .select('id');
+    if (error) return { ok: false, error: 'unknown' };
+    if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
+
+    const { error: linkError } = await supabase
+      .from('case_borrowers')
+      .update({ role_in_case: input.roleInCase, is_primary: input.isPrimary })
+      .eq('case_id', input.caseId)
+      .eq('borrower_id', input.borrowerId);
+    if (linkError) return { ok: false, error: 'unknown' };
+
+    finalBorrowerId = input.borrowerId;
+  } else {
+    const { data: newBorrower, error } = await supabase
+      .from('borrowers')
+      .insert({ ...fields, created_by: input.userId, updated_by: input.userId })
+      .select('id')
+      .single();
+    if (error || !newBorrower) return { ok: false, error: 'unknown' };
+
+    const { error: linkError } = await supabase.from('case_borrowers').insert({
+      case_id: input.caseId,
+      borrower_id: newBorrower.id,
+      role_in_case: input.roleInCase,
+      is_primary: input.isPrimary,
+    });
+    if (linkError) return { ok: false, error: 'unknown' };
+
+    finalBorrowerId = newBorrower.id;
+  }
+
+  if (input.isPrimary) {
+    const { error: primaryErr } = await supabase
+      .from('cases')
+      .update({ primary_borrower_id: finalBorrowerId })
+      .eq('id', input.caseId);
+    if (primaryErr) return { ok: false, error: 'unknown' };
+  }
+
+  return { ok: true, borrowerId: finalBorrowerId };
+}
