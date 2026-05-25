@@ -5,12 +5,14 @@ import { useMemo, useState } from 'react';
 import { Mail, MessageCircle, Phone, UserCircle2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { Tooltip } from '@/components/ui/tooltip';
-
 import { updateBorrowerFieldAction, type EditableBorrowerField } from '../actions/update-borrower-field';
 import { buildMailLink, buildTelLink, buildWhatsAppLink } from '../domain/contact-links';
 import { calculateAge } from '../domain/age';
 
+import { BorrowerCitizenshipFields } from './borrower-citizenship-fields';
+import { FieldGroup } from './borrower-compact-fields';
+import { QuickIconLink } from './borrower-contact-actions';
+import { BorrowerMiscRow } from './borrower-misc-row';
 import { EditableField } from './editable-field';
 
 import type { BorrowerRow, RoleInCase } from '../types';
@@ -84,14 +86,6 @@ export function CaseBorrowerCard({
       (['resident', 'foreign_resident', 'returning_resident'] as const).map((v) => ({
         value: v,
         label: tForm(`residencyTypes.${v}`),
-      })),
-    [tForm],
-  );
-  const languageOptions = useMemo(
-    () =>
-      (['he', 'en'] as const).map((v) => ({
-        value: v,
-        label: tForm(`preferredLanguages.${v}`),
       })),
     [tForm],
   );
@@ -197,213 +191,24 @@ export function CaseBorrowerCard({
         />
       </FieldGroup>
 
-      {/* Single dense row: tiny inline-label fields (children / age /
-          foreign / language) plus the address taking the rest of the row.
-          Wraps to a new line on narrow screens. */}
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pb-3 border-b border-neutral-100 text-sm">
-        <CompactNumber
-          label={tf('childrenCount')}
-          value={localBorrower.children_count}
-          onSave={(v) => saveField('children_count', v === null ? null : String(v))}
-        />
-        <CompactReadonly label={t('age')} value={ageLabel} />
-        <CompactSelect
-          label={tf('foreignCitizenship')}
-          value={hasForeign ? 'yes' : 'no'}
-          onChange={(v) => setHasForeign(v === 'yes')}
-          options={[
-            { value: 'no', label: tc('no') },
-            { value: 'yes', label: tc('yes') },
-          ]}
-        />
-        <CompactSelect
-          label={tf('preferredLanguage')}
-          value={localBorrower.preferred_language ?? ''}
-          onChange={(v) => {
-            void saveField('preferred_language', v || null);
-          }}
-          options={[{ value: '', label: tc('select') }, ...languageOptions]}
-        />
-        <div className="flex-1 min-w-[16rem]">
-          <EditableField
-            label={tf('address')}
-            value={localBorrower.address}
-            onSave={(v) => saveField('address', v)}
-          />
-        </div>
-      </div>
+      <BorrowerMiscRow
+        borrower={localBorrower}
+        ageLabel={ageLabel}
+        hasForeign={hasForeign}
+        onHasForeignChange={setHasForeign}
+        saveField={saveField}
+      />
 
-      {/* Conditional citizenship details — only when foreign=yes. Stays in
-          a regular 3-col FieldGroup so the labels match the rest of the card. */}
+      {/* Conditional citizenship details — only when foreign=yes. Section
+          owns its layout (3-col FieldGroup matching the rest of the card). */}
       {hasForeign && (
-        <FieldGroup cols={3}>
-          <EditableField
-            label={tf('citizenship')}
-            value={localBorrower.citizenship}
-            onSave={(v) => saveField('citizenship', v)}
-            placeholder={tf('citizenshipPlaceholder')}
-          />
-          <EditableField
-            label={tf('additionalCitizenships')}
-            value={localBorrower.additional_citizenships}
-            onSave={(v) => saveField('additional_citizenships', v)}
-            placeholder={tf('additionalCitizenshipsPlaceholder')}
-          />
-          <EditableField
-            type="select"
-            label={tf('residency')}
-            value={localBorrower.residency_type}
-            options={residencyOptions}
-            onSave={(v) => saveField('residency_type', v)}
-          />
-        </FieldGroup>
+        <BorrowerCitizenshipFields
+          borrower={localBorrower}
+          saveField={saveField}
+          residencyOptions={residencyOptions}
+        />
       )}
     </div>
   );
 }
 
-function FieldGroup({
-  children,
-  cols = 2,
-}: {
-  children: React.ReactNode;
-  cols?: 2 | 3 | 4;
-}) {
-  // Borrower cards are stacked full-width now, so denser column counts are
-  // viable. 3-col for identity (name | last | id), 4-col for the misc row
-  // (children | age | foreign | language), 2-col stays default.
-  const colsClass =
-    cols === 4 ? 'sm:grid-cols-4' : cols === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2';
-  return (
-    <div
-      className={`grid grid-cols-1 ${colsClass} gap-x-6 gap-y-2 pb-3 border-b border-neutral-100 last:border-0 last:pb-0`}
-    >
-      {children}
-    </div>
-  );
-}
-
-// -- Compact inline-label helpers for the dense merged row ----------------
-// Each renders as "label: [tiny input]" instead of EditableField's
-// label-column + input-column. Used only in the single-row merged section
-// where 4 fields plus an address need to share one line.
-
-function CompactNumber({
-  label,
-  value,
-  onSave,
-}: {
-  label: string;
-  value: number | null;
-  onSave: (next: number | null) => unknown;
-}) {
-  const [local, setLocal] = useState(value === null || value === undefined ? '' : String(value));
-  const [propRef, setPropRef] = useState(value);
-  if (value !== propRef) {
-    setPropRef(value);
-    setLocal(value === null || value === undefined ? '' : String(value));
-  }
-  return (
-    <label className="inline-flex items-center gap-1.5 whitespace-nowrap">
-      <span className="text-neutral-500">{label}:</span>
-      <input
-        type="number"
-        inputMode="numeric"
-        min={0}
-        step="1"
-        dir="ltr"
-        value={local}
-        onChange={(e) => setLocal(e.target.value)}
-        onBlur={(e) => {
-          const v = e.target.value.trim();
-          const next = v === '' ? null : Number(v);
-          if (next !== value) onSave(next);
-        }}
-        className="w-12 h-8 px-1.5 text-center rounded-md border border-neutral-200 bg-white text-sm focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [appearance:textfield]"
-      />
-    </label>
-  );
-}
-
-function CompactReadonly({ label, value }: { label: string; value: string | null }) {
-  // Disabled input so the age slot matches the visual shape of the editable
-  // boxes around it — same border/radius/height, just non-interactive.
-  return (
-    <label className="inline-flex items-center gap-1.5 whitespace-nowrap">
-      <span className="text-neutral-500">{label}:</span>
-      <input
-        type="text"
-        value={value ?? '—'}
-        disabled
-        readOnly
-        className="w-14 h-8 px-2 text-center rounded-md border border-neutral-200 bg-neutral-50 text-sm font-mono text-neutral-700 cursor-default"
-      />
-    </label>
-  );
-}
-
-function CompactSelect({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: string;
-  onChange: (next: string) => void;
-  options: ReadonlyArray<{ value: string; label: string }>;
-}) {
-  // Arrow positioned on the LEFT (the "end" side in RTL): text now starts
-  // from the right edge with breathing room, no collision with the chevron.
-  return (
-    <label className="inline-flex items-center gap-1.5 whitespace-nowrap">
-      <span className="text-neutral-500">{label}:</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-8 ps-3 pe-7 rounded-md border border-neutral-200 bg-white text-sm appearance-none bg-[length:1rem] bg-[left_0.5rem_center] bg-no-repeat focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
-        style={{
-          backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23737373'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E\")",
-        }}
-      >
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
-
-function QuickIconLink({
-  href,
-  label,
-  icon: Icon,
-  accent,
-  external = false,
-}: {
-  href: string;
-  label: string;
-  icon: React.ComponentType<{ className?: string; 'aria-hidden'?: 'true' }>;
-  accent: 'emerald' | 'neutral';
-  external?: boolean;
-}) {
-  const accentClass =
-    accent === 'emerald'
-      ? 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
-      : 'text-neutral-500 hover:text-brand-gold-text hover:bg-neutral-100';
-  return (
-    <Tooltip content={label}>
-      <a
-        href={href}
-        aria-label={label}
-        {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-        className={`size-7 rounded inline-flex items-center justify-center transition ${accentClass} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40`}
-      >
-        <Icon className="size-3.5" aria-hidden="true" />
-      </a>
-    </Tooltip>
-  );
-}
