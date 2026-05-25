@@ -261,9 +261,27 @@
       "insert": "יצירה",
       "update": "עדכון",
       "delete": "מחיקה"
+    },
+    "tables": {
+      "cases": "תיק",
+      "borrowers": "לווה",
+      "borrower_incomes": "הכנסה",
+      "borrower_obligations": "התחייבות",
+      "case_banks": "בנק בתיק",
+      "documents": "מסמך",
+      "case_borrowers": "שיוך לווה",
+      "case_financials": "פיננסי תיק",
+      "tasks": "משימה",
+      "leads": "ליד"
     }
   },
   "case": {
+    "history": {
+      "title": "היסטוריית התיק",
+      "subtitle": "כל הפעולות שבוצעו על תיק {caseNumber} של {borrower}",
+      "backToCase": "חזרה לתיק",
+      "truncatedNote": "מוצגות 200 הרשומות האחרונות. רשומות ישנות יותר זמינות באמצעות ייצוא יומן השינויים המלא."
+    },
     "actionBar": {
       "backTooltip": "חזרה",
       "caseLabel": "תיק",

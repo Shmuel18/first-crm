@@ -2,13 +2,33 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 
-import type { AuditEntry } from '../services/audit.service';
+import { formatFieldValue, getFieldLabel } from '../lib/field-labels';
+import type { AuditEntry, AuditFieldChange } from '../services/audit.service';
 
 const ACTION_STYLE: Record<string, string> = {
   INSERT: 'bg-emerald-100 text-emerald-800',
   UPDATE: 'bg-blue-100 text-blue-800',
   DELETE: 'bg-rose-100 text-rose-800',
 };
+
+// Table names we have a friendly i18n label for. Anything else falls back
+// to the raw table_name string (useful while audit coverage grows).
+const KNOWN_TABLES = [
+  'cases',
+  'borrowers',
+  'borrower_incomes',
+  'borrower_obligations',
+  'case_banks',
+  'documents',
+  'case_borrowers',
+  'case_financials',
+  'tasks',
+  'leads',
+] as const;
+type KnownTable = (typeof KNOWN_TABLES)[number];
+function isKnownTable(name: string): name is KnownTable {
+  return (KNOWN_TABLES as readonly string[]).includes(name);
+}
 
 export function AuditLogTable({ entries }: { entries: ReadonlyArray<AuditEntry> }) {
   const t = useTranslations('auditLog');
@@ -57,9 +77,11 @@ export function AuditLogTable({ entries }: { entries: ReadonlyArray<AuditEntry> 
                   {actionLabel(t, entry.action)}
                 </span>
               </Td>
-              <Td className="font-mono text-xs text-neutral-700">{entry.tableName}</Td>
-              <Td className="text-xs text-neutral-600 truncate">
-                {entry.changedFields.join(', ') || '—'}
+              <Td className="text-xs text-neutral-700">
+                {isKnownTable(entry.tableName) ? t(`tables.${entry.tableName}`) : entry.tableName}
+              </Td>
+              <Td className="text-xs text-neutral-600">
+                <ChangesCell entry={entry} />
               </Td>
             </tr>
           ))}
@@ -73,6 +95,64 @@ function actionLabel(t: ReturnType<typeof useTranslations>, action: string): str
   const key = action.toLowerCase();
   if (key === 'insert' || key === 'update' || key === 'delete') return t(`actions.${key}`);
   return action;
+}
+
+function ChangesCell({ entry }: { entry: AuditEntry }) {
+  // UPDATE: render each diff as "label: old ← new" on its own line.
+  // Field labels and values are both run through the field-labels helper —
+  // so the user sees "סוג תושבות: תושב/ת חוץ ← תושב/ת ישראל" instead of
+  // "residency_type: foreign_resident ← resident".
+  if (entry.changes) {
+    const fields = Object.entries(entry.changes);
+    return (
+      <div className="space-y-0.5">
+        {fields.map(([field, change]) => (
+          <div key={field} className="leading-tight">
+            <span className="text-[12px] text-neutral-600 font-medium">
+              {getFieldLabel(field)}
+            </span>
+            <span className="text-neutral-400">: </span>
+            <DiffValue field={field} value={change.old} variant="old" />
+            <span className="text-neutral-400 mx-1">←</span>
+            <DiffValue field={field} value={change.new} variant="new" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // INSERT / DELETE: the trigger stored the whole row. Don't dump every
+  // column — just hint at the action and let the user dive into the row
+  // elsewhere if needed.
+  if (entry.wholeRow) {
+    const count = Object.keys(entry.wholeRow).length;
+    return <span className="text-neutral-500 italic">({count} שדות)</span>;
+  }
+
+  return <span className="text-neutral-400">—</span>;
+}
+
+function DiffValue({
+  field,
+  value,
+  variant,
+}: {
+  field: string;
+  value: AuditFieldChange['old'];
+  variant: 'old' | 'new';
+}) {
+  const display = formatFieldValue(field, value);
+  return (
+    <span
+      className={
+        variant === 'old'
+          ? 'text-neutral-500 line-through decoration-neutral-400'
+          : 'text-neutral-900 font-medium'
+      }
+    >
+      {display}
+    </span>
+  );
 }
 
 function Th({ children }: { children: React.ReactNode }) {

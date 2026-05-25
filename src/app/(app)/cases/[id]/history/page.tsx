@@ -23,6 +23,16 @@ export default async function CaseHistoryPage({ params }: Props) {
   const locale = parseLocale(await getLocale());
   const entries = await listAuditEntriesForCase(caseId);
 
+  // Show the primary borrower's name in the header (more useful at a glance
+  // than the internal case number, which the user can't memorise anyway).
+  const primaryBorrower = caseData.case_borrowers?.find((cb) => cb.is_primary)?.borrower;
+  const borrowerName = primaryBorrower
+    ? [primaryBorrower.first_name, primaryBorrower.last_name]
+        .filter(Boolean)
+        .join(' ')
+        .trim() || tc('noName')
+    : tc('noName');
+
   return (
     <div className="space-y-5 -mt-6">
       <div className="bg-[#FAF8F3] text-neutral-900 sticky top-[-1rem] sm:top-[-1.5rem] z-20 -mx-4 border-b border-[#C9A961]/20 px-4 py-3 shadow-sm sm:-mx-6 sm:px-6">
@@ -37,9 +47,7 @@ export default async function CaseHistoryPage({ params }: Props) {
           <div className="flex items-center gap-2">
             <span className="font-display text-base font-semibold">{t('history.title')}</span>
             <span aria-hidden="true" className="text-neutral-400">·</span>
-            <span className="font-mono text-sm text-[#A88840]">
-              {t('actionBar.caseLabel')} {caseData.case_number}
-            </span>
+            <span className="text-sm text-[#A88840] font-medium">{borrowerName}</span>
           </div>
         </div>
       </div>

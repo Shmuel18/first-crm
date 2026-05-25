@@ -261,9 +261,27 @@
       "insert": "Created",
       "update": "Updated",
       "delete": "Deleted"
+    },
+    "tables": {
+      "cases": "Case",
+      "borrowers": "Borrower",
+      "borrower_incomes": "Income",
+      "borrower_obligations": "Obligation",
+      "case_banks": "Case bank",
+      "documents": "Document",
+      "case_borrowers": "Borrower link",
+      "case_financials": "Case financials",
+      "tasks": "Task",
+      "leads": "Lead"
     }
   },
   "case": {
+    "history": {
+      "title": "Case history",
+      "subtitle": "All actions on case {caseNumber} for {borrower}",
+      "backToCase": "Back to case",
+      "truncatedNote": "Showing the last 200 entries. Older entries are available via the full audit log export."
+    },
     "actionBar": {
       "backTooltip": "Back",
       "caseLabel": "Case",
