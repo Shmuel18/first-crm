@@ -32,6 +32,7 @@ type Props = {
 const MARITAL_STATUS_VALUES = ['single', 'married', 'divorced', 'widowed', 'common_law'] as const;
 const RESIDENCY_TYPE_VALUES = ['resident', 'foreign_resident', 'returning_resident'] as const;
 const EMPLOYMENT_STATUS_VALUES = ['employee', 'self_employed', 'unemployed', 'pensioner'] as const;
+const PREFERRED_LANGUAGE_VALUES = ['he', 'en'] as const;
 
 function SubmitButton({ isEdit }: { isEdit: boolean }) {
   const { pending } = useFormStatus();
@@ -115,6 +116,9 @@ export function BorrowerForm({
         <FormField label={t('fields.nationalId')} error={errs.national_id}>
           <Input name="national_id" dir="ltr" defaultValue={val('national_id')} />
         </FormField>
+        <FormField label={t('fields.idIssueDate')} error={errs.id_issue_date}>
+          <Input name="id_issue_date" type="date" defaultValue={val('id_issue_date')} />
+        </FormField>
         {!initial && (
           <div className="md:col-span-2">
             <ReturningClientAutofill formRef={formRef} />
@@ -123,8 +127,26 @@ export function BorrowerForm({
         <FormField label={t('fields.phone')} error={errs.phone}>
           <Input name="phone" type="tel" dir="ltr" defaultValue={val('phone')} />
         </FormField>
+        <FormField label={t('fields.landlinePhone')} error={errs.landline_phone}>
+          <Input
+            name="landline_phone"
+            type="tel"
+            dir="ltr"
+            defaultValue={val('landline_phone')}
+          />
+        </FormField>
         <FormField label={t('fields.email')} error={errs.email}>
           <Input name="email" type="email" dir="ltr" defaultValue={val('email')} />
+        </FormField>
+        <FormField label={t('fields.preferredLanguage')} error={errs.preferred_language}>
+          <NativeSelect name="preferred_language" defaultValue={val('preferred_language')}>
+            <option value="">{tc('select')}</option>
+            {PREFERRED_LANGUAGE_VALUES.map((l) => (
+              <option key={l} value={l}>
+                {t(`preferredLanguages.${l}`)}
+              </option>
+            ))}
+          </NativeSelect>
         </FormField>
         <FormField label={t('fields.birthDate')} error={errs.birth_date}>
           <Input name="birth_date" type="date" defaultValue={val('birth_date')} />
@@ -142,6 +164,9 @@ export function BorrowerForm({
         </FormField>
         <FormField label={t('fields.childrenCount')} error={errs.children_count}>
           <Input name="children_count" type="number" min={0} step="1" defaultValue={val('children_count')} />
+        </FormField>
+        <FormField label={t('fields.city')} error={errs.city}>
+          <Input name="city" defaultValue={val('city')} />
         </FormField>
         <div className="md:col-span-2">
           <FormField label={t('fields.address')} error={errs.address}>
@@ -189,6 +214,13 @@ export function BorrowerForm({
         </FormField>
         <FormField label={t('fields.ownsOtherProperty')} error={errs.owns_other_property}>
           <NativeSelect name="owns_other_property" defaultValue={val('owns_other_property')}>
+            <option value="">{t('fields.ownsOtherPropertyUnknown')}</option>
+            <option value="true">{tc('yes')}</option>
+            <option value="false">{tc('no')}</option>
+          </NativeSelect>
+        </FormField>
+        <FormField label={t('fields.relatedToSellers')} error={errs.related_to_sellers}>
+          <NativeSelect name="related_to_sellers" defaultValue={val('related_to_sellers')}>
             <option value="">{t('fields.ownsOtherPropertyUnknown')}</option>
             <option value="true">{tc('yes')}</option>
             <option value="false">{tc('no')}</option>

@@ -22,6 +22,8 @@ export type BorrowerId = Brand<string, 'BorrowerId'>;
 export type CaseBankId = Brand<string, 'CaseBankId'>;
 export type DocumentId = Brand<string, 'DocumentId'>;
 export type TaskId = Brand<string, 'TaskId'>;
+export type IncomeId = Brand<string, 'IncomeId'>;
+export type ObligationId = Brand<string, 'ObligationId'>;
 
 // ============= Lookup IDs =============
 
@@ -47,6 +49,8 @@ export const asBorrowerId = (s: string): BorrowerId => s as BorrowerId;
 export const asCaseBankId = (s: string): CaseBankId => s as CaseBankId;
 export const asDocumentId = (s: string): DocumentId => s as DocumentId;
 export const asTaskId = (s: string): TaskId => s as TaskId;
+export const asIncomeId = (s: string): IncomeId => s as IncomeId;
+export const asObligationId = (s: string): ObligationId => s as ObligationId;
 export const asStatusId = (s: string): StatusId => s as StatusId;
 export const asCaseTypeId = (s: string): CaseTypeId => s as CaseTypeId;
 export const asBankId = (s: string): BankId => s as BankId;

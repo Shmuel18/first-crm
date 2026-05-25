@@ -11,15 +11,21 @@ import {
 } from '../actions/lookup-returning-borrower';
 
 // Person-level fields safe to copy from a prior case onto a returning client.
+// Deal-scoped flags (e.g. related_to_sellers, role_in_case, is_primary) are
+// excluded — they reset per case and copying them would be wrong.
 const FILL_FIELDS = [
   'first_name',
   'last_name',
   'phone',
+  'landline_phone',
   'email',
+  'preferred_language',
+  'id_issue_date',
   'birth_date',
   'marital_status',
   'children_count',
   'address',
+  'city',
   'citizenship',
   'residency_type',
   'employment_status',

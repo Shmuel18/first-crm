@@ -8,15 +8,20 @@ export type ReturningBorrower = {
   first_name: string | null;
   last_name: string | null;
   phone: string | null;
+  landline_phone: string | null;
   email: string | null;
+  preferred_language: string | null;
+  id_issue_date: string | null;
   birth_date: string | null;
   marital_status: string | null;
   children_count: number | null;
   address: string | null;
+  city: string | null;
   citizenship: string | null;
   residency_type: string | null;
   employment_status: string | null;
   employer_name: string | null;
+  related_to_sellers: boolean | null;
 };
 
 // national_id may be an Israeli ID or a passport, so don't enforce a checksum —
@@ -42,7 +47,7 @@ export async function lookupReturningBorrowerAction(
   const { data } = await supabase
     .from('borrowers')
     .select(
-      'first_name, last_name, phone, email, birth_date, marital_status, children_count, address, citizenship, residency_type, employment_status, employer_name',
+      'first_name, last_name, phone, landline_phone, email, preferred_language, id_issue_date, birth_date, marital_status, children_count, address, city, citizenship, residency_type, employment_status, employer_name, related_to_sellers',
     )
     .eq('national_id', parsed.data)
     .is('deleted_at', null)

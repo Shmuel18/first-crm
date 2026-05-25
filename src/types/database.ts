@@ -252,10 +252,12 @@ export type Database = {
       }
       borrowers: {
         Row: {
+          additional_citizenships: string | null
           address: string | null
           birth_date: string | null
           children_count: number | null
           citizenship: string | null
+          city: string | null
           created_at: string
           created_by: string | null
           credit_rating: string | null
@@ -264,7 +266,11 @@ export type Database = {
           employer_name: string | null
           employment_status: string | null
           first_name: string | null
+          gender: string | null
           id: string
+          id_expiry_date: string | null
+          id_issue_date: string | null
+          landline_phone: string | null
           last_name: string | null
           marital_status: string | null
           metadata: Json
@@ -272,15 +278,20 @@ export type Database = {
           notes: string | null
           owns_other_property: boolean | null
           phone: string | null
+          preferred_language: string | null
+          related_to_sellers: boolean | null
+          relationship_in_case: string | null
           residency_type: string | null
           updated_at: string
           updated_by: string | null
         }
         Insert: {
+          additional_citizenships?: string | null
           address?: string | null
           birth_date?: string | null
           children_count?: number | null
           citizenship?: string | null
+          city?: string | null
           created_at?: string
           created_by?: string | null
           credit_rating?: string | null
@@ -289,7 +300,11 @@ export type Database = {
           employer_name?: string | null
           employment_status?: string | null
           first_name?: string | null
+          gender?: string | null
           id?: string
+          id_expiry_date?: string | null
+          id_issue_date?: string | null
+          landline_phone?: string | null
           last_name?: string | null
           marital_status?: string | null
           metadata?: Json
@@ -297,15 +312,20 @@ export type Database = {
           notes?: string | null
           owns_other_property?: boolean | null
           phone?: string | null
+          preferred_language?: string | null
+          related_to_sellers?: boolean | null
+          relationship_in_case?: string | null
           residency_type?: string | null
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
+          additional_citizenships?: string | null
           address?: string | null
           birth_date?: string | null
           children_count?: number | null
           citizenship?: string | null
+          city?: string | null
           created_at?: string
           created_by?: string | null
           credit_rating?: string | null
@@ -314,7 +334,11 @@ export type Database = {
           employer_name?: string | null
           employment_status?: string | null
           first_name?: string | null
+          gender?: string | null
           id?: string
+          id_expiry_date?: string | null
+          id_issue_date?: string | null
+          landline_phone?: string | null
           last_name?: string | null
           marital_status?: string | null
           metadata?: Json
@@ -322,6 +346,9 @@ export type Database = {
           notes?: string | null
           owns_other_property?: boolean | null
           phone?: string | null
+          preferred_language?: string | null
+          related_to_sellers?: boolean | null
+          relationship_in_case?: string | null
           residency_type?: string | null
           updated_at?: string
           updated_by?: string | null
