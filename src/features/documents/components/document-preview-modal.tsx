@@ -2,28 +2,9 @@
 
 import { useEffect, useState, useTransition } from 'react';
 
-import {
-  CheckCircle2,
-  Download,
-  ExternalLink,
-  FileQuestion,
-  Loader2,
-  RotateCw,
-  Trash2,
-  XCircle,
-} from 'lucide-react';
+import { Download, ExternalLink } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -36,6 +17,9 @@ import { deleteDocumentAction } from '../actions/delete-document';
 import { getDocumentPreviewUrlAction } from '../actions/get-document-preview-url';
 import { updateDocumentStatusAction } from '../actions/update-document-status';
 import type { DocumentStatus, DocumentWithRelations } from '../types';
+
+import { DocumentPreviewActions } from './document-preview-actions';
+import { DocumentPreviewBody } from './document-preview-body';
 import { DocumentStatusChip } from './document-status-chip';
 
 type Props = {
@@ -46,19 +30,14 @@ type Props = {
 
 export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
   const t = useTranslations('documents.previewModal');
-  const tActions = useTranslations('documents.statusActions');
   const tErr = useTranslations('documents.errors');
-  const tCommon = useTranslations('common');
-  const tError = useTranslations('error');
   const locale = useLocale();
   const [url, setUrl] = useState<string | null>(null);
   // Initial loading is derived from doc: only true if we'll actually fetch
   // a signed URL (i.e., this is a Supabase-only doc, not a Drive iframe one).
   // Using an initializer instead of setLoading(true) inside an effect avoids
   // react-hooks/set-state-in-effect.
-  const [loading, setLoading] = useState<boolean>(() =>
-    Boolean(doc && !doc.drive_file_id),
-  );
+  const [loading, setLoading] = useState<boolean>(() => Boolean(doc && !doc.drive_file_id));
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -74,7 +53,7 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
       .then((res) => {
         if (cancelled) return;
         if (res.ok) setUrl(res.url);
-        else setError(res.message ?? tErr('unauthorized'));
+        else setError(tErr('unauthorized'));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -100,7 +79,7 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
     getDocumentPreviewUrlAction(doc.id)
       .then((res) => {
         if (res.ok) setUrl(res.url);
-        else setError(res.message ?? tErr('unauthorized'));
+        else setError(tErr('unauthorized'));
       })
       .finally(() => setLoading(false));
   };
@@ -122,7 +101,7 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
 
   const isImage = doc.mime_type?.startsWith('image/') ?? false;
   const isPdf = doc.mime_type === 'application/pdf';
-  // Drive preview handles Word, Excel, PPT, PDF, images - everything.
+  // Drive preview handles Word, Excel, PPT, PDF, images — everything.
   // Falls back to Supabase signed URL for files not in Drive yet.
   const drivePreviewUrl = doc.drive_file_id
     ? `https://drive.google.com/file/d/${doc.drive_file_id}/preview`
@@ -141,50 +120,16 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="rounded-xl border border-neutral-200 bg-neutral-50 overflow-hidden min-h-[280px] max-h-[60vh] flex items-center justify-center">
-          {loading && <Loader2 className="size-5 animate-spin text-neutral-400" aria-label="Loading" />}
-          {!loading && error && (
-            <div className="px-4 py-6 text-center">
-              <p className="text-sm text-rose-600">{error}</p>
-              {!url && !doc.drive_file_id && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleRetry}
-                  className="mt-3 h-8"
-                >
-                  <RotateCw className="size-3.5 me-1" />
-                  {tError('retry')}
-                </Button>
-              )}
-            </div>
-          )}
-          {!loading && !error && drivePreviewUrl && (
-            <iframe
-              src={drivePreviewUrl}
-              title={doc.file_name}
-              className="w-full h-[58vh]"
-              allow="autoplay"
-            />
-          )}
-          {!loading && !error && !drivePreviewUrl && url && isImage && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={url} alt={doc.file_name} className="max-h-[58vh] object-contain" />
-          )}
-          {!loading && !error && !drivePreviewUrl && url && isPdf && (
-            <iframe
-              src={url}
-              title={doc.file_name}
-              className="w-full h-[58vh]"
-            />
-          )}
-          {!loading && !error && !drivePreviewUrl && url && !isImage && !isPdf && (
-            <div className="text-center text-neutral-500 px-4 py-12">
-              <FileQuestion className="size-10 mx-auto mb-3 text-neutral-300" />
-              <p className="text-sm">{t('noPreview')}</p>
-            </div>
-          )}
-        </div>
+        <DocumentPreviewBody
+          loading={loading}
+          error={error}
+          drivePreviewUrl={drivePreviewUrl}
+          url={url}
+          fileName={doc.file_name}
+          isImage={isImage}
+          isPdf={isPdf}
+          onRetry={handleRetry}
+        />
 
         {(url || doc.drive_file_url) && (
           <div className="flex flex-wrap items-center gap-2">
@@ -213,86 +158,15 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-neutral-100">
-          {status !== 'verified' && (
-            <Button
-              type="button"
-              onClick={() => updateStatus('verified')}
-              disabled={isPending}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white h-9"
-            >
-              <CheckCircle2 className="size-4 me-1" />
-              {tActions('markVerified')}
-            </Button>
-          )}
-          {status !== 'new' && status !== 'rejected' && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => updateStatus('new')}
-              disabled={isPending}
-              className="h-9"
-            >
-              <RotateCw className="size-4 me-1" />
-              {tActions('markNew')}
-            </Button>
-          )}
-          {status !== 'not_relevant' && (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => updateStatus('not_relevant')}
-              disabled={isPending}
-              className="h-9"
-            >
-              <XCircle className="size-4 me-1" />
-              {tActions('markNotRelevant')}
-            </Button>
-          )}
-
-          <div className="flex-1" />
-
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={() => setConfirmDelete(true)}
-            disabled={isPending}
-            className="h-9"
-          >
-            <Trash2 className="size-4 me-1" />
-            {tCommon('delete')}
-          </Button>
-        </div>
+        <DocumentPreviewActions
+          status={status}
+          pending={isPending}
+          onUpdateStatus={updateStatus}
+          confirmDeleteOpen={confirmDelete}
+          onConfirmDeleteOpenChange={setConfirmDelete}
+          onDeleteConfirmed={handleDeleteConfirmed}
+        />
       </DialogContent>
-
-      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-        <AlertDialogContent>
-          <AlertDialogTitle>{tCommon('delete')}</AlertDialogTitle>
-          <AlertDialogDescription>{t('deleteConfirm')}</AlertDialogDescription>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              render={
-                <Button type="button" variant="ghost" className="h-10">
-                  {tCommon('cancel')}
-                </Button>
-              }
-            />
-            <AlertDialogAction
-              render={
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={handleDeleteConfirmed}
-                  disabled={isPending}
-                  className="h-10"
-                >
-                  {tCommon('delete')}
-                </Button>
-              }
-            />
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Dialog>
   );
 }
