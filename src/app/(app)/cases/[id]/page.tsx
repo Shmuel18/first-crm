@@ -1,24 +1,30 @@
+import { Suspense } from 'react';
+
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import {
   Briefcase,
-  Building2,
   FileText,
   FolderArchive,
   Home,
   Pencil,
+  Receipt,
   UserCircle2,
+  Wallet,
 } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import { CaseBorrowerCard } from '@/features/borrowers/components/case-borrower-card';
 import { listBorrowersForCase } from '@/features/borrowers/services/borrowers.service';
-import { CaseBankRow } from '@/features/case-banks/components/case-bank-row';
-import { listCaseBanks } from '@/features/case-banks/services/case-banks.service';
+import {
+  CaseBanksBlock,
+  CaseBanksBlockSkeleton,
+} from '@/features/case-banks/components/case-banks-block';
 import { CaseActionBar } from '@/features/cases/components/case-action-bar';
 import { CaseAdminBlock } from '@/features/cases/components/case-admin-block';
 import { CaseBlock } from '@/features/cases/components/case-block';
+import { CaseBlockSkeleton } from '@/features/cases/components/case-block-skeleton';
 import { bandToAccent, EmptyBorrowers } from '@/features/cases/components/case-detail-helpers';
 import { DataRow } from '@/features/cases/components/case-info-rows';
 import { calculateLtv, ltvBand } from '@/features/cases/domain/calculations';
@@ -29,7 +35,7 @@ import { getCaseById } from '@/features/cases/services/cases.service';
 import { CaseIncomesBlock } from '@/features/incomes/components/case-incomes-block';
 import { CaseObligationsBlock } from '@/features/obligations/components/case-obligations-block';
 import { CaseTasksBlock } from '@/features/tasks/components/case-tasks-block';
-import { isCurrentUserAdmin, userHasPermission } from '@/lib/auth/permissions';
+import { userHasPermission } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
 import { sanitizeRichTextHtml } from '@/lib/utils/sanitize-html';
@@ -43,17 +49,25 @@ export default async function CaseDetailPage({ params }: Props) {
   const tc = await getTranslations('common');
 
   const caseId = asCaseId(id);
-  const [caseData, borrowers, banks, statusOptions] = await Promise.all([
+
+  // Eager fetches block first paint: the action bar needs the case + status
+  // options, and the borrowers list feeds the header's client-name display.
+  // Banks, incomes, obligations, and tasks all stream in below via <Suspense>.
+  const [caseData, borrowers, statusOptions] = await Promise.all([
     getCaseById(caseId),
     listBorrowersForCase(caseId),
-    listCaseBanks(caseId),
     listCaseStatusOptions(),
   ]);
 
   if (!caseData) notFound();
 
+  // Use the same permission gate as the case_financials RLS policy (#27).
+  // Previously this was isCurrentUserAdmin(), which meant a non-admin with
+  // view_case_fee saw an empty UI block — but the fee_amount + expected_income
+  // values were still loaded by getCaseById and shipped down in the RSC
+  // payload, readable via view-source. Aligning the gate closes the leak.
   const [canSeeFinancials, canArchive, canRestore] = await Promise.all([
-    isCurrentUserAdmin(),
+    userHasPermission('view_case_fee'),
     userHasPermission('archive_case'),
     userHasPermission('restore_archived_case'),
   ]);
@@ -133,9 +147,15 @@ export default async function CaseDetailPage({ params }: Props) {
           )}
         </CaseBlock>
 
-        <CaseIncomesBlock caseId={caseData.id} />
+        <Suspense fallback={<CaseBlockSkeleton title={t('blocks.incomes')} icon={<Wallet />} />}>
+          <CaseIncomesBlock caseId={caseData.id} />
+        </Suspense>
 
-        <CaseObligationsBlock caseId={caseData.id} />
+        <Suspense
+          fallback={<CaseBlockSkeleton title={t('blocks.obligations')} icon={<Receipt />} />}
+        >
+          <CaseObligationsBlock caseId={caseData.id} />
+        </Suspense>
 
         <CaseBlock title={t('blocks.property')} icon={<Home />}>
           <DataRow label={t('fields.propertyValue')} value={formatMoney(caseData.property_value)} large />
@@ -150,28 +170,9 @@ export default async function CaseDetailPage({ params }: Props) {
           )}
         </CaseBlock>
 
-        <CaseBlock
-          title={`${t('blocks.banks')} ${banks.length > 0 ? `(${banks.length})` : ''}`}
-          icon={<Building2 />}
-          rightSlot={
-            <Link
-              href={`/cases/${caseData.id}/banks/new`}
-              className="text-xs text-[#A88840] hover:underline font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
-            >
-              {t('blocks.addBank')}
-            </Link>
-          }
-        >
-          {banks.length === 0 ? (
-            <p className="text-sm text-neutral-600 text-center py-6">{t('blocks.noBanks')}</p>
-          ) : (
-            <div className="space-y-2">
-              {banks.map((cb) => (
-                <CaseBankRow key={cb.id} caseId={caseData.id} caseBank={cb} />
-              ))}
-            </div>
-          )}
-        </CaseBlock>
+        <Suspense fallback={<CaseBanksBlockSkeleton />}>
+          <CaseBanksBlock caseId={caseData.id} />
+        </Suspense>
 
         {/* blocker/insurance are CHECK-constrained DB strings; narrow to unions. */}
         <CaseAdminBlock
@@ -180,14 +181,20 @@ export default async function CaseDetailPage({ params }: Props) {
           referrerName={caseData.referrer_name}
           advisor={advisor}
           createdAt={caseData.created_at}
-          feeAmount={caseData.case_financials?.fee_amount ?? null}
-          expectedIncome={caseData.case_financials?.expected_income ?? null}
+          // Defense in depth: even if RLS lets the row through, never ship
+          // the numbers to the client when the UI is going to hide them.
+          feeAmount={canSeeFinancials ? caseData.case_financials?.fee_amount ?? null : null}
+          expectedIncome={
+            canSeeFinancials ? caseData.case_financials?.expected_income ?? null : null
+          }
           canSeeFinancials={canSeeFinancials}
           locale={locale}
         />
 
         <CaseBlock title={t('blocks.tasks')} icon={<Briefcase />}>
-          <CaseTasksBlock caseId={caseData.id} locale={locale} />
+          <Suspense fallback={<TasksBlockInlineSkeleton />}>
+            <CaseTasksBlock caseId={caseData.id} locale={locale} />
+          </Suspense>
         </CaseBlock>
 
         <CaseBlock title={t('blocks.shortNote')} icon={<Briefcase />} fullWidth>
@@ -244,6 +251,18 @@ export default async function CaseDetailPage({ params }: Props) {
           {tc('edit')}
         </Link>
       </div>
+    </div>
+  );
+}
+
+// Inline skeleton for the tasks block — it's nested inside an existing
+// <CaseBlock>, so we only render the row placeholders, not the chrome.
+function TasksBlockInlineSkeleton() {
+  return (
+    <div className="space-y-2 animate-pulse" aria-hidden>
+      <div className="h-12 rounded-lg bg-neutral-100" />
+      <div className="h-12 rounded-lg bg-neutral-100" />
+      <div className="h-12 rounded-lg bg-neutral-100" />
     </div>
   );
 }
