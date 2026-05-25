@@ -43,7 +43,7 @@ export default async function NewCaseBankPage({ params }: Props) {
       </div>
 
       <div className="bg-white border border-neutral-200 rounded-lg p-6">
-        <CaseBankForm key="new" caseId={id} banks={banks} statuses={statuses} />
+        <CaseBankForm caseId={id} banks={banks} statuses={statuses} />
       </div>
     </div>
   );

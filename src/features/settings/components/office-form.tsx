@@ -34,8 +34,6 @@ export function OfficeForm({ office }: Props) {
     state.ok === false && state.error === 'validation' ? state.fieldErrors ?? {} : {};
   const submitted = state.ok === false && state.error !== 'idle' ? state.values : undefined;
   const initialRecord = office as unknown as Record<string, unknown>;
-  // Snapshot caused a base-ui DOM re-sync that locked the inputs; see
-  // BorrowerForm. Reverted to the live lookup.
   const value = (name: string) => fieldDefault(name, submitted, initialRecord);
 
   const genericError =

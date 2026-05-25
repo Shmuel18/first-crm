@@ -103,6 +103,7 @@
       "active": "Active cases",
       "leads": "Leads",
       "archive": "Archive",
+      "groupLabel": "Cases view",
       "leadsEmpty": "No leads to show"
     },
     "filters": {
@@ -127,9 +128,6 @@
       "export": "Export",
       "formatExcel": "Excel",
       "formatPdf": "PDF",
-      "exportExcel": "Export to Excel",
-      "exportPdf": "Export to PDF",
-      "exporting": "Exporting...",
       "exportFailed": "Export failed",
       "exportEmpty": "No cases to export",
       "pdf": {

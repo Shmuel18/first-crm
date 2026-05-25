@@ -41,7 +41,12 @@ const emptyToNull = (v: unknown): unknown => (v === '' || v === null ? null : v)
 export const optionalShortString = (max: number = NAME_MAX) =>
   z.preprocess(emptyToNull, z.string().max(max).nullable().optional());
 
-/** Required name-shaped string — trims whitespace, rejects empty. */
+/**
+ * Required name-shaped string — trims whitespace, rejects empty.
+ * Unlike the optional variants this does NOT use `emptyToNull` (the whole
+ * point is to reject empty); non-string inputs fall through to z.string()
+ * which rejects them with the same 'required' message.
+ */
 export const requiredShortString = (max: number = NAME_MAX) =>
   z.preprocess(
     (v) => (typeof v === 'string' ? v.trim() : v),

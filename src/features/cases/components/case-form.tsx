@@ -86,9 +86,6 @@ export function CaseForm({
     state.ok === false && state.error !== 'idle' ? state.values : undefined;
   const initialRecord = (initial ?? null) as Record<string, unknown> | null;
 
-  // See BorrowerForm for the long version — snapshotting defaultValue with
-  // useState breaks editing because base-ui re-syncs the DOM to it. So we
-  // keep the live `submitted` lookup and accept the console warning.
   const value = (name: string) => fieldDefault(name, submitted, initialRecord);
 
   const genericError = getGenericError(state, t);

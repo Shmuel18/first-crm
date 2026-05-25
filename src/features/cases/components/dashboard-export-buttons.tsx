@@ -19,13 +19,11 @@ type Format = 'xlsx' | 'pdf';
 export function DashboardExportButtons() {
   const t = useTranslations('dashboard.savedViews');
   const [isPending, startTransition] = useTransition();
-  const [, setActiveFormat] = useState<Format | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleExport = (format: Format) => {
     if (isPending) return;
     setError(null);
-    setActiveFormat(format);
     startTransition(async () => {
       try {
         const result =
@@ -37,8 +35,6 @@ export function DashboardExportButtons() {
         }
       } catch {
         setError(t('exportFailed'));
-      } finally {
-        setActiveFormat(null);
       }
     });
   };

@@ -49,9 +49,8 @@ export function DashboardFiltersBar({
     'hideClosedFrozen',
     parseAsBoolean.withDefault(true).withOptions(urlOpts),
   );
-  // Free-text search filters client-side (see useCaseQueryFilter), so it uses a
-  // shallow URL update — no server round-trip, instant as you type.
-  const [query, setQuery] = useQueryState('q', parseAsString.withOptions({ shallow: true }));
+  // The free-text search input lives in the view-selector bar above and owns
+  // its own `?q=` state — we deliberately don't read or clear it from here.
 
   const stages: Option[] = statusOptions.map((s) => ({ id: s.id, name: s.name_he }));
   const banks: Option[] = bankOptions.map((b) => ({ id: b.id, name: b.name_he }));
@@ -63,13 +62,15 @@ export function DashboardFiltersBar({
   const showAdvisor = canFilterByAdvisor && advisors.length > 0;
 
   // The "hide completed & frozen" toggle is an independent display preference,
-  // not a filter the user "applied" — clearing other filters shouldn't reset
-  // it, and toggling it off shouldn't surface the clear button.
-  const anyActive =
-    Boolean(query) || advisor !== null || stage !== null || bank !== null;
+  // not a filter the user "applied" — clearing the chips shouldn't reset it,
+  // and toggling it off shouldn't surface the clear button.
+  //
+  // The free-text search lives in a sibling component (the view selector bar
+  // above), so we deliberately leave `query` alone here — it would be a
+  // surprise to wipe text the user typed in a different bar.
+  const anyActive = advisor !== null || stage !== null || bank !== null;
 
   const clearAll = () => {
-    setQuery(null);
     setAdvisor(null);
     setStage(null);
     setBank(null);

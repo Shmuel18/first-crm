@@ -103,6 +103,7 @@
       "active": "תיקים פעילים",
       "leads": "לידים",
       "archive": "ארכיון",
+      "groupLabel": "תצוגת תיקים",
       "leadsEmpty": "אין לידים להצגה"
     },
     "filters": {
@@ -127,9 +128,6 @@
       "export": "ייצוא",
       "formatExcel": "אקסל",
       "formatPdf": "PDF",
-      "exportExcel": "ייצוא לאקסל",
-      "exportPdf": "ייצוא ל-PDF",
-      "exporting": "מייצא...",
       "exportFailed": "ייצוא נכשל",
       "exportEmpty": "אין תיקים לייצוא",
       "pdf": {

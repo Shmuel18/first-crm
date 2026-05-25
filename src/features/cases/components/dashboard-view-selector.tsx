@@ -31,12 +31,14 @@ export function DashboardViewSelector({
 
   return (
     <div className="bg-white px-6 py-2.5 border-b border-neutral-200 flex items-center gap-3 flex-wrap">
-      {/* Segmented control: one shared track, active tab is a dark pill, the
-          inactive tabs are flat text. Replaces the previous three individual
-          bordered pills. */}
+      {/* Segmented control: one shared track, the active "tab" is a dark pill,
+          the others are flat text. Not a real ARIA tab pattern — clicking
+          updates the URL and the whole page re-renders, there's no in-place
+          panel swap — so we expose this as a button group with aria-pressed.
+          aria-label uses the wrapping role's intent, not one of the children. */}
       <div
-        role="tablist"
-        aria-label={t('active')}
+        role="group"
+        aria-label={t('groupLabel')}
         className="inline-flex items-center bg-neutral-100 rounded-lg p-0.5"
       >
         <ViewTab
@@ -94,8 +96,7 @@ function ViewTab({
   return (
     <button
       type="button"
-      role="tab"
-      aria-selected={active}
+      aria-pressed={active}
       onClick={onClick}
       className={[
         'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition',

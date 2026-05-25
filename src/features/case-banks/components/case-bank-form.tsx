@@ -58,9 +58,6 @@ export function CaseBankForm({ caseId, initial, banks, statuses }: CaseBankFormP
   const submitted =
     state.ok === false && state.error !== 'idle' ? state.values : undefined;
   const initialRecord = (initial ?? null) as Record<string, unknown> | null;
-
-  // See BorrowerForm for the long version — snapshotting defaultValue with
-  // useState breaks editing because base-ui re-syncs the DOM to it.
   const val = (name: string) => fieldDefault(name, submitted, initialRecord);
 
   const genericError =

@@ -68,17 +68,6 @@ export function BorrowerForm({
   const sub = state.ok === false && state.error !== 'idle' ? state.values : undefined;
   const initialRecord = (initial ?? null) as Record<string, unknown> | null;
 
-  // NB: we deliberately do NOT snapshot the defaults here. base-ui's
-  // FieldControl appears to sync its DOM back to `defaultValue` on every
-  // change of that prop — so freezing it lets the DOM end up locked to the
-  // initial value (user's edits get wiped on the next re-render). Letting
-  // `defaultValue` track state.values means the sync targets the user's
-  // typed-in value, which is a no-op visually. The console warning that
-  // accompanies it is annoying but harmless; the proper fix is to migrate
-  // the affected fields to controlled components, which is a bigger lift.
-  // (key={borrower.id} on the parent still gives a clean remount when the
-  // user navigates between borrowers.)
-
   const genericError =
     state.ok === false && state.error !== 'idle' && state.error !== 'validation'
       ? state.error === 'unauthorized'

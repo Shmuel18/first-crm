@@ -12,6 +12,7 @@ import {
   parseCaseView,
   parseDashboardFilters,
 } from '@/features/cases/domain/case-filters';
+import { applySort, parseCaseSort } from '@/features/cases/domain/case-sort';
 import {
   getCurrentProfileName,
   listAdvisorOptions,
@@ -41,6 +42,7 @@ export default async function CasesListPage({ searchParams }: Props) {
   const sp = await searchParams;
   const view = parseCaseView(sp);
   const filters = parseDashboardFilters(sp);
+  const sort = parseCaseSort(sp);
 
   const [
     activeCases,
@@ -92,9 +94,10 @@ export default async function CasesListPage({ searchParams }: Props) {
       : activeCases;
     // In the archive, "hide closed & frozen" would hide exactly the cases that
     // were archived (completed / on-hold), so don't apply it there.
-    const visible = filterCases(
-      cases,
-      isArchive ? { ...filters, hideClosedFrozen: false } : filters,
+    const visible = applySort(
+      filterCases(cases, isArchive ? { ...filters, hideClosedFrozen: false } : filters),
+      sort,
+      statusOptions,
     );
     chrome = (
       <DashboardFiltersBar

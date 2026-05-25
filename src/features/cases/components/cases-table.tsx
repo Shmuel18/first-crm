@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -15,6 +15,7 @@ import {
 import {
   applySort,
   SORT_COLUMNS,
+  type CaseSort,
   type SortColumn,
   type SortDir,
 } from '../domain/case-sort';
@@ -48,20 +49,26 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
   // (which `listCases` returns newest-first). Click a header to activate.
   const [sortCol, setSortCol] = useQueryState(
     'sort',
-    parseAsStringEnum(SORT_COLUMNS as unknown as SortColumn[]).withOptions({ shallow: true }),
+    parseAsStringEnum([...SORT_COLUMNS]).withOptions({ shallow: true }),
   );
   const [sortDirRaw, setSortDir] = useQueryState(
     'dir',
     parseAsStringEnum(SORT_DIRS).withOptions({ shallow: true }),
   );
-  const sort = sortCol ? { column: sortCol, dir: sortDirRaw ?? 'asc' } : null;
 
-  const ordered = useMemo(
-    () => applySort(filtered, sort, statusOptions),
-    // sort is recreated each render; its parts are the real deps.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [filtered, sortCol, sortDirRaw, statusOptions],
-  );
+  // Build the sort object inside useMemo so its parts are the explicit deps —
+  // no `eslint-disable` and no leaky reference held outside.
+  const ordered = useMemo(() => {
+    const sort: CaseSort | null = sortCol
+      ? { column: sortCol, dir: sortDirRaw ?? 'asc' }
+      : null;
+    return applySort(filtered, sort, statusOptions);
+  }, [filtered, sortCol, sortDirRaw, statusOptions]);
+
+  // For the header components (which need to highlight the active arrow).
+  const sortForHeaders: CaseSort | null = sortCol
+    ? { column: sortCol, dir: sortDirRaw ?? 'asc' }
+    : null;
 
   const densityClass =
     density === 'compact'
@@ -99,9 +106,19 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
         <thead className="sticky top-[-1rem] z-10 sm:top-[-1.5rem]">
           <tr className="bg-neutral-100 border-b-2 border-neutral-300">
             <Th>{t('row')}</Th>
-            <SortableTh label={t('clientName')} column="name" sort={sort} onSort={handleSort} />
+            <SortableTh
+              label={t('clientName')}
+              column="name"
+              sort={sortForHeaders}
+              onSort={handleSort}
+            />
             <Th>{t('nationalId')}</Th>
-            <SortableTh label={t('stage')} column="stage" sort={sort} onSort={handleSort} />
+            <SortableTh
+              label={t('stage')}
+              column="stage"
+              sort={sortForHeaders}
+              onSort={handleSort}
+            />
             <Th>{t('bank')}</Th>
             <Th>{t('advisor')}</Th>
             <Th>{t('shortNote')}</Th>
@@ -109,14 +126,13 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
         </thead>
         <tbody className={densityClass}>
           {ordered.map((c, index) => (
-            <Fragment key={c.id}>
-              <CaseTableRow
-                row={toRowData(c, index + 1)}
-                statusOptions={statusOptions}
-                bankOptions={bankOptions}
-                advisorOptions={advisorOptions}
-              />
-            </Fragment>
+            <CaseTableRow
+              key={c.id}
+              row={toRowData(c, index + 1)}
+              statusOptions={statusOptions}
+              bankOptions={bankOptions}
+              advisorOptions={advisorOptions}
+            />
           ))}
         </tbody>
       </table>
