@@ -1,5 +1,9 @@
 name: CI
 
+# Manual one-time setup required: Settings → Branches → Add rule for `main`
+# → "Require status checks to pass before merging" → tick CI / verify.
+# Without that toggle, this workflow runs on every PR but doesn't block merges.
+
 on:
   pull_request:
   push:
@@ -21,3 +25,20 @@ jobs:
         run: npm run lint
       - name: Test
         run: npm test
+
+  audit:
+    runs-on: ubuntu-latest
+    # npm audit is informational — a high-severity advisory shouldn't block
+    # a merge while waiting on an upstream patch. `continue-on-error: true`
+    # keeps the PR green but the run shows up red in the Actions tab so the
+    # team sees it. Dependabot creates the actual update PR separately.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: npm audit (high severity)
+        run: npm audit --audit-level=high

@@ -1,0 +1,56 @@
+version: 2
+updates:
+  # Weekly bump of npm deps. Group security-critical libraries together so a
+  # CVE doesn't sit waiting for a separate PR. Group everything else by ecosystem
+  # so review is one PR/week instead of dozens.
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: Asia/Jerusalem
+    open-pull-requests-limit: 5
+    versioning-strategy: increase
+    groups:
+      security-critical:
+        applies-to: version-updates
+        patterns:
+          - "@supabase/*"
+          - "isomorphic-dompurify"
+          - "file-type"
+          - "googleapis"
+          - "google-auth-library"
+      next-stack:
+        applies-to: version-updates
+        patterns:
+          - "next"
+          - "next-intl"
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+      tooling:
+        applies-to: version-updates
+        patterns:
+          - "eslint*"
+          - "prettier*"
+          - "typescript"
+          - "vitest"
+          - "@types/node"
+    labels:
+      - dependencies
+    commit-message:
+      prefix: chore
+      include: scope
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: chore
+      include: scope
