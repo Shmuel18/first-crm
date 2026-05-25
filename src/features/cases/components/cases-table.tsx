@@ -2,16 +2,10 @@
 
 import { useEffect, useMemo, useRef } from 'react';
 
-import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
 
-import {
-  getCaseClientLabel,
-  getPrimaryBank,
-  getPrimaryBorrowerNationalId,
-  getSecondaryBanksCount,
-} from '../domain/case-derivations';
+import { toRowData } from '../domain/case-row-data';
 import {
   applySort,
   SORT_COLUMNS,
@@ -19,12 +13,12 @@ import {
   type SortColumn,
   type SortDir,
 } from '../domain/case-sort';
-import { isFrozenCase, isStuckCase } from '../domain/case-state';
 import { useCaseQueryFilter } from '../hooks/use-case-query-filter';
 import { useRowDensity } from '../hooks/use-row-density';
 import type { CaseWithRelations } from '../types';
 
-import { CaseTableRow, type CaseTableRowData } from './case-table-row';
+import { CaseTableRow } from './case-table-row';
+import { SortableTh, Th } from './cases-table-headers';
 
 type StatusOption = { id: string; name_he: string; color: string; sort_order: number };
 type BankOption = { id: string; key: string; name_he: string; color: string; logo_url: string | null };
@@ -210,90 +204,3 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
   );
 }
 
-function SortableTh({
-  label,
-  column,
-  sort,
-  onSort,
-}: {
-  label: string;
-  column: SortColumn;
-  sort: { column: SortColumn; dir: SortDir } | null;
-  onSort: (column: SortColumn) => void;
-}) {
-  const isActive = sort?.column === column;
-  const ariaSort = isActive ? (sort!.dir === 'asc' ? 'ascending' : 'descending') : 'none';
-  const ArrowIcon = !isActive ? ArrowUpDown : sort!.dir === 'asc' ? ArrowUp : ArrowDown;
-
-  return (
-    <th scope="col" aria-sort={ariaSort} className="p-0">
-      <button
-        type="button"
-        onClick={() => onSort(column)}
-        className={[
-          'group flex w-full items-center gap-1 px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider transition-colors',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-gold-text/40',
-          isActive
-            ? 'text-neutral-900'
-            : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50',
-        ].join(' ')}
-      >
-        {label}
-        <ArrowIcon
-          aria-hidden="true"
-          className={[
-            'size-3 shrink-0 transition-opacity',
-            isActive
-              ? 'text-brand-gold-text opacity-100'
-              : 'text-neutral-400 opacity-40 group-hover:opacity-100',
-          ].join(' ')}
-        />
-      </button>
-    </th>
-  );
-}
-
-function Th({ children }: { children: React.ReactNode }) {
-  return (
-    <th
-      scope="col"
-      className="text-start text-xs font-semibold text-neutral-600 uppercase tracking-wider px-4 py-3"
-    >
-      {children}
-    </th>
-  );
-}
-
-function toRowData(c: CaseWithRelations, index: number): CaseTableRowData {
-  const advisorName =
-    [c.assigned_advisor?.first_name, c.assigned_advisor?.last_name]
-      .filter(Boolean)
-      .join(' ') || null;
-  const primaryBank = getPrimaryBank(c);
-
-  return {
-    id: c.id,
-    index,
-    clientLabel: getCaseClientLabel(c),
-    nationalId: getPrimaryBorrowerNationalId(c),
-    statusId: c.status_id,
-    statusName: c.status?.name_he ?? null,
-    statusColor: c.status?.color ?? null,
-    primaryBank: primaryBank
-      ? {
-          id: primaryBank.id,
-          key: primaryBank.key,
-          name_he: primaryBank.name_he,
-          color: primaryBank.color,
-          logo_url: primaryBank.logo_url,
-        }
-      : null,
-    secondaryBanksCount: getSecondaryBanksCount(c),
-    advisorId: c.assigned_advisor_id,
-    advisorName,
-    shortNote: c.short_note ?? null,
-    isStuck: isStuckCase(c),
-    isFrozen: isFrozenCase(c),
-    updatedAt: c.updated_at,
-  };
-}
