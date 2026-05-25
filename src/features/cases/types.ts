@@ -21,7 +21,13 @@ export type CaseWithRelations = CaseRow & {
   status: { id: string; key: string; name_he: string; name_en: string; color: string } | null;
   case_type_primary: { id: string; key: string; name_he: string; name_en: string } | null;
   case_type_secondary: { id: string; key: string; name_he: string; name_en: string } | null;
-  assigned_advisor: { id: string; first_name: string | null; last_name: string | null } | null;
+  assigned_advisor: {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    phone: string | null;
+    email: string | null;
+  } | null;
   case_borrowers?: Array<{
     is_primary: boolean;
     borrower: {

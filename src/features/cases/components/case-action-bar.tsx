@@ -4,7 +4,6 @@ import {
   Calculator,
   Check,
   ClipboardList,
-  FileText,
   Folder,
   MessageSquare,
 } from 'lucide-react';
@@ -18,6 +17,7 @@ import { parseLocale } from '@/lib/i18n/direction';
 
 import { CaseMoreMenu } from './case-more-menu';
 import { EditableStatusCell } from './editable-status-cell';
+import { GenerateBankPdfButton } from './generate-bank-pdf-button';
 import { ScheduleMeetingButton } from './schedule-meeting-button';
 import type { StatusOption } from '../services/case-lookups.service';
 
@@ -142,7 +142,7 @@ export async function CaseActionBar({
             title={t('actions.calendar')}
             clientLabel={borrowerNames || `${t('caseLabel')} ${caseNumber}`}
           />
-          <ActionIcon icon={FileText} title={t('actions.generatePdf')} />
+          <GenerateBankPdfButton caseId={caseId} title={t('actions.generatePdf')} />
           <CaseMoreMenu
             caseId={caseId}
             isArchived={isArchived}
