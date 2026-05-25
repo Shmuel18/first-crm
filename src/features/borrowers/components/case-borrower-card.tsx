@@ -204,7 +204,7 @@ export function CaseBorrowerCard({
         <CompactNumber
           label={tf('childrenCount')}
           value={localBorrower.children_count}
-          onSave={(v) => saveField('children_count', v)}
+          onSave={(v) => saveField('children_count', v === null ? null : String(v))}
         />
         <CompactReadonly label={t('age')} value={ageLabel} />
         <CompactSelect
