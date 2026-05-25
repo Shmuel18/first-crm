@@ -115,7 +115,11 @@ export default async function CaseDetailPage({ params }: Props) {
               ctaText={t('blocks.addBorrowerFirst')}
             />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            // Borrowers stacked vertically (not side-by-side) so each card
+            // gets full block width and inner fields can pair without
+            // cramping. Was md:grid-cols-2 — at ~400px per card the dates
+            // + adornments didn't fit cleanly.
+            <div className="space-y-4">
               {borrowers.map(({ borrower, role_in_case, is_primary }) => (
                 <CaseBorrowerCard
                   key={borrower.id}
