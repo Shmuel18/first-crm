@@ -24,11 +24,20 @@ export const env = createEnv({
     // rejects every call, so the endpoint can't be triggered by anyone.
     CRON_SECRET: z.string().optional(),
     // Key for encrypting office_integrations OAuth tokens at rest (AES-256-GCM).
-    // OPTIONAL so it can't break a live deploy: when unset, tokens are stored
-    // as-is (legacy) and reads pass through. Set any string >=16 chars (a 32+
-    // char random value is best) to activate encryption — tokens then encrypt
-    // on the next write/refresh; existing plaintext keeps working.
-    INTEGRATION_ENCRYPTION_KEY: z.string().min(16).optional(),
+    // REQUIRED — without it, refresh tokens would land in Postgres in plaintext
+    // and any DB dump / read leaks them. decryptWithKey is backward-compatible
+    // with legacy plaintext rows (returns them unchanged), so enabling this on
+    // an existing deploy is non-breaking: tokens re-encrypt on next refresh.
+    // Generate with: `openssl rand -base64 48` (>=32 chars).
+    INTEGRATION_ENCRYPTION_KEY: z.string().min(32),
+    // Key for encrypting the whole backup JSON before it's uploaded to Drive.
+    // REQUIRED — the snapshot includes PII (borrower names/phones/emails) and
+    // manager-only fields (case_financials.fee_amount, expected_income). Anyone
+    // with access to the Drive folder would otherwise read them in cleartext.
+    // KEEP THIS KEY SAFE: lose it = backup files are unrecoverable. Generate
+    // with: `openssl rand -base64 48` (>=32 chars). Use a DIFFERENT value than
+    // INTEGRATION_ENCRYPTION_KEY so a leak of one doesn't expose the other.
+    BACKUP_ENCRYPTION_KEY: z.string().min(32),
   },
   client: {
     NEXT_PUBLIC_SUPABASE_URL: z.string().url('NEXT_PUBLIC_SUPABASE_URL must be a valid URL'),
@@ -48,6 +57,7 @@ export const env = createEnv({
     EMAIL_FROM: process.env.EMAIL_FROM,
     CRON_SECRET: process.env.CRON_SECRET,
     INTEGRATION_ENCRYPTION_KEY: process.env.INTEGRATION_ENCRYPTION_KEY,
+    BACKUP_ENCRYPTION_KEY: process.env.BACKUP_ENCRYPTION_KEY,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
@@ -74,4 +84,25 @@ export function isGoogleOAuthConfigured(): boolean {
  */
 export function isEmailConfigured(): boolean {
   return Boolean(env.RESEND_API_KEY && env.EMAIL_FROM);
+}
+
+// Warn at first-import in production when env vars that are declared "optional"
+// but operationally critical have been left unset. Vercel surfaces this in the
+// Functions logs on every cold start, which is annoying enough to fix and
+// quiet enough not to spam after the fix lands. Dev / test deploys skip the
+// warning so localhost stays quiet.
+if (env.NODE_ENV === 'production') {
+  const warnings: string[] = [];
+  if (!env.CRON_SECRET) {
+    warnings.push('CRON_SECRET is unset — /api/cron/backup will refuse every call (nightly backup disabled).');
+  }
+  if (!isEmailConfigured()) {
+    warnings.push('RESEND_API_KEY / EMAIL_FROM are unset — team invites have to share the link manually instead of emailing it.');
+  }
+  if (!isGoogleOAuthConfigured()) {
+    warnings.push('GOOGLE_OAUTH_* are unset — Drive integration (sync, backup destination, document upload mirror) is disabled.');
+  }
+  if (warnings.length > 0) {
+    console.warn('[env] production deploy is missing optional-but-critical config:\n  - ' + warnings.join('\n  - '));
+  }
 }

@@ -106,6 +106,39 @@ export async function uploadDocumentBlobs(
     .upload(path, file, { contentType: file.type, upsert: false });
   if (storageErr) return { ok: false, error: 'storage', message: storageErr.message };
 
+  // Post-upload size verification. Supabase storage is S3-backed and very
+  // rarely commits a truncated object — but a mid-transfer truncation that
+  // *does* commit would silently land a partial PDF that staff later opens.
+  // .list() returns the stored object's metadata.size; mismatch → reject
+  // and remove the orphan. Fail-open on list-errors: an unverifiable upload
+  // is better than rejecting every legitimate one when the metadata API
+  // hiccups.
+  const folder = path.substring(0, path.lastIndexOf('/'));
+  const fileName = path.substring(path.lastIndexOf('/') + 1);
+  const { data: listed, error: listErr } = await supabase.storage
+    .from(BUCKET)
+    .list(folder, { search: fileName });
+  if (listErr) {
+    console.warn('[uploadDocumentBlobs] post-upload size check skipped', listErr);
+  } else {
+    const entry = listed?.find((e) => e.name === fileName);
+    const storedSize =
+      entry?.metadata && typeof entry.metadata === 'object' && 'size' in entry.metadata
+        ? Number((entry.metadata as { size: unknown }).size)
+        : null;
+    if (storedSize !== null && Number.isFinite(storedSize) && storedSize !== file.size) {
+      await supabase.storage
+        .from(BUCKET)
+        .remove([path])
+        .catch(() => undefined);
+      return {
+        ok: false,
+        error: 'storage',
+        message: `size mismatch: stored=${storedSize} expected=${file.size}`,
+      };
+    }
+  }
+
   let driveFileId: string | null = null;
   let driveFileUrl: string | null = null;
   if (ctx.driveFolder) {

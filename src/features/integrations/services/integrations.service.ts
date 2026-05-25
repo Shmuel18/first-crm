@@ -10,16 +10,18 @@ import type {
   IntegrationStatus,
 } from '../types';
 
-// OAuth tokens are encrypted at rest when INTEGRATION_ENCRYPTION_KEY is set.
-// Legacy plaintext rows decrypt as a no-op, so enabling the key is non-breaking;
-// tokens encrypt on the next write/refresh.
+// OAuth tokens are encrypted at rest with INTEGRATION_ENCRYPTION_KEY (required
+// at build time via env.ts). decryptWithKey is backward-compatible with legacy
+// plaintext rows — it returns them unchanged when the `enc:v1:` prefix is
+// missing — so rows written before encryption was enforced still load. On the
+// next write/refresh they re-encrypt automatically.
 function encryptToken<T extends string | null | undefined>(value: T): T {
-  if (typeof value !== 'string' || !env.INTEGRATION_ENCRYPTION_KEY) return value;
+  if (typeof value !== 'string') return value;
   return encryptWithKey(value, env.INTEGRATION_ENCRYPTION_KEY) as T;
 }
 
 function decryptToken<T extends string | null | undefined>(value: T): T {
-  if (typeof value !== 'string' || !env.INTEGRATION_ENCRYPTION_KEY) return value;
+  if (typeof value !== 'string') return value;
   return decryptWithKey(value, env.INTEGRATION_ENCRYPTION_KEY) as T;
 }
 
@@ -119,7 +121,11 @@ export async function upsertIntegration(input: UpsertIntegrationInput): Promise<
 }
 
 export async function clearIntegration(provider: IntegrationProvider): Promise<void> {
-  const supabase = await createClient();
+  // office_integrations is admin-only under RLS; the disconnect action gates
+  // on isAdmin upfront, but using the cookie-bound client here would still
+  // silently 0-row if the gate ever drifted. Match getIntegration and the
+  // other writers in this file and use the service-role client.
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from('office_integrations')
     .update({

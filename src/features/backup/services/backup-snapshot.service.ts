@@ -42,9 +42,14 @@ const BACKUP_TABLES = [
 type BackupTable = (typeof BACKUP_TABLES)[number];
 
 /**
- * Columns stripped from the backup even though their table is included. These
- * hold live credentials (OAuth refresh tokens) that must never be written to a
- * Drive file — a restore re-authenticates rather than replaying a stale token.
+ * Columns stripped from the backup even though their table is included.
+ *
+ * Defense-in-depth: the whole snapshot is encrypted with BACKUP_ENCRYPTION_KEY
+ * before it's uploaded to Drive (see actions/run-backup.ts), so a Drive-only
+ * compromise doesn't read PII or manager-only fields. Even so, live OAuth
+ * credentials shouldn't be in the file at all — if the encryption key ever
+ * leaks alongside a backup, a refresh token replay is worse than losing them
+ * (a restore re-authenticates instead).
  */
 const REDACTED_COLUMNS: Partial<Record<BackupTable, readonly string[]>> = {
   profiles: ['google_calendar_refresh_token'],

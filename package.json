@@ -26,6 +26,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "exceljs": "^4.4.0",
+    "file-type": "^22.0.1",
     "isomorphic-dompurify": "^3.13.0",
     "lucide-react": "^1.14.0",
     "next": "16.2.6",

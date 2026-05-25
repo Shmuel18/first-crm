@@ -9,6 +9,7 @@ import {
   uploadBackup,
 } from '@/features/backup/services/drive-backup.service';
 import { getDriveClientIfConnected } from '@/features/integrations/services/drive-case-uploader';
+import { encryptWithKey } from '@/lib/crypto/secrets';
 import { env } from '@/lib/env';
 
 /**
@@ -36,12 +37,15 @@ export async function GET(request: Request): Promise<Response> {
   try {
     const { data, counts } = await buildBackupSnapshot();
     const totalRows = Object.values(counts).reduce((sum, n) => sum + n, 0);
-    const payload = JSON.stringify({
+    const json = JSON.stringify({
       version: 1,
       generatedAt: new Date().toISOString(),
       counts,
       data,
     });
+    // Mirror runBackupAction: encrypt the snapshot before upload so Drive
+    // alone can't read PII / manager-only fields.
+    const payload = encryptWithKey(json, env.BACKUP_ENCRYPTION_KEY);
     const folderId = await ensureBackupFolder(client);
     const filename = backupFilename();
     await uploadBackup(client, folderId, filename, payload);

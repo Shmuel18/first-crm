@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 
 import { revalidatePath } from 'next/cache';
 
+import { fileTypeFromBuffer } from 'file-type';
 import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 
@@ -61,6 +62,16 @@ export async function uploadDocumentAction(
   if (!(ALLOWED_MIME_TYPES as readonly string[]).includes(file.type)) {
     return { ok: false, error: 'validation', message: t('fileTypeNotAllowed') };
   }
+  // Magic-byte sniff: the browser-supplied file.type is attacker-controlled
+  // (any multipart writer can lie). Inspect the actual bytes so an .exe or
+  // an HTML page with <script> can't masquerade as application/pdf and land
+  // in Drive/Storage for staff to download. file-type reads the first ~4100
+  // bytes, which is enough for every format on ALLOWED_MIME_TYPES.
+  const sniffBuf = Buffer.from(await file.slice(0, 4100).arrayBuffer());
+  const sniffed = await fileTypeFromBuffer(sniffBuf);
+  if (!sniffed || !(ALLOWED_MIME_TYPES as readonly string[]).includes(sniffed.mime)) {
+    return { ok: false, error: 'validation', message: t('fileTypeNotAllowed') };
+  }
 
   const meta = DocumentMetadataSchema.safeParse({
     category_id: formData.get('category_id'),
@@ -113,7 +124,10 @@ export async function uploadDocumentAction(
 
   const documentId = randomUUID();
   const blobs = await uploadDocumentBlobs(documentId, parsedCaseId, file, ctx);
-  if (!blobs.ok) return { ok: false, error: 'storage', message: blobs.message };
+  if (!blobs.ok) {
+    console.error('[uploadDocument] blob staging failed', blobs.message);
+    return { ok: false, error: 'storage' };
+  }
 
   const { error: insertErr } = await supabase
     .from('documents')
@@ -138,8 +152,9 @@ export async function uploadDocumentAction(
     // INSERT failed (RLS, constraint, etc.) - blobs are orphaned. Clean up
     // best-effort. No row is created, so the user sees an error and can
     // retry without a stale "rejected" placeholder lingering.
+    console.error('[uploadDocument] insert failed', insertErr);
     await rollbackDocumentBlobs(blobs.storagePath, blobs.driveFileId);
-    return { ok: false, error: 'storage', message: insertErr.message };
+    return { ok: false, error: 'storage' };
   }
 
   revalidatePath(`/cases/${parsedCaseId}/documents`);
