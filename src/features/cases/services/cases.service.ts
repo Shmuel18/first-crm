@@ -27,11 +27,16 @@ export type CaseListFilters = {
 export async function listCases(filters: CaseListFilters = {}): Promise<CaseWithRelations[]> {
   const supabase = await createClient();
 
+  // Default ordering: oldest first. The dashboard treats the # column as a
+  // timeline counter, so case #1 is the oldest open case (typical mortgage-
+  // pipeline reading: top of list = "next to push along"). The table allows
+  // opt-in column sorting on top of this; cancelling that sort returns to
+  // this default.
   let query = supabase
     .from('cases')
     .select(CASE_SELECT_WITH_RELATIONS)
     .is('deleted_at', null)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: true });
 
   if (filters.isArchived !== undefined) {
     query = query.eq('is_archived', filters.isArchived);

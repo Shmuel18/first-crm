@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -38,6 +38,30 @@ type Props = {
 };
 
 const SORT_DIRS: SortDir[] = ['asc', 'desc'];
+
+// localStorage key for the user's last sort preference. Restored on mount when
+// the URL is empty (e.g. after navigating back via the sidebar's bare /cases
+// link), and kept in sync whenever the URL sort changes. Cancelling the sort
+// via the 3-state header cycle clears the saved preference too.
+const SORT_STORAGE_KEY = 'kaufman:dashboard:case-sort';
+
+function readSavedSort(): { col: SortColumn; dir: SortDir } | null {
+  if (typeof window === 'undefined') return null;
+  const raw = window.localStorage.getItem(SORT_STORAGE_KEY);
+  if (!raw) return null;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== 'object' || parsed === null) return null;
+    const { col, dir } = parsed as { col?: unknown; dir?: unknown };
+    if (typeof col !== 'string' || typeof dir !== 'string') return null;
+    if (!(SORT_COLUMNS as readonly string[]).includes(col)) return null;
+    if (!(SORT_DIRS as readonly string[]).includes(dir)) return null;
+    return { col: col as SortColumn, dir: dir as SortDir };
+  } catch {
+    window.localStorage.removeItem(SORT_STORAGE_KEY);
+    return null;
+  }
+}
 
 export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }: Props) {
   const t = useTranslations('dashboard.columns');
@@ -83,8 +107,54 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
       setSortDir('asc');
       return;
     }
-    setSortDir(sortDirRaw === 'asc' ? 'desc' : 'asc');
+    // Same column re-clicked → cycle asc → desc → cleared → asc. The
+    // cleared state returns to the listCases default ordering (oldest first).
+    if (sortDirRaw === 'asc') {
+      setSortDir('desc');
+    } else if (sortDirRaw === 'desc') {
+      setSortCol(null);
+      setSortDir(null);
+    } else {
+      setSortDir('asc');
+    }
   };
+
+  // -- Sort persistence (localStorage) -------------------------------------
+  // On mount: if the URL is empty (e.g. user navigated to /cases via the
+  // sidebar without query params) and there's a saved preference, restore
+  // it. Guard with a ref so this runs once and the sync effect below
+  // doesn't clobber storage on the first render before the restore lands.
+  const hasMountedRef = useRef(false);
+  useEffect(() => {
+    if (sortCol) return; // URL already has sort — nothing to restore
+    const saved = readSavedSort();
+    if (!saved) return;
+    setSortCol(saved.col);
+    setSortDir(saved.dir);
+    // setSortCol/setSortDir are stable nuqs setters; mount-only restore
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Sync URL → storage on every change after mount. Skipping the very first
+  // render avoids a race where this fires before the mount restore above and
+  // would clear the saved value.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      return;
+    }
+    if (sortCol) {
+      window.localStorage.setItem(
+        SORT_STORAGE_KEY,
+        JSON.stringify({ col: sortCol, dir: sortDirRaw ?? 'asc' }),
+      );
+    } else {
+      // Explicit cancel via the 3-cycle: forget the preference so the next
+      // visit gets the default oldest-first view, not a re-surfaced old sort.
+      window.localStorage.removeItem(SORT_STORAGE_KEY);
+    }
+  }, [sortCol, sortDirRaw]);
 
   if (filtered.length === 0) {
     return <p className="px-6 py-12 text-center text-sm text-neutral-600">{tf('noMatches')}</p>;

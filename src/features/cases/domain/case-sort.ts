@@ -7,7 +7,8 @@
  *
  * Everything else — including the # column — is non-sortable. When no
  * sort is active the table shows cases in the DB-returned order, which
- * `listCases` already orders newest-first.
+ * `listCases` orders oldest-first (the dashboard reads top-down as a
+ * timeline). Cancelling a column sort returns to this default.
  *
  * Empty / missing keys (case with no borrowers, no stage) always sink
  * to the bottom — independent of the sort direction. Direction is
