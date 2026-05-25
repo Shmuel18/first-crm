@@ -24,7 +24,10 @@ import { DataRow } from '@/features/cases/components/case-info-rows';
 import { calculateLtv, ltvBand } from '@/features/cases/domain/calculations';
 import { formatMoney } from '@/features/cases/domain/format';
 import type { CaseBlocker, InsuranceStatus } from '@/features/cases/schemas/case.schema';
+import { listCaseStatusOptions } from '@/features/cases/services/case-lookups.service';
 import { getCaseById } from '@/features/cases/services/cases.service';
+import { CaseIncomesBlock } from '@/features/incomes/components/case-incomes-block';
+import { CaseObligationsBlock } from '@/features/obligations/components/case-obligations-block';
 import { CaseTasksBlock } from '@/features/tasks/components/case-tasks-block';
 import { isCurrentUserAdmin, userHasPermission } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
@@ -40,10 +43,11 @@ export default async function CaseDetailPage({ params }: Props) {
   const tc = await getTranslations('common');
 
   const caseId = asCaseId(id);
-  const [caseData, borrowers, banks] = await Promise.all([
+  const [caseData, borrowers, banks, statusOptions] = await Promise.all([
     getCaseById(caseId),
     listBorrowersForCase(caseId),
     listCaseBanks(caseId),
+    listCaseStatusOptions(),
   ]);
 
   if (!caseData) notFound();
@@ -77,8 +81,11 @@ export default async function CaseDetailPage({ params }: Props) {
       <CaseActionBar
         caseId={caseData.id}
         caseNumber={caseData.case_number}
+        createdAt={caseData.created_at}
+        statusId={caseData.status?.id ?? null}
         statusName={caseData.status?.name_he ?? null}
         statusColor={caseData.status?.color ?? null}
+        statusOptions={statusOptions}
         caseTypePrimary={caseData.case_type_primary?.name_he ?? null}
         caseTypeSecondary={caseData.case_type_secondary?.name_he ?? null}
         borrowerNames={borrowerNames}
@@ -121,6 +128,10 @@ export default async function CaseDetailPage({ params }: Props) {
             </div>
           )}
         </CaseBlock>
+
+        <CaseIncomesBlock caseId={caseData.id} />
+
+        <CaseObligationsBlock caseId={caseData.id} />
 
         <CaseBlock title={t('blocks.property')} icon={<Home />}>
           <DataRow label={t('fields.propertyValue')} value={formatMoney(caseData.property_value)} large />

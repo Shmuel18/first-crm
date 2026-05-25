@@ -11,19 +11,27 @@ import {
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import { BackArrow } from '@/components/shared/back-arrow';
+import { Tooltip } from '@/components/ui/tooltip';
 import { CaseActionTaskButton } from '@/features/tasks/components/case-action-task-button';
 import { listAssignableProfiles } from '@/features/tasks/services/tasks.service';
 import { parseLocale } from '@/lib/i18n/direction';
 
 import { CaseMoreMenu } from './case-more-menu';
-import { CaseStatusBadge } from './case-status-badge';
+import { EditableStatusCell } from './editable-status-cell';
 import { ScheduleMeetingButton } from './schedule-meeting-button';
+import type { StatusOption } from '../services/case-lookups.service';
 
 type ActionBarProps = {
   caseId: string;
+  /** Kept for the task / meeting children that need a case identifier even
+      though the header no longer shows the number visibly. */
   caseNumber: string;
+  /** Case creation timestamp — shown next to the borrower name as a date. */
+  createdAt: string;
+  statusId: string | null;
   statusName: string | null;
   statusColor: string | null;
+  statusOptions: ReadonlyArray<StatusOption>;
   caseTypePrimary: string | null;
   caseTypeSecondary: string | null;
   borrowerNames: string;
@@ -37,8 +45,11 @@ type ActionBarProps = {
 export async function CaseActionBar({
   caseId,
   caseNumber,
+  createdAt,
+  statusId,
   statusName,
   statusColor,
+  statusOptions,
   caseTypePrimary,
   caseTypeSecondary,
   borrowerNames,
@@ -53,27 +64,43 @@ export async function CaseActionBar({
   const locale = parseLocale(await getLocale());
   const assignees = await listAssignableProfiles();
 
+  const openedAtLabel = new Intl.DateTimeFormat(locale === 'he' ? 'he-IL' : 'en-US', {
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+  }).format(new Date(createdAt));
+
   return (
     <div className="bg-[#FAF8F3] text-neutral-900 sticky top-[-1rem] sm:top-[-1.5rem] z-20 shadow-sm -mx-4 px-4 sm:-mx-6 sm:px-6 py-3 border-b border-[#C9A961]/20">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <Link
-            href="/cases"
-            aria-label={tc('back')}
-            className="inline-flex items-center justify-center size-7 border border-neutral-300 hover:border-[#A88840] text-neutral-700 hover:text-[#A88840] bg-white/60 rounded-md transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
-          >
-            <BackArrow locale={locale} className="size-3.5" aria-hidden="true" />
-          </Link>
+          <Tooltip content={tc('back')}>
+            <Link
+              href="/cases"
+              aria-label={tc('back')}
+              className="inline-flex items-center justify-center size-7 border border-neutral-300 hover:border-[#A88840] text-neutral-700 hover:text-[#A88840] bg-white/60 rounded-md transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
+            >
+              <BackArrow locale={locale} className="size-3.5" aria-hidden="true" />
+            </Link>
+          </Tooltip>
 
           <div className="flex items-center gap-2 flex-wrap min-w-0">
             <span className="font-display text-base font-semibold truncate max-w-md">
               {borrowerNames || t('withBorrowers')}
             </span>
             <span aria-hidden="true" className="text-neutral-400">·</span>
-            <span className="text-[#A88840] font-mono text-sm">
-              {t('caseLabel')} {caseNumber}
-            </span>
-            <CaseStatusBadge name={statusName} color={statusColor} interactive />
+            <Tooltip content={t('openedAtTooltip')}>
+              <span className="text-neutral-500 text-xs cursor-default">
+                {t('openedAt')} {openedAtLabel}
+              </span>
+            </Tooltip>
+            <EditableStatusCell
+              caseId={caseId}
+              currentStatusId={statusId}
+              currentStatusName={statusName}
+              currentStatusColor={statusColor}
+              options={statusOptions}
+            />
             {(caseTypePrimary || caseTypeSecondary) && (
               <span className="hidden md:inline-flex items-center gap-1 ms-1">
                 {caseTypePrimary && (
@@ -162,17 +189,15 @@ function ActionIcon({
     </>
   );
 
-  if (href) {
-    return (
-      <Link href={href} aria-label={title} className={className}>
-        {content}
-      </Link>
-    );
-  }
-
-  return (
+  const trigger = href ? (
+    <Link href={href} aria-label={title} className={className}>
+      {content}
+    </Link>
+  ) : (
     <button type="button" aria-label={title} className={className}>
       {content}
     </button>
   );
+
+  return <Tooltip content={title}>{trigger}</Tooltip>;
 }
