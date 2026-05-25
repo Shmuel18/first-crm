@@ -4,8 +4,22 @@ import { getTranslations } from 'next-intl/server';
 
 import { LoginForm } from './login-form';
 
-export default async function LoginPage() {
+type Props = {
+  searchParams: Promise<{ error?: string }>;
+};
+
+// Errors surfaced via redirect from /auth/callback (invalid/expired invite,
+// missing code). Anything else lands as a generic "unknown" message.
+const ALLOWED_URL_ERROR_KEYS = new Set([
+  'invalid_invite',
+  'missing_code',
+]);
+
+export default async function LoginPage({ searchParams }: Props) {
   const t = await getTranslations('auth.login');
+  const { error } = await searchParams;
+
+  const urlError = error && ALLOWED_URL_ERROR_KEYS.has(error) ? error : null;
 
   return (
     <div className="w-full">
@@ -27,6 +41,15 @@ export default async function LoginPage() {
           <h1 className="font-display text-2xl text-neutral-900 mb-1">{t('title')}</h1>
           <p className="text-sm text-neutral-500">{t('subtitle')}</p>
         </div>
+
+        {urlError && (
+          <div
+            role="alert"
+            className="mb-5 rounded-lg bg-red-50 border border-red-200 px-3 py-2.5 text-sm text-red-700"
+          >
+            {t(`errors.${urlError}`)}
+          </div>
+        )}
 
         <LoginForm />
       </div>

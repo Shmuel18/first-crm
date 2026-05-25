@@ -49,7 +49,7 @@ export function InviteMemberDialog({ open, onOpenChange, roles, locale }: Props)
         {state.ok === true ? (
           <InviteSuccess
             email={state.email}
-            tempPassword={state.tempPassword}
+            inviteLink={state.inviteLink}
             emailed={state.emailed}
             onDone={() => onOpenChange(false)}
           />
@@ -96,7 +96,7 @@ export function InviteMemberDialog({ open, onOpenChange, roles, locale }: Props)
                 </div>
               )}
 
-              <p className="text-xs text-neutral-600">{t('tempPasswordNote')}</p>
+              <p className="text-xs text-neutral-600">{t('inviteLinkNote')}</p>
 
               <DialogFooter>
                 <SubmitButton />
@@ -114,12 +114,12 @@ export function InviteMemberDialog({ open, onOpenChange, roles, locale }: Props)
 
 function InviteSuccess({
   email,
-  tempPassword,
+  inviteLink,
   emailed,
   onDone,
 }: {
   email: string;
-  tempPassword: string;
+  inviteLink: string | null;
   emailed: boolean;
   onDone: () => void;
 }) {
@@ -128,7 +128,8 @@ function InviteSuccess({
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
-    await navigator.clipboard.writeText(tempPassword);
+    if (!inviteLink) return;
+    await navigator.clipboard.writeText(inviteLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -139,50 +140,60 @@ function InviteSuccess({
         <DialogTitle>{t('successTitle')}</DialogTitle>
       </DialogHeader>
       <p className="text-sm text-neutral-700">{t('successBody', { email })}</p>
-      {emailed && (
+
+      {emailed ? (
         <p className="inline-flex items-center gap-1.5 text-sm text-green-800">
           <Check className="size-4" aria-hidden="true" />
           {t('emailedNote', { email })}
         </p>
+      ) : (
+        inviteLink && (
+          <div
+            role="region"
+            aria-label={t('inviteLinkLabel')}
+            className="rounded-lg border border-[#C9A961]/40 bg-[#FAF8F3] p-3 space-y-2"
+          >
+            <p id="invite-link-label" className="text-xs text-neutral-700">
+              {t('inviteLinkLabel')}
+            </p>
+            <div className="flex items-center justify-between gap-3">
+              <code
+                aria-labelledby="invite-link-label"
+                className="text-xs font-mono text-neutral-900 break-all"
+                dir="ltr"
+              >
+                {inviteLink}
+              </code>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={copy}
+                aria-label={copied ? tc('copied') : tc('copy')}
+                className="shrink-0"
+              >
+                {copied ? (
+                  <Check className="size-3.5" aria-hidden="true" />
+                ) : (
+                  <Copy className="size-3.5" aria-hidden="true" />
+                )}
+                {copied ? tc('copied') : tc('copy')}
+              </Button>
+            </div>
+            <span role="status" aria-live="polite" className="sr-only">
+              {copied ? tc('copied') : ''}
+            </span>
+            <p className="text-xs text-amber-800">{t('inviteLinkWarning')}</p>
+          </div>
+        )
       )}
-      <div
-        role="region"
-        aria-label={t('tempPasswordLabel')}
-        className="rounded-lg border border-[#C9A961]/40 bg-[#FAF8F3] p-3 space-y-2"
-      >
-        <p id="temp-password-label" className="text-xs text-neutral-700">
-          {t('tempPasswordLabel')}
-        </p>
-        <div className="flex items-center justify-between gap-3">
-          <code
-            aria-labelledby="temp-password-label"
-            className="text-base font-mono font-semibold text-neutral-900"
-            dir="ltr"
-          >
-            {tempPassword}
-          </code>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={copy}
-            aria-label={copied ? tc('copied') : tc('copy')}
-          >
-            {copied ? (
-              <Check className="size-3.5" aria-hidden="true" />
-            ) : (
-              <Copy className="size-3.5" aria-hidden="true" />
-            )}
-            {copied ? tc('copied') : tc('copy')}
-          </Button>
-        </div>
-        <span role="status" aria-live="polite" className="sr-only">
-          {copied ? tc('copied') : ''}
-        </span>
-      </div>
-      <p className="text-xs text-amber-800">{t('tempPasswordWarning')}</p>
+
       <DialogFooter>
-        <Button type="button" onClick={onDone} className="bg-[#C9A961] hover:bg-[#E8D5A2] text-[#0A0A0A] font-semibold">
+        <Button
+          type="button"
+          onClick={onDone}
+          className="bg-[#C9A961] hover:bg-[#E8D5A2] text-[#0A0A0A] font-semibold"
+        >
           {tc('done')}
         </Button>
       </DialogFooter>

@@ -15,7 +15,15 @@ export type TeamMember = Pick<
 };
 
 export type InviteActionState =
-  | { ok: true; tempPassword: string; email: string; emailed: boolean }
+  | {
+      ok: true;
+      email: string;
+      emailed: boolean;
+      // Single-use, time-limited Supabase invite link. Present ONLY when
+      // emailed=false so the admin can share it manually. Null when the email
+      // went out successfully — the link should not linger in client memory.
+      inviteLink: string | null;
+    }
   | {
       ok: false;
       error: 'validation' | 'unauthorized' | 'email_exists' | 'unknown';

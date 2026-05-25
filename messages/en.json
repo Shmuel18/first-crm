@@ -89,7 +89,23 @@
       "errors": {
         "invalidInput": "Invalid email or password",
         "invalidCredentials": "Incorrect email or password",
+        "invalid_invite": "This invite link is invalid or has expired. Ask your admin for a new one.",
+        "missing_code": "The invite link is missing. Ask your admin for a new one.",
         "unknown": "Unknown error. Please try again."
+      }
+    },
+    "setPassword": {
+      "title": "Set a password",
+      "subtitle": "Choose a password for {email}.",
+      "newPasswordLabel": "New password",
+      "confirmPasswordLabel": "Confirm password",
+      "submitButton": "Save password",
+      "submitting": "Saving...",
+      "errors": {
+        "minLength": "Password must be at least 8 characters.",
+        "mismatch": "Password confirmation does not match.",
+        "unauthorized": "Your invite has expired. Ask the admin for a new link.",
+        "unknown": "Saving the password failed. Please try again."
       }
     }
   },
@@ -131,6 +147,7 @@
       "formatPdf": "PDF",
       "exportFailed": "Export failed",
       "exportEmpty": "No cases to export",
+      "exportRateLimited": "Too many exports. Try again in an hour.",
       "pdf": {
         "title": "Active Cases - Kaufman Finance Group",
         "subtitle": "Total {count} cases",
@@ -331,6 +348,8 @@
       "banks": "Banks",
       "addBank": "+ Add bank",
       "noBanks": "No banks added yet",
+      "incomes": "Income",
+      "obligations": "Obligations",
       "admin": "Administration",
       "tasks": "Tasks",
       "shortNote": "Short note",
@@ -745,6 +764,7 @@
         "done": "Backup complete — {count} records saved to Drive",
         "notConnected": "Google Drive is not connected",
         "failed": "Backup failed. Please try again.",
+        "rateLimited": "A backup just ran. Wait 10 minutes before the next one.",
         "restoreDone": "Restore complete — {count} records restored",
         "restoreInvalid": "This file isn't a valid backup.",
         "restoreFailed": "Restore failed. Please try again."
@@ -768,6 +788,7 @@
         "empty": "File is empty or has no recognized columns",
         "too_large": "File is too large",
         "parse": "Couldn't read the file",
+        "rate_limited": "Too many imports. Try again in an hour.",
         "unknown": "Import failed. Please try again."
       }
     },
@@ -826,6 +847,7 @@
       "noFolderYet": "No Drive folder yet for this case. Upload your first document from the app and it'll be created automatically.",
       "errors": {
         "notConnected": "Drive not connected. Go to Settings → Integrations.",
+        "rateLimited": "A sync just ran. Wait 30 seconds.",
         "generic": "Sync failed. Try again or check the Drive connection."
       }
     },
@@ -1069,11 +1091,9 @@
       "subject": "You've been invited to Kaufman Finance Group",
       "heading": "Welcome to Kaufman Finance Group",
       "greeting": "Hi {name},",
-      "intro": "An account was created for you. Here are your temporary login details:",
-      "emailLabel": "Email",
-      "passwordLabel": "Temporary password",
-      "changeNote": "We recommend changing your password after your first login.",
-      "cta": "Sign in"
+      "intro": "An account was created for you. Click the button to activate it and choose your password.",
+      "linkNote": "This link is single-use and expires after a short time.",
+      "cta": "Activate account"
     }
   },
   "team": {
@@ -1112,17 +1132,17 @@
       "email": "Email",
       "phone": "Phone",
       "role": "Role",
-      "tempPasswordNote": "A temporary password will be generated for you to share with the new member. Once email is configured this will become an automatic invite.",
-      "submit": "Create account",
-      "successTitle": "Account created!",
-      "successBody": "An account was created for {email}. Share the temporary password with them — they can change it after signing in.",
-      "tempPasswordLabel": "Temporary password",
-      "emailedNote": "Details were also sent to {email}",
-      "tempPasswordWarning": "This password is shown only once. Copy it now.",
+      "inviteLinkNote": "An invite email with a single-use link will be sent to the member. They pick their own password through that link.",
+      "submit": "Send invite",
+      "successTitle": "Invite sent!",
+      "successBody": "An account was created for {email}. They will receive an activation link to choose their own password.",
+      "emailedNote": "Invite email sent to {email}",
+      "inviteLinkLabel": "Activation link (share with the member manually)",
+      "inviteLinkWarning": "Single-use, expires quickly. Share only over a secure channel (WhatsApp/SMS).",
       "errors": {
         "unauthorized": "Only an admin can add team members.",
         "emailExists": "This email is already registered.",
-        "generic": "Account creation failed. Please try again."
+        "generic": "Sending the invite failed. Please try again."
       }
     }
   }

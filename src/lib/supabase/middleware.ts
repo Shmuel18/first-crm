@@ -11,6 +11,13 @@ import type { Database } from '@/types/database';
  * Must run in middleware to keep auth fresh.
  */
 export async function updateSession(request: NextRequest) {
+  // CORS preflight (OPTIONS) and HEAD requests don't need a session refresh
+  // and never trigger a redirect — skip the Supabase round-trip so the
+  // browser's preflight isn't blocked on a DB call.
+  if (request.method === 'OPTIONS' || request.method === 'HEAD') {
+    return NextResponse.next({ request });
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient<Database>(
@@ -41,6 +48,12 @@ export async function updateSession(request: NextRequest) {
   // Redirect unauthenticated users away from protected routes.
   // Use exact-or-prefix-with-slash matching so /loginfake, /casesx etc. don't
   // accidentally classify a future route into the wrong bucket.
+  //
+  // NOTE on /api routes: they are deliberately NOT in isProtectedRoute. A
+  // browser redirect to /login is the wrong response for a JSON endpoint —
+  // /api/cron/backup uses CRON_SECRET (no cookie at all), and other API
+  // routes return JSON errors. Every new /api/* route MUST check auth at
+  // the route handler level (see /api/auth/google/* for the pattern).
   const pathname = request.nextUrl.pathname;
   const matches = (p: string): boolean =>
     pathname === p || pathname.startsWith(p + '/');
@@ -52,7 +65,13 @@ export async function updateSession(request: NextRequest) {
     matches('/templates') ||
     matches('/audit-log') ||
     matches('/settings') ||
-    matches('/dashboard');
+    matches('/dashboard') ||
+    // /auth/set-password is hit AFTER /auth/callback runs the code exchange
+    // and writes session cookies. An unauth visit here is invalid (no session
+    // to update), so bounce to /login like any protected page.
+    // /auth/callback itself is intentionally NOT protected — the exchange
+    // happens BEFORE there's a session.
+    matches('/auth/set-password');
   const isAuthRoute = matches('/login') || matches('/signup');
 
   if (!user && isProtectedRoute) {

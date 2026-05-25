@@ -1,11 +1,10 @@
 'use server';
 
-import { randomInt } from 'crypto';
-
 import { revalidatePath } from 'next/cache';
 
 import { getLocale } from 'next-intl/server';
 
+import { env } from '@/lib/env';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
@@ -15,6 +14,20 @@ import { InviteMemberSchema } from '../schemas/team.schema';
 import { sendInviteEmail } from '../services/team-email';
 import type { InviteActionState } from '../types';
 
+/**
+ * Invite a new team member via Supabase's single-use invite link.
+ *
+ * Flow:
+ *   1. Admin gate (rpc is_admin).
+ *   2. `admin.auth.admin.generateLink({type:'invite'})` creates the auth user
+ *      AND returns a one-time, time-limited link. The handle_new_user trigger
+ *      creates the matching profile row (default junior_advisor).
+ *   3. We update the profile with the chosen name/phone/role.
+ *   4. Best-effort: email the link via Resend. If email isn't configured or
+ *      sending failed, the link is returned to the dialog so the admin can
+ *      copy-share it. The link forces the new user to set their OWN password
+ *      via /auth/set-password — admin never sees the password.
+ */
 export async function inviteMemberAction(
   _prev: InviteActionState,
   formData: FormData,
@@ -32,60 +45,64 @@ export async function inviteMemberAction(
   if (isAdmin !== true) return { ok: false, error: 'unauthorized', values };
 
   const { email, first_name, last_name, phone, role_id } = parsed.data;
-  const tempPassword = generateTempPassword();
 
   const admin = createAdminClient();
-  const { data: created, error: createErr } = await admin.auth.admin.createUser({
+
+  // Supabase appends ?code=... (and type=invite) to the redirectTo URL. Our
+  // /auth/callback exchanges the code for a session, then forwards to
+  // `next` which puts the user on the set-password page.
+  const redirectTo = `${env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/auth/set-password`;
+
+  const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+    type: 'invite',
     email,
-    password: tempPassword,
-    email_confirm: true,
+    options: { redirectTo },
   });
 
-  if (createErr || !created.user) {
-    const msg = createErr?.message?.toLowerCase() ?? '';
+  if (linkErr || !linkData.user) {
+    const msg = linkErr?.message?.toLowerCase() ?? '';
     if (msg.includes('already') || msg.includes('exists') || msg.includes('registered')) {
       return { ok: false, error: 'email_exists', values };
     }
     return { ok: false, error: 'unknown', values };
   }
 
-  // The handle_new_user trigger created a profile (default junior_advisor).
-  // Fill in the chosen name/phone/role.
-  const { error: updateErr } = await admin
-    .from('profiles')
-    .update({ first_name, last_name, phone: phone ?? null, role_id })
-    .eq('id', created.user.id);
-
-  if (updateErr) {
-    // Roll back the orphaned auth user so the admin can retry cleanly.
-    await admin.auth.admin.deleteUser(created.user.id);
+  const inviteLink = linkData.properties?.action_link ?? null;
+  if (!inviteLink) {
+    // Defensive: generateLink shouldn't succeed without action_link, but if
+    // the Supabase API changes shape we'd rather fail loudly than create a
+    // user nobody can finish onboarding.
+    await admin.auth.admin.deleteUser(linkData.user.id);
     return { ok: false, error: 'unknown', values };
   }
 
-  // Best-effort: email the credentials. If it doesn't go out (email not
-  // configured or send failed), the dialog still shows the temp password so
-  // the admin can share it manually.
+  // The handle_new_user trigger created a default profile; fill in chosen values.
+  const { error: updateErr } = await admin
+    .from('profiles')
+    .update({ first_name, last_name, phone: phone ?? null, role_id })
+    .eq('id', linkData.user.id);
+
+  if (updateErr) {
+    // Roll back the auth user so the admin can retry cleanly.
+    await admin.auth.admin.deleteUser(linkData.user.id);
+    return { ok: false, error: 'unknown', values };
+  }
+
   const locale = (await getLocale()) === 'en' ? 'en' : 'he';
-  const emailed = await sendInviteEmail({ to: email, firstName: first_name, tempPassword, locale });
+  const emailed = await sendInviteEmail({
+    to: email,
+    firstName: first_name,
+    inviteLink,
+    locale,
+  });
 
   revalidatePath('/team');
-  return { ok: true, tempPassword, email, emailed };
-}
-
-function generateTempPassword(): string {
-  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-  const lower = 'abcdefghijkmnpqrstuvwxyz';
-  const digits = '23456789';
-  const all = upper + lower + digits;
-  const pick = (set: string) => set[randomInt(set.length)];
-
-  const chars = [pick(upper), pick(lower), pick(digits), pick(digits)];
-  for (let i = 0; i < 8; i++) chars.push(pick(all));
-
-  // Fisher-Yates shuffle so the guaranteed classes aren't always in front.
-  for (let i = chars.length - 1; i > 0; i--) {
-    const j = randomInt(i + 1);
-    [chars[i], chars[j]] = [chars[j]!, chars[i]!];
-  }
-  return chars.join('');
+  return {
+    ok: true,
+    email,
+    emailed,
+    // Only return the link when the email failed — successful emails mean
+    // the link should not echo back into client memory at all.
+    inviteLink: emailed ? null : inviteLink,
+  };
 }
