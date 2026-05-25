@@ -26,6 +26,10 @@ type CommonProps = {
   adornment?: React.ReactNode;
   /** Override text direction. Defaults to auto for text, ltr for numeric. */
   dir?: 'ltr' | 'rtl' | 'auto';
+  /** Extra classes appended to the input. Useful for text-end alignment
+   *  (national_id digits should hug the label side of the box) without
+   *  forking the EditableField API for every cosmetic tweak. */
+  inputClassName?: string;
 };
 
 type FieldProps = CommonProps &
@@ -101,7 +105,7 @@ export function EditableField(props: FieldProps) {
   // label column so two fields fit comfortably side-by-side inside the
   // 2-column FieldGroup grid.
   return (
-    <div className="grid grid-cols-[5rem_1fr] items-center gap-2 text-sm">
+    <div className="grid grid-cols-[6rem_1fr] items-center gap-2 text-sm">
       <label htmlFor={id} className="text-neutral-500 truncate">
         {label}
       </label>
@@ -159,6 +163,8 @@ function renderControl(p: ControlRenderProps) {
   }
 
   if (p.type === 'select' || p.type === 'tristate') {
+    // Chevron on the left (RTL end-side) so it doesn't collide with the
+    // selected option text starting from the right.
     return (
       <select
         id={p.id}
@@ -168,7 +174,7 @@ function renderControl(p: ControlRenderProps) {
           p.save(e.target.value);
         }}
         disabled={p.disabled || p.isPending}
-        className={`${inputClass} appearance-none ps-2.5 pe-7 bg-[length:1rem] bg-[right_0.5rem_center] bg-no-repeat`}
+        className={`${inputClass} appearance-none ps-3 pe-7 bg-[length:1rem] bg-[left_0.5rem_center] bg-no-repeat`}
         style={{
           backgroundImage:
             "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23737373'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E\")",
@@ -190,18 +196,36 @@ function renderControl(p: ControlRenderProps) {
   const dateClass =
     p.type === 'date' ? '[&::-webkit-calendar-picker-indicator]:hidden' : '';
 
+  // For type='number': suppress the browser's up/down spinner buttons. They
+  // don't add value for our use cases (IDs, currency, counts) and clutter the
+  // input visually.
+  const numberClass =
+    p.type === 'number'
+      ? '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [appearance:textfield]'
+      : '';
+
   return (
     <input
       ref={p.inputRef}
       id={p.id}
       type={p.type}
       value={p.localValue}
-      onChange={(e) => p.setLocalValue(e.target.value)}
-      onBlur={(e) => p.save(e.target.value)}
+      onChange={(e) => {
+        const v = e.target.value;
+        p.setLocalValue(v);
+        // Date inputs commit instantly when the picker closes (no separate
+        // blur event), so save on change instead of waiting for blur.
+        if (p.type === 'date') p.save(v);
+      }}
+      onBlur={(e) => {
+        // Date already saved on change; skip blur to avoid a no-op round trip.
+        if (p.type === 'date') return;
+        p.save(e.target.value);
+      }}
       placeholder={p.placeholder}
       disabled={p.disabled || p.isPending}
       dir={p.resolvedDir}
-      className={`${inputClass} ${dateClass}`}
+      className={`${inputClass} ${dateClass} ${numberClass} ${p.inputClassName ?? ''}`}
     />
   );
 }
@@ -243,7 +267,7 @@ export function ReadonlyField({
   mono?: boolean;
 }) {
   return (
-    <div className="grid grid-cols-[5rem_1fr] items-center gap-2 text-sm">
+    <div className="grid grid-cols-[6rem_1fr] items-center gap-2 text-sm">
       <span className="text-neutral-500 truncate">{label}</span>
       <span
         className={`px-2.5 py-1.5 text-neutral-800 ${mono ? 'font-mono' : ''}`}
