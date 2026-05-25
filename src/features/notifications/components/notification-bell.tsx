@@ -11,6 +11,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Tooltip } from '@/components/ui/tooltip';
 import type { Locale } from '@/lib/i18n/direction';
 
 import {
@@ -73,24 +74,34 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
     });
   };
 
+  const ariaLabel =
+    unread > 0 ? `${t('title')} — ${t('unreadCount', { count: unread })}` : t('title');
+  const tooltipLabel =
+    unread > 0 ? `${t('title')} (${unread})` : t('title');
+
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        className="relative size-10 rounded-lg border border-[#333] hover:border-[#C9A961] hover:bg-[#1A1A1A] transition flex items-center justify-center text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8C77B] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
-        aria-label={
-          unread > 0 ? `${t('title')} — ${t('unreadCount', { count: unread })}` : t('title')
-        }
-      >
-        <Bell className="size-4" aria-hidden="true" />
-        {unread > 0 && (
-          <span
-            aria-hidden="true"
-            className="absolute -top-1 -end-1 min-w-4 h-4 px-1 rounded-full bg-[#C9A961] text-[#0A0A0A] text-[10px] font-bold flex items-center justify-center"
-          >
-            {unread > 9 ? '9+' : unread}
-          </span>
-        )}
-      </DropdownMenuTrigger>
+      <Tooltip content={tooltipLabel}>
+        <DropdownMenuTrigger
+          render={
+            <button
+              type="button"
+              aria-label={ariaLabel}
+              className="relative size-10 rounded-lg border border-[#333] hover:border-[#C9A961] hover:bg-[#1A1A1A] transition flex items-center justify-center text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8C77B] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
+            >
+              <Bell className="size-4" aria-hidden="true" />
+              {unread > 0 && (
+                <span
+                  aria-hidden="true"
+                  className="absolute -top-1 -end-1 min-w-4 h-4 px-1 rounded-full bg-[#C9A961] text-[#0A0A0A] text-[10px] font-bold flex items-center justify-center"
+                >
+                  {unread > 9 ? '9+' : unread}
+                </span>
+              )}
+            </button>
+          }
+        />
+      </Tooltip>
 
       <DropdownMenuContent align="end" className="w-80 max-h-[28rem] overflow-y-auto p-0">
         <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-neutral-100 sticky top-0 bg-popover">

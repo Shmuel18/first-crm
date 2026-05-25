@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Tooltip } from '@/components/ui/tooltip';
 
 import { buildGoogleCalendarEventUrl } from '../domain/google-calendar-link';
 
@@ -66,14 +67,16 @@ export function ScheduleMeetingButton({ title, clientLabel }: Props) {
 
   return (
     <>
-      <button
-        type="button"
-        aria-label={title}
-        onClick={openDialog}
-        className="relative flex size-8 items-center justify-center rounded-md text-neutral-600 transition hover:bg-white hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
-      >
-        <Calendar className="size-3.5" aria-hidden="true" />
-      </button>
+      <Tooltip content={title}>
+        <button
+          type="button"
+          aria-label={title}
+          onClick={openDialog}
+          className="relative flex size-8 items-center justify-center rounded-md text-neutral-600 transition hover:bg-white hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
+        >
+          <Calendar className="size-3.5" aria-hidden="true" />
+        </button>
+      </Tooltip>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-sm">

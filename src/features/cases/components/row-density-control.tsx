@@ -3,6 +3,8 @@
 import { Menu, Rows2, Rows3 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { Tooltip } from '@/components/ui/tooltip';
+
 import {
   ROW_DENSITIES,
   setRowDensity,
@@ -31,24 +33,24 @@ export function RowDensityControl() {
         const Icon = DENSITY_ICON[d];
         const selected = density === d;
         return (
-          <button
-            key={d}
-            type="button"
-            role="radio"
-            aria-checked={selected}
-            aria-label={t(d)}
-            title={t(d)}
-            onClick={() => setRowDensity(d)}
-            className={[
-              'size-7 rounded inline-flex items-center justify-center transition',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50',
-              selected
-                ? 'bg-neutral-100 text-neutral-900 shadow-sm'
-                : 'text-neutral-500 hover:text-neutral-800 hover:bg-neutral-50',
-            ].join(' ')}
-          >
-            <Icon className="size-3.5" aria-hidden="true" />
-          </button>
+          <Tooltip key={d} content={t(d)} side="top">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              aria-label={t(d)}
+              onClick={() => setRowDensity(d)}
+              className={[
+                'size-7 rounded inline-flex items-center justify-center transition',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50',
+                selected
+                  ? 'bg-neutral-100 text-neutral-900 shadow-sm'
+                  : 'text-neutral-500 hover:text-neutral-800 hover:bg-neutral-50',
+              ].join(' ')}
+            >
+              <Icon className="size-3.5" aria-hidden="true" />
+            </button>
+          </Tooltip>
         );
       })}
     </div>

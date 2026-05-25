@@ -4,6 +4,8 @@ import { useState } from 'react';
 
 import { UserPlus } from 'lucide-react';
 
+import { Tooltip } from '@/components/ui/tooltip';
+
 import { TaskFormDialog } from './task-form-dialog';
 
 type Profile = { id: string; first_name: string | null; last_name: string | null };
@@ -20,14 +22,16 @@ export function CaseActionTaskButton({ caseId, caseNumber, assignees, title }: P
 
   return (
     <>
-      <button
-        type="button"
-        aria-label={title}
-        onClick={() => setOpen(true)}
-        className="relative size-8 rounded-md text-neutral-700 hover:bg-white hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50 transition flex items-center justify-center"
-      >
-        <UserPlus className="size-3.5" aria-hidden="true" />
-      </button>
+      <Tooltip content={title}>
+        <button
+          type="button"
+          aria-label={title}
+          onClick={() => setOpen(true)}
+          className="relative size-8 rounded-md text-neutral-700 hover:bg-white hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50 transition flex items-center justify-center"
+        >
+          <UserPlus className="size-3.5" aria-hidden="true" />
+        </button>
+      </Tooltip>
 
       <TaskFormDialog
         open={open}
