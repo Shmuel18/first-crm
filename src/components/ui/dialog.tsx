@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { cn } from '@/lib/utils';
 
@@ -24,6 +25,7 @@ function DialogContent({
   showCloseButton = true,
   ...props
 }: DialogPrimitive.Popup.Props & { showCloseButton?: boolean }) {
+  const t = useTranslations('common');
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px] data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 transition-opacity duration-200" />
@@ -39,7 +41,7 @@ function DialogContent({
         {showCloseButton && (
           <DialogPrimitive.Close
             className="absolute end-4 top-4 rounded-md p-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition outline-none focus-visible:ring-2 focus-visible:ring-brand-gold"
-            aria-label="Close dialog"
+            aria-label={t('close')}
           >
             <X className="size-4" />
           </DialogPrimitive.Close>
