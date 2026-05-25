@@ -9,7 +9,7 @@ import type { Database } from '@/types/database';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
 import { IncomeFormSchema } from '../schemas/income.schema';
-import { borrowerIsOnCase } from '../services/incomes.service';
+import { borrowerIsOnCase } from '@/features/borrowers/services/borrowers.service';
 
 type IncomeUpdate = Database['public']['Tables']['borrower_incomes']['Update'];
 

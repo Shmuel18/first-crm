@@ -9,7 +9,7 @@ import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
 import { IncomeFormSchema } from '../schemas/income.schema';
-import { borrowerIsOnCase } from '../services/incomes.service';
+import { borrowerIsOnCase } from '@/features/borrowers/services/borrowers.service';
 import type { IncomeActionState } from '../types';
 
 export async function saveIncomeAction(

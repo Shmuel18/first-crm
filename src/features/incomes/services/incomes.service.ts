@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import type { BorrowerId, CaseId, IncomeId } from '@/lib/types/branded';
+import type { CaseId, IncomeId } from '@/lib/types/branded';
 
 import { sumMonthlyIncomes } from '../domain/totals';
 import type { BorrowerIncomesGroup, IncomeRow, IncomeTypeOption, IncomeWithType } from '../types';
@@ -74,26 +74,6 @@ export async function getIncomeById(id: IncomeId): Promise<IncomeRow | null> {
 
   if (error) throw error;
   return data;
-}
-
-/**
- * Verify a borrower is on a given case. Used by the save/delete actions as
- * defense-in-depth: the action layer already calls userCanEditCase, but we
- * also need to make sure the borrower in the form actually belongs to this
- * case (otherwise a caller could attach incomes to someone else's borrower).
- */
-export async function borrowerIsOnCase(
-  caseId: CaseId,
-  borrowerId: BorrowerId,
-): Promise<boolean> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from('case_borrowers')
-    .select('borrower_id')
-    .eq('case_id', caseId)
-    .eq('borrower_id', borrowerId)
-    .maybeSingle();
-  return data !== null;
 }
 
 export async function listIncomeTypeOptions(): Promise<IncomeTypeOption[]> {

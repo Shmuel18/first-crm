@@ -9,7 +9,7 @@ import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
 import { ObligationFormSchema } from '../schemas/obligation.schema';
-import { borrowerIsOnCase } from '../services/obligations.service';
+import { borrowerIsOnCase } from '@/features/borrowers/services/borrowers.service';
 import type { ObligationActionState } from '../types';
 
 export async function saveObligationAction(

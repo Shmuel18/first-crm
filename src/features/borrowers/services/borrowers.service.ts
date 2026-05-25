@@ -58,3 +58,26 @@ export async function getCaseBorrowerLink(
   if (!data) return null;
   return { role_in_case: data.role_in_case as RoleInCase, is_primary: data.is_primary };
 }
+
+/**
+ * Defense-in-depth check used by every borrower-scoped action (income /
+ * obligation / inline-field update): verify the borrower really belongs
+ * to the supplied case before mutating anything attached to them.
+ *
+ * The action layer already calls userCanEditCase, but a caller could
+ * otherwise patch borrower data that's on a DIFFERENT case they can edit
+ * by passing a mismatched (caseId, borrowerId) pair. This shuts that down.
+ */
+export async function borrowerIsOnCase(
+  caseId: CaseId,
+  borrowerId: BorrowerId,
+): Promise<boolean> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('case_borrowers')
+    .select('borrower_id')
+    .eq('case_id', caseId)
+    .eq('borrower_id', borrowerId)
+    .maybeSingle();
+  return data !== null;
+}

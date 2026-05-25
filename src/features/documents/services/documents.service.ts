@@ -86,6 +86,47 @@ export type UploadBlobsContext = {
 };
 
 /**
+ * Read the case + category + (optional) borrower in parallel and assemble
+ * the UploadBlobsContext that drives Drive folder naming. Lives next to
+ * uploadDocumentBlobs because the two are always called as a pair.
+ *
+ * Returns `null` when the case row can't be read — usually means the
+ * caller doesn't have permission (RLS denied) or the id is wrong. The
+ * action layer maps that to 'unauthorized'.
+ */
+export async function resolveUploadContext(
+  caseId: string,
+  categoryId: string,
+  borrowerId: string | null,
+): Promise<UploadBlobsContext | null> {
+  const supabase = await createClient();
+  const [caseRow, category, borrower] = await Promise.all([
+    supabase.from('cases').select('id, case_number').eq('id', caseId).maybeSingle(),
+    supabase
+      .from('document_categories')
+      .select('drive_folder')
+      .eq('id', categoryId)
+      .maybeSingle(),
+    borrowerId
+      ? supabase
+          .from('borrowers')
+          .select('first_name, last_name')
+          .eq('id', borrowerId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+  if (!caseRow.data) return null;
+
+  const familyName =
+    [borrower.data?.first_name, borrower.data?.last_name].filter(Boolean).join('_') || 'Case';
+  return {
+    caseNumber: caseRow.data.case_number,
+    familyName,
+    driveFolder: category.data?.drive_folder ?? null,
+  };
+}
+
+/**
  * Blob-first upload: stage the file to Supabase Storage (primary) and Drive
  * (secondary, best-effort) using a pre-generated documentId. The caller
  * INSERTs the documents row AFTER this resolves, passing the returned

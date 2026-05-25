@@ -6,7 +6,7 @@ import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import { asBorrowerId, asCaseId } from '@/lib/types/branded';
 
-import { borrowerIsOnCase } from '../services/incomes.service';
+import { borrowerIsOnCase } from '@/features/borrowers/services/borrowers.service';
 
 type Result =
   | { ok: true; incomeId: string }

@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import type { BorrowerId, CaseId, ObligationId } from '@/lib/types/branded';
+import type { CaseId, ObligationId } from '@/lib/types/branded';
 
 import { sumMonthlyPayments, sumRemainingDebt } from '../domain/totals';
 import type { BorrowerObligationsGroup, ObligationRow } from '../types';
@@ -68,16 +68,3 @@ export async function getObligationById(id: ObligationId): Promise<ObligationRow
   return data;
 }
 
-export async function borrowerIsOnCase(
-  caseId: CaseId,
-  borrowerId: BorrowerId,
-): Promise<boolean> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from('case_borrowers')
-    .select('borrower_id')
-    .eq('case_id', caseId)
-    .eq('borrower_id', borrowerId)
-    .maybeSingle();
-  return data !== null;
-}

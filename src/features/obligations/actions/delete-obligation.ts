@@ -6,7 +6,7 @@ import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import { asBorrowerId, asCaseId } from '@/lib/types/branded';
 
-import { borrowerIsOnCase } from '../services/obligations.service';
+import { borrowerIsOnCase } from '@/features/borrowers/services/borrowers.service';
 
 type DeleteResult = { ok: true } | { ok: false; error: 'unauthorized' | 'unknown' };
 
