@@ -17,7 +17,7 @@ export async function CaseBankRow({ caseId, caseBank: cb }: Props) {
   return (
     <Link
       href={`/cases/${caseId}/banks/${cb.id}/edit`}
-      className="flex items-center justify-between gap-3 p-3 border border-neutral-200 rounded-lg hover:border-[#A88840]/40 hover:bg-[#C9A961]/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50 transition"
+      className="flex items-center justify-between gap-3 p-3 border border-neutral-200 rounded-lg hover:border-brand-gold-text/40 hover:bg-brand-gold/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50 transition"
     >
       <div className="flex items-center gap-3 flex-1">
         {cb.bank?.color && (
@@ -31,7 +31,7 @@ export async function CaseBankRow({ caseId, caseBank: cb }: Props) {
           {cb.bank?.name_he ?? '—'}
         </span>
         {cb.is_primary && (
-          <span className="text-[10px] text-[#A88840] font-bold">
+          <span className="text-[10px] text-brand-gold-text font-bold">
             {t('primaryBankMarker')}
           </span>
         )}

@@ -31,7 +31,7 @@ export function TemplatesManager({ templates }: Props) {
         <button
           type="button"
           onClick={openNew}
-          className="inline-flex items-center gap-1.5 px-4 h-10 rounded-lg bg-[#C9A961] hover:bg-[#B8985A] text-[#0A0A0A] font-medium text-sm transition"
+          className="inline-flex items-center gap-1.5 px-4 h-10 rounded-lg bg-brand-gold hover:bg-brand-gold-dark text-brand-black font-medium text-sm transition"
         >
           <Plus className="size-4" />
           {t('new')}

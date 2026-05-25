@@ -75,7 +75,7 @@ export function TasksList({
           <Button
             type="button"
             onClick={() => setDialogState({ mode: 'create' })}
-            className="bg-[#C9A961] hover:bg-[#E8D5A2] text-[#0A0A0A] font-semibold"
+            className="bg-brand-gold hover:bg-brand-gold-hover text-brand-black font-semibold"
             size="sm"
           >
             <Plus className="size-3.5 me-1.5" />
@@ -88,9 +88,9 @@ export function TasksList({
         <div className="flex flex-col items-center justify-center text-center py-14 px-4 rounded-xl border border-dashed border-neutral-200 bg-white">
           <span
             aria-hidden="true"
-            className="size-14 rounded-full bg-[#C9A961]/15 flex items-center justify-center mb-4"
+            className="size-14 rounded-full bg-brand-gold/15 flex items-center justify-center mb-4"
           >
-            <ClipboardList className="size-7 text-[#A88840]" />
+            <ClipboardList className="size-7 text-brand-gold-text" />
           </span>
           <p className="text-sm text-neutral-600 mb-4">{t(emptyKey)}</p>
           {!hideCreateButton && (

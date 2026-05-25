@@ -116,7 +116,7 @@ export default async function CaseDetailPage({ params }: Props) {
           rightSlot={
             <Link
               href={`/cases/${caseData.id}/borrowers/new`}
-              className="text-xs text-[#A88840] hover:underline font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
+              className="text-xs text-brand-gold-text hover:underline font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
             >
               {t('blocks.addBorrower')}
             </Link>
@@ -230,7 +230,7 @@ export default async function CaseDetailPage({ params }: Props) {
           rightSlot={
             <Link
               href={`/cases/${caseData.id}/documents`}
-              className="text-xs text-[#A88840] hover:underline font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
+              className="text-xs text-brand-gold-text hover:underline font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
             >
               {t('blocks.openDocuments')}
             </Link>
@@ -245,7 +245,7 @@ export default async function CaseDetailPage({ params }: Props) {
       <div className="text-center text-xs text-neutral-600 pt-4">
         <Link
           href={`/cases/${caseData.id}/edit`}
-          className="inline-flex items-center gap-1 hover:text-[#A88840] rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40 transition"
+          className="inline-flex items-center gap-1 hover:text-brand-gold-text rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 transition"
         >
           <Pencil className="size-3" aria-hidden="true" />
           {tc('edit')}

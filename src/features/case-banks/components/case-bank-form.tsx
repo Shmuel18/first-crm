@@ -37,7 +37,7 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
     <Button
       type="submit"
       disabled={pending}
-      className="bg-[#0A0A0A] hover:bg-neutral-800 text-white h-11 min-w-32"
+      className="bg-brand-black hover:bg-neutral-800 text-white h-11 min-w-32"
     >
       {pending ? <Loader2 className="size-4 animate-spin" /> : isEdit ? tc('save') : t('submit.create')}
     </Button>
@@ -102,7 +102,7 @@ export function CaseBankForm({ caseId, initial, banks, statuses }: CaseBankFormP
           type="checkbox"
           name="is_primary"
           defaultChecked={isPrimaryDefault}
-          className="size-4 accent-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40 rounded"
+          className="size-4 accent-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 rounded"
         />
         <span className="text-sm text-neutral-700">{t('fields.isPrimary')}</span>
       </label>

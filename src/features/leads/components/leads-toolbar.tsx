@@ -20,7 +20,7 @@ export function LeadsToolbar({ assignees }: Props) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 px-4 h-9 rounded-lg bg-[#C9A961] hover:bg-[#B8985A] text-[#0A0A0A] font-medium text-sm transition"
+        className="inline-flex items-center gap-2 px-4 h-9 rounded-lg bg-brand-gold hover:bg-brand-gold-dark text-brand-black font-medium text-sm transition"
       >
         <Plus className="size-4" />
         {t('new')}

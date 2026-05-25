@@ -103,7 +103,7 @@ export function EditableAdvisorCell({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={triggerLabel}
-        className="inline-flex items-center gap-2 cursor-pointer rounded-md disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
+        className="inline-flex items-center gap-2 cursor-pointer rounded-md disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
       >
         {advisorName ? (
           <>
@@ -140,10 +140,10 @@ export function EditableAdvisorCell({
               role="option"
               aria-selected={!advisorId}
               onClick={() => handleSelect(null)}
-              className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-start text-neutral-600 hover:bg-neutral-50 focus-visible:outline-none focus-visible:bg-[#FAF8F3]"
+              className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-start text-neutral-600 hover:bg-neutral-50 focus-visible:outline-none focus-visible:bg-brand-gold-soft"
             >
               <span>{unassignedLabel}</span>
-              {!advisorId && <Check className="size-3.5 text-[#A88840]" aria-hidden="true" />}
+              {!advisorId && <Check className="size-3.5 text-brand-gold-text" aria-hidden="true" />}
             </button>
             {options.map((opt) => {
               const name = fullName(opt, noNameFallback);
@@ -155,7 +155,7 @@ export function EditableAdvisorCell({
                   role="option"
                   aria-selected={isSelected}
                   onClick={() => handleSelect(opt)}
-                  className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-start hover:bg-neutral-50 focus-visible:outline-none focus-visible:bg-[#FAF8F3]"
+                  className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-start hover:bg-neutral-50 focus-visible:outline-none focus-visible:bg-brand-gold-soft"
                 >
                   <span className="inline-flex items-center gap-2">
                     <span
@@ -167,7 +167,7 @@ export function EditableAdvisorCell({
                     {name}
                   </span>
                   {isSelected && (
-                    <Check className="size-3.5 text-[#A88840]" aria-hidden="true" />
+                    <Check className="size-3.5 text-brand-gold-text" aria-hidden="true" />
                   )}
                 </button>
               );

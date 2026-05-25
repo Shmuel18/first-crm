@@ -35,9 +35,9 @@ export function CaseBlock({
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="flex items-center gap-2.5 text-start group flex-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
+          className="flex items-center gap-2.5 text-start group flex-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
         >
-          <span aria-hidden="true" className="text-[#A88840] [&_svg]:size-5">
+          <span aria-hidden="true" className="text-brand-gold-text [&_svg]:size-5">
             {icon}
           </span>
           <span className="font-display text-base font-medium text-neutral-900">{title}</span>

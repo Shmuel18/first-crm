@@ -56,7 +56,7 @@ export function CaseMoreMenu({ caseId, isArchived, canArchive, canRestore }: Pro
             <button
               type="button"
               aria-label={t('actions.more')}
-              className="relative flex size-8 items-center justify-center rounded-md text-neutral-600 transition hover:bg-white hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
+              className="relative flex size-8 items-center justify-center rounded-md text-neutral-600 transition hover:bg-white hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
             >
               <MoreVertical className="size-3.5" aria-hidden="true" />
             </button>

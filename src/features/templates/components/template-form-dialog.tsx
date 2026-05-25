@@ -118,7 +118,7 @@ export function TemplateFormDialog({ open, onOpenChange, mode, template }: Props
                   key={v}
                   type="button"
                   onClick={() => insertVariable(v)}
-                  className="inline-flex items-center px-2 py-1 rounded-full border border-neutral-200 text-xs text-neutral-600 hover:border-[#C9A961] hover:bg-[#FAF8F3] transition"
+                  className="inline-flex items-center px-2 py-1 rounded-full border border-neutral-200 text-xs text-neutral-600 hover:border-brand-gold hover:bg-brand-gold-soft transition"
                 >
                   {t(`variables.${v}`)}
                 </button>
@@ -151,7 +151,7 @@ function SubmitButton({ mode }: { mode: 'create' | 'edit' }) {
     <Button
       type="submit"
       disabled={pending}
-      className="bg-[#C9A961] hover:bg-[#E8D5A2] text-[#0A0A0A] font-semibold"
+      className="bg-brand-gold hover:bg-brand-gold-hover text-brand-black font-semibold"
     >
       {pending ? <Loader2 className="size-4 animate-spin" /> : mode === 'create' ? t('create') : t('update')}
     </Button>

@@ -78,7 +78,7 @@ function ToggleRow({
       <span className="text-sm text-neutral-800">{label}</span>
       <span
         aria-hidden="true"
-        className="relative w-10 h-6 rounded-full bg-neutral-400 shrink-0 transition-colors peer-checked:bg-[#A88840] peer-focus-visible:ring-2 peer-focus-visible:ring-[#A88840]/40 before:content-[''] before:absolute before:top-0.5 before:start-0.5 before:size-5 before:rounded-full before:bg-white before:shadow before:transition-all peer-checked:before:start-[1.125rem]"
+        className="relative w-10 h-6 rounded-full bg-neutral-400 shrink-0 transition-colors peer-checked:bg-brand-gold-text peer-focus-visible:ring-2 peer-focus-visible:ring-brand-gold-text/40 before:content-[''] before:absolute before:top-0.5 before:start-0.5 before:size-5 before:rounded-full before:bg-white before:shadow before:transition-all peer-checked:before:start-[1.125rem]"
       />
     </label>
   );
@@ -91,7 +91,7 @@ function SubmitButton() {
     <Button
       type="submit"
       disabled={pending}
-      className="bg-[#C9A961] hover:bg-[#E8D5A2] text-[#0A0A0A] font-semibold"
+      className="bg-brand-gold hover:bg-brand-gold-hover text-brand-black font-semibold"
     >
       {pending ? <Loader2 className="size-4 animate-spin" /> : tc('save')}
     </Button>

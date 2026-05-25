@@ -32,7 +32,7 @@ export function TaskBoardColumn({ status, label, tasks, locale, emptyLabel, onOp
       ref={setNodeRef}
       className={[
         'rounded-xl border p-2 transition-colors min-h-40',
-        isOver ? 'border-[#C9A961] bg-[#FAF8F3]' : 'border-neutral-200 bg-neutral-50/60',
+        isOver ? 'border-brand-gold bg-brand-gold-soft' : 'border-neutral-200 bg-neutral-50/60',
       ].join(' ')}
     >
       <div className="flex items-center gap-2 px-2 py-1.5">

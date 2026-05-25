@@ -98,7 +98,7 @@ export function DashboardFiltersBar({
         <button
           type="button"
           onClick={clearAll}
-          className="inline-flex items-center gap-1 px-2 py-1.5 text-xs text-neutral-600 hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40 rounded transition"
+          className="inline-flex items-center gap-1 px-2 py-1.5 text-xs text-neutral-600 hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 rounded transition"
         >
           <X className="size-3.5" aria-hidden="true" />
           {t('clear')}
@@ -127,9 +127,9 @@ export function DashboardFiltersBar({
 function chipClass(active: boolean): string {
   return [
     'inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border text-xs transition',
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40',
     active
-      ? 'border-[#A88840] bg-[#FAF8F3] text-[#0A0A0A] font-medium'
+      ? 'border-brand-gold-text bg-brand-gold-soft text-brand-black font-medium'
       : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50',
   ].join(' ');
 }
@@ -196,7 +196,7 @@ function HideClosedCheckbox({
         type="checkbox"
         checked={on}
         onChange={(e) => onChange(e.target.checked)}
-        className="size-4 rounded accent-[#A88840] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
+        className="size-4 rounded accent-brand-gold-text cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
       />
       {label}
     </label>

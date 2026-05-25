@@ -87,13 +87,13 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
             <button
               type="button"
               aria-label={ariaLabel}
-              className="relative size-10 rounded-lg border border-[#333] hover:border-[#C9A961] hover:bg-[#1A1A1A] transition flex items-center justify-center text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8C77B] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
+              className="relative size-10 rounded-lg border border-[#333] hover:border-brand-gold hover:bg-[#1A1A1A] transition flex items-center justify-center text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-light focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black"
             >
               <Bell className="size-4" aria-hidden="true" />
               {unread > 0 && (
                 <span
                   aria-hidden="true"
-                  className="absolute -top-1 -end-1 min-w-4 h-4 px-1 rounded-full bg-[#C9A961] text-[#0A0A0A] text-[10px] font-bold flex items-center justify-center"
+                  className="absolute -top-1 -end-1 min-w-4 h-4 px-1 rounded-full bg-brand-gold text-brand-black text-[10px] font-bold flex items-center justify-center"
                 >
                   {unread > 9 ? '9+' : unread}
                 </span>
@@ -110,7 +110,7 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
             {unread > 0 && (
               <span
                 aria-label={t('unreadCount', { count: unread })}
-                className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-[#C9A961] text-[#0A0A0A] text-[10px] font-bold tabular-nums"
+                className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-brand-gold text-brand-black text-[10px] font-bold tabular-nums"
               >
                 {unread}
               </span>
@@ -120,7 +120,7 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
             <button
               type="button"
               onClick={handleMarkAll}
-              className="inline-flex items-center gap-1 text-xs text-[#A88840] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40 rounded"
+              className="inline-flex items-center gap-1 text-xs text-brand-gold-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 rounded"
             >
               <CheckCheck className="size-3.5" aria-hidden="true" />
               {t('markAllRead')}
@@ -132,9 +132,9 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
           <div className="px-4 py-10 text-center">
             <span
               aria-hidden="true"
-              className="size-12 rounded-full bg-[#C9A961]/15 flex items-center justify-center mx-auto mb-3"
+              className="size-12 rounded-full bg-brand-gold/15 flex items-center justify-center mx-auto mb-3"
             >
-              <Bell className="size-6 text-[#A88840]" />
+              <Bell className="size-6 text-brand-gold-text" />
             </span>
             <p className="text-sm text-neutral-600">{t('empty')}</p>
           </div>
@@ -147,14 +147,14 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
                   onClick={() => handleClick(n)}
                   aria-label={n.read_at ? message(n) : `${t('unreadIndicator')} — ${message(n)}`}
                   className={[
-                    'w-full text-start px-3 py-2.5 border-b border-neutral-100 last:border-0 hover:bg-neutral-50 focus-visible:outline-none focus-visible:bg-[#FAF8F3] transition flex gap-2.5',
-                    n.read_at ? '' : 'bg-[#FAF8F3]',
+                    'w-full text-start px-3 py-2.5 border-b border-neutral-100 last:border-0 hover:bg-neutral-50 focus-visible:outline-none focus-visible:bg-brand-gold-soft transition flex gap-2.5',
+                    n.read_at ? '' : 'bg-brand-gold-soft',
                   ].join(' ')}
                 >
                   {!n.read_at && (
                     <span
                       aria-hidden="true"
-                      className="mt-1.5 size-2 rounded-full bg-[#A88840] shrink-0"
+                      className="mt-1.5 size-2 rounded-full bg-brand-gold-text shrink-0"
                     />
                   )}
                   <span className={n.read_at ? 'ps-4.5' : ''}>

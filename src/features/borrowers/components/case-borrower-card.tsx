@@ -319,7 +319,7 @@ function CompactNumber({
           const next = v === '' ? null : Number(v);
           if (next !== value) onSave(next);
         }}
-        className="w-12 h-8 px-1.5 text-center rounded-md border border-neutral-200 bg-white text-sm focus:outline-none focus-visible:border-[#A88840] focus-visible:ring-2 focus-visible:ring-[#A88840]/40 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [appearance:textfield]"
+        className="w-12 h-8 px-1.5 text-center rounded-md border border-neutral-200 bg-white text-sm focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [appearance:textfield]"
       />
     </label>
   );
@@ -361,7 +361,7 @@ function CompactSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-8 ps-3 pe-7 rounded-md border border-neutral-200 bg-white text-sm appearance-none bg-[length:1rem] bg-[left_0.5rem_center] bg-no-repeat focus:outline-none focus-visible:border-[#A88840] focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
+        className="h-8 ps-3 pe-7 rounded-md border border-neutral-200 bg-white text-sm appearance-none bg-[length:1rem] bg-[left_0.5rem_center] bg-no-repeat focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
         style={{
           backgroundImage:
             "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23737373'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E\")",
@@ -393,14 +393,14 @@ function QuickIconLink({
   const accentClass =
     accent === 'emerald'
       ? 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
-      : 'text-neutral-500 hover:text-[#A88840] hover:bg-neutral-100';
+      : 'text-neutral-500 hover:text-brand-gold-text hover:bg-neutral-100';
   return (
     <Tooltip content={label}>
       <a
         href={href}
         aria-label={label}
         {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-        className={`size-7 rounded inline-flex items-center justify-center transition ${accentClass} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40`}
+        className={`size-7 rounded inline-flex items-center justify-center transition ${accentClass} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40`}
       >
         <Icon className="size-3.5" aria-hidden="true" />
       </a>

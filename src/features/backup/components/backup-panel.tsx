@@ -57,7 +57,7 @@ export function BackupPanel({ view }: Props) {
         <Notice icon={Plug} title={t('notConnectedTitle')} body={t('notConnectedBody')} />
         <Link
           href="/settings/integrations"
-          className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-[#C9A961] hover:bg-[#B8985A] text-[#0A0A0A] font-medium text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]"
+          className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-brand-gold hover:bg-brand-gold-dark text-brand-black font-medium text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text"
         >
           <Plug className="size-4" aria-hidden="true" />
           {t('goToIntegrations')}
@@ -68,11 +68,11 @@ export function BackupPanel({ view }: Props) {
 
   return (
     <div className="space-y-5">
-      <section className="rounded-2xl border border-[#C9A961]/30 bg-[#FAF8F3] p-5">
+      <section className="rounded-2xl border border-brand-gold/30 bg-brand-gold-soft p-5">
         <div className="flex items-start gap-4">
           <div
             aria-hidden="true"
-            className="size-12 rounded-xl bg-[#0A0A0A] text-[#C9A961] flex items-center justify-center shrink-0"
+            className="size-12 rounded-xl bg-brand-black text-brand-gold flex items-center justify-center shrink-0"
           >
             <DatabaseBackup className="size-6" />
           </div>
@@ -91,7 +91,7 @@ export function BackupPanel({ view }: Props) {
           onClick={runBackup}
           disabled={pending}
           aria-busy={pending}
-          className="mt-4 inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-[#C9A961] hover:bg-[#B8985A] disabled:opacity-60 text-[#0A0A0A] font-medium text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]"
+          className="mt-4 inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-brand-gold hover:bg-brand-gold-dark disabled:opacity-60 text-brand-black font-medium text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text"
         >
           {pending ? (
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />
@@ -115,7 +115,7 @@ export function BackupPanel({ view }: Props) {
                 key={b.id}
                 className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50/60"
               >
-                <FileJson className="size-4 text-[#A88840] shrink-0" aria-hidden="true" />
+                <FileJson className="size-4 text-brand-gold-text shrink-0" aria-hidden="true" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-mono text-neutral-800 truncate">{b.name}</p>
                   <p className="text-xs text-neutral-600">
@@ -129,7 +129,7 @@ export function BackupPanel({ view }: Props) {
                     href={b.webViewLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-neutral-700 hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40 rounded transition"
+                    className="inline-flex items-center gap-1 text-xs text-neutral-700 hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 rounded transition"
                   >
                     {t('open')}
                     <ExternalLink className="size-3.5" aria-hidden="true" />

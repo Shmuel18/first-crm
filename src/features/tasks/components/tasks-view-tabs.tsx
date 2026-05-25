@@ -28,7 +28,7 @@ export async function TasksViewTabs({ currentView, isAdmin, counts }: Props) {
             className={[
               'inline-flex items-center gap-2 px-4 py-2.5 -mb-px border-b-2 text-sm font-medium transition-colors',
               active
-                ? 'border-[#C9A961] text-neutral-900'
+                ? 'border-brand-gold text-neutral-900'
                 : 'border-transparent text-neutral-500 hover:text-neutral-800',
             ].join(' ')}
           >
@@ -37,7 +37,7 @@ export async function TasksViewTabs({ currentView, isAdmin, counts }: Props) {
               <span
                 className={[
                   'inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[10px] font-bold tabular-nums',
-                  active ? 'bg-[#FFF8E7] text-[#A88840]' : 'bg-neutral-100 text-neutral-600',
+                  active ? 'bg-[#FFF8E7] text-brand-gold-text' : 'bg-neutral-100 text-neutral-600',
                 ].join(' ')}
               >
                 {count}

@@ -106,7 +106,7 @@ export function EditableTextCell({
         type="button"
         onClick={openEditor}
         aria-label={triggerLabel}
-        className="group inline-flex items-center gap-1.5 w-full text-start min-w-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
+        className="group inline-flex items-center gap-1.5 w-full text-start min-w-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
       >
         <span
           aria-hidden="true"
@@ -118,7 +118,7 @@ export function EditableTextCell({
           {displayValue}
         </span>
         {isPending ? (
-          <Loader2 className="size-3 text-[#A88840] animate-spin shrink-0" aria-hidden="true" />
+          <Loader2 className="size-3 text-brand-gold-text animate-spin shrink-0" aria-hidden="true" />
         ) : showSaved ? (
           <Check className="size-3 text-emerald-600 shrink-0" aria-hidden="true" />
         ) : (
@@ -152,7 +152,7 @@ export function EditableTextCell({
               rows={4}
               aria-label={fieldLabel}
               placeholder={effectivePlaceholder}
-              className="w-full px-2 py-1.5 text-sm border border-neutral-200 rounded resize-none focus:outline-none focus-visible:border-[#A88840] focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
+              className="w-full px-2 py-1.5 text-sm border border-neutral-200 rounded resize-none focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
             />
             <div className="flex items-center justify-between gap-2 mt-1.5">
               <span className="text-[10px] text-neutral-600">
@@ -162,14 +162,14 @@ export function EditableTextCell({
                 <button
                   type="button"
                   onClick={cancel}
-                  className="text-xs text-neutral-700 px-2.5 py-1 rounded hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
+                  className="text-xs text-neutral-700 px-2.5 py-1 rounded hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
                 >
                   {tc('cancel')}
                 </button>
                 <button
                   type="button"
                   onClick={save}
-                  className="text-xs bg-[#0A0A0A] text-white px-2.5 py-1 rounded hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]"
+                  className="text-xs bg-brand-black text-white px-2.5 py-1 rounded hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text"
                 >
                   {tc('save')}
                 </button>

@@ -71,14 +71,14 @@ export async function CaseActionBar({
   }).format(new Date(createdAt));
 
   return (
-    <div className="bg-[#FAF8F3] text-neutral-900 sticky top-[-1rem] sm:top-[-1.5rem] z-20 shadow-sm -mx-4 px-4 sm:-mx-6 sm:px-6 py-3 border-b border-[#C9A961]/20">
+    <div className="bg-brand-gold-soft text-neutral-900 sticky top-[-1rem] sm:top-[-1.5rem] z-20 shadow-sm -mx-4 px-4 sm:-mx-6 sm:px-6 py-3 border-b border-brand-gold/20">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <Tooltip content={tc('back')}>
             <Link
               href="/cases"
               aria-label={tc('back')}
-              className="inline-flex items-center justify-center size-7 border border-neutral-300 hover:border-[#A88840] text-neutral-700 hover:text-[#A88840] bg-white/60 rounded-md transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
+              className="inline-flex items-center justify-center size-7 border border-neutral-300 hover:border-brand-gold-text text-neutral-700 hover:text-brand-gold-text bg-white/60 rounded-md transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
             >
               <BackArrow locale={locale} className="size-3.5" aria-hidden="true" />
             </Link>
@@ -176,14 +176,14 @@ function ActionIcon({
   href?: string;
 }) {
   const className =
-    'relative size-8 rounded-md text-neutral-600 hover:bg-white hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50 transition flex items-center justify-center';
+    'relative size-8 rounded-md text-neutral-600 hover:bg-white hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50 transition flex items-center justify-center';
   const content = (
     <>
       <Icon className="size-3.5" aria-hidden="true" />
       {hasAlert && (
         <span
           aria-hidden="true"
-          className="absolute top-1 start-1 size-1.5 bg-[#A88840] rounded-full ring-2 ring-[#FAF8F3]"
+          className="absolute top-1 start-1 size-1.5 bg-brand-gold-text rounded-full ring-2 ring-brand-gold-soft"
         />
       )}
     </>

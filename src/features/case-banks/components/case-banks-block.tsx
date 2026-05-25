@@ -27,7 +27,7 @@ export async function CaseBanksBlock({ caseId }: Props) {
       rightSlot={
         <Link
           href={`/cases/${caseId}/banks/new`}
-          className="text-xs text-[#A88840] hover:underline font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
+          className="text-xs text-brand-gold-text hover:underline font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
         >
           {t('blocks.addBank')}
         </Link>

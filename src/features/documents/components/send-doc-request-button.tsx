@@ -50,7 +50,7 @@ export function SendDocRequestButton({ caseId, title }: { caseId: string; title:
         type="button"
         aria-label={title}
         onClick={() => setOpen(true)}
-        className="flex size-8 items-center justify-center rounded-md text-neutral-700 transition hover:bg-white hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
+        className="flex size-8 items-center justify-center rounded-md text-neutral-700 transition hover:bg-white hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
       >
         <MessageSquare className="size-3.5" aria-hidden="true" />
       </button>
@@ -65,7 +65,7 @@ export function SendDocRequestButton({ caseId, title }: { caseId: string; title:
               type="button"
               disabled={isPending}
               onClick={send}
-              className="bg-[#C9A961] font-semibold text-[#0A0A0A] hover:bg-[#E8D5A2]"
+              className="bg-brand-gold font-semibold text-brand-black hover:bg-brand-gold-hover"
             >
               {isPending ? <Loader2 className="size-4 animate-spin" /> : t('send')}
             </Button>

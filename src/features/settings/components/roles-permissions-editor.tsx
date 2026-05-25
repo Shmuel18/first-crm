@@ -89,10 +89,10 @@ export function RolesPermissionsEditor({ roles, permissions, granted, locale }: 
               onClick={() => setSelectedRoleId(r.id)}
               className={[
                 'inline-flex items-center gap-1.5 px-3 h-9 rounded-lg text-sm font-medium border transition',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50',
                 active
-                  ? 'bg-[#0A0A0A] text-white border-[#0A0A0A]'
-                  : 'bg-white border-neutral-200 text-neutral-700 hover:border-[#A88840]',
+                  ? 'bg-brand-black text-white border-brand-black'
+                  : 'bg-white border-neutral-200 text-neutral-700 hover:border-brand-gold-text',
               ].join(' ')}
             >
               {roleName(r)}
@@ -105,7 +105,7 @@ export function RolesPermissionsEditor({ roles, permissions, granted, locale }: 
       {isAdminRole && (
         <div
           role="note"
-          className="rounded-lg border border-[#C9A961]/40 bg-[#FAF8F3] px-3 py-2 text-sm text-neutral-800"
+          className="rounded-lg border border-brand-gold/40 bg-brand-gold-soft px-3 py-2 text-sm text-neutral-800"
         >
           {t('adminLocked')}
         </div>
@@ -138,8 +138,8 @@ export function RolesPermissionsEditor({ roles, permissions, granted, locale }: 
                     onClick={() => toggle(perm.id)}
                     className={[
                       'relative w-10 h-6 rounded-full transition-colors shrink-0',
-                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40',
-                      on ? 'bg-[#A88840]' : 'bg-neutral-400',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40',
+                      on ? 'bg-brand-gold-text' : 'bg-neutral-400',
                       isAdminRole ? 'opacity-60 cursor-not-allowed' : '',
                     ].join(' ')}
                   >
@@ -150,7 +150,7 @@ export function RolesPermissionsEditor({ roles, permissions, granted, locale }: 
                         on ? 'start-[1.125rem]' : 'start-0.5',
                       ].join(' ')}
                     >
-                      {on && <Check className="size-3 text-[#A88840]" />}
+                      {on && <Check className="size-3 text-brand-gold-text" />}
                     </span>
                   </button>
                 </div>

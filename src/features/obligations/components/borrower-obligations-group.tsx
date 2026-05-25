@@ -88,7 +88,7 @@ export function BorrowerObligationsGroup({
           <button
             type="button"
             onClick={() => setDialog({ mode: 'new' })}
-            className="inline-flex items-center gap-1 text-xs text-[#A88840] hover:text-[#0A0A0A] font-medium transition"
+            className="inline-flex items-center gap-1 text-xs text-brand-gold-text hover:text-brand-black font-medium transition"
           >
             <Plus className="size-3.5" aria-hidden="true" />
             {t('addObligation')}
@@ -128,7 +128,7 @@ export function BorrowerObligationsGroup({
                       type="button"
                       onClick={() => setDialog({ mode: 'edit', obligation: ob })}
                       aria-label={tc('edit')}
-                      className="size-6 rounded flex items-center justify-center text-neutral-500 hover:text-[#A88840] hover:bg-white transition"
+                      className="size-6 rounded flex items-center justify-center text-neutral-500 hover:text-brand-gold-text hover:bg-white transition"
                     >
                       <Pencil className="size-3" aria-hidden="true" />
                     </button>

@@ -41,7 +41,7 @@ type FieldProps = CommonProps &
 
 const baseInputClass =
   'min-w-0 flex-1 h-9 px-2.5 rounded-md border border-neutral-200 bg-white text-sm text-neutral-900 ' +
-  'shadow-xs focus:outline-none focus-visible:border-[#A88840] focus-visible:ring-2 focus-visible:ring-[#A88840]/40 ' +
+  'shadow-xs focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 ' +
   'disabled:opacity-60 disabled:cursor-not-allowed transition';
 
 const errorInputClass = 'border-red-400 focus-visible:border-red-500 focus-visible:ring-red-200';
@@ -117,7 +117,7 @@ export function EditableField(props: FieldProps) {
               type="button"
               onClick={openDatePicker}
               aria-label={tc('selectDate')}
-              className="shrink-0 size-7 rounded inline-flex items-center justify-center text-neutral-500 hover:text-[#A88840] hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40 transition"
+              className="shrink-0 size-7 rounded inline-flex items-center justify-center text-neutral-500 hover:text-brand-gold-text hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 transition"
             >
               <Calendar className="size-3.5" aria-hidden="true" />
             </button>

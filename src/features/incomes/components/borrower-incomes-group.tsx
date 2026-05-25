@@ -71,7 +71,7 @@ export function BorrowerIncomesGroup({
             type="button"
             onClick={handleAdd}
             disabled={isAdding}
-            className="inline-flex items-center gap-1 text-xs text-[#A88840] hover:text-[#0A0A0A] font-medium transition disabled:opacity-50"
+            className="inline-flex items-center gap-1 text-xs text-brand-gold-text hover:text-brand-black font-medium transition disabled:opacity-50"
           >
             {isAdding ? (
               <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />

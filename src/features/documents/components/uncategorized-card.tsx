@@ -94,7 +94,7 @@ function UncategorizedRow({
           disabled={isPending}
           defaultValue=""
           onChange={(e) => handleChange(e.target.value)}
-          className="h-8 rounded-md border border-amber-200 bg-white px-2 text-xs text-neutral-700 focus:outline-none focus:ring-2 focus:ring-[#C9A961] disabled:opacity-50 max-w-[140px]"
+          className="h-8 rounded-md border border-amber-200 bg-white px-2 text-xs text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-gold disabled:opacity-50 max-w-[140px]"
         >
           <option value="" disabled>
             {t('pickCategory')}

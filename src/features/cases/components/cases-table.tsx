@@ -232,7 +232,7 @@ function SortableTh({
         onClick={() => onSort(column)}
         className={[
           'group flex w-full items-center gap-1 px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider transition-colors',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#A88840]/40',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-gold-text/40',
           isActive
             ? 'text-neutral-900'
             : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50',
@@ -244,7 +244,7 @@ function SortableTh({
           className={[
             'size-3 shrink-0 transition-opacity',
             isActive
-              ? 'text-[#A88840] opacity-100'
+              ? 'text-brand-gold-text opacity-100'
               : 'text-neutral-400 opacity-40 group-hover:opacity-100',
           ].join(' ')}
         />

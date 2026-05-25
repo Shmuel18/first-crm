@@ -42,7 +42,7 @@ export function RowDensityControl() {
               onClick={() => setRowDensity(d)}
               className={[
                 'size-7 rounded inline-flex items-center justify-center transition',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50',
                 selected
                   ? 'bg-neutral-100 text-neutral-900 shadow-sm'
                   : 'text-neutral-500 hover:text-neutral-800 hover:bg-neutral-50',

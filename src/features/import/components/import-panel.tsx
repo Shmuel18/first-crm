@@ -33,7 +33,7 @@ export function ImportPanel() {
 
   return (
     <div className="space-y-5">
-      <section className="rounded-xl border border-[#C9A961]/30 bg-[#FAF8F3] p-4">
+      <section className="rounded-xl border border-brand-gold/30 bg-brand-gold-soft p-4">
         <p className="text-sm text-neutral-800">{t('instructions')}</p>
         <p className="mt-2 text-xs text-neutral-700 font-mono" dir="ltr">
           {t('columns')}
@@ -43,7 +43,7 @@ export function ImportPanel() {
       <form onSubmit={onSubmit} className="space-y-3">
         <label
           htmlFor="import-file"
-          className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-neutral-300 bg-white px-4 py-8 cursor-pointer hover:border-[#A88840] focus-within:border-[#A88840] focus-within:ring-2 focus-within:ring-[#A88840]/40 transition"
+          className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-neutral-300 bg-white px-4 py-8 cursor-pointer hover:border-brand-gold-text focus-within:border-brand-gold-text focus-within:ring-2 focus-within:ring-brand-gold-text/40 transition"
         >
           <input
             id="import-file"
@@ -56,7 +56,7 @@ export function ImportPanel() {
           />
           {fileName ? (
             <span className="inline-flex items-center gap-2 text-sm text-neutral-800">
-              <FileSpreadsheet className="size-4 text-[#A88840]" aria-hidden="true" />
+              <FileSpreadsheet className="size-4 text-brand-gold-text" aria-hidden="true" />
               {fileName}
             </span>
           ) : (
@@ -71,7 +71,7 @@ export function ImportPanel() {
           type="submit"
           disabled={pending || !fileName}
           aria-busy={pending}
-          className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-[#C9A961] hover:bg-[#B8985A] disabled:opacity-60 text-[#0A0A0A] font-medium text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]"
+          className="inline-flex items-center gap-2 px-4 h-10 rounded-lg bg-brand-gold hover:bg-brand-gold-dark disabled:opacity-60 text-brand-black font-medium text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text"
         >
           {pending ? (
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />

@@ -45,8 +45,8 @@ function Pill({
       className={[
         'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium transition',
         active
-          ? 'border-[#C9A961] bg-[#0A0A0A] text-white'
-          : 'border-neutral-200 text-neutral-600 hover:border-[#C9A961] hover:text-[#0A0A0A]',
+          ? 'border-brand-gold bg-brand-black text-white'
+          : 'border-neutral-200 text-neutral-600 hover:border-brand-gold hover:text-brand-black',
       ].join(' ')}
     >
       {color && <span className="size-2 rounded-full" style={{ background: color }} />}

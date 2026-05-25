@@ -39,7 +39,7 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
     <Button
       type="submit"
       disabled={pending}
-      className="bg-[#0A0A0A] hover:bg-neutral-800 text-white"
+      className="bg-brand-black hover:bg-neutral-800 text-white"
     >
       {pending ? (
         <Loader2 className="size-4 animate-spin" />

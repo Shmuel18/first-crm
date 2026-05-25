@@ -72,7 +72,7 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
         member.is_active ? '' : 'opacity-60 bg-neutral-50/60',
       ].join(' ')}
     >
-      <div className="size-10 rounded-full bg-[#0A0A0A] text-[#C9A961] flex items-center justify-center text-sm font-semibold shrink-0 ring-2 ring-[#C9A961]/30">
+      <div className="size-10 rounded-full bg-brand-black text-brand-gold flex items-center justify-center text-sm font-semibold shrink-0 ring-2 ring-brand-gold/30">
         {initials}
       </div>
 
@@ -94,14 +94,14 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
           aria-label={`${t('columns.cases')}: ${member.activeCasesCount}`}
           className="inline-flex items-center gap-1 rounded-md bg-neutral-50 border border-neutral-200 px-2 py-1 tabular-nums"
         >
-          <Briefcase className="size-3.5 text-[#A88840]" aria-hidden="true" />
+          <Briefcase className="size-3.5 text-brand-gold-text" aria-hidden="true" />
           {member.activeCasesCount}
         </span>
         <span
           aria-label={`${t('columns.tasks')}: ${member.openTasksCount}`}
           className="inline-flex items-center gap-1 rounded-md bg-neutral-50 border border-neutral-200 px-2 py-1 tabular-nums"
         >
-          <CheckSquare className="size-3.5 text-[#A88840]" aria-hidden="true" />
+          <CheckSquare className="size-3.5 text-brand-gold-text" aria-hidden="true" />
           {member.openTasksCount}
         </span>
       </div>

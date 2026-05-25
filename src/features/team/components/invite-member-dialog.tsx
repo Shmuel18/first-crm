@@ -151,7 +151,7 @@ function InviteSuccess({
           <div
             role="region"
             aria-label={t('inviteLinkLabel')}
-            className="rounded-lg border border-[#C9A961]/40 bg-[#FAF8F3] p-3 space-y-2"
+            className="rounded-lg border border-brand-gold/40 bg-brand-gold-soft p-3 space-y-2"
           >
             <p id="invite-link-label" className="text-xs text-neutral-700">
               {t('inviteLinkLabel')}
@@ -192,7 +192,7 @@ function InviteSuccess({
         <Button
           type="button"
           onClick={onDone}
-          className="bg-[#C9A961] hover:bg-[#E8D5A2] text-[#0A0A0A] font-semibold"
+          className="bg-brand-gold hover:bg-brand-gold-hover text-brand-black font-semibold"
         >
           {tc('done')}
         </Button>
@@ -205,7 +205,7 @@ function SubmitButton() {
   const { pending } = useFormStatus();
   const t = useTranslations('team.invite');
   return (
-    <Button type="submit" disabled={pending} className="bg-[#C9A961] hover:bg-[#E8D5A2] text-[#0A0A0A] font-semibold">
+    <Button type="submit" disabled={pending} className="bg-brand-gold hover:bg-brand-gold-hover text-brand-black font-semibold">
       {pending ? <Loader2 className="size-4 animate-spin" /> : t('submit')}
     </Button>
   );

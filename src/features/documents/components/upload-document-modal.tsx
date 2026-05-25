@@ -44,7 +44,7 @@ function SubmitButton() {
     <Button
       type="submit"
       disabled={pending}
-      className="bg-[#0A0A0A] hover:bg-neutral-800 text-white h-10 min-w-28"
+      className="bg-brand-black hover:bg-neutral-800 text-white h-10 min-w-28"
     >
       {pending ? <Loader2 className="size-4 animate-spin" /> : t('submit')}
     </Button>
@@ -143,10 +143,10 @@ export function UploadDocumentModal({
                 }}
                 onDragLeave={() => setIsDragOver(false)}
                 onDrop={handleDrop}
-                className={`flex-1 flex items-center gap-2 px-3 h-10 rounded-md border border-dashed transition cursor-pointer text-sm focus-within:border-[#A88840] focus-within:ring-2 focus-within:ring-[#A88840]/30 ${
+                className={`flex-1 flex items-center gap-2 px-3 h-10 rounded-md border border-dashed transition cursor-pointer text-sm focus-within:border-brand-gold-text focus-within:ring-2 focus-within:ring-brand-gold-text/30 ${
                   isDragOver
-                    ? 'border-[#A88840] bg-[#C9A961]/15 text-[#A88840]'
-                    : 'border-neutral-300 bg-neutral-50 hover:border-[#A88840] hover:bg-[#C9A961]/8 text-neutral-700'
+                    ? 'border-brand-gold-text bg-brand-gold/15 text-brand-gold-text'
+                    : 'border-neutral-300 bg-neutral-50 hover:border-brand-gold-text hover:bg-brand-gold/8 text-neutral-700'
                 }`}
               >
                 <UploadIcon className="size-4 shrink-0" />

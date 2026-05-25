@@ -19,7 +19,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <TooltipProvider>
-      <div className="h-dvh overflow-hidden bg-[#FAFAFA]">
+      <div className="h-dvh overflow-hidden bg-brand-surface">
         <Topbar />
       <Sidebar tasksBadge={pendingTasks} isAdmin={isAdminRes.data === true} />
       {/* The inner viewport owns scrolling. Sticky subheaders compensate for

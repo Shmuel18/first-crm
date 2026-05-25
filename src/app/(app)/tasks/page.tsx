@@ -103,7 +103,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
       <TasksStatStrip open={openCount} overdue={overdueCount} done={doneCount} />
 
       {caseId && caseLabel && (
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-[#C9A961]/40 bg-[#FAF8F3] px-3 py-2">
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-brand-gold/40 bg-brand-gold-soft px-3 py-2">
           <span className="text-sm text-neutral-700">
             {t('filteredByCase', { label: caseLabel })}
           </span>

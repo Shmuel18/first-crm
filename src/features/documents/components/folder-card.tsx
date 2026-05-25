@@ -72,7 +72,7 @@ export function FolderCard({ folder, documents, onUpload, onPreview }: Props) {
           type="button"
           onClick={() => onUpload(folder)}
           aria-label={tc('addDocument')}
-          className="size-9 inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-700 hover:text-[#A88840] hover:border-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50 transition shrink-0"
+          className="size-9 inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-700 hover:text-brand-gold-text hover:border-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50 transition shrink-0"
         >
           <Plus className="size-4" aria-hidden="true" />
         </button>

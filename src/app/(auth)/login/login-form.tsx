@@ -63,7 +63,7 @@ export function LoginForm() {
             required
             autoComplete="email"
             dir="ltr"
-            className="ps-10 h-12 text-base bg-neutral-50 border-neutral-200 focus:border-[#A88840] focus-visible:border-[#A88840] focus-visible:ring-[#A88840]/40"
+            className="ps-10 h-12 text-base bg-neutral-50 border-neutral-200 focus:border-brand-gold-text focus-visible:border-brand-gold-text focus-visible:ring-brand-gold-text/40"
             placeholder="moshe@kaufman.co.il"
           />
         </div>
@@ -85,7 +85,7 @@ export function LoginForm() {
             required
             autoComplete="current-password"
             dir="ltr"
-            className="ps-10 h-12 text-base bg-neutral-50 border-neutral-200 focus:border-[#A88840] focus-visible:border-[#A88840] focus-visible:ring-[#A88840]/40"
+            className="ps-10 h-12 text-base bg-neutral-50 border-neutral-200 focus:border-brand-gold-text focus-visible:border-brand-gold-text focus-visible:ring-brand-gold-text/40"
             placeholder="••••••••"
           />
         </div>

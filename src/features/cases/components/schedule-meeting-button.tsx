@@ -72,7 +72,7 @@ export function ScheduleMeetingButton({ title, clientLabel }: Props) {
           type="button"
           aria-label={title}
           onClick={openDialog}
-          className="relative flex size-8 items-center justify-center rounded-md text-neutral-600 transition hover:bg-white hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
+          className="relative flex size-8 items-center justify-center rounded-md text-neutral-600 transition hover:bg-white hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
         >
           <Calendar className="size-3.5" aria-hidden="true" />
         </button>
@@ -105,7 +105,7 @@ export function ScheduleMeetingButton({ title, clientLabel }: Props) {
               <select
                 value={duration}
                 onChange={(e) => setDuration(Number(e.target.value))}
-                className="h-9 w-full rounded-md border border-neutral-200 px-2 text-sm focus:outline-none focus-visible:border-[#A88840] focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
+                className="h-9 w-full rounded-md border border-neutral-200 px-2 text-sm focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
               >
                 {DURATIONS.map((m) => (
                   <option key={m} value={m}>
@@ -122,14 +122,14 @@ export function ScheduleMeetingButton({ title, clientLabel }: Props) {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}
-                className="w-full resize-none rounded-md border border-neutral-200 px-2 py-1.5 text-sm focus:outline-none focus-visible:border-[#A88840] focus-visible:ring-2 focus-visible:ring-[#A88840]/40"
+                className="w-full resize-none rounded-md border border-neutral-200 px-2 py-1.5 text-sm focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
               />
             </Field>
             <DialogFooter>
               <Button
                 type="submit"
                 disabled={!canSubmit}
-                className="bg-[#C9A961] font-semibold text-[#0A0A0A] hover:bg-[#E8D5A2]"
+                className="bg-brand-gold font-semibold text-brand-black hover:bg-brand-gold-hover"
               >
                 {t('open')}
               </Button>

@@ -36,7 +36,7 @@ export function TemplateRow({ template, onEdit }: Props) {
     <li className="flex items-start gap-3 px-4 py-3 hover:bg-neutral-50/60">
       <span
         aria-hidden="true"
-        className="size-9 rounded-lg bg-[#FAF8F3] text-[#A88840] flex items-center justify-center shrink-0"
+        className="size-9 rounded-lg bg-brand-gold-soft text-brand-gold-text flex items-center justify-center shrink-0"
       >
         <Icon className="size-4" />
       </span>
@@ -59,7 +59,7 @@ export function TemplateRow({ template, onEdit }: Props) {
           type="button"
           onClick={() => onEdit(template)}
           aria-label={`${tc('edit')} — ${template.name}`}
-          className="size-8 rounded-md text-neutral-600 hover:bg-neutral-100 hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50 flex items-center justify-center transition"
+          className="size-8 rounded-md text-neutral-600 hover:bg-neutral-100 hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50 flex items-center justify-center transition"
         >
           <Pencil className="size-3.5" aria-hidden="true" />
         </button>

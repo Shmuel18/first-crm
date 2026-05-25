@@ -55,7 +55,7 @@ export function DashboardExportButtons() {
               disabled={isPending}
               aria-busy={isPending}
               aria-label={t('export')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 bg-white text-xs text-neutral-700 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40 disabled:opacity-60 transition"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 bg-white text-xs text-neutral-700 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 disabled:opacity-60 transition"
             >
               {isPending ? (
                 <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />

@@ -67,7 +67,7 @@ export function UserMenu({ fullName, initials, roleName }: UserMenuProps) {
         aria-label={t('open')}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex items-center gap-2.5 px-3 py-1.5 border border-[#333] rounded-lg hover:border-[#C9A961] hover:bg-[#1A1A1A] transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8C77B] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
+        className="flex items-center gap-2.5 px-3 py-1.5 border border-[#333] rounded-lg hover:border-brand-gold hover:bg-[#1A1A1A] transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-light focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black"
       >
         <div
           aria-hidden="true"
@@ -154,9 +154,9 @@ function LocaleOption({
       aria-pressed={active}
       className={[
         'flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/40',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40',
         active
-          ? 'bg-[#C9A961] text-black'
+          ? 'bg-brand-gold text-black'
           : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200',
       ].join(' ')}
     >

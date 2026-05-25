@@ -93,8 +93,8 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
         className={[
           'mt-0.5 size-5 rounded border-2 flex items-center justify-center transition shrink-0',
           completed
-            ? 'bg-[#C9A961] border-[#C9A961] text-white'
-            : 'border-neutral-300 hover:border-[#C9A961]',
+            ? 'bg-brand-gold border-brand-gold text-white'
+            : 'border-neutral-300 hover:border-brand-gold',
         ].join(' ')}
       >
         {completed && <CheckIcon />}
@@ -160,7 +160,7 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
           {task.case && !compact && (
             <Link
               href={`/cases/${task.case.id}`}
-              className="hover:text-[#A88840] hover:underline decoration-[#C9A961] underline-offset-2"
+              className="hover:text-brand-gold-text hover:underline decoration-brand-gold underline-offset-2"
             >
               #{task.case.case_number}
             </Link>

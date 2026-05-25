@@ -49,7 +49,7 @@ function ToggleButton({
       aria-pressed={active}
       className={[
         'inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition',
-        active ? 'bg-[#0A0A0A] text-white' : 'bg-white text-neutral-600 hover:bg-neutral-50',
+        active ? 'bg-brand-black text-white' : 'bg-white text-neutral-600 hover:bg-neutral-50',
       ].join(' ')}
     >
       <Icon className="size-4" />

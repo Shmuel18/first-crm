@@ -14,10 +14,10 @@ type PageHeaderProps = {
  */
 export function PageHeader({ icon, title, subtitle, rightSlot }: PageHeaderProps) {
   return (
-    <div className="-mx-6 -mt-6 bg-gradient-to-l from-[#FAFAFA] via-white to-[#FAFAFA] px-6 py-5 border-b border-neutral-200">
+    <div className="-mx-6 -mt-6 bg-gradient-to-l from-brand-surface via-white to-brand-surface px-6 py-5 border-b border-neutral-200">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
-          <span className="size-11 rounded-xl bg-[#FFF8E7] text-[#A88840] border border-[#E8D5A2] flex items-center justify-center [&_svg]:size-5">
+          <span className="size-11 rounded-xl bg-[#FFF8E7] text-brand-gold-text border border-brand-gold-hover flex items-center justify-center [&_svg]:size-5">
             {icon}
           </span>
           <div>

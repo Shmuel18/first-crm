@@ -52,7 +52,7 @@ export function RichTextEditor({ value, onChange, placeholder, minRows = 8 }: Pr
   }
 
   return (
-    <div className="border border-neutral-200 rounded-md overflow-hidden bg-white focus-within:border-[#C9A961] focus-within:ring-2 focus-within:ring-[#C9A961]/20 transition">
+    <div className="border border-neutral-200 rounded-md overflow-hidden bg-white focus-within:border-brand-gold focus-within:ring-2 focus-within:ring-brand-gold/20 transition">
       <Toolbar editor={editor} />
       <EditorContent editor={editor} />
     </div>
@@ -62,7 +62,7 @@ export function RichTextEditor({ value, onChange, placeholder, minRows = 8 }: Pr
 function Toolbar({ editor }: { editor: Editor }) {
   const t = useTranslations('richTextEditor');
   return (
-    <div className="flex items-center gap-0.5 border-b border-neutral-200 bg-[#FAF8F3] px-2 py-1.5">
+    <div className="flex items-center gap-0.5 border-b border-neutral-200 bg-brand-gold-soft px-2 py-1.5">
       <ToolBtn
         active={editor.isActive('bold')}
         onClick={() => editor.chain().focus().toggleBold().run()}
@@ -149,8 +149,8 @@ function ToolBtn({
       aria-pressed={active}
       className={`size-7 rounded flex items-center justify-center transition ${
         active
-          ? 'bg-[#0A0A0A] text-white'
-          : 'text-neutral-600 hover:bg-white hover:text-[#0A0A0A]'
+          ? 'bg-brand-black text-white'
+          : 'text-neutral-600 hover:bg-white hover:text-brand-black'
       }`}
     >
       {children}

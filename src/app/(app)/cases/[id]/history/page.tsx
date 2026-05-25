@@ -35,19 +35,19 @@ export default async function CaseHistoryPage({ params }: Props) {
 
   return (
     <div className="space-y-5 -mt-6">
-      <div className="bg-[#FAF8F3] text-neutral-900 sticky top-[-1rem] sm:top-[-1.5rem] z-20 -mx-4 border-b border-[#C9A961]/20 px-4 py-3 shadow-sm sm:-mx-6 sm:px-6">
+      <div className="bg-brand-gold-soft text-neutral-900 sticky top-[-1rem] sm:top-[-1.5rem] z-20 -mx-4 border-b border-brand-gold/20 px-4 py-3 shadow-sm sm:-mx-6 sm:px-6">
         <div className="flex items-center gap-3">
           <Link
             href={`/cases/${caseData.id}`}
             aria-label={tc('back')}
-            className="inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-neutral-300 bg-white/60 text-neutral-700 transition hover:border-[#A88840] hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
+            className="inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-neutral-300 bg-white/60 text-neutral-700 transition hover:border-brand-gold-text hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
           >
             <BackArrow locale={locale} className="size-3.5" aria-hidden="true" />
           </Link>
           <div className="flex items-center gap-2">
             <span className="font-display text-base font-semibold">{t('history.title')}</span>
             <span aria-hidden="true" className="text-neutral-400">·</span>
-            <span className="text-sm text-[#A88840] font-medium">{borrowerName}</span>
+            <span className="text-sm text-brand-gold-text font-medium">{borrowerName}</span>
           </div>
         </div>
       </div>

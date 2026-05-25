@@ -17,7 +17,7 @@ type DataRowProps = {
 };
 
 const ACCENT_CLASSES: Record<Accent, string> = {
-  gold: 'text-[#A88840]',
+  gold: 'text-brand-gold-text',
   red: 'text-red-700',
   green: 'text-emerald-700',
   yellow: 'text-amber-700',

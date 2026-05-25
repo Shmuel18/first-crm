@@ -94,7 +94,7 @@ export function NativeSelect(props: React.SelectHTMLAttributes<HTMLSelectElement
   return (
     <select
       {...rest}
-      className={`h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm shadow-xs focus:outline-none focus-visible:border-[#A88840] focus-visible:ring-2 focus-visible:ring-[#A88840]/40 disabled:opacity-60 disabled:cursor-not-allowed ${className}`}
+      className={`h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm shadow-xs focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 disabled:opacity-60 disabled:cursor-not-allowed ${className}`}
     />
   );
 }

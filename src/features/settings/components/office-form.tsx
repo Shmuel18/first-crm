@@ -107,7 +107,7 @@ function SubmitButton({ label }: { label: string }) {
     <Button
       type="submit"
       disabled={pending}
-      className="bg-[#C9A961] hover:bg-[#E8D5A2] text-[#0A0A0A] font-semibold h-11 min-w-32"
+      className="bg-brand-gold hover:bg-brand-gold-hover text-brand-black font-semibold h-11 min-w-32"
     >
       {pending ? <Loader2 className="size-4 animate-spin" /> : label}
     </Button>

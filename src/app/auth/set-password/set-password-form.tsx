@@ -67,7 +67,7 @@ export function SetPasswordForm() {
             minLength={PASSWORD_MIN_LENGTH}
             autoComplete="new-password"
             dir="ltr"
-            className="ps-10 h-12 text-base bg-neutral-50 border-neutral-200 focus:border-[#A88840] focus-visible:border-[#A88840] focus-visible:ring-[#A88840]/40"
+            className="ps-10 h-12 text-base bg-neutral-50 border-neutral-200 focus:border-brand-gold-text focus-visible:border-brand-gold-text focus-visible:ring-brand-gold-text/40"
             placeholder="••••••••"
           />
         </div>
@@ -90,7 +90,7 @@ export function SetPasswordForm() {
             minLength={PASSWORD_MIN_LENGTH}
             autoComplete="new-password"
             dir="ltr"
-            className="ps-10 h-12 text-base bg-neutral-50 border-neutral-200 focus:border-[#A88840] focus-visible:border-[#A88840] focus-visible:ring-[#A88840]/40"
+            className="ps-10 h-12 text-base bg-neutral-50 border-neutral-200 focus:border-brand-gold-text focus-visible:border-brand-gold-text focus-visible:ring-brand-gold-text/40"
             placeholder="••••••••"
           />
         </div>

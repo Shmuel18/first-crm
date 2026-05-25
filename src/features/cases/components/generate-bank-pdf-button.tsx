@@ -57,7 +57,7 @@ export function GenerateBankPdfButton({ caseId, title }: Props) {
         onClick={handleClick}
         disabled={isPending}
         aria-label={title}
-        className="relative size-8 rounded-md text-neutral-700 hover:bg-white hover:text-[#A88840] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50 transition flex items-center justify-center disabled:opacity-50"
+        className="relative size-8 rounded-md text-neutral-700 hover:bg-white hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50 transition flex items-center justify-center disabled:opacity-50"
       >
         {isPending ? (
           <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />

@@ -90,7 +90,7 @@ export function ReturningClientAutofill({
           type="button"
           onClick={check}
           disabled={isPending}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#A88840] transition hover:text-[#0A0A0A] disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-gold-text transition hover:text-brand-black disabled:opacity-50"
         >
           {isPending ? (
             <Loader2 className="size-3.5 animate-spin" />
@@ -107,7 +107,7 @@ export function ReturningClientAutofill({
             <button
               type="button"
               onClick={fill}
-              className="inline-flex items-center gap-1 rounded-md bg-[#C9A961] px-2 py-1 text-xs font-semibold text-[#0A0A0A] transition hover:bg-[#E8D5A2]"
+              className="inline-flex items-center gap-1 rounded-md bg-brand-gold px-2 py-1 text-xs font-semibold text-brand-black transition hover:bg-brand-gold-hover"
             >
               {t('fill')}
             </button>

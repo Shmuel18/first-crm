@@ -126,13 +126,13 @@ export function IncomeRow({ caseId, income, incomeTypes, locale, canEdit }: Prop
                 aria-pressed={row.is_primary}
                 aria-label={tf('isPrimary')}
                 disabled={savingPrimary || isDeleting}
-                className="size-7 rounded inline-flex items-center justify-center text-neutral-400 hover:text-[#A88840] hover:bg-neutral-50 transition disabled:opacity-50"
+                className="size-7 rounded inline-flex items-center justify-center text-neutral-400 hover:text-brand-gold-text hover:bg-neutral-50 transition disabled:opacity-50"
               >
                 {savingPrimary ? (
                   <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
                 ) : (
                   <Star
-                    className={`size-4 transition ${row.is_primary ? 'fill-[#C9A961] text-[#A88840]' : ''}`}
+                    className={`size-4 transition ${row.is_primary ? 'fill-brand-gold text-brand-gold-text' : ''}`}
                     aria-hidden="true"
                   />
                 )}

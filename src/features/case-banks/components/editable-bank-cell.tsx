@@ -92,7 +92,7 @@ export function EditableBankCell({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={triggerLabel}
-        className="grid h-8 w-full max-w-full min-w-0 cursor-pointer grid-cols-[1.75rem_minmax(0,1fr)_0.75rem] items-center gap-2 overflow-hidden rounded-md px-1 leading-none transition hover:bg-neutral-50 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50"
+        className="grid h-8 w-full max-w-full min-w-0 cursor-pointer grid-cols-[1.75rem_minmax(0,1fr)_0.75rem] items-center gap-2 overflow-hidden rounded-md px-1 leading-none transition hover:bg-neutral-50 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
       >
         {bank ? (
           <>
@@ -136,10 +136,10 @@ export function EditableBankCell({
               role="option"
               aria-selected={!bank}
               onClick={() => handleSelect(null)}
-              className="w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-start text-neutral-600 hover:bg-neutral-50 focus-visible:outline-none focus-visible:bg-[#FAF8F3]"
+              className="w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-start text-neutral-600 hover:bg-neutral-50 focus-visible:outline-none focus-visible:bg-brand-gold-soft"
             >
               <span>{noBankLabel}</span>
-              {!bank && <Check className="size-3.5 text-[#A88840]" aria-hidden="true" />}
+              {!bank && <Check className="size-3.5 text-brand-gold-text" aria-hidden="true" />}
             </button>
             <div className="border-t border-neutral-100 my-0.5" aria-hidden="true" />
             {options.map((opt) => {
@@ -151,8 +151,8 @@ export function EditableBankCell({
                   role="option"
                   aria-selected={selected}
                   onClick={() => handleSelect(opt)}
-                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-start transition focus-visible:outline-none focus-visible:bg-[#FAF8F3] ${
-                    selected ? 'bg-[#C9A961]/15' : 'hover:bg-neutral-50'
+                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-start transition focus-visible:outline-none focus-visible:bg-brand-gold-soft ${
+                    selected ? 'bg-brand-gold/15' : 'hover:bg-neutral-50'
                   }`}
                 >
                   <span className="inline-flex items-center gap-2.5">
@@ -162,7 +162,7 @@ export function EditableBankCell({
                     </span>
                   </span>
                   {selected && (
-                    <Check className="size-3.5 text-[#A88840]" aria-hidden="true" />
+                    <Check className="size-3.5 text-brand-gold-text" aria-hidden="true" />
                   )}
                 </button>
               );

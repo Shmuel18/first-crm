@@ -45,7 +45,7 @@ export function ConvertLeadButton({ leadId }: Props) {
         type="button"
         onClick={() => setOpen(true)}
         disabled={pending}
-        className="inline-flex items-center gap-1 text-xs font-medium text-[#A88840] hover:text-[#0A0A0A] disabled:opacity-60 transition"
+        className="inline-flex items-center gap-1 text-xs font-medium text-brand-gold-text hover:text-brand-black disabled:opacity-60 transition"
       >
         {pending ? (
           <Loader2 className="size-3.5 animate-spin" />
@@ -73,7 +73,7 @@ export function ConvertLeadButton({ leadId }: Props) {
                   type="button"
                   onClick={confirmConvert}
                   disabled={pending}
-                  className="h-10 bg-[#C9A961] hover:bg-[#B8985A] text-[#0A0A0A]"
+                  className="h-10 bg-brand-gold hover:bg-brand-gold-dark text-brand-black"
                 >
                   {t('convert')}
                 </Button>

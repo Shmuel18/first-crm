@@ -75,7 +75,7 @@ export default async function SettingsLayout({
 
   return (
     <div className="-mt-6">
-      <div className="bg-[#FAF8F3] text-neutral-900 sticky top-[-1rem] sm:top-[-1.5rem] z-20 shadow-sm -mx-4 px-4 sm:-mx-6 sm:px-6 py-3 border-b border-[#C9A961]/20">
+      <div className="bg-brand-gold-soft text-neutral-900 sticky top-[-1rem] sm:top-[-1.5rem] z-20 shadow-sm -mx-4 px-4 sm:-mx-6 sm:px-6 py-3 border-b border-brand-gold/20">
         <h1 className="font-display text-base font-semibold">{t('pageTitle')}</h1>
         <p className="text-[11px] text-neutral-500 mt-0.5">{t('pageSubtitle')}</p>
       </div>

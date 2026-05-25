@@ -52,7 +52,7 @@ export function Sidebar({ tasksBadge, isAdmin = false }: SidebarProps) {
       // z-30 (same as the topbar — they sit on different rows so they never
       // overlap visually) so the icon-hover tooltips render above the sticky
       // case / documents action bars in the main scroll area (which use z-20).
-      className="hidden md:flex flex-col w-16 bg-[#0A0A0A] fixed start-0 top-16 bottom-0 z-30 border-e border-neutral-900 py-3"
+      className="hidden md:flex flex-col w-16 bg-brand-black fixed start-0 top-16 bottom-0 z-30 border-e border-neutral-900 py-3"
     >
       <nav aria-label={t('primary')} className="flex-1 flex flex-col gap-1 px-2">
         {topItems.map((item) => (
@@ -91,9 +91,9 @@ function SidebarLink({
       aria-current={isActive ? 'page' : undefined}
       className={[
         'group relative h-12 rounded-lg flex items-center justify-center transition-colors',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A961] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black',
         isActive
-          ? 'bg-[#C9A961]/20 text-[#E8C77B]'
+          ? 'bg-brand-gold/20 text-brand-gold-light'
           : 'text-neutral-300 hover:text-neutral-100 hover:bg-neutral-900',
       ].join(' ')}
     >
@@ -102,7 +102,7 @@ function SidebarLink({
       {badge !== undefined && (
         <span
           aria-hidden="true"
-          className="absolute top-1.5 end-1.5 min-w-4 h-4 px-1 rounded-full bg-[#C9A961] text-[#0A0A0A] text-[10px] font-bold flex items-center justify-center"
+          className="absolute top-1.5 end-1.5 min-w-4 h-4 px-1 rounded-full bg-brand-gold text-brand-black text-[10px] font-bold flex items-center justify-center"
         >
           {badge}
         </span>
@@ -110,7 +110,7 @@ function SidebarLink({
 
       <span
         aria-hidden="true"
-        className="absolute start-full ms-2 px-2 py-1 bg-[#0A0A0A] border border-[#C9A961]/40 text-white text-xs rounded whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-visible:opacity-100 group-focus-visible:visible transition pointer-events-none z-50"
+        className="absolute start-full ms-2 px-2 py-1 bg-brand-black border border-brand-gold/40 text-white text-xs rounded whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-visible:opacity-100 group-focus-visible:visible transition pointer-events-none z-50"
       >
         {label}
       </span>

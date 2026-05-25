@@ -67,7 +67,7 @@ export function DashboardViewSelector({
       >
         <Search
           aria-hidden="true"
-          className="absolute end-3 top-1/2 -translate-y-1/2 size-4 text-[#A88840] pointer-events-none"
+          className="absolute end-3 top-1/2 -translate-y-1/2 size-4 text-brand-gold-text pointer-events-none"
         />
         <input
           type="search"
@@ -75,7 +75,7 @@ export function DashboardViewSelector({
           value={query ?? ''}
           onChange={(e) => setQuery(e.target.value || null)}
           placeholder={tf('search')}
-          className="w-full rounded-xl border border-neutral-300 bg-white ps-4 pe-10 py-2.5 text-sm placeholder:text-neutral-500 shadow-sm focus:outline-none focus-visible:border-[#A88840] focus-visible:ring-2 focus-visible:ring-[#A88840]/40 transition"
+          className="w-full rounded-xl border border-neutral-300 bg-white ps-4 pe-10 py-2.5 text-sm placeholder:text-neutral-500 shadow-sm focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 transition"
         />
       </div>
     </div>
@@ -100,10 +100,10 @@ function ViewTab({
       onClick={onClick}
       className={[
         'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840]/50',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50',
         active
-          ? 'bg-[#0A0A0A] text-white shadow-sm'
-          : 'text-neutral-700 hover:text-[#0A0A0A] hover:bg-white/70',
+          ? 'bg-brand-black text-white shadow-sm'
+          : 'text-neutral-700 hover:text-brand-black hover:bg-white/70',
       ].join(' ')}
     >
       <span>{label}</span>
@@ -112,7 +112,7 @@ function ViewTab({
           aria-hidden="true"
           className={[
             'inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[10px] font-bold tabular-nums',
-            active ? 'bg-[#C9A961] text-[#0A0A0A]' : 'bg-neutral-200 text-neutral-700',
+            active ? 'bg-brand-gold text-brand-black' : 'bg-neutral-200 text-neutral-700',
           ].join(' ')}
         >
           {count}

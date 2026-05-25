@@ -48,7 +48,7 @@ export function LeadsTable({ leads }: Props) {
                       'inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium',
                       lead.status === 'converted'
                         ? 'bg-emerald-100 text-emerald-800'
-                        : 'bg-[#C9A961]/15 text-[#A88840]',
+                        : 'bg-brand-gold/15 text-brand-gold-text',
                     ].join(' ')}
                   >
                     {t(`status.${lead.status === 'converted' ? 'converted' : 'active'}`)}

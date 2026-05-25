@@ -125,7 +125,7 @@ export function DriveIntegrationCard({
           {oauthConfigured && !isConnected && (
             <a
               href="/api/auth/google/start"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#C9A961] hover:bg-[#B8985A] text-[#0A0A0A] font-medium text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A88840] focus-visible:ring-offset-2"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-gold hover:bg-brand-gold-dark text-brand-black font-medium text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text focus-visible:ring-offset-2"
             >
               <Link2 className="size-4" aria-hidden="true" />
               {t('connect')}

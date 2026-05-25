@@ -45,7 +45,7 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
     <Button
       type="submit"
       disabled={pending}
-      className="bg-[#0A0A0A] hover:bg-neutral-800 text-white"
+      className="bg-brand-black hover:bg-neutral-800 text-white"
     >
       {pending ? (
         <Loader2 className="size-4 animate-spin" />
@@ -157,7 +157,7 @@ export function IncomeFormDialog({
               type="checkbox"
               name="is_primary"
               defaultChecked={isPrimaryDefault}
-              className="size-4 accent-[#A88840] rounded"
+              className="size-4 accent-brand-gold-text rounded"
             />
             <span className="text-sm text-neutral-700">{tf('isPrimary')}</span>
           </label>

@@ -31,7 +31,7 @@ export async function Topbar() {
   const roleName = (locale === 'en' ? profile?.roleNameEn : profile?.roleNameHe) ?? '';
 
   return (
-    <header className="h-16 bg-[#0A0A0A] text-white sticky top-0 z-30 shadow-md">
+    <header className="h-16 bg-brand-black text-white sticky top-0 z-30 shadow-md">
       <div className="h-full px-4 flex items-center gap-3">
         <Link href="/cases" className="shrink-0" aria-label="Kaufman Finance Group">
           <Image
@@ -48,7 +48,7 @@ export async function Topbar() {
           <Link
             href="/cases/new"
             aria-label={t('newCase')}
-            className="btn-gold inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8C77B] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
+            className="btn-gold inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-light focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black"
           >
             <Plus className="size-4" aria-hidden="true" />
             <span className="hidden md:inline">{t('newCase')}</span>
