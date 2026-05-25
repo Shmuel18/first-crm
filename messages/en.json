@@ -25,6 +25,7 @@
     "notAssigned": "Unassigned",
     "noName": "(No name)",
     "select": "— Select —",
+    "selectDate": "Select date",
     "showing": "Showing",
     "all": "All",
     "more": "More",
@@ -266,6 +267,8 @@
     "actionBar": {
       "backTooltip": "Back",
       "caseLabel": "Case",
+      "openedAt": "Opened",
+      "openedAtTooltip": "Case opening date",
       "withBorrowers": "(Borrowers to be added)",
       "actions": {
         "calculator": "Calculations (LTV, DTI)",
@@ -399,9 +402,16 @@
       "guarantor": "Guarantor",
       "primarySuffix": "Primary",
       "id": "ID",
-      "phone": "Phone",
+      "phone": "Mobile",
+      "landline": "Landline",
       "email": "Email",
-      "address": "Address"
+      "city": "City",
+      "address": "Address",
+      "age": "Age",
+      "whatsapp": "Open in WhatsApp",
+      "call": "Call",
+      "sendEmail": "Send email",
+      "relatedToSellers": "Related to sellers"
     }
   },
   "borrowerForm": {
@@ -424,14 +434,25 @@
       "firstName": "First name",
       "lastName": "Last name",
       "nationalId": "ID number",
+      "gender": "Gender",
+      "idIssueDate": "ID issue date",
+      "idExpiryDate": "ID expiry date",
+      "relationshipInCase": "Relationship between borrowers",
+      "relationshipInCasePlaceholder": "Married / Siblings / Parent-child / Partners",
+      "additionalCitizenships": "Additional citizenships",
+      "additionalCitizenshipsPlaceholder": "UK, USA",
       "phone": "Mobile",
+      "landlinePhone": "Landline",
       "email": "Email",
+      "preferredLanguage": "Preferred language",
       "birthDate": "Date of birth",
       "maritalStatus": "Marital status",
       "childrenCount": "Number of children",
       "address": "Residential address",
+      "city": "City",
       "citizenship": "Citizenship",
       "citizenshipPlaceholder": "Israeli, other...",
+      "foreignCitizenship": "Foreign citizenship",
       "residency": "Residency type",
       "employmentStatus": "Employment status",
       "employerName": "Employer name",
@@ -439,7 +460,17 @@
       "creditRatingPlaceholder": "e.g.: 750",
       "ownsOtherProperty": "Owns other property",
       "ownsOtherPropertyUnknown": "— Unknown —",
+      "relatedToSellers": "Related to sellers",
       "notes": "Notes"
+    },
+    "preferredLanguages": {
+      "he": "Hebrew",
+      "en": "English"
+    },
+    "genders": {
+      "male": "Male",
+      "female": "Female",
+      "other": "Other"
     },
     "submit": {
       "create": "Add borrower"
@@ -486,6 +517,76 @@
     "errors": {
       "unauthorized": "Not authorized",
       "generic": "Error saving. Please try again."
+    }
+  },
+  "incomes": {
+    "blockTitle": "Incomes",
+    "grandTotal": "Case monthly total",
+    "monthlyTotal": "Monthly total",
+    "noBorrowers": "Add a borrower to this case to record incomes.",
+    "empty": "No incomes for this borrower yet.",
+    "addIncome": "Add income",
+    "untyped": "Uncategorised",
+    "primaryBadge": "Primary",
+    "confirmDelete": "Remove this income?",
+    "deleteSuccess": "Income removed",
+    "deleteError": "Could not delete the income",
+    "errors": {
+      "borrowerRequired": "Borrower is required"
+    },
+    "fields": {
+      "type": "Income type",
+      "amountMonthly": "Monthly amount (₪)",
+      "sourceName": "Source / name",
+      "sourceNamePlaceholder": "e.g. employer name or property address",
+      "tenureMonths": "Tenure (months)",
+      "isPrimary": "Borrower's primary income",
+      "notes": "Notes"
+    },
+    "dialog": {
+      "titleNew": "Add income - {name}",
+      "titleEdit": "Edit income - {name}",
+      "add": "Add",
+      "errors": {
+        "unauthorized": "Not authorized",
+        "generic": "Error saving. Please try again."
+      }
+    }
+  },
+  "obligations": {
+    "blockTitle": "Obligations",
+    "grandTotal": "Case monthly repayment total",
+    "monthlyTotal": "Monthly repayment",
+    "remainingTotal": "Outstanding balance",
+    "noBorrowers": "Add a borrower to this case to record obligations.",
+    "empty": "No obligations for this borrower yet.",
+    "addObligation": "Add obligation",
+    "unnamedLender": "Unnamed lender",
+    "monthsLeft": "{count} months left",
+    "confirmDelete": "Remove this obligation?",
+    "deleteSuccess": "Obligation removed",
+    "deleteError": "Could not delete the obligation",
+    "errors": {
+      "borrowerRequired": "Borrower is required"
+    },
+    "fields": {
+      "lender": "Lender",
+      "lenderPlaceholder": "e.g. Bank Leumi, personal loan",
+      "description": "Description",
+      "descriptionPlaceholder": "e.g. car loan, overdraft line",
+      "loanAmount": "Outstanding balance (₪)",
+      "monthlyPayment": "Monthly payment (₪)",
+      "monthsRemaining": "Months remaining",
+      "endDate": "End date"
+    },
+    "dialog": {
+      "titleNew": "Add obligation - {name}",
+      "titleEdit": "Edit obligation - {name}",
+      "add": "Add",
+      "errors": {
+        "unauthorized": "Not authorized",
+        "generic": "Error saving. Please try again."
+      }
     }
   },
   "settings": {

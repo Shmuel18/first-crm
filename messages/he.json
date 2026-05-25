@@ -25,6 +25,7 @@
     "notAssigned": "לא מוקצה",
     "noName": "(ללא שם)",
     "select": "— בחר —",
+    "selectDate": "בחר תאריך",
     "showing": "מציג",
     "all": "כל",
     "more": "עוד",
@@ -266,6 +267,8 @@
     "actionBar": {
       "backTooltip": "חזרה",
       "caseLabel": "תיק",
+      "openedAt": "נפתח",
+      "openedAtTooltip": "תאריך פתיחת התיק",
       "withBorrowers": "(לווים יתווספו)",
       "actions": {
         "calculator": "חישובים (LTV, יחס החזר)",
@@ -399,9 +402,16 @@
       "guarantor": "ערב",
       "primarySuffix": "ראשי",
       "id": "ת״ז",
-      "phone": "טלפון",
+      "phone": "נייד",
+      "landline": "קווי",
       "email": "מייל",
-      "address": "כתובת"
+      "city": "עיר",
+      "address": "כתובת",
+      "age": "גיל",
+      "whatsapp": "פתח בוואטסאפ",
+      "call": "התקשר",
+      "sendEmail": "שלח אימייל",
+      "relatedToSellers": "קשור למוכרים"
     }
   },
   "borrowerForm": {
@@ -424,14 +434,25 @@
       "firstName": "שם פרטי",
       "lastName": "שם משפחה",
       "nationalId": "תעודת זהות",
+      "gender": "מגדר",
+      "idIssueDate": "תאריך הנפקת ת״ז",
+      "idExpiryDate": "תוקף תעודת זהות",
+      "relationshipInCase": "קשר בין הלווים",
+      "relationshipInCasePlaceholder": "נשואים / אחים / הורה-ילד / שותפים",
+      "additionalCitizenships": "אזרחויות נוספות",
+      "additionalCitizenshipsPlaceholder": "בריטניה, ארה״ב",
       "phone": "טלפון נייד",
+      "landlinePhone": "טלפון קווי",
       "email": "אימייל",
+      "preferredLanguage": "שפת תקשורת",
       "birthDate": "תאריך לידה",
       "maritalStatus": "מצב משפחתי",
       "childrenCount": "מספר ילדים",
       "address": "כתובת מגורים",
+      "city": "עיר",
       "citizenship": "אזרחות",
       "citizenshipPlaceholder": "ישראלית, אחר...",
+      "foreignCitizenship": "אזרחות זרה",
       "residency": "סוג תושבות",
       "employmentStatus": "סטטוס תעסוקה",
       "employerName": "שם מעסיק",
@@ -439,7 +460,17 @@
       "creditRatingPlaceholder": "לדוגמה: 750",
       "ownsOtherProperty": "בעלות על דירה נוספת",
       "ownsOtherPropertyUnknown": "— לא ידוע —",
+      "relatedToSellers": "קשר משפחתי למוכרים",
       "notes": "הערות"
+    },
+    "preferredLanguages": {
+      "he": "עברית",
+      "en": "אנגלית"
+    },
+    "genders": {
+      "male": "זכר",
+      "female": "נקבה",
+      "other": "אחר"
     },
     "submit": {
       "create": "הוסף לווה"
@@ -486,6 +517,76 @@
     "errors": {
       "unauthorized": "אין הרשאה",
       "generic": "שגיאה בשמירה. נסה שוב."
+    }
+  },
+  "incomes": {
+    "blockTitle": "הכנסות",
+    "grandTotal": "סה״כ חודשי בתיק",
+    "monthlyTotal": "סה״כ חודשי",
+    "noBorrowers": "הוסף לווה לתיק כדי להזין הכנסות.",
+    "empty": "אין הכנסות ללווה זה.",
+    "addIncome": "הוסף הכנסה",
+    "untyped": "ללא סיווג",
+    "primaryBadge": "ראשי",
+    "confirmDelete": "להסיר את ההכנסה?",
+    "deleteSuccess": "ההכנסה נמחקה",
+    "deleteError": "מחיקת ההכנסה נכשלה",
+    "errors": {
+      "borrowerRequired": "יש לבחור לווה"
+    },
+    "fields": {
+      "type": "סוג הכנסה",
+      "amountMonthly": "סכום חודשי (₪)",
+      "sourceName": "מקור / שם",
+      "sourceNamePlaceholder": "לדוגמה: שם המעסיק או כתובת הנכס",
+      "tenureMonths": "ותק (חודשים)",
+      "isPrimary": "הכנסה ראשית של הלווה",
+      "notes": "הערות"
+    },
+    "dialog": {
+      "titleNew": "הוסף הכנסה - {name}",
+      "titleEdit": "עריכת הכנסה - {name}",
+      "add": "הוסף",
+      "errors": {
+        "unauthorized": "אין הרשאה",
+        "generic": "שגיאה בשמירה. נסה שוב."
+      }
+    }
+  },
+  "obligations": {
+    "blockTitle": "התחייבויות",
+    "grandTotal": "סה״כ החזר חודשי בתיק",
+    "monthlyTotal": "החזר חודשי",
+    "remainingTotal": "יתרת חוב",
+    "noBorrowers": "הוסף לווה לתיק כדי להזין התחייבויות.",
+    "empty": "אין התחייבויות ללווה זה.",
+    "addObligation": "הוסף התחייבות",
+    "unnamedLender": "ללא מלווה רשום",
+    "monthsLeft": "{count} חודשים נותרו",
+    "confirmDelete": "להסיר את ההתחייבות?",
+    "deleteSuccess": "ההתחייבות נמחקה",
+    "deleteError": "מחיקת ההתחייבות נכשלה",
+    "errors": {
+      "borrowerRequired": "יש לבחור לווה"
+    },
+    "fields": {
+      "lender": "מלווה",
+      "lenderPlaceholder": "לדוגמה: בנק לאומי, מימון אישי",
+      "description": "תיאור",
+      "descriptionPlaceholder": "לדוגמה: הלוואת רכב, מסגרת בעו״ש",
+      "loanAmount": "יתרת חוב (₪)",
+      "monthlyPayment": "החזר חודשי (₪)",
+      "monthsRemaining": "חודשים נותרו",
+      "endDate": "תאריך סיום"
+    },
+    "dialog": {
+      "titleNew": "הוסף התחייבות - {name}",
+      "titleEdit": "עריכת התחייבות - {name}",
+      "add": "הוסף",
+      "errors": {
+        "unauthorized": "אין הרשאה",
+        "generic": "שגיאה בשמירה. נסה שוב."
+      }
     }
   },
   "settings": {
