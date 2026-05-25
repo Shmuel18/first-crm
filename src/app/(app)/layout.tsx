@@ -3,6 +3,7 @@ import { getLocale } from 'next-intl/server';
 
 import { Sidebar } from '@/components/layout/sidebar';
 import { Topbar } from '@/components/layout/topbar';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { countPendingTasksForUser } from '@/features/tasks/services/tasks.service';
 import { getDirection, parseLocale } from '@/lib/i18n/direction';
 import { createClient } from '@/lib/supabase/server';
@@ -17,8 +18,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const dir = getDirection(parseLocale(rawLocale));
 
   return (
-    <div className="h-dvh overflow-hidden bg-[#FAFAFA]">
-      <Topbar />
+    <TooltipProvider>
+      <div className="h-dvh overflow-hidden bg-[#FAFAFA]">
+        <Topbar />
       <Sidebar tasksBadge={pendingTasks} isAdmin={isAdminRes.data === true} />
       {/* The inner viewport owns scrolling. Sticky subheaders compensate for
           viewport padding so they pin flush under the fixed topbar. */}
@@ -37,6 +39,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         closeButton
         richColors
       />
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }
