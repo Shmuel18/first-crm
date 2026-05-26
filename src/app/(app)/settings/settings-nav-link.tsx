@@ -6,7 +6,14 @@ import { usePathname } from 'next/navigation';
 type Props = {
   href: string;
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
+  /**
+   * Pre-rendered icon element. Receiving an element (not a component) keeps
+   * the RSC boundary clean — lucide-react 1.16+ wraps icons in forwardRef,
+   * which React refuses to serialize as a function across the Server →
+   * Client boundary. Rendering the icon on the server side gives us a
+   * plain React element (a JSON-serializable object) that survives the trip.
+   */
+  icon: React.ReactNode;
 };
 
 /**
@@ -14,7 +21,7 @@ type Props = {
  * server-rendered SettingsLayout can stay synchronous and i18n-driven —
  * the client component only handles "is this the current page".
  */
-export function SettingsNavLink({ href, label, icon: Icon }: Props) {
+export function SettingsNavLink({ href, label, icon }: Props) {
   const pathname = usePathname();
   const active = pathname === href || pathname.startsWith(href + '/');
 
@@ -27,7 +34,7 @@ export function SettingsNavLink({ href, label, icon: Icon }: Props) {
 
   return (
     <Link href={href} className={className} aria-current={active ? 'page' : undefined}>
-      <Icon className="size-4" />
+      {icon}
       <span>{label}</span>
     </Link>
   );

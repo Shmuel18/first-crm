@@ -113,7 +113,7 @@ export default async function SettingsLayout({
                 key={item.href}
                 href={item.href}
                 label={t(item.labelKey)}
-                icon={Icon}
+                icon={<Icon className="size-4" />}
               />
             );
           })}
