@@ -58,6 +58,942 @@ export type Database = {
           },
         ]
       }
+      audit_log_2025_05: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2025_06: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2025_07: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2025_08: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2025_09: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2025_10: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2025_11: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2025_12: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2026_01: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2026_02: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2026_03: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2026_04: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2026_05: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2026_06: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2026_07: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2026_08: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2026_09: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2026_10: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2026_11: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2026_12: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2027_01: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2027_02: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2027_03: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2027_04: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_2027_05: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log_default: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       banks: {
         Row: {
           color: string
@@ -284,6 +1220,7 @@ export type Database = {
           residency_type: string | null
           updated_at: string
           updated_by: string | null
+          version: number
         }
         Insert: {
           additional_citizenships?: string | null
@@ -318,6 +1255,7 @@ export type Database = {
           residency_type?: string | null
           updated_at?: string
           updated_by?: string | null
+          version?: number
         }
         Update: {
           additional_citizenships?: string | null
@@ -352,6 +1290,7 @@ export type Database = {
           residency_type?: string | null
           updated_at?: string
           updated_by?: string | null
+          version?: number
         }
         Relationships: [
           {
@@ -756,6 +1695,7 @@ export type Database = {
           status_id: string | null
           updated_at: string
           updated_by: string | null
+          version: number
         }
         Insert: {
           assigned_advisor_id?: string | null
@@ -780,6 +1720,7 @@ export type Database = {
           status_id?: string | null
           updated_at?: string
           updated_by?: string | null
+          version?: number
         }
         Update: {
           assigned_advisor_id?: string | null
@@ -804,6 +1745,7 @@ export type Database = {
           status_id?: string | null
           updated_at?: string
           updated_by?: string | null
+          version?: number
         }
         Relationships: [
           {
@@ -2126,17 +3068,55 @@ export type Database = {
         Returns: boolean
       }
       convert_lead_to_case: { Args: { p_lead_id: string }; Returns: string }
+      create_case_with_financials: {
+        Args: {
+          p_assigned_advisor_id: string
+          p_case_type_primary_id: string
+          p_case_type_secondary_id: string
+          p_equity: number
+          p_expected_income: number
+          p_fee_amount: number
+          p_property_value: number
+          p_referrer_name: string
+          p_request_details: string
+          p_requested_mortgage_amount: number
+          p_status_id: string
+        }
+        Returns: string
+      }
+      ensure_audit_log_partitions_ahead: {
+        Args: { p_months?: number }
+        Returns: number
+      }
       generate_case_number: { Args: never; Returns: string }
       has_permission: { Args: { perm_key: string }; Returns: boolean }
       import_cases: { Args: { p_rows: Json }; Returns: Json }
       is_active_profile: { Args: { uid: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       restore_backup_snapshot: { Args: { p_snapshot: Json }; Returns: Json }
+      save_borrower_for_case: {
+        Args: {
+          p_birth_date: string
+          p_borrower_id: string
+          p_case_id: string
+          p_email: string
+          p_first_name: string
+          p_is_primary: boolean
+          p_last_name: string
+          p_national_id: string
+          p_phone: string
+        }
+        Returns: string
+      }
       set_primary_bank: {
         Args: { p_bank_id: string; p_case_id: string; p_user_id: string }
         Returns: undefined
       }
       set_request_audit_context: { Args: never; Returns: undefined }
+      update_borrower_in_case: {
+        Args: { p_borrower_id: string; p_case_id: string; p_patch: Json }
+        Returns: boolean
+      }
       update_case_drive_meta: {
         Args: { p_case_id: string; p_patch: Json }
         Returns: undefined

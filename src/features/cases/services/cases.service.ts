@@ -8,7 +8,7 @@ import type { CaseRow, CaseWithRelations } from '../types';
 // to clients. Excludes embedded relations; CASE_SELECT_WITH_RELATIONS below
 // is the "with relations" variant.
 const CASE_FULL_COLUMNS =
-  'id, case_number, status_id, assigned_advisor_id, primary_borrower_id, case_type_primary_id, case_type_secondary_id, property_value, equity, requested_mortgage_amount, request_details, short_note, referrer_name, case_blocker, insurance_status, is_archived, metadata, deleted_at, created_at, created_by, updated_at, updated_by' as const;
+  'id, case_number, status_id, assigned_advisor_id, primary_borrower_id, case_type_primary_id, case_type_secondary_id, property_value, equity, requested_mortgage_amount, request_details, short_note, referrer_name, case_blocker, insurance_status, is_archived, metadata, version, deleted_at, created_at, created_by, updated_at, updated_by' as const;
 
 const CASE_SELECT_WITH_RELATIONS = `
   ${CASE_FULL_COLUMNS},

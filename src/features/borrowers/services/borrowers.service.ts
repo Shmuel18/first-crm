@@ -7,7 +7,7 @@ import type { BorrowerRow, CaseBorrowerWithBorrower, RoleInCase } from '../types
 // schema additions go through an intentional update here. Used for both the
 // nested embed in listBorrowersForCase and the standalone getBorrowerById.
 const BORROWER_FULL_COLUMNS =
-  'id, first_name, last_name, national_id, id_issue_date, id_expiry_date, birth_date, gender, marital_status, children_count, relationship_in_case, phone, landline_phone, email, preferred_language, address, city, citizenship, additional_citizenships, residency_type, employment_status, employer_name, credit_rating, owns_other_property, related_to_sellers, notes, metadata, deleted_at, created_at, created_by, updated_at, updated_by' as const;
+  'id, first_name, last_name, national_id, id_issue_date, id_expiry_date, birth_date, gender, marital_status, children_count, relationship_in_case, phone, landline_phone, email, preferred_language, address, city, citizenship, additional_citizenships, residency_type, employment_status, employer_name, credit_rating, owns_other_property, related_to_sellers, notes, metadata, version, deleted_at, created_at, created_by, updated_at, updated_by' as const;
 
 export async function listBorrowersForCase(
   caseId: CaseId,
@@ -96,6 +96,8 @@ export type SaveBorrowerInput = {
   borrowerFields: Record<string, unknown>;
   roleInCase: string;
   isPrimary: boolean;
+  /** Kept for API compatibility; the RPC stamps updated_by/created_by from
+   *  auth.uid() server-side. Callers can keep passing this — it's ignored. */
   userId: string;
 };
 
@@ -106,89 +108,64 @@ export type SaveBorrowerResult =
 // Postgres unique-violation code — surfaces when uq_case_borrowers_one_primary
 // (migration 024) rejects a second primary borrower on the same case.
 const PG_UNIQUE_VIOLATION = '23505';
+// Postgres "insufficient privilege" — RPC raises this when the per-case
+// scope check fails (caller can't edit this case OR borrower not on it).
+const PG_INSUFFICIENT_PRIVILEGE = '42501';
 
 /**
- * Persist a borrower for a case in one of two modes:
- *   - borrowerId set    → update existing row + its case_borrowers junction.
- *                         Junction must already exist; missing = unauthorized.
- *   - borrowerId null   → insert a fresh borrower + a junction row.
+ * Persist a borrower for a case atomically via the save_borrower_for_case_full
+ * RPC (migration 065). The RPC handles:
+ *   - INSERT or UPDATE on the borrowers row (deduped by national_id on insert)
+ *   - INSERT or UPDATE on the case_borrowers junction
+ *   - Optional cases.primary_borrower_id sync when is_primary flips
  *
- * On is_primary=true, also syncs cases.primary_borrower_id so the join table
- * and the case row never disagree silently.
+ * Wrapping all three in a single SECURITY DEFINER call gives us:
+ *   - Transactional atomicity — no orphan borrower rows on partial failure
+ *   - Per-case scope check — defends against shared-borrower abuse (migration
+ *     064 made direct UPDATE/INSERT on borrowers admin-only; non-admins must
+ *     go through this RPC)
+ *   - Single round-trip instead of 2-3 sequential statements
  */
 export async function saveBorrowerForCase(
   input: SaveBorrowerInput,
 ): Promise<SaveBorrowerResult> {
   const supabase = await createClient();
-  // Typing the dynamic borrower-fields object would force every caller to
-  // re-spread into Update / Insert shapes — the action layer already gates
-  // these fields with BorrowerFormSchema, so a cast here is bounded.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- bounded by BorrowerFormSchema upstream
-  const fields = input.borrowerFields as any;
 
-  let finalBorrowerId: string;
+  // Migration 065 adds save_borrower_for_case_full. Once `supabase gen types`
+  // runs against a DB that has 065 applied, the cast below disappears — until
+  // then we narrow the rpc-name argument to the literal we know is shipped.
+  const callRpc = supabase.rpc.bind(supabase) as unknown as (
+    fn: 'save_borrower_for_case_full',
+    args: {
+      p_case_id: string;
+      p_borrower_id: string | null;
+      p_fields: unknown;
+      p_role: string;
+      p_is_primary: boolean;
+    },
+  ) => Promise<{ data: string | null; error: { code?: string; message: string } | null }>;
+  const { data: borrowerId, error } = await callRpc('save_borrower_for_case_full', {
+    p_case_id: input.caseId,
+    p_borrower_id: input.borrowerId,
+    p_fields: input.borrowerFields,
+    p_role: input.roleInCase,
+    p_is_primary: input.isPrimary,
+  });
 
-  if (input.borrowerId) {
-    const { data: link } = await supabase
-      .from('case_borrowers')
-      .select('borrower_id')
-      .eq('case_id', input.caseId)
-      .eq('borrower_id', input.borrowerId)
-      .maybeSingle();
-    if (!link) return { ok: false, error: 'unauthorized' };
-
-    const { data: updated, error } = await supabase
-      .from('borrowers')
-      .update({ ...fields, updated_by: input.userId })
-      .eq('id', input.borrowerId)
-      .select('id');
-    if (error) return { ok: false, error: 'unknown' };
-    if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
-
-    const { error: linkError } = await supabase
-      .from('case_borrowers')
-      .update({ role_in_case: input.roleInCase, is_primary: input.isPrimary })
-      .eq('case_id', input.caseId)
-      .eq('borrower_id', input.borrowerId);
-    if (linkError) {
-      if (linkError.code === PG_UNIQUE_VIOLATION) {
-        return { ok: false, error: 'primary_exists' };
-      }
-      return { ok: false, error: 'unknown' };
+  if (error) {
+    if (error.code === PG_UNIQUE_VIOLATION) {
+      // uq_case_borrowers_one_primary — promoting a second primary borrower.
+      return { ok: false, error: 'primary_exists' };
     }
-
-    finalBorrowerId = input.borrowerId;
-  } else {
-    const { data: newBorrower, error } = await supabase
-      .from('borrowers')
-      .insert({ ...fields, created_by: input.userId, updated_by: input.userId })
-      .select('id')
-      .single();
-    if (error || !newBorrower) return { ok: false, error: 'unknown' };
-
-    const { error: linkError } = await supabase.from('case_borrowers').insert({
-      case_id: input.caseId,
-      borrower_id: newBorrower.id,
-      role_in_case: input.roleInCase,
-      is_primary: input.isPrimary,
-    });
-    if (linkError) {
-      if (linkError.code === PG_UNIQUE_VIOLATION) {
-        return { ok: false, error: 'primary_exists' };
-      }
-      return { ok: false, error: 'unknown' };
+    if (error.code === PG_INSUFFICIENT_PRIVILEGE) {
+      return { ok: false, error: 'unauthorized' };
     }
-
-    finalBorrowerId = newBorrower.id;
+    console.error('[saveBorrowerForCase] rpc error', error);
+    return { ok: false, error: 'unknown' };
+  }
+  if (!borrowerId) {
+    return { ok: false, error: 'unknown' };
   }
 
-  if (input.isPrimary) {
-    const { error: primaryErr } = await supabase
-      .from('cases')
-      .update({ primary_borrower_id: finalBorrowerId })
-      .eq('id', input.caseId);
-    if (primaryErr) return { ok: false, error: 'unknown' };
-  }
-
-  return { ok: true, borrowerId: finalBorrowerId };
+  return { ok: true, borrowerId };
 }
