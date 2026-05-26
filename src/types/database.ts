@@ -2446,6 +2446,7 @@ export type Database = {
           phone_main: string | null
           primary_color: string
           secondary_color: string
+          sla_status_thresholds: Json
           task_reminder_days_before: number
           tax_id: string | null
           timezone: string
@@ -2486,6 +2487,7 @@ export type Database = {
           phone_main?: string | null
           primary_color?: string
           secondary_color?: string
+          sla_status_thresholds?: Json
           task_reminder_days_before?: number
           tax_id?: string | null
           timezone?: string
@@ -2526,6 +2528,7 @@ export type Database = {
           phone_main?: string | null
           primary_color?: string
           secondary_color?: string
+          sla_status_thresholds?: Json
           task_reminder_days_before?: number
           tax_id?: string | null
           timezone?: string

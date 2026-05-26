@@ -1,6 +1,7 @@
 import {
   Bell,
   Building2,
+  Clock,
   HardDrive,
   KeyRound,
   Plug,
@@ -34,6 +35,12 @@ const NAV: SettingsNavItem[] = [
     href: '/settings/office',
     labelKey: 'office',
     icon: Building2,
+    adminOnly: true,
+  },
+  {
+    href: '/settings/sla',
+    labelKey: 'sla',
+    icon: Clock,
     adminOnly: true,
   },
   {

@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/cleanup-orphaned-blobs",
       "schedule": "30 3 * * *"
+    },
+    {
+      "path": "/api/cron/status-sla-check",
+      "schedule": "0 5 * * *"
     }
   ]
 }

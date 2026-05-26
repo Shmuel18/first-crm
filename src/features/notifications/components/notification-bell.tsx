@@ -48,6 +48,15 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
   }
 
   const message = (n: Notification): string => {
+    if (n.type === 'case_status_overdue') {
+      return t('message.case_status_overdue', {
+        caseNumber: n.data.caseNumber ?? '',
+        statusName:
+          (locale === 'he' ? n.data.statusNameHe : n.data.statusNameEn) ?? '',
+        days: n.data.daysInStatus ?? 0,
+        threshold: n.data.threshold ?? 0,
+      });
+    }
     const actor = n.data.actorName || t('someone');
     const task = n.data.taskTitle || t('aTask');
     return t(`message.${n.type}`, { actor, task });

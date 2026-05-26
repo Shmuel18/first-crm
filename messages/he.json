@@ -742,6 +742,7 @@
       "security": "אבטחה",
       "notifications": "התראות",
       "office": "פרטי המשרד",
+      "sla": "זמני סטטוס",
       "roles": "תפקידים והרשאות",
       "integrations": "אינטגרציות",
       "import": "ייבוא נתונים",
@@ -792,6 +793,17 @@
         "city": "עיר",
         "postalCode": "מיקוד"
       },
+      "errors": {
+        "generic": "השמירה נכשלה. נסה שוב."
+      }
+    },
+    "sla": {
+      "title": "זמני סטטוס",
+      "subtitle": "כמה ימים מותר לתיק להישאר בכל סטטוס לפני שתוצג התראה",
+      "intro": "השאר שדה ריק כדי לבטל את ההתראה לסטטוס מסוים. כשהתיק עובר את הסף, יישלחו התראות בפעמון ליועץ ולמנהל, ויחזרו אחת לשבוע כל עוד התיק נשאר באותו סטטוס.",
+      "placeholder": "—",
+      "daysUnit": "ימים",
+      "saved": "זמני הסטטוס נשמרו",
       "errors": {
         "generic": "השמירה נכשלה. נסה שוב."
       }
@@ -1206,7 +1218,8 @@
     "aTask": "משימה",
     "message": {
       "task_assigned": "{actor} הקצה לך משימה: {task}",
-      "task_completed": "{actor} השלים משימה שהקצית: {task}"
+      "task_completed": "{actor} השלים משימה שהקצית: {task}",
+      "case_status_overdue": "תיק {caseNumber} בסטטוס \"{statusName}\" כבר {days} ימים (סף: {threshold})"
     }
   },
   "email": {

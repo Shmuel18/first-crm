@@ -742,6 +742,7 @@
       "security": "Security",
       "notifications": "Notifications",
       "office": "Office details",
+      "sla": "Status SLAs",
       "roles": "Roles & permissions",
       "integrations": "Integrations",
       "import": "Data import",
@@ -792,6 +793,17 @@
         "city": "City",
         "postalCode": "Postal code"
       },
+      "errors": {
+        "generic": "Save failed. Please try again."
+      }
+    },
+    "sla": {
+      "title": "Status SLAs",
+      "subtitle": "How many days a case may sit in each status before an alert fires",
+      "intro": "Leave a field empty to disable the alert for that status. When a case exceeds the threshold, bell notifications are sent to the advisor and the manager, and repeat once a week while the case stays in the same status.",
+      "placeholder": "—",
+      "daysUnit": "days",
+      "saved": "Status SLAs saved",
       "errors": {
         "generic": "Save failed. Please try again."
       }
@@ -1206,7 +1218,8 @@
     "aTask": "a task",
     "message": {
       "task_assigned": "{actor} assigned you a task: {task}",
-      "task_completed": "{actor} completed a task you assigned: {task}"
+      "task_completed": "{actor} completed a task you assigned: {task}",
+      "case_status_overdue": "Case {caseNumber} has been in \"{statusName}\" for {days} days (threshold: {threshold})"
     }
   },
   "email": {
