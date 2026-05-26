@@ -41,6 +41,7 @@ type ActionBarProps = {
   isArchived: boolean;
   canArchive: boolean;
   canRestore: boolean;
+  canDelete: boolean;
 };
 
 export async function CaseActionBar({
@@ -59,6 +60,7 @@ export async function CaseActionBar({
   isArchived,
   canArchive,
   canRestore,
+  canDelete,
 }: ActionBarProps) {
   const t = await getTranslations('case.actionBar');
   const tc = await getTranslations('common');
@@ -145,6 +147,7 @@ export async function CaseActionBar({
             isArchived={isArchived}
             canArchive={canArchive}
             canRestore={canRestore}
+            canDelete={canDelete}
           />
         </div>
       </div>

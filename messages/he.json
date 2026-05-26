@@ -329,12 +329,18 @@
         "generatePdf": "הפק PDF לבנק",
         "more": "עוד",
         "archive": "העבר לארכיון",
-        "restore": "שחזר מארכיון"
+        "restore": "שחזר מארכיון",
+        "delete": "מחק תיק"
       },
       "archiveSuccess": "התיק הועבר לארכיון",
       "restoreSuccess": "התיק שוחזר מהארכיון",
       "archiveError": "הפעולה נכשלה. נסה שוב.",
-      "archiveUnauthorized": "אין לך הרשאה לפעולה זו"
+      "archiveUnauthorized": "אין לך הרשאה לפעולה זו",
+      "deleteSuccess": "התיק נמחק",
+      "deleteDialog": {
+        "title": "מחיקת תיק",
+        "description": "התיק יוסתר מהדשבורד ויעבור לארכיון לתקופת השחזור. שחזור לאחר מכן דורש פנייה למפתח."
+      }
     },
     "scheduleMeeting": {
       "dialogTitle": "קביעת פגישה",

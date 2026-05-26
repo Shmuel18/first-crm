@@ -66,10 +66,11 @@ export default async function CaseDetailPage({ params }: Props) {
   // view_case_fee saw an empty UI block — but the fee_amount + expected_income
   // values were still loaded by getCaseById and shipped down in the RSC
   // payload, readable via view-source. Aligning the gate closes the leak.
-  const [canSeeFinancials, canArchive, canRestore] = await Promise.all([
+  const [canSeeFinancials, canArchive, canRestore, canDelete] = await Promise.all([
     userHasPermission('view_case_fee'),
     userHasPermission('archive_case'),
     userHasPermission('restore_archived_case'),
+    userHasPermission('delete_case'),
   ]);
 
   const borrowerNames =
@@ -106,6 +107,7 @@ export default async function CaseDetailPage({ params }: Props) {
         isArchived={caseData.is_archived}
         canArchive={canArchive}
         canRestore={canRestore}
+        canDelete={canDelete}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
