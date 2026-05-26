@@ -45,14 +45,13 @@ const SECURITY_HEADERS = [
 const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
-      // Document uploads cap at 20 MB (document.schema MAX_FILE_SIZE_BYTES).
-      // Add a 1 MB cushion for multipart envelope + form fields. Without
-      // this, the action body limit defaults to 1 MB and uploads fail with
-      // an opaque error before reaching our validation.
-      // TODO: longer-term, switch to direct-to-storage uploads (Supabase
-      // Storage signed-upload URLs or a streaming route handler) so the
-      // 20 MB never hits Server Action memory.
-      bodySizeLimit: '21mb',
+      // Document uploads now use direct-to-storage via Supabase signed-upload
+      // URLs (batch 25). Bytes go browser → Storage without passing through
+      // Server Action memory; finalizeUploadAction only carries metadata.
+      // 2 MB is comfortable headroom for any remaining Server Action payload
+      // (form fields, JSON bodies) without inviting accidental large posts
+      // back into the Vercel function memory budget.
+      bodySizeLimit: '2mb',
     },
   },
   // Bank logos used to come from upload.wikimedia.org via remotePatterns;

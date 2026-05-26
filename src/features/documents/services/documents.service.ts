@@ -1,7 +1,3 @@
-import {
-  deleteCaseDocumentFromDrive,
-  uploadCaseDocumentToDrive,
-} from '@/features/integrations/services/drive-case-uploader';
 import { createClient } from '@/lib/supabase/server';
 import type { CaseId } from '@/lib/types/branded';
 
@@ -86,17 +82,6 @@ export async function signedUrlFor(
   return data.signedUrl;
 }
 
-const BUCKET = 'case-documents';
-
-export type UploadBlobsResult =
-  | {
-      ok: true;
-      storagePath: string;
-      driveFileId: string | null;
-      driveFileUrl: string | null;
-    }
-  | { ok: false; error: 'storage'; message: string };
-
 export type UploadBlobsContext = {
   caseNumber: string;
   familyName: string;
@@ -105,8 +90,8 @@ export type UploadBlobsContext = {
 
 /**
  * Read the case + category + (optional) borrower in parallel and assemble
- * the UploadBlobsContext that drives Drive folder naming. Lives next to
- * uploadDocumentBlobs because the two are always called as a pair.
+ * the UploadBlobsContext that drives Drive folder naming. Used by both
+ * phases of the direct-to-storage upload flow (prepare + finalize).
  *
  * Returns `null` when the case row can't be read — usually means the
  * caller doesn't have permission (RLS denied) or the id is wrong. The
@@ -142,94 +127,4 @@ export async function resolveUploadContext(
     familyName,
     driveFolder: category.data?.drive_folder ?? null,
   };
-}
-
-/**
- * Blob-first upload: stage the file to Supabase Storage (primary) and Drive
- * (secondary, best-effort) using a pre-generated documentId. The caller
- * INSERTs the documents row AFTER this resolves, passing the returned
- * storage_path / drive_* refs. If that INSERT then fails, rollbackBlobs
- * cleans up - either way we never leave an empty document row.
- */
-export async function uploadDocumentBlobs(
-  documentId: string,
-  caseId: string,
-  file: File,
-  ctx: UploadBlobsContext,
-): Promise<UploadBlobsResult> {
-  const supabase = await createClient();
-  const path = storagePathFor(caseId, documentId, file.name);
-
-  const { error: storageErr } = await supabase.storage
-    .from(BUCKET)
-    .upload(path, file, { contentType: file.type, upsert: false });
-  if (storageErr) return { ok: false, error: 'storage', message: storageErr.message };
-
-  // Post-upload size verification. Supabase storage is S3-backed and very
-  // rarely commits a truncated object — but a mid-transfer truncation that
-  // *does* commit would silently land a partial PDF that staff later opens.
-  // .list() returns the stored object's metadata.size; mismatch → reject
-  // and remove the orphan. Fail-open on list-errors: an unverifiable upload
-  // is better than rejecting every legitimate one when the metadata API
-  // hiccups.
-  const folder = path.substring(0, path.lastIndexOf('/'));
-  const fileName = path.substring(path.lastIndexOf('/') + 1);
-  const { data: listed, error: listErr } = await supabase.storage
-    .from(BUCKET)
-    .list(folder, { search: fileName });
-  if (listErr) {
-    console.warn('[uploadDocumentBlobs] post-upload size check skipped', listErr);
-  } else {
-    const entry = listed?.find((e) => e.name === fileName);
-    const storedSize =
-      entry?.metadata && typeof entry.metadata === 'object' && 'size' in entry.metadata
-        ? Number((entry.metadata as { size: unknown }).size)
-        : null;
-    if (storedSize !== null && Number.isFinite(storedSize) && storedSize !== file.size) {
-      await supabase.storage
-        .from(BUCKET)
-        .remove([path])
-        .catch(() => undefined);
-      return {
-        ok: false,
-        error: 'storage',
-        message: `size mismatch: stored=${storedSize} expected=${file.size}`,
-      };
-    }
-  }
-
-  let driveFileId: string | null = null;
-  let driveFileUrl: string | null = null;
-  if (ctx.driveFolder) {
-    const buf = await file.arrayBuffer();
-    const out = await uploadCaseDocumentToDrive({
-      caseId,
-      caseNumber: ctx.caseNumber,
-      familyName: ctx.familyName,
-      driveFolder: ctx.driveFolder,
-      file: { content: buf, name: file.name, mimeType: file.type },
-    });
-    if (out.ok) {
-      driveFileId = out.driveFileId;
-      driveFileUrl = out.webViewLink;
-    }
-  }
-
-  return { ok: true, storagePath: path, driveFileId, driveFileUrl };
-}
-
-/**
- * Compensating cleanup if the documents INSERT after uploadDocumentBlobs
- * fails. Both calls are best-effort - we already lost atomicity once the
- * blobs landed; this just minimizes orphan cost.
- */
-export async function rollbackDocumentBlobs(
-  storagePath: string,
-  driveFileId: string | null,
-): Promise<void> {
-  const supabase = await createClient();
-  await supabase.storage.from(BUCKET).remove([storagePath]).catch(() => undefined);
-  if (driveFileId) {
-    await deleteCaseDocumentFromDrive(driveFileId);
-  }
 }

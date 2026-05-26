@@ -131,23 +131,13 @@ export async function saveBorrowerForCase(
 ): Promise<SaveBorrowerResult> {
   const supabase = await createClient();
 
-  // Migration 065 adds save_borrower_for_case_full. Once `supabase gen types`
-  // runs against a DB that has 065 applied, the cast below disappears — until
-  // then we narrow the rpc-name argument to the literal we know is shipped.
-  const callRpc = supabase.rpc.bind(supabase) as unknown as (
-    fn: 'save_borrower_for_case_full',
-    args: {
-      p_case_id: string;
-      p_borrower_id: string | null;
-      p_fields: unknown;
-      p_role: string;
-      p_is_primary: boolean;
-    },
-  ) => Promise<{ data: string | null; error: { code?: string; message: string } | null }>;
-  const { data: borrowerId, error } = await callRpc('save_borrower_for_case_full', {
+  const { data: borrowerId, error } = await supabase.rpc('save_borrower_for_case_full', {
     p_case_id: input.caseId,
-    p_borrower_id: input.borrowerId,
-    p_fields: input.borrowerFields,
+    // p_borrower_id is nullable in the SQL (NULL = insert new) but the
+    // generated types narrow it to `string`. The function explicitly
+    // handles NULL — keep that contract with an `as string` cast.
+    p_borrower_id: input.borrowerId as string,
+    p_fields: input.borrowerFields as never,
     p_role: input.roleInCase,
     p_is_primary: input.isPrimary,
   });

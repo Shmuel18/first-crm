@@ -4,11 +4,13 @@ import { CasesCardList } from '@/features/cases/components/cases-card-list';
 import { CasesEmptyState } from '@/features/cases/components/cases-empty-state';
 import { CasesTable } from '@/features/cases/components/cases-table';
 import { DashboardFiltersBar } from '@/features/cases/components/dashboard-filters-bar';
+import { DashboardPagination } from '@/features/cases/components/dashboard-pagination';
 import { DashboardViewSelector } from '@/features/cases/components/dashboard-view-selector';
 import { DashboardWelcomeBanner } from '@/features/cases/components/dashboard-welcome-banner';
 import { listBankOptions } from '@/features/case-banks/services/case-banks.service';
 import {
   filterCases,
+  parseCasePage,
   parseCaseView,
   parseDashboardFilters,
 } from '@/features/cases/domain/case-filters';
@@ -18,7 +20,7 @@ import {
   listAdvisorOptions,
   listCaseStatusOptions,
 } from '@/features/cases/services/case-lookups.service';
-import { getCaseViewCounts, listCases } from '@/features/cases/services/cases.service';
+import { getCaseViewCounts, listCasesPaged } from '@/features/cases/services/cases.service';
 import { userHasPermission } from '@/lib/auth/permissions';
 import { LeadsCardList } from '@/features/leads/components/leads-card-list';
 import { LeadsTable } from '@/features/leads/components/leads-table';
@@ -33,23 +35,21 @@ function EmptyMessage({ text }: { text: string }) {
   return <p className="px-6 py-12 text-center text-sm text-neutral-500">{text}</p>;
 }
 
-// Safety bound on the dashboard fetch. Kept at 1000 for the MVP — Kaufman
-// runs ~80 active cases, so a full-list-in-one-go UX beats cursor pagination
-// at this scale (the user expects to scroll the whole pipeline at a glance).
-// Audit-driven SQL pagination is the right move past ~300 cases; document
-// the threshold here so the next person doesn't reflexively re-flag it.
-// The common advisor/stage filters are pushed to SQL so the fetched set
-// shrinks when they're active.
-const DASHBOARD_CASE_CAP = 1000;
+// Page size for SQL pagination. 50 picks up the next round of the pipeline
+// without a noticeable hop on scroll — Kaufman runs ~80 active cases, so
+// most days the second page is empty and the pager doesn't render at all.
+// Tune up if the dashboard ever holds substantially more cases per advisor.
+const DASHBOARD_PAGE_SIZE = 50;
 
 export default async function CasesListPage({ searchParams }: Props) {
   const sp = await searchParams;
   const view = parseCaseView(sp);
   const filters = parseDashboardFilters(sp);
   const sort = parseCaseSort(sp);
+  const page = parseCasePage(sp);
 
   const [
-    activeCases,
+    activePage,
     profile,
     statusOptions,
     bankOptions,
@@ -59,11 +59,12 @@ export default async function CasesListPage({ searchParams }: Props) {
     canViewAll,
     t,
   ] = await Promise.all([
-    listCases({
+    listCasesPaged({
       isArchived: false,
       advisorId: filters.advisor ?? undefined,
       statusId: filters.stage ?? undefined,
-      limit: DASHBOARD_CASE_CAP,
+      page,
+      pageSize: DASHBOARD_PAGE_SIZE,
     }),
     getCurrentProfileName(),
     listCaseStatusOptions(),
@@ -97,16 +98,25 @@ export default async function CasesListPage({ searchParams }: Props) {
       );
   } else {
     const isArchive = view === 'archive';
-    const cases = isArchive
-      ? await listCases({
+    const pageRes = isArchive
+      ? await listCasesPaged({
           isArchived: true,
           advisorId: filters.advisor ?? undefined,
           statusId: filters.stage ?? undefined,
-          limit: DASHBOARD_CASE_CAP,
+          page,
+          pageSize: DASHBOARD_PAGE_SIZE,
         })
-      : activeCases;
+      : activePage;
+    const cases = pageRes.rows;
+    const totalCount = pageRes.totalCount;
+    const totalPages = Math.max(1, Math.ceil(totalCount / DASHBOARD_PAGE_SIZE));
     // In the archive, "hide closed & frozen" would hide exactly the cases that
     // were archived (completed / on-hold), so don't apply it there.
+    //
+    // Derived filters (stuck, hideClosedFrozen) and sort run on the current
+    // page only — at 50 rows/page the user can scan a page and move on.
+    // Pagination tracks the SQL count, not the derived-visible count, so
+    // "page 2 of 3" stays stable across re-filters.
     const visible = applySort(
       filterCases(cases, isArchive ? { ...filters, hideClosedFrozen: false } : filters),
       sort,
@@ -121,11 +131,22 @@ export default async function CasesListPage({ searchParams }: Props) {
         isArchiveView={isArchive}
       />
     );
+    const pager = (
+      <DashboardPagination
+        currentPage={page}
+        totalPages={totalPages}
+        pageSize={DASHBOARD_PAGE_SIZE}
+        totalCount={totalCount}
+      />
+    );
     scrollContent =
       cases.length === 0 ? (
         <CasesEmptyState />
       ) : visible.length === 0 ? (
-        <EmptyMessage text={t('filters.noMatches')} />
+        <>
+          <EmptyMessage text={t('filters.noMatches')} />
+          {pager}
+        </>
       ) : (
         <>
           {/* Cards up to ~iPad landscape; the table needs ~1100px of comfort
@@ -143,6 +164,7 @@ export default async function CasesListPage({ searchParams }: Props) {
               advisorOptions={advisorOptions}
             />
           </div>
+          {pager}
         </>
       );
   }

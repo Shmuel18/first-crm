@@ -11,11 +11,21 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-import { exportCasesPdfAction } from '../actions/export-cases-pdf';
-import { exportCasesXlsxAction } from '../actions/export-cases-xlsx';
-
 type Format = 'xlsx' | 'pdf';
 
+/**
+ * Exports trigger the streaming Route Handler at /api/exports/cases?format=...
+ * (batch 26). Successful responses arrive as binary with a Content-Disposition
+ * header — we surface them via an in-page anchor click so the browser triggers
+ * a native download. Failures arrive as JSON (`{ ok: false, error: '...' }`)
+ * which we map to a translated message inline.
+ *
+ * Why fetch + blob instead of `window.location.href = …`:
+ *   - We need to surface auth / rate-limit errors as toasts, not as a
+ *     mysterious browser-error page.
+ *   - The dropdown should stay closed and the user remain on the dashboard
+ *     after a successful download.
+ */
 export function DashboardExportButtons() {
   const t = useTranslations('dashboard.savedViews');
   const [isPending, startTransition] = useTransition();
@@ -26,19 +36,45 @@ export function DashboardExportButtons() {
     setError(null);
     startTransition(async () => {
       try {
-        const result =
-          format === 'xlsx' ? await exportCasesXlsxAction() : await exportCasesPdfAction();
-        if (result.ok) {
-          downloadBase64(result.base64, result.filename, result.mimeType);
-        } else {
+        const res = await fetch(`/api/exports/cases?format=${format}`, {
+          method: 'GET',
+        });
+        if (!res.ok) {
+          let errorKey = 'unknown';
+          try {
+            const body = (await res.json()) as { error?: string };
+            errorKey = body?.error ?? 'unknown';
+          } catch {
+            // Non-JSON error body (server crash). Fall through to generic message.
+          }
           setError(
-            result.error === 'empty'
+            errorKey === 'empty'
               ? t('exportEmpty')
-              : result.error === 'rate_limited'
+              : errorKey === 'rate_limited'
                 ? t('exportRateLimited')
                 : t('exportFailed'),
           );
+          return;
         }
+
+        // Pull the filename from Content-Disposition; the server includes
+        // both `filename=` and `filename*=UTF-8''...` for non-ASCII safety.
+        const cd = res.headers.get('Content-Disposition') ?? '';
+        const fromStar = /filename\*=UTF-8''([^;]+)/i.exec(cd);
+        const fromPlain = /filename="([^"]+)"/i.exec(cd);
+        const filename = fromStar
+          ? decodeURIComponent(fromStar[1] ?? '')
+          : fromPlain?.[1] ?? `cases.${format}`;
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
       } catch {
         setError(t('exportFailed'));
       }
@@ -100,21 +136,4 @@ export function DashboardExportButtons() {
       )}
     </div>
   );
-}
-
-function downloadBase64(base64: string, filename: string, mimeType: string): void {
-  const byteChars = atob(base64);
-  const bytes = new Uint8Array(byteChars.length);
-  for (let i = 0; i < byteChars.length; i++) {
-    bytes[i] = byteChars.charCodeAt(i);
-  }
-  const blob = new Blob([bytes], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
 }

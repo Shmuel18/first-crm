@@ -3093,6 +3093,7 @@ export type Database = {
       import_cases: { Args: { p_rows: Json }; Returns: Json }
       is_active_profile: { Args: { uid: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      layout_bootstrap: { Args: never; Returns: Json }
       restore_backup_snapshot: { Args: { p_snapshot: Json }; Returns: Json }
       save_borrower_for_case: {
         Args: {
@@ -3105,6 +3106,16 @@ export type Database = {
           p_last_name: string
           p_national_id: string
           p_phone: string
+        }
+        Returns: string
+      }
+      save_borrower_for_case_full: {
+        Args: {
+          p_borrower_id: string
+          p_case_id: string
+          p_fields: Json
+          p_is_primary: boolean
+          p_role: string
         }
         Returns: string
       }

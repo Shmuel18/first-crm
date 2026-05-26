@@ -1,8 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useRef, useState } from 'react';
 
 import { Loader2, Upload as UploadIcon, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -19,14 +17,10 @@ import {
 } from '@/components/ui/dialog';
 import { FormField, NativeSelect } from '@/components/shared/form-fields';
 
-import { uploadDocumentAction } from '../actions/upload-document';
+import { finalizeUploadAction } from '../actions/finalize-upload';
+import { prepareUploadAction } from '../actions/prepare-upload';
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE_BYTES } from '../schemas/document.schema';
-import {
-  DOCUMENT_ACTION_INITIAL,
-  type DocumentActionState,
-  type DocumentCategoryRow,
-  type DriveFolder,
-} from '../types';
+import { type DocumentCategoryRow, type DriveFolder } from '../types';
 
 type Props = {
   open: boolean;
@@ -37,20 +31,16 @@ type Props = {
   defaultFolder?: DriveFolder | null;
 };
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  const t = useTranslations('documents.uploadModal');
-  return (
-    <Button
-      type="submit"
-      disabled={pending}
-      className="bg-brand-black hover:bg-neutral-800 text-white h-10 min-w-28"
-    >
-      {pending ? <Loader2 className="size-4 animate-spin" /> : t('submit')}
-    </Button>
-  );
-}
-
+/**
+ * Direct-to-storage upload (batch 25):
+ *
+ *   1. prepareUploadAction() returns a signed upload URL + documentId.
+ *   2. The browser PUTs the file directly to Supabase Storage — bytes never
+ *      pass through the Server Action body (no 21 MB limit, no function
+ *      memory pressure).
+ *   3. finalizeUploadAction() does the magic-byte sniff (Range GET of first
+ *      4 KB), the Drive secondary upload, and the documents INSERT.
+ */
 export function UploadDocumentModal({
   open,
   onOpenChange,
@@ -61,13 +51,16 @@ export function UploadDocumentModal({
 }: Props) {
   const t = useTranslations('documents.uploadModal');
   const tErr = useTranslations('documents.errors');
+  const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [clientFileError, setClientFileError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const [genericError, setGenericError] = useState<string | null>(null);
 
   // Mirror of the server-side guards so the user sees the error before a
-  // 20 MB file uploads in full and gets rejected by the action.
+  // 20 MB file uploads in full and gets rejected post-upload.
   const validateFile = (file: File): string | null => {
     if (file.size === 0) return tErr('fileRequired');
     if (file.size > MAX_FILE_SIZE_BYTES) return tErr('fileTooLarge');
@@ -88,40 +81,108 @@ export function UploadDocumentModal({
       setClientFileError(err);
       return;
     }
-    // Programmatically set the file input via DataTransfer
     const dt = new DataTransfer();
     dt.items.add(dropped);
     fileInputRef.current.files = dt.files;
     setFileName(dropped.name);
   };
 
-  const [state, formAction] = useActionState<DocumentActionState, FormData>(
-    uploadDocumentAction,
-    DOCUMENT_ACTION_INITIAL,
-  );
+  const mapErrorMessage = (key: string | undefined): string => {
+    if (!key) return tErr('uploadFailed');
+    if (key === 'fileRequired') return tErr('fileRequired');
+    if (key === 'fileTooLarge') return tErr('fileTooLarge');
+    if (key === 'fileTypeNotAllowed') return tErr('fileTypeNotAllowed');
+    return tErr('uploadFailed');
+  };
 
-  // On success, ask the parent to close. The parent should remount the
-  // modal via `key={String(open)}` so all internal state (form values,
-  // useActionState result, refs) resets cleanly without us needing to
-  // call setState here - which would trigger react-hooks/set-state-in-effect.
-  useEffect(() => {
-    if (state.ok === true) onOpenChange(false);
-  }, [state, onOpenChange]);
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>): Promise<void> {
+    e.preventDefault();
+    if (pending) return;
+    setGenericError(null);
+
+    const form = e.currentTarget;
+    const file = fileInputRef.current?.files?.[0];
+    if (!file) {
+      setClientFileError(tErr('fileRequired'));
+      return;
+    }
+
+    const formData = new FormData(form);
+    const categoryId = String(formData.get('category_id') ?? '');
+    const borrowerIdRaw = String(formData.get('borrower_id') ?? '');
+    const expiryRaw = String(formData.get('expiry_date') ?? '');
+    const notesRaw = String(formData.get('notes') ?? '');
+
+    setPending(true);
+    try {
+      // ── Phase 1: ask the server for a signed upload URL ─────────────
+      const prep = await prepareUploadAction({
+        caseId,
+        fileName: file.name,
+        fileSize: file.size,
+        mimeType: file.type,
+        categoryId,
+        borrowerId: borrowerIdRaw || null,
+      });
+      if (!prep.ok) {
+        setGenericError(
+          prep.error === 'unauthorized'
+            ? tErr('uploadFailed')
+            : mapErrorMessage(prep.message),
+        );
+        return;
+      }
+
+      // ── Phase 2: browser uploads bytes directly to Storage ──────────
+      const putRes = await fetch(prep.signedUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': file.type,
+          // Supabase signed-upload URLs accept the token via Authorization header.
+          // The signed URL embeds the token too, so this header is sometimes
+          // redundant — keeping it explicit makes the intent clear.
+          'x-upsert': 'false',
+        },
+        body: file,
+      });
+      if (!putRes.ok) {
+        setGenericError(tErr('uploadFailed'));
+        return;
+      }
+
+      // ── Phase 3: finalize — magic-byte check + Drive + DB row ───────
+      const final = await finalizeUploadAction({
+        documentId: prep.documentId,
+        caseId,
+        storagePath: prep.path,
+        fileName: prep.safeFileName,
+        fileSize: file.size,
+        mimeType: file.type,
+        categoryId,
+        borrowerId: borrowerIdRaw || null,
+        expiryDate: expiryRaw || null,
+        notes: notesRaw || null,
+      });
+      if (!final.ok) {
+        setGenericError(mapErrorMessage(final.message));
+        return;
+      }
+
+      // Success — close the modal. The parent should remount via
+      // key={String(open)} so all internal state resets cleanly.
+      onOpenChange(false);
+    } catch {
+      setGenericError(tErr('uploadFailed'));
+    } finally {
+      setPending(false);
+    }
+  }
 
   const filteredCategories = defaultFolder
     ? categories.filter((c) => c.drive_folder === defaultFolder)
     : categories;
 
   const defaultCategoryId = filteredCategories[0]?.id ?? '';
-
-  const fieldErrors =
-    state.ok === false && state.error === 'validation' ? state.fieldErrors ?? {} : {};
-  const genericError =
-    state.ok === false && state.error !== 'idle' && state.error !== 'validation'
-      ? state.message ?? tErr('uploadFailed')
-      : state.ok === false && state.error === 'validation' && state.message
-        ? state.message
-        : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -130,9 +191,7 @@ export function UploadDocumentModal({
           <DialogTitle>{t('title')}</DialogTitle>
         </DialogHeader>
 
-        <form action={formAction} className="space-y-4" noValidate>
-          <input type="hidden" name="case_id" value={caseId} />
-
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-4" noValidate>
           <FormField label={t('fileLabel')} required error={clientFileError ?? undefined}>
             <div className="flex items-center gap-2">
               <label
@@ -191,7 +250,7 @@ export function UploadDocumentModal({
             />
           </FormField>
 
-          <FormField label={t('categoryLabel')} required error={fieldErrors.category_id}>
+          <FormField label={t('categoryLabel')} required>
             <NativeSelect name="category_id" defaultValue={defaultCategoryId} required>
               {filteredCategories.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -229,12 +288,19 @@ export function UploadDocumentModal({
           )}
 
           <DialogFooter>
-            <SubmitButton />
+            <Button
+              type="submit"
+              disabled={pending}
+              className="bg-brand-black hover:bg-neutral-800 text-white h-10 min-w-28"
+            >
+              {pending ? <Loader2 className="size-4 animate-spin" /> : t('submit')}
+            </Button>
             <Button
               type="button"
               variant="ghost"
               onClick={() => onOpenChange(false)}
               className="h-10"
+              disabled={pending}
             >
               {t('cancel')}
             </Button>

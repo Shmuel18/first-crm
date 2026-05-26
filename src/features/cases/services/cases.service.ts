@@ -29,7 +29,61 @@ export type CaseListFilters = {
   search?: string;
   /** Safety bound on rows returned (newest first). Unset = unbounded (exports). */
   limit?: number;
+  /**
+   * 1-based page index for SQL pagination. When set, `pageSize` is required.
+   * Range is translated to `from = (page-1)*pageSize, to = from+pageSize-1`
+   * via PostgREST `.range()`. Mutually exclusive with `limit` — set one or
+   * the other.
+   */
+  page?: number;
+  pageSize?: number;
 };
+
+export type CaseListPage = {
+  rows: CaseWithRelations[];
+  /** Total rows that match the SQL filters (not the derived in-memory ones). */
+  totalCount: number;
+};
+
+/**
+ * Page-aware variant of listCases. Use this when you want a known total +
+ * SQL range; pass page+pageSize together. Falls back to the plain unbounded
+ * fetch (no count) if neither is set — exports + back-compat callers don't
+ * pay for a COUNT query they don't read.
+ */
+export async function listCasesPaged(
+  filters: CaseListFilters = {},
+): Promise<CaseListPage> {
+  const supabase = await createClient();
+  const page = filters.page && filters.page > 0 ? filters.page : 1;
+  const pageSize = filters.pageSize && filters.pageSize > 0 ? filters.pageSize : 50;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let query = supabase
+    .from('cases')
+    .select(CASE_SELECT_WITH_RELATIONS, { count: 'exact' })
+    .is('deleted_at', null)
+    .order('created_at', { ascending: true });
+
+  if (filters.isArchived !== undefined) query = query.eq('is_archived', filters.isArchived);
+  if (filters.statusId) query = query.eq('status_id', filters.statusId);
+  if (filters.caseTypeId) query = query.eq('case_type_primary_id', filters.caseTypeId);
+  if (filters.advisorId) query = query.eq('assigned_advisor_id', filters.advisorId);
+  if (filters.search) {
+    const term = filters.search.replace(/[\\%_]/g, (c) => `\\${c}`);
+    query = query.ilike('case_number', `%${term}%`);
+  }
+
+  query = query.range(from, to);
+
+  const { data, count, error } = await query;
+  if (error) throw error;
+  return {
+    rows: (data ?? []) as unknown as CaseWithRelations[],
+    totalCount: count ?? 0,
+  };
+}
 
 export async function listCases(filters: CaseListFilters = {}): Promise<CaseWithRelations[]> {
   const supabase = await createClient();

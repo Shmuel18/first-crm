@@ -49,12 +49,7 @@ const UNAUTHED: LayoutBootstrap = {
  */
 export const getLayoutBootstrap = cache(async (): Promise<LayoutBootstrap> => {
   const supabase = await createClient();
-  // Cast required until `supabase gen types` runs against a DB with 066
-  // applied — once that lands, the rpc-name literal is in the typed union.
-  const callRpc = supabase.rpc.bind(supabase) as unknown as (
-    fn: 'layout_bootstrap',
-  ) => Promise<{ data: unknown; error: { message: string } | null }>;
-  const { data, error } = await callRpc('layout_bootstrap');
+  const { data, error } = await supabase.rpc('layout_bootstrap');
 
   if (error || !data || typeof data !== 'object') {
     if (error) console.error('[layout_bootstrap] rpc error', error);

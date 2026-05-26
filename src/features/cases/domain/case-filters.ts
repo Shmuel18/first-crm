@@ -16,6 +16,19 @@ export type DashboardFilters = {
   hideClosedFrozen: boolean;
 };
 
+/**
+ * 1-based current page from `?page=`. Clamps junk values to page 1 so a
+ * hand-edited URL can't crash the server-rendered range query.
+ */
+export function parseCasePage(
+  sp: Record<string, string | string[] | undefined>,
+): number {
+  const raw = first(sp.page);
+  if (!raw) return 1;
+  const n = Number.parseInt(raw, 10);
+  return Number.isFinite(n) && n > 0 ? n : 1;
+}
+
 function first(v: string | string[] | undefined): string | null {
   return (Array.isArray(v) ? v[0] : v) ?? null;
 }
