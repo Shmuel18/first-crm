@@ -35,17 +35,27 @@ A SaaS for **Kaufman Finance Group** - an Israeli mortgage advisor office. Repla
 - Zod 4 has breaking API changes from Zod 3 - check docs when copying old code
 
 ## Brand
-| Element | Value |
-|---|---|
-| Black | `#0A0A0A` |
-| Gold | `#C9A961` |
-| White | `#FFFFFF` |
-| Surface gray | `#FAFAFA` |
-| Border | `#E5E5E5` |
-| Body font (Hebrew) | Heebo / Assistant |
-| Body font (English) | Inter |
-| Heading font (Hebrew) | Frank Ruhl Libre |
-| Heading font (English) | Playfair Display |
+| Element | Value | Tailwind token |
+|---|---|---|
+| Black | `#0A0A0A` | `brand-black` |
+| Gold (decorative fills, gradients) | `#C9A961` | `brand-gold` |
+| Gold-text (WCAG-AA-safe on white, 4.6:1) | `#A88840` | `brand-gold-text` |
+| Gold-light (soft accents) | `#E8C77B` | `brand-gold-light` |
+| Gold-dark (borders, gradient stops) | `#B8945A` | `brand-gold-dark` |
+| Gold-soft (warm-tint surfaces) | `#FAF8F3` | `brand-gold-soft` |
+| Gold-hover (lift on solid gold buttons) | `#E8D5A2` | `brand-gold-hover` |
+| White | `#FFFFFF` | `white` |
+| Surface gray | `#FAFAFA` | `brand-surface` |
+| Border | `#E5E5E5` | `border-neutral-200` |
+| Body font (Hebrew) | Heebo / Assistant | `font-sans` |
+| Body font (English) | Inter | `font-sans` |
+| Heading font (Hebrew) | Frank Ruhl Libre | `font-display` |
+| Heading font (English) | Playfair Display | `font-display` |
+
+**Use the Tailwind tokens — never bracketed hex (`text-[#A88840]`).** The
+tokens are declared in `src/app/globals.css` `@theme` and generate every
+utility variant (text/bg/border/ring/.../opacity) automatically. Any new
+`[#hex]` literal in a class is an auto-reject in code review.
 
 ## Architecture - Layer Responsibilities
 
@@ -125,6 +135,14 @@ Every file lives in exactly one layer. Crossing layers requires going UP through
 - NO direct DB calls from components - components call the action
 - NO multi-purpose actions ("updateOrCreateAndAlsoSend" is forbidden)
 - File: max 100 lines (split sub-helpers into `domain/`)
+- **NEVER return Supabase `error.message` to the client.** It can leak
+  policy / constraint / bucket names. Pattern: `console.error('[action] ...', err)` server-side, return `{ ok: false, error: 'unknown' }` to the client. UI maps the error code to a translated string.
+- **Expensive actions go through `checkRateLimit`** (`@/lib/rate-limit`).
+  Already applied to: lookup-borrower, export-pdf/xlsx, run-backup,
+  import-cases, sync-drive-documents. Pick a subject prefix
+  (`user:<uid>` or `user:<uid>:case:<id>`) and a window matching the
+  action's true cost. Counters live in the `rate_limit_counters` table
+  (migration 048); access is via the SECURITY DEFINER RPC.
 
 ### Performance
 - Prefer Server Components to reduce client bundle size
@@ -140,6 +158,25 @@ Every file lives in exactly one layer. Crossing layers requires going UP through
 - **RLS (Row Level Security)** on every table
 - Migrations versioned in `/supabase/migrations`
 - Soft deletes via `deleted_at` where appropriate
+- **Never `select('*')` from a feature service.** Define a
+  `TABLE_FULL_COLUMNS` const that mirrors the Row type and gates schema-add
+  propagation to clients. Two exceptions exist in the codebase
+  (`integrations.service.getIntegration` for encrypted tokens,
+  `backup-snapshot.fetchAllRows` for restore round-trip); both carry an
+  AUDIT-ACK comment explaining why.
+- **Audit log IP / user-agent are wired automatically** via a PostgREST
+  `db-pre-request` hook (`set_request_audit_context`, migration 047). No
+  TS plumbing needed — every authenticated mutation records the request
+  context into `audit_log.ip_address` / `user_agent`.
+
+### Secrets & encryption
+- **`INTEGRATION_ENCRYPTION_KEY`** (required, ≥32 chars) encrypts Google
+  OAuth tokens in `office_integrations` at rest. Set in `.env.local` AND
+  in Vercel — env validation fails the build without it.
+- **`BACKUP_ENCRYPTION_KEY`** (required, ≥32 chars) encrypts the whole
+  backup file before Drive upload. Restore is backward-compatible with
+  legacy plaintext `.json` via the `enc:v1:` prefix check.
+- See `src/lib/crypto/secrets.ts` for the AES-256-GCM wrapper.
 
 ### Naming Conventions
 **Rule:** files are kebab-case, exports inside are PascalCase (components/types) or camelCase (functions/hooks).
@@ -206,6 +243,9 @@ src/
 │   │   └── layout.tsx             # Sidebar + Topbar
 │   ├── (public)/                  # Public-facing
 │   │   └── check/page.tsx         # Onboarding form
+│   ├── auth/                      # OAuth callback + set-password (post-invite)
+│   │   ├── callback/route.ts      # Exchanges magic-link code for session
+│   │   └── set-password/page.tsx  # New users pick own password here
 │   └── api/                       # API routes (webhooks etc.)
 │
 ├── features/                      # Most code lives here (feature-first)
@@ -246,8 +286,26 @@ src/
 │   ├── he.json
 │   └── en.json
 │
-└── middleware.ts                  # Auth middleware
+└── proxy.ts                       # Auth middleware (Next.js 16 — was middleware.ts)
 ```
+
+## Team onboarding flow (magic-link invite)
+New advisor / secretary accounts are NOT created with a password by the
+admin. Instead:
+1. Admin fills the invite form (`/team` → "Add team member").
+2. `inviteMemberAction` calls `admin.auth.admin.generateLink({type:'invite'})`
+   — creates the auth user (no password) and returns a one-time link.
+3. The link is emailed via Resend with `redirectTo=/auth/callback?next=/auth/set-password`.
+4. New user clicks → `/auth/callback` exchanges the code for a session,
+   redirects to `/auth/set-password` where they pick their own password
+   via `setPasswordAction → auth.updateUser({password})`.
+5. On email failure (Resend not configured / send failed), the action
+   returns the link to the dialog so the admin can share manually
+   — still single-use, still short-lived.
+
+The admin **never sees a password**. Don't reintroduce a temp-password
+flow even if email setup feels onerous; the magic-link path is the
+security baseline.
 
 ## Domain Concepts
 - **Case (תיק):** A mortgage case with status, borrowers, banks, documents
@@ -309,6 +367,10 @@ These are auto-reject patterns. If you see one in a PR/review - reject without d
 - ❌ Hardcoded role checks in code (use the configurable permissions system)
 - ❌ Emojis in production UI (Lucide icons only)
 - ❌ "Just for now" hacks without a tracked TODO + issue link
+- ❌ **Bracketed hex in Tailwind classes** (`text-[#A88840]`, `bg-[#C9A961]`) — use the brand tokens (`text-brand-gold-text`, `bg-brand-gold`). See the Brand table above.
+- ❌ **`select('*')` in feature services** — use a `TABLE_FULL_COLUMNS` const mirroring the Row type so schema additions are a deliberate, reviewable step.
+- ❌ **Returning Supabase `error.message` from a server action** — log server-side, return a generic error code, UI maps to a translated string.
+- ❌ **Reintroducing the tempPassword team-invite flow** — magic-link only; admin never sees the password.
 
 ### When you spot an anti-pattern
 1. Stop the work
