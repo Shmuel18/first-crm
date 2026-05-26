@@ -57,6 +57,12 @@ updates:
       # of Next itself is incoherent.
       - dependency-name: "eslint-config-next"
         update-types: ["version-update:semver-major"]
+      # eslint v10 broke eslint-plugin-react (react/display-name rule throws
+      # `contextOrFilename.getFilename is not a function`). PR #11 closed
+      # 2026-05-26 over this. Re-allow majors once the plugin lands a
+      # v10-compatible release.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
     labels:
       - dependencies
     commit-message:
