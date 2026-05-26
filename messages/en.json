@@ -304,6 +304,85 @@
       "case_financials": "Case financials",
       "tasks": "Task",
       "leads": "Lead"
+    },
+    "fields": {
+      "first_name": "First name",
+      "last_name": "Last name",
+      "national_id": "ID number",
+      "id_issue_date": "ID issued",
+      "id_expiry_date": "ID expires",
+      "birth_date": "Date of birth",
+      "gender": "Gender",
+      "marital_status": "Marital status",
+      "children_count": "Children",
+      "citizenship": "Citizenship",
+      "residency_type": "Residency",
+      "preferred_language": "Preferred language",
+      "phone": "Mobile",
+      "landline_phone": "Landline",
+      "email": "Email",
+      "address": "Address",
+      "city": "City",
+      "amount_monthly": "Monthly amount",
+      "source_name": "Income source",
+      "tenure_months": "Tenure (months)",
+      "income_type_id": "Income type",
+      "is_primary": "Primary",
+      "lender": "Lender",
+      "loan_amount": "Outstanding loan",
+      "monthly_payment": "Monthly payment",
+      "months_remaining": "Months remaining",
+      "description": "Description",
+      "case_number": "Case number",
+      "status_id": "Status",
+      "property_value": "Property value",
+      "requested_mortgage_amount": "Requested mortgage",
+      "equity": "Equity",
+      "case_type_primary_id": "Primary case type",
+      "case_type_secondary_id": "Secondary case type",
+      "assigned_advisor_id": "Assigned advisor",
+      "notes": "Notes",
+      "archived_at": "Archived at",
+      "is_archived": "Archived",
+      "file_name": "File name",
+      "drive_url": "Drive link",
+      "bank_id": "Bank",
+      "banker_name": "Banker",
+      "banker_phone": "Banker phone",
+      "banker_email": "Banker email",
+      "fee_amount": "Fee",
+      "expected_income": "Expected income",
+      "created_at": "Created",
+      "updated_at": "Updated",
+      "deleted_at": "Deleted"
+    },
+    "enums": {
+      "residency_type": {
+        "resident": "Israeli resident",
+        "foreign_resident": "Foreign resident",
+        "returning_resident": "Returning resident"
+      },
+      "preferred_language": {
+        "he": "Hebrew",
+        "en": "English"
+      },
+      "marital_status": {
+        "single": "Single",
+        "married": "Married",
+        "divorced": "Divorced",
+        "widowed": "Widowed"
+      },
+      "gender": {
+        "male": "Male",
+        "female": "Female",
+        "other": "Other"
+      }
+    },
+    "values": {
+      "empty": "—",
+      "yes": "Yes",
+      "no": "No",
+      "nFields": "{count, plural, =1 {1 field} other {# fields}}"
     }
   },
   "case": {

@@ -304,6 +304,85 @@
       "case_financials": "פיננסי תיק",
       "tasks": "משימה",
       "leads": "ליד"
+    },
+    "fields": {
+      "first_name": "שם פרטי",
+      "last_name": "שם משפחה",
+      "national_id": "מספר ת״ז",
+      "id_issue_date": "תאריך הנפקת ת״ז",
+      "id_expiry_date": "תוקף ת״ז",
+      "birth_date": "תאריך לידה",
+      "gender": "מגדר",
+      "marital_status": "מצב משפחתי",
+      "children_count": "מספר ילדים",
+      "citizenship": "אזרחות",
+      "residency_type": "סוג תושבות",
+      "preferred_language": "שפה מועדפת",
+      "phone": "טלפון נייד",
+      "landline_phone": "טלפון בית",
+      "email": "דואר אלקטרוני",
+      "address": "כתובת",
+      "city": "עיר",
+      "amount_monthly": "סכום חודשי",
+      "source_name": "מקור הכנסה",
+      "tenure_months": "וותק (חודשים)",
+      "income_type_id": "סוג הכנסה",
+      "is_primary": "ראשי",
+      "lender": "מלווה",
+      "loan_amount": "יתרת הלוואה",
+      "monthly_payment": "החזר חודשי",
+      "months_remaining": "חודשים נותרו",
+      "description": "תיאור",
+      "case_number": "מספר תיק",
+      "status_id": "סטטוס",
+      "property_value": "שווי הנכס",
+      "requested_mortgage_amount": "סכום מבוקש",
+      "equity": "הון עצמי",
+      "case_type_primary_id": "סוג עסקה ראשי",
+      "case_type_secondary_id": "סוג עסקה משני",
+      "assigned_advisor_id": "יועץ אחראי",
+      "notes": "הערות",
+      "archived_at": "תאריך ארכוב",
+      "is_archived": "בארכיון",
+      "file_name": "שם הקובץ",
+      "drive_url": "קישור Drive",
+      "bank_id": "בנק",
+      "banker_name": "פקיד הבנק",
+      "banker_phone": "טלפון פקיד הבנק",
+      "banker_email": "מייל פקיד הבנק",
+      "fee_amount": "שכר טרחה",
+      "expected_income": "הכנסה צפויה",
+      "created_at": "נוצר",
+      "updated_at": "עודכן",
+      "deleted_at": "נמחק"
+    },
+    "enums": {
+      "residency_type": {
+        "resident": "תושב/ת ישראל",
+        "foreign_resident": "תושב/ת חוץ",
+        "returning_resident": "תושב/ת חוזר/ת"
+      },
+      "preferred_language": {
+        "he": "עברית",
+        "en": "English"
+      },
+      "marital_status": {
+        "single": "רווק/ה",
+        "married": "נשוי/אה",
+        "divorced": "גרוש/ה",
+        "widowed": "אלמן/ה"
+      },
+      "gender": {
+        "male": "זכר",
+        "female": "נקבה",
+        "other": "אחר"
+      }
+    },
+    "values": {
+      "empty": "—",
+      "yes": "כן",
+      "no": "לא",
+      "nFields": "{count, plural, =1 {שדה אחד} other {# שדות}}"
     }
   },
   "case": {

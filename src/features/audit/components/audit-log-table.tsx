@@ -2,7 +2,9 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 
-import { formatFieldValue, getFieldLabel } from '../lib/field-labels';
+import { parseLocale, type Locale } from '@/lib/i18n/direction';
+
+import { formatFieldValue, getFieldLabel, type AuditTranslator } from '../lib/field-labels';
 import type { AuditEntry, AuditFieldChange } from '../services/audit.service';
 
 const ACTION_STYLE: Record<string, string> = {
@@ -31,8 +33,11 @@ function isKnownTable(name: string): name is KnownTable {
 }
 
 export function AuditLogTable({ entries }: { entries: ReadonlyArray<AuditEntry> }) {
-  const t = useTranslations('auditLog');
-  const locale = useLocale();
+  // Cast to the audit-helpers' translator shape — next-intl's t() supports
+  // both call-style and `.has(key)`, but the inferred type from
+  // useTranslations doesn't expose .has on the return; the helpers need it.
+  const t = useTranslations('auditLog') as unknown as AuditTranslator;
+  const locale = parseLocale(useLocale());
   const fmt = (iso: string) =>
     new Date(iso).toLocaleString(locale === 'he' ? 'he-IL' : 'en-GB');
 
@@ -81,7 +86,7 @@ export function AuditLogTable({ entries }: { entries: ReadonlyArray<AuditEntry> 
                 {isKnownTable(entry.tableName) ? t(`tables.${entry.tableName}`) : entry.tableName}
               </Td>
               <Td className="text-xs text-neutral-600">
-                <ChangesCell entry={entry} />
+                <ChangesCell entry={entry} t={t} locale={locale} />
               </Td>
             </tr>
           ))}
@@ -91,17 +96,21 @@ export function AuditLogTable({ entries }: { entries: ReadonlyArray<AuditEntry> 
   );
 }
 
-function actionLabel(t: ReturnType<typeof useTranslations>, action: string): string {
+function actionLabel(t: AuditTranslator, action: string): string {
   const key = action.toLowerCase();
   if (key === 'insert' || key === 'update' || key === 'delete') return t(`actions.${key}`);
   return action;
 }
 
-function ChangesCell({ entry }: { entry: AuditEntry }) {
-  // UPDATE: render each diff as "label: old ← new" on its own line.
-  // Field labels and values are both run through the field-labels helper —
-  // so the user sees "סוג תושבות: תושב/ת חוץ ← תושב/ת ישראל" instead of
-  // "residency_type: foreign_resident ← resident".
+function ChangesCell({
+  entry,
+  t,
+  locale,
+}: {
+  entry: AuditEntry;
+  t: AuditTranslator;
+  locale: Locale;
+}) {
   if (entry.changes) {
     const fields = Object.entries(entry.changes);
     return (
@@ -109,12 +118,12 @@ function ChangesCell({ entry }: { entry: AuditEntry }) {
         {fields.map(([field, change]) => (
           <div key={field} className="leading-tight">
             <span className="text-[12px] text-neutral-600 font-medium">
-              {getFieldLabel(field)}
+              {getFieldLabel(t, field)}
             </span>
             <span className="text-neutral-400">: </span>
-            <DiffValue field={field} value={change.old} variant="old" />
+            <DiffValue field={field} value={change.old} variant="old" t={t} locale={locale} />
             <span className="text-neutral-400 mx-1">←</span>
-            <DiffValue field={field} value={change.new} variant="new" />
+            <DiffValue field={field} value={change.new} variant="new" t={t} locale={locale} />
           </div>
         ))}
       </div>
@@ -126,22 +135,28 @@ function ChangesCell({ entry }: { entry: AuditEntry }) {
   // elsewhere if needed.
   if (entry.wholeRow) {
     const count = Object.keys(entry.wholeRow).length;
-    return <span className="text-neutral-500 italic">({count} שדות)</span>;
+    return (
+      <span className="text-neutral-500 italic">({t('values.nFields', { count })})</span>
+    );
   }
 
-  return <span className="text-neutral-400">—</span>;
+  return <span className="text-neutral-400">{t('values.empty')}</span>;
 }
 
 function DiffValue({
   field,
   value,
   variant,
+  t,
+  locale,
 }: {
   field: string;
   value: AuditFieldChange['old'];
   variant: 'old' | 'new';
+  t: AuditTranslator;
+  locale: Locale;
 }) {
-  const display = formatFieldValue(field, value);
+  const display = formatFieldValue(t, locale, field, value);
   return (
     <span
       className={
