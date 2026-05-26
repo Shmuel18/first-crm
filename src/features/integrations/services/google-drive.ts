@@ -1,20 +1,36 @@
 import { timeoutSignal } from '@/lib/http/with-timeout';
 
+import {
+  DRIVE_SUBFOLDER_NAMES,
+  caseFolderName,
+  type DriveFileMeta,
+  type DriveUploadResult,
+} from '../domain/drive-folder-naming';
 import type { IntegrationProvider, IntegrationRow } from '../types';
+
+import { buildMultipartUploadBody } from './google-drive-multipart';
 import { refreshAccessToken, RefreshTokenError } from './google-oauth';
 import {
   markIntegrationDisconnected,
   persistRefreshedAccessToken,
 } from './integrations.service';
 
+// Re-export domain types/constants for backward compatibility with the prior
+// `from './google-drive'` import shape used by sync, uploader, and backup
+// services. New callers should import from '../domain/drive-folder-naming'.
+export { DRIVE_SUBFOLDER_NAMES, caseFolderName };
+export type { DriveFileMeta, DriveUploadResult };
+
 const DRIVE_API = 'https://www.googleapis.com/drive/v3';
 const DRIVE_UPLOAD = 'https://www.googleapis.com/upload/drive/v3';
 const FOLDER_MIME = 'application/vnd.google-apps.folder';
 
-export type DriveUploadResult = {
-  id: string;
-  webViewLink: string;
-};
+/** Escape a value for use inside the Drive query DSL (`name = '...'`).
+ *  Order matters: backslashes first, then quotes — otherwise the second
+ *  pass would mangle the backslashes the first pass adds. */
+function escapeDriveQueryValue(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
 
 export class GoogleDriveClient {
   private accessToken: string | null;
@@ -109,11 +125,8 @@ export class GoogleDriveClient {
   }
 
   async findFolder(name: string, parentId?: string): Promise<string | null> {
-    // Escape backslashes first, then single quotes. Order matters - escaping
-    // quotes first would mangle the backslash we add.
-    const escaped = name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     const parts = [
-      `name = '${escaped}'`,
+      `name = '${escapeDriveQueryValue(name)}'`,
       `mimeType = '${FOLDER_MIME}'`,
       `trashed = false`,
     ];
@@ -160,12 +173,10 @@ export class GoogleDriveClient {
     value: string,
     parentId?: string,
   ): Promise<string | null> {
-    // Escape single quotes inside value for the Drive query DSL.
-    const safeValue = value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     const parts = [
       `mimeType = '${FOLDER_MIME}'`,
       `trashed = false`,
-      `appProperties has { key='${key}' and value='${safeValue}' }`,
+      `appProperties has { key='${key}' and value='${escapeDriveQueryValue(value)}' }`,
     ];
     if (parentId) parts.push(`'${parentId}' in parents`);
     const q = parts.join(' and ');
@@ -182,28 +193,13 @@ export class GoogleDriveClient {
     mimeType: string;
     parentId: string;
   }): Promise<DriveUploadResult> {
-    const boundary = `boundary_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-    const metadata = { name: file.name, parents: [file.parentId] };
-
-    const head = Buffer.from(
-      `--${boundary}\r\n` +
-        `Content-Type: application/json; charset=UTF-8\r\n\r\n` +
-        `${JSON.stringify(metadata)}\r\n` +
-        `--${boundary}\r\n` +
-        `Content-Type: ${file.mimeType}\r\n\r\n`,
-    );
-    const tail = Buffer.from(`\r\n--${boundary}--\r\n`);
-    const bytes =
-      file.content instanceof Uint8Array ? file.content : new Uint8Array(file.content);
-    const fileBuf = Buffer.from(bytes);
-    const body = Buffer.concat([head, fileBuf, tail]);
-
+    const { body, contentType } = buildMultipartUploadBody(file);
     const res = await this.authedFetch(
       `${DRIVE_UPLOAD}/files?uploadType=multipart&fields=id,webViewLink`,
       {
         method: 'POST',
-        headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
-        body: new Uint8Array(body),
+        headers: { 'Content-Type': contentType },
+        body,
       },
     );
 
@@ -211,8 +207,7 @@ export class GoogleDriveClient {
       const text = await res.text();
       throw new Error(`Drive upload failed: ${res.status} ${text}`);
     }
-    const data = (await res.json()) as { id: string; webViewLink: string };
-    return data;
+    return (await res.json()) as DriveUploadResult;
   }
 
   /** Download a file's raw text content (used to read a backup JSON back). */
@@ -283,27 +278,4 @@ export class GoogleDriveClient {
     const data = (await res.json()) as { files: { id: string; name: string }[] };
     return data.files ?? [];
   }
-}
-
-export type DriveFileMeta = {
-  id: string;
-  name: string;
-  mimeType: string;
-  size?: string;
-  webViewLink: string;
-  modifiedTime: string;
-  createdTime: string;
-};
-
-/** Hebrew folder names per spec (KFG_Cases/{case}/01_זהות_וקשר/...). */
-export const DRIVE_SUBFOLDER_NAMES: Record<string, string> = {
-  identity: '01_זהות_וקשר',
-  income_il: '02_תעסוקה_והכנסות',
-  income_abroad: '03_הכנסות_מחול',
-  insurance_collateral: '04_אישורים_וביטחונות',
-};
-
-export function caseFolderName(caseNumber: string, familyName: string): string {
-  const safe = familyName.replace(/[\\/:*?"<>|]/g, '').trim() || 'Case';
-  return `${caseNumber}_${safe}`;
 }
