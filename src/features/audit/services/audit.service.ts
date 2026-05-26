@@ -1,138 +1,17 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 
-import type { Json } from '@/types/database';
+import {
+  collectFkIds,
+  extractChanges,
+  extractWholeRow,
+  substituteFkValues,
+  type AuditEntry,
+  type AuditRow,
+} from '../domain/audit-parser';
 
-/**
- * Per-field old/new pair for an UPDATE. For INSERT/DELETE the trigger logs
- * the whole row instead, so we expose `wholeRow` (the raw JSONB) for those.
- */
-export type AuditFieldChange = { old: Json | null; new: Json | null };
-export type AuditChangeMap = Record<string, AuditFieldChange>;
+import { resolveFkDisplayNames } from './audit-fk-resolver';
 
-export type AuditEntry = {
-  id: string;
-  action: string;
-  tableName: string;
-  recordId: string;
-  timestamp: string;
-  actorName: string | null;
-  /**
-   * For UPDATEs: the parsed { field: { old, new } } diff.
-   * For INSERT/DELETE: null (the audit row stored the whole record under
-   * `wholeRow` instead — useful for showing what was created/removed).
-   */
-  changes: AuditChangeMap | null;
-  /** INSERT/DELETE only — the entire row that was created or removed. */
-  wholeRow: Record<string, Json | null> | null;
-};
-
-type AuditRow = {
-  id: string;
-  action: string;
-  table_name: string;
-  record_id: string;
-  timestamp: string;
-  changed_fields: Json | null;
-  user_id: string | null;
-};
-
-/**
- * For an UPDATE row, the trigger stores `{ field: { old, new } }`. Coerce
- * loose JSONB into our typed shape; entries that don't look like a diff
- * (i.e. INSERT/DELETE rows where the whole row is stored) return null so
- * the caller knows to fall back to `wholeRow`.
- */
-function extractChanges(action: string, changed: Json | null): AuditChangeMap | null {
-  if (action !== 'UPDATE') return null;
-  if (!changed || typeof changed !== 'object' || Array.isArray(changed)) return null;
-  const out: AuditChangeMap = {};
-  for (const [key, val] of Object.entries(changed)) {
-    if (val && typeof val === 'object' && !Array.isArray(val) && 'old' in val && 'new' in val) {
-      const pair = val as { old: Json | null; new: Json | null };
-      out[key] = { old: pair.old, new: pair.new };
-    }
-  }
-  return Object.keys(out).length > 0 ? out : null;
-}
-
-function extractWholeRow(
-  action: string,
-  changed: Json | null,
-): Record<string, Json | null> | null {
-  if (action !== 'INSERT' && action !== 'DELETE') return null;
-  if (!changed || typeof changed !== 'object' || Array.isArray(changed)) return null;
-  return changed as Record<string, Json | null>;
-}
-
-/**
- * FK columns we substitute with the referenced row's display name. Keeps
- * the audit log readable — a raw UUID like
- * `7d2e8c4b-...` is meaningless to the office, but the resolved name
- * "אישור עקרוני" is immediately useful.
- *
- * Each entry maps the column name to (target_table, name_column). For
- * profiles the resolver concatenates first+last; everything else just
- * picks `name_he`.
- */
-const FK_NAME_LOOKUPS: ReadonlyArray<{
-  field: string;
-  table: 'case_statuses' | 'case_types' | 'banks' | 'income_types';
-  nameColumn: 'name_he';
-}> = [
-  { field: 'status_id', table: 'case_statuses', nameColumn: 'name_he' },
-  { field: 'case_type_primary_id', table: 'case_types', nameColumn: 'name_he' },
-  { field: 'case_type_secondary_id', table: 'case_types', nameColumn: 'name_he' },
-  { field: 'bank_id', table: 'banks', nameColumn: 'name_he' },
-  { field: 'income_type_id', table: 'income_types', nameColumn: 'name_he' },
-];
-
-/** Walk a JSONB object collecting any FK ids we know how to resolve. */
-function collectFkIds(
-  source: AuditChangeMap | Record<string, Json | null> | null,
-  acc: Map<string, Set<string>>,
-): void {
-  if (!source) return;
-  for (const [field, val] of Object.entries(source)) {
-    if (val === null || val === undefined) continue;
-    // UPDATE: { old, new } pair
-    if (typeof val === 'object' && !Array.isArray(val) && 'old' in val && 'new' in val) {
-      for (const candidate of [val.old, val.new]) {
-        if (typeof candidate === 'string' && candidate.length > 0) {
-          if (!acc.has(field)) acc.set(field, new Set());
-          acc.get(field)!.add(candidate);
-        }
-      }
-      continue;
-    }
-    // INSERT/DELETE: bare value
-    if (typeof val === 'string') {
-      if (!acc.has(field)) acc.set(field, new Set());
-      acc.get(field)!.add(val);
-    }
-  }
-}
-
-/** Mutate a JSONB object in-place, replacing FK ids with their resolved
- *  display name when available. Leaves unknown ids untouched. */
-function substituteFkValues(
-  source: AuditChangeMap | Record<string, Json | null> | null,
-  lookups: Map<string, Map<string, string>>,
-): void {
-  if (!source) return;
-  for (const [field, val] of Object.entries(source)) {
-    const lookup = lookups.get(field);
-    if (!lookup) continue;
-    if (val && typeof val === 'object' && !Array.isArray(val) && 'old' in val && 'new' in val) {
-      const pair = val as AuditFieldChange;
-      if (typeof pair.old === 'string') pair.old = lookup.get(pair.old) ?? pair.old;
-      if (typeof pair.new === 'string') pair.new = lookup.get(pair.new) ?? pair.new;
-      continue;
-    }
-    if (typeof val === 'string') {
-      (source as Record<string, Json | null>)[field] = lookup.get(val) ?? val;
-    }
-  }
-}
+export type { AuditChangeMap, AuditEntry, AuditFieldChange } from '../domain/audit-parser';
 
 /** Resolve actor names and FK display names, then map raw audit rows to
  *  display entries. Two passes: build entries → enrich changes/wholeRow with
@@ -172,48 +51,8 @@ async function resolveEntries(rows: AuditRow[]): Promise<AuditEntry[]> {
     collectFkIds(entry.changes, idsByField);
     collectFkIds(entry.wholeRow, idsByField);
   }
-  // Also resolve assigned_advisor_id from the profiles map we already fetched
-  // — no extra query needed since users are typically advisors too. For ids
-  // not in the map, leave the UUID (rare: deleted users).
-  const advisorIds = idsByField.get('assigned_advisor_id');
-  if (advisorIds && advisorIds.size > 0) {
-    const missing = [...advisorIds].filter((id) => !nameById.has(id));
-    if (missing.length > 0) {
-      const { data: extraProfiles } = await admin
-        .from('profiles')
-        .select('id, first_name, last_name')
-        .in('id', missing);
-      for (const p of extraProfiles ?? []) {
-        nameById.set(p.id, [p.first_name, p.last_name].filter(Boolean).join(' ').trim() || null);
-      }
-    }
-  }
 
-  const lookups = new Map<string, Map<string, string>>();
-  if (advisorIds && advisorIds.size > 0) {
-    const advisorLookup = new Map<string, string>();
-    for (const id of advisorIds) {
-      const name = nameById.get(id);
-      if (name) advisorLookup.set(id, name);
-    }
-    if (advisorLookup.size > 0) lookups.set('assigned_advisor_id', advisorLookup);
-  }
-
-  await Promise.all(
-    FK_NAME_LOOKUPS.map(async ({ field, table, nameColumn }) => {
-      const ids = idsByField.get(field);
-      if (!ids || ids.size === 0) return;
-      const { data } = await admin.from(table).select(`id, ${nameColumn}`).in('id', [...ids]);
-      if (!data) return;
-      const map = new Map<string, string>();
-      for (const row of data as Array<Record<string, unknown>>) {
-        const id = row.id;
-        const name = row[nameColumn];
-        if (typeof id === 'string' && typeof name === 'string') map.set(id, name);
-      }
-      if (map.size > 0) lookups.set(field, map);
-    }),
-  );
+  const lookups = await resolveFkDisplayNames(admin, idsByField, nameById);
 
   for (const entry of entries) {
     substituteFkValues(entry.changes, lookups);
