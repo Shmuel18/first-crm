@@ -87,7 +87,7 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
             <button
               type="button"
               aria-label={ariaLabel}
-              className="relative size-10 rounded-lg border border-[#333] hover:border-brand-gold hover:bg-[#1A1A1A] transition flex items-center justify-center text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-light focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black"
+              className="relative size-10 rounded-lg border border-brand-black-border hover:border-brand-gold hover:bg-brand-black-soft transition flex items-center justify-center text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-light focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black"
             >
               <Bell className="size-4" aria-hidden="true" />
               {unread > 0 && (

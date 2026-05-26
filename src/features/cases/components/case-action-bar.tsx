@@ -14,6 +14,7 @@ import { Tooltip } from '@/components/ui/tooltip';
 import { CaseActionTaskButton } from '@/features/tasks/components/case-action-task-button';
 import { listAssignableProfiles } from '@/features/tasks/services/tasks.service';
 import { parseLocale } from '@/lib/i18n/direction';
+import { formatDateLong } from '@/lib/utils/format-date';
 
 import { CaseMoreMenu } from './case-more-menu';
 import { EditableStatusCell } from './editable-status-cell';
@@ -64,11 +65,7 @@ export async function CaseActionBar({
   const locale = parseLocale(await getLocale());
   const assignees = await listAssignableProfiles();
 
-  const openedAtLabel = new Intl.DateTimeFormat(locale === 'he' ? 'he-IL' : 'en-US', {
-    day: 'numeric',
-    month: 'numeric',
-    year: 'numeric',
-  }).format(new Date(createdAt));
+  const openedAtLabel = formatDateLong(createdAt, locale);
 
   return (
     <div className="bg-brand-gold-soft text-neutral-900 sticky top-[-1rem] sm:top-[-1.5rem] z-20 shadow-sm -mx-4 px-4 sm:-mx-6 sm:px-6 py-3 border-b border-brand-gold/20">

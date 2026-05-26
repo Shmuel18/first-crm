@@ -1,3 +1,5 @@
+import { formatDateShort } from '@/lib/utils/format-date';
+
 import type { Json } from '@/types/database';
 
 /**
@@ -143,10 +145,7 @@ export function formatFieldValue(field: string, value: Json | null): string {
 
     // Date formatting
     if (DATE_FIELDS.has(field)) {
-      const d = new Date(value);
-      if (!Number.isNaN(d.getTime())) {
-        return d.toLocaleDateString('he-IL');
-      }
+      return formatDateShort(value, 'he') || value;
     }
 
     // Money formatting (numeric-as-string from numeric DB columns)

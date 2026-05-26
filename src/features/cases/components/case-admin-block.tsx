@@ -2,6 +2,7 @@ import { Wallet } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 import type { Locale } from '@/lib/i18n/direction';
+import { formatDateShort } from '@/lib/utils/format-date';
 
 import { formatMoney } from '../domain/format';
 import type { CaseBlocker, InsuranceStatus } from '../schemas/case.schema';
@@ -38,7 +39,6 @@ export async function CaseAdminBlock({
   locale,
 }: Props) {
   const t = await getTranslations('case');
-  const dateLocale = locale === 'he' ? 'he-IL' : 'en-GB';
 
   return (
     <CaseBlock title={t('blocks.admin')} icon={<Wallet />}>
@@ -48,7 +48,7 @@ export async function CaseAdminBlock({
       <DataRow label={t('fields.advisor')} value={advisor} />
       <DataRow
         label={t('fields.createdAt')}
-        value={new Date(createdAt).toLocaleDateString(dateLocale)}
+        value={formatDateShort(createdAt, locale)}
       />
       {canSeeFinancials && (
         <>

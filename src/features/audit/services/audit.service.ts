@@ -262,11 +262,10 @@ export async function listAuditEntriesForCase(
   // then chase the incomes/obligations once borrower_ids land.
   //
   // case_financials note: the table uses case_id as its PK (no `id` column).
-  // The shared audit_log_change trigger references NEW.id, so writes to
-  // case_financials currently throw at the DB layer. We still query for
-  // record_id=caseId here: if the trigger gets fixed (TODO: see follow-up
-  // migration) entries will surface immediately without an app change. If
-  // not, we get an empty result — no user impact either way.
+  // Migration 054 added a dedicated trigger keyed off case_id, so audit rows
+  // for fee_amount / expected_income changes land with record_id=caseId.
+  // Querying by record_id=caseId here surfaces them in the case timeline
+  // without an extra join.
   const [caseBorrowers, banksRes, docsRes] = await Promise.all([
     admin.from('case_borrowers').select('borrower_id').eq('case_id', caseId),
     admin.from('case_banks').select('id').eq('case_id', caseId),

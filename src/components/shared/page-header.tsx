@@ -17,7 +17,7 @@ export function PageHeader({ icon, title, subtitle, rightSlot }: PageHeaderProps
     <div className="-mx-6 -mt-6 bg-gradient-to-l from-brand-surface via-white to-brand-surface px-6 py-5 border-b border-neutral-200">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
-          <span className="size-11 rounded-xl bg-[#FFF8E7] text-brand-gold-text border border-brand-gold-hover flex items-center justify-center [&_svg]:size-5">
+          <span className="size-11 rounded-xl bg-brand-gold-tint text-brand-gold-text border border-brand-gold-hover flex items-center justify-center [&_svg]:size-5">
             {icon}
           </span>
           <div>

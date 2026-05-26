@@ -14,9 +14,9 @@ export function TasksStatStrip({ open, overdue, done }: Props) {
       <StatCard
         label={t('overdue')}
         value={overdue}
-        tone={overdue > 0 ? 'text-[#991B1B]' : 'text-neutral-900'}
+        tone={overdue > 0 ? 'text-status-error-text' : 'text-neutral-900'}
       />
-      <StatCard label={t('done')} value={done} tone="text-[#15803D]" />
+      <StatCard label={t('done')} value={done} tone="text-status-success-text" />
     </div>
   );
 }

@@ -52,7 +52,7 @@ export function CasesCardList({ cases }: Props) {
             ? 'bg-red-50 active:bg-red-100'
             : frozen
               ? 'bg-neutral-100 text-neutral-500 active:bg-neutral-200'
-              : 'bg-white active:bg-[#FAF6EC]',
+              : 'bg-white active:bg-brand-row-hover',
         ].join(' ');
 
         return (

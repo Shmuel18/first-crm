@@ -88,7 +88,6 @@ export function IncomeRow({ caseId, income, incomeTypes, locale, canEdit }: Prop
   };
 
   const handleDelete = () => {
-    if (!confirm(t('confirmDelete'))) return;
     startDelete(async () => {
       const result = await deleteIncomeAction(income.id, income.borrower_id, caseId);
       if (result.ok) {

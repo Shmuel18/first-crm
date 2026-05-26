@@ -37,10 +37,17 @@ export default function GlobalError({
           padding: '1.5rem',
         }}
       >
-        <h1 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0 }}>משהו השתבש</h1>
+        <h1 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0 }}>
+          משהו השתבש · Something went wrong
+        </h1>
         <p style={{ color: '#525252', margin: 0, fontSize: '0.9rem' }}>
-          אירעה שגיאה בלתי צפויה. אפשר לנסות שוב. · Something went wrong.
+          אירעה שגיאה בלתי צפויה. אפשר לנסות שוב. · An unexpected error occurred. You can try again.
         </p>
+        {error.digest && (
+          <p style={{ color: '#737373', margin: 0, fontSize: '0.75rem', fontFamily: 'monospace' }}>
+            ID: {error.digest}
+          </p>
+        )}
         <button
           type="button"
           onClick={reset}
@@ -55,7 +62,7 @@ export default function GlobalError({
             cursor: 'pointer',
           }}
         >
-          נסה שוב
+          נסה שוב · Try again
         </button>
       </body>
     </html>

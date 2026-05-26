@@ -27,7 +27,9 @@ const DeleteDocumentSchema = z.object({
  *     UI inconsistent with the actual store.
  *
  * Retention purge (cleanup_soft_deleted_records, migration 022) currently
- * only deletes the DB row; a follow-up storage-side purge job is TODO.
+ * only deletes the DB row. A storage-side purge job that drops the orphaned
+ * blob from Supabase Storage + the Drive file lives on the deferred list
+ * — until that lands, blobs accumulate at the bucket's own retention rate.
  */
 export async function deleteDocumentAction(
   documentId: string,

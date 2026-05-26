@@ -37,7 +37,7 @@ export async function TasksViewTabs({ currentView, isAdmin, counts }: Props) {
               <span
                 className={[
                   'inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[10px] font-bold tabular-nums',
-                  active ? 'bg-[#FFF8E7] text-brand-gold-text' : 'bg-neutral-100 text-neutral-600',
+                  active ? 'bg-brand-gold-tint text-brand-gold-text' : 'bg-neutral-100 text-neutral-600',
                 ].join(' ')}
               >
                 {count}

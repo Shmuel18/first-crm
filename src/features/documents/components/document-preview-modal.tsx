@@ -12,6 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { parseLocale } from '@/lib/i18n/direction';
+import { formatDateShort } from '@/lib/utils/format-date';
 
 import { deleteDocumentAction } from '../actions/delete-document';
 import { getDocumentPreviewUrlAction } from '../actions/get-document-preview-url';
@@ -31,7 +33,7 @@ type Props = {
 export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
   const t = useTranslations('documents.previewModal');
   const tErr = useTranslations('documents.errors');
-  const locale = useLocale();
+  const locale = parseLocale(useLocale());
   const [url, setUrl] = useState<string | null>(null);
   // Initial loading is derived from doc: only true if we'll actually fetch
   // a signed URL (i.e., this is a Supabase-only doc, not a Drive iframe one).
@@ -69,8 +71,7 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
   if (!doc) return null;
 
   const status = doc.status as DocumentStatus;
-  const dateLocale = locale === 'he' ? 'he-IL' : 'en-GB';
-  const uploadDate = new Date(doc.upload_date).toLocaleDateString(dateLocale);
+  const uploadDate = formatDateShort(doc.upload_date, locale);
 
   const handleRetry = () => {
     if (doc.drive_file_id) return;

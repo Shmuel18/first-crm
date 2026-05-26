@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { EditableBankCell } from '@/features/case-banks/components/editable-bank-cell';
 
 import { parseLocale } from '@/lib/i18n/direction';
+import { formatDateShort } from '@/lib/utils/format-date';
 
 import { EditableAdvisorCell } from './editable-advisor-cell';
 import { EditableStatusCell } from './editable-status-cell';
@@ -35,16 +36,13 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }
     'border-b border-neutral-300',
     row.isStuck && 'bg-red-50 hover:bg-red-100',
     row.isFrozen && 'bg-neutral-200/70 text-neutral-500 hover:bg-neutral-300/70',
-    !row.isStuck && !row.isFrozen && 'odd:bg-white even:bg-[#F4F4F2] hover:!bg-[#FAF6EC]',
+    !row.isStuck && !row.isFrozen && 'odd:bg-white even:bg-brand-row-alt hover:!bg-brand-row-hover',
   ]
     .filter(Boolean)
     .join(' ');
 
   const navigateToCase = () => router.push(`/cases/${row.id}`);
-  const updatedDate = new Date(row.updatedAt).toLocaleDateString(
-    locale === 'he' ? 'he-IL' : 'en-GB',
-  );
-  const auditTooltip = t('updatedOn', { date: updatedDate });
+  const auditTooltip = t('updatedOn', { date: formatDateShort(row.updatedAt, locale) });
 
   // Keyboard a11y (#17): <tr onClick> alone is mouse-only. role="link" +
   // tabIndex + Enter/Space handler makes the row operable from the keyboard

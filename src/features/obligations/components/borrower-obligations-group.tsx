@@ -6,6 +6,15 @@ import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 import { Tooltip } from '@/components/ui/tooltip';
 
 import { deleteObligationAction } from '../actions/delete-obligation';
@@ -46,6 +55,7 @@ export function BorrowerObligationsGroup({
   const tc = useTranslations('common');
   const [dialog, setDialog] = useState<DialogState>({ mode: 'closed' });
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<ObligationRow | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const fmt = new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-US', {
@@ -55,7 +65,6 @@ export function BorrowerObligationsGroup({
   });
 
   const handleDelete = (obligation: ObligationRow) => {
-    if (!confirm(t('confirmDelete'))) return;
     setDeletingId(obligation.id);
     startTransition(async () => {
       const result = await deleteObligationAction(obligation.id, obligation.borrower_id, caseId);
@@ -136,7 +145,7 @@ export function BorrowerObligationsGroup({
                   <Tooltip content={tc('delete')}>
                     <button
                       type="button"
-                      onClick={() => handleDelete(ob)}
+                      onClick={() => setConfirmTarget(ob)}
                       disabled={isPending && deletingId === ob.id}
                       aria-label={tc('delete')}
                       className="size-6 rounded flex items-center justify-center text-neutral-500 hover:text-red-600 hover:bg-white transition disabled:opacity-50"
@@ -163,6 +172,35 @@ export function BorrowerObligationsGroup({
           obligation={dialog.mode === 'edit' ? dialog.obligation : null}
         />
       )}
+
+      <AlertDialog
+        open={confirmTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogTitle>{tc('delete')}</AlertDialogTitle>
+          <AlertDialogDescription>{t('confirmDelete')}</AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              render={
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    if (confirmTarget) handleDelete(confirmTarget);
+                    setConfirmTarget(null);
+                  }}
+                  disabled={isPending}
+                >
+                  {tc('delete')}
+                </Button>
+              }
+            />
+            <AlertDialogCancel render={<Button variant="outline">{tc('cancel')}</Button>} />
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

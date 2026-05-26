@@ -67,7 +67,7 @@ export function UserMenu({ fullName, initials, roleName }: UserMenuProps) {
         aria-label={t('open')}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex items-center gap-2.5 px-3 py-1.5 border border-[#333] rounded-lg hover:border-brand-gold hover:bg-[#1A1A1A] transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-light focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black"
+        className="flex items-center gap-2.5 px-3 py-1.5 border border-brand-black-border rounded-lg hover:border-brand-gold hover:bg-brand-black-soft transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-light focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black"
       >
         <div
           aria-hidden="true"

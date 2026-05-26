@@ -29,6 +29,25 @@
   /* Brighter gold used as the hover/active state for solid brand-gold
      surfaces (buttons, badges). Reads as a "lift" against brand-gold. */
   --color-brand-gold-hover: #E8D5A2;
+  /* Pale gold "tint" — used as background for warning/info chips, settings
+     headers, view-tabs hover. Distinct from brand-gold-soft (warmer for
+     content surfaces); this one is the chip/badge variant. */
+  --color-brand-gold-tint: #FFF8E7;
+  /* Warm gold used as the row-hover state on the dashboard table + cards. */
+  --color-brand-row-hover: #FAF6EC;
+  /* Subtle warm-neutral for zebra striping the dashboard table — slightly
+     warmer than neutral-100 so the gold theme reads through. */
+  --color-brand-row-alt: #F4F4F2;
+  /* Slightly-lifted black for popovers/dropdowns on the dark sidebar/topbar.
+     Reads as a layer above brand-black without going pure neutral. */
+  --color-brand-black-soft: #1A1A1A;
+  /* Border for the dark surfaces (popovers, notification panel) — matches
+     the soft black. */
+  --color-brand-black-border: #333333;
+  /* Status text colors — equivalent to text-red-800 / text-green-700 but
+     named so semantic intent survives a Tailwind palette change. */
+  --color-status-error-text: #991B1B;
+  --color-status-success-text: #15803D;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
