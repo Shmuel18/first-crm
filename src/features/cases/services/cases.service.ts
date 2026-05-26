@@ -3,8 +3,15 @@ import type { CaseId } from '@/lib/types/branded';
 
 import type { CaseRow, CaseWithRelations } from '../types';
 
+// Explicit column list (audit-driven). Mirrors the cases Row type — schema
+// additions go through an intentional update here rather than auto-flowing
+// to clients. Excludes embedded relations; CASE_SELECT_WITH_RELATIONS below
+// is the "with relations" variant.
+const CASE_FULL_COLUMNS =
+  'id, case_number, status_id, assigned_advisor_id, primary_borrower_id, case_type_primary_id, case_type_secondary_id, property_value, equity, requested_mortgage_amount, request_details, short_note, referrer_name, case_blocker, insurance_status, is_archived, metadata, deleted_at, created_at, created_by, updated_at, updated_by' as const;
+
 const CASE_SELECT_WITH_RELATIONS = `
-  *,
+  ${CASE_FULL_COLUMNS},
   status:case_statuses(id, key, name_he, name_en, color),
   case_type_primary:case_types!cases_case_type_primary_id_fkey(id, key, name_he, name_en),
   case_type_secondary:case_types!cases_case_type_secondary_id_fkey(id, key, name_he, name_en),
@@ -86,13 +93,6 @@ export async function getCaseById(id: CaseId): Promise<CaseWithRelations | null>
   // PostgREST embedded-relation typing gap; shape per CASE_SELECT_WITH_RELATIONS.
   return data as unknown as CaseWithRelations | null;
 }
-
-// Explicit column list (audit-driven). Mirrors the cases Row type — schema
-// additions go through an intentional update here rather than auto-flowing
-// to clients. Excludes embedded relations; getCaseById() above is the
-// "with relations" variant.
-const CASE_FULL_COLUMNS =
-  'id, case_number, status_id, assigned_advisor_id, primary_borrower_id, case_type_primary_id, case_type_secondary_id, property_value, equity, requested_mortgage_amount, request_details, short_note, referrer_name, case_blocker, insurance_status, is_archived, metadata, deleted_at, created_at, created_by, updated_at, updated_by' as const;
 
 export async function getRawCaseById(id: CaseId): Promise<CaseRow | null> {
   const supabase = await createClient();

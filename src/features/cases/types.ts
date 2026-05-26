@@ -53,6 +53,35 @@ export type CaseWithRelations = CaseRow & {
   case_financials: { fee_amount: number | null; expected_income: number | null } | null;
 };
 
+/**
+ * Display shape for a single row of <CasesTable>. Lives in types so both
+ * the pure mapper (domain/case-row-data.ts) and the row component can import
+ * it without crossing the layer boundary the other way.
+ */
+export type CaseTableRowData = {
+  id: string;
+  index: number;
+  clientLabel: string;
+  nationalId: string | null;
+  statusId: string | null;
+  statusName: string | null;
+  statusColor: string | null;
+  primaryBank: {
+    id: string;
+    key: string;
+    name_he: string;
+    color: string;
+    logo_url: string | null;
+  } | null;
+  secondaryBanksCount: number;
+  advisorId: string | null;
+  advisorName: string | null;
+  shortNote: string | null;
+  isStuck: boolean;
+  isFrozen: boolean;
+  updatedAt: string;
+};
+
 export type CaseActionError = 'validation' | 'unauthorized' | 'not_found' | 'unknown';
 
 /** Values submitted in last attempt - used to preserve form data on error. */

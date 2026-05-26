@@ -1,5 +1,4 @@
-import type { CaseTableRowData } from '../components/case-table-row';
-import type { CaseWithRelations } from '../types';
+import type { CaseTableRowData, CaseWithRelations } from '../types';
 
 import {
   getCaseClientLabel,

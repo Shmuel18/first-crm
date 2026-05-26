@@ -119,7 +119,7 @@ export async function CaseActionBar({
         </div>
 
         <div className="flex items-center gap-0.5 shrink-0">
-          <ActionIcon icon={Calculator} title={t('actions.calculator')} />
+          <ActionIcon icon={Calculator} title={t('actions.calculator')} comingSoonLabel={tc('comingSoon')} />
           <ActionIcon
             icon={ClipboardList}
             title={t('actions.history')}
@@ -131,7 +131,7 @@ export async function CaseActionBar({
             hasAlert={hasDocumentAlerts}
             href={`/cases/${caseId}/documents`}
           />
-          <ActionIcon icon={MessageSquare} title={t('actions.sendMessage')} />
+          <ActionIcon icon={MessageSquare} title={t('actions.sendMessage')} comingSoonLabel={tc('comingSoon')} />
           <CaseActionTaskButton
             caseId={caseId}
             caseNumber={caseNumber}
@@ -169,14 +169,21 @@ function ActionIcon({
   title,
   hasAlert,
   href,
+  comingSoonLabel,
 }: {
   icon: React.ComponentType<{ className?: string; 'aria-hidden'?: 'true' }>;
   title: string;
   hasAlert?: boolean;
   href?: string;
+  /** When set, renders as a disabled button with a "title · {label}" tooltip
+      so the affordance is honest about being unwired. Used for phase-2 features
+      whose buttons exist in the design but have no handler yet. */
+  comingSoonLabel?: string;
 }) {
-  const className =
-    'relative size-8 rounded-md text-neutral-600 hover:bg-white hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50 transition flex items-center justify-center';
+  const isDisabled = !!comingSoonLabel;
+  const className = isDisabled
+    ? 'relative size-8 rounded-md text-neutral-400 opacity-50 cursor-not-allowed flex items-center justify-center'
+    : 'relative size-8 rounded-md text-neutral-600 hover:bg-white hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50 transition flex items-center justify-center';
   const content = (
     <>
       <Icon className="size-3.5" aria-hidden="true" />
@@ -189,7 +196,13 @@ function ActionIcon({
     </>
   );
 
-  const trigger = href ? (
+  const tooltipContent = isDisabled ? `${title} · ${comingSoonLabel}` : title;
+
+  const trigger = isDisabled ? (
+    <button type="button" aria-label={tooltipContent} disabled className={className}>
+      {content}
+    </button>
+  ) : href ? (
     <Link href={href} aria-label={title} className={className}>
       {content}
     </Link>
@@ -199,5 +212,5 @@ function ActionIcon({
     </button>
   );
 
-  return <Tooltip content={title}>{trigger}</Tooltip>;
+  return <Tooltip content={tooltipContent}>{trigger}</Tooltip>;
 }

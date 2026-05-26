@@ -34,9 +34,13 @@ export async function setPrimaryBankAction(
     p_bank_id: bankId as string,
     p_user_id: userRes.user.id,
   });
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    console.error('[setPrimaryBank] rpc failed', { caseId, code: error.code });
+    return { ok: false, error: 'unknown' };
+  }
 
-  revalidatePath('/cases');
+  // Detail-page only. The dashboard's bank cell uses optimistic state and
+  // would needlessly refetch the full 1000-row list otherwise.
   revalidatePath(`/cases/${caseId}`);
   return { ok: true };
 }

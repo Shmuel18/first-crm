@@ -1,12 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 
 import { Calendar, MoreHorizontal, Pencil, Trash2, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -43,6 +51,7 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
   const ts = useTranslations('tasks.status');
   const tc = useTranslations('common');
   const [pending, startTransition] = useTransition();
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   const overdue = isOverdue(task);
   const completed = task.status === 'completed';
@@ -195,7 +204,7 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onClick={handleDelete}
+            onClick={() => setConfirmDeleteOpen(true)}
             className="text-red-600 focus:text-red-700 focus:bg-red-50"
           >
             <Trash2 className="size-3.5 me-2" />
@@ -203,6 +212,25 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogTitle>{t('deleteDialog.title')}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {t('deleteDialog.description', { title: task.title })}
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              render={
+                <Button variant="destructive" onClick={handleDelete} disabled={pending}>
+                  {tc('delete')}
+                </Button>
+              }
+            />
+            <AlertDialogCancel render={<Button variant="outline">{tc('cancel')}</Button>} />
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

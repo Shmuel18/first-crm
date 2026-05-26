@@ -7,8 +7,14 @@ import type { CaseId } from '@/lib/types/branded';
 import type { TaskListFilters } from '../schemas/task.schema';
 import type { TaskAssignee, TaskCaseOption, TaskStatus, TaskView, TaskWithRelations } from '../types';
 
+// Explicit column list (audit-driven). Mirrors the tasks Row type so schema
+// additions are gated by an intentional update here rather than auto-
+// propagating to clients via `*`.
+const TASK_FULL_COLUMNS =
+  'id, title, description, status, priority, tags, due_date, snoozed_until, completed_at, completed_by, case_id, lead_id, assigned_to, automation_rule_id, is_automated, google_calendar_event_id, metadata, deleted_at, created_at, created_by, updated_at, updated_by' as const;
+
 const TASK_SELECT = `
-  *,
+  ${TASK_FULL_COLUMNS},
   assignee:profiles!tasks_assigned_to_fkey(id, first_name, last_name),
   creator:profiles!tasks_created_by_fkey(id, first_name, last_name),
   case:cases!tasks_case_id_fkey(id, case_number)

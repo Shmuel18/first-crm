@@ -10,8 +10,14 @@ import {
   type DocumentWithRelations,
 } from '../types';
 
+// Explicit column list (audit-driven). Mirrors the documents Row type so
+// schema additions are gated by an intentional update here rather than
+// auto-propagating to clients via `*`.
+const DOCUMENT_FULL_COLUMNS =
+  'id, case_id, borrower_id, category_id, file_name, file_size, mime_type, status, notes, drive_file_id, drive_file_url, upload_date, expiry_date, uploaded_by, verified_at, verified_by, metadata, deleted_at, created_at, updated_at' as const;
+
 const DOCUMENT_SELECT = `
-  *,
+  ${DOCUMENT_FULL_COLUMNS},
   category:document_categories(id, key, name_he, name_en, drive_folder),
   uploader:uploaded_by(id, first_name, last_name),
   borrower:borrower_id(id, first_name, last_name)

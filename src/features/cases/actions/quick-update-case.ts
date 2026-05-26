@@ -72,13 +72,16 @@ export async function quickUpdateCaseFieldAction(
     .select('id');
 
   if (error) {
-    return { ok: false, error: error.message };
+    console.error('[quickUpdateCaseField] db error', { caseId, field, code: error.code });
+    return { ok: false, error: 'unknown' };
   }
   if (!updated || updated.length === 0) {
     return { ok: false, error: 'unauthorized' };
   }
 
-  revalidatePath('/cases');
+  // Detail-page only. The dashboard relies on the inline cells' optimistic
+  // state — invalidating /cases here would refetch the full 1000-row list
+  // on every keystroke against a status/bank/advisor cell.
   revalidatePath(`/cases/${caseId}`);
   return { ok: true };
 }

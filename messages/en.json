@@ -37,6 +37,7 @@
     "savedAgo": "Saved",
     "saveFailed": "Save failed. Try again.",
     "noStatus": "No status",
+    "comingSoon": "Coming soon",
     "errors": {
       "required": "Required",
       "invalidEmail": "Invalid email address",
@@ -1030,6 +1031,10 @@
       "deleted": "Task deleted",
       "actionFailed": "Action failed. Please try again.",
       "deleteFailed": "Delete failed. Please try again."
+    },
+    "deleteDialog": {
+      "title": "Delete task",
+      "description": "\"{title}\" will be removed from the list and kept in the recovery window."
     },
     "form": {
       "title": {

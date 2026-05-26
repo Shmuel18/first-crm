@@ -37,6 +37,7 @@
     "savedAgo": "נשמר",
     "saveFailed": "השמירה נכשלה. נסה שוב.",
     "noStatus": "ללא סטטוס",
+    "comingSoon": "בקרוב",
     "errors": {
       "required": "שדה חובה",
       "invalidEmail": "כתובת מייל לא תקינה",
@@ -1030,6 +1031,10 @@
       "deleted": "המשימה נמחקה",
       "actionFailed": "הפעולה נכשלה. נסה שוב.",
       "deleteFailed": "המחיקה נכשלה. נסה שוב."
+    },
+    "deleteDialog": {
+      "title": "מחיקת משימה",
+      "description": "המשימה \"{title}\" תוסר מהרשימה ותעבור לארכיון לתקופת השחזור."
     },
     "form": {
       "title": {

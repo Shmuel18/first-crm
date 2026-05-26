@@ -11,28 +11,11 @@ import { parseLocale } from '@/lib/i18n/direction';
 import { EditableAdvisorCell } from './editable-advisor-cell';
 import { EditableStatusCell } from './editable-status-cell';
 import { EditableTextCell } from './editable-text-cell';
+import type { CaseTableRowData } from '../types';
 
 type StatusOption = { id: string; name_he: string; color: string };
 type BankOption = { id: string; key: string; name_he: string; color: string; logo_url: string | null };
 type AdvisorOption = { id: string; first_name: string | null; last_name: string | null };
-
-export type CaseTableRowData = {
-  id: string;
-  index: number;
-  clientLabel: string;
-  nationalId: string | null;
-  statusId: string | null;
-  statusName: string | null;
-  statusColor: string | null;
-  primaryBank: BankOption | null;
-  secondaryBanksCount: number;
-  advisorId: string | null;
-  advisorName: string | null;
-  shortNote: string | null;
-  isStuck: boolean;
-  isFrozen: boolean;
-  updatedAt: string;
-};
 
 type Props = {
   row: CaseTableRowData;
