@@ -25,7 +25,8 @@ import { CaseActionBar } from '@/features/cases/components/case-action-bar';
 import { CaseAdminBlock } from '@/features/cases/components/case-admin-block';
 import { CaseBlock } from '@/features/cases/components/case-block';
 import { CaseBlockSkeleton } from '@/features/cases/components/case-block-skeleton';
-import { bandToAccent, EmptyBorrowers } from '@/features/cases/components/case-detail-helpers';
+import { AddBorrowerButton } from '@/features/borrowers/components/add-borrower-button';
+import { bandToAccent } from '@/features/cases/components/case-detail-helpers';
 import { DataRow } from '@/features/cases/components/case-info-rows';
 import { calculateLtv, ltvBand } from '@/features/cases/domain/calculations';
 import { formatMoney } from '@/features/cases/domain/format';
@@ -115,21 +116,13 @@ export default async function CaseDetailPage({ params }: Props) {
           title={`${t('blocks.borrowers')} ${borrowers.length > 0 ? `(${borrowers.length})` : ''}`}
           icon={<UserCircle2 />}
           fullWidth
-          rightSlot={
-            <Link
-              href={`/cases/${caseData.id}/borrowers/new`}
-              className="text-xs text-brand-gold-text hover:underline font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
-            >
-              {t('blocks.addBorrower')}
-            </Link>
-          }
+          rightSlot={<AddBorrowerButton caseId={caseData.id} variant="header" />}
         >
           {borrowers.length === 0 ? (
-            <EmptyBorrowers
-              caseId={caseData.id}
-              emptyText={t('blocks.noBorrowers')}
-              ctaText={t('blocks.addBorrowerFirst')}
-            />
+            <div className="text-center py-6 space-y-3">
+              <p className="text-sm text-neutral-500">{t('blocks.noBorrowers')}</p>
+              <AddBorrowerButton caseId={caseData.id} variant="cta" />
+            </div>
           ) : (
             // Borrowers stacked vertically (not side-by-side) so each card
             // gets full block width and inner fields can pair without

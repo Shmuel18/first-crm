@@ -1,51 +1,26 @@
-import Link from 'next/link';
+import { getLocale } from 'next-intl/server';
 
-import { getLocale, getTranslations } from 'next-intl/server';
-
-import { BackArrow } from '@/components/shared/back-arrow';
-import { CaseForm } from '@/features/cases/components/case-form';
-import {
-  listAdvisorOptions,
-  listCaseStatusOptions,
-  listCaseTypeOptions,
-} from '@/features/cases/services/case-lookups.service';
-import { isCurrentUserAdmin } from '@/lib/auth/permissions';
+import { NewCasePageClient } from '@/features/cases/components/new-case-page-client';
 import { parseLocale } from '@/lib/i18n/direction';
 
+/**
+ * /cases/new — draft-mode case creation page. See NewCasePageClient for
+ * the full UX rationale: the page renders the detail-page shell with
+ * borrowers + request_details editable, everything else locked until the
+ * single "save" action commits the case + borrowers atomically via the
+ * create_case_draft RPC (migration 074).
+ *
+ * Locale is the only thing the server hands down — the page itself fetches
+ * no case-shaped data (there is no case yet). The lookup options that the
+ * old form needed (case_types, statuses, advisors) all live behind locked
+ * blocks now; the user will see them as inline editors after redirect to
+ * /cases/[id].
+ */
 export default async function NewCasePage() {
-  const t = await getTranslations('case.form');
-  const tc = await getTranslations('common');
   const locale = parseLocale(await getLocale());
-
-  const [caseTypes, statuses, advisors, canSeeFinancials] = await Promise.all([
-    listCaseTypeOptions(),
-    listCaseStatusOptions(),
-    listAdvisorOptions(),
-    isCurrentUserAdmin(),
-  ]);
-
   return (
-    <div className="max-w-3xl space-y-6">
-      <div>
-        <Link
-          href="/cases"
-          className="inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-900 mb-3"
-        >
-          <BackArrow locale={locale} className="size-4" />
-          {tc('back')}
-        </Link>
-        <h1 className="text-2xl font-light text-neutral-900">{t('title.create')}</h1>
-      </div>
-
-      <div className="bg-white border border-neutral-200 rounded-lg p-6">
-        <CaseForm
-          mode="create"
-          caseTypes={caseTypes}
-          statuses={statuses}
-          advisors={advisors}
-          canSeeFinancials={canSeeFinancials}
-        />
-      </div>
+    <div className="max-w-5xl">
+      <NewCasePageClient locale={locale} />
     </div>
   );
 }

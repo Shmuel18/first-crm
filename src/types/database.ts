@@ -3071,6 +3071,13 @@ export type Database = {
         Returns: boolean
       }
       convert_lead_to_case: { Args: { p_lead_id: string }; Returns: string }
+      create_case_draft: {
+        Args: {
+          p_borrowers: Json
+          p_request_details: string | null
+        }
+        Returns: string
+      }
       create_case_with_financials: {
         Args: {
           p_assigned_advisor_id: string
