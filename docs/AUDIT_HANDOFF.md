@@ -172,15 +172,12 @@ This isn't critical for week one but it's the difference between "backup hasn't 
 
 ## 8. Things deferred — track these for a follow-up sprint
 
-After the bank-grade follow-up run (commits `980d888` → `67b75db`), the deferred list shrank a lot. What's *still* deferred:
+After the bank-grade follow-up run (commits `980d888` → `5676070`), the deferred list shrank a lot. What's *still* deferred:
 
-### Genuine deferrals (size or scope makes them post-MVP)
+### Genuine deferrals (need ops setup or product decision)
 
 | Item | Why deferred | Size |
 |---|---|---|
-| **Direct-to-storage document uploads** | TODO in `next.config.ts:14`. Replace the 21 MB `bodySizeLimit` with a signed-upload URL + post-upload validation route. Magic-byte security gate has to move from sync (`parseUploadInput`) to a post-upload check (download first 4 KB, validate, soft-delete on fail). Currently the 20 MB cap × 80-case scale = no real pressure. | ~1 day |
-| **Streamed PDF/XLSX export downloads** | Base64 response works to ~3K cases. At 80 cases the response is well under the Server Action body limit. Refactor to streaming route handler when a multi-tenant build lands. | ~1 day |
-| **Dashboard SQL pagination (`?page=` + virtual scroll)** | At 80 cases the dashboard fits in one fetch comfortably. Pagination becomes urgent at multi-office tenant scale. | ~2 days |
 | **Cases hard-delete from UI** | Manager has `delete_case` permission but no UI surfaces it (only soft-delete archive). Adding hard-delete is a product decision — Kaufman has not asked for it. | ~3 hours once decided |
 | **CSV/PII scrubbing in Sentry beforeSend** | After Sentry is wired up (step 6), add a `beforeSend` hook that strips PII before forwarding. Blocked on Sentry account setup. | ~1 hour |
 | **Scrypt per-deployment salt (S10)** | Current fixed-salt scrypt is cryptographically OK but the audit flagged rotation hygiene. Switching salts means a key-rotation event (v1→v2 prefix), planned with operational care. | ~4 hours |
@@ -195,6 +192,9 @@ After the bank-grade follow-up run (commits `980d888` → `67b75db`), the deferr
 | ~~Borrowers shared across cases RLS rewrite (DI6)~~ | Migrations 064 + 065 + TS rewrites of `update-borrower-field` action and `saveBorrowerForCase` service via scope-checked RPCs. |
 | ~~Three god-file service extractions~~ | audit.service split into parser + fk-resolver + service. drive-document-sync split into types + importer + sweeper + orchestrator. google-drive split out multipart + folder-naming. |
 | ~~MFA enrollment UI scaffold~~ | Server actions + client `MfaSection` component + i18n. Works on Supabase free tier today; Pro tier required only for AAL2 enforcement. |
+| ~~Direct-to-storage document uploads~~ | prepareUploadAction + finalizeUploadAction split. Browser PUTs bytes directly to Supabase Storage via signed URL; finalize does a 4 KB Range GET for magic-byte validation. next.config.ts bodySizeLimit dropped from 21 MB to 2 MB. |
+| ~~Streamed PDF/XLSX export downloads~~ | /api/exports/cases?format=... Route Handler returns raw binary with Content-Disposition; client uses fetch + blob anchor. No more base64 inflation. |
+| ~~Dashboard SQL pagination~~ | listCasesPaged uses PostgREST .range() + COUNT exact. ?page= URL param via parseCasePage. DashboardPagination renders prev/next when totalPages > 1 (hidden at 80-case scale). |
 | ~~`runtime='edge'` on /login + /forgot-password~~ | Pure render pages — no Supabase, no cookies. Cold start ~150 ms → ~10 ms. |
 | ~~Audit log partitioning by month~~ | Migration 063 — range partition by month, daily pg_cron job for future partitions, retention via `DROP PARTITION` instead of `DELETE`. |
 | ~~Bank logo mirror to /public~~ | Migration 062 + 5 SVGs in `/public/banks/`. |
