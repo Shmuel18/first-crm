@@ -3,6 +3,7 @@
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 
+import { env } from '@/lib/env';
 import { createClient } from '@/lib/supabase/server';
 import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
@@ -45,12 +46,16 @@ export async function updateProfileAction(
   if (error) return { ok: false, error: 'unknown', values };
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized', values };
 
-  // Keep the UI locale cookie in sync with the saved preference.
+  // Keep the UI locale cookie in sync with the saved preference. httpOnly:
+  // false is intentional — next-intl reads this from client-side code on
+  // hard navigations.
   const cookieStore = await cookies();
   cookieStore.set(LOCALE_COOKIE, parsed.data.language, {
     maxAge: ONE_YEAR_SECONDS,
     path: '/',
     sameSite: 'lax',
+    secure: env.NODE_ENV === 'production',
+    httpOnly: false,
   });
 
   revalidatePath('/', 'layout');

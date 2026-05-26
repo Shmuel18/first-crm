@@ -21,8 +21,11 @@ export const env = createEnv({
     RESEND_API_KEY: z.string().optional(),
     EMAIL_FROM: z.string().optional(),
     // Secret for the nightly backup cron. OPTIONAL: when unset, the cron route
-    // rejects every call, so the endpoint can't be triggered by anyone.
-    CRON_SECRET: z.string().optional(),
+    // rejects every call, so the endpoint can't be triggered by anyone. When
+    // set, require ≥32 chars so a stub value (`CRON_SECRET=test`) can't make
+    // the endpoint reachable with a trivially-brute-forceable token. Generate
+    // with `openssl rand -base64 48`.
+    CRON_SECRET: z.string().min(32).optional(),
     // Key for encrypting office_integrations OAuth tokens at rest (AES-256-GCM).
     // REQUIRED — without it, refresh tokens would land in Postgres in plaintext
     // and any DB dump / read leaks them. decryptWithKey is backward-compatible

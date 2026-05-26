@@ -65,9 +65,17 @@ export function storagePathFor(
   return `${caseId}/${documentId}${safeExt}`;
 }
 
+/**
+ * Signed URL for a stored document. Default 60s — Supabase storage signed
+ * URLs are unauthenticated bearer tokens for their entire lifetime, so a
+ * URL captured from history / a corporate proxy / a screenshare gives the
+ * holder access to PII (national IDs, bank statements) for that window.
+ * The iframe preview loads instantly; 60s is plenty for the success path.
+ * Callers that need a longer URL (e.g. async generation) pass it explicitly.
+ */
 export async function signedUrlFor(
   storagePath: string,
-  expiresInSeconds = 300,
+  expiresInSeconds = 60,
 ): Promise<string | null> {
   const supabase = await createClient();
   const { data, error } = await supabase.storage

@@ -9,6 +9,7 @@ import { getTranslations } from 'next-intl/server';
 import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
+import { sanitizeFilename } from '../domain/sanitize-filename';
 import { parseUploadInput } from '../domain/upload-input';
 import {
   resolveUploadContext,
@@ -47,6 +48,15 @@ export async function uploadDocumentAction(
   }
   const { caseId, file, meta } = input;
 
+  // Sanitize the browser-supplied filename before we touch any DB row or
+  // external service. file.name can contain control bytes, RTL-override
+  // chars (used to disguise extensions), or FS-reserved chars that break
+  // Drive object naming.
+  const safeFileName = sanitizeFilename(file.name);
+  if (!safeFileName) {
+    return { ok: false, error: 'validation', message: t('fileRequired') };
+  }
+
   const supabase = await createClient();
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
@@ -73,7 +83,7 @@ export async function uploadDocumentAction(
       case_id: caseId,
       category_id: meta.category_id,
       borrower_id: meta.borrower_id ?? null,
-      file_name: file.name,
+      file_name: safeFileName,
       file_size: file.size,
       mime_type: file.type,
       notes: meta.notes ?? null,

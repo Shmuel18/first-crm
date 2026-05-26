@@ -26,7 +26,7 @@ function redirectWithError(reason: string): Response {
   );
 }
 
-function isAllowedGoogleAccount(email: string, hostedDomain?: string): boolean {
+function isAllowedGoogleAccount(_email: string, hostedDomain?: string): boolean {
   const allowed = env.GOOGLE_OAUTH_ALLOWED_DOMAIN;
   if (!allowed) return true;
 
@@ -36,8 +36,16 @@ function isAllowedGoogleAccount(email: string, hostedDomain?: string): boolean {
     .filter(Boolean);
   if (allowedDomains.length === 0) return true;
 
-  const emailDomain = email.split('@')[1]?.toLowerCase();
-  return allowedDomains.some((domain) => hostedDomain?.toLowerCase() === domain || emailDomain === domain);
+  // hd-only match: the `hd` ("hosted domain") claim is only set by Google
+  // for Workspace accounts and reflects the verified ownership of the
+  // domain by an admin. The email LOCAL part is user-controlled (anyone
+  // can create an alias) and email DOMAIN equality is meaningless for
+  // non-Workspace accounts — Google won't enforce that gmail.com user's
+  // email "foo@kaufman.co.il" actually belongs to the kaufman.co.il
+  // domain. The original "hd OR emailDomain" check would let such an
+  // account through. Reject any account without a matching hd.
+  if (!hostedDomain) return false;
+  return allowedDomains.includes(hostedDomain.toLowerCase());
 }
 
 export async function GET(request: Request): Promise<Response> {
