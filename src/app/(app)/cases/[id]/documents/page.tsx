@@ -16,9 +16,18 @@ export default async function CaseDocumentsPage({ params }: Props) {
   const { id } = await params;
   const caseId = asCaseId(id);
 
-  // Best-effort: pull fresh files from Drive before rendering.
-  // Rate-limited internally to once every 10s - cheap if user navigates fast.
-  await autoSyncIfStale(caseId);
+  // Fire-and-forget the Drive freshness check. Previously this was awaited
+  // before any rendering, which blocked first paint on a Google API hop
+  // (~600 ms p99, up to 10 s on a cold/throttled call). The page now
+  // renders from the DB immediately; the next visit picks up whatever the
+  // sync wrote. autoSyncIfStale has internal 10 s throttling so rapid
+  // navigation doesn't spam Drive.
+  void autoSyncIfStale(caseId).catch((err) => {
+    console.warn('[documents page] background sync failed', {
+      caseId,
+      message: err instanceof Error ? err.message : 'unknown',
+    });
+  });
 
   const [caseData, documents, categories, borrowers] = await Promise.all([
     getCaseById(caseId),
