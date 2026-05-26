@@ -329,12 +329,18 @@
         "generatePdf": "Generate PDF for bank",
         "more": "More",
         "archive": "Move to archive",
-        "restore": "Restore from archive"
+        "restore": "Restore from archive",
+        "delete": "Delete case"
       },
       "archiveSuccess": "Case moved to archive",
       "restoreSuccess": "Case restored from archive",
       "archiveError": "Action failed. Please try again.",
-      "archiveUnauthorized": "You don't have permission for this action"
+      "archiveUnauthorized": "You don't have permission for this action",
+      "deleteSuccess": "Case deleted",
+      "deleteDialog": {
+        "title": "Delete case",
+        "description": "The case will be hidden from the dashboard and kept in the recovery window. Restoring afterwards requires contacting the developer."
+      }
     },
     "scheduleMeeting": {
       "dialogTitle": "Schedule meeting",
