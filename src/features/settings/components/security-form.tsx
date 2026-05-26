@@ -15,6 +15,8 @@ import { changePasswordAction } from '../actions/change-password';
 import { signOutEverywhereAction } from '../actions/sign-out-everywhere';
 import { SETTINGS_ACTION_INITIAL, type SettingsActionState } from '../types';
 
+import { MfaSection } from './mfa-section';
+
 export function SecurityForm() {
   const t = useTranslations('settings.security');
   const formRef = useRef<HTMLFormElement>(null);
@@ -62,6 +64,8 @@ export function SecurityForm() {
           <ChangePasswordButton label={t('changePassword')} />
         </div>
       </form>
+
+      <MfaSection />
 
       <form action={signOutEverywhereAction}>
         <h3 className="text-sm font-semibold text-neutral-900 mb-1">{t('sections.sessions')}</h3>

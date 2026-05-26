@@ -812,6 +812,33 @@
         "needsLower": "Password must contain a lowercase letter",
         "needsDigit": "Password must contain a digit",
         "mismatch": "Passwords don't match"
+      },
+      "mfa": {
+        "title": "Two-factor authentication",
+        "hint": "Add a second layer of protection using an Authenticator app on your phone.",
+        "enable": "Enable two-factor",
+        "disable": "Disable two-factor",
+        "statusEnabled": "Enabled",
+        "enabled": "Two-factor authentication enabled",
+        "disabled": "Two-factor authentication disabled",
+        "confirmDisable": "Disable two-factor authentication? Your account will be less secure.",
+        "dialog": {
+          "title": "Enable two-factor authentication",
+          "subtitle": "Scan the QR code with an Authenticator app (Google Authenticator, Authy, 1Password) and enter the 6-digit code it shows.",
+          "step1": "Open your Authenticator app",
+          "step2": "Scan the QR code or enter the secret key manually",
+          "step3": "Enter the 6-digit code shown in the app below",
+          "qrAlt": "QR code to scan in your authenticator app",
+          "secretLabel": "Secret key (if you can't scan)",
+          "codeLabel": "6-digit code",
+          "verify": "Verify and enable",
+          "cancel": "Cancel"
+        },
+        "errors": {
+          "generic": "Action failed. Please try again.",
+          "invalidCode": "Code is invalid or expired. Try again.",
+          "alreadyEnrolled": "Two-factor is already enabled"
+        }
       }
     },
     "notifications": {
