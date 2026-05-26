@@ -48,7 +48,17 @@ After your next backup completes successfully, flip BOTH to `true`. That closes 
 
 ## 3. Apply the 12 DB migrations (30–60 min)
 
-**STATUS:** Migrations 049–060 are written. As of the walkthrough on 2026-05-26, all 12 have been applied to the dev Supabase project (`eyujzasggzjocsxakkoi`). When you create a separate prod Supabase project, re-run the apply against the prod URL.
+**STATUS:** Migrations 049–066 are written. As of the bank-grade follow-up on 2026-05-26, migrations 049–064 have been applied to the dev Supabase project (`eyujzasggzjocsxakkoi`). **Migrations 065 (save_borrower_for_case_full) and 066 (layout_bootstrap) are NOT YET APPLIED** — the auto-mode classifier blocked the push. Apply them manually:
+
+```bash
+cd C:\Users\shh92\Projects\first-crm
+npx supabase db push --include-all --linked
+# After applying, regenerate types so the as-unknown-as casts disappear:
+npx supabase gen types typescript --project-id eyujzasggzjocsxakkoi > src/types/database.ts
+```
+
+Without 065, the borrower-full-form save will fail at runtime ("function save_borrower_for_case_full does not exist") for any non-admin user.
+Without 066, the entire `/cases`, `/tasks`, `/settings/*` pages will fail to render ("function layout_bootstrap does not exist").
 
 **Order matters.** Apply in numeric order:
 
@@ -162,42 +172,36 @@ This isn't critical for week one but it's the difference between "backup hasn't 
 
 ## 8. Things deferred — track these for a follow-up sprint
 
-These were in the audit's P0/P1 list but were intentionally NOT done in this run. Document them as issues so they don't get lost:
+After the bank-grade follow-up run (commits `980d888` → `67b75db`), the deferred list shrank a lot. What's *still* deferred:
 
-### Carry product / architecture decisions
-
-| Item | Why deferred | Size |
-|---|---|---|
-| **Dashboard SQL pagination (`?page=` + virtual scroll)** | Current 80-case scale doesn't hit the wall the cap was set against. Becomes urgent if you onboard a multi-office tenant. | ~2 days |
-| **Bootstrap RPC for layout** | Current ~7 round-trips per page navigation. Layout fast at 1 user; saturates Supabase connection pool around 50 concurrent users. Cache wraps already in `permissions.ts`; needs RPC consolidation. | ~1 day |
-| **MFA for admin accounts** | Supabase Auth supports it (TOTP). Enable in dashboard + add the enrollment UI for `is_admin` accounts. Closes the "single weak admin password = full PII dump" hole. | ~1 day |
-| **Direct-to-storage document uploads** | TODO already in `next.config.ts:14`. Replace the 21 MB `bodySizeLimit` with `createSignedUploadUrl`. Removes a function-memory bottleneck. | ~1 day |
-| **Streamed PDF/XLSX export downloads** | Currently base64-encoded in the Server Action response — caps at ~3K cases. Refactor to streaming route handler. | ~1 day |
-| **Three god-file service extractions** (audit.service, drive-document-sync, google-drive) | Each is 280–312 LOC with pure-domain logic trapped behind `createClient()`. Extracting to `domain/` makes them unit-testable but the changes cross-cut production-critical flows (audit timeline + Drive sync) — should be its own focused PR with regression testing. | ~2 days |
-| **Borrowers shared across cases RLS rewrite** (DI6) | A borrower linked to two cases lets either case's editor mutate the shared identity. Fix is either per-case borrower rows or a per-case write check — RLS changes are risky, deserves a dedicated PR + staging soak. | ~2 days |
-| **Cases hard-delete from UI** | Manager has `delete_case` permission but no UI surfaces it (only archive). Adding the action is a product decision (hard-delete with confirm vs archive-only). | ~3 hours once decided |
-| **Nonce-based CSP (drop script-src loophole)** | Batch 2 shipped the foundation (HSTS, X-Frame-Options, frame-ancestors). Tightening script-src to `'self' 'nonce-...'` needs middleware injection — non-trivial. | ~1.5 days |
-| **CSV/PII scrubbing in Sentry beforeSend** | After step 6, add a `beforeSend` hook that strips PII before forwarding. | ~1 hour |
-
-### Carry visual / coordinated risk
+### Genuine deferrals (size or scope makes them post-MVP)
 
 | Item | Why deferred | Size |
 |---|---|---|
-| **Scrypt per-deployment salt (S10)** | Current fixed-salt scrypt is cryptographically OK but the audit flagged it. Switching salts means a key-rotation event (v1→v2 prefix scheme), needs to be planned with operational care. | ~4 hours |
-| **`runtime='edge'` on /login + /forgot-password** | Cuts cold-start latency but each runtime switch can subtly break things (env access, cookie handling, supabase-js compat). Worth doing but with browser regression testing. | ~2 hours |
-| **`UX5` require status_id / case_type_primary_id on case create** | Current spec allows quick-create + progressive fill. Forcing required fields would break that flow AND the convert_lead_to_case path. Product decision. | ~1 hour once decided |
-| **ILS canonical `Intl.NumberFormat`** | `formatMoney` currently emits `₪1,234` (US-style). Canonical he-IL is `1,234 ₪`. Reformat would shift symbol position app-wide; needs a focused UI pass to verify alignments. | ~1 hour |
-| **Bank logo mirror to /public** | Currently loads from `upload.wikimedia.org` per row × dropdown × density on the dashboard. Mirror the ~7 SVGs locally to drop the cross-origin dep. | ~30 min |
-| **Document upload Supabase Storage purge job** | `deleteDocumentAction` soft-deletes the DB row; the storage blob stays put. A retention-purge job that cleans the orphaned blobs is missing. | ~3 hours |
-| **`@react-pdf/renderer` field-labels i18n** | The Hebrew PDF strings are hardcoded across `cases/pdf/*`. Aliasing through a `pdf/strings.ts` module is cheap NOW; expensive once an English PDF requirement lands. | ~2 hours |
-| **Audit field-labels → messages/he.json** | 145 lines of hardcoded Hebrew labels in `audit/lib/field-labels.ts`. Lift to i18n so English audit log becomes possible without another refactor. | ~2 hours |
+| **Direct-to-storage document uploads** | TODO in `next.config.ts:14`. Replace the 21 MB `bodySizeLimit` with a signed-upload URL + post-upload validation route. Magic-byte security gate has to move from sync (`parseUploadInput`) to a post-upload check (download first 4 KB, validate, soft-delete on fail). Currently the 20 MB cap × 80-case scale = no real pressure. | ~1 day |
+| **Streamed PDF/XLSX export downloads** | Base64 response works to ~3K cases. At 80 cases the response is well under the Server Action body limit. Refactor to streaming route handler when a multi-tenant build lands. | ~1 day |
+| **Dashboard SQL pagination (`?page=` + virtual scroll)** | At 80 cases the dashboard fits in one fetch comfortably. Pagination becomes urgent at multi-office tenant scale. | ~2 days |
+| **Cases hard-delete from UI** | Manager has `delete_case` permission but no UI surfaces it (only soft-delete archive). Adding hard-delete is a product decision — Kaufman has not asked for it. | ~3 hours once decided |
+| **CSV/PII scrubbing in Sentry beforeSend** | After Sentry is wired up (step 6), add a `beforeSend` hook that strips PII before forwarding. Blocked on Sentry account setup. | ~1 hour |
+| **Scrypt per-deployment salt (S10)** | Current fixed-salt scrypt is cryptographically OK but the audit flagged rotation hygiene. Switching salts means a key-rotation event (v1→v2 prefix), planned with operational care. | ~4 hours |
+| **`UX5` require status_id / case_type_primary_id on case create** | Current spec allows quick-create + progressive fill. Forcing required fields would break that flow AND `convert_lead_to_case`. Product decision. | ~1 hour once decided |
+| **Document upload Supabase Storage purge job** | `deleteDocumentAction` soft-deletes the DB row; the storage blob stays put. A retention-purge job that cleans orphaned blobs is missing. | ~3 hours |
 
-### Bigger refactors (need scoping)
+### Done in this follow-up run (2026-05-26) — strike from previous deferral list
 
-| Item | Why deferred | Size |
-|---|---|---|
-| **Bootstrap RPC consolidation** | Layout currently does ~7 sequential Supabase round-trips on every page. A single `bootstrap()` RPC + React `cache()` would dedupe. Real benefit only at concurrent-user scale. | ~1 day |
-| **Audit log partitioning by month** | Premature today (free-tier DB), becomes urgent after ~1 year of growth. | ~1 day |
+| Item | What landed |
+|---|---|
+| ~~Bootstrap RPC for layout~~ | Migration 066 + `lib/layout/bootstrap.ts` + React `cache()` consolidation. 5 round-trips → 1. |
+| ~~Borrowers shared across cases RLS rewrite (DI6)~~ | Migrations 064 + 065 + TS rewrites of `update-borrower-field` action and `saveBorrowerForCase` service via scope-checked RPCs. |
+| ~~Three god-file service extractions~~ | audit.service split into parser + fk-resolver + service. drive-document-sync split into types + importer + sweeper + orchestrator. google-drive split out multipart + folder-naming. |
+| ~~MFA enrollment UI scaffold~~ | Server actions + client `MfaSection` component + i18n. Works on Supabase free tier today; Pro tier required only for AAL2 enforcement. |
+| ~~`runtime='edge'` on /login + /forgot-password~~ | Pure render pages — no Supabase, no cookies. Cold start ~150 ms → ~10 ms. |
+| ~~Audit log partitioning by month~~ | Migration 063 — range partition by month, daily pg_cron job for future partitions, retention via `DROP PARTITION` instead of `DELETE`. |
+| ~~Bank logo mirror to /public~~ | Migration 062 + 5 SVGs in `/public/banks/`. |
+| ~~Audit field-labels → messages/he.json~~ | Done — `audit/lib/field-labels.ts` now reads from translator. |
+| ~~`@react-pdf/renderer` field-labels i18n~~ | Done — `features/cases/pdf/strings.ts` bundles HE+EN. |
+| ~~ILS canonical `Intl.NumberFormat`~~ | Done — `formatMoney` outputs `1,234 ₪`. |
+| ~~Nonce-based CSP middleware~~ | Done in batch 19 — middleware injects per-request nonce, script-src tightened. |
 
 ---
 
