@@ -12,6 +12,11 @@ import { getDriveClientIfConnected } from '@/features/integrations/services/driv
 import { encryptWithKey } from '@/lib/crypto/secrets';
 import { env } from '@/lib/env';
 
+/** Vercel Pro function cap. The backup serializes + encrypts + uploads every
+ *  business table; allow the maximum so a single slow Drive hop doesn't fail
+ *  the nightly run. Scope this UP if you've moved to streaming. */
+export const maxDuration = 60;
+
 /**
  * Nightly automated backup to Drive (Vercel Cron — see vercel.json).
  * No user session: the snapshot reads via the service-role client and the
@@ -51,10 +56,12 @@ export async function GET(request: Request): Promise<Response> {
     await uploadBackup(client, folderId, filename, payload);
     return NextResponse.json({ ok: true, filename, totalRows });
   } catch (err) {
-    console.error('nightly backup failed', err);
-    return NextResponse.json(
-      { ok: false, error: err instanceof Error ? err.message : 'unknown' },
-      { status: 500 },
-    );
+    console.error('[cron/backup] failed', {
+      message: err instanceof Error ? err.message : 'unknown',
+    });
+    // Return a generic error to whoever is hitting this — even though
+    // CRON_SECRET gates the route, the same hygiene rule applies as for
+    // user-facing actions: don't echo DB/RPC internals.
+    return NextResponse.json({ ok: false, error: 'backup_failed' }, { status: 500 });
   }
 }

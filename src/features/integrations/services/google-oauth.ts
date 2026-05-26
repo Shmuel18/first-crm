@@ -1,4 +1,5 @@
 import { env } from '@/lib/env';
+import { timeoutSignal } from '@/lib/http/with-timeout';
 
 /**
  * Google OAuth 2.0 helpers (server-only).
@@ -77,6 +78,7 @@ export async function exchangeCodeForTokens(code: string): Promise<TokenResponse
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body,
+    signal: timeoutSignal(),
   });
 
   if (!res.ok) {
@@ -117,6 +119,7 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenRes
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body,
+    signal: timeoutSignal(),
   });
 
   if (!res.ok) {
@@ -137,6 +140,7 @@ export async function fetchUserInfo(
 ): Promise<{ email: string; sub: string; hd?: string }> {
   const res = await fetch(USERINFO_URL, {
     headers: { Authorization: `Bearer ${accessToken}` },
+    signal: timeoutSignal(),
   });
   if (!res.ok) throw new Error('Failed to fetch Google user info');
   const data = (await res.json()) as { email: string; sub: string; hd?: string };
@@ -152,6 +156,7 @@ export async function revokeToken(token: string): Promise<void> {
   try {
     const res = await fetch(`${REVOKE_URL}?token=${encodeURIComponent(token)}`, {
       method: 'POST',
+      signal: timeoutSignal(),
     });
     if (!res.ok) {
       const body = await res.text().catch(() => '');

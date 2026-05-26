@@ -1,3 +1,5 @@
+import { timeoutSignal } from '@/lib/http/with-timeout';
+
 import type { IntegrationProvider, IntegrationRow } from '../types';
 import { refreshAccessToken, RefreshTokenError } from './google-oauth';
 import {
@@ -73,8 +75,12 @@ export class GoogleDriveClient {
 
   private async authedFetch(url: string, init: RequestInit = {}): Promise<Response> {
     const token = await this.getAccessToken();
+    // 8 s deadline per call. A Vercel function (60 s budget) needs to survive
+    // a couple of retries — letting a hung Drive call hold a function until
+    // the platform kills it cascade-burns concurrency.
     return fetch(url, {
       ...init,
+      signal: init.signal ?? timeoutSignal(),
       headers: {
         ...(init.headers ?? {}),
         Authorization: `Bearer ${token}`,

@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 
 import { env } from '@/lib/env';
+import { withTimeout } from '@/lib/http/with-timeout';
 
 export type SendEmailResult =
   | { ok: true; skipped?: false }
@@ -32,11 +33,21 @@ export async function sendEmail({ to, subject, html }: SendEmailInput): Promise<
 
   try {
     const resend = new Resend(apiKey);
-    const { error } = await resend.emails.send({ from, to, subject, html });
+    // Resend's SDK doesn't expose AbortSignal — wrap with a hard deadline
+    // so a slow Resend call can't hold a Vercel function indefinitely.
+    const { error } = await withTimeout(
+      resend.emails.send({ from, to, subject, html }),
+      10_000,
+      'resend_timeout',
+    );
 
-    if (error) return { ok: false, error: error.message };
+    if (error) {
+      console.error('[sendEmail] resend error', { name: error.name });
+      return { ok: false, error: 'send_failed' };
+    }
     return { ok: true };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : 'unknown' };
+    console.error('[sendEmail] threw', { message: err instanceof Error ? err.message : 'unknown' });
+    return { ok: false, error: 'send_failed' };
   }
 }

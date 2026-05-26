@@ -4,6 +4,11 @@ import { cookies } from 'next/headers';
 import { env, isGoogleOAuthConfigured } from '@/lib/env';
 import { createClient } from '@/lib/supabase/server';
 
+/** OAuth callback does a token exchange + userinfo fetch + an integrations
+ *  upsert. 30 s is plenty; capping it prevents a slow Google hop from holding
+ *  the function until the platform default kills it. */
+export const maxDuration = 30;
+
 import {
   exchangeCodeForTokens,
   fetchUserInfo,
