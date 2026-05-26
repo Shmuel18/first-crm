@@ -46,9 +46,9 @@ After your next backup completes successfully, flip BOTH to `true`. That closes 
 
 ---
 
-## 3. Apply the 11 DB migrations (30–60 min)
+## 3. Apply the 12 DB migrations (30–60 min)
 
-Migrations 049–059 are written but **not applied to prod**. They land in `supabase/migrations/`. Each file's header documents pre-deploy checks for migrations that may fail on dirty data.
+**STATUS:** Migrations 049–060 are written. As of the walkthrough on 2026-05-26, all 12 have been applied to the dev Supabase project (`eyujzasggzjocsxakkoi`). When you create a separate prod Supabase project, re-run the apply against the prod URL.
 
 **Order matters.** Apply in numeric order:
 
@@ -63,6 +63,7 @@ Migrations 049–059 are written but **not applied to prod**. They land in `supa
 9. **057_schedule_cleanup_jobs** — pg_cron schedules. Requires extension from 1c.
 10. **058_restore_strip_deleted_at** — updates restore_backup_snapshot to actually un-delete restored rows.
 11. **059_signup_hardening** — handle_new_user requires invited_by metadata. Existing users unaffected.
+12. **060_audit_followups** — second-pass audit hardening: profiles.metadata guard trigger, documents.uploaded_by DEFAULT, notifications explicit INSERT deny, tasks.tags GIN, drop duplicate idx_case_banks_primary + idx_case_borrowers_primary, profiles email case-insensitive UNIQUE + format CHECK, leads.national_id partial UNIQUE. **PRE-CHECK REQUIRED** for the two uniqueness items — header has the queries.
 
 **Recommended apply path:**
 
@@ -161,7 +162,9 @@ This isn't critical for week one but it's the difference between "backup hasn't 
 
 ## 8. Things deferred — track these for a follow-up sprint
 
-These were in the audit's P0 list but didn't fit this run. Document them as issues:
+These were in the audit's P0/P1 list but were intentionally NOT done in this run. Document them as issues so they don't get lost:
+
+### Carry product / architecture decisions
 
 | Item | Why deferred | Size |
 |---|---|---|
@@ -169,8 +172,32 @@ These were in the audit's P0 list but didn't fit this run. Document them as issu
 | **Bootstrap RPC for layout** | Current ~7 round-trips per page navigation. Layout fast at 1 user; saturates Supabase connection pool around 50 concurrent users. Cache wraps already in `permissions.ts`; needs RPC consolidation. | ~1 day |
 | **MFA for admin accounts** | Supabase Auth supports it (TOTP). Enable in dashboard + add the enrollment UI for `is_admin` accounts. Closes the "single weak admin password = full PII dump" hole. | ~1 day |
 | **Direct-to-storage document uploads** | TODO already in `next.config.ts:14`. Replace the 21 MB `bodySizeLimit` with `createSignedUploadUrl`. Removes a function-memory bottleneck. | ~1 day |
+| **Streamed PDF/XLSX export downloads** | Currently base64-encoded in the Server Action response — caps at ~3K cases. Refactor to streaming route handler. | ~1 day |
+| **Three god-file service extractions** (audit.service, drive-document-sync, google-drive) | Each is 280–312 LOC with pure-domain logic trapped behind `createClient()`. Extracting to `domain/` makes them unit-testable but the changes cross-cut production-critical flows (audit timeline + Drive sync) — should be its own focused PR with regression testing. | ~2 days |
+| **Borrowers shared across cases RLS rewrite** (DI6) | A borrower linked to two cases lets either case's editor mutate the shared identity. Fix is either per-case borrower rows or a per-case write check — RLS changes are risky, deserves a dedicated PR + staging soak. | ~2 days |
+| **Cases hard-delete from UI** | Manager has `delete_case` permission but no UI surfaces it (only archive). Adding the action is a product decision (hard-delete with confirm vs archive-only). | ~3 hours once decided |
 | **Nonce-based CSP (drop script-src loophole)** | Batch 2 shipped the foundation (HSTS, X-Frame-Options, frame-ancestors). Tightening script-src to `'self' 'nonce-...'` needs middleware injection — non-trivial. | ~1.5 days |
 | **CSV/PII scrubbing in Sentry beforeSend** | After step 6, add a `beforeSend` hook that strips PII before forwarding. | ~1 hour |
+
+### Carry visual / coordinated risk
+
+| Item | Why deferred | Size |
+|---|---|---|
+| **Scrypt per-deployment salt (S10)** | Current fixed-salt scrypt is cryptographically OK but the audit flagged it. Switching salts means a key-rotation event (v1→v2 prefix scheme), needs to be planned with operational care. | ~4 hours |
+| **`runtime='edge'` on /login + /forgot-password** | Cuts cold-start latency but each runtime switch can subtly break things (env access, cookie handling, supabase-js compat). Worth doing but with browser regression testing. | ~2 hours |
+| **`UX5` require status_id / case_type_primary_id on case create** | Current spec allows quick-create + progressive fill. Forcing required fields would break that flow AND the convert_lead_to_case path. Product decision. | ~1 hour once decided |
+| **ILS canonical `Intl.NumberFormat`** | `formatMoney` currently emits `₪1,234` (US-style). Canonical he-IL is `1,234 ₪`. Reformat would shift symbol position app-wide; needs a focused UI pass to verify alignments. | ~1 hour |
+| **Bank logo mirror to /public** | Currently loads from `upload.wikimedia.org` per row × dropdown × density on the dashboard. Mirror the ~7 SVGs locally to drop the cross-origin dep. | ~30 min |
+| **Document upload Supabase Storage purge job** | `deleteDocumentAction` soft-deletes the DB row; the storage blob stays put. A retention-purge job that cleans the orphaned blobs is missing. | ~3 hours |
+| **`@react-pdf/renderer` field-labels i18n** | The Hebrew PDF strings are hardcoded across `cases/pdf/*`. Aliasing through a `pdf/strings.ts` module is cheap NOW; expensive once an English PDF requirement lands. | ~2 hours |
+| **Audit field-labels → messages/he.json** | 145 lines of hardcoded Hebrew labels in `audit/lib/field-labels.ts`. Lift to i18n so English audit log becomes possible without another refactor. | ~2 hours |
+
+### Bigger refactors (need scoping)
+
+| Item | Why deferred | Size |
+|---|---|---|
+| **Bootstrap RPC consolidation** | Layout currently does ~7 sequential Supabase round-trips on every page. A single `bootstrap()` RPC + React `cache()` would dedupe. Real benefit only at concurrent-user scale. | ~1 day |
+| **Audit log partitioning by month** | Premature today (free-tier DB), becomes urgent after ~1 year of growth. | ~1 day |
 
 ---
 
@@ -186,17 +213,24 @@ Tests + typecheck pass for everything I shipped, but the verification workflow p
 
 ## 10. Verify checklist (after applying everything above)
 
-- [ ] Self-signup disabled in Supabase dashboard (1a)
-- [ ] PITR confirmed enabled (1b)
-- [ ] pg_cron extension enabled (1c)
-- [ ] `BACKUP_ENCRYPTION_STRICT` + `INTEGRATION_ENCRYPTION_STRICT` set in Vercel (start false)
-- [ ] Migrations 049–059 applied; cleanup of duplicates was needed for 052/053? (note: ___)
-- [ ] One full backup ran successfully after migration 057 (pg_cron schedule active)
+### Walkthrough on 2026-05-26 already completed:
+- [x] Self-signup disabled in Supabase dashboard (1a)
+- [x] pg_cron extension enabled (1c)
+- [x] `BACKUP_ENCRYPTION_STRICT` + `INTEGRATION_ENCRYPTION_STRICT` set in `.env.local` (start false)
+- [x] Migrations 049–060 applied to dev DB (no duplicate cleanup needed; the only pre-check hit was a 23MB Drive-sourced PowerPoint — fixed by widening migration 052's CHECK to 500MB)
+- [x] Supabase CLI installed as dev dependency
+
+### Still pending (do before paying customers):
+- [ ] **Upgrade Supabase to Pro tier** ($25/mo) + enable PITR (1b)
+- [ ] First successful Vercel deploy with all env vars
+- [ ] GitHub repo secrets (6) added for deploy.yml
+- [ ] Vercel auto-deploy disabled (workflow drives now)
+- [ ] UptimeRobot pinging `/api/health`
+- [ ] Sentry receiving errors
+- [ ] One nightly backup ran successfully via the cron
 - [ ] After that backup verified — flip both `*_ENCRYPTION_STRICT` to `true`
-- [ ] CI: deploy.yml ran end-to-end on a no-op push
-- [ ] UptimeRobot pinging /api/health
-- [ ] Sentry receiving errors (trigger one manually via `logger.error('test')`)
 - [ ] Manual mobile-phone test: login → drawer → all nav items → drawer closes on tap
 - [ ] Manual test: task delete dialog confirms before deleting
+- [ ] Manual test: forgot-password flow sends email + lands on /auth/set-password
 
 Once all checked, the score has moved from 58 to ~85 and the system is defensible for paying customers.
