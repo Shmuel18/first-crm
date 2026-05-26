@@ -20,6 +20,7 @@ import {
 } from '@/features/cases/services/case-lookups.service';
 import { getCaseViewCounts, listCases } from '@/features/cases/services/cases.service';
 import { userHasPermission } from '@/lib/auth/permissions';
+import { LeadsCardList } from '@/features/leads/components/leads-card-list';
 import { LeadsTable } from '@/features/leads/components/leads-table';
 import { LeadsToolbar } from '@/features/leads/components/leads-toolbar';
 import { countLeads, listLeads } from '@/features/leads/services/leads.service';
@@ -83,7 +84,16 @@ export default async function CasesListPage({ searchParams }: Props) {
       leads.length === 0 ? (
         <EmptyMessage text={t('viewTabs.leadsEmpty')} />
       ) : (
-        <LeadsTable leads={leads} />
+        <>
+          {/* Same breakpoint as the cases dashboard: the table needs ~900px
+              of comfort width, so switch to cards below xl. */}
+          <div className="xl:hidden">
+            <LeadsCardList leads={leads} />
+          </div>
+          <div className="hidden xl:block">
+            <LeadsTable leads={leads} />
+          </div>
+        </>
       );
   } else {
     const isArchive = view === 'archive';
