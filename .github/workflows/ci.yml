@@ -39,6 +39,9 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
+      # `npm install` (not `npm ci`) so a Dependabot lockfile-drift on a
+      # bumped transitive dep doesn't mask the actual audit signal. Pair
+      # with --no-audit so this step doesn't double-run the audit logic.
+      - run: npm install --no-audit --no-fund
       - name: npm audit (high severity)
         run: npm audit --audit-level=high
