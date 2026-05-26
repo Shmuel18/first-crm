@@ -18,6 +18,8 @@
 --   SELECT id, birth_date FROM public.borrowers WHERE birth_date > CURRENT_DATE;
 --   SELECT id, id_issue_date, id_expiry_date FROM public.borrowers
 --    WHERE id_issue_date > id_expiry_date;
+--   SELECT id, file_name, file_size FROM public.documents
+--    WHERE file_size IS NOT NULL AND (file_size < 0 OR file_size > 524288000);
 -- Clean up any violations before running this — the ALTER TABLE will fail
 -- on existing bad rows.
 -- =============================================================================
@@ -50,10 +52,17 @@ ALTER TABLE public.borrower_obligations
   ADD CONSTRAINT borrower_obligations_loan_amount_nn
     CHECK (loan_amount IS NULL OR loan_amount >= 0);
 
--- Document file size: bucket caps at 20 MB; reject anything outside [0, 20MB]
+-- Document file size: 500 MB upper bound. Note: the Supabase Storage bucket
+-- caps direct uploads at 20 MB (matches MAX_FILE_SIZE_BYTES in the schema +
+-- next.config.ts bodySizeLimit). But the `documents` table also records
+-- Drive-sourced files (drive-document-sync writes whatever Drive reports —
+-- Drive itself has a 5 TB ceiling). Capping the table at the bucket limit
+-- would reject any Drive document larger than 20 MB (e.g. a scanned PDF
+-- portfolio or a slide deck). 500 MB covers virtually every real mortgage
+-- document while still catching genuinely-corrupt values (GB-scale, negative).
 ALTER TABLE public.documents
   ADD CONSTRAINT documents_file_size_range
-    CHECK (file_size IS NULL OR (file_size >= 0 AND file_size <= 20971520));
+    CHECK (file_size IS NULL OR (file_size >= 0 AND file_size <= 524288000));
 
 -- Dates: birthday in the past; ID issue <= ID expiry
 ALTER TABLE public.borrowers
