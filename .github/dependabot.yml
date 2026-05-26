@@ -63,6 +63,12 @@ updates:
       # v10-compatible release.
       - dependency-name: "eslint"
         update-types: ["version-update:semver-major"]
+      # TypeScript 6 tightens strict mode + retires several APIs we use
+      # (legacy enum behavior, isolatedModules edge cases). PR #12 closed
+      # 2026-05-26 over the major bump. Re-allow once supabase-js + zod +
+      # @types/* confirm full v6 compat.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     labels:
       - dependencies
     commit-message:
