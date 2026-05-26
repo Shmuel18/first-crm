@@ -2,6 +2,9 @@
 
 import { renderToBuffer } from '@react-pdf/renderer';
 
+import { getLocale } from 'next-intl/server';
+
+import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
 
 import { loadCaseForBankPdf } from '../pdf/bank-pdf-data.service';
@@ -27,8 +30,13 @@ export async function generateBankPdfAction(caseId: string): Promise<Result> {
   const data = await loadCaseForBankPdf(asCaseId(caseId));
   if (!data) return { ok: false, error: 'not_found' };
 
+  // PDF strings follow the user's UI locale. Hebrew stays the default for
+  // Israeli mortgage submissions; English unlocks once an advisor's
+  // session is set to 'en'.
+  const locale = parseLocale(await getLocale());
+
   try {
-    const buffer = await renderToBuffer(<BankPdfDocument data={data} />);
+    const buffer = await renderToBuffer(<BankPdfDocument data={data} locale={locale} />);
     const base64 = buffer.toString('base64');
     const safeCaseNumber = data.case.caseNumber.replace(/[^\w-]/g, '_');
     return {

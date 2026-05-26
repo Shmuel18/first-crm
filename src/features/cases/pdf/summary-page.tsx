@@ -1,8 +1,11 @@
 import { Page, Text, View } from '@react-pdf/renderer';
 
+import type { Locale } from '@/lib/i18n/direction';
+
 import type { BankPdfData } from './bank-pdf-data.service';
 import { fmtCurrency } from './formatters';
 import { PageFooter, SummaryCell4 } from './shared';
+import type { PdfStrings } from './strings';
 import { COLOR_MUTED, styles } from './styles';
 
 /**
@@ -15,32 +18,40 @@ import { COLOR_MUTED, styles } from './styles';
  *   4. Notes placeholder
  *   5. Thanks + signature block (advisor name + phone + email)
  */
-export function SummaryPage({ data }: { data: BankPdfData }) {
+export function SummaryPage({
+  data,
+  strings,
+  locale,
+}: {
+  data: BankPdfData;
+  strings: PdfStrings;
+  locale: Locale;
+}) {
+  const dash = strings.values.dash;
   return (
     <Page size="A4" style={styles.page}>
-      <Text style={styles.sectionTitle}>דוח סיכום לבקשת המשכנתא</Text>
+      <Text style={styles.sectionTitle}>{strings.summary.title}</Text>
 
       <View style={{ marginTop: 12 }}>
         <Text style={{ fontSize: 9, color: COLOR_MUTED, marginBottom: 6, textAlign: 'right' }}>
-          סיכום הכנסות / הוצאות ({data.borrowers.length}{' '}
-          {data.borrowers.length === 1 ? 'לווה' : 'לווים'})
+          {strings.summary.incomeExpenseHeader(data.borrowers.length)}
         </Text>
         <View style={styles.summary4}>
           <SummaryCell4
-            label="הכנסות לווים"
-            value={fmtCurrency(data.totals.borrowersIncomeMonthly)}
+            label={strings.summary.borrowersIncome}
+            value={fmtCurrency(data.totals.borrowersIncomeMonthly, locale, dash)}
           />
           <SummaryCell4
-            label="התחייבויות לווים (מעל 18 חודשים)"
-            value={fmtCurrency(data.totals.borrowersObligationsLongTermMonthly)}
+            label={strings.summary.borrowersObligationsLT}
+            value={fmtCurrency(data.totals.borrowersObligationsLongTermMonthly, locale, dash)}
           />
           <SummaryCell4
-            label="הכנסות ערבים"
-            value={fmtCurrency(data.totals.guarantorsIncomeMonthly)}
+            label={strings.summary.guarantorsIncome}
+            value={fmtCurrency(data.totals.guarantorsIncomeMonthly, locale, dash)}
           />
           <SummaryCell4
-            label="התחייבויות ערבים (מעל 18 חודשים)"
-            value={fmtCurrency(data.totals.guarantorsObligationsLongTermMonthly)}
+            label={strings.summary.guarantorsObligationsLT}
+            value={fmtCurrency(data.totals.guarantorsObligationsLongTermMonthly, locale, dash)}
             last
           />
         </View>
@@ -48,14 +59,14 @@ export function SummaryPage({ data }: { data: BankPdfData }) {
 
       {/* Available income highlight */}
       <View style={styles.availableBox}>
-        <Text style={styles.availableLabel}>הכנסה פנויה לבקשה</Text>
+        <Text style={styles.availableLabel}>{strings.summary.availableIncome}</Text>
         <Text style={styles.availableValue}>
-          {fmtCurrency(data.totals.availableIncomeMonthly)}
+          {fmtCurrency(data.totals.availableIncomeMonthly, locale, dash)}
         </Text>
       </View>
 
       {/* DTI bands */}
-      <Text style={styles.bandsTitle}>החזר חודשי אפשרי לפי יחס החזר</Text>
+      <Text style={styles.bandsTitle}>{strings.summary.bandsTitle}</Text>
       <View style={styles.bandsGrid}>
         {data.totals.paymentBands.map((band, idx, arr) => (
           <View
@@ -66,18 +77,18 @@ export function SummaryPage({ data }: { data: BankPdfData }) {
                 : styles.bandCell
             }
           >
-            <Text style={styles.bandRatio}>יחס החזר {band.ratio}%</Text>
-            <Text style={styles.bandPayment}>{fmtCurrency(band.payment)}</Text>
+            <Text style={styles.bandRatio}>{strings.summary.bandRatio(band.ratio)}</Text>
+            <Text style={styles.bandPayment}>{fmtCurrency(band.payment, locale, dash)}</Text>
           </View>
         ))}
       </View>
 
       {/* Notes placeholder */}
-      <Text style={[styles.bandsTitle, { marginTop: 22 }]}>הערות</Text>
+      <Text style={[styles.bandsTitle, { marginTop: 22 }]}>{strings.summary.notesTitle}</Text>
       <View style={styles.notesBox} />
 
       {/* Thanks + signature */}
-      <Text style={styles.thanksLine}>תודה מראש,</Text>
+      <Text style={styles.thanksLine}>{strings.summary.thanks}</Text>
       <View style={styles.signatureBlock}>
         <View style={styles.signatureLine} />
         {data.advisorName && <Text style={styles.signatureName}>{data.advisorName}</Text>}
@@ -86,10 +97,12 @@ export function SummaryPage({ data }: { data: BankPdfData }) {
             {[data.advisorPhone, data.advisorEmail].filter(Boolean).join(' · ')}
           </Text>
         )}
-        {!data.advisorName && <Text style={styles.signatureMeta}>חתימת היועץ</Text>}
+        {!data.advisorName && (
+          <Text style={styles.signatureMeta}>{strings.summary.signatureFallback}</Text>
+        )}
       </View>
 
-      <PageFooter />
+      <PageFooter strings={strings} />
     </Page>
   );
 }

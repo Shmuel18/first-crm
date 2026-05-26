@@ -1,39 +1,44 @@
+import type { Locale } from '@/lib/i18n/direction';
+
 /**
- * Pure value formatters + enum-label dictionaries used across the bank-PDF
- * sections. Kept separate from styles/components so a section file can
- * import only what it needs without dragging in StyleSheet.
+ * Pure value formatters for the bank-PDF sections. Locale-aware so the
+ * generated PDF reads naturally in either Hebrew (he-IL thousands
+ * separators) or English (en-GB numerics).
+ *
+ * Enum-value labels (gender, residency, marital status, borrower role)
+ * live alongside the rest of the strings in ./strings.ts now — the per-
+ * locale lookup happens via the resolved PdfStrings object.
  */
 
-export const fmtCurrency = (v: number | null | undefined): string =>
-  v === null || v === undefined ? '—' : `${Math.round(v).toLocaleString('he-IL')} ₪`;
+function intlLocale(locale: Locale): string {
+  return locale === 'he' ? 'he-IL' : 'en-GB';
+}
 
-export const fmtDate = (iso: string | null | undefined): string => {
-  if (!iso) return '—';
+export function fmtCurrency(
+  v: number | null | undefined,
+  locale: Locale,
+  dash = '—',
+): string {
+  if (v === null || v === undefined) return dash;
+  return `${Math.round(v).toLocaleString(intlLocale(locale))} ₪`;
+}
+
+export function fmtDate(
+  iso: string | null | undefined,
+  locale: Locale,
+  dash = '—',
+): string {
+  if (!iso) return dash;
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('he-IL');
-};
+  if (Number.isNaN(d.getTime())) return dash;
+  return d.toLocaleDateString(intlLocale(locale));
+}
 
-export const fmtNum = (v: number | null | undefined): string =>
-  v === null || v === undefined ? '—' : v.toLocaleString('he-IL');
-
-export const ROLE_LABELS = { borrower: 'לווה', guarantor: 'ערב' } as const;
-
-export const RESIDENCY_LABELS: Record<string, string> = {
-  resident: 'תושב/ת ישראל',
-  foreign_resident: 'תושב/ת חוץ',
-  returning_resident: 'תושב/ת חוזר/ת',
-};
-
-export const MARITAL_LABELS: Record<string, string> = {
-  single: 'רווק/ה',
-  married: 'נשוי/אה',
-  divorced: 'גרוש/ה',
-  widowed: 'אלמן/ה',
-};
-
-export const GENDER_LABELS: Record<string, string> = {
-  male: 'זכר',
-  female: 'נקבה',
-  other: 'אחר',
-};
+export function fmtNum(
+  v: number | null | undefined,
+  locale: Locale,
+  dash = '—',
+): string {
+  if (v === null || v === undefined) return dash;
+  return v.toLocaleString(intlLocale(locale));
+}

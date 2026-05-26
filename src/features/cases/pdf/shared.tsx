@@ -1,5 +1,6 @@
 import { Text, View } from '@react-pdf/renderer';
 
+import type { PdfStrings } from './strings';
 import { styles } from './styles';
 
 /**
@@ -39,11 +40,15 @@ export function SummaryCell4({
  * left. Render once per <Page> with the `fixed` prop — react-pdf paints it
  * on every page even if content overflows.
  */
-export function PageFooter() {
+export function PageFooter({ strings }: { strings: PdfStrings }) {
   return (
     <View style={styles.footer} fixed>
-      <Text>Kaufman Finance Group · בקשה להגשה לבנק</Text>
-      <Text render={({ pageNumber, totalPages }) => `עמוד ${pageNumber} מתוך ${totalPages}`} />
+      <Text>{strings.footer.brandTagline}</Text>
+      <Text
+        render={({ pageNumber, totalPages }) =>
+          strings.footer.pageOfN(pageNumber, totalPages)
+        }
+      />
     </View>
   );
 }

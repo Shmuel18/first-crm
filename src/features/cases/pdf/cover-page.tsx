@@ -1,27 +1,31 @@
 import { Page, Text, View } from '@react-pdf/renderer';
 
+import type { Locale } from '@/lib/i18n/direction';
+
 import type { BankPdfData } from './bank-pdf-data.service';
-import {
-  fmtCurrency,
-  fmtDate,
-  fmtNum,
-  GENDER_LABELS,
-  MARITAL_LABELS,
-  RESIDENCY_LABELS,
-  ROLE_LABELS,
-} from './formatters';
+import { fmtCurrency, fmtDate, fmtNum } from './formatters';
 import { MetaItem, PageFooter } from './shared';
+import type { PdfStrings } from './strings';
 import { styles } from './styles';
 
 /**
  * Page 1: cover header (title with borrower names, brand block, requested
  * amount, date stamp) + meta strip + side-by-side borrower table.
  *
- * Title format: first 3 borrower names joined with " ו ", suffixed with
- * " ועוד N" if there are more. Matches the WISE/Hershkovitz convention.
+ * Title format: first 3 borrower names joined with the locale connector,
+ * suffixed with "…and N more" if there are more.
  */
-export function CoverPage({ data }: { data: BankPdfData }) {
-  const generatedAt = new Intl.DateTimeFormat('he-IL', {
+export function CoverPage({
+  data,
+  strings,
+  locale,
+}: {
+  data: BankPdfData;
+  strings: PdfStrings;
+  locale: Locale;
+}) {
+  const intlLocale = locale === 'he' ? 'he-IL' : 'en-GB';
+  const generatedAt = new Intl.DateTimeFormat(intlLocale, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -30,8 +34,9 @@ export function CoverPage({ data }: { data: BankPdfData }) {
   }).format(new Date());
 
   const titleNames = data.borrowers.slice(0, 3).map((b) => b.fullName);
-  const titleSuffix = data.borrowers.length > 3 ? ` ועוד ${data.borrowers.length - 3}` : '';
-  const title = titleNames.join(' ו') + titleSuffix;
+  const titleSuffix =
+    data.borrowers.length > 3 ? strings.cover.titleSuffix(data.borrowers.length - 3) : '';
+  const title = titleNames.join(strings.cover.titleConnector) + titleSuffix;
 
   return (
     <Page size="A4" style={styles.page}>
@@ -40,54 +45,63 @@ export function CoverPage({ data }: { data: BankPdfData }) {
         <View style={styles.coverRight}>
           <Text style={styles.coverTitle}>{title}</Text>
           <Text style={styles.coverSubtitle}>
-            סכום המשכנתא המבוקש: {fmtCurrency(data.case.requestedAmount)}
+            {strings.cover.requestedAmount(
+              fmtCurrency(data.case.requestedAmount, locale, strings.values.dash),
+            )}
           </Text>
           <Text style={styles.coverDate}>{generatedAt}</Text>
         </View>
         <View style={styles.brandBlock}>
           <View style={styles.brandBar} />
-          <Text style={styles.brandName}>Kaufman Finance Group</Text>
-          <Text style={styles.brandSub}>קופמן ייעוץ משכנתאות</Text>
+          <Text style={styles.brandName}>{strings.brandName}</Text>
+          <Text style={styles.brandSub}>{strings.brandSub}</Text>
         </View>
       </View>
       <View style={styles.coverRule} />
 
       {/* Meta strip */}
       <View style={styles.metaStrip}>
-        <MetaItem label="מספר תיק" value={data.case.caseNumber} />
-        <MetaItem label="נפתח" value={fmtDate(data.case.createdAt)} />
-        {data.case.statusName && <MetaItem label="סטטוס" value={data.case.statusName} />}
-        {data.advisorName && <MetaItem label="יועץ" value={data.advisorName} />}
+        <MetaItem label={strings.cover.metaCaseNumber} value={data.case.caseNumber} />
+        <MetaItem
+          label={strings.cover.metaOpened}
+          value={fmtDate(data.case.createdAt, locale, strings.values.dash)}
+        />
+        {data.case.statusName && (
+          <MetaItem label={strings.cover.metaStatus} value={data.case.statusName} />
+        )}
+        {data.advisorName && (
+          <MetaItem label={strings.cover.metaAdvisor} value={data.advisorName} />
+        )}
       </View>
 
       {/* Customer details */}
       <Text style={styles.sectionTitle}>
-        פרטי הלקוחות ({data.borrowers.length}{' '}
-        {data.borrowers.length === 1 ? 'לווה' : 'לווים'})
+        {strings.cover.customerDetails(data.borrowers.length)}
       </Text>
-      <BorrowerTable borrowers={data.borrowers} />
+      <BorrowerTable borrowers={data.borrowers} strings={strings} locale={locale} />
 
-      <PageFooter />
+      <PageFooter strings={strings} />
     </Page>
   );
 }
 
-/**
- * Side-by-side borrower table: rows are fields, columns are borrowers.
- * Compresses gracefully — 1 borrower = 2 cols, 2 borrowers = 3 cols, etc.
- * Above ~4 borrowers the columns get tight; for v1 we accept that.
- *
- * `fieldRows` is built imperatively so each row carries its own value
- * map per borrower — keeps the JSX flat and easy to skim.
- */
-function BorrowerTable({ borrowers }: { borrowers: BankPdfData['borrowers'] }) {
-  const fieldRows = buildFieldRows(borrowers);
+function BorrowerTable({
+  borrowers,
+  strings,
+  locale,
+}: {
+  borrowers: BankPdfData['borrowers'];
+  strings: PdfStrings;
+  locale: Locale;
+}) {
+  const fieldRows = buildFieldRows(borrowers, strings, locale);
 
   return (
     <View style={styles.sbsTable}>
-      {/* Header row: empty label cell + borrower column headers */}
       <View style={styles.sbsHeader}>
-        <Text style={[styles.sbsHeaderCell, styles.sbsLabelCell]}>פרטי הלווה</Text>
+        <Text style={[styles.sbsHeaderCell, styles.sbsLabelCell]}>
+          {strings.cover.borrowerHeader}
+        </Text>
         {borrowers.map((b, idx) => (
           <Text
             key={b.id}
@@ -97,11 +111,10 @@ function BorrowerTable({ borrowers }: { borrowers: BankPdfData['borrowers'] }) {
                 : styles.sbsHeaderCell
             }
           >
-            לווה {idx + 1}
+            {strings.cover.borrowerN(idx + 1)}
           </Text>
         ))}
       </View>
-      {/* Field rows */}
       {fieldRows.map((row) => (
         <View key={row.label} style={styles.sbsRow}>
           <Text style={[styles.sbsCell, styles.sbsLabelCell]}>{row.label}</Text>
@@ -125,66 +138,86 @@ function BorrowerTable({ borrowers }: { borrowers: BankPdfData['borrowers'] }) {
 
 type Row = { label: string; values: string[] };
 
-function buildFieldRows(borrowers: BankPdfData['borrowers']): Row[] {
+function buildFieldRows(
+  borrowers: BankPdfData['borrowers'],
+  strings: PdfStrings,
+  locale: Locale,
+): Row[] {
+  const f = strings.cover.fields;
+  const dash = strings.values.dash;
+  const roleLabel = (role: 'borrower' | 'guarantor') =>
+    role === 'borrower' ? strings.values.borrower : strings.values.guarantor;
+
   return [
     {
-      label: 'תפקיד בתיק',
-      values: borrowers.map((b) => `${ROLE_LABELS[b.role]}${b.isPrimary ? ' (ראשי)' : ''}`),
+      label: f.roleInCase,
+      values: borrowers.map(
+        (b) => `${roleLabel(b.role)}${b.isPrimary ? f.primarySuffix : ''}`,
+      ),
     },
-    { label: 'שם ושם משפחה', values: borrowers.map((b) => b.fullName) },
-    { label: 'מספר ת״ז', values: borrowers.map((b) => b.nationalId ?? '—') },
-    { label: 'תאריך הנפקת ת״ז', values: borrowers.map((b) => fmtDate(b.idIssueDate)) },
-    { label: 'תוקף ת״ז', values: borrowers.map((b) => fmtDate(b.idExpiryDate)) },
-    { label: 'תאריך לידה', values: borrowers.map((b) => fmtDate(b.birthDate)) },
+    { label: f.fullName, values: borrowers.map((b) => b.fullName) },
+    { label: f.nationalId, values: borrowers.map((b) => b.nationalId ?? dash) },
+    { label: f.idIssueDate, values: borrowers.map((b) => fmtDate(b.idIssueDate, locale, dash)) },
+    { label: f.idExpiryDate, values: borrowers.map((b) => fmtDate(b.idExpiryDate, locale, dash)) },
+    { label: f.birthDate, values: borrowers.map((b) => fmtDate(b.birthDate, locale, dash)) },
     {
-      label: 'גיל',
-      values: borrowers.map((b) => (b.ageYears === null ? '—' : String(b.ageYears))),
-    },
-    {
-      label: 'מגדר',
-      values: borrowers.map((b) => (b.gender ? (GENDER_LABELS[b.gender] ?? b.gender) : '—')),
+      label: f.age,
+      values: borrowers.map((b) => (b.ageYears === null ? dash : String(b.ageYears))),
     },
     {
-      label: 'מצב משפחתי',
+      label: f.gender,
       values: borrowers.map((b) =>
-        b.maritalStatus ? (MARITAL_LABELS[b.maritalStatus] ?? b.maritalStatus) : '—',
+        b.gender ? (strings.values.gender[b.gender] ?? b.gender) : dash,
       ),
     },
     {
-      label: 'מספר ילדים עד גיל 18',
+      label: f.maritalStatus,
       values: borrowers.map((b) =>
-        b.childrenCount === null ? '—' : String(b.childrenCount),
-      ),
-    },
-    { label: 'טלפון נייד', values: borrowers.map((b) => b.phone ?? '—') },
-    { label: 'דואר אלקטרוני', values: borrowers.map((b) => b.email ?? '—') },
-    { label: 'כתובת מגורים', values: borrowers.map((b) => b.address ?? '—') },
-    { label: 'אזרחות', values: borrowers.map((b) => b.citizenship ?? 'ישראלית') },
-    {
-      label: 'תושבות',
-      values: borrowers.map((b) =>
-        b.residencyType ? (RESIDENCY_LABELS[b.residencyType] ?? b.residencyType) : '—',
+        b.maritalStatus
+          ? (strings.values.maritalStatus[b.maritalStatus] ?? b.maritalStatus)
+          : dash,
       ),
     },
     {
-      label: 'הכנסה חודשית ממוצעת נטו',
-      values: borrowers.map((b) => fmtCurrency(b.monthlyIncomeTotal)),
+      label: f.childrenUnder18,
+      values: borrowers.map((b) =>
+        b.childrenCount === null ? dash : String(b.childrenCount),
+      ),
+    },
+    { label: f.phone, values: borrowers.map((b) => b.phone ?? dash) },
+    { label: f.email, values: borrowers.map((b) => b.email ?? dash) },
+    { label: f.address, values: borrowers.map((b) => b.address ?? dash) },
+    {
+      label: f.citizenship,
+      values: borrowers.map((b) => b.citizenship ?? f.defaultCitizenship),
     },
     {
-      label: 'מקור הכנסה עיקרי',
+      label: f.residency,
+      values: borrowers.map((b) =>
+        b.residencyType
+          ? (strings.values.residency[b.residencyType] ?? b.residencyType)
+          : dash,
+      ),
+    },
+    {
+      label: f.avgMonthlyIncomeNet,
+      values: borrowers.map((b) => fmtCurrency(b.monthlyIncomeTotal, locale, dash)),
+    },
+    {
+      label: f.primaryIncomeSource,
       values: borrowers.map((b) => {
         const primary = b.incomes[0];
-        if (!primary) return '—';
-        return [primary.typeName, primary.sourceName].filter(Boolean).join(' · ') || '—';
+        if (!primary) return dash;
+        return [primary.typeName, primary.sourceName].filter(Boolean).join(' · ') || dash;
       }),
     },
     {
-      label: 'וותק הכנסה עיקרית (חודשים)',
+      label: f.primaryIncomeTenure,
       values: borrowers.map((b) => {
         const primary = b.incomes[0];
         return primary?.tenureMonths === null || primary?.tenureMonths === undefined
-          ? '—'
-          : fmtNum(primary.tenureMonths);
+          ? dash
+          : fmtNum(primary.tenureMonths, locale, dash);
       }),
     },
   ];
