@@ -3122,6 +3122,14 @@ export type Database = {
         }
         Returns: string
       }
+      save_notification_settings: {
+        Args: {
+          p_email_task_assigned: boolean
+          p_email_task_completed: boolean
+          p_sla?: Json
+        }
+        Returns: undefined
+      }
       set_primary_bank: {
         Args: { p_bank_id: string; p_case_id: string; p_user_id: string }
         Returns: undefined

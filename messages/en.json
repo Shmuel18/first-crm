@@ -46,6 +46,7 @@
       "dateInFuture": "Date must be in the past",
       "invalidNumber": "Invalid number",
       "negative": "Must be a positive value",
+      "tooSmall": "Value too small",
       "tooLarge": "Value too large",
       "tooLong": "Text too long",
       "invalidEnum": "Invalid value",

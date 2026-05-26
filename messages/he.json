@@ -46,6 +46,7 @@
       "dateInFuture": "התאריך חייב להיות בעבר",
       "invalidNumber": "ערך מספרי לא תקין",
       "negative": "הערך חייב להיות חיובי",
+      "tooSmall": "הערך נמוך מדי",
       "tooLarge": "הערך גבוה מדי",
       "tooLong": "הטקסט ארוך מדי",
       "invalidEnum": "ערך לא חוקי",
