@@ -23,9 +23,12 @@ name: Deploy (migrations + Vercel)
 # Migrations 049-059 (the post-audit batch) are particularly sensitive — see
 # their headers for pre-deploy cleanup queries.
 
+# DISABLED during development (2026-05-26): no prod Supabase / Vercel project
+# yet, so every push to main fails the `supabase link` step. Re-enable by
+# restoring `on: push: branches: [main]` once the GitHub secrets listed below
+# are configured.
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: deploy-${{ github.ref }}
