@@ -174,15 +174,52 @@ This isn't critical for week one but it's the difference between "backup hasn't 
 
 After the bank-grade follow-up run (commits `980d888` → `5676070`), the deferred list shrank a lot. What's *still* deferred:
 
-### Genuine deferrals (need ops setup or product decision)
+### Final 5-item walkthrough (2026-05-26) — decisions
 
-| Item | Why deferred | Size |
+After the bank-grade follow-up, the deferred list got narrowed to 5 items and reviewed with the operator. Outcomes:
+
+| Item | Decision | Status |
 |---|---|---|
-| **Cases hard-delete from UI** | Manager has `delete_case` permission but no UI surfaces it (only soft-delete archive). Adding hard-delete is a product decision — Kaufman has not asked for it. | ~3 hours once decided |
-| **CSV/PII scrubbing in Sentry beforeSend** | After Sentry is wired up (step 6), add a `beforeSend` hook that strips PII before forwarding. Blocked on Sentry account setup. | ~1 hour |
-| **Scrypt per-deployment salt (S10)** | Current fixed-salt scrypt is cryptographically OK but the audit flagged rotation hygiene. Switching salts means a key-rotation event (v1→v2 prefix), planned with operational care. | ~4 hours |
-| **`UX5` require status_id / case_type_primary_id on case create** | Current spec allows quick-create + progressive fill. Forcing required fields would break that flow AND `convert_lead_to_case`. Product decision. | ~1 hour once decided |
-| **Document upload Supabase Storage purge job** | `deleteDocumentAction` soft-deletes the DB row; the storage blob stays put. A retention-purge job that cleans orphaned blobs is missing. | ~3 hours |
+| **Cases hard-delete from UI** | ❌ NO — stay with Archive-only (soft-delete + status `closed`). Kaufman hasn't asked for hard-delete. | n/a |
+| **`UX5` required fields on case create** | ❌ NO — keep status + case_type optional. The progressive-fill UX is intentional and `convert_lead_to_case` depends on it. | n/a |
+| **Sentry `beforeSend` PII scrub** | ✅ YES — full scaffold shipped (see commit `be1c0c3`). | Awaiting Sentry account + DSN |
+| **Scrypt per-deployment salt** | ✅ YES — v1+v2 prefix scheme + rekey script. | Awaiting salt env vars + script run |
+| **Storage blob purge job** | ✅ YES — daily cron at 03:30 UTC. | Live (vercel.json deploys it) |
+
+### Operator follow-up for the 3 implemented items
+
+**Sentry (~10 min):**
+1. Sign up at https://sentry.io (free tier = 5K events/month).
+2. Create a new Next.js project → copy DSN.
+3. Add to Vercel + `.env.local`:
+   ```
+   SENTRY_DSN=https://abc@oXXX.ingest.sentry.io/YYY
+   NEXT_PUBLIC_SENTRY_DSN=https://abc@oXXX.ingest.sentry.io/YYY
+   SENTRY_ENVIRONMENT=production
+   ```
+4. Trigger a deliberate error from `/audit-log` to verify it shows up scrubbed.
+
+**Scrypt v2 (~15 min):**
+1. Generate 2 salts: `openssl rand -base64 48` × 2 (each ≥ 32 chars).
+2. Add to Vercel + `.env.local`:
+   ```
+   INTEGRATION_ENCRYPTION_SALT_V2=...
+   BACKUP_ENCRYPTION_SALT_V2=...
+   ```
+3. Deploy. From then on, new backups write `enc:v2:` and new OAuth token refreshes encrypt with v2.
+4. From your machine with prod env loaded:
+   ```bash
+   npx tsx scripts/rekey-integrations-v2.ts
+   ```
+   Script reports rows scanned / rekeyed / already-v2 / plaintext / failures. Re-runnable.
+5. Wait ≥ 90 days (until all v1 backup files have rotated off Drive by retention).
+6. Flip `BACKUP_ENCRYPTION_STRICT=true` + `INTEGRATION_ENCRYPTION_STRICT=true` in Vercel.
+
+**Storage purge cron — no manual steps.** Vercel picks up the new cron from `vercel.json` on next deploy. Verify with:
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" https://your-app.vercel.app/api/cron/cleanup-orphaned-blobs
+```
+Expect `{ ok: true, scanned: 0, deleted: 0 }` on a healthy system (nothing to purge yet — needs 30 days of soft-deletes to accumulate).
 
 ### Done in this follow-up run (2026-05-26) — strike from previous deferral list
 
