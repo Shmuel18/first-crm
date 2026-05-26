@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 import {
   Bell,
   Building2,
@@ -13,6 +11,8 @@ import {
 import { getTranslations } from 'next-intl/server';
 
 import { createClient } from '@/lib/supabase/server';
+
+import { SettingsNavLink } from './settings-nav-link';
 
 type SettingsNavItem = {
   href: string;
@@ -84,30 +84,30 @@ export default async function SettingsLayout({
         <aside className="space-y-1">
           {items.map((item) => {
             const Icon = item.icon;
-            const className = `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition ${
-              item.disabled
-                ? 'text-neutral-300 cursor-not-allowed pointer-events-none'
-                : 'text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900'
-            }`;
-            return item.disabled ? (
-              <div
+            if (item.disabled) {
+              return (
+                <div
+                  key={item.href}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-neutral-300 cursor-not-allowed pointer-events-none"
+                  title={t('comingSoon')}
+                  role="link"
+                  aria-disabled="true"
+                >
+                  <Icon className="size-4" />
+                  <span className="flex-1">{t(item.labelKey)}</span>
+                  <span className="text-[10px] uppercase text-neutral-400">
+                    {t('comingSoon')}
+                  </span>
+                </div>
+              );
+            }
+            return (
+              <SettingsNavLink
                 key={item.href}
-                className={className}
-                title={t('comingSoon')}
-                role="link"
-                aria-disabled="true"
-              >
-                <Icon className="size-4" />
-                <span className="flex-1">{t(item.labelKey)}</span>
-                <span className="text-[10px] uppercase text-neutral-400">
-                  {t('comingSoon')}
-                </span>
-              </div>
-            ) : (
-              <Link key={item.href} href={item.href} className={className}>
-                <Icon className="size-4" />
-                <span>{t(item.labelKey)}</span>
-              </Link>
+                href={item.href}
+                label={t(item.labelKey)}
+                icon={Icon}
+              />
             );
           })}
         </aside>

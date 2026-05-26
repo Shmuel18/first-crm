@@ -66,7 +66,6 @@
     "unreadTasks": "{count, plural, =1 {משימה אחת פתוחה} other {# משימות פתוחות}}"
   },
   "topbar": {
-    "searchPlaceholder": "חיפוש לפי שם, ת״ז, טלפון או מספר תיק...",
     "newCase": "פתיחת תיק חדש",
     "logout": "התנתק",
     "userMenu": {
@@ -529,6 +528,7 @@
     },
     "errors": {
       "unauthorized": "אין הרשאה",
+      "primaryExists": "כבר קיים לווה ראשי בתיק. בטל קודם את הסימון מהלווה הראשי הקיים ואז סמן את הלווה הזה כראשי.",
       "generic": "שגיאה בשמירה. נסה שוב."
     },
     "maritalStatuses": {

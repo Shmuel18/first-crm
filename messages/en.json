@@ -66,7 +66,6 @@
     "unreadTasks": "{count, plural, =1 {1 open task} other {# open tasks}}"
   },
   "topbar": {
-    "searchPlaceholder": "Search by name, ID, phone or case number...",
     "newCase": "New Case",
     "logout": "Log out",
     "userMenu": {
@@ -529,6 +528,7 @@
     },
     "errors": {
       "unauthorized": "Not authorized",
+      "primaryExists": "Another borrower is already marked primary on this case. Unmark them first, then promote this borrower.",
       "generic": "Error saving. Please try again."
     },
     "maritalStatuses": {

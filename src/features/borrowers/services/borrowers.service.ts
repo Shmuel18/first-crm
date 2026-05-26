@@ -101,7 +101,11 @@ export type SaveBorrowerInput = {
 
 export type SaveBorrowerResult =
   | { ok: true; borrowerId: string }
-  | { ok: false; error: 'unauthorized' | 'unknown' };
+  | { ok: false; error: 'unauthorized' | 'primary_exists' | 'unknown' };
+
+// Postgres unique-violation code — surfaces when uq_case_borrowers_one_primary
+// (migration 024) rejects a second primary borrower on the same case.
+const PG_UNIQUE_VIOLATION = '23505';
 
 /**
  * Persist a borrower for a case in one of two modes:
@@ -146,7 +150,12 @@ export async function saveBorrowerForCase(
       .update({ role_in_case: input.roleInCase, is_primary: input.isPrimary })
       .eq('case_id', input.caseId)
       .eq('borrower_id', input.borrowerId);
-    if (linkError) return { ok: false, error: 'unknown' };
+    if (linkError) {
+      if (linkError.code === PG_UNIQUE_VIOLATION) {
+        return { ok: false, error: 'primary_exists' };
+      }
+      return { ok: false, error: 'unknown' };
+    }
 
     finalBorrowerId = input.borrowerId;
   } else {
@@ -163,7 +172,12 @@ export async function saveBorrowerForCase(
       role_in_case: input.roleInCase,
       is_primary: input.isPrimary,
     });
-    if (linkError) return { ok: false, error: 'unknown' };
+    if (linkError) {
+      if (linkError.code === PG_UNIQUE_VIOLATION) {
+        return { ok: false, error: 'primary_exists' };
+      }
+      return { ok: false, error: 'unknown' };
+    }
 
     finalBorrowerId = newBorrower.id;
   }

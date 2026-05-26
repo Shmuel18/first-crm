@@ -82,11 +82,21 @@ export function renderControl(p: ControlRenderProps) {
       ? '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [appearance:textfield]'
       : '';
 
+  // Mobile keyboard hint: pick the right virtual keyboard per field type.
+  // `tel` for phone numbers, `email` for email, `numeric` for currency /
+  // counts (decimal would show a "." key on iOS which we don't need).
+  const inputMode =
+    p.type === 'number' ? 'numeric'
+      : p.type === 'tel' ? 'tel'
+      : p.type === 'email' ? 'email'
+      : undefined;
+
   return (
     <input
       ref={p.inputRef}
       id={p.id}
       type={p.type}
+      inputMode={inputMode}
       value={p.localValue}
       onChange={(e) => {
         const v = e.target.value;

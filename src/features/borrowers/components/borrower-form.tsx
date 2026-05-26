@@ -73,7 +73,9 @@ export function BorrowerForm({
     state.ok === false && state.error !== 'idle' && state.error !== 'validation'
       ? state.error === 'unauthorized'
         ? t('errors.unauthorized')
-        : t('errors.generic')
+        : state.error === 'primary_exists'
+          ? t('errors.primaryExists')
+          : t('errors.generic')
       : null;
 
   const roleDefault = sub?.role_in_case ?? initialRole;
