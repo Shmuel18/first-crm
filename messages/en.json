@@ -426,7 +426,7 @@
       "deleteSuccess": "Case deleted",
       "deleteDialog": {
         "title": "Delete case",
-        "description": "The case will be hidden from the dashboard and kept in the recovery window. Restoring afterwards requires contacting the developer."
+        "description": "The case will be hidden from the dashboard and moved to \"Deleted cases\" in Settings. You can restore it from there within 14 days — after that it will be permanently deleted."
       }
     },
     "scheduleMeeting": {
@@ -526,6 +526,29 @@
         "unauthorized": "Not authorized to perform this action",
         "generic": "Error saving. Please try again.",
         "mortgageExceedsProperty": "Mortgage cannot exceed property value"
+      }
+    },
+    "draft": {
+      "title": "Open a new case",
+      "subtitle": "Add the borrowers and write the request story. The other blocks become editable once the case is saved.",
+      "locked": {
+        "hint": "Editable after the case is saved"
+      },
+      "borrowers": {
+        "emptyCta": "+ Add the first borrower",
+        "addTitle": "Add borrower",
+        "editTitle": "Edit borrower"
+      },
+      "save": {
+        "button": "Save case",
+        "ready": "Case is ready to save",
+        "needBorrower": "Add at least one borrower before saving"
+      },
+      "errors": {
+        "validation": "One or more fields are invalid",
+        "unauthorized": "You don't have permission to create a case",
+        "generic": "Something went wrong while saving. Please try again.",
+        "noBorrowers": "Add at least one borrower"
       }
     },
     "blocker": {
@@ -746,6 +769,7 @@
       "roles": "Roles & permissions",
       "integrations": "Integrations",
       "import": "Data import",
+      "recycleBin": "Deleted cases",
       "backup": "Backup & restore"
     },
     "profile": {
@@ -886,6 +910,35 @@
       "toast": {
         "failed": "Failed to update permission. Please try again.",
         "adminLocked": "The manager's permissions cannot be edited."
+      }
+    },
+    "recycleBin": {
+      "title": "Deleted cases",
+      "subtitle": "Cases that were deleted and can be restored within 14 days. After that they are permanently deleted automatically.",
+      "empty": "No deleted cases in the bin",
+      "noBorrower": "(No primary borrower)",
+      "deletedAt": "Deleted on {date}",
+      "deletedBy": "by {name}",
+      "purgeIn": "{days, plural, =0 {will be purged today} =1 {will be purged tomorrow} other {will be purged in # days}}",
+      "actions": {
+        "restore": "Restore",
+        "more": "More actions",
+        "permanentDelete": "Permanently delete now"
+      },
+      "restoreSuccess": "Case #{caseNumber} restored",
+      "permanentDeleteSuccess": "Case #{caseNumber} permanently deleted",
+      "confirmDialog": {
+        "title": "Permanent deletion",
+        "description": "Case #{caseNumber} will be gone forever — there will be no way to restore it. Files on Drive will remain.",
+        "typeToConfirm": "To confirm, type the case number: {caseNumber}",
+        "confirm": "Permanently delete",
+        "cancel": "Cancel"
+      },
+      "errors": {
+        "unauthorized": "You don't have permission for this action",
+        "not_found": "Case not found or already restored",
+        "mismatch": "Case number doesn't match — try again",
+        "unknown": "Action failed. Please try again."
       }
     },
     "backup": {

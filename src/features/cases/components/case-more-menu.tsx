@@ -97,10 +97,20 @@ export function CaseMoreMenu({
             }
           />
         </Tooltip>
-        <DropdownMenuContent align="end" className="min-w-48">
+        {/* Compact items matching DashboardExportButtons: text-xs, tight
+            padding, size-3.5 icons, centered icon+label pair. */}
+        <DropdownMenuContent align="end" className="min-w-36">
           {canToggle && (
-            <DropdownMenuItem onClick={onToggle} disabled={isPending}>
-              {isArchived ? <RotateCcw /> : <Archive />}
+            <DropdownMenuItem
+              onClick={onToggle}
+              disabled={isPending}
+              className="text-xs py-1 px-2.5 justify-center"
+            >
+              {isArchived ? (
+                <RotateCcw className="size-3.5" aria-hidden="true" />
+              ) : (
+                <Archive className="size-3.5" aria-hidden="true" />
+              )}
               {t(isArchived ? 'actions.restore' : 'actions.archive')}
             </DropdownMenuItem>
           )}
@@ -110,9 +120,9 @@ export function CaseMoreMenu({
               <DropdownMenuItem
                 onClick={() => setConfirmDeleteOpen(true)}
                 disabled={isPending}
-                className="text-red-600 focus:text-red-700 focus:bg-red-50"
+                className="text-xs py-1 px-2.5 justify-center text-red-600 focus:text-red-700 focus:bg-red-50"
               >
-                <Trash2 />
+                <Trash2 className="size-3.5" aria-hidden="true" />
                 {t('actions.delete')}
               </DropdownMenuItem>
             </>

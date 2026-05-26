@@ -5,6 +5,7 @@ import {
   KeyRound,
   Plug,
   ShieldCheck,
+  Trash2,
   Upload,
   UserCog,
 } from 'lucide-react';
@@ -52,6 +53,12 @@ const NAV: SettingsNavItem[] = [
     href: '/settings/import',
     labelKey: 'import',
     icon: Upload,
+    adminOnly: true,
+  },
+  {
+    href: '/settings/recycle-bin',
+    labelKey: 'recycleBin',
+    icon: Trash2,
     adminOnly: true,
   },
   {
