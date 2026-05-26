@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 
@@ -103,7 +104,14 @@ export function LoginForm() {
 
       <SubmitButton />
 
-      <p className="text-center pt-2 text-sm text-neutral-600">{t('forgotPassword')}</p>
+      <p className="text-center pt-2 text-sm">
+        <Link
+          href="/forgot-password"
+          className="text-brand-gold-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 rounded"
+        >
+          {t('forgotPasswordLink')}
+        </Link>
+      </p>
     </form>
   );
 }

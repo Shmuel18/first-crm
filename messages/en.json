@@ -87,6 +87,7 @@
       "submitButton": "Sign in",
       "submitting": "Signing in...",
       "forgotPassword": "Forgot password? Contact the system administrator to reset it.",
+      "forgotPasswordLink": "Forgot password?",
       "footer": "© 2026 Kaufman Finance Group · All rights reserved",
       "errors": {
         "invalidInput": "Invalid email or password",
@@ -96,6 +97,16 @@
         "rateLimited": "Too many sign-in attempts. Please try again in a few minutes.",
         "unknown": "Unknown error. Please try again."
       }
+    },
+    "forgotPassword": {
+      "title": "Reset password",
+      "subtitle": "Enter your email and we'll send a link to choose a new password.",
+      "emailLabel": "Email",
+      "submitButton": "Send reset link",
+      "submitting": "Sending...",
+      "successTitle": "If the account exists, a link was sent",
+      "successBody": "Check your inbox (and the spam folder). The link expires shortly.",
+      "backToLogin": "Back to sign in"
     },
     "setPassword": {
       "title": "Set a password",

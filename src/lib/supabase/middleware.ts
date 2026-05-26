@@ -72,7 +72,8 @@ export async function updateSession(request: NextRequest) {
     // /auth/callback itself is intentionally NOT protected — the exchange
     // happens BEFORE there's a session.
     matches('/auth/set-password');
-  const isAuthRoute = matches('/login') || matches('/signup');
+  const isAuthRoute =
+    matches('/login') || matches('/signup') || matches('/forgot-password');
 
   if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone();

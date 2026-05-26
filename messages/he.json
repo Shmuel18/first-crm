@@ -87,6 +87,7 @@
       "submitButton": "כניסה למערכת",
       "submitting": "מתחבר...",
       "forgotPassword": "שכחת סיסמה? פנה למנהל המערכת לאיפוס.",
+      "forgotPasswordLink": "שכחת סיסמה?",
       "footer": "© 2026 Kaufman Finance Group · כל הזכויות שמורות",
       "errors": {
         "invalidInput": "אימייל או סיסמה לא תקינים",
@@ -96,6 +97,16 @@
         "rateLimited": "יותר מדי נסיונות התחברות. נסה שוב בעוד מספר דקות.",
         "unknown": "שגיאה לא ידועה. נסה שוב."
       }
+    },
+    "forgotPassword": {
+      "title": "איפוס סיסמה",
+      "subtitle": "הזן את כתובת המייל שלך ונשלח לך קישור לבחירת סיסמה חדשה.",
+      "emailLabel": "כתובת מייל",
+      "submitButton": "שלח קישור איפוס",
+      "submitting": "שולח...",
+      "successTitle": "אם החשבון קיים — נשלח קישור",
+      "successBody": "בדוק את תיבת המייל שלך (וגם את תיקיית הספאם). הקישור תקף לזמן מוגבל.",
+      "backToLogin": "חזרה לדף הכניסה"
     },
     "setPassword": {
       "title": "הגדרת סיסמה",
