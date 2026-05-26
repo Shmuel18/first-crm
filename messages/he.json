@@ -773,7 +773,8 @@
       "comingSoon": "בקרוב",
       "sections": {
         "personal": "אישי",
-        "office": "המשרד",
+        "office": "משרד",
+        "system": "מערכת",
         "data": "נתונים"
       },
       "profile": "פרופיל אישי",

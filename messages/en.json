@@ -774,6 +774,7 @@
       "sections": {
         "personal": "Personal",
         "office": "Office",
+        "system": "System",
         "data": "Data"
       },
       "profile": "Profile",

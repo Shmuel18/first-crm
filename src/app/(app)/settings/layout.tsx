@@ -50,6 +50,11 @@ const NAV_SECTIONS: SettingsNavSection[] = [
     items: [
       { href: '/settings/office', labelKey: 'office', icon: Building2, adminOnly: true },
       { href: '/settings/people', labelKey: 'people', icon: Users, adminOnly: true },
+    ],
+  },
+  {
+    titleKey: 'system',
+    items: [
       { href: '/settings/templates', labelKey: 'templates', icon: MessageSquare, adminOnly: true },
       { href: '/settings/integrations', labelKey: 'integrations', icon: Plug, adminOnly: true },
     ],
@@ -94,11 +99,11 @@ export default async function SettingsLayout({
         <aside className="space-y-6">
           {sections.map((section) => (
             <div key={section.titleKey} className="space-y-1">
-              {/* Soft-gold pill section header. brand-gold-soft background
-                  echoes the topbar's tinted strip; brand-gold-text label in
-                  the serif display font for a premium feel. The pill takes
-                  full row width so the eye groups all items below it. */}
-              <h2 className="font-display text-xs font-medium text-brand-gold-text bg-brand-gold/15 border border-brand-gold/40 rounded-md px-3 py-1.5 mb-1.5">
+              {/* Plain gold section header — no pill background, just the
+                  serif display font in brand-gold-text. Sections are
+                  separated by the aside's space-y-6 (parent), so visual
+                  grouping comes from spacing, not borders. */}
+              <h2 className="font-display text-xs font-medium text-brand-gold-text px-3 pb-1.5">
                 {t(`sections.${section.titleKey}`)}
               </h2>
               {section.items.map((item) => {
