@@ -7,12 +7,8 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { MobileNav } from '@/components/layout/mobile-nav';
 import { UserMenu } from '@/components/layout/user-menu';
 import { NotificationBell } from '@/features/notifications/components/notification-bell';
-import {
-  countUnreadNotifications,
-  listRecentNotifications,
-} from '@/features/notifications/services/notifications.service';
-import { getMyProfile } from '@/features/settings/services/settings.service';
 import { parseLocale } from '@/lib/i18n/direction';
+import { getLayoutBootstrap } from '@/lib/layout/bootstrap';
 
 type TopbarProps = {
   tasksBadge?: number;
@@ -23,11 +19,10 @@ export async function Topbar({ tasksBadge, isAdmin = false }: TopbarProps = {}) 
   const t = await getTranslations('topbar');
   const locale = parseLocale(await getLocale());
 
-  const [profile, unread, notifications] = await Promise.all([
-    getMyProfile(),
-    countUnreadNotifications(),
-    listRecentNotifications(),
-  ]);
+  // Reuses the cached bootstrap envelope from AppLayout — same RPC call,
+  // no second round-trip even though both this component and the layout
+  // independently call getLayoutBootstrap.
+  const { profile, unreadNotifications, recentNotifications } = await getLayoutBootstrap();
 
   const fullName =
     [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') ||
@@ -63,8 +58,8 @@ export async function Topbar({ tasksBadge, isAdmin = false }: TopbarProps = {}) 
           </Link>
 
           <NotificationBell
-            initialUnread={unread}
-            notifications={notifications}
+            initialUnread={unreadNotifications}
+            notifications={recentNotifications}
             locale={locale}
           />
 
