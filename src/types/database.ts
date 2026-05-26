@@ -3094,6 +3094,7 @@ export type Database = {
       generate_case_number: { Args: never; Returns: string }
       has_permission: { Args: { perm_key: string }; Returns: boolean }
       import_cases: { Args: { p_rows: Json }; Returns: Json }
+      insert_overdue_notifications: { Args: { p_rows: Json }; Returns: number }
       is_active_profile: { Args: { uid: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       layout_bootstrap: { Args: never; Returns: Json }
