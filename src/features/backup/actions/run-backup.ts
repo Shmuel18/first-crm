@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 
 import { getDriveClientIfConnected } from '@/features/integrations/services/drive-case-uploader';
 import { isCurrentUserAdmin } from '@/lib/auth/permissions';
-import { encryptWithKey } from '@/lib/crypto/secrets';
+import { encryptWithKey, encryptWithKeyV2 } from '@/lib/crypto/secrets';
 import { env } from '@/lib/env';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
@@ -51,7 +51,12 @@ export async function runBackupAction(): Promise<RunBackupResult> {
     // Encrypt before upload. The snapshot contains borrower PII and
     // manager-only financials — anyone with Drive access would read them
     // otherwise. AES-256-GCM via lib/crypto/secrets with a dedicated key.
-    const payload = encryptWithKey(json, env.BACKUP_ENCRYPTION_KEY);
+    // v2 (per-deployment salt) is preferred when BACKUP_ENCRYPTION_SALT_V2
+    // is set; falls back to v1 (code-baked salt) otherwise. Restore reads
+    // both via prefix detection.
+    const payload = env.BACKUP_ENCRYPTION_SALT_V2
+      ? encryptWithKeyV2(json, env.BACKUP_ENCRYPTION_KEY, env.BACKUP_ENCRYPTION_SALT_V2)
+      : encryptWithKey(json, env.BACKUP_ENCRYPTION_KEY);
 
     const folderId = await ensureBackupFolder(client);
     const filename = backupFilename();

@@ -1,4 +1,4 @@
-import { decryptWithKey, encryptWithKey } from '@/lib/crypto/secrets';
+import { decryptWithKey, encryptWithKey, encryptWithKeyV2 } from '@/lib/crypto/secrets';
 import { env } from '@/lib/env';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
@@ -11,12 +11,19 @@ import type {
 } from '../types';
 
 // OAuth tokens are encrypted at rest with INTEGRATION_ENCRYPTION_KEY (required
-// at build time via env.ts). decryptWithKey is backward-compatible with legacy
-// plaintext rows — it returns them unchanged when the `enc:v1:` prefix is
-// missing — so rows written before encryption was enforced still load. On the
-// next write/refresh they re-encrypt automatically.
+// at build time via env.ts). Writes prefer the v2 scheme (per-deployment salt
+// from INTEGRATION_ENCRYPTION_SALT_V2) when that env var is set; otherwise
+// they fall back to v1 (code-baked salt). The decrypt path is prefix-routed
+// so v1 rows keep working alongside v2 rows during the rekey window.
 function encryptToken<T extends string | null | undefined>(value: T): T {
   if (typeof value !== 'string') return value;
+  if (env.INTEGRATION_ENCRYPTION_SALT_V2) {
+    return encryptWithKeyV2(
+      value,
+      env.INTEGRATION_ENCRYPTION_KEY,
+      env.INTEGRATION_ENCRYPTION_SALT_V2,
+    ) as T;
+  }
   return encryptWithKey(value, env.INTEGRATION_ENCRYPTION_KEY) as T;
 }
 
@@ -24,6 +31,7 @@ function decryptToken<T extends string | null | undefined>(value: T): T {
   if (typeof value !== 'string') return value;
   return decryptWithKey(value, env.INTEGRATION_ENCRYPTION_KEY, {
     strict: env.INTEGRATION_ENCRYPTION_STRICT,
+    saltV2: env.INTEGRATION_ENCRYPTION_SALT_V2,
   }) as T;
 }
 

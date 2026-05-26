@@ -14,7 +14,12 @@ import { restoreSnapshot } from '../services/restore.service';
 import type { RestoreBackupResult } from '../types';
 
 const MAX_BYTES = 20 * 1024 * 1024;
-const ENC_PREFIX = 'enc:v1:';
+// Restore handles both legacy v1 and the new v2 (per-deploy salt) backups.
+// Prefix detection routes to the right key derivation inside decryptWithKey.
+const ENC_PREFIX_V1 = 'enc:v1:';
+const ENC_PREFIX_V2 = 'enc:v2:';
+const isEncrypted = (s: string): boolean =>
+  s.startsWith(ENC_PREFIX_V1) || s.startsWith(ENC_PREFIX_V2);
 
 export async function restoreBackupAction(driveFileId: string): Promise<RestoreBackupResult> {
   const supabase = await createClient();
@@ -41,9 +46,10 @@ export async function restoreBackupAction(driveFileId: string): Promise<RestoreB
     // A tampered or wrong-key file throws on GCM auth-tag verification.
     let plaintext: string;
     try {
-      if (text.startsWith(ENC_PREFIX)) {
+      if (isEncrypted(text)) {
         plaintext = decryptWithKey(text, env.BACKUP_ENCRYPTION_KEY, {
           strict: env.BACKUP_ENCRYPTION_STRICT,
+          saltV2: env.BACKUP_ENCRYPTION_SALT_V2,
         });
       } else if (env.BACKUP_ENCRYPTION_STRICT) {
         console.error('[restoreBackup] refusing plaintext backup (strict mode)', {

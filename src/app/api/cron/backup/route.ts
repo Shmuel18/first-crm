@@ -9,7 +9,7 @@ import {
   uploadBackup,
 } from '@/features/backup/services/drive-backup.service';
 import { getDriveClientIfConnected } from '@/features/integrations/services/drive-case-uploader';
-import { encryptWithKey } from '@/lib/crypto/secrets';
+import { encryptWithKey, encryptWithKeyV2 } from '@/lib/crypto/secrets';
 import { env } from '@/lib/env';
 
 /** Vercel Pro function cap. The backup serializes + encrypts + uploads every
@@ -49,8 +49,11 @@ export async function GET(request: Request): Promise<Response> {
       data,
     });
     // Mirror runBackupAction: encrypt the snapshot before upload so Drive
-    // alone can't read PII / manager-only fields.
-    const payload = encryptWithKey(json, env.BACKUP_ENCRYPTION_KEY);
+    // alone can't read PII / manager-only fields. v2 (per-deploy salt)
+    // when BACKUP_ENCRYPTION_SALT_V2 is set, v1 otherwise.
+    const payload = env.BACKUP_ENCRYPTION_SALT_V2
+      ? encryptWithKeyV2(json, env.BACKUP_ENCRYPTION_KEY, env.BACKUP_ENCRYPTION_SALT_V2)
+      : encryptWithKey(json, env.BACKUP_ENCRYPTION_KEY);
     const folderId = await ensureBackupFolder(client);
     const filename = backupFilename();
     await uploadBackup(client, folderId, filename, payload);

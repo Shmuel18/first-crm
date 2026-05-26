@@ -1,0 +1,35 @@
+-- =============================================================================
+-- Migration 067: Note about v2 rekey path (no SQL changes)
+-- =============================================================================
+-- Migration-system marker only — the actual rekey of office_integrations
+-- happens via the TypeScript script at scripts/rekey-integrations-v2.ts.
+-- This file is committed so the migration history records the rekey event;
+-- it doesn't do SQL because:
+--
+--   - The encryption layer lives in the app (src/lib/crypto/secrets.ts),
+--     not in Postgres. SQL can't derive AES keys from scrypt without the
+--     pgcrypto extension + a different code path.
+--   - Re-encrypting requires READING the value (decrypt with v1 salt),
+--     deriving a new key (v2 salt from env), and WRITING the v2-prefixed
+--     ciphertext back. All three steps need the app's env vars — outside
+--     Postgres' reach.
+--
+-- Operator path:
+--   1. Set INTEGRATION_ENCRYPTION_SALT_V2 + BACKUP_ENCRYPTION_SALT_V2 in
+--      Vercel + .env.local (each: openssl rand -base64 48).
+--   2. Deploy the v2 code (this commit). New writes already go to v2.
+--   3. From a server with env populated, run:
+--        npx tsx scripts/rekey-integrations-v2.ts
+--      It iterates office_integrations rows, decrypts tokens via v1 salt,
+--      re-encrypts as v2, writes back. Idempotent — rows already at v2
+--      are skipped.
+--   4. Old backup files on Drive STAY v1 until a backup-retention sweep
+--      drops them past the 90-day mark. Restore handles both prefixes.
+--   5. Once 90 days have passed since this deploy AND
+--      scripts/rekey-integrations-v2.ts reports 0 v1 rows remaining,
+--      flip INTEGRATION_ENCRYPTION_STRICT + BACKUP_ENCRYPTION_STRICT to
+--      true in Vercel so any future regression that lands plaintext or
+--      v1 fails loudly.
+-- =============================================================================
+
+SELECT 1; -- placeholder so the migration runner doesn't complain about an empty file.

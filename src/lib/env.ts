@@ -56,12 +56,31 @@ export const env = createEnv({
       .enum(['true', 'false'])
       .default('false')
       .transform((v) => v === 'true'),
+    // Per-deployment salts for the v2 encryption layer. OPTIONAL — when
+    // unset, the decrypt path still handles `enc:v1:` rows (fixed-salt,
+    // baked into the code) but new encryptions degrade-write as v1 too.
+    // Once you've set these in Vercel + .env.local and run the rekey
+    // migration (067), strict mode below can be enabled to refuse v1
+    // entirely. Generate 32+ random bytes each: `openssl rand -base64 48`.
+    // Use DIFFERENT values for integration + backup so a leak of one
+    // doesn't compromise the other.
+    INTEGRATION_ENCRYPTION_SALT_V2: z.string().min(32).optional(),
+    BACKUP_ENCRYPTION_SALT_V2: z.string().min(32).optional(),
+    // Sentry DSN. OPTIONAL — when unset, Sentry init is skipped entirely
+    // (no SDK overhead in dev / on a fresh deploy without an account).
+    // Once you create a Sentry project, drop the DSN in here and the
+    // instrumentation hook picks it up on the next cold start.
+    SENTRY_DSN: z.string().url().optional(),
+    SENTRY_ENVIRONMENT: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_SUPABASE_URL: z.string().url('NEXT_PUBLIC_SUPABASE_URL must be a valid URL'),
     NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1, 'Missing NEXT_PUBLIC_SUPABASE_ANON_KEY'),
     NEXT_PUBLIC_APP_NAME: z.string().default('Kaufman Finance Group'),
     NEXT_PUBLIC_APP_URL: z.string().url().default('http://localhost:3000'),
+    // Same DSN as the server, but bundled into the client for browser-side
+    // error reporting. Mirror NEXT_PUBLIC_SENTRY_DSN=$SENTRY_DSN in Vercel.
+    NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
   },
   runtimeEnv: {
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -78,10 +97,15 @@ export const env = createEnv({
     BACKUP_ENCRYPTION_KEY: process.env.BACKUP_ENCRYPTION_KEY,
     BACKUP_ENCRYPTION_STRICT: process.env.BACKUP_ENCRYPTION_STRICT,
     INTEGRATION_ENCRYPTION_STRICT: process.env.INTEGRATION_ENCRYPTION_STRICT,
+    INTEGRATION_ENCRYPTION_SALT_V2: process.env.INTEGRATION_ENCRYPTION_SALT_V2,
+    BACKUP_ENCRYPTION_SALT_V2: process.env.BACKUP_ENCRYPTION_SALT_V2,
+    SENTRY_DSN: process.env.SENTRY_DSN,
+    SENTRY_ENVIRONMENT: process.env.SENTRY_ENVIRONMENT,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
   },
   emptyStringAsUndefined: true,
 });
