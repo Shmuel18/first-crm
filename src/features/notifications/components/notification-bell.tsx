@@ -19,7 +19,11 @@ import {
   markNotificationReadAction,
 } from '../actions/mark-read';
 import { formatRelativeTime } from '../domain/format';
-import type { Notification } from '../types';
+import type {
+  Notification,
+  NotificationDataCaseStatusOverdue,
+  NotificationDataTask,
+} from '../types';
 
 type Props = {
   initialUnread: number;
@@ -48,18 +52,40 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
   }
 
   const message = (n: Notification): string => {
-    if (n.type === 'case_status_overdue') {
-      return t('message.case_status_overdue', {
-        caseNumber: n.data.caseNumber ?? '',
-        statusName:
-          (locale === 'he' ? n.data.statusNameHe : n.data.statusNameEn) ?? '',
-        days: n.data.daysInStatus ?? 0,
-        threshold: n.data.threshold ?? 0,
-      });
+    // Exhaustive switch on n.type — TS surfaces a missing branch when a
+    // new NotificationType is added. The default arm is a defensive
+    // fallback for stale rows (e.g., a type removed from the enum but
+    // still in old DB rows) so the bell never crashes-renders.
+    switch (n.type) {
+      case 'case_status_overdue': {
+        // Narrow to the case-overdue data shape. Old/corrupt rows might
+        // lack some fields — fall back per-field to keep the message
+        // human-readable instead of rendering empty quotes / zeros.
+        const d = n.data as Partial<NotificationDataCaseStatusOverdue>;
+        const statusName =
+          (locale === 'he' ? d.statusNameHe : d.statusNameEn) ?? d.statusKey ?? t('unknownStatus');
+        return t('message.case_status_overdue', {
+          caseNumber: d.caseNumber ?? t('aCase'),
+          statusName,
+          days: d.daysInStatus ?? 0,
+          threshold: d.threshold ?? 0,
+        });
+      }
+      case 'task_assigned':
+      case 'task_completed': {
+        const d = n.data as Partial<NotificationDataTask>;
+        const actor = d.actorName || t('someone');
+        const task = d.taskTitle || t('aTask');
+        return t(`message.${n.type}`, { actor, task });
+      }
+      default: {
+        // Exhaustiveness check — TS errors here when a new
+        // NotificationType is added without a render branch.
+        const _exhaustive: never = n.type;
+        void _exhaustive;
+        return t('message.unknown');
+      }
     }
-    const actor = n.data.actorName || t('someone');
-    const task = n.data.taskTitle || t('aTask');
-    return t(`message.${n.type}`, { actor, task });
   };
 
   const handleClick = (n: Notification) => {

@@ -1216,10 +1216,13 @@
     "unreadIndicator": "לא נקראה",
     "someone": "מישהו",
     "aTask": "משימה",
+    "aCase": "תיק",
+    "unknownStatus": "סטטוס לא ידוע",
     "message": {
       "task_assigned": "{actor} הקצה לך משימה: {task}",
       "task_completed": "{actor} השלים משימה שהקצית: {task}",
-      "case_status_overdue": "תיק {caseNumber} בסטטוס \"{statusName}\" כבר {days} ימים (סף: {threshold})"
+      "case_status_overdue": "תיק {caseNumber} בסטטוס \"{statusName}\" כבר {days} ימים (סף: {threshold})",
+      "unknown": "התראה חדשה"
     }
   },
   "email": {

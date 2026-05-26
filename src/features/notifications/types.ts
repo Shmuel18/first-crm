@@ -21,25 +21,56 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
 };
 
 /**
- * Denormalized snapshot stored at creation time. Fields are optional because
- * each notification type populates only the subset it needs:
- *   - task_assigned / task_completed → taskTitle + actorName
- *   - case_status_overdue → caseNumber, statusKey, statusName(He|En),
- *     daysInStatus, threshold, enteredAt
+ * Denormalized snapshot stored at creation time. Discriminated by
+ * `notification.type` so the consumer can narrow to the exact data shape
+ * — TypeScript catches missing/wrong fields at compile time instead of
+ * silently rendering empty strings in the bell at runtime.
+ *
  * Storing snapshots means the bell renders correctly even after a task is
  * renamed/deleted or a status name changes later.
+ *
+ * IMPORTANT: when adding a new NotificationType:
+ *   1. Add the literal to NOTIFICATION_TYPE_VALUES above.
+ *   2. Add a matching member to the union below.
+ *   3. Add a render branch in notification-bell.tsx — TypeScript will
+ *      force you to via the exhaustive switch.
  */
-export type NotificationData = {
-  taskTitle?: string;
-  actorName?: string | null;
-  caseNumber?: string;
-  statusKey?: string;
-  statusNameHe?: string;
-  statusNameEn?: string;
-  daysInStatus?: number;
-  threshold?: number;
-  enteredAt?: string;
+export type NotificationDataTask = {
+  taskTitle: string;
+  actorName: string | null;
 };
+
+export type NotificationDataCaseStatusOverdue = {
+  caseNumber: string;
+  statusKey: string;
+  statusNameHe: string;
+  statusNameEn: string;
+  daysInStatus: number;
+  threshold: number;
+  enteredAt: string;
+};
+
+/**
+ * Discriminated union over `notification.type`. Index by type to get the
+ * exact shape — `NotificationDataByType['case_status_overdue']` is the
+ * full required-fields object, not a soup of optionals.
+ */
+export type NotificationDataByType = {
+  task_assigned: NotificationDataTask;
+  task_completed: NotificationDataTask;
+  case_status_overdue: NotificationDataCaseStatusOverdue;
+};
+
+/**
+ * Loose-shape kept for the storage path (Supabase row.data is JSON). At
+ * read time the bell narrows via `n.type` to the specific union member.
+ * New code that produces notifications should construct one of the
+ * specific types so missing-field bugs surface at compile time.
+ */
+export type NotificationData =
+  | NotificationDataTask
+  | NotificationDataCaseStatusOverdue
+  | Record<string, never>;
 
 export type Notification = Omit<NotificationRow, 'data' | 'type'> & {
   type: NotificationType;

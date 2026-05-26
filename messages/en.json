@@ -1216,10 +1216,13 @@
     "unreadIndicator": "Unread",
     "someone": "Someone",
     "aTask": "a task",
+    "aCase": "a case",
+    "unknownStatus": "unknown status",
     "message": {
       "task_assigned": "{actor} assigned you a task: {task}",
       "task_completed": "{actor} completed a task you assigned: {task}",
-      "case_status_overdue": "Case {caseNumber} has been in \"{statusName}\" for {days} days (threshold: {threshold})"
+      "case_status_overdue": "Case {caseNumber} has been in \"{statusName}\" for {days} days (threshold: {threshold})",
+      "unknown": "New notification"
     }
   },
   "email": {
