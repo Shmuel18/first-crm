@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { getLocale } from 'next-intl/server';
 
 import { env } from '@/lib/env';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
@@ -33,8 +34,22 @@ export async function inviteMemberAction(
   }
 
   const supabase = await createClient();
+  const { data: userRes } = await supabase.auth.getUser();
+  if (!userRes.user) return { ok: false, error: 'unauthorized', values };
+
   const { data: isAdmin } = await supabase.rpc('is_admin');
   if (isAdmin !== true) return { ok: false, error: 'unauthorized', values };
+
+  // Cap admin throughput so a compromised admin session can't burn invites
+  // to enumerate emails (admin.generateLink returns a distinct error when
+  // the address already exists). Legitimate bulk-invite is rare.
+  const ok = await checkRateLimit({
+    action: 'invite_member',
+    subject: `user:${userRes.user.id}`,
+    max: 10,
+    windowSeconds: 3600,
+  });
+  if (!ok) return { ok: false, error: 'rate_limited', values };
 
   const { email, first_name, last_name, phone, role_id } = parsed.data;
 

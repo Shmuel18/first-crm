@@ -38,6 +38,21 @@ export const env = createEnv({
     // with: `openssl rand -base64 48` (>=32 chars). Use a DIFFERENT value than
     // INTEGRATION_ENCRYPTION_KEY so a leak of one doesn't expose the other.
     BACKUP_ENCRYPTION_KEY: z.string().min(32),
+    // Strict-mode toggles for the encryption layer. Default false for backward
+    // compatibility with legacy plaintext rows / backups. Once you've confirmed
+    // every stored value has been re-encrypted (e.g. all OAuth tokens cleared
+    // by migration 046; at least one new backup written after enabling
+    // BACKUP_ENCRYPTION_KEY), flip these to "true" so any future code path
+    // that bypasses encryption fails loudly instead of silently accepting
+    // plaintext.
+    BACKUP_ENCRYPTION_STRICT: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((v) => v === 'true'),
+    INTEGRATION_ENCRYPTION_STRICT: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((v) => v === 'true'),
   },
   client: {
     NEXT_PUBLIC_SUPABASE_URL: z.string().url('NEXT_PUBLIC_SUPABASE_URL must be a valid URL'),
@@ -58,6 +73,8 @@ export const env = createEnv({
     CRON_SECRET: process.env.CRON_SECRET,
     INTEGRATION_ENCRYPTION_KEY: process.env.INTEGRATION_ENCRYPTION_KEY,
     BACKUP_ENCRYPTION_KEY: process.env.BACKUP_ENCRYPTION_KEY,
+    BACKUP_ENCRYPTION_STRICT: process.env.BACKUP_ENCRYPTION_STRICT,
+    INTEGRATION_ENCRYPTION_STRICT: process.env.INTEGRATION_ENCRYPTION_STRICT,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,

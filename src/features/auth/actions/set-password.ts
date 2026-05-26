@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 
+import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 
 import { SetPasswordSchema } from '../schemas/set-password.schema';
@@ -40,6 +41,18 @@ export async function setPasswordAction(
   const supabase = await createClient();
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { error: 'unauthorized' };
+
+  // Throttle the post-invite credential window: a stolen one-time link
+  // shouldn't grant an attacker unlimited password attempts. Legitimate
+  // users click once. fail-closed because this is a security-critical gate.
+  const ok = await checkRateLimit({
+    action: 'set_password',
+    subject: `user:${userRes.user.id}`,
+    max: 5,
+    windowSeconds: 3600,
+    failMode: 'closed',
+  });
+  if (!ok) return { error: 'rate_limited' };
 
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
   if (error) return { error: 'unknown' };

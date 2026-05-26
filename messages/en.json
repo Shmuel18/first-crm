@@ -93,6 +93,7 @@
         "invalidCredentials": "Incorrect email or password",
         "invalid_invite": "This invite link is invalid or has expired. Ask your admin for a new one.",
         "missing_code": "The invite link is missing. Ask your admin for a new one.",
+        "rateLimited": "Too many sign-in attempts. Please try again in a few minutes.",
         "unknown": "Unknown error. Please try again."
       }
     },
@@ -107,6 +108,7 @@
         "minLength": "Password must be at least 8 characters.",
         "mismatch": "Password confirmation does not match.",
         "unauthorized": "Your invite has expired. Ask the admin for a new link.",
+        "rateLimited": "Too many attempts. Please try again in an hour.",
         "unknown": "Saving the password failed. Please try again."
       }
     }
@@ -1148,6 +1150,7 @@
       "errors": {
         "unauthorized": "Only an admin can add team members.",
         "emailExists": "This email is already registered.",
+        "rateLimited": "Too many invites sent recently. Please try again in an hour.",
         "generic": "Sending the invite failed. Please try again."
       }
     }

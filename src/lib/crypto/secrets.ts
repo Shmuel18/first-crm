@@ -27,14 +27,37 @@ export function encryptWithKey(plaintext: string, secret: string): string {
   return PREFIX + Buffer.concat([iv, tag, ciphertext]).toString('base64');
 }
 
+/** Options for decryptWithKey. */
+export type DecryptOptions = {
+  /**
+   * When true, values WITHOUT the `enc:v1:` prefix throw instead of being
+   * returned unchanged. Callers should enable this once they've confirmed
+   * all stored values have been re-encrypted (e.g., after one full backup
+   * cycle), so a regression that lands plaintext fails loudly. Defaults to
+   * false (backward-compatible / legacy plaintext passthrough).
+   */
+  strict?: boolean;
+};
+
 /**
  * Decrypt a value produced by encryptWithKey. Values WITHOUT the enc: prefix
- * are returned unchanged — this is the backward-compat path for tokens stored
- * before encryption was enabled. Throws if an encrypted value was tampered
+ * are returned unchanged when strict=false (the default) — this is the
+ * backward-compat path for tokens stored before encryption was enabled. In
+ * strict mode plaintext values throw, so any code path that bypasses
+ * encryptWithKey fails loudly. Throws if an encrypted value was tampered
  * with or the key is wrong (GCM auth-tag check fails).
  */
-export function decryptWithKey(value: string, secret: string): string {
-  if (!value.startsWith(PREFIX)) return value;
+export function decryptWithKey(
+  value: string,
+  secret: string,
+  opts: DecryptOptions = {},
+): string {
+  if (!value.startsWith(PREFIX)) {
+    if (opts.strict) {
+      throw new Error('decryptWithKey: refusing plaintext value (strict mode)');
+    }
+    return value;
+  }
   const raw = Buffer.from(value.slice(PREFIX.length), 'base64');
   const iv = raw.subarray(0, IV_LEN);
   const tag = raw.subarray(IV_LEN, IV_LEN + TAG_LEN);

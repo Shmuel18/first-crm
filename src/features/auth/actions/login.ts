@@ -2,6 +2,8 @@
 
 import { redirect } from 'next/navigation';
 
+import { getRequestIp } from '@/lib/http/request-ip';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 
 import { LoginSchema } from '../schemas/login.schema';
@@ -20,6 +22,31 @@ export async function loginAction(
   if (!parsed.success) {
     return { error: 'invalid_input' };
   }
+
+  // Layered brute-force defense. The IP gate catches credential-stuffing
+  // from a single host; the per-email gate catches the same attacker
+  // rotating IPs against one account. Both use failMode='closed' so a
+  // transient DB outage can't silently disable the limiter — better to
+  // refuse a few legitimate logins for ~minute than open the door.
+  const ip = await getRequestIp();
+  const ipOk = await checkRateLimit({
+    action: 'login_attempt',
+    subject: `ip:${ip}`,
+    max: 10,
+    windowSeconds: 60,
+    failMode: 'closed',
+  });
+  if (!ipOk) return { error: 'rate_limited' };
+
+  const emailKey = parsed.data.email.toLowerCase().trim();
+  const emailOk = await checkRateLimit({
+    action: 'login_attempt',
+    subject: `email:${emailKey}`,
+    max: 5,
+    windowSeconds: 900,
+    failMode: 'closed',
+  });
+  if (!emailOk) return { error: 'rate_limited' };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);

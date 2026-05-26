@@ -4,6 +4,44 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
+/**
+ * Baseline security headers. CSP intentionally omits script-src/style-src
+ * tightening because Next 16 emits inline bootstrap scripts during
+ * hydration — switching to a nonce-per-request CSP requires middleware
+ * injection and is a separate follow-up. What ships here closes the
+ * highest-leverage attack surfaces (clickjacking, MIME-confusion, downgrade,
+ * form-action injection, base-tag injection) without breaking Next.
+ *
+ * - HSTS with preload: forces HTTPS for 2 years and qualifies for the
+ *   browser preload list.
+ * - X-Frame-Options DENY + CSP frame-ancestors 'none': belt-and-suspenders
+ *   clickjacking defense.
+ * - X-Content-Type-Options nosniff: blocks MIME-sniff confusion.
+ * - Referrer-Policy strict-origin-when-cross-origin: URLs (which include
+ *   /cases/:id) don't leak to third parties on link clicks.
+ * - Permissions-Policy: disables sensors the CRM never asks for.
+ */
+const SECURITY_HEADERS = [
+  { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  {
+    key: 'Permissions-Policy',
+    value: 'camera=(), microphone=(), geolocation=(), interest-cohort=(), payment=()',
+  },
+  {
+    key: 'Content-Security-Policy',
+    value: [
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "object-src 'none'",
+      'upgrade-insecure-requests',
+    ].join('; '),
+  },
+];
+
 const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
@@ -24,6 +62,9 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'upload.wikimedia.org', pathname: '/wikipedia/**' },
     ],
+  },
+  async headers() {
+    return [{ source: '/:path*', headers: SECURITY_HEADERS }];
   },
 };
 

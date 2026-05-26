@@ -5,7 +5,11 @@
  * can only export async functions - no types, no constants.
  */
 
-export type LoginErrorCode = 'invalid_input' | 'invalid_credentials' | 'unknown';
+export type LoginErrorCode =
+  | 'invalid_input'
+  | 'invalid_credentials'
+  | 'rate_limited'
+  | 'unknown';
 
 export type LoginState = { error: LoginErrorCode | null };
 
@@ -15,6 +19,7 @@ export type SetPasswordErrorCode =
   | 'invalid_input'
   | 'mismatch'
   | 'unauthorized'
+  | 'rate_limited'
   | 'unknown';
 
 export type SetPasswordState = { error: SetPasswordErrorCode | null };

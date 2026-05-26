@@ -26,7 +26,7 @@ export type InviteActionState =
     }
   | {
       ok: false;
-      error: 'validation' | 'unauthorized' | 'email_exists' | 'unknown';
+      error: 'validation' | 'unauthorized' | 'email_exists' | 'rate_limited' | 'unknown';
       fieldErrors?: Record<string, string>;
       values?: Partial<Record<string, string>>;
     }

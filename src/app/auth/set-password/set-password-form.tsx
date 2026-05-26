@@ -45,6 +45,7 @@ export function SetPasswordForm() {
     invalid_input: 'errors.minLength',
     mismatch: 'errors.mismatch',
     unauthorized: 'errors.unauthorized',
+    rate_limited: 'errors.rateLimited',
     unknown: 'errors.unknown',
   };
 

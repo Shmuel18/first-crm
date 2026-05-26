@@ -34,13 +34,25 @@ export async function restoreBackupAction(driveFileId: string): Promise<RestoreB
 
     // New backups are encrypted (enc:v1: prefix). Legacy backups created
     // before encryption shipped are plain JSON; they round-trip through
-    // decryptWithKey unchanged (the helper passes non-prefixed values through).
+    // decryptWithKey unchanged when BACKUP_ENCRYPTION_STRICT=false.
+    // When strict=true, plaintext files throw and the restore is refused —
+    // closes the "malicious admin uploads a hand-crafted plaintext backup"
+    // vector once you've confirmed all legitimate backups are encrypted.
     // A tampered or wrong-key file throws on GCM auth-tag verification.
     let plaintext: string;
     try {
-      plaintext = text.startsWith(ENC_PREFIX)
-        ? decryptWithKey(text, env.BACKUP_ENCRYPTION_KEY)
-        : text;
+      if (text.startsWith(ENC_PREFIX)) {
+        plaintext = decryptWithKey(text, env.BACKUP_ENCRYPTION_KEY, {
+          strict: env.BACKUP_ENCRYPTION_STRICT,
+        });
+      } else if (env.BACKUP_ENCRYPTION_STRICT) {
+        console.error('[restoreBackup] refusing plaintext backup (strict mode)', {
+          driveFileId,
+        });
+        return { ok: false, error: 'invalid_file' };
+      } else {
+        plaintext = text;
+      }
     } catch {
       return { ok: false, error: 'invalid_file' };
     }

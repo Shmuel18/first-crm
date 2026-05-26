@@ -22,7 +22,9 @@ function encryptToken<T extends string | null | undefined>(value: T): T {
 
 function decryptToken<T extends string | null | undefined>(value: T): T {
   if (typeof value !== 'string') return value;
-  return decryptWithKey(value, env.INTEGRATION_ENCRYPTION_KEY) as T;
+  return decryptWithKey(value, env.INTEGRATION_ENCRYPTION_KEY, {
+    strict: env.INTEGRATION_ENCRYPTION_STRICT,
+  }) as T;
 }
 
 // office_integrations is admin-only under RLS, but Drive upload/sync are run by

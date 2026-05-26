@@ -40,6 +40,7 @@ export function LoginForm() {
   const errorKeyMap: Record<LoginErrorCode, string> = {
     invalid_input: 'errors.invalidInput',
     invalid_credentials: 'errors.invalidCredentials',
+    rate_limited: 'errors.rateLimited',
     unknown: 'errors.unknown',
   };
 

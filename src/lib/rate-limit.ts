@@ -13,6 +13,15 @@ export type RateLimitConfig = {
   max: number;
   /** Window length in seconds. Counters reset at the next window boundary. */
   windowSeconds: number;
+  /**
+   * Behavior when the rate-limit RPC errors (DB unreachable, schema mismatch).
+   * - 'open' (default): log + allow. Right for expensive-but-non-malicious
+   *   actions (exports, backups, drive sync) where availability matters more.
+   * - 'closed': log + refuse. Required for security-critical actions
+   *   (login, password reset, enumeration oracles) so a DB blip doesn't
+   *   silently disable every brute-force defense in the codebase.
+   */
+  failMode?: 'open' | 'closed';
 };
 
 /**
@@ -24,17 +33,13 @@ export type RateLimitConfig = {
  * scale out — an in-memory Map per Lambda would give each box its own
  * counter, defeating the purpose. The RPC is SECURITY DEFINER so the
  * counter table itself stays behind RLS.
- *
- * Fail-open: if the RPC errors (DB unreachable, schema mismatch), we log
- * and return TRUE. The auth + permission checks elsewhere in the action
- * are still enforced — losing the rate limit is a small price for keeping
- * the feature available.
  */
 export async function checkRateLimit({
   action,
   subject,
   max,
   windowSeconds,
+  failMode = 'open',
 }: RateLimitConfig): Promise<boolean> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc('consume_rate_limit', {
@@ -44,8 +49,8 @@ export async function checkRateLimit({
     p_window_seconds: windowSeconds,
   });
   if (error) {
-    console.error('[checkRateLimit] RPC failed; allowing request', { action, error });
-    return true;
+    console.error('[checkRateLimit] RPC failed', { action, failMode, code: error.code });
+    return failMode === 'closed' ? false : true;
   }
   return data === true;
 }

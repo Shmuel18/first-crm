@@ -219,5 +219,6 @@ function getGenericError(
   if (state.error === 'idle' || state.error === 'validation') return null;
   if (state.error === 'unauthorized') return t('errors.unauthorized');
   if (state.error === 'email_exists') return t('errors.emailExists');
+  if (state.error === 'rate_limited') return t('errors.rateLimited');
   return t('errors.generic');
 }
