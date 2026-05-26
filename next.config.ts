@@ -55,7 +55,8 @@ const nextConfig: NextConfig = {
     },
   },
   // Bank logos used to come from upload.wikimedia.org via remotePatterns;
-  // migration 062 mirrored them into /public/banks/*.svg so the dashboard
+  // migration 062 mirrored them locally, and migration 069 swapped to the
+  // operator's branded PNG/JPG/WEBP files in /public/banks/. The dashboard
   // doesn't depend on a third-party CDN per bank cell. No remote image
   // hosts needed by the app today — if one is added later, declare it
   // here under `images.remotePatterns`.
