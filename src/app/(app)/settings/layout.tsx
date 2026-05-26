@@ -2,12 +2,14 @@ import {
   Bell,
   Building2,
   HardDrive,
-  KeyRound,
+  MessageSquare,
   Plug,
+  ScrollText,
   ShieldCheck,
   Trash2,
   Upload,
   UserCog,
+  Users,
 } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
@@ -23,49 +25,43 @@ type SettingsNavItem = {
   disabled?: boolean;
 };
 
-const NAV: SettingsNavItem[] = [
-  { href: '/settings/profile', labelKey: 'profile', icon: UserCog },
-  { href: '/settings/security', labelKey: 'security', icon: ShieldCheck },
+type SettingsNavSection = {
+  /** Translation key under `settings.nav.sections`; rendered above the items. */
+  titleKey: string;
+  items: SettingsNavItem[];
+};
+
+/**
+ * Sections group the 11-item nav into 3 visual chunks so the eye scans by
+ * category instead of by line. Section headers don't add clicks and aren't
+ * interactive — they're just labels above each group.
+ */
+const NAV_SECTIONS: SettingsNavSection[] = [
   {
-    href: '/settings/notifications',
-    labelKey: 'notifications',
-    icon: Bell,
+    titleKey: 'personal',
+    items: [
+      { href: '/settings/profile', labelKey: 'profile', icon: UserCog },
+      { href: '/settings/security', labelKey: 'security', icon: ShieldCheck },
+      { href: '/settings/notifications', labelKey: 'notifications', icon: Bell },
+    ],
   },
   {
-    href: '/settings/office',
-    labelKey: 'office',
-    icon: Building2,
-    adminOnly: true,
+    titleKey: 'office',
+    items: [
+      { href: '/settings/office', labelKey: 'office', icon: Building2, adminOnly: true },
+      { href: '/settings/people', labelKey: 'people', icon: Users, adminOnly: true },
+      { href: '/settings/templates', labelKey: 'templates', icon: MessageSquare, adminOnly: true },
+      { href: '/settings/integrations', labelKey: 'integrations', icon: Plug, adminOnly: true },
+    ],
   },
   {
-    href: '/settings/roles',
-    labelKey: 'roles',
-    icon: KeyRound,
-    adminOnly: true,
-  },
-  {
-    href: '/settings/integrations',
-    labelKey: 'integrations',
-    icon: Plug,
-    adminOnly: true,
-  },
-  {
-    href: '/settings/import',
-    labelKey: 'import',
-    icon: Upload,
-    adminOnly: true,
-  },
-  {
-    href: '/settings/recycle-bin',
-    labelKey: 'recycleBin',
-    icon: Trash2,
-    adminOnly: true,
-  },
-  {
-    href: '/settings/backup',
-    labelKey: 'backup',
-    icon: HardDrive,
-    adminOnly: true,
+    titleKey: 'data',
+    items: [
+      { href: '/settings/import', labelKey: 'import', icon: Upload, adminOnly: true },
+      { href: '/settings/audit-log', labelKey: 'auditLog', icon: ScrollText, adminOnly: true },
+      { href: '/settings/recycle-bin', labelKey: 'recycleBin', icon: Trash2, adminOnly: true },
+      { href: '/settings/backup', labelKey: 'backup', icon: HardDrive, adminOnly: true },
+    ],
   },
 ];
 
@@ -78,7 +74,14 @@ export default async function SettingsLayout({
 
   const supabase = await createClient();
   const { data: isAdmin } = await supabase.rpc('is_admin');
-  const items = NAV.filter((it) => !it.adminOnly || isAdmin === true);
+
+  // Filter items per section, then drop sections that ended up empty (e.g.
+  // a non-admin sees no items in the office/data sections — better to hide
+  // the headers than to show a header above nothing).
+  const sections = NAV_SECTIONS.map((section) => ({
+    titleKey: section.titleKey,
+    items: section.items.filter((it) => !it.adminOnly || isAdmin === true),
+  })).filter((section) => section.items.length > 0);
 
   return (
     <div className="-mt-6">
@@ -88,35 +91,46 @@ export default async function SettingsLayout({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6 mt-6">
-        <aside className="space-y-1">
-          {items.map((item) => {
-            const Icon = item.icon;
-            if (item.disabled) {
-              return (
-                <div
-                  key={item.href}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-neutral-300 cursor-not-allowed pointer-events-none"
-                  title={t('comingSoon')}
-                  role="link"
-                  aria-disabled="true"
-                >
-                  <Icon className="size-4" />
-                  <span className="flex-1">{t(item.labelKey)}</span>
-                  <span className="text-[10px] uppercase text-neutral-400">
-                    {t('comingSoon')}
-                  </span>
-                </div>
-              );
-            }
-            return (
-              <SettingsNavLink
-                key={item.href}
-                href={item.href}
-                label={t(item.labelKey)}
-                icon={<Icon className="size-4" />}
-              />
-            );
-          })}
+        <aside className="space-y-6">
+          {sections.map((section) => (
+            <div key={section.titleKey} className="space-y-1">
+              {/* Soft-gold pill section header. brand-gold-soft background
+                  echoes the topbar's tinted strip; brand-gold-text label in
+                  the serif display font for a premium feel. The pill takes
+                  full row width so the eye groups all items below it. */}
+              <h2 className="font-display text-xs font-medium text-brand-gold-text bg-brand-gold/15 border border-brand-gold/40 rounded-md px-3 py-1.5 mb-1.5">
+                {t(`sections.${section.titleKey}`)}
+              </h2>
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                if (item.disabled) {
+                  return (
+                    <div
+                      key={item.href}
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-neutral-300 cursor-not-allowed pointer-events-none"
+                      title={t('comingSoon')}
+                      role="link"
+                      aria-disabled="true"
+                    >
+                      <Icon className="size-4" />
+                      <span className="flex-1">{t(item.labelKey)}</span>
+                      <span className="text-[10px] uppercase text-neutral-400">
+                        {t('comingSoon')}
+                      </span>
+                    </div>
+                  );
+                }
+                return (
+                  <SettingsNavLink
+                    key={item.href}
+                    href={item.href}
+                    label={t(item.labelKey)}
+                    icon={<Icon className="size-4" />}
+                  />
+                );
+              })}
+            </div>
+          ))}
         </aside>
 
         <main>{children}</main>

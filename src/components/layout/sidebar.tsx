@@ -3,30 +3,24 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import {
-  CheckSquare,
-  LayoutDashboard,
-  MessageSquare,
-  ScrollText,
-  Settings,
-  Users,
-} from 'lucide-react';
+import { CheckSquare, LayoutDashboard, Settings } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 type NavItem = {
   href: string;
-  labelKey: 'dashboard' | 'tasks' | 'team' | 'templates' | 'auditLog' | 'settings';
+  labelKey: 'dashboard' | 'tasks' | 'settings';
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
   adminOnly?: boolean;
 };
 
+// Team / Templates / Audit Log used to live here as top-level admin items.
+// They moved into Settings (tabs) so the sidebar stays minimal and identical
+// for admins and advisors. Pages still live at /team, /templates, /audit-log
+// as redirects to /settings/<name> for back-compat with any old bookmarks.
 const BASE_TOP_ITEMS: readonly NavItem[] = [
   { href: '/cases', labelKey: 'dashboard', icon: LayoutDashboard },
   { href: '/tasks', labelKey: 'tasks', icon: CheckSquare },
-  { href: '/team', labelKey: 'team', icon: Users, adminOnly: true },
-  { href: '/templates', labelKey: 'templates', icon: MessageSquare, adminOnly: true },
-  { href: '/audit-log', labelKey: 'auditLog', icon: ScrollText, adminOnly: true },
 ] as const;
 
 const BOTTOM_ITEMS: readonly NavItem[] = [
@@ -35,14 +29,13 @@ const BOTTOM_ITEMS: readonly NavItem[] = [
 
 type SidebarProps = {
   tasksBadge?: number;
-  isAdmin?: boolean;
 };
 
-export function Sidebar({ tasksBadge, isAdmin = false }: SidebarProps) {
+export function Sidebar({ tasksBadge }: SidebarProps) {
   const pathname = usePathname();
   const t = useTranslations('nav');
 
-  const topItems = BASE_TOP_ITEMS.filter((item) => !item.adminOnly || isAdmin).map((item) =>
+  const topItems = BASE_TOP_ITEMS.map((item) =>
     item.labelKey === 'tasks' ? { ...item, badge: tasksBadge } : item,
   );
 

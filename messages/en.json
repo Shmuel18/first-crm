@@ -531,8 +531,17 @@
     "draft": {
       "title": "Open a new case",
       "subtitle": "Add the borrowers and write the request story. The other blocks become editable once the case is saved.",
+      "actionBar": {
+        "title": "New case",
+        "unsaved": "Not saved yet",
+        "leadStatus": "Lead"
+      },
       "locked": {
-        "hint": "Editable after the case is saved"
+        "hint": "Editable after the case is saved",
+        "noIncomes": "You'll be able to add incomes per borrower after saving the case.",
+        "noObligations": "You'll be able to add obligations per borrower after saving the case.",
+        "noTasks": "You'll be able to add tasks after the case is saved.",
+        "documents": "Document management + Drive sync opens after the case is saved."
       },
       "borrowers": {
         "emptyCta": "+ Add the first borrower",
@@ -542,7 +551,7 @@
       "save": {
         "button": "Save case",
         "ready": "Case is ready to save",
-        "needBorrower": "Add at least one borrower before saving"
+        "needBorrower": "Fill in first + last name for at least one borrower before saving"
       },
       "errors": {
         "validation": "One or more fields are invalid",
@@ -762,13 +771,20 @@
       "pageTitle": "Settings",
       "pageSubtitle": "Personal profile, office settings, integrations and backup",
       "comingSoon": "soon",
+      "sections": {
+        "personal": "Personal",
+        "office": "Office",
+        "data": "Data"
+      },
       "profile": "Profile",
       "security": "Security",
       "notifications": "Notifications",
       "office": "Office details",
-      "roles": "Roles & permissions",
+      "people": "Team & permissions",
+      "templates": "Message templates",
       "integrations": "Integrations",
       "import": "Data import",
+      "auditLog": "Audit log",
       "recycleBin": "Deleted cases",
       "backup": "Backup & restore"
     },
@@ -893,6 +909,15 @@
       "saved": "Preferences saved",
       "errors": {
         "generic": "Save failed. Please try again."
+      }
+    },
+    "people": {
+      "title": "Team & permissions",
+      "subtitle": "Manage who has access and what each role can do",
+      "tabs": {
+        "groupLabel": "View selection",
+        "members": "People",
+        "roles": "Roles"
       }
     },
     "roles": {

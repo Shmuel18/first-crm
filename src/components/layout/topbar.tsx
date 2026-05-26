@@ -12,10 +12,9 @@ import { getLayoutBootstrap } from '@/lib/layout/bootstrap';
 
 type TopbarProps = {
   tasksBadge?: number;
-  isAdmin?: boolean;
 };
 
-export async function Topbar({ tasksBadge, isAdmin = false }: TopbarProps = {}) {
+export async function Topbar({ tasksBadge }: TopbarProps = {}) {
   const t = await getTranslations('topbar');
   const locale = parseLocale(await getLocale());
 
@@ -34,7 +33,7 @@ export async function Topbar({ tasksBadge, isAdmin = false }: TopbarProps = {}) 
   return (
     <header className="h-16 bg-brand-black text-white sticky top-0 z-30 shadow-md">
       <div className="h-full px-4 flex items-center gap-3">
-        <MobileNav tasksBadge={tasksBadge} isAdmin={isAdmin} />
+        <MobileNav tasksBadge={tasksBadge} />
 
         <Link href="/cases" className="shrink-0" aria-label="Kaufman Finance Group">
           <Image

@@ -5,32 +5,21 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
-import {
-  CheckSquare,
-  LayoutDashboard,
-  Menu,
-  MessageSquare,
-  ScrollText,
-  Settings,
-  Users,
-  X,
-} from 'lucide-react';
+import { CheckSquare, LayoutDashboard, Menu, Settings, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 type NavItem = {
   href: string;
-  labelKey: 'dashboard' | 'tasks' | 'team' | 'templates' | 'auditLog' | 'settings';
+  labelKey: 'dashboard' | 'tasks' | 'settings';
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
   adminOnly?: boolean;
 };
 
+// Mirrors Sidebar — Team / Templates / Audit Log moved into Settings tabs.
 const BASE_TOP_ITEMS: readonly NavItem[] = [
   { href: '/cases', labelKey: 'dashboard', icon: LayoutDashboard },
   { href: '/tasks', labelKey: 'tasks', icon: CheckSquare },
-  { href: '/team', labelKey: 'team', icon: Users, adminOnly: true },
-  { href: '/templates', labelKey: 'templates', icon: MessageSquare, adminOnly: true },
-  { href: '/audit-log', labelKey: 'auditLog', icon: ScrollText, adminOnly: true },
 ] as const;
 
 const BOTTOM_ITEMS: readonly NavItem[] = [
@@ -39,7 +28,6 @@ const BOTTOM_ITEMS: readonly NavItem[] = [
 
 type Props = {
   tasksBadge?: number;
-  isAdmin?: boolean;
 };
 
 /**
@@ -48,7 +36,7 @@ type Props = {
  * without this the entire app is unreachable from a phone (logo is the
  * only link). Always renders the trigger; the trigger is hidden on md+.
  */
-export function MobileNav({ tasksBadge, isAdmin = false }: Props) {
+export function MobileNav({ tasksBadge }: Props) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const t = useTranslations('nav');
@@ -60,7 +48,7 @@ export function MobileNav({ tasksBadge, isAdmin = false }: Props) {
   // of cascading-render anti-pattern an effect shouldn't do.
   const close = () => setOpen(false);
 
-  const topItems = BASE_TOP_ITEMS.filter((i) => !i.adminOnly || isAdmin).map((i) =>
+  const topItems = BASE_TOP_ITEMS.map((i) =>
     i.labelKey === 'tasks' ? { ...i, badge: tasksBadge } : i,
   );
 
