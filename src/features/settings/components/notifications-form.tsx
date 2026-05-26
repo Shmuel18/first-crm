@@ -122,7 +122,7 @@ export function NotificationsForm({
                       placeholder={tSla('placeholder')}
                       defaultValue={initialValue(s.key)}
                       dir="ltr"
-                      className="max-w-32"
+                      className="max-w-32 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [appearance:textfield]"
                     />
                     <span className="text-sm text-neutral-500">{tSla('daysUnit')}</span>
                   </div>
