@@ -46,13 +46,31 @@ type BackupTable = (typeof BACKUP_TABLES)[number];
  *
  * Defense-in-depth: the whole snapshot is encrypted with BACKUP_ENCRYPTION_KEY
  * before it's uploaded to Drive (see actions/run-backup.ts), so a Drive-only
- * compromise doesn't read PII or manager-only fields. Even so, live OAuth
- * credentials shouldn't be in the file at all — if the encryption key ever
- * leaks alongside a backup, a refresh token replay is worse than losing them
- * (a restore re-authenticates instead).
+ * compromise doesn't read PII or manager-only fields. Even so, live
+ * credentials / secrets / MFA factors shouldn't be in the file at all — if
+ * the encryption key ever leaks alongside a backup, replay / impersonation
+ * is worse than losing the column (a restore re-authenticates / re-enrolls).
+ *
+ * The names below include plausible future credential-style columns that
+ * don't exist today. Cheap to list now, expensive to discover were missed
+ * after a leak.
  */
 const REDACTED_COLUMNS: Partial<Record<BackupTable, readonly string[]>> = {
-  profiles: ['google_calendar_refresh_token'],
+  profiles: [
+    'google_calendar_refresh_token',
+    'password_hash',
+    'recovery_token',
+    'mfa_secret',
+    'totp_secret',
+    'api_key',
+    'session_token',
+  ],
+  office_settings: [
+    // bank_account_number — sensitive even before migration 061 tightens
+    // SELECT to admin-only. Restore re-enters this once from the office
+    // settings UI.
+    'bank_account_number',
+  ],
 };
 
 const PAGE_SIZE = 1000;

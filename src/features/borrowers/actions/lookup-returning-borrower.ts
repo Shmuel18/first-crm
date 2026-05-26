@@ -49,11 +49,15 @@ export async function lookupReturningBorrowerAction(
   // limits results to borrowers on the caller's cases, a malicious advisor
   // could probe many IDs to map out their case roster faster than legitimate
   // use. 10/min is generous for a real "is this a returning client?" flow.
+  // failMode='closed' — a DB hiccup must NOT silently disable this gate;
+  // refusing legitimate lookups for ~1 min is preferable to opening the
+  // enumeration door.
   const allowed = await checkRateLimit({
     action: 'lookup_borrower',
     subject: `user:${userRes.user.id}`,
     max: 10,
     windowSeconds: 60,
+    failMode: 'closed',
   });
   if (!allowed) return null;
 
