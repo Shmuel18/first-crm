@@ -44,6 +44,9 @@ export async function updateSlaAction(
   }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized', values };
 
-  revalidatePath('/settings/sla');
+  // SLA settings live under /settings/notifications as of the Status-times
+  // consolidation. Revalidate that path so the form re-renders with the
+  // freshly-saved thresholds.
+  revalidatePath('/settings/notifications');
   return { ok: true };
 }
