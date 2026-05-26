@@ -4,6 +4,12 @@ import { getTranslations } from 'next-intl/server';
 
 import { LoginForm } from './login-form';
 
+// Edge runtime: this page is a pure render of getTranslations + JSX. The
+// loginAction it submits to still runs on Node (Supabase SSR client needs
+// the Node cookie shim), but the *render* drops to ~10 ms cold start
+// instead of ~150 ms because there's no Node container spin-up.
+export const runtime = 'edge';
+
 type Props = {
   searchParams: Promise<{ error?: string }>;
 };

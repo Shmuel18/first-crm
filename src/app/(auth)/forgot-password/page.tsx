@@ -4,6 +4,9 @@ import { getTranslations } from 'next-intl/server';
 
 import { ForgotPasswordForm } from './forgot-password-form';
 
+// See login/page.tsx — same edge-runtime trade-off applies here.
+export const runtime = 'edge';
+
 export default async function ForgotPasswordPage() {
   const t = await getTranslations('auth.forgotPassword');
 
