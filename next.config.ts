@@ -55,14 +55,11 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '21mb',
     },
   },
-  images: {
-    // Bank logos (migration 019_bank_logos.sql) point at upload.wikimedia.org.
-    // Allowlisted here so <Image> can serve them through Next's optimizer
-    // instead of forcing every consumer to drop back to <img>.
-    remotePatterns: [
-      { protocol: 'https', hostname: 'upload.wikimedia.org', pathname: '/wikipedia/**' },
-    ],
-  },
+  // Bank logos used to come from upload.wikimedia.org via remotePatterns;
+  // migration 062 mirrored them into /public/banks/*.svg so the dashboard
+  // doesn't depend on a third-party CDN per bank cell. No remote image
+  // hosts needed by the app today — if one is added later, declare it
+  // here under `images.remotePatterns`.
   async headers() {
     return [{ source: '/:path*', headers: SECURITY_HEADERS }];
   },
