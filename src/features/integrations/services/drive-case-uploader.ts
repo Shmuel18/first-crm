@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import type { Json } from '@/types/database';
 
 import {
   DRIVE_SUBFOLDER_NAMES,
@@ -60,8 +61,8 @@ async function patchCaseDriveMeta(
   const supabase = await createClient();
   await supabase.rpc('update_case_drive_meta', {
     p_case_id: caseId,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Partial<CaseDriveMeta> is structurally JSONB-compatible; Supabase types only declare Json.
-    p_patch: patch as any,
+    // Partial<CaseDriveMeta> is JSON-shaped; widen at the call boundary.
+    p_patch: patch as unknown as Json,
   });
 }
 

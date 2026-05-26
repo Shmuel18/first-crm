@@ -37,14 +37,7 @@ export async function checkRateLimit({
   windowSeconds,
 }: RateLimitConfig): Promise<boolean> {
   const supabase = await createClient();
-  // consume_rate_limit is from migration 048 and isn't in the generated
-  // Database types yet; call through a narrowly-typed view.
-  const rpc = supabase.rpc.bind(supabase) as unknown as (
-    fn: 'consume_rate_limit',
-    args: { p_action: string; p_subject: string; p_max: number; p_window_seconds: number },
-  ) => Promise<{ data: boolean | null; error: { message: string } | null }>;
-
-  const { data, error } = await rpc('consume_rate_limit', {
+  const { data, error } = await supabase.rpc('consume_rate_limit', {
     p_action: action,
     p_subject: subject,
     p_max: max,

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import type { Json } from '@/types/database';
 
 import { DRIVE_SUBFOLDER_NAMES, type GoogleDriveClient } from './google-drive';
 import { getDriveClientIfConnected } from './drive-case-uploader';
@@ -62,8 +63,8 @@ async function persistLastSyncedAt(caseId: string): Promise<void> {
   const supabase = await createClient();
   await supabase.rpc('update_case_drive_meta', {
     p_case_id: caseId,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- patch object is structurally Json-compatible
-    p_patch: { last_synced_at: new Date().toISOString() } as any,
+    // JSON-shaped literal; widen at the call boundary.
+    p_patch: { last_synced_at: new Date().toISOString() } as unknown as Json,
   });
 }
 
@@ -207,8 +208,8 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
           // updated count (visually nothing changed for the advisor).
           await supabase
             .from('documents')
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Record<string, unknown> is structurally compatible with Json but TS can't prove it
-            .update({ metadata: metaWithoutMissing as any })
+            // Record<string, unknown> → Json widening at the boundary.
+            .update({ metadata: metaWithoutMissing as unknown as Json })
             .eq('id', found.docId);
           found.existingMetadata = metaWithoutMissing;
           skipped += 1;
@@ -317,8 +318,8 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
         delete cleared.drive_missing_since;
         const { error } = await supabase
           .from('documents')
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Record<string, unknown> is structurally compatible with Json but TS can't prove it
-          .update({ deleted_at: nowIso, metadata: cleared as any })
+          // Record<string, unknown> → Json widening at the boundary.
+          .update({ deleted_at: nowIso, metadata: cleared as unknown as Json })
           .eq('id', entry.docId);
         if (!error) deleted += 1;
       }

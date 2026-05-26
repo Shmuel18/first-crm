@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 
+import type { Json } from '@/types/database';
+
 import type { BackupSnapshot } from '../schemas/snapshot.schema';
 
 export type RestoreCounts = Record<string, number>;
@@ -12,15 +14,12 @@ export type RestoreCounts = Record<string, number>;
  */
 export async function restoreSnapshot(snapshot: BackupSnapshot): Promise<RestoreCounts> {
   const supabase = await createClient();
-
-  // restore_backup_snapshot is introduced in migration 030 and isn't in the
-  // generated Database types yet; call it through a narrowly-typed rpc view.
-  const rpc = supabase.rpc.bind(supabase) as unknown as (
-    fn: 'restore_backup_snapshot',
-    args: { p_snapshot: BackupSnapshot },
-  ) => Promise<{ data: RestoreCounts | null; error: { message: string } | null }>;
-
-  const { data, error } = await rpc('restore_backup_snapshot', { p_snapshot: snapshot });
+  // The RPC is typed `p_snapshot: Json`. BackupSnapshot is JSON-shaped but
+  // TS can't widen it structurally, so widen once at the call boundary —
+  // callers above stay typed against BackupSnapshot.
+  const { data, error } = await supabase.rpc('restore_backup_snapshot', {
+    p_snapshot: snapshot as unknown as Json,
+  });
   if (error) throw new Error(error.message);
-  return data ?? {};
+  return (data ?? {}) as RestoreCounts;
 }

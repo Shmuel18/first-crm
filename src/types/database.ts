@@ -1254,6 +1254,154 @@ export type Database = {
           },
         ]
       }
+      message_templates: {
+        Row: {
+          body: string
+          channel: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          name: string
+          subject: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          body?: string
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          subject?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          body?: string
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          subject?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_templates_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_preferences: {
+        Row: {
+          email_task_assigned: boolean
+          email_task_completed: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          email_task_assigned?: boolean
+          email_task_completed?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          email_task_assigned?: boolean
+          email_task_completed?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          actor_id: string | null
+          case_id: string | null
+          created_at: string
+          data: Json
+          id: string
+          read_at: string | null
+          task_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          case_id?: string | null
+          created_at?: string
+          data?: Json
+          id?: string
+          read_at?: string | null
+          task_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          case_id?: string | null
+          created_at?: string
+          data?: Json
+          id?: string
+          read_at?: string | null
+          task_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       office_integrations: {
         Row: {
           access_token: string | null
@@ -1492,71 +1640,6 @@ export type Database = {
         }
         Relationships: []
       }
-      notifications: {
-        Row: {
-          actor_id: string | null
-          case_id: string | null
-          created_at: string
-          data: Json
-          id: string
-          read_at: string | null
-          task_id: string | null
-          type: string
-          user_id: string
-        }
-        Insert: {
-          actor_id?: string | null
-          case_id?: string | null
-          created_at?: string
-          data?: Json
-          id?: string
-          read_at?: string | null
-          task_id?: string | null
-          type: string
-          user_id: string
-        }
-        Update: {
-          actor_id?: string | null
-          case_id?: string | null
-          created_at?: string
-          data?: Json
-          id?: string
-          read_at?: string | null
-          task_id?: string | null
-          type?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "notifications_actor_id_fkey"
-            columns: ["actor_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "notifications_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "notifications_task_id_fkey"
-            columns: ["task_id"]
-            isOneToOne: false
-            referencedRelation: "tasks"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           created_at: string
@@ -1635,6 +1718,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rate_limit_counters: {
+        Row: {
+          action_key: string
+          count: number
+          subject_key: string
+          window_start: string
+        }
+        Insert: {
+          action_key: string
+          count?: number
+          subject_key: string
+          window_start: string
+        }
+        Update: {
+          action_key?: string
+          count?: number
+          subject_key?: string
+          window_start?: string
+        }
+        Relationships: []
       }
       reminder_rules: {
         Row: {
@@ -1849,6 +1953,7 @@ export type Database = {
           priority: string
           snoozed_until: string | null
           status: string
+          tags: string[]
           title: string
           updated_at: string
           updated_by: string | null
@@ -1872,6 +1977,7 @@ export type Database = {
           priority?: string
           snoozed_until?: string | null
           status?: string
+          tags?: string[]
           title: string
           updated_at?: string
           updated_by?: string | null
@@ -1895,6 +2001,7 @@ export type Database = {
           priority?: string
           snoozed_until?: string | null
           status?: string
+          tags?: string[]
           title?: string
           updated_at?: string
           updated_by?: string | null
@@ -2005,19 +2112,31 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_view_case: { Args: { p_case_id: string }; Returns: boolean }
       cleanup_old_audit_logs: { Args: never; Returns: number }
+      cleanup_rate_limit_counters: { Args: never; Returns: number }
       cleanup_soft_deleted_records: { Args: never; Returns: Json }
+      consume_rate_limit: {
+        Args: {
+          p_action: string
+          p_max: number
+          p_subject: string
+          p_window_seconds: number
+        }
+        Returns: boolean
+      }
+      convert_lead_to_case: { Args: { p_lead_id: string }; Returns: string }
       generate_case_number: { Args: never; Returns: string }
       has_permission: { Args: { perm_key: string }; Returns: boolean }
+      import_cases: { Args: { p_rows: Json }; Returns: Json }
+      is_active_profile: { Args: { uid: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      restore_backup_snapshot: { Args: { p_snapshot: Json }; Returns: Json }
       set_primary_bank: {
         Args: { p_bank_id: string; p_case_id: string; p_user_id: string }
         Returns: undefined
       }
-      soft_delete_document_with_tombstone: {
-        Args: { p_case_id: string; p_document_id: string; p_user_id: string }
-        Returns: undefined
-      }
+      set_request_audit_context: { Args: never; Returns: undefined }
       update_case_drive_meta: {
         Args: { p_case_id: string; p_patch: Json }
         Returns: undefined
@@ -2029,8 +2148,8 @@ export type Database = {
       upsert_case_financials: {
         Args: {
           p_case_id: string
-          p_expected_income: number | null
-          p_fee_amount: number | null
+          p_expected_income: number
+          p_fee_amount: number
           p_user_id: string
         }
         Returns: boolean

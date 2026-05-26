@@ -55,7 +55,15 @@ export async function deleteDocumentAction(
   }
   if (!doc) return { ok: false, error: 'not_found' };
 
-  const { error: deleteErr } = await supabase.rpc('soft_delete_document_with_tombstone', {
+  // soft_delete_document_with_tombstone (migration 027) is on the remote
+  // DB but not surfaced by `supabase gen types` — narrow the call instead
+  // of casting through unknown at the use-site of `error`.
+  const rpc = supabase.rpc.bind(supabase) as unknown as (
+    fn: 'soft_delete_document_with_tombstone',
+    args: { p_document_id: string; p_case_id: string; p_user_id: string },
+  ) => Promise<{ error: { message: string } | null }>;
+
+  const { error: deleteErr } = await rpc('soft_delete_document_with_tombstone', {
     p_document_id: parsed.data.documentId,
     p_case_id: parsed.data.caseId,
     p_user_id: userRes.user.id,

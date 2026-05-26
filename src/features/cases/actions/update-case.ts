@@ -79,10 +79,12 @@ export async function updateCaseAction(
   // any other failure surfaces - admin-submitted financials must not fail
   // silently (#5).
   if (fee_amount != null || expected_income != null) {
+    // Cast around the generated RPC type — see create-case.ts for the
+    // same workaround: NUMERIC params accept NULL at SQL level.
     const { error: finErr } = await supabase.rpc('upsert_case_financials', {
       p_case_id: caseId,
-      p_fee_amount: fee_amount ?? null,
-      p_expected_income: expected_income ?? null,
+      p_fee_amount: (fee_amount ?? null) as unknown as number,
+      p_expected_income: (expected_income ?? null) as unknown as number,
       p_user_id: userRes.user.id,
     });
     if (finErr) {
