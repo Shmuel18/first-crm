@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import {
@@ -54,11 +54,11 @@ export function MobileNav({ tasksBadge, isAdmin = false }: Props) {
   const t = useTranslations('nav');
   const tc = useTranslations('common');
 
-  // Close on route change. Without this the drawer stays open after the
-  // user taps a link, the next page renders, and the drawer occludes it.
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
+  // Closing on link tap is handled by passing close() to each MobileNavLink
+  // — cleaner than the "useEffect on pathname change" pattern, which the
+  // react-hooks/set-state-in-effect lint rule (rightly) flags as the kind
+  // of cascading-render anti-pattern an effect shouldn't do.
+  const close = () => setOpen(false);
 
   const topItems = BASE_TOP_ITEMS.filter((i) => !i.adminOnly || isAdmin).map((i) =>
     i.labelKey === 'tasks' ? { ...i, badge: tasksBadge } : i,
@@ -108,6 +108,7 @@ export function MobileNav({ tasksBadge, isAdmin = false }: Props) {
                 item={item}
                 pathname={pathname}
                 label={t(item.labelKey)}
+                onNavigate={close}
                 badgeLabel={
                   item.badge && item.badge > 0
                     ? t('unreadTasks', { count: item.badge })
@@ -124,6 +125,7 @@ export function MobileNav({ tasksBadge, isAdmin = false }: Props) {
                 item={item}
                 pathname={pathname}
                 label={t(item.labelKey)}
+                onNavigate={close}
               />
             ))}
           </div>
@@ -137,11 +139,13 @@ function MobileNavLink({
   item,
   pathname,
   label,
+  onNavigate,
   badgeLabel,
 }: {
   item: NavItem;
   pathname: string;
   label: string;
+  onNavigate: () => void;
   badgeLabel?: string;
 }) {
   const Icon = item.icon;
@@ -152,6 +156,7 @@ function MobileNavLink({
   return (
     <Link
       href={item.href}
+      onClick={onNavigate}
       aria-label={accessibleName}
       aria-current={isActive ? 'page' : undefined}
       className={[
