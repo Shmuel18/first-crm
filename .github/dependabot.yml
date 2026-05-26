@@ -38,6 +38,25 @@ updates:
           - "typescript"
           - "vitest"
           - "@types/node"
+    # Pin majors for deps whose major version must match a runtime/framework.
+    # Otherwise you get TS-green code that crashes at module-resolve time
+    # — e.g., @types/node@25 surfaces APIs that don't exist in Node 20.
+    ignore:
+      # @types/node tracks the runtime Node version. CI + Vercel both run
+      # Node 20. Allow minor/patch within ^20; reject any major bump.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # @types/react + @types/react-dom track React's major. We're on
+      # React 19; a major bump here is only valid after upgrading React
+      # itself (which the next-stack group catches separately).
+      - dependency-name: "@types/react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react-dom"
+        update-types: ["version-update:semver-major"]
+      # eslint-config-next major == Next.js major. Bumping it independently
+      # of Next itself is incoherent.
+      - dependency-name: "eslint-config-next"
+        update-types: ["version-update:semver-major"]
     labels:
       - dependencies
     commit-message:
