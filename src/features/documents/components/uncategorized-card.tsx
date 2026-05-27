@@ -28,13 +28,13 @@ export function UncategorizedCard({ documents, categories, caseId, onPreview }: 
   const t = useTranslations('documents.uncategorized');
 
   return (
-    <section className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 shadow-sm">
+    <section className="rounded-lg border border-amber-200 bg-amber-50/50 p-4 shadow-sm">
       <header className="flex items-center gap-2 mb-3">
         <div className="size-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
           <AlertCircle className="size-4" />
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="font-display text-base font-semibold text-neutral-900 leading-tight">
+          <h2 className="font-display text-sm font-semibold text-neutral-950 leading-tight">
             {t('title', { count: documents.length })}
           </h2>
           <p className="text-xs text-neutral-600 mt-0.5">{t('subtitle')}</p>
@@ -78,7 +78,7 @@ function UncategorizedRow({
   };
 
   return (
-    <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white border border-amber-100">
+    <div className="flex items-center gap-3 px-3 py-2 rounded-md bg-white border border-amber-100">
       <button
         type="button"
         onClick={() => onPreview(doc)}

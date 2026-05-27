@@ -1131,6 +1131,30 @@
   "documents": {
     "pageTitle": "מסמכי תיק",
     "backToCase": "חזרה לתיק",
+    "requestMenu": {
+      "title": "בקשת מסמכים",
+      "viaEmail": "שלח באימייל",
+      "viaWhatsapp": "שלח ב-WhatsApp",
+      "noEmail": "אין אימייל ללווה",
+      "noPhone": "אין טלפון ללווה",
+      "whatsappTemplate": "שלום {name}, אנחנו זקוקים למסמכים הבאים לתיק:\n{docList}\nאנא צלמ/י ושלח/י לי בחזרה ב-WhatsApp. תודה!",
+      "whatsappTemplateNoMissing": "שלום {name}, אנחנו זקוקים למסמכים נוספים לתיק. אשמח שתחזור/י אלי לבירור. תודה!"
+    },
+    "checklist": {
+      "title": "צ׳ק-ליסט מסמכים",
+      "allDone": "כל המסמכים הנדרשים נאספו ✓",
+      "showAll": "הצג הכל ({total})",
+      "showMissingOnly": "הצג חסרים בלבד",
+      "optional": "מומלץ",
+      "uploadCta": "העלאה",
+      "dueAtStage": "דרוש בשלב {stage}",
+      "uploadedCount": "{count, plural, =1 {1 קובץ הועלה} other {# קבצים הועלו}}",
+      "chip": {
+        "missing": "{count, plural, =1 {חסר 1} other {# חסרים}}",
+        "pending": "{count, plural, =1 {1 ממתין לאימות} other {# ממתינים לאימות}}",
+        "verified": "{count, plural, =1 {1 אומת} other {# אומתו}}"
+      }
+    },
     "syncIndicator": {
       "synced": "מסונכרן עם Google Drive (כל העלאה נשמרת גם בדרייב)",
       "driveComingSoon": "סנכרון Google Drive יתווסף בקרוב"
@@ -1168,9 +1192,15 @@
       "history": "היסטוריית מסמכים"
     },
     "summary": {
+      "progressTitle": "התקדמות איסוף מסמכים",
+      "progressValue": "נאספו {collected} מתוך {total} מסמכים נדרשים",
+      "progressEmpty": "עדיין אין דרישות מסמכים לתיק הזה",
+      "progressLabel": "הושלם",
+      "progressAria": "התקדמות איסוף מסמכים {percent} אחוז",
       "total": "סך הכל {count} מסמכים",
       "verified": "{count} מאומתים",
       "pending": "{count} ממתינים לבדיקה",
+      "missing": "{count} חסרים",
       "empty": "אין עדיין מסמכים בתיק"
     },
     "uncategorized": {

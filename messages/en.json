@@ -1131,6 +1131,30 @@
   "documents": {
     "pageTitle": "Case documents",
     "backToCase": "Back to case",
+    "requestMenu": {
+      "title": "Request documents",
+      "viaEmail": "Send by email",
+      "viaWhatsapp": "Send via WhatsApp",
+      "noEmail": "Borrower has no email",
+      "noPhone": "Borrower has no phone",
+      "whatsappTemplate": "Hi {name}, we still need the following documents for your file:\n{docList}\nPlease snap photos and send them back here. Thanks!",
+      "whatsappTemplateNoMissing": "Hi {name}, we need some additional documents for your file. Could you reach out so we can clarify? Thanks!"
+    },
+    "checklist": {
+      "title": "Document checklist",
+      "allDone": "All required documents collected ✓",
+      "showAll": "Show all ({total})",
+      "showMissingOnly": "Show missing only",
+      "optional": "Optional",
+      "uploadCta": "Upload",
+      "dueAtStage": "Due by {stage}",
+      "uploadedCount": "{count, plural, =1 {1 file uploaded} other {# files uploaded}}",
+      "chip": {
+        "missing": "{count, plural, =1 {1 missing} other {# missing}}",
+        "pending": "{count, plural, =1 {1 pending review} other {# pending review}}",
+        "verified": "{count, plural, =1 {1 verified} other {# verified}}"
+      }
+    },
     "syncIndicator": {
       "synced": "Synced with Google Drive (every upload is mirrored)",
       "driveComingSoon": "Google Drive sync coming soon"
@@ -1168,9 +1192,15 @@
       "history": "Documents history"
     },
     "summary": {
+      "progressTitle": "Document collection progress",
+      "progressValue": "{collected} of {total} required documents collected",
+      "progressEmpty": "No document requirements are configured for this case yet",
+      "progressLabel": "Complete",
+      "progressAria": "Document collection progress {percent} percent",
       "total": "{count} documents total",
       "verified": "{count} verified",
       "pending": "{count} pending review",
+      "missing": "{count} missing",
       "empty": "No documents uploaded yet"
     },
     "uncategorized": {

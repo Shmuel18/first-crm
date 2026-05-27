@@ -1,7 +1,7 @@
 'use client';
 
-import { useTransition } from 'react';
 import Link from 'next/link';
+import { useTransition } from 'react';
 
 import {
   ClipboardList,
@@ -17,6 +17,7 @@ import { BackArrow } from '@/components/shared/back-arrow';
 import { parseLocale } from '@/lib/i18n/direction';
 
 import { syncDriveDocumentsAction } from '../actions/sync-drive-documents';
+import type { DocumentChecklistItem } from '../services/document-checklist.service';
 import { SendDocRequestButton } from './send-doc-request-button';
 
 type Props = {
@@ -25,6 +26,13 @@ type Props = {
   borrowerNames: string;
   onUpload: () => void;
   driveFolderId: string | null;
+  primaryBorrower: {
+    firstName: string | null;
+    lastName: string | null;
+    email: string | null;
+    phone: string | null;
+  } | null;
+  checklist: ReadonlyArray<DocumentChecklistItem>;
 };
 
 export function DocumentsActionBar({
@@ -33,6 +41,8 @@ export function DocumentsActionBar({
   borrowerNames,
   onUpload,
   driveFolderId,
+  primaryBorrower,
+  checklist,
 }: Props) {
   const t = useTranslations('documents.actions');
   const tPage = useTranslations('documents');
@@ -56,8 +66,6 @@ export function DocumentsActionBar({
         }
         return;
       }
-      // no_folder isn't really an error - the case just hasn't had a doc
-      // uploaded yet, so there's no Drive folder. Show an info toast (not red).
       if (res.error === 'no_folder') {
         toast(tSync('noFolderYet'));
         return;
@@ -88,17 +96,16 @@ export function DocumentsActionBar({
             <span className="font-display text-base font-semibold truncate max-w-md">
               {borrowerNames || tCase('withBorrowers')}
             </span>
-            <span aria-hidden="true" className="text-neutral-400">·</span>
-            <span className="text-brand-gold-text font-mono text-sm">
+            <span className="sr-only">
               {tCase('caseLabel')} {caseNumber}
             </span>
-            <span className="hidden md:inline-flex text-[10px] px-1.5 py-0.5 rounded bg-white border border-neutral-200 text-neutral-700 uppercase tracking-wider">
+            <span className="hidden md:inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full bg-brand-gold-soft border border-brand-gold/40 text-brand-gold-text">
               {tPage('pageTitle')}
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-0.5 shrink-0">
           <button
             type="button"
             onClick={onUpload}
@@ -122,7 +129,12 @@ export function DocumentsActionBar({
             )}
             <span className="hidden lg:inline">{tSync('button')}</span>
           </button>
-          <SendDocRequestButton caseId={caseId} title={t('sendRequest')} />
+          <SendDocRequestButton
+            caseId={caseId}
+            title={t('sendRequest')}
+            borrower={primaryBorrower}
+            checklist={checklist}
+          />
           <BarIcon
             icon={FolderOpen}
             title={t('openDrive')}

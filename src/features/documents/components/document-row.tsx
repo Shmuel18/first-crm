@@ -41,16 +41,18 @@ export function DocumentRow({ doc, onClick }: Props) {
       type="button"
       onClick={() => onClick(doc)}
       className={cn(
-        'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-start',
+        'w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-start',
         'hover:bg-neutral-50 active:bg-neutral-100 transition-colors',
         'border border-transparent hover:border-neutral-200',
       )}
     >
-      <FileTypeIcon mime={doc.mime_type} className="size-5 text-neutral-400 shrink-0" />
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-neutral-100">
+        <FileTypeIcon mime={doc.mime_type} className="size-4 text-neutral-500" />
+      </span>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-neutral-900 truncate">
+          <span className="text-sm font-semibold text-neutral-950 truncate">
             {doc.category?.name_he ?? doc.file_name}
           </span>
         </div>

@@ -10,13 +10,21 @@ import { normalizeIsraeliPhone } from '@/lib/validators/il-phone';
 
 /**
  * wa.me URL for an Israeli phone. WhatsApp expects international format with
- * no leading "+", so a local "0501234567" becomes "972501234567".
+ * no leading "+", so a local "0501234567" becomes "972501234567". When
+ * `text` is provided it's appended as a URL-encoded `?text=...` query —
+ * WhatsApp pre-fills the composer with that message so the advisor only
+ * has to hit send.
  */
-export function buildWhatsAppLink(phone: string | null | undefined): string | null {
+export function buildWhatsAppLink(
+  phone: string | null | undefined,
+  text?: string | null,
+): string | null {
   if (!phone) return null;
   const normalized = normalizeIsraeliPhone(phone);
   if (!normalized) return null;
-  return `https://wa.me/972${normalized.slice(1)}`;
+  const base = `https://wa.me/972${normalized.slice(1)}`;
+  const trimmed = text?.trim();
+  return trimmed ? `${base}?text=${encodeURIComponent(trimmed)}` : base;
 }
 
 /** tel: link. Returns null for empty/invalid input. */
