@@ -587,7 +587,23 @@
       "whatsapp": "Open in WhatsApp",
       "call": "Call",
       "sendEmail": "Send email",
-      "relatedToSellers": "Related to sellers"
+      "relatedToSellers": "Related to sellers",
+      "remove": {
+        "action": "Remove borrower from case",
+        "success": "{name} removed from this case",
+        "dialog": {
+          "title": "Remove borrower",
+          "description": "Remove {name} from this case? Only the link to this case is removed; if the borrower is on other cases they stay there.",
+          "confirm": "Remove"
+        },
+        "errors": {
+          "unauthorized": "You don't have permission to remove this borrower",
+          "primary": "Can't remove the primary borrower. Promote another borrower to primary first.",
+          "last": "Can't remove — a case must have at least one borrower.",
+          "not_found": "Borrower not on this case or already removed",
+          "unknown": "Failed to remove borrower. Please try again."
+        }
+      }
     }
   },
   "borrowerForm": {

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 
-import { Loader2 } from 'lucide-react';
+import { Loader2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 
@@ -72,14 +72,21 @@ export function AddBorrowerButton({ caseId, variant = 'header' }: Props) {
     );
   }
 
+  // Soft-gold pill: brand-tinted background + gold-text label, gentle
+  // border so the button reads as a real CTA against the white card
+  // header instead of a plain text link. Hover deepens the tint slightly.
   return (
     <button
       type="button"
       onClick={handleClick}
       disabled={pending || firing}
-      className="text-xs text-brand-gold-text hover:underline font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-1"
+      className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-gold-text bg-brand-gold-soft border border-brand-gold/40 rounded-full px-3 py-1.5 hover:bg-brand-gold/20 hover:border-brand-gold/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 disabled:opacity-60 disabled:cursor-not-allowed"
     >
-      {pending || firing ? <Loader2 className="size-3 animate-spin" /> : null}
+      {pending || firing ? (
+        <Loader2 aria-hidden="true" className="size-3.5 animate-spin" />
+      ) : (
+        <UserPlus aria-hidden="true" className="size-3.5" />
+      )}
       {t('addBorrower')}
     </button>
   );

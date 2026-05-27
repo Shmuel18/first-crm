@@ -3,9 +3,14 @@
 import { revalidatePath } from 'next/cache';
 
 import { userCanEditCase } from '@/lib/auth/permissions';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { asBorrowerId, asCaseId } from '@/lib/types/branded';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
+
+import type { Database } from '@/types/database';
+
+type BorrowersUpdate = Database['public']['Tables']['borrowers']['Update'];
 
 import {
   isEditableBorrowerField,
@@ -70,30 +75,50 @@ export async function updateBorrowerFieldAction(
     return { ok: false, error: 'unauthorized' };
   }
 
-  // RPC accepts a JSONB patch keyed by column name. The per-field validator
-  // above guarantees the value type matches the column (Zod schema is the
-  // single source of truth), and the RPC strips server-controlled columns
-  // (id/created_*/updated_*/deleted_at/metadata) defensively.
-  const patch = { [safeField]: parsed.data ?? null };
-
-  const { data: rowsUpdated, error } = await supabase.rpc('update_borrower_in_case', {
-    p_case_id: caseId,
-    p_borrower_id: borrowerId,
-    p_patch: patch,
-  });
+  // The original `update_borrower_in_case` RPC (migration 064) is broken:
+  // it references the target table from inside a FROM-clause expression
+  // (`jsonb_populate_record(b, patch)` while `b` is the UPDATE alias),
+  // which Postgres rejects with 42P10. App-layer scope checks above
+  // already enforce the same invariants the RPC was meant to enforce
+  // (user can edit case + borrower is on case), so we route the write
+  // through the admin client until a follow-up migration replaces the
+  // RPC with a non-broken implementation. Same pattern as deleteCase /
+  // restoreCase: app gates, service-role does the write.
+  // Dynamic-key Supabase Update types only accept the static column union;
+  // safeField is constrained to EditableBorrowerField (a subset of those
+  // columns), and parsed.data was validated against the same Zod primitive
+  // the column type expects. Cast to BorrowersUpdate so TS accepts the
+  // dynamic key — runtime safety comes from `isEditableBorrowerField` +
+  // the per-field Zod validator above.
+  const updatePayload = {
+    [safeField]: parsed.data ?? null,
+    updated_by: userRes.user.id,
+  } as BorrowersUpdate;
+  const admin = createAdminClient();
+  const { data: updatedRows, error } = await admin
+    .from('borrowers')
+    .update(updatePayload)
+    .eq('id', borrowerId)
+    .is('deleted_at', null)
+    .select('id');
 
   if (error) {
-    console.error('[updateBorrowerField] rpc error', error);
-    // Postgres 42501 maps to RLS / explicit RAISE EXCEPTION 'not authorized'
-    // from the RPC's scope checks. Surface as unauthorized rather than unknown.
-    if (error.code === '42501') return { ok: false, error: 'unauthorized' };
+    console.error(
+      '[updateBorrowerField] update error',
+      JSON.stringify({
+        caseId,
+        borrowerId,
+        field: safeField,
+        code: error.code ?? null,
+        message: error.message ?? null,
+        details: error.details ?? null,
+        hint: error.hint ?? null,
+      }),
+    );
     return { ok: false, error: 'unknown' };
   }
-  if (rowsUpdated !== true) {
-    // RPC returns FALSE when the patch had nothing to apply (e.g. the only
-    // key was a stripped server-controlled column) — treat as a no-op, not
-    // a failure, but surface as unauthorized for safety since the UI's
-    // intended write didn't take effect.
+  if (!updatedRows || updatedRows.length === 0) {
+    // Borrower row is missing or soft-deleted under us — likely a stale UI.
     return { ok: false, error: 'unauthorized' };
   }
 

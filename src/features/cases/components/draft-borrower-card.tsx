@@ -44,9 +44,17 @@ type Props = {
   borrower: DraftBorrower;
   onChange: (next: DraftBorrower) => void;
   onRemove: () => void;
+  /**
+   * When false the trash button hides — used for the first borrower in
+   * the draft, who becomes the primary on save and must therefore exist.
+   * A draft with zero borrowers can't be saved either way (the save
+   * action validates `needBorrower`), so the lock is consistent with the
+   * save constraint and prevents the user from emptying the block.
+   */
+  canRemove: boolean;
 };
 
-export function DraftBorrowerCard({ borrower, onChange, onRemove }: Props) {
+export function DraftBorrowerCard({ borrower, onChange, onRemove, canRemove }: Props) {
   const t = useTranslations('case.borrower');
   const tf = useTranslations('borrowerForm.fields');
   const tForm = useTranslations('borrowerForm');
@@ -132,16 +140,18 @@ export function DraftBorrowerCard({ borrower, onChange, onRemove }: Props) {
             </span>
           </div>
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onRemove}
-          aria-label={tc('delete')}
-          className="size-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-        >
-          <Trash2 className="size-4" />
-        </Button>
+        {canRemove && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onRemove}
+            aria-label={tc('delete')}
+            className="size-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        )}
       </div>
 
       {/* Identity — 2 rows of 3 cells, same shape as the live card. */}

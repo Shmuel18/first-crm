@@ -1,10 +1,24 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 
-import { Mail, MessageCircle, Phone, UserCircle2 } from 'lucide-react';
+import { Mail, MessageCircle, Phone, Trash2, UserCircle2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Tooltip } from '@/components/ui/tooltip';
+
+import { removeBorrowerFromCaseAction } from '../actions/remove-borrower-from-case';
 import { updateBorrowerFieldAction, type EditableBorrowerField } from '../actions/update-borrower-field';
 import { buildMailLink, buildTelLink, buildWhatsAppLink } from '../domain/contact-links';
 import { calculateAge } from '../domain/age';
@@ -21,21 +35,30 @@ type Props = {
   caseId: string;
   borrower: BorrowerRow;
   roleInCase: RoleInCase;
+  /** Data flag from case_borrowers.is_primary. */
   isPrimary: boolean;
+  /** First card in the rendered list (list is is_primary DESC). */
+  isFirst: boolean;
+  /** Only borrower on the case — locks removal regardless of position. */
+  isOnly: boolean;
 };
 
 export function CaseBorrowerCard({
   caseId,
   borrower,
   roleInCase,
-  // isPrimary intentionally unused for now — the primary-borrower
-  // indicator was removed per user request. Prop stays on the interface
-  // so the page contract doesn't change.
+  isPrimary,
+  isFirst,
+  isOnly,
 }: Props) {
   const t = useTranslations('case.borrower');
   const tf = useTranslations('borrowerForm.fields');
   const tForm = useTranslations('borrowerForm');
   const tc = useTranslations('common');
+  const tRemove = useTranslations('case.borrower.remove');
+  const router = useRouter();
+  const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
+  const [isRemoving, startRemove] = useTransition();
 
   // localBorrower is the optimistic view: each successful inline save updates
   // it so derived bits (header name, computed age, contact-icon visibility)
@@ -81,6 +104,19 @@ export function CaseBorrowerCard({
 
   const ageLabel = calculateAge(localBorrower.birth_date);
 
+  const handleRemove = () => {
+    startRemove(async () => {
+      const result = await removeBorrowerFromCaseAction(caseId, borrower.id);
+      if (result.ok) {
+        toast.success(tRemove('success', { name: fullName }));
+        setConfirmRemoveOpen(false);
+        router.refresh();
+      } else {
+        toast.error(tRemove(`errors.${result.error}`));
+      }
+    });
+  };
+
   const residencyOptions = useMemo(
     () =>
       (['resident', 'foreign_resident', 'returning_resident'] as const).map((v) => ({
@@ -110,7 +146,41 @@ export function CaseBorrowerCard({
             </span>
           </div>
         </div>
+        {/* Hide trash for (a) the data-flagged primary, (b) whoever's first
+            in the list (handles data that has no primary at all), and (c)
+            the sole borrower on the case (a case needs ≥1 borrower).
+            Server action enforces the same guards as defense-in-depth. */}
+        {!isPrimary && !isFirst && !isOnly && (
+          <Tooltip content={tRemove('action')}>
+            <button
+              type="button"
+              aria-label={tRemove('action')}
+              onClick={() => setConfirmRemoveOpen(true)}
+              disabled={isRemoving}
+              className="shrink-0 inline-flex items-center justify-center size-8 rounded-md text-neutral-500 hover:text-red-600 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            >
+              <Trash2 className="size-4" aria-hidden="true" />
+            </button>
+          </Tooltip>
+        )}
       </div>
+
+      <AlertDialog open={confirmRemoveOpen} onOpenChange={setConfirmRemoveOpen}>
+        <AlertDialogContent>
+          <AlertDialogTitle>{tRemove('dialog.title')}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {tRemove('dialog.description', { name: fullName })}
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <Button variant="destructive" onClick={handleRemove} disabled={isRemoving}>
+              {tRemove('dialog.confirm')}
+            </Button>
+            <AlertDialogCancel
+              render={<Button variant="outline">{tc('cancel')}</Button>}
+            />
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Identity — packed into 2 rows of 3 cells:
             row 1: first | last | id

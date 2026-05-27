@@ -129,13 +129,21 @@ export default async function CaseDetailPage({ params }: Props) {
             // cramping. Was md:grid-cols-2 — at ~400px per card the dates
             // + adornments didn't fit cleanly.
             <div className="space-y-4">
-              {borrowers.map(({ borrower, role_in_case, is_primary }) => (
+              {borrowers.map(({ borrower, role_in_case, is_primary }, index) => (
                 <CaseBorrowerCard
                   key={borrower.id}
                   caseId={caseData.id}
                   borrower={borrower}
                   roleInCase={role_in_case}
                   isPrimary={is_primary}
+                  // Lock removal on (a) the primary (by data flag) or (b) the
+                  // first row in the rendered list. The list is ordered
+                  // is_primary DESC, so "first" is the de-facto anchor even
+                  // if the data has no row flagged primary (legacy / partial
+                  // migrations). Combined with isOnly to never let the user
+                  // empty a case.
+                  isFirst={index === 0}
+                  isOnly={borrowers.length === 1}
                 />
               ))}
             </div>

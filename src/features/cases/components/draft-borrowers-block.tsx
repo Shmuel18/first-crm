@@ -1,6 +1,6 @@
 'use client';
 
-import { UserCircle2 } from 'lucide-react';
+import { UserCircle2, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { CaseBlock } from './case-block';
@@ -45,11 +45,14 @@ export function DraftBorrowersBlock({ borrowers, onAdd, onUpdate, onRemove }: Pr
       icon={<UserCircle2 />}
       fullWidth
       rightSlot={
+        // Soft-gold pill — mirrors AddBorrowerButton on the live case page
+        // so /cases/new and /cases/[id] share one visual language.
         <button
           type="button"
           onClick={handleAddClick}
-          className="text-xs text-brand-gold-text hover:underline font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-gold-text bg-brand-gold-soft border border-brand-gold/40 rounded-full px-3 py-1.5 hover:bg-brand-gold/20 hover:border-brand-gold/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
         >
+          <UserPlus aria-hidden="true" className="size-3.5" />
           {t('blocks.addBorrower')}
         </button>
       }
@@ -64,12 +67,17 @@ export function DraftBorrowersBlock({ borrowers, onAdd, onUpdate, onRemove }: Pr
         </button>
       ) : (
         <div className="space-y-4">
-          {borrowers.map((b) => (
+          {borrowers.map((b, index) => (
             <DraftBorrowerCard
               key={b.tempId}
               borrower={b}
               onChange={(next) => onUpdate(b.tempId, next)}
               onRemove={() => onRemove(b.tempId)}
+              // Index 0 is the primary-to-be (see RPC migration 074, which
+              // derives is_primary from array position). Locking it from
+              // removal here keeps the draft consistent with the save
+              // contract (needBorrower validation also enforces ≥1).
+              canRemove={index > 0}
             />
           ))}
         </div>
