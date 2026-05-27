@@ -9,7 +9,7 @@ import type { BorrowerIncomesGroup, IncomeRow, IncomeTypeOption, IncomeWithType 
 // gates whether it flows to the client. Updating both stays a conscious
 // step instead of an auto-propagation.
 const INCOME_FULL_COLUMNS =
-  'id, borrower_id, income_type_id, amount_monthly, source_name, tenure_months, is_primary, notes, metadata, created_at, created_by, updated_at, updated_by' as const;
+  'id, borrower_id, income_type_id, amount_monthly, source_name, tenure_months, employment_start_date, is_primary, notes, metadata, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by' as const;
 
 const INCOME_SELECT = `
   ${INCOME_FULL_COLUMNS},
@@ -53,6 +53,7 @@ export async function listIncomesForCase(caseId: CaseId): Promise<BorrowerIncome
       .from('borrower_incomes')
       .select(INCOME_SELECT)
       .in('borrower_id', borrowerIds)
+      .is('deleted_at', null)
       .order('is_primary', { ascending: false })
       .order('created_at', { ascending: true });
     if (error) throw error;
@@ -77,6 +78,7 @@ export async function getIncomeById(id: IncomeId): Promise<IncomeRow | null> {
     .from('borrower_incomes')
     .select(INCOME_FULL_COLUMNS)
     .eq('id', id)
+    .is('deleted_at', null)
     .maybeSingle();
 
   if (error) throw error;

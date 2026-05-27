@@ -48,6 +48,7 @@ export async function inviteMemberAction(
     subject: `user:${userRes.user.id}`,
     max: 10,
     windowSeconds: 3600,
+    failMode: 'closed',
   });
   if (!ok) return { ok: false, error: 'rate_limited', values };
 

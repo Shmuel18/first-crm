@@ -27,6 +27,7 @@ export async function importCasesAction(formData: FormData): Promise<ImportResul
     subject: `user:${userRes.user.id}`,
     max: 5,
     windowSeconds: 3600,
+    failMode: 'closed',
   });
   if (!allowed) return { ok: false, error: 'rate_limited' };
 

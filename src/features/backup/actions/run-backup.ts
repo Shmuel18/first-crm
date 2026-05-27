@@ -33,6 +33,7 @@ export async function runBackupAction(): Promise<RunBackupResult> {
     subject: `user:${userRes.user.id}`,
     max: 1,
     windowSeconds: 600,
+    failMode: 'closed',
   });
   if (!allowed) return { ok: false, error: 'rate_limited' };
 

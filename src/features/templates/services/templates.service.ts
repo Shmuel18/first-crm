@@ -24,12 +24,13 @@ export type TemplateInput = {
 // list is hand-maintained — adding a column to the table requires updating
 // the MessageTemplate type AND this list.
 const TEMPLATE_FULL_COLUMNS =
-  'id, name, channel, subject, body, is_active, created_at, created_by, updated_at, updated_by' as const;
+  'id, name, channel, subject, body, is_active, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by' as const;
 
 export async function listMessageTemplates(): Promise<MessageTemplate[]> {
   const table = await templatesTable();
   const { data, error } = await table
     .select(TEMPLATE_FULL_COLUMNS)
+    .is('deleted_at', null)
     .order('updated_at', { ascending: false });
   if (error) throw error;
   return (data ?? []) as MessageTemplate[];
@@ -64,9 +65,13 @@ export async function updateMessageTemplate(
   return Array.isArray(data) && data.length > 0;
 }
 
-export async function deleteMessageTemplate(id: string): Promise<boolean> {
+export async function deleteMessageTemplate(id: string, userId: string): Promise<boolean> {
   const table = await templatesTable();
-  const { data, error } = await table.delete().eq('id', id).select('id');
+  const { data, error } = await table
+    .update({ deleted_at: new Date().toISOString(), deleted_by: userId, updated_by: userId })
+    .eq('id', id)
+    .is('deleted_at', null)
+    .select('id');
   if (error) return false;
   return Array.isArray(data) && data.length > 0;
 }

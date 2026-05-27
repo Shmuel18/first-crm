@@ -6,15 +6,19 @@ import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
 
-import { listObligationsForCase } from '../services/obligations.service';
-import { BorrowerObligationsGroup } from './borrower-obligations-group';
+import { listObligationsFlatForCase } from '../services/obligations.service';
+import { CaseObligationsList } from './case-obligations-list';
 
 type Props = { caseId: string };
 
 /**
- * Server block listing obligations per borrower. Hidden when the caller
- * lacks `view_case_obligations` so the borrower list isn't leaked through
- * an empty shell.
+ * Case-level obligations block. Obligations are accounted for at the case
+ * level (a couple's combined debt picture), so the UI lists them flat
+ * instead of splitting per borrower. New obligations are billed to the
+ * primary borrower in the DB; the visible list is unified.
+ *
+ * Hidden when the caller lacks `view_case_obligations` so an empty shell
+ * doesn't leak the case structure to non-viewers.
  */
 export async function CaseObligationsBlock({ caseId }: Props) {
   const t = await getTranslations('obligations');
@@ -26,16 +30,18 @@ export async function CaseObligationsBlock({ caseId }: Props) {
 
   const locale = parseLocale(await getLocale());
 
-  // Defensive: see CaseIncomesBlock — degrade to empty rather than crashing
-  // the whole case page if the fetch throws.
-  let groups: Awaited<ReturnType<typeof listObligationsForCase>> = [];
+  let view: Awaited<ReturnType<typeof listObligationsFlatForCase>> = {
+    obligations: [],
+    primaryBorrowerId: null,
+    monthlyPaymentTotal: 0,
+    remainingDebtTotal: 0,
+  };
   try {
-    groups = await listObligationsForCase(asCaseId(caseId));
+    view = await listObligationsFlatForCase(asCaseId(caseId));
   } catch (err) {
     console.error('[CaseObligationsBlock] data fetch failed', err);
   }
 
-  const totalMonthly = groups.reduce((sum, g) => sum + g.monthlyPaymentTotal, 0);
   const fmt = new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-US', {
     style: 'currency',
     currency: 'ILS',
@@ -48,32 +54,28 @@ export async function CaseObligationsBlock({ caseId }: Props) {
       icon={<CreditCard />}
       fullWidth
       rightSlot={
-        groups.length > 0 && (
+        view.obligations.length > 0 && (
           <span className="text-xs text-neutral-600">
             {t('grandTotal')}:{' '}
-            <span className="font-semibold text-neutral-900">{fmt.format(totalMonthly)}</span>
+            <span className="font-semibold text-neutral-900">
+              {fmt.format(view.monthlyPaymentTotal)}
+            </span>
           </span>
         )
       }
     >
-      {groups.length === 0 ? (
+      {view.primaryBorrowerId === null ? (
         <p className="text-sm text-neutral-600 text-center py-4">{t('noBorrowers')}</p>
       ) : (
-        <div className="space-y-5">
-          {groups.map((g) => (
-            <BorrowerObligationsGroup
-              key={g.borrowerId}
-              caseId={caseId}
-              borrowerId={g.borrowerId}
-              borrowerName={g.borrowerName}
-              obligations={g.obligations}
-              monthlyPaymentTotal={g.monthlyPaymentTotal}
-              remainingDebtTotal={g.remainingDebtTotal}
-              locale={locale}
-              canEdit={canEdit}
-            />
-          ))}
-        </div>
+        <CaseObligationsList
+          caseId={caseId}
+          primaryBorrowerId={view.primaryBorrowerId}
+          obligations={view.obligations}
+          monthlyPaymentTotal={view.monthlyPaymentTotal}
+          remainingDebtTotal={view.remainingDebtTotal}
+          locale={locale}
+          canEdit={canEdit}
+        />
       )}
     </CaseBlock>
   );

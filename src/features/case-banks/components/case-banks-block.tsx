@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { Building2 } from 'lucide-react';
+import { Building2, Plus } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 import { CaseBlock } from '@/features/cases/components/case-block';
@@ -25,10 +25,14 @@ export async function CaseBanksBlock({ caseId }: Props) {
       title={`${t('blocks.banks')} ${banks.length > 0 ? `(${banks.length})` : ''}`}
       icon={<Building2 />}
       rightSlot={
+        // Shared soft-gold pill — mirrors AddBorrowerButton, DraftBorrowersBlock,
+        // and the income/obligation add buttons so every "+ add" CTA in the
+        // case detail reads the same way.
         <Link
           href={`/cases/${caseId}/banks/new`}
-          className="text-xs text-brand-gold-text hover:underline font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-gold-text bg-brand-gold-soft border border-brand-gold/40 rounded-full px-3 py-1.5 hover:bg-brand-gold/20 hover:border-brand-gold/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
         >
+          <Plus aria-hidden="true" className="size-3.5" />
           {t('blocks.addBank')}
         </Link>
       }

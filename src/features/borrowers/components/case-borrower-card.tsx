@@ -182,9 +182,7 @@ export function CaseBorrowerCard({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Identity — packed into 2 rows of 3 cells:
-            row 1: first | last | id
-            row 2: issue | expiry | birth (with inline age sub-line) */}
+      {/* Identity names — row 1: first | last | id */}
       <FieldGroup cols={3}>
         <EditableField
           label={tf('firstName')}
@@ -203,31 +201,12 @@ export function CaseBorrowerCard({
           dir="ltr"
           inputClassName="text-end"
         />
-        <EditableField
-          type="date"
-          label={tf('idIssueDate')}
-          value={localBorrower.id_issue_date}
-          onSave={(v) => saveField('id_issue_date', v)}
-        />
-        <EditableField
-          type="date"
-          label={tf('idExpiryDate')}
-          value={localBorrower.id_expiry_date}
-          onSave={(v) => saveField('id_expiry_date', v)}
-        />
-        <EditableField
-          type="date"
-          label={tf('birthDate')}
-          value={localBorrower.birth_date}
-          onSave={(v) => saveField('birth_date', v)}
-        />
       </FieldGroup>
 
-      {/* Contact */}
+      {/* Contact — row 2: phone | email. Moved above the date row so the
+          "how do I reach this borrower" answer sits next to their name,
+          which is what the advisor scans for first. */}
       <FieldGroup>
-        {/* Phone | Email pair. Both have icon adornments — with the wider
-            stacked-card layout each half-column fits the label + input + 1-2
-            icons comfortably. */}
         <EditableField
           type="tel"
           label={tf('phone')}
@@ -258,6 +237,28 @@ export function CaseBorrowerCard({
               <QuickIconLink href={mailLink} label={t('sendEmail')} icon={Mail} accent="neutral" />
             ) : null
           }
+        />
+      </FieldGroup>
+
+      {/* Dates — row 3: issue | expiry | birth. */}
+      <FieldGroup cols={3}>
+        <EditableField
+          type="date"
+          label={tf('idIssueDate')}
+          value={localBorrower.id_issue_date}
+          onSave={(v) => saveField('id_issue_date', v)}
+        />
+        <EditableField
+          type="date"
+          label={tf('idExpiryDate')}
+          value={localBorrower.id_expiry_date}
+          onSave={(v) => saveField('id_expiry_date', v)}
+        />
+        <EditableField
+          type="date"
+          label={tf('birthDate')}
+          value={localBorrower.birth_date}
+          onSave={(v) => saveField('birth_date', v)}
         />
       </FieldGroup>
 

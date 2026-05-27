@@ -64,7 +64,17 @@ export async function CaseIncomesBlock({ caseId }: Props) {
       {groups.length === 0 ? (
         <p className="text-sm text-neutral-600 text-center py-4">{t('noBorrowers')}</p>
       ) : (
-        <div className="space-y-5">
+        // Side-by-side layout when there are exactly 2 borrowers (the
+        // common case for couples) — each per-borrower income card gets
+        // half the row instead of stretching full width. 1 or 3+ borrowers
+        // fall back to a stacked layout where each card stays readable.
+        <div
+          className={
+            groups.length === 2
+              ? 'grid grid-cols-1 lg:grid-cols-2 gap-4'
+              : 'space-y-5'
+          }
+        >
           {groups.map((g) => (
             <BorrowerIncomesGroup
               key={g.borrowerId}

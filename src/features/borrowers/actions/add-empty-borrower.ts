@@ -83,10 +83,12 @@ export async function addEmptyBorrowerAction(
       borrowerId: borrower.id,
       err: linkErr.message,
     });
-    // Best-effort rollback of the orphan borrower row. If this fails too,
-    // it gets cleaned up by the periodic orphan-cleanup job (the borrower
-    // has no case_borrowers link so it's unreachable from any case view).
-    await supabase.from('borrowers').delete().eq('id', borrower.id);
+    // Best-effort rollback of the orphan borrower row. Keep retention/audit
+    // semantics by soft-deleting instead of physically deleting PII.
+    await supabase
+      .from('borrowers')
+      .update({ deleted_at: new Date().toISOString(), updated_by: userRes.user.id })
+      .eq('id', borrower.id);
     return { ok: false, error: 'unknown' };
   }
 

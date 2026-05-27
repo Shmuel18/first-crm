@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from 'react';
 
-import { Loader2, Star, Trash2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
@@ -22,22 +22,31 @@ type Props = {
   incomeTypes: ReadonlyArray<IncomeTypeOption>;
   locale: 'he' | 'en';
   canEdit: boolean;
+  /**
+   * False hides the trash button — used for the first income in each
+   * borrower's group (the "primary employment" slot which the group
+   * auto-creates and treats as structural). Defaults true for back-compat
+   * with any caller that hasn't been migrated yet.
+   */
+  canDelete?: boolean;
 };
 
 /**
  * One income, rendered as a small card with every field visible and inline-
  * editable. Reuses the borrowers' EditableField primitive so labels, save
  * indicators, and rollback-on-error all behave consistently across the app.
- * The is_primary toggle is a star button (more obvious than a checkbox) and
- * the delete sits in the card's header on hover.
+ *
+ * The "primary income" star was removed: with the auto-create flow the
+ * first row in each borrower's group is implicitly the primary employment
+ * and the rest are "other incomes". The is_primary column is still in DB
+ * for back-compat / future bulk views — just no longer surfaced here.
  */
-export function IncomeRow({ caseId, income, incomeTypes, locale, canEdit }: Props) {
+export function IncomeRow({ caseId, income, incomeTypes, locale, canEdit, canDelete = true }: Props) {
   const t = useTranslations('incomes');
   const tf = useTranslations('incomes.fields');
   const tc = useTranslations('common');
 
   const [row, setRow] = useState(income);
-  const [savingPrimary, startPrimary] = useTransition();
   const [isDeleting, startDelete] = useTransition();
 
   // Resync from server when the parent revalidates.
@@ -75,18 +84,6 @@ export function IncomeRow({ caseId, income, incomeTypes, locale, canEdit }: Prop
     return { ok: true } as const;
   };
 
-  const togglePrimary = () => {
-    const next = !row.is_primary;
-    setRow((r) => ({ ...r, is_primary: next }));
-    startPrimary(async () => {
-      const result = await updateIncomeFieldAction(income.id, caseId, 'is_primary', next);
-      if (!result.ok) {
-        setRow((r) => ({ ...r, is_primary: !next }));
-        toast.error(result.message || tc('saveFailed'));
-      }
-    });
-  };
-
   const handleDelete = () => {
     startDelete(async () => {
       const result = await deleteIncomeAction(income.id, income.borrower_id, caseId);
@@ -105,7 +102,7 @@ export function IncomeRow({ caseId, income, incomeTypes, locale, canEdit }: Prop
 
   return (
     <li className="border border-neutral-200 rounded-lg p-3 bg-white space-y-2 group">
-      {/* Header — type/amount summary + star toggle + delete */}
+      {/* Header — type/amount summary + delete on hover (no primary star). */}
       <div className="flex items-center justify-between gap-2 pb-2 border-b border-neutral-100">
         <div className="flex items-center gap-2 min-w-0">
           <span className="font-medium text-sm text-neutral-900 truncate">
@@ -117,28 +114,7 @@ export function IncomeRow({ caseId, income, incomeTypes, locale, canEdit }: Prop
           </span>
         </div>
         <div className="flex items-center gap-0.5 shrink-0">
-          {canEdit && (
-            <Tooltip content={tf('isPrimary')}>
-              <button
-                type="button"
-                onClick={togglePrimary}
-                aria-pressed={row.is_primary}
-                aria-label={tf('isPrimary')}
-                disabled={savingPrimary || isDeleting}
-                className="size-7 rounded inline-flex items-center justify-center text-neutral-400 hover:text-brand-gold-text hover:bg-neutral-50 transition disabled:opacity-50"
-              >
-                {savingPrimary ? (
-                  <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-                ) : (
-                  <Star
-                    className={`size-4 transition ${row.is_primary ? 'fill-brand-gold text-brand-gold-text' : ''}`}
-                    aria-hidden="true"
-                  />
-                )}
-              </button>
-            </Tooltip>
-          )}
-          {canEdit && (
+          {canEdit && canDelete && (
             <Tooltip content={tc('delete')}>
               <button
                 type="button"
@@ -181,22 +157,93 @@ export function IncomeRow({ caseId, income, incomeTypes, locale, canEdit }: Prop
             placeholder={tf('sourceNamePlaceholder')}
           />
         </div>
-        <EditableField
-          type="number"
-          label={tf('tenureMonths')}
-          value={row.tenure_months === null ? null : String(row.tenure_months)}
-          onSave={(v) => saveField('tenure_months', v === null ? null : Number(v))}
-        />
-        <div className="sm:col-span-2">
+        {/* Date + seniority share one row but split 2fr:1fr — the date
+            using equal columns, so the seniority readout aligns with the
+            monthly amount field above instead of ending too far left. */}
+        <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] gap-x-6 gap-y-1.5">
           <EditableField
-            type="textarea"
-            rows={2}
-            label={tf('notes')}
-            value={row.notes}
-            onSave={(v) => saveField('notes', v)}
+            type="date"
+            label={tf('employmentStartDate')}
+            value={row.employment_start_date}
+            onSave={(v) => saveField('employment_start_date', v)}
+          />
+          <SeniorityReadout
+            label={tf('seniority')}
+            startDateIso={row.employment_start_date}
+            tenureMonthsFallback={row.tenure_months}
           />
         </div>
       </div>
     </li>
   );
+}
+
+/**
+ * Read-only "ותק" display derived from employment_start_date. Falls back to
+ * the legacy tenure_months column if the date isn't set yet. Layout matches
+ * EditableField (right-side label + 1fr value) so the row reads as one
+ * coherent grid instead of "two different field shapes side by side".
+ *
+ * Years are shown to 2 decimals — matches the reference design and avoids
+ * the "is 18 months one-and-a-half or two?" ambiguity of integer years.
+ */
+function SeniorityReadout({
+  label,
+  startDateIso,
+  tenureMonthsFallback,
+}: {
+  label: string;
+  startDateIso: string | null;
+  tenureMonthsFallback: number | null;
+}) {
+  const display = computeSeniorityYears(startDateIso, tenureMonthsFallback);
+  return (
+    <div className="grid grid-cols-[3.5rem_1fr] items-center gap-2 text-sm">
+      <span className="text-neutral-500 truncate">{label}</span>
+      {/* Flex container mirrors EditableField's value side: readout takes
+          flex-1, plus an invisible size-4 spacer where the save indicator
+          would be on a regular field. That keeps the readout's LEFT edge
+          at the same position as the source-name input's left edge in
+          the row above — without the spacer the readout was overshooting
+          by ~22px (save-indicator width + gap), drifting past the
+          source-name's terminator. */}
+      <div className="flex items-center gap-1.5 min-w-0">
+        <div
+          dir="ltr"
+          aria-readonly="true"
+          className="h-9 px-3 flex items-center justify-end flex-1 text-sm text-neutral-900 bg-neutral-50/80 border border-neutral-200 rounded-md"
+        >
+          {display ?? <span className="text-neutral-300">—</span>}
+        </div>
+        {/* inline-flex forces the span to honour its size-4 dimensions —
+            a bare <span> is `display: inline` which ignores width/height,
+            so the spacer was rendering at 0px and the readout overshot
+            into where the source-name input terminates above. */}
+        <span aria-hidden="true" className="inline-flex size-4 shrink-0 invisible" />
+      </div>
+    </div>
+  );
+}
+
+function computeSeniorityYears(
+  startDateIso: string | null,
+  tenureMonthsFallback: number | null,
+): string | null {
+  if (startDateIso) {
+    const start = new Date(startDateIso);
+    if (Number.isFinite(start.getTime())) {
+      const now = new Date();
+      const rawMonths =
+        (now.getFullYear() - start.getFullYear()) * 12 +
+        (now.getMonth() - start.getMonth());
+      // Subtract 1 if we haven't reached the day-of-month yet this month.
+      const months = now.getDate() >= start.getDate() ? rawMonths : rawMonths - 1;
+      if (months < 0) return null;
+      return (months / 12).toFixed(2);
+    }
+  }
+  if (tenureMonthsFallback !== null && tenureMonthsFallback >= 0) {
+    return (tenureMonthsFallback / 12).toFixed(2);
+  }
+  return null;
 }

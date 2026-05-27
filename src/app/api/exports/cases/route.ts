@@ -76,6 +76,7 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
     subject: `user:${userRes.user.id}`,
     max: limit.max,
     windowSeconds: 3600,
+    failMode: 'closed',
   });
   if (!allowed) return errorJson('rate_limited', 429);
 

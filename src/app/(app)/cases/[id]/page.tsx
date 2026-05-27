@@ -17,10 +17,8 @@ import { getLocale, getTranslations } from 'next-intl/server';
 
 import { CaseBorrowerCard } from '@/features/borrowers/components/case-borrower-card';
 import { listBorrowersForCase } from '@/features/borrowers/services/borrowers.service';
-import {
-  CaseBanksBlock,
-  CaseBanksBlockSkeleton,
-} from '@/features/case-banks/components/case-banks-block';
+// CaseBanksBlock/Skeleton removed — banks now render as an inline row
+// inside CaseAdminBlock.
 import { CaseActionBar } from '@/features/cases/components/case-action-bar';
 import { CaseAdminBlock } from '@/features/cases/components/case-admin-block';
 import { CaseBlock } from '@/features/cases/components/case-block';
@@ -97,7 +95,6 @@ export default async function CaseDetailPage({ params }: Props) {
       <CaseActionBar
         caseId={caseData.id}
         caseNumber={caseData.case_number}
-        createdAt={caseData.created_at}
         statusId={caseData.status?.id ?? null}
         statusName={caseData.status?.name_he ?? null}
         statusColor={caseData.status?.color ?? null}
@@ -113,10 +110,18 @@ export default async function CaseDetailPage({ params }: Props) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <CaseBlock
-          title={`${t('blocks.borrowers')} ${borrowers.length > 0 ? `(${borrowers.length})` : ''}`}
+          title={t('blocks.borrowers')}
           icon={<UserCircle2 />}
           fullWidth
-          rightSlot={<AddBorrowerButton caseId={caseData.id} variant="header" />}
+          // RightSlot summary: borrower names instead of a button — aligns
+          // with the Incomes / Obligations blocks which surface a money
+          // total in the same spot. The "+ Add borrower" button moved
+          // inside the block content (visible only when expanded).
+          rightSlot={
+            borrowerNames ? (
+              <span className="text-xs text-neutral-600 truncate max-w-xs">{borrowerNames}</span>
+            ) : null
+          }
         >
           {borrowers.length === 0 ? (
             <div className="text-center py-6 space-y-3">
@@ -129,6 +134,9 @@ export default async function CaseDetailPage({ params }: Props) {
             // cramping. Was md:grid-cols-2 — at ~400px per card the dates
             // + adornments didn't fit cleanly.
             <div className="space-y-4">
+              <div className="flex justify-end">
+                <AddBorrowerButton caseId={caseData.id} variant="header" />
+              </div>
               {borrowers.map(({ borrower, role_in_case, is_primary }, index) => (
                 <CaseBorrowerCard
                   key={borrower.id}
@@ -173,12 +181,11 @@ export default async function CaseDetailPage({ params }: Props) {
           )}
         </CaseBlock>
 
-        <Suspense fallback={<CaseBanksBlockSkeleton />}>
-          <CaseBanksBlock caseId={caseData.id} />
-        </Suspense>
-
+        {/* Banks moved into CaseAdminBlock as an inline row — saves the
+            visual heft of a full block for the typical 1-3 banks case. */}
         {/* blocker/insurance are CHECK-constrained DB strings; narrow to unions. */}
         <CaseAdminBlock
+          caseId={caseData.id}
           blocker={caseData.case_blocker as CaseBlocker | null}
           insurance={caseData.insurance_status as InsuranceStatus | null}
           referrerName={caseData.referrer_name}

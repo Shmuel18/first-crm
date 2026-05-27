@@ -51,7 +51,7 @@ export async function restoreBackupAction(driveFileId: string): Promise<RestoreB
           strict: env.BACKUP_ENCRYPTION_STRICT,
           saltV2: env.BACKUP_ENCRYPTION_SALT_V2,
         });
-      } else if (env.BACKUP_ENCRYPTION_STRICT) {
+      } else if (env.NODE_ENV === 'production' || env.BACKUP_ENCRYPTION_STRICT) {
         console.error('[restoreBackup] refusing plaintext backup (strict mode)', {
           driveFileId,
         });

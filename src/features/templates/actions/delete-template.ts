@@ -18,7 +18,7 @@ export async function deleteTemplateAction(templateId: string): Promise<Result> 
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
   if (!(await isCurrentUserAdmin())) return { ok: false, error: 'unauthorized' };
 
-  const ok = await deleteMessageTemplate(templateId);
+  const ok = await deleteMessageTemplate(templateId, userRes.user.id);
   if (!ok) return { ok: false, error: 'unknown' };
 
   revalidatePath('/templates');

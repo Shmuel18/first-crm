@@ -23,6 +23,7 @@ const EDITABLE_FIELDS = [
   'amount_monthly',
   'source_name',
   'tenure_months',
+  'employment_start_date',
   'is_primary',
   'notes',
 ] as const satisfies readonly (keyof typeof IncomeFormSchema.shape)[];
@@ -72,6 +73,7 @@ export async function updateIncomeFieldAction(
     .from('borrower_incomes')
     .select('borrower_id')
     .eq('id', incomeId)
+    .is('deleted_at', null)
     .maybeSingle();
   if (!income) return { ok: false, error: 'unauthorized' };
   if (!(await borrowerIsOnCase(asCaseId(caseId), asBorrowerId(income.borrower_id)))) {
@@ -87,6 +89,7 @@ export async function updateIncomeFieldAction(
     .from('borrower_incomes')
     .update(updatePayload)
     .eq('id', incomeId)
+    .is('deleted_at', null)
     .select('id');
 
   if (error) {

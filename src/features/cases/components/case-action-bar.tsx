@@ -14,7 +14,6 @@ import { Tooltip } from '@/components/ui/tooltip';
 import { CaseActionTaskButton } from '@/features/tasks/components/case-action-task-button';
 import { listAssignableProfiles } from '@/features/tasks/services/tasks.service';
 import { parseLocale } from '@/lib/i18n/direction';
-import { formatDateLong } from '@/lib/utils/format-date';
 
 import { CaseMoreMenu } from './case-more-menu';
 import { EditableStatusCell } from './editable-status-cell';
@@ -27,8 +26,6 @@ type ActionBarProps = {
   /** Kept for the task / meeting children that need a case identifier even
       though the header no longer shows the number visibly. */
   caseNumber: string;
-  /** Case creation timestamp — shown next to the borrower name as a date. */
-  createdAt: string;
   statusId: string | null;
   statusName: string | null;
   statusColor: string | null;
@@ -47,7 +44,6 @@ type ActionBarProps = {
 export async function CaseActionBar({
   caseId,
   caseNumber,
-  createdAt,
   statusId,
   statusName,
   statusColor,
@@ -67,8 +63,6 @@ export async function CaseActionBar({
   const locale = parseLocale(await getLocale());
   const assignees = await listAssignableProfiles();
 
-  const openedAtLabel = formatDateLong(createdAt, locale);
-
   return (
     <div className="bg-brand-gold-soft text-neutral-900 sticky top-[-1rem] sm:top-[-1.5rem] z-20 shadow-sm -mx-4 px-4 sm:-mx-6 sm:px-6 py-3 border-b border-brand-gold/20">
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -87,12 +81,6 @@ export async function CaseActionBar({
             <span className="font-display text-base font-semibold truncate max-w-md">
               {borrowerNames || t('withBorrowers')}
             </span>
-            <span aria-hidden="true" className="text-neutral-400">·</span>
-            <Tooltip content={t('openedAtTooltip')}>
-              <span className="text-neutral-500 text-xs cursor-default">
-                {t('openedAt')} {openedAtLabel}
-              </span>
-            </Tooltip>
             <EditableStatusCell
               caseId={caseId}
               currentStatusId={statusId}
@@ -101,14 +89,17 @@ export async function CaseActionBar({
               options={statusOptions}
             />
             {(caseTypePrimary || caseTypeSecondary) && (
-              <span className="hidden md:inline-flex items-center gap-1 ms-1">
+              // Brand-aligned pills (soft gold + gold text, rounded-full) —
+              // matches the +Add / sub-tab pill family used elsewhere on
+              // the page, replacing the previous plain 10px white chip.
+              <span className="hidden md:inline-flex items-center gap-1.5 ms-1">
                 {caseTypePrimary && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-white border border-neutral-200 text-neutral-600">
+                  <span className="inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full bg-brand-gold-soft border border-brand-gold/40 text-brand-gold-text">
                     {caseTypePrimary}
                   </span>
                 )}
                 {caseTypeSecondary && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-white border border-neutral-200 text-neutral-600">
+                  <span className="inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full bg-brand-gold-soft border border-brand-gold/40 text-brand-gold-text">
                     + {caseTypeSecondary}
                   </span>
                 )}

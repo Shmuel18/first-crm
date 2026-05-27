@@ -8,13 +8,19 @@ import { asBorrowerId, asCaseId } from '@/lib/types/branded';
 
 import { borrowerIsOnCase } from '@/features/borrowers/services/borrowers.service';
 
-type DeleteResult = { ok: true } | { ok: false; error: 'unauthorized' | 'unknown' };
+type Result =
+  | { ok: true; obligationId: string }
+  | { ok: false; error: 'unauthorized' | 'unknown'; message?: string };
 
-export async function deleteObligationAction(
-  obligationId: string,
-  borrowerId: string,
+/**
+ * Create an empty borrower_obligations row with only borrower_id set. The
+ * case-level inline list renders the new row and the user fills the
+ * fields cell-by-cell — no dialog. Mirrors createEmptyIncomeAction.
+ */
+export async function createEmptyObligationAction(
   caseId: string,
-): Promise<DeleteResult> {
+  borrowerId: string,
+): Promise<Result> {
   const supabase = await createClient();
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
@@ -24,21 +30,21 @@ export async function deleteObligationAction(
     return { ok: false, error: 'unauthorized' };
   }
 
-  const { data: deleted, error } = await supabase
+  const { data: created, error } = await supabase
     .from('borrower_obligations')
-    .update({
-      deleted_at: new Date().toISOString(),
-      deleted_by: userRes.user.id,
+    .insert({
+      borrower_id: borrowerId,
+      created_by: userRes.user.id,
       updated_by: userRes.user.id,
     })
-    .eq('id', obligationId)
-    .eq('borrower_id', borrowerId)
-    .is('deleted_at', null)
-    .select('id');
+    .select('id')
+    .single();
 
-  if (error) return { ok: false, error: 'unknown' };
-  if (!deleted || deleted.length === 0) return { ok: false, error: 'unauthorized' };
+  if (error || !created) {
+    console.error('[createEmptyObligation] db error', error);
+    return { ok: false, error: 'unknown' };
+  }
 
   revalidatePath(`/cases/${caseId}`);
-  return { ok: true };
+  return { ok: true, obligationId: created.id };
 }

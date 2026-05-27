@@ -10,11 +10,6 @@ import { borrowerIsOnCase } from '@/features/borrowers/services/borrowers.servic
 
 type DeleteResult = { ok: true } | { ok: false; error: 'unauthorized' | 'unknown' };
 
-/**
- * Hard-deletes an income row. The table has no `deleted_at` column (per
- * migration 007), and audit triggers capture the DELETE so the change can
- * be reconstructed from `audit_log` if it was a mistake.
- */
 export async function deleteIncomeAction(
   incomeId: string,
   borrowerId: string,
@@ -31,9 +26,14 @@ export async function deleteIncomeAction(
 
   const { data: deleted, error } = await supabase
     .from('borrower_incomes')
-    .delete()
+    .update({
+      deleted_at: new Date().toISOString(),
+      deleted_by: userRes.user.id,
+      updated_by: userRes.user.id,
+    })
     .eq('id', incomeId)
     .eq('borrower_id', borrowerId)
+    .is('deleted_at', null)
     .select('id');
 
   if (error) return { ok: false, error: 'unknown' };

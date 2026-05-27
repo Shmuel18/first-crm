@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Scale, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
@@ -78,26 +78,40 @@ export function BorrowerObligationsGroup({
   };
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-neutral-100">
-        <div className="flex items-baseline gap-3 min-w-0 flex-wrap">
-          <span className="text-sm font-medium text-neutral-900 truncate">{borrowerName}</span>
-          <span className="text-xs text-neutral-500 shrink-0">
-            {t('monthlyTotal')}:{' '}
-            <span className="font-semibold text-neutral-800">{fmt.format(monthlyPaymentTotal)}</span>
+    // Outer wrapper mirrors CaseBorrowerCard / BorrowerIncomesGroup — same
+    // border, padding, and icon-disk header so all three per-borrower
+    // groupings read as the same visual family.
+    <div className="border border-neutral-200 rounded-lg p-4 bg-white space-y-3">
+      <div className="flex items-start justify-between gap-2 pb-3 border-b border-neutral-100">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="size-9 rounded-full bg-brand-gold-soft flex items-center justify-center shrink-0">
+            <Scale aria-hidden="true" className="size-5 text-brand-gold-text" />
           </span>
-          {remainingDebtTotal > 0 && (
-            <span className="text-xs text-neutral-500 shrink-0">
-              {t('remainingTotal')}:{' '}
-              <span className="font-semibold text-neutral-800">{fmt.format(remainingDebtTotal)}</span>
+          <div className="flex flex-col min-w-0 gap-0.5">
+            <span className="font-medium text-neutral-900 text-sm truncate">{borrowerName}</span>
+            <span className="text-xs text-neutral-500 flex items-center gap-2 flex-wrap">
+              <span>
+                {t('monthlyTotal')}:{' '}
+                <span className="font-semibold text-neutral-800">
+                  {fmt.format(monthlyPaymentTotal)}
+                </span>
+              </span>
+              {remainingDebtTotal > 0 && (
+                <span>
+                  · {t('remainingTotal')}:{' '}
+                  <span className="font-semibold text-neutral-800">
+                    {fmt.format(remainingDebtTotal)}
+                  </span>
+                </span>
+              )}
             </span>
-          )}
+          </div>
         </div>
         {canEdit && (
           <button
             type="button"
             onClick={() => setDialog({ mode: 'new' })}
-            className="inline-flex items-center gap-1 text-xs text-brand-gold-text hover:text-brand-black font-medium transition"
+            className="shrink-0 inline-flex items-center gap-1.5 text-[11px] font-medium text-brand-gold-text bg-brand-gold-soft border border-brand-gold/40 rounded-full px-2.5 py-1 hover:bg-brand-gold/20 hover:border-brand-gold/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
           >
             <Plus className="size-3.5" aria-hidden="true" />
             {t('addObligation')}

@@ -26,6 +26,8 @@ export type MessageTemplate = {
   updated_at: string;
   created_by: string | null;
   updated_by: string | null;
+  deleted_at: string | null;
+  deleted_by: string | null;
 };
 
 export type TemplateActionState =

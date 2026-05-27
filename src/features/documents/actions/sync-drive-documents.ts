@@ -47,6 +47,7 @@ export async function syncDriveDocumentsAction(caseId: string): Promise<Result> 
     subject: `user:${userRes.user.id}:case:${parsed.data}`,
     max: 1,
     windowSeconds: 30,
+    failMode: 'closed',
   });
   if (!allowed) return { ok: false, error: 'rate_limited' };
 

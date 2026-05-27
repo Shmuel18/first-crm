@@ -54,6 +54,7 @@ export async function saveIncomeAction(
       .update(payload)
       .eq('id', incomeId)
       .eq('borrower_id', parsed.data.borrower_id)
+      .is('deleted_at', null)
       .select('id');
     if (error) return { ok: false, error: 'unknown', values };
     if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized', values };

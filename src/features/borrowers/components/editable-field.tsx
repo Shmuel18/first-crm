@@ -2,11 +2,10 @@
 
 import { useId, useRef, useState, useTransition } from 'react';
 
-import { Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 
-import { Tooltip } from '@/components/ui/tooltip';
+import { DatePickerPopover } from '@/components/ui/date-picker-popover';
 
 import { renderControl, SaveIndicator } from './editable-field-control';
 import type { FieldProps } from './editable-field-shared';
@@ -61,11 +60,12 @@ export function EditableField(props: FieldProps) {
       ? 'ltr'
       : undefined);
 
-  const openDatePicker = () => {
-    // showPicker() is available in modern browsers (Chrome 99+, FF 101+,
-    // Safari 16.4+). Optional-chain so older browsers just no-op — the user
-    // can still click the input itself to focus it.
-    inputRef.current?.showPicker?.();
+  // When the calendar popover picks a date, push it into local state +
+  // run the save bridge in one step — same path the input would take on
+  // blur, just driven externally.
+  const handlePickerSelect = (next: string | null) => {
+    setLocalValue(next ?? '');
+    save(next ?? '');
   };
 
   // Right-side label, input on the left (RTL natural order). Tight 6rem
@@ -89,16 +89,12 @@ export function EditableField(props: FieldProps) {
           resolvedDir,
         })}
         {type === 'date' && (
-          <Tooltip content={tc('selectDate')}>
-            <button
-              type="button"
-              onClick={openDatePicker}
-              aria-label={tc('selectDate')}
-              className="shrink-0 size-7 rounded inline-flex items-center justify-center text-neutral-500 hover:text-brand-gold-text hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 transition"
-            >
-              <Calendar className="size-3.5" aria-hidden="true" />
-            </button>
-          </Tooltip>
+          <DatePickerPopover
+            value={localValue || null}
+            onSelect={handlePickerSelect}
+            label={tc('selectDate')}
+            disabled={props.disabled || isPending}
+          />
         )}
         {adornment ? <div className="shrink-0">{adornment}</div> : null}
         <SaveIndicator pending={isPending} error={hasError} />

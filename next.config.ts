@@ -4,6 +4,8 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 /**
  * Baseline security headers. CSP intentionally omits script-src/style-src
  * tightening because Next 16 emits inline bootstrap scripts during
@@ -33,10 +35,17 @@ const SECURITY_HEADERS = [
   {
     key: 'Content-Security-Policy',
     value: [
+      "default-src 'self'",
+      `script-src 'self' 'unsafe-inline'${isProduction ? '' : " 'unsafe-eval'"}`,
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob:",
+      "font-src 'self' data:",
+      "connect-src 'self' https://*.supabase.co https://*.googleapis.com https://accounts.google.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
       "object-src 'none'",
+      "frame-src 'none'",
       'upgrade-insecure-requests',
     ].join('; '),
   },

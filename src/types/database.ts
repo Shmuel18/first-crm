@@ -1045,6 +1045,9 @@ export type Database = {
           borrower_id: string
           created_at: string
           created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          employment_start_date: string | null
           id: string
           income_type_id: string | null
           is_primary: boolean
@@ -1060,6 +1063,9 @@ export type Database = {
           borrower_id: string
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          employment_start_date?: string | null
           id?: string
           income_type_id?: string | null
           is_primary?: boolean
@@ -1075,6 +1081,9 @@ export type Database = {
           borrower_id?: string
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          employment_start_date?: string | null
           id?: string
           income_type_id?: string | null
           is_primary?: boolean
@@ -1121,6 +1130,8 @@ export type Database = {
           borrower_id: string
           created_at: string
           created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
           description: string | null
           end_date: string | null
           id: string
@@ -1136,6 +1147,8 @@ export type Database = {
           borrower_id: string
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           description?: string | null
           end_date?: string | null
           id?: string
@@ -1151,6 +1164,8 @@ export type Database = {
           borrower_id?: string
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           description?: string | null
           end_date?: string | null
           id?: string
@@ -2202,6 +2217,8 @@ export type Database = {
           channel: string
           created_at: string
           created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
           id: string
           is_active: boolean
           name: string
@@ -2214,6 +2231,8 @@ export type Database = {
           channel?: string
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           is_active?: boolean
           name: string
@@ -2226,6 +2245,8 @@ export type Database = {
           channel?: string
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           is_active?: boolean
           name?: string
