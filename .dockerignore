@@ -1,0 +1,13 @@
+.git
+.github
+.next
+node_modules
+dev-fixtures
+docs/mockups
+.env*
+!.env.example
+*.log
+*.tsbuildinfo
+PR_BODY.md
+supabase/.temp
+supabase/.branches
