@@ -37,7 +37,14 @@ export async function CaseIncomesBlock({ caseId }: Props) {
       listIncomeTypeOptions(),
     ]);
   } catch (err) {
-    console.error('[CaseIncomesBlock] data fetch failed', err);
+    // Same flatten-to-string trick as CaseObligationsBlock — see comment there.
+    const summary =
+      err instanceof Error
+        ? `${err.name}: ${err.message}`
+        : err && typeof err === 'object'
+          ? JSON.stringify(err, Object.getOwnPropertyNames(err))
+          : String(err);
+    console.error(`[CaseIncomesBlock] data fetch failed — ${summary}`);
   }
 
   const totalAcrossBorrowers = groups.reduce((sum, g) => sum + g.monthlyTotal, 0);

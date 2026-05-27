@@ -152,7 +152,7 @@ AS $fn$
       FROM public.audit_log al
      WHERE al.table_name = 'cases'
        AND al.action = 'SOFT_DELETE'
-       AND al.record_id = c.id::text
+       AND al.record_id = c.id
      ORDER BY al.timestamp DESC
      LIMIT 1
   ) latest_delete ON TRUE

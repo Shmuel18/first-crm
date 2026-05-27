@@ -3126,7 +3126,29 @@ export type Database = {
       is_active_profile: { Args: { uid: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       layout_bootstrap: { Args: never; Returns: Json }
+      list_deleted_cases: {
+        Args: { p_cutoff: string }
+        Returns: {
+          assigned_advisor_first_name: string | null
+          assigned_advisor_last_name: string | null
+          case_number: string
+          deleted_at: string
+          deleted_by_first_name: string | null
+          deleted_by_last_name: string | null
+          id: string
+          primary_borrower_first_name: string | null
+          primary_borrower_last_name: string | null
+          status_color: string | null
+          status_name_en: string | null
+          status_name_he: string | null
+        }[]
+      }
+      permanently_delete_case: {
+        Args: { p_case_id: string; p_confirm_case_number: string }
+        Returns: boolean
+      }
       restore_backup_snapshot: { Args: { p_snapshot: Json }; Returns: Json }
+      restore_case: { Args: { p_case_id: string }; Returns: boolean }
       save_borrower_for_case: {
         Args: {
           p_birth_date: string
@@ -3164,6 +3186,7 @@ export type Database = {
         Returns: undefined
       }
       set_request_audit_context: { Args: never; Returns: undefined }
+      soft_delete_case: { Args: { p_case_id: string }; Returns: boolean }
       update_borrower_in_case: {
         Args: { p_borrower_id: string; p_case_id: string; p_patch: Json }
         Returns: boolean

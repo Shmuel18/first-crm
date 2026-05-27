@@ -39,7 +39,18 @@ export async function CaseObligationsBlock({ caseId }: Props) {
   try {
     view = await listObligationsFlatForCase(asCaseId(caseId));
   } catch (err) {
-    console.error('[CaseObligationsBlock] data fetch failed', err);
+    // Flatten to a single-line STRING so console.error in dev overlay /
+    // Chrome devtools shows the fields directly instead of collapsing to
+    // "Object". JSON.stringify catches own-properties — covers Supabase
+    // PostgrestError shape (message / code / details / hint) AND any
+    // future shape we haven't enumerated.
+    const summary =
+      err instanceof Error
+        ? `${err.name}: ${err.message}`
+        : err && typeof err === 'object'
+          ? JSON.stringify(err, Object.getOwnPropertyNames(err))
+          : String(err);
+    console.error(`[CaseObligationsBlock] data fetch failed — ${summary}`);
   }
 
   const fmt = new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-US', {
