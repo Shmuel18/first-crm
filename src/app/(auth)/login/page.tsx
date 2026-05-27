@@ -29,8 +29,8 @@ export default async function LoginPage({ searchParams }: Props) {
 
   return (
     <div className="w-full">
-      <div className="flex justify-center mb-10">
-        <div className="relative h-40 w-full max-w-[280px]">
+      <div className="flex justify-center mb-6 sm:mb-8">
+        <div className="relative h-24 w-full max-w-[220px] sm:h-28 sm:max-w-[250px] lg:h-32 lg:max-w-[280px]">
           <Image
             src="/logo.png"
             alt="Kaufman Finance Group"
@@ -42,7 +42,7 @@ export default async function LoginPage({ searchParams }: Props) {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-2xl p-8" dir="auto">
+      <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-8" dir="auto">
         <div className="mb-6">
           <h1 className="font-display text-2xl text-neutral-900 mb-1">{t('title')}</h1>
           <p className="text-sm text-neutral-500">{t('subtitle')}</p>
