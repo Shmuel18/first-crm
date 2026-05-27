@@ -12,9 +12,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN --mount=type=secret,id=env_production \
-  set -a && \
-  . /run/secrets/env_production && \
-  set +a && \
+  node -e "const fs=require('fs'); const q=(v)=>String(v).replace(/'/g, '\\''\"'\"'\\''); for (const line of fs.readFileSync('/run/secrets/env_production','utf8').split(/\\r?\\n/)) { const s=line.trim(); if (!s || s.startsWith('#')) continue; const i=s.indexOf('='); if (i<1) continue; const k=s.slice(0,i).trim(); const v=s.slice(i+1); if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(k)) console.log(`export ${k}='${q(v)}'`); }" > /tmp/build-env.sh && \
+  . /tmp/build-env.sh && \
   npm run build
 
 FROM node:22-alpine AS runner
