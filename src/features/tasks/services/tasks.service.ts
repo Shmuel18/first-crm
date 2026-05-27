@@ -77,7 +77,8 @@ export async function listTasks(filters: TaskListFilters): Promise<TaskWithRelat
 }
 
 export async function listTasksForCase(caseId: CaseId): Promise<TaskWithRelations[]> {
-  return listTasks({ view: 'all', caseId });
+  const tasks = await listTasks({ view: 'all', caseId });
+  return tasks.filter((task) => task.status !== 'completed' && task.status !== 'cancelled');
 }
 
 export async function countPendingTasksForUser(): Promise<number> {
@@ -162,11 +163,18 @@ export async function getCaseNumberLabel(caseId: CaseId): Promise<string | null>
   const supabase = await createClient();
   const { data } = await supabase
     .from('cases')
-    .select('case_number')
+    .select(CASE_OPTION_SELECT)
     .eq('id', caseId)
     .is('deleted_at', null)
     .maybeSingle();
-  return data ? `#${data.case_number}` : null;
+  if (!data) return null;
+  // Prefer the primary borrower's name in the chip — the case number is
+  // less recognisable than the client's name when scanning. Fall back to
+  // `#{case_number}` if the case has no primary borrower yet (brand-new
+  // or after the primary was removed).
+  const borrower = primaryBorrower(data.case_borrowers);
+  const name = [borrower?.first_name, borrower?.last_name].filter(Boolean).join(' ');
+  return name || `#${data.case_number}`;
 }
 
 type BorrowerName = { first_name: string | null; last_name: string | null };

@@ -13,6 +13,7 @@ import {
   updateObligationFieldAction,
   type EditableObligationField,
 } from '../actions/update-obligation-field';
+import { monthsUntil } from '../domain/months-remaining';
 import type { ObligationRow as ObligationRowData } from '../types';
 
 type Props = {
@@ -65,6 +66,24 @@ export function ObligationRow({ caseId, obligation, locale, canEdit }: Props) {
     if (!result.ok) {
       setRow((r) => ({ ...r, [field]: prev as never }));
       return { ok: false, message: result.message };
+    }
+
+    // Smart default: filling end_date also derives months_remaining (the
+    // user can still override the months value manually afterward). Same
+    // rule as ObligationTableRow — see comment there.
+    if (field === 'end_date' && typeof value === 'string' && value) {
+      const prevMonths = row.months_remaining;
+      const months = monthsUntil(value);
+      setRow((r) => ({ ...r, months_remaining: months as never }));
+      const monthsResult = await updateObligationFieldAction(
+        obligation.id,
+        caseId,
+        'months_remaining',
+        months,
+      );
+      if (!monthsResult.ok) {
+        setRow((r) => ({ ...r, months_remaining: prevMonths as never }));
+      }
     }
     return { ok: true } as const;
   };

@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
+import { DateInputWithPicker } from '@/components/ui/date-input-with-picker';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { FormField, NativeSelect } from '@/components/shared/form-fields';
@@ -123,11 +124,19 @@ export function CaseBankForm({ caseId, initial, banks, statuses }: CaseBankFormP
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField label={t('fields.submissionDate')} error={fieldErrors.submission_date}>
-          <Input name="submission_date" type="date" defaultValue={val('submission_date')} />
+          <DateInputWithPicker
+            name="submission_date"
+            defaultValue={val('submission_date')}
+            pickerLabel={t('fields.submissionDate')}
+          />
         </FormField>
 
         <FormField label={t('fields.responseDate')} error={fieldErrors.response_date}>
-          <Input name="response_date" type="date" defaultValue={val('response_date')} />
+          <DateInputWithPicker
+            name="response_date"
+            defaultValue={val('response_date')}
+            pickerLabel={t('fields.responseDate')}
+          />
         </FormField>
       </div>
 

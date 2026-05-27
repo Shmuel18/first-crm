@@ -46,6 +46,16 @@ export function EditableBankCell({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<DropdownPosition | null>(null);
 
+  // Re-sync from props after a server revalidation. Another instance on
+  // the same page (admin block / dashboard row) may have just changed the
+  // primary bank — we want this trigger to reflect the new value without
+  // a hard refresh.
+  const [propRef, setPropRef] = useState<string | null>(currentBank?.id ?? null);
+  if ((currentBank?.id ?? null) !== propRef) {
+    setPropRef(currentBank?.id ?? null);
+    setBank(currentBank);
+  }
+
   useEffect(() => {
     if (!open) return;
     const onScroll = (e: Event) => {

@@ -6,7 +6,7 @@ import { Loader2, Upload as UploadIcon, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { DateInputWithPicker } from '@/components/ui/date-input-with-picker';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
@@ -273,7 +273,7 @@ export function UploadDocumentModal({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField label={t('expiryLabel')}>
-              <Input name="expiry_date" type="date" />
+              <DateInputWithPicker name="expiry_date" pickerLabel={t('expiryLabel')} />
             </FormField>
           </div>
 

@@ -11,9 +11,14 @@ import { getLocale, getTranslations } from 'next-intl/server';
 
 import { BackArrow } from '@/components/shared/back-arrow';
 import { Tooltip } from '@/components/ui/tooltip';
-import { CaseActionTaskButton } from '@/features/tasks/components/case-action-task-button';
-import { listAssignableProfiles } from '@/features/tasks/services/tasks.service';
+import { CaseActionTaskPopover } from '@/features/tasks/components/case-action-task-popover';
+import {
+  getCaseOption,
+  listAssignableProfiles,
+  listTasksForCase,
+} from '@/features/tasks/services/tasks.service';
 import { parseLocale } from '@/lib/i18n/direction';
+import { asCaseId } from '@/lib/types/branded';
 
 import { CaseMoreMenu } from './case-more-menu';
 import { EditableStatusCell } from './editable-status-cell';
@@ -61,7 +66,16 @@ export async function CaseActionBar({
   const t = await getTranslations('case.actionBar');
   const tc = await getTranslations('common');
   const locale = parseLocale(await getLocale());
-  const assignees = await listAssignableProfiles();
+  const brandedCaseId = asCaseId(caseId);
+  // Hoisted up from CaseTasksBlock + the legacy CaseActionTaskButton: the
+  // popover trigger needs the list of open tasks, the assignee picker, and
+  // the case-option label for the create form. One Promise.all keeps the
+  // action bar's render path cheap.
+  const [assignees, tasks, caseOption] = await Promise.all([
+    listAssignableProfiles(),
+    listTasksForCase(brandedCaseId),
+    getCaseOption(brandedCaseId, locale),
+  ]);
 
   return (
     <div className="bg-brand-gold-soft text-neutral-900 sticky top-[-1rem] sm:top-[-1.5rem] z-20 shadow-sm -mx-4 px-4 sm:-mx-6 sm:px-6 py-3 border-b border-brand-gold/20">
@@ -122,10 +136,13 @@ export async function CaseActionBar({
             href={`/cases/${caseId}/documents`}
           />
           <ActionIcon icon={MessageSquare} title={t('actions.sendMessage')} comingSoonLabel={tc('comingSoon')} />
-          <CaseActionTaskButton
+          <CaseActionTaskPopover
             caseId={caseId}
             caseNumber={caseNumber}
+            tasks={tasks}
             assignees={assignees}
+            caseOption={caseOption}
+            locale={locale}
             title={t('actions.assignTask')}
           />
           <ScheduleMeetingButton

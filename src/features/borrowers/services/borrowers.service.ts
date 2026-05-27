@@ -7,7 +7,7 @@ import type { BorrowerRow, CaseBorrowerWithBorrower, RoleInCase } from '../types
 // schema additions go through an intentional update here. Used for both the
 // nested embed in listBorrowersForCase and the standalone getBorrowerById.
 const BORROWER_FULL_COLUMNS =
-  'id, first_name, last_name, national_id, id_issue_date, id_expiry_date, birth_date, gender, marital_status, children_count, relationship_in_case, phone, landline_phone, email, preferred_language, address, city, citizenship, additional_citizenships, residency_type, employment_status, employer_name, credit_rating, owns_other_property, related_to_sellers, notes, metadata, version, deleted_at, created_at, created_by, updated_at, updated_by' as const;
+  'id, first_name, last_name, national_id, id_issue_date, id_expiry_date, birth_date, gender, marital_status, children_count, relationship_in_case, phone, landline_phone, email, preferred_language, address, city, citizenship, additional_citizenships, residency_type, foreign_residence_country, employment_status, employer_name, credit_rating, owns_other_property, related_to_sellers, notes, metadata, version, deleted_at, created_at, created_by, updated_at, updated_by' as const;
 
 export async function listBorrowersForCase(
   caseId: CaseId,

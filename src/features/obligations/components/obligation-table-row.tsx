@@ -6,6 +6,7 @@ import { Loader2, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { CurrencySign } from '@/components/ui/currency-sign';
 import { DatePickerPopover } from '@/components/ui/date-picker-popover';
 import { Tooltip } from '@/components/ui/tooltip';
 
@@ -14,6 +15,7 @@ import {
   updateObligationFieldAction,
   type EditableObligationField,
 } from '../actions/update-obligation-field';
+import { monthsUntil } from '../domain/months-remaining';
 import type { ObligationRow as ObligationRowData } from '../types';
 
 type Props = {
@@ -47,6 +49,27 @@ export function ObligationTableRow({ caseId, obligation, canEdit }: Props) {
     const result = await updateObligationFieldAction(obligation.id, caseId, field, value);
     if (!result.ok) {
       setRow((r) => ({ ...r, [field]: prev as never }));
+      return;
+    }
+
+    // Smart default: when end_date is filled, derive and persist
+    // months_remaining from it. The user can still override the months
+    // value manually after — only this direction is automatic. Clearing
+    // end_date leaves months_remaining as-is so a hand-typed value
+    // doesn't disappear unexpectedly.
+    if (field === 'end_date' && typeof value === 'string' && value) {
+      const prevMonths = row.months_remaining;
+      const months = monthsUntil(value);
+      setRow((r) => ({ ...r, months_remaining: months as never }));
+      const monthsResult = await updateObligationFieldAction(
+        obligation.id,
+        caseId,
+        'months_remaining',
+        months,
+      );
+      if (!monthsResult.ok) {
+        setRow((r) => ({ ...r, months_remaining: prevMonths as never }));
+      }
     }
   };
 
@@ -170,26 +193,32 @@ function NumberCell({
     setPropRef(initial);
     setLocal(initial);
   }
+  // Non-integer NumberCells in this table are all money columns
+  // (loan_amount, monthly_payment) — show ₪ next to the input.
+  const isMoney = !integer;
   return (
-    <input
-      type="number"
-      inputMode={integer ? 'numeric' : 'decimal'}
-      step={integer ? 1 : 'any'}
-      value={local}
-      dir="ltr"
-      onChange={(e) => setLocal(e.target.value)}
-      onBlur={(e) => {
-        const raw = e.target.value.trim();
-        const next = raw === '' ? null : Number(raw);
-        if ((next === null && value === null) || next === value) return;
-        if (next !== null && !Number.isFinite(next)) {
-          setLocal(initial);
-          return;
-        }
-        onSave(next);
-      }}
-      className={`${baseInputClass} [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [appearance:textfield] text-end`}
-    />
+    <div className="flex items-center gap-1 min-w-0">
+      <input
+        type="number"
+        inputMode={integer ? 'numeric' : 'decimal'}
+        step={integer ? 1 : 'any'}
+        value={local}
+        dir="ltr"
+        onChange={(e) => setLocal(e.target.value)}
+        onBlur={(e) => {
+          const raw = e.target.value.trim();
+          const next = raw === '' ? null : Number(raw);
+          if ((next === null && value === null) || next === value) return;
+          if (next !== null && !Number.isFinite(next)) {
+            setLocal(initial);
+            return;
+          }
+          onSave(next);
+        }}
+        className={`${baseInputClass} [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [appearance:textfield] text-end`}
+      />
+      {isMoney && <CurrencySign />}
+    </div>
   );
 }
 

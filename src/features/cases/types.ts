@@ -38,8 +38,10 @@ export type CaseWithRelations = CaseRow & {
     } | null;
   }> | null;
   case_banks?: Array<{
+    id: string;
     is_primary: boolean;
     deleted_at: string | null;
+    banker_name: string | null;
     bank: {
       id: string;
       key: string;

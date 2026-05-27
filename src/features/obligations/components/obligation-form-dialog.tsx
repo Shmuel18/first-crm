@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { DateInputWithPicker } from '@/components/ui/date-input-with-picker';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { FormField } from '@/components/shared/form-fields';
@@ -155,7 +156,11 @@ export function ObligationFormDialog({
               />
             </FormField>
             <FormField label={tf('endDate')} error={errs.end_date}>
-              <Input name="end_date" type="date" defaultValue={val('end_date')} />
+              <DateInputWithPicker
+                name="end_date"
+                defaultValue={val('end_date')}
+                pickerLabel={tf('endDate')}
+              />
             </FormField>
           </div>
 

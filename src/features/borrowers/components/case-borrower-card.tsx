@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 
 import { Mail, MessageCircle, Phone, Trash2, UserCircle2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -23,7 +23,7 @@ import { updateBorrowerFieldAction, type EditableBorrowerField } from '../action
 import { buildMailLink, buildTelLink, buildWhatsAppLink } from '../domain/contact-links';
 import { calculateAge } from '../domain/age';
 
-import { BorrowerCitizenshipFields } from './borrower-citizenship-fields';
+import { BorrowerCitizenshipQuestions } from './borrower-citizenship-questions';
 import { FieldGroup } from './borrower-compact-fields';
 import { QuickIconLink } from './borrower-contact-actions';
 import { BorrowerMiscRow } from './borrower-misc-row';
@@ -53,7 +53,6 @@ export function CaseBorrowerCard({
 }: Props) {
   const t = useTranslations('case.borrower');
   const tf = useTranslations('borrowerForm.fields');
-  const tForm = useTranslations('borrowerForm');
   const tc = useTranslations('common');
   const tRemove = useTranslations('case.borrower.remove');
   const router = useRouter();
@@ -65,17 +64,6 @@ export function CaseBorrowerCard({
   // refresh immediately. On error we restore the previous value here AND the
   // EditableField rolls back its own input via its `value` prop effect.
   const [localBorrower, setLocalBorrower] = useState(borrower);
-
-  // Citizenship section is conditional: most Kaufman clients are Israeli, so
-  // we ask "אזרחות זרה?" (foreign citizenship) and only reveal the 3 detail
-  // fields when the answer is yes. Auto-reveal on mount if existing data
-  // implies foreign citizenship — don't strand records behind a closed accordion.
-  const hasCitizenshipData = Boolean(
-    localBorrower.citizenship?.trim() ||
-      localBorrower.additional_citizenships?.trim() ||
-      (localBorrower.residency_type && localBorrower.residency_type !== 'resident'),
-  );
-  const [hasForeign, setHasForeign] = useState(hasCitizenshipData);
 
   const fullName =
     [localBorrower.first_name, localBorrower.last_name].filter(Boolean).join(' ') || tc('noName');
@@ -116,15 +104,6 @@ export function CaseBorrowerCard({
       }
     });
   };
-
-  const residencyOptions = useMemo(
-    () =>
-      (['resident', 'foreign_resident', 'returning_resident'] as const).map((v) => ({
-        value: v,
-        label: tForm(`residencyTypes.${v}`),
-      })),
-    [tForm],
-  );
 
   return (
     <div className="border border-neutral-200 rounded-lg p-4 bg-white space-y-3">
@@ -265,20 +244,16 @@ export function CaseBorrowerCard({
       <BorrowerMiscRow
         borrower={localBorrower}
         ageLabel={ageLabel}
-        hasForeign={hasForeign}
-        onHasForeignChange={setHasForeign}
         saveField={saveField}
       />
 
-      {/* Conditional citizenship details — only when foreign=yes. Section
-          owns its layout (3-col FieldGroup matching the rest of the card). */}
-      {hasForeign && (
-        <BorrowerCitizenshipFields
-          borrower={localBorrower}
-          saveField={saveField}
-          residencyOptions={residencyOptions}
-        />
-      )}
+      {/* Citizenship + residency: two yes/no questions, each reveals a
+          country picker on "כן". Replaces the old single foreign-toggle +
+          3-field reveal. */}
+      <BorrowerCitizenshipQuestions
+        borrower={localBorrower}
+        saveField={saveField}
+      />
     </div>
   );
 }

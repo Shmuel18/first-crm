@@ -23,8 +23,6 @@ type Props = {
     'children_count' | 'preferred_language' | 'address'
   >;
   ageLabel: string | null;
-  hasForeign: boolean;
-  onHasForeignChange: (next: boolean) => void;
   saveField: (
     field: EditableBorrowerField,
     value: string | null,
@@ -32,18 +30,15 @@ type Props = {
 };
 
 /**
- * Dense merged row on a borrower card: children · age · foreign? · language
- * + address that takes the remaining width. Wraps on narrow screens.
+ * Dense merged row on a borrower card: children · age · language · address.
  *
- * Carries the foreign-citizenship toggle but not the conditional details —
- * the parent owns hasForeign state so it can also gate
- * <BorrowerCitizenshipFields> on the same value.
+ * The "foreign citizenship?" toggle that used to live here moved into
+ * <BorrowerCitizenshipQuestions> — two yes/no questions (additional
+ * citizenships, foreign residence), each with a conditional country picker.
  */
 export function BorrowerMiscRow({
   borrower,
   ageLabel,
-  hasForeign,
-  onHasForeignChange,
   saveField,
 }: Props) {
   const t = useTranslations('case.borrower');
@@ -68,15 +63,6 @@ export function BorrowerMiscRow({
         onSave={(v) => saveField('children_count', v === null ? null : String(v))}
       />
       <CompactReadonly label={t('age')} value={ageLabel} />
-      <CompactSelect
-        label={tf('foreignCitizenship')}
-        value={hasForeign ? 'yes' : 'no'}
-        onChange={(v) => onHasForeignChange(v === 'yes')}
-        options={[
-          { value: 'no', label: tc('no') },
-          { value: 'yes', label: tc('yes') },
-        ]}
-      />
       <CompactSelect
         label={tf('preferredLanguage')}
         value={borrower.preferred_language ?? ''}

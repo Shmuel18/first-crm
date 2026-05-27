@@ -1,13 +1,13 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { Mail, MessageCircle, Phone, Trash2, UserCircle2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 
-import { BorrowerCitizenshipFields } from '@/features/borrowers/components/borrower-citizenship-fields';
+import { BorrowerCitizenshipQuestions } from '@/features/borrowers/components/borrower-citizenship-questions';
 import { FieldGroup } from '@/features/borrowers/components/borrower-compact-fields';
 import { QuickIconLink } from '@/features/borrowers/components/borrower-contact-actions';
 import { BorrowerMiscRow } from '@/features/borrowers/components/borrower-misc-row';
@@ -57,22 +57,12 @@ type Props = {
 export function DraftBorrowerCard({ borrower, onChange, onRemove, canRemove }: Props) {
   const t = useTranslations('case.borrower');
   const tf = useTranslations('borrowerForm.fields');
-  const tForm = useTranslations('borrowerForm');
   const tc = useTranslations('common');
 
   // Local optimistic view — same pattern as the live card. Saves push up to
   // the parent reducer, and the next prop snapshot folds back in via React's
   // "adjust on prop change" idiom in EditableField itself.
   const [localBorrower, setLocalBorrower] = useState(borrower);
-
-  // Citizenship reveal — auto-open if the user already filled foreign-shaped
-  // data (same behaviour as the live card).
-  const hasCitizenshipData = Boolean(
-    localBorrower.citizenship?.trim() ||
-      localBorrower.additional_citizenships?.trim() ||
-      (localBorrower.residency_type && localBorrower.residency_type !== 'resident'),
-  );
-  const [hasForeign, setHasForeign] = useState(hasCitizenshipData);
 
   const fullName =
     [localBorrower.first_name, localBorrower.last_name].filter(Boolean).join(' ') ||
@@ -110,16 +100,7 @@ export function DraftBorrowerCard({ borrower, onChange, onRemove, canRemove }: P
 
   const ageLabel = calculateAge(localBorrower.birth_date);
 
-  const residencyOptions = useMemo(
-    () =>
-      (['resident', 'foreign_resident', 'returning_resident'] as const).map((v) => ({
-        value: v,
-        label: tForm(`residencyTypes.${v}`),
-      })),
-    [tForm],
-  );
-
-  // BorrowerMiscRow + BorrowerCitizenshipFields expect a slice of BorrowerRow
+  // BorrowerMiscRow + BorrowerCitizenshipQuestions expect a slice of BorrowerRow
   // (DB row type). DraftBorrower mirrors the same field names but uses the
   // Zod input type (e.g. children_count is number). Cast — both sub-components
   // treat the fields as nullable strings / numbers at runtime.
@@ -231,18 +212,13 @@ export function DraftBorrowerCard({ borrower, onChange, onRemove, canRemove }: P
       <BorrowerMiscRow
         borrower={borrowerForMisc}
         ageLabel={ageLabel}
-        hasForeign={hasForeign}
-        onHasForeignChange={setHasForeign}
         saveField={saveField}
       />
 
-      {hasForeign && (
-        <BorrowerCitizenshipFields
-          borrower={borrowerForMisc}
-          saveField={saveField}
-          residencyOptions={residencyOptions}
-        />
-      )}
+      <BorrowerCitizenshipQuestions
+        borrower={borrowerForMisc}
+        saveField={saveField}
+      />
     </div>
   );
 }

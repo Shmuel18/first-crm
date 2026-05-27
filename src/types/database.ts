@@ -1201,6 +1201,12 @@ export type Database = {
           },
         ]
       }
+      // AUDIT-ACK: `foreign_residence_country` was added by hand to all
+      // three (Row/Insert/Update) here after migration 084 introduced the
+      // column, so the codebase compiles until the next supabase-cli type
+      // regeneration. Drop this hand-edit after running
+      // `npx supabase gen types typescript` against the project — the
+      // generator will re-emit the same fields and this comment can go.
       borrowers: {
         Row: {
           additional_citizenships: string | null
@@ -1217,6 +1223,7 @@ export type Database = {
           employer_name: string | null
           employment_status: string | null
           first_name: string | null
+          foreign_residence_country: string | null
           gender: string | null
           id: string
           id_expiry_date: string | null
@@ -1252,6 +1259,7 @@ export type Database = {
           employer_name?: string | null
           employment_status?: string | null
           first_name?: string | null
+          foreign_residence_country?: string | null
           gender?: string | null
           id?: string
           id_expiry_date?: string | null
@@ -1287,6 +1295,7 @@ export type Database = {
           employer_name?: string | null
           employment_status?: string | null
           first_name?: string | null
+          foreign_residence_country?: string | null
           gender?: string | null
           id?: string
           id_expiry_date?: string | null
@@ -1498,6 +1507,56 @@ export type Database = {
           },
         ]
       }
+      case_expenses: {
+        Row: {
+          amount: number | null
+          case_id: string
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          description: string | null
+          expense_date: string | null
+          id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          amount?: number | null
+          case_id: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          description?: string | null
+          expense_date?: string | null
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          amount?: number | null
+          case_id?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          description?: string | null
+          expense_date?: string | null
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_expenses_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_financials: {
         Row: {
           case_id: string
@@ -1692,7 +1751,9 @@ export type Database = {
           case_blocker: string | null
           case_number: string
           case_type_primary_id: string | null
+          case_type_other_text: string | null
           case_type_secondary_id: string | null
+          city: string | null
           created_at: string
           created_by: string | null
           deleted_at: string | null
@@ -1717,7 +1778,9 @@ export type Database = {
           case_blocker?: string | null
           case_number?: string
           case_type_primary_id?: string | null
+          case_type_other_text?: string | null
           case_type_secondary_id?: string | null
+          city?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -1742,7 +1805,9 @@ export type Database = {
           case_blocker?: string | null
           case_number?: string
           case_type_primary_id?: string | null
+          case_type_other_text?: string | null
           case_type_secondary_id?: string | null
+          city?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -3186,7 +3251,19 @@ export type Database = {
         Returns: undefined
       }
       set_request_audit_context: { Args: never; Returns: undefined }
+      soft_delete_borrower_income: {
+        Args: { p_case_id: string; p_income_id: string }
+        Returns: boolean
+      }
+      soft_delete_borrower_obligation: {
+        Args: { p_case_id: string; p_obligation_id: string }
+        Returns: boolean
+      }
       soft_delete_case: { Args: { p_case_id: string }; Returns: boolean }
+      soft_delete_case_expense: {
+        Args: { p_case_id: string; p_expense_id: string }
+        Returns: boolean
+      }
       update_borrower_in_case: {
         Args: { p_borrower_id: string; p_case_id: string; p_patch: Json }
         Returns: boolean

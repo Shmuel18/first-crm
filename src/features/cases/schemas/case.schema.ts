@@ -36,23 +36,31 @@ export const INSURANCE_STATUS_COLORS: Record<InsuranceStatus, string> = {
   missing: '#DC2626',
 };
 
-export const CaseFormSchema = z
-  .object({
-    case_type_primary_id: optionalUuid,
-    case_type_secondary_id: optionalUuid,
-    status_id: optionalUuid,
-    assigned_advisor_id: optionalUuid,
-    case_blocker: optionalEnum(CASE_BLOCKER_VALUES),
-    insurance_status: optionalEnum(INSURANCE_STATUS_VALUES),
-    referrer_name: optionalShortString(NAME_MAX),
-    property_value: optionalCurrency(CURRENCY_MAX_ILS),
-    requested_mortgage_amount: optionalCurrency(CURRENCY_MAX_ILS),
-    equity: optionalCurrency(CURRENCY_MAX_ILS),
-    fee_amount: optionalCurrency(MONTHLY_AMOUNT_MAX_ILS),
-    expected_income: optionalCurrency(MONTHLY_AMOUNT_MAX_ILS),
-    short_note: optionalShortString(SHORT_NOTE_MAX),
-    request_details: optionalLongText(REQUEST_DETAILS_MAX),
-  })
+/**
+ * Exposed separately so inline-edit actions can pick a single-field
+ * validator by name (`CaseFormShape.shape[fieldName]`). The full form
+ * uses CaseFormSchema (this object + a superRefine for cross-field rules).
+ */
+export const CaseFormShape = z.object({
+  case_type_primary_id: optionalUuid,
+  case_type_secondary_id: optionalUuid,
+  status_id: optionalUuid,
+  assigned_advisor_id: optionalUuid,
+  case_blocker: optionalEnum(CASE_BLOCKER_VALUES),
+  insurance_status: optionalEnum(INSURANCE_STATUS_VALUES),
+  referrer_name: optionalShortString(NAME_MAX),
+  property_value: optionalCurrency(CURRENCY_MAX_ILS),
+  requested_mortgage_amount: optionalCurrency(CURRENCY_MAX_ILS),
+  equity: optionalCurrency(CURRENCY_MAX_ILS),
+  fee_amount: optionalCurrency(MONTHLY_AMOUNT_MAX_ILS),
+  expected_income: optionalCurrency(MONTHLY_AMOUNT_MAX_ILS),
+  city: optionalShortString(NAME_MAX),
+  case_type_other_text: optionalShortString(NAME_MAX),
+  short_note: optionalShortString(SHORT_NOTE_MAX),
+  request_details: optionalLongText(REQUEST_DETAILS_MAX),
+});
+
+export const CaseFormSchema = CaseFormShape
   .superRefine((data, ctx) => {
     // Cross-field sanity check: mortgage ≤ property value. If both are
     // provided and the relationship is broken, reject with a translated

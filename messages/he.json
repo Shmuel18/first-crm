@@ -446,6 +446,14 @@
     "history": {
       "title": "היסטוריית התיק"
     },
+    "admin": {
+      "sections": {
+        "caseDetails": "פרטי התיק",
+        "banks": "בנקים",
+        "officeExpenses": "הוצאות משרד",
+        "openTasks": "משימות פתוחות"
+      }
+    },
     "blocks": {
       "borrowers": "לווים",
       "addBorrower": "+ הוסף לווה",
@@ -461,7 +469,7 @@
       "tasks": "משימות",
       "shortNote": "הערה קצרה",
       "shortNoteEmpty": "ללא הערה. מוצגת בדשבורד מתחת לסטטוס - לתזכורות מהירות.",
-      "requestDetails": "פרטי הבקשה (סיפור התיק)",
+      "requestDetails": "פרטי הבקשה",
       "requestDetailsEmpty": "טרם נכתבו פרטי בקשה מלאים.",
       "documents": "מסמכים",
       "documentsComingSoon": "ניהול מסמכים + סנכרון Google Drive יתווסף בקרוב",
@@ -469,8 +477,17 @@
       "openDocuments": "פתח מסמכים"
     },
     "fields": {
-      "propertyValue": "שווי הנכס",
-      "requestedMortgageAmount": "גובה משכנתא מבוקש",
+      "transactionPurpose": "מטרת העסקה",
+      "transactionPurposeOther": "פירוט המטרה",
+      "transactionPurposeOtherPlaceholder": "לדוגמה: רכישה בחו״ל, עזרה לבן משפחה",
+      "transactionPurposeSelect": "— בחר מטרה —",
+      "transactionPurposeRevert": "חזרה לבחירה מהרשימה",
+      "status": "שלב בתהליך",
+      "bank": "בנק",
+      "shortNotePlaceholder": "לדוגמה: הלקוח חוזר ביום ב', יש בעיה עם תלוש שכר",
+      "city": "עיר",
+      "propertyValue": "שווי דירה",
+      "requestedMortgageAmount": "סכום הלוואה",
       "equity": "הון עצמי",
       "ltv": "LTV",
       "feeAmount": "שכ״ט סוכם",
@@ -516,7 +533,7 @@
         "shortNote": "הערה קצרה (מוצגת בדשבורד)",
         "shortNotePlaceholder": "לדוגמה: הלקוח חוזר ביום ב', יש בעיה עם תלוש שכר",
         "requestDetails": "סיפור התיק / פרטי הבקשה (מלא)",
-        "requestDetailsPlaceholder": "לדוגמה: רוצה לקנות דירה ב-1.5M, יש לו חיסכון של 400K..."
+        "requestDetailsPlaceholder": ""
       },
       "submit": {
         "create": "צור תיק",
@@ -534,7 +551,7 @@
       "actionBar": {
         "title": "תיק חדש",
         "unsaved": "טרם נשמר",
-        "leadStatus": "ליד"
+        "initialStatus": "פתיחת תיק"
       },
       "locked": {
         "hint": "ייפתח לעריכה לאחר שמירת התיק",
@@ -556,6 +573,7 @@
       "errors": {
         "validation": "אחד או יותר מהשדות אינם תקינים",
         "unauthorized": "אין הרשאה ליצור תיק חדש",
+        "setup": "יצירת תיק אינה מוגדרת בבסיס הנתונים. יש להריץ את מיגרציה 074.",
         "generic": "אירעה שגיאה בשמירת התיק. נסה שוב.",
         "noBorrowers": "יש להוסיף לפחות לווה אחד"
       }
@@ -645,6 +663,10 @@
       "citizenship": "אזרחות",
       "citizenshipPlaceholder": "ישראלית, אחר...",
       "foreignCitizenship": "אזרחות זרה",
+      "hasAdditionalCitizenship": "האם ישנן אזרחויות נוספות?",
+      "isForeignResident": "האם תושב חוץ?",
+      "country": "מדינה",
+      "countryPlaceholder": "בחרו מדינה",
       "residency": "סוג תושבות",
       "employmentStatus": "סטטוס תעסוקה",
       "employerName": "שם מעסיק",
@@ -689,6 +711,18 @@
       "self_employed": "עצמאי/ת",
       "unemployed": "לא עובד/ת",
       "pensioner": "פנסיונר/ית"
+    }
+  },
+  "caseBanks": {
+    "addBank": "+ הוסף בנק",
+    "empty": "טרם נוספו בנקים לתיק",
+    "bankerNamePlaceholder": "שם הבנקאי",
+    "makePrimary": "הפוך לבנק עיקרי",
+    "isPrimary": "בנק עיקרי",
+    "deleteSuccess": "הבנק הוסר מהתיק",
+    "deleteError": "מחיקת הבנק נכשלה",
+    "errors": {
+      "alreadyLinked": "הבנק כבר משויך לתיק"
     }
   },
   "caseBankForm": {
@@ -751,6 +785,19 @@
         "unauthorized": "אין הרשאה",
         "generic": "שגיאה בשמירה. נסה שוב."
       }
+    }
+  },
+  "expenses": {
+    "addExpense": "+ הוסף הוצאה",
+    "addFirstExpense": "+ הוסף הוצאה ראשונה",
+    "empty": "אין הוצאות לתיק זה",
+    "deleteSuccess": "ההוצאה נמחקה",
+    "deleteError": "מחיקת ההוצאה נכשלה",
+    "fields": {
+      "expenseDate": "תאריך",
+      "amount": "סכום",
+      "description": "תיאור",
+      "descriptionPlaceholder": "לדוגמה: שמאות, שליחויות, ייעוץ משפטי"
     }
   },
   "obligations": {
@@ -1221,6 +1268,7 @@
   },
   "tasks": {
     "title": "משימות",
+    "openTitle": "משימות פתוחות",
     "subtitle": "ניהול משימות יומיומי - לעצמך, לצוות, ולתיקים",
     "newTask": "+ משימה חדשה",
     "createFirst": "צור משימה ראשונה",
@@ -1229,6 +1277,7 @@
     "unassigned": "לא מוקצה",
     "overdue": "באיחור",
     "showAll": "הצג עוד {count} →",
+    "openFull": "הצג הכל",
     "stats": {
       "open": "פתוחות",
       "overdue": "באיחור",

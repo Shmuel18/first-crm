@@ -35,6 +35,7 @@ export const EDITABLE_FIELDS = [
   'citizenship',
   'additional_citizenships',
   'residency_type',
+  'foreign_residence_country',
   'employment_status',
   'employer_name',
   'credit_rating',

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import type { CaseId } from '@/lib/types/branded';
 
-export type CaseLookupOption = { id: string; name_he: string };
+export type CaseLookupOption = { id: string; key: string; name_he: string };
 export type StatusOption = { id: string; name_he: string; color: string; sort_order: number };
 export type AdvisorOption = { id: string; first_name: string | null; last_name: string | null };
 export type CaseFinancials = { fee_amount: number | null; expected_income: number | null };
@@ -11,7 +11,7 @@ export async function listCaseTypeOptions(): Promise<CaseLookupOption[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from('case_types')
-    .select('id, name_he')
+    .select('id, key, name_he')
     .eq('is_active', true)
     .order('sort_order');
   return data ?? [];

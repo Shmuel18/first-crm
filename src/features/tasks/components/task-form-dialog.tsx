@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { DateInputWithPicker } from '@/components/ui/date-input-with-picker';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { FormField, NativeSelect } from '@/components/shared/form-fields';
@@ -143,11 +144,10 @@ export function TaskFormDialog({
             </FormField>
 
             <FormField label={t('fields.dueDate')} error={fieldErrors.due_date}>
-              <Input
+              <DateInputWithPicker
                 name="due_date"
-                type="date"
                 defaultValue={value('due_date').slice(0, 10)}
-                dir="ltr"
+                pickerLabel={t('fields.dueDate')}
               />
             </FormField>
           </div>

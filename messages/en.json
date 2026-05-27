@@ -446,6 +446,14 @@
     "history": {
       "title": "Case history"
     },
+    "admin": {
+      "sections": {
+        "caseDetails": "Case details",
+        "banks": "Banks",
+        "officeExpenses": "Office expenses",
+        "openTasks": "Open tasks"
+      }
+    },
     "blocks": {
       "borrowers": "Borrowers",
       "addBorrower": "+ Add borrower",
@@ -461,7 +469,7 @@
       "tasks": "Tasks",
       "shortNote": "Short note",
       "shortNoteEmpty": "No note yet. Shown in dashboard under status - for quick reminders.",
-      "requestDetails": "Request Details (full story)",
+      "requestDetails": "Request Details",
       "requestDetailsEmpty": "No detailed request written yet.",
       "documents": "Documents",
       "documentsComingSoon": "Document management + Google Drive sync coming soon",
@@ -469,8 +477,17 @@
       "openDocuments": "Open documents"
     },
     "fields": {
+      "transactionPurpose": "Transaction purpose",
+      "transactionPurposeOther": "Purpose detail",
+      "transactionPurposeOtherPlaceholder": "e.g. Purchase abroad, helping a family member",
+      "transactionPurposeSelect": "— Select purpose —",
+      "transactionPurposeRevert": "Back to dropdown",
+      "status": "Stage",
+      "bank": "Bank",
+      "shortNotePlaceholder": "e.g. Client returns Monday, missing recent payslip",
+      "city": "City",
       "propertyValue": "Property value",
-      "requestedMortgageAmount": "Requested mortgage",
+      "requestedMortgageAmount": "Loan amount",
       "equity": "Down payment",
       "ltv": "LTV",
       "feeAmount": "Agreed fee",
@@ -516,7 +533,7 @@
         "shortNote": "Short note (shown in dashboard)",
         "shortNotePlaceholder": "e.g.: Client returns Monday, issue with payslip",
         "requestDetails": "Case story / request details (full)",
-        "requestDetailsPlaceholder": "e.g.: Wants to buy a 1.5M apartment, has 400K savings..."
+        "requestDetailsPlaceholder": ""
       },
       "submit": {
         "create": "Create case",
@@ -534,7 +551,7 @@
       "actionBar": {
         "title": "New case",
         "unsaved": "Not saved yet",
-        "leadStatus": "Lead"
+        "initialStatus": "Case Opened"
       },
       "locked": {
         "hint": "Editable after the case is saved",
@@ -556,6 +573,7 @@
       "errors": {
         "validation": "One or more fields are invalid",
         "unauthorized": "You don't have permission to create a case",
+        "setup": "Case creation is not configured in the database. Run migration 074.",
         "generic": "Something went wrong while saving. Please try again.",
         "noBorrowers": "Add at least one borrower"
       }
@@ -645,6 +663,10 @@
       "citizenship": "Citizenship",
       "citizenshipPlaceholder": "Israeli, other...",
       "foreignCitizenship": "Foreign citizenship",
+      "hasAdditionalCitizenship": "Are there additional citizenships?",
+      "isForeignResident": "Foreign resident?",
+      "country": "Country",
+      "countryPlaceholder": "Select country",
       "residency": "Residency type",
       "employmentStatus": "Employment status",
       "employerName": "Employer name",
@@ -689,6 +711,18 @@
       "self_employed": "Self-employed",
       "unemployed": "Unemployed",
       "pensioner": "Pensioner"
+    }
+  },
+  "caseBanks": {
+    "addBank": "+ Add bank",
+    "empty": "No banks linked to this case yet",
+    "bankerNamePlaceholder": "Banker name",
+    "makePrimary": "Make primary bank",
+    "isPrimary": "Primary bank",
+    "deleteSuccess": "Bank removed from case",
+    "deleteError": "Failed to remove bank",
+    "errors": {
+      "alreadyLinked": "This bank is already linked to the case"
     }
   },
   "caseBankForm": {
@@ -751,6 +785,19 @@
         "unauthorized": "Not authorized",
         "generic": "Error saving. Please try again."
       }
+    }
+  },
+  "expenses": {
+    "addExpense": "+ Add expense",
+    "addFirstExpense": "+ Add first expense",
+    "empty": "No expenses recorded for this case",
+    "deleteSuccess": "Expense deleted",
+    "deleteError": "Failed to delete expense",
+    "fields": {
+      "expenseDate": "Date",
+      "amount": "Amount",
+      "description": "Description",
+      "descriptionPlaceholder": "e.g. appraisal, courier, legal advice"
     }
   },
   "obligations": {
@@ -1221,6 +1268,7 @@
   },
   "tasks": {
     "title": "Tasks",
+    "openTitle": "Open tasks",
     "subtitle": "Daily task management — for yourself, the team, and cases",
     "newTask": "+ New task",
     "createFirst": "Create your first task",
@@ -1229,6 +1277,7 @@
     "unassigned": "Unassigned",
     "overdue": "Overdue",
     "showAll": "Show {count} more →",
+    "openFull": "Show all",
     "stats": {
       "open": "Open",
       "overdue": "Overdue",

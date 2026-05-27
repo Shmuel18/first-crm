@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { DateInputWithPicker } from '@/components/ui/date-input-with-picker';
 import { Input } from '@/components/ui/input';
 import { Tooltip } from '@/components/ui/tooltip';
 
@@ -95,7 +96,11 @@ export function ScheduleMeetingButton({ title, clientLabel }: Props) {
             </Field>
             <div className="flex gap-2">
               <Field label={t('fields.date')} className="flex-1">
-                <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                <DateInputWithPicker
+                  value={date}
+                  onChange={setDate}
+                  pickerLabel={t('fields.date')}
+                />
               </Field>
               <Field label={t('fields.time')} className="flex-1">
                 <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />

@@ -10,17 +10,16 @@ import { BLANK_BORROWER, type DraftBorrower } from '../hooks/use-case-draft-stat
 import type { CaseDraftBorrowerInput } from '../schemas/case-draft.schema';
 
 /**
- * Borrowers block on /cases/new. Renders an inline DraftBorrowerCard per
- * borrower — same visual layout as the live CaseBorrowerCard on the
- * detail page. There is NO dialog/modal: clicking "+ הוסף לווה" adds an
- * empty card right here and the user edits inline.
+ * Borrowers block on /cases/new. Mirrors the live borrowers block on
+ * /cases/[id]:
  *
- * The page seeds one empty borrower on mount (see useCaseDraftState), so
- * this block never renders truly empty — the empty-state branch stays as a
- * defensive fallback in case the user removes that seeded card.
- *
- * The first borrower in the array becomes is_primary=true on save (the RPC
- * derives this from array index — see migration 074).
+ *   - Title plain "לווים" (no count).
+ *   - rightSlot: joined borrower names (truncated, max-w-xs) — same content
+ *     and visual treatment as the live block.
+ *   - "+ הוסף לווה" pill lives INSIDE the expanded content, not in the
+ *     header — also matches the live block.
+ *   - Empty state: a dashed full-width CTA, again identical to the live
+ *     "addBorrowerFirst" affordance.
  */
 
 type Props = {
@@ -33,28 +32,26 @@ type Props = {
 export function DraftBorrowersBlock({ borrowers, onAdd, onUpdate, onRemove }: Props) {
   const t = useTranslations('case');
 
-  const title = `${t('blocks.borrowers')}${borrowers.length > 0 ? ` (${borrowers.length})` : ''}`;
-
   const handleAddClick = (): void => {
     onAdd(BLANK_BORROWER);
   };
 
+  const borrowerNames =
+    borrowers
+      .map((b) => [b.first_name, b.last_name].filter(Boolean).join(' '))
+      .filter(Boolean)
+      .join(' & ') || '';
+
   return (
     <CaseBlock
-      title={title}
+      title={t('blocks.borrowers')}
       icon={<UserCircle2 />}
       fullWidth
+      defaultOpen
       rightSlot={
-        // Soft-gold pill — mirrors AddBorrowerButton on the live case page
-        // so /cases/new and /cases/[id] share one visual language.
-        <button
-          type="button"
-          onClick={handleAddClick}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-gold-text bg-brand-gold-soft border border-brand-gold/40 rounded-full px-3 py-1.5 hover:bg-brand-gold/20 hover:border-brand-gold/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
-        >
-          <UserPlus aria-hidden="true" className="size-3.5" />
-          {t('blocks.addBorrower')}
-        </button>
+        borrowerNames ? (
+          <span className="text-xs text-neutral-600 truncate max-w-xs">{borrowerNames}</span>
+        ) : null
       }
     >
       {borrowers.length === 0 ? (
@@ -67,6 +64,9 @@ export function DraftBorrowersBlock({ borrowers, onAdd, onUpdate, onRemove }: Pr
         </button>
       ) : (
         <div className="space-y-4">
+          <div className="flex justify-end">
+            <AddPillButton onClick={handleAddClick} label={t('blocks.addBorrower')} />
+          </div>
           {borrowers.map((b, index) => (
             <DraftBorrowerCard
               key={b.tempId}
@@ -83,5 +83,18 @@ export function DraftBorrowersBlock({ borrowers, onAdd, onUpdate, onRemove }: Pr
         </div>
       )}
     </CaseBlock>
+  );
+}
+
+function AddPillButton({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-gold-text bg-brand-gold-soft border border-brand-gold/40 rounded-full px-3 py-1.5 hover:bg-brand-gold/20 hover:border-brand-gold/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+    >
+      <UserPlus aria-hidden="true" className="size-3.5" />
+      {label}
+    </button>
   );
 }

@@ -59,22 +59,20 @@ export function DraftActionBar({
             <span className="font-display text-base font-semibold truncate max-w-md">
               {borrowerNamesPreview || tDraft('actionBar.title')}
             </span>
-            <span aria-hidden="true" className="text-neutral-400">·</span>
-            <span className="text-neutral-500 text-xs">{tDraft('actionBar.unsaved')}</span>
-            {/* Read-only "ליד" pill — the RPC pins status to lead on save.
-                Using a static neutral palette here since we don't have the
-                real case_statuses.color value at render time (no DB lookup
-                in a client component). */}
+            {/* Read-only "פתיחת תיק" pill — migration 086 dropped the
+                separate `lead` row, so new cases now land on the
+                `case_opened` status. Colour mirrors that seeded row
+                (`#64748B` slate-500 from migration 082). */}
             <span
               className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium"
-              style={{ backgroundColor: '#5B9BD525', color: '#3F7BB0' }}
+              style={{ backgroundColor: '#64748B25', color: '#475569' }}
             >
               <span
                 className="size-1.5 rounded-full"
-                style={{ backgroundColor: '#5B9BD5' }}
+                style={{ backgroundColor: '#64748B' }}
                 aria-hidden="true"
               />
-              {tDraft('actionBar.leadStatus')}
+              {tDraft('actionBar.initialStatus')}
             </span>
           </div>
         </div>
@@ -84,6 +82,10 @@ export function DraftActionBar({
             type="button"
             onClick={onSave}
             disabled={!canSave}
+            // Tooltip-via-title — the "needs ≥1 named borrower" hint used to
+            // live as a separate strip below the bar; folded into the button
+            // so the action-bar height matches the live page exactly.
+            title={!canSave && !pending ? tDraft('save.needBorrower') : undefined}
             className="bg-brand-black hover:bg-neutral-800 text-white h-9 min-w-28"
           >
             {pending ? (
@@ -95,11 +97,6 @@ export function DraftActionBar({
         </div>
       </div>
 
-      {!canSave && !pending && (
-        <p className="mt-1.5 text-[11px] text-neutral-600">
-          {tDraft('save.needBorrower')}
-        </p>
-      )}
     </div>
   );
 }

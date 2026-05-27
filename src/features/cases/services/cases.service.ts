@@ -8,7 +8,7 @@ import type { CaseRow, CaseWithRelations } from '../types';
 // to clients. Excludes embedded relations; CASE_SELECT_WITH_RELATIONS below
 // is the "with relations" variant.
 const CASE_FULL_COLUMNS =
-  'id, case_number, status_id, assigned_advisor_id, primary_borrower_id, case_type_primary_id, case_type_secondary_id, property_value, equity, requested_mortgage_amount, request_details, short_note, referrer_name, case_blocker, insurance_status, is_archived, metadata, version, deleted_at, created_at, created_by, updated_at, updated_by' as const;
+  'id, case_number, status_id, assigned_advisor_id, primary_borrower_id, case_type_primary_id, case_type_secondary_id, case_type_other_text, property_value, equity, requested_mortgage_amount, request_details, short_note, referrer_name, city, case_blocker, insurance_status, is_archived, metadata, version, deleted_at, created_at, created_by, updated_at, updated_by' as const;
 
 const CASE_SELECT_WITH_RELATIONS = `
   ${CASE_FULL_COLUMNS},
@@ -17,7 +17,7 @@ const CASE_SELECT_WITH_RELATIONS = `
   case_type_secondary:case_types!cases_case_type_secondary_id_fkey(id, key, name_he, name_en),
   assigned_advisor:profiles!cases_assigned_advisor_id_fkey(id, first_name, last_name, phone, email),
   case_borrowers(is_primary, borrower:borrowers(id, first_name, last_name, national_id)),
-  case_banks(is_primary, deleted_at, bank:banks(id, key, name_he, name_en, color, logo_url)),
+  case_banks(id, is_primary, deleted_at, banker_name, bank:banks(id, key, name_he, name_en, color, logo_url)),
   case_financials(fee_amount, expected_income)
 ` as const;
 

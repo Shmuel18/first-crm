@@ -54,7 +54,16 @@ export function ProfileForm({ profile, roleName }: Props) {
           <Input name="phone" type="tel" defaultValue={value('phone')} dir="ltr" />
         </FormField>
         <FormField label={t('fields.language')} error={fieldErrors.language}>
-          <NativeSelect name="language" defaultValue={value('language') || 'he'}>
+          {/* Key tied to the saved language so a successful save (which
+              switches the locale + revalidates the layout) remounts the
+              select with the fresh defaultValue. Without the key the
+              uncontrolled <select>'s DOM state can lag behind the new
+              prop and display the old language as the active option. */}
+          <NativeSelect
+            key={`lang-${profile.language ?? 'unset'}`}
+            name="language"
+            defaultValue={value('language') || 'he'}
+          >
             <option value="he">{t('languages.he')}</option>
             <option value="en">{t('languages.en')}</option>
           </NativeSelect>

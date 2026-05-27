@@ -32,7 +32,7 @@ export function DraftRequestDetailsBlock({ html, onChange }: Props) {
   const tForm = useTranslations('case.form.fields');
 
   return (
-    <CaseBlock title={t('blocks.requestDetails')} icon={<FileText />} fullWidth>
+    <CaseBlock title={t('blocks.requestDetails')} icon={<FileText />} fullWidth defaultOpen>
       <RichTextEditor
         value={html}
         onChange={onChange}

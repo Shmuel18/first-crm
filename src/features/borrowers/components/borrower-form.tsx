@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
+import { DateInputWithPicker } from '@/components/ui/date-input-with-picker';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { FormField, FormSection, NativeSelect } from '@/components/shared/form-fields';
@@ -119,7 +120,11 @@ export function BorrowerForm({
           <Input name="national_id" dir="ltr" defaultValue={val('national_id')} />
         </FormField>
         <FormField label={t('fields.idIssueDate')} error={errs.id_issue_date}>
-          <Input name="id_issue_date" type="date" defaultValue={val('id_issue_date')} />
+          <DateInputWithPicker
+            name="id_issue_date"
+            defaultValue={val('id_issue_date')}
+            pickerLabel={t('fields.idIssueDate')}
+          />
         </FormField>
         {!initial && (
           <div className="md:col-span-2">
@@ -151,7 +156,11 @@ export function BorrowerForm({
           </NativeSelect>
         </FormField>
         <FormField label={t('fields.birthDate')} error={errs.birth_date}>
-          <Input name="birth_date" type="date" defaultValue={val('birth_date')} />
+          <DateInputWithPicker
+            name="birth_date"
+            defaultValue={val('birth_date')}
+            pickerLabel={t('fields.birthDate')}
+          />
         </FormField>
       </FormSection>
 

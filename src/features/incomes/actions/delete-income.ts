@@ -24,20 +24,25 @@ export async function deleteIncomeAction(
     return { ok: false, error: 'unauthorized' };
   }
 
-  const { data: deleted, error } = await supabase
-    .from('borrower_incomes')
-    .update({
-      deleted_at: new Date().toISOString(),
-      deleted_by: userRes.user.id,
-      updated_by: userRes.user.id,
-    })
-    .eq('id', incomeId)
-    .eq('borrower_id', borrowerId)
-    .is('deleted_at', null)
-    .select('id');
+  const { data: deleted, error } = await supabase.rpc('soft_delete_borrower_income', {
+    p_case_id: caseId,
+    p_income_id: incomeId,
+  });
 
-  if (error) return { ok: false, error: 'unknown' };
-  if (!deleted || deleted.length === 0) return { ok: false, error: 'unauthorized' };
+  if (error) {
+    console.error(
+      '[deleteIncome] rpc error',
+      JSON.stringify({
+        incomeId,
+        borrowerId,
+        caseId,
+        code: error.code ?? null,
+        message: error.message ?? null,
+      }),
+    );
+    return { ok: false, error: 'unknown' };
+  }
+  if (deleted !== true) return { ok: false, error: 'unauthorized' };
 
   revalidatePath(`/cases/${caseId}`);
   return { ok: true };

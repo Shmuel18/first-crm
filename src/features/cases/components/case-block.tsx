@@ -16,7 +16,11 @@ type CaseBlockProps = {
 export function CaseBlock({
   title,
   icon,
-  defaultOpen = true,
+  // Default closed — the case page is a stack of collapsed blocks the user
+  // opens one at a time via the header chevron. Pass `defaultOpen` to
+  // override per-block when a section needs to be revealed up front
+  // (e.g. a dialog rendering a single block inline).
+  defaultOpen = false,
   children,
   rightSlot,
   fullWidth,

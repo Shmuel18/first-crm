@@ -30,6 +30,7 @@ export const BLANK_BORROWER: CaseDraftBorrowerInput = {
   citizenship: null,
   additional_citizenships: null,
   residency_type: null,
+  foreign_residence_country: null,
   employment_status: null,
   employer_name: null,
   credit_rating: null,

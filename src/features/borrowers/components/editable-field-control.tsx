@@ -76,10 +76,12 @@ export function renderControl(p: ControlRenderProps) {
 
   // For type='number': suppress the browser's up/down spinner buttons. They
   // don't add value for our use cases (IDs, currency, counts) and clutter
-  // the input visually.
+  // the input visually. Also right-align (text-end on an LTR input resolves
+  // to right) so the digits hug the label side of the row in RTL — without
+  // this, numbers float to the LTR start (left of the box).
   const numberClass =
     p.type === 'number'
-      ? '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [appearance:textfield]'
+      ? '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [appearance:textfield] text-end'
       : '';
 
   // Mobile keyboard hint: pick the right virtual keyboard per field type.

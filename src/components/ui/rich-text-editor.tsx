@@ -18,11 +18,14 @@ import { useTranslations } from 'next-intl';
 type Props = {
   value: string;
   onChange: (html: string) => void;
+  /** Fired when the editor loses focus. Receives the latest HTML so a
+   *  parent can persist on click-outside without keystroke-level writes. */
+  onBlur?: (html: string) => void;
   placeholder?: string;
   minRows?: number;
 };
 
-export function RichTextEditor({ value, onChange, placeholder, minRows = 8 }: Props) {
+export function RichTextEditor({ value, onChange, onBlur, placeholder, minRows = 8 }: Props) {
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -32,6 +35,7 @@ export function RichTextEditor({ value, onChange, placeholder, minRows = 8 }: Pr
     ],
     content: value,
     onUpdate: ({ editor: ed }) => onChange(ed.getHTML()),
+    onBlur: ({ editor: ed }) => onBlur?.(ed.getHTML()),
     editorProps: {
       attributes: {
         class: 'tiptap-content focus:outline-none p-3 leading-relaxed',

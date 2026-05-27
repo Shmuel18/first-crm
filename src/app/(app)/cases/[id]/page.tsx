@@ -1,43 +1,31 @@
 import { Suspense } from 'react';
 
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import {
-  Briefcase,
-  FileText,
-  FolderArchive,
-  Home,
-  Pencil,
-  Receipt,
-  UserCircle2,
-  Wallet,
-} from 'lucide-react';
+import { Receipt, UserCircle2, Wallet } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import { CaseBorrowerCard } from '@/features/borrowers/components/case-borrower-card';
 import { listBorrowersForCase } from '@/features/borrowers/services/borrowers.service';
-// CaseBanksBlock/Skeleton removed — banks now render as an inline row
-// inside CaseAdminBlock.
 import { CaseActionBar } from '@/features/cases/components/case-action-bar';
 import { CaseAdminBlock } from '@/features/cases/components/case-admin-block';
 import { CaseBlock } from '@/features/cases/components/case-block';
 import { CaseBlockSkeleton } from '@/features/cases/components/case-block-skeleton';
 import { AddBorrowerButton } from '@/features/borrowers/components/add-borrower-button';
-import { bandToAccent } from '@/features/cases/components/case-detail-helpers';
-import { DataRow } from '@/features/cases/components/case-info-rows';
-import { calculateLtv, ltvBand } from '@/features/cases/domain/calculations';
-import { formatMoney } from '@/features/cases/domain/format';
+import { CasePropertyBlock } from '@/features/cases/components/case-property-block';
+import { CaseRequestDetailsBlock } from '@/features/cases/components/case-request-details-block';
 import type { CaseBlocker, InsuranceStatus } from '@/features/cases/schemas/case.schema';
-import { listCaseStatusOptions } from '@/features/cases/services/case-lookups.service';
+import {
+  listAdvisorOptions,
+  listCaseStatusOptions,
+  listCaseTypeOptions,
+} from '@/features/cases/services/case-lookups.service';
 import { getCaseById } from '@/features/cases/services/cases.service';
 import { CaseIncomesBlock } from '@/features/incomes/components/case-incomes-block';
 import { CaseObligationsBlock } from '@/features/obligations/components/case-obligations-block';
-import { CaseTasksBlock } from '@/features/tasks/components/case-tasks-block';
 import { userHasPermission } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
-import { sanitizeRichTextHtml } from '@/lib/utils/sanitize-html';
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -45,18 +33,21 @@ export default async function CaseDetailPage({ params }: Props) {
   const { id } = await params;
 
   const t = await getTranslations('case');
-  const tc = await getTranslations('common');
 
   const caseId = asCaseId(id);
 
   // Eager fetches block first paint: the action bar needs the case + status
   // options, and the borrowers list feeds the header's client-name display.
-  // Banks, incomes, obligations, and tasks all stream in below via <Suspense>.
-  const [caseData, borrowers, statusOptions] = await Promise.all([
-    getCaseById(caseId),
-    listBorrowersForCase(caseId),
-    listCaseStatusOptions(),
-  ]);
+  // Incomes and obligations stream in below via <Suspense>; tasks are
+  // fetched by the action bar for the new top-of-page popover.
+  const [caseData, borrowers, statusOptions, caseTypeOptions, advisorOptions] =
+    await Promise.all([
+      getCaseById(caseId),
+      listBorrowersForCase(caseId),
+      listCaseStatusOptions(),
+      listCaseTypeOptions(),
+      listAdvisorOptions(),
+    ]);
 
   if (!caseData) notFound();
 
@@ -65,6 +56,9 @@ export default async function CaseDetailPage({ params }: Props) {
   // view_case_fee saw an empty UI block — but the fee_amount + expected_income
   // values were still loaded by getCaseById and shipped down in the RSC
   // payload, readable via view-source. Aligning the gate closes the leak.
+  // canSeeFinancials gates the manager-only agreed-fee row in the admin
+  // block. The DB enforces the same gate via case_financials RLS — this
+  // app-side check is for clean UX (hide the row) + defense-in-depth.
   const [canSeeFinancials, canArchive, canRestore, canDelete] = await Promise.all([
     userHasPermission('view_case_fee'),
     userHasPermission('archive_case'),
@@ -80,13 +74,25 @@ export default async function CaseDetailPage({ params }: Props) {
       .filter(Boolean)
       .join(' & ') || '';
 
-  const advisor =
-    [caseData.assigned_advisor?.first_name, caseData.assigned_advisor?.last_name]
-      .filter(Boolean)
-      .join(' ') || `— ${tc('notAssigned')}`;
-
-  const ltv = calculateLtv(caseData.property_value, caseData.requested_mortgage_amount);
-  const ltvAccent = ltv !== null ? bandToAccent(ltvBand(ltv)) : undefined;
+  // Banks linked to this case — passed to the admin block's inline list.
+  // Each row has the bank info + banker_name + is_primary; the list
+  // renders one row per bank with inline-edit + delete + primary toggle.
+  const bankRows = (caseData.case_banks ?? [])
+    .filter((cb) => cb.deleted_at === null)
+    .map((cb) => ({
+      id: cb.id,
+      bank: cb.bank
+        ? {
+            id: cb.bank.id,
+            key: cb.bank.key,
+            name_he: cb.bank.name_he,
+            color: cb.bank.color,
+            logo_url: cb.bank.logo_url,
+          }
+        : null,
+      banker_name: cb.banker_name,
+      is_primary: cb.is_primary,
+    }));
 
   const locale = parseLocale(await getLocale());
 
@@ -158,6 +164,11 @@ export default async function CaseDetailPage({ params }: Props) {
           )}
         </CaseBlock>
 
+        <CaseRequestDetailsBlock
+          caseId={caseData.id}
+          initialHtml={caseData.request_details}
+        />
+
         <Suspense fallback={<CaseBlockSkeleton title={t('blocks.incomes')} icon={<Wallet />} />}>
           <CaseIncomesBlock caseId={caseData.id} />
         </Suspense>
@@ -168,111 +179,51 @@ export default async function CaseDetailPage({ params }: Props) {
           <CaseObligationsBlock caseId={caseData.id} />
         </Suspense>
 
-        <CaseBlock title={t('blocks.property')} icon={<Home />}>
-          <DataRow label={t('fields.propertyValue')} value={formatMoney(caseData.property_value)} large />
-          <DataRow
-            label={t('fields.requestedMortgageAmount')}
-            value={formatMoney(caseData.requested_mortgage_amount)}
-            large
-          />
-          <DataRow label={t('fields.equity')} value={formatMoney(caseData.equity)} />
-          {ltv !== null && (
-            <DataRow label={t('fields.ltv')} value={`${ltv.toFixed(1)}%`} accent={ltvAccent} />
-          )}
-        </CaseBlock>
+        <CasePropertyBlock
+          caseId={caseData.id}
+          initial={{
+            case_type_primary_id: caseData.case_type_primary?.id ?? null,
+            case_type_other_text: caseData.case_type_other_text ?? null,
+            city: caseData.city ?? null,
+            property_value: caseData.property_value,
+            requested_mortgage_amount: caseData.requested_mortgage_amount,
+          }}
+          caseTypes={caseTypeOptions}
+        />
 
-        {/* Banks moved into CaseAdminBlock as an inline row — saves the
-            visual heft of a full block for the typical 1-3 banks case. */}
-        {/* blocker/insurance are CHECK-constrained DB strings; narrow to unions. */}
+        {/* Equity + LTV intentionally removed from this block — they aren't
+            in the new product spec for the property card. The equity column
+            stays in the DB as nullable so old data isn't dropped. */}
+
+        {/* Admin block owns the case-details fields (status / blocker /
+            primary bank / advisor / insurance / short note / referrer /
+            fee), the banks list, and the office-expenses table. Tasks
+            moved out to the action-bar popover so there's a single
+            top-level entry for the case's open tasks.
+            blocker/insurance are CHECK-constrained DB strings; narrow to unions. */}
         <CaseAdminBlock
           caseId={caseData.id}
+          statusId={caseData.status?.id ?? null}
+          statusName={caseData.status?.name_he ?? null}
+          statusColor={caseData.status?.color ?? null}
+          assignedAdvisorId={caseData.assigned_advisor?.id ?? null}
           blocker={caseData.case_blocker as CaseBlocker | null}
           insurance={caseData.insurance_status as InsuranceStatus | null}
           referrerName={caseData.referrer_name}
-          advisor={advisor}
-          createdAt={caseData.created_at}
-          // Defense in depth: even if RLS lets the row through, never ship
-          // the numbers to the client when the UI is going to hide them.
-          feeAmount={canSeeFinancials ? caseData.case_financials?.fee_amount ?? null : null}
-          expectedIncome={
-            canSeeFinancials ? caseData.case_financials?.expected_income ?? null : null
-          }
+          shortNote={caseData.short_note}
+          bankRows={bankRows}
           canSeeFinancials={canSeeFinancials}
+          feeAmount={
+            // Defense in depth: even if the row is in RAM, don't leak the
+            // value down to the client when the UI is going to hide it.
+            canSeeFinancials ? caseData.case_financials?.fee_amount ?? null : null
+          }
+          statuses={statusOptions}
+          advisors={advisorOptions}
           locale={locale}
         />
-
-        <CaseBlock title={t('blocks.tasks')} icon={<Briefcase />}>
-          <Suspense fallback={<TasksBlockInlineSkeleton />}>
-            <CaseTasksBlock caseId={caseData.id} locale={locale} />
-          </Suspense>
-        </CaseBlock>
-
-        <CaseBlock title={t('blocks.shortNote')} icon={<Briefcase />} fullWidth>
-          {caseData.short_note ? (
-            <p className="text-sm text-neutral-800 leading-relaxed">{caseData.short_note}</p>
-          ) : (
-            <p className="text-sm text-neutral-600 italic">{t('blocks.shortNoteEmpty')}</p>
-          )}
-        </CaseBlock>
-
-        <CaseBlock title={t('blocks.requestDetails')} icon={<FileText />} fullWidth>
-          {caseData.request_details ? (
-            <div
-              className="tiptap-content text-neutral-700"
-              // Defense-in-depth: even though create/update actions sanitize
-              // before INSERT, re-sanitize on read so older rows or any future
-              // bypass (studio writes, audit replays, imports) can't XSS.
-              dangerouslySetInnerHTML={{
-                __html: sanitizeRichTextHtml(caseData.request_details),
-              }}
-            />
-          ) : (
-            <p className="text-sm text-neutral-600 italic">
-              {t('blocks.requestDetailsEmpty')}
-            </p>
-          )}
-        </CaseBlock>
-
-        <CaseBlock
-          title={t('blocks.documents')}
-          icon={<FolderArchive />}
-          fullWidth
-          rightSlot={
-            <Link
-              href={`/cases/${caseData.id}/documents`}
-              className="text-xs text-brand-gold-text hover:underline font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
-            >
-              {t('blocks.openDocuments')}
-            </Link>
-          }
-        >
-          <p className="text-sm text-neutral-600 text-center py-4">
-            {t('blocks.documentsHint')}
-          </p>
-        </CaseBlock>
       </div>
 
-      <div className="text-center text-xs text-neutral-600 pt-4">
-        <Link
-          href={`/cases/${caseData.id}/edit`}
-          className="inline-flex items-center gap-1 hover:text-brand-gold-text rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 transition"
-        >
-          <Pencil className="size-3" aria-hidden="true" />
-          {tc('edit')}
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-// Inline skeleton for the tasks block — it's nested inside an existing
-// <CaseBlock>, so we only render the row placeholders, not the chrome.
-function TasksBlockInlineSkeleton() {
-  return (
-    <div className="space-y-2 animate-pulse" aria-hidden>
-      <div className="h-12 rounded-lg bg-neutral-100" />
-      <div className="h-12 rounded-lg bg-neutral-100" />
-      <div className="h-12 rounded-lg bg-neutral-100" />
     </div>
   );
 }

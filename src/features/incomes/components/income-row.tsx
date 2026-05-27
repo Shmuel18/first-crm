@@ -6,6 +6,7 @@ import { Loader2, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { CurrencySign } from '@/components/ui/currency-sign';
 import { Tooltip } from '@/components/ui/tooltip';
 import { EditableField } from '@/features/borrowers/components/editable-field';
 
@@ -148,6 +149,7 @@ export function IncomeRow({ caseId, income, incomeTypes, locale, canEdit, canDel
           label={tf('amountMonthly')}
           value={row.amount_monthly === null ? null : String(row.amount_monthly)}
           onSave={(v) => saveField('amount_monthly', v === null ? null : Number(v))}
+          adornment={<CurrencySign />}
         />
         <div className="sm:col-span-2">
           <EditableField

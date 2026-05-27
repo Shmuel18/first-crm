@@ -1,146 +1,143 @@
-import Link from 'next/link';
-
-import { Plus, Wallet } from 'lucide-react';
+import { Landmark, Receipt, Wallet } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
-import { listCaseBanks } from '@/features/case-banks/services/case-banks.service';
-import type { CaseBankWithRelations } from '@/features/case-banks/types';
+import { CaseBanksInlineList, type CaseBankRowData } from '@/features/case-banks/components/case-banks-inline-list';
+import { listBankOptions } from '@/features/case-banks/services/case-banks.service';
+import { CaseExpensesList } from '@/features/case-expenses/components/case-expenses-list';
+import { listCaseExpenses } from '@/features/case-expenses/services/case-expenses.service';
 import type { Locale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
-import { formatDateShort } from '@/lib/utils/format-date';
 
-import { formatMoney } from '../domain/format';
 import type { CaseBlocker, InsuranceStatus } from '../schemas/case.schema';
+import type {
+  AdvisorOption,
+  StatusOption,
+} from '../services/case-lookups.service';
 
 import { CaseBlock } from './case-block';
-import { BlockerRow, DataRow, InsuranceRow } from './case-info-rows';
+import { CaseDetailsSection } from './case-details-section';
 
 type Props = {
   caseId: string;
+  /** Initial case-row fields shown in the "case details" sub-section. */
+  statusId: string | null;
+  /** Live status name + color for the EditableStatusCell badge. */
+  statusName: string | null;
+  statusColor: string | null;
+  assignedAdvisorId: string | null;
   blocker: CaseBlocker | null;
   insurance: InsuranceStatus | null;
   referrerName: string | null;
-  advisor: string;
-  createdAt: string;
-  feeAmount: number | null;
-  expectedIncome: number | null;
+  shortNote: string | null;
+  /** All active case_banks rows (with bank + banker_name) for the inline
+   *  banks list inside the admin block. */
+  bankRows: ReadonlyArray<CaseBankRowData>;
+  /** Manager-only agreed-fee. Already filtered by the page based on
+   *  canSeeFinancials — non-managers receive null and the field hides. */
   canSeeFinancials: boolean;
+  feeAmount: number | null;
+  /** Lookups passed down from the page. */
+  statuses: ReadonlyArray<StatusOption>;
+  advisors: ReadonlyArray<AdvisorOption>;
   locale: Locale;
 };
 
 /**
- * Administrative case info block. Manager-only fee/income rows are
- * server-rendered conditionally so they never reach the client when the
- * caller lacks permission (defense-in-depth alongside RLS).
+ * Administrative case info block. Three sub-sections:
+ *
+ *   1. פרטי התיק (Case Details) — 8 inline-editable fields rendered by
+ *      CaseDetailsSection (status / blocker / primary bank / advisor /
+ *      insurance / short note / referrer / agreed fee).
+ *   2. בנקים (Banks) — inline list of case_banks rows.
+ *   3. הוצאות משרד (Office Expenses) — inline table backed by
+ *      case_expenses (migration 081).
+ *
+ * Manager-only fee_amount is gated behind canSeeFinancials at the prop
+ * level (defense-in-depth alongside case_financials RLS). Tasks moved
+ * out of this block into the action-bar popover so the page has a single
+ * top-level entry point for the case's open tasks.
  */
 export async function CaseAdminBlock({
   caseId,
+  statusId,
+  statusName,
+  statusColor,
+  assignedAdvisorId,
   blocker,
   insurance,
   referrerName,
-  advisor,
-  createdAt,
-  feeAmount,
-  expectedIncome,
+  shortNote,
+  bankRows,
   canSeeFinancials,
+  feeAmount,
+  statuses,
+  advisors,
   locale,
 }: Props) {
   const t = await getTranslations('case');
+  const tAdmin = await getTranslations('case.admin');
+  void locale; // reserved for future locale-aware formatting
 
-  // Banks used to live in their own block on the case page; consolidated
-  // here as a single row because a typical case has 1-3 banks and the
-  // standalone block was visually heavy for a small dataset. Each chip
-  // links to the existing per-bank edit page; "+ Add" goes to the
-  // existing /banks/new route.
-  let banks: CaseBankWithRelations[] = [];
-  try {
-    banks = await listCaseBanks(asCaseId(caseId));
-  } catch (err) {
-    console.error('[CaseAdminBlock] banks fetch failed', err);
-  }
+  // Server-side fetches: bank lookup + this case's expenses. Both are
+  // cheap and tightly scoped, so we don't pull them up to the page.
+  const [banks, expenses] = await Promise.all([
+    listBankOptions(),
+    listCaseExpenses(asCaseId(caseId)),
+  ]);
 
   return (
-    <CaseBlock title={t('blocks.admin')} icon={<Wallet />}>
-      <BlockerRow blocker={blocker} />
-      <InsuranceRow status={insurance} />
-      <DataRow label={t('fields.referrer')} value={referrerName ?? '—'} />
-      <DataRow label={t('fields.advisor')} value={advisor} />
-      <DataRow
-        label={t('fields.createdAt')}
-        value={formatDateShort(createdAt, locale)}
+    <CaseBlock title={t('blocks.admin')} icon={<Wallet />} fullWidth>
+      {/* Section 1 — Case details (8 inline fields). */}
+      <SectionHeader title={tAdmin('sections.caseDetails')} />
+      <CaseDetailsSection
+        caseId={caseId}
+        initial={{
+          status_id: statusId,
+          assigned_advisor_id: assignedAdvisorId,
+          case_blocker: blocker,
+          insurance_status: insurance,
+          referrer_name: referrerName,
+          short_note: shortNote,
+        }}
+        statusName={statusName}
+        statusColor={statusColor}
+        statuses={statuses}
+        advisors={advisors}
+        canSeeFinancials={canSeeFinancials}
+        initialFeeAmount={feeAmount}
       />
-      <BanksRow caseId={caseId} banks={banks} addLabel={t('blocks.addBank')} />
-      {canSeeFinancials && (
-        <>
-          <DataRow
-            label={t('fields.feeAmount')}
-            value={formatMoney(feeAmount)}
-            accent="gold"
+
+      {/* Sections 2 + 3 — Banks and Office expenses side-by-side on
+          desktop (each is a short list, no need to claim full width),
+          stacked on mobile. */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-4 pt-2">
+        <div>
+          <SectionHeader title={tAdmin('sections.banks')} icon={<Landmark />} />
+          <CaseBanksInlineList
+            caseId={caseId}
+            rows={bankRows}
+            banks={banks}
+            canEdit
           />
-          <DataRow
-            label={t('fields.expectedIncome')}
-            value={formatMoney(expectedIncome)}
-            accent="gold"
-          />
-        </>
-      )}
+        </div>
+        <div>
+          <SectionHeader title={tAdmin('sections.officeExpenses')} icon={<Receipt />} />
+          <CaseExpensesList caseId={caseId} expenses={expenses} canEdit />
+        </div>
+      </div>
     </CaseBlock>
   );
 }
 
-/** Inline banks row — replaces the previous standalone block. Each bank
- *  links to its edit page; an empty list shows just the "+ Add" CTA. */
-async function BanksRow({
-  caseId,
-  banks,
-  addLabel,
-}: {
-  caseId: string;
-  banks: CaseBankWithRelations[];
-  addLabel: string;
-}) {
-  const t = await getTranslations('case');
+function SectionHeader({ title, icon }: { title: string; icon?: React.ReactNode }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 py-2 border-b border-neutral-100">
-      <span className="text-sm text-neutral-600">{t('blocks.banks')}</span>
-      <div className="flex flex-wrap items-center justify-end gap-1.5 min-w-0">
-        {banks.map((cb) => (
-          <Link
-            key={cb.id}
-            href={`/cases/${caseId}/banks/${cb.id}/edit`}
-            className="inline-flex items-center gap-1.5 text-xs text-neutral-800 bg-neutral-50 border border-neutral-200 rounded-full px-2 py-0.5 hover:border-brand-gold-text/50 hover:bg-brand-gold/8 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
-          >
-            {cb.bank?.color && (
-              <span
-                aria-hidden="true"
-                className="size-2 rounded-full shrink-0"
-                style={{ backgroundColor: cb.bank.color }}
-              />
-            )}
-            <span className="font-medium">{cb.bank?.name_he ?? '—'}</span>
-            {cb.is_primary && (
-              <span className="text-[10px] text-brand-gold-text font-bold">
-                ★
-              </span>
-            )}
-            {cb.status?.name_he && (
-              <span
-                aria-hidden="true"
-                className="size-1.5 rounded-full shrink-0"
-                style={{ backgroundColor: cb.status.color ?? '#999' }}
-                title={cb.status.name_he}
-              />
-            )}
-          </Link>
-        ))}
-        <Link
-          href={`/cases/${caseId}/banks/new`}
-          className="inline-flex items-center gap-1 text-xs font-medium text-brand-gold-text bg-brand-gold-soft border border-brand-gold/40 rounded-full px-2 py-0.5 hover:bg-brand-gold/20 hover:border-brand-gold/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
-        >
-          <Plus aria-hidden="true" className="size-3" />
-          {addLabel}
-        </Link>
-      </div>
+    <div className="flex items-center gap-2 pt-5 first:pt-0 pb-2 border-b border-neutral-100">
+      {icon && (
+        <span aria-hidden="true" className="text-brand-gold-text [&_svg]:size-4">
+          {icon}
+        </span>
+      )}
+      <h3 className="text-sm font-semibold text-neutral-900">{title}</h3>
     </div>
   );
 }

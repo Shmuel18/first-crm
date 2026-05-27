@@ -38,6 +38,18 @@ export function EditableStatusCell({
   const [statusColor, setStatusColor] = useState(currentStatusColor);
   const [statusId, setStatusId] = useState(currentStatusId);
   const [isPending, startTransition] = useTransition();
+
+  // Re-sync from props after a server revalidation. The page renders TWO
+  // EditableStatusCell instances (action bar + admin block); editing in
+  // one used to leave the other showing stale optimistic state until a
+  // hard refresh. React 19 idiom: render-phase setState on prop change.
+  const [propRef, setPropRef] = useState(currentStatusId);
+  if (currentStatusId !== propRef) {
+    setPropRef(currentStatusId);
+    setStatusId(currentStatusId);
+    setStatusName(currentStatusName);
+    setStatusColor(currentStatusColor);
+  }
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<DropdownPosition | null>(null);

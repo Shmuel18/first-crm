@@ -88,9 +88,15 @@ export const BorrowerFormSchema = z.object({
   address: optionalShortString(NAME_MAX),
   city: optionalShortString(NAME_MAX),
   citizenship: optionalShortString(NAME_MAX),
-  // Free-text comma-separated secondary citizenships ("בריטניה, ארה״ב").
+  // Single ISO country code (or legacy free text) of the secondary citizenship
+  // revealed by the "האם ישנן אזרחויות נוספות?" toggle on the borrower card.
+  // Column name stays plural for backward-compat with existing rows.
   additional_citizenships: optionalShortString(NAME_MAX),
   residency_type: optionalEnum(RESIDENCY_TYPE_VALUES),
+  // Country of foreign residence — revealed by the "האם תושב חוץ?" toggle.
+  // Only meaningful when residency_type='foreign_resident'; the toggle keeps
+  // those two columns in sync.
+  foreign_residence_country: optionalShortString(NAME_MAX),
   employment_status: optionalEnum(EMPLOYMENT_STATUS_VALUES),
   employer_name: optionalShortString(NAME_MAX),
   credit_rating: optionalShortString(64),

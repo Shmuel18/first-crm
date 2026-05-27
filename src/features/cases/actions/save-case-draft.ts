@@ -26,7 +26,7 @@ import { CaseDraftSchema, type CaseDraftInput } from '../schemas/case-draft.sche
 export type SaveCaseDraftResult =
   | { ok: true; caseId: string } // Practically unreachable — success path redirects (throws)
   | { ok: false; error: 'validation'; fieldErrors: Record<string, string> }
-  | { ok: false; error: 'unauthorized' | 'unknown' };
+  | { ok: false; error: 'unauthorized' | 'setup' | 'unknown' };
 
 export async function saveCaseDraftAction(
   input: CaseDraftInput,
@@ -66,8 +66,14 @@ export async function saveCaseDraftAction(
   if (rpcErr || !caseId) {
     console.error('[saveCaseDraft] rpc failed', {
       userId: userRes.user.id,
-      err: rpcErr?.message,
+      code: rpcErr?.code ?? null,
+      message: rpcErr?.message ?? null,
+      details: rpcErr?.details ?? null,
+      hint: rpcErr?.hint ?? null,
     });
+    if (rpcErr?.code === '42883' || rpcErr?.message?.includes('create_case_draft')) {
+      return { ok: false, error: 'setup' };
+    }
     return { ok: false, error: 'unknown' };
   }
 
