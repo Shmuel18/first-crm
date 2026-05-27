@@ -29,8 +29,8 @@ export default async function LoginPage({ searchParams }: Props) {
 
   return (
     <div className="w-full">
-      <div className="flex justify-center mb-6 sm:mb-8">
-        <div className="relative h-24 w-full max-w-[220px] sm:h-28 sm:max-w-[250px] lg:h-32 lg:max-w-[280px]">
+      <div className="mb-3 flex justify-center sm:mb-4">
+        <div className="relative h-20 w-full max-w-[190px] sm:h-24 sm:max-w-[220px] lg:h-28 lg:max-w-[250px]">
           <Image
             src="/logo.png"
             alt="Kaufman Finance Group"
@@ -42,8 +42,8 @@ export default async function LoginPage({ searchParams }: Props) {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-8" dir="auto">
-        <div className="mb-6">
+      <div className="rounded-2xl bg-white p-5 shadow-2xl sm:p-6" dir="auto">
+        <div className="mb-5">
           <h1 className="font-display text-2xl text-neutral-900 mb-1">{t('title')}</h1>
           <p className="text-sm text-neutral-500">{t('subtitle')}</p>
         </div>
@@ -60,7 +60,7 @@ export default async function LoginPage({ searchParams }: Props) {
         <LoginForm />
       </div>
 
-      <div className="mt-8 text-center">
+      <div className="mt-4 text-center sm:mt-5">
         <div className="text-xs text-neutral-500">{t('footer')}</div>
       </div>
     </div>

@@ -20,7 +20,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="btn-gold w-full py-3 rounded-lg font-bold disabled:opacity-50 inline-flex items-center justify-center gap-2"
+      className="btn-gold inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg font-bold disabled:opacity-50"
     >
       {pending ? (
         <>
@@ -46,7 +46,7 @@ export function LoginForm() {
   };
 
   return (
-    <form action={formAction} className="space-y-5" noValidate>
+    <form action={formAction} className="space-y-4" noValidate>
       <div className="space-y-2">
         <Label htmlFor="email" className="text-neutral-700 text-sm font-medium">
           {t('emailLabel')}
@@ -65,7 +65,7 @@ export function LoginForm() {
             required
             autoComplete="email"
             dir="ltr"
-            className="ps-10 h-12 text-base bg-neutral-50 border-neutral-200 focus:border-brand-gold-text focus-visible:border-brand-gold-text focus-visible:ring-brand-gold-text/40"
+            className="h-11 bg-neutral-50 ps-10 text-base border-neutral-200 focus:border-brand-gold-text focus-visible:border-brand-gold-text focus-visible:ring-brand-gold-text/40"
             placeholder="moshe@kaufman.co.il"
           />
         </div>
@@ -87,7 +87,7 @@ export function LoginForm() {
             required
             autoComplete="current-password"
             dir="ltr"
-            className="ps-10 h-12 text-base bg-neutral-50 border-neutral-200 focus:border-brand-gold-text focus-visible:border-brand-gold-text focus-visible:ring-brand-gold-text/40"
+            className="h-11 bg-neutral-50 ps-10 text-base border-neutral-200 focus:border-brand-gold-text focus-visible:border-brand-gold-text focus-visible:ring-brand-gold-text/40"
             placeholder="••••••••"
           />
         </div>
@@ -104,7 +104,7 @@ export function LoginForm() {
 
       <SubmitButton />
 
-      <p className="text-center pt-2 text-sm">
+      <p className="text-center text-sm">
         <Link
           href="/forgot-password"
           className="text-brand-gold-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 rounded"
