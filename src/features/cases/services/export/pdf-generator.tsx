@@ -4,6 +4,7 @@ import path from 'node:path';
 import {
   Document,
   Font,
+  Image,
   Page,
   StyleSheet,
   Text,
@@ -34,6 +35,22 @@ async function ensureFontRegistered(): Promise<void> {
   fontRegistered = true;
 }
 
+/**
+ * Load the brand mark as a base64 data URL (same rationale as the font:
+ * @react-pdf needs an inline src that survives the serverless cwd). The
+ * mark is gold-on-black — rendered as a small rounded badge in the header
+ * so it reads as an intentional brand stamp on the white page. Cached per
+ * lambda instance.
+ */
+let logoDataUrl: string | null = null;
+async function ensureLogoLoaded(): Promise<string> {
+  if (logoDataUrl) return logoDataUrl;
+  const logoPath = path.join(process.cwd(), 'public', 'logo-mark.png');
+  const buffer = await readFile(logoPath);
+  logoDataUrl = `data:image/png;base64,${buffer.toString('base64')}`;
+  return logoDataUrl;
+}
+
 const COLORS = {
   black: '#0A0A0A',
   gold: '#C9A961',
@@ -45,15 +62,28 @@ const COLORS = {
 const styles = StyleSheet.create({
   page: { padding: 32, fontFamily: 'Heebo', fontSize: 9, color: COLORS.black },
   header: {
-    flexDirection: 'row',
+    // row-reverse so the brand cluster (logo + title) sits on the right,
+    // matching the RTL flow of the table below; the generated-at meta
+    // lands on the left.
+    flexDirection: 'row-reverse',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 14,
     paddingBottom: 8,
     borderBottomWidth: 2,
     borderBottomColor: COLORS.gold,
   },
-  title: { fontSize: 14, color: COLORS.black },
-  subtitle: { fontSize: 8, color: COLORS.muted, marginTop: 2 },
+  brand: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8 },
+  logo: {
+    width: 53,
+    height: 34,
+    borderRadius: 4,
+    objectFit: 'contain',
+    backgroundColor: COLORS.black,
+  },
+  titleBlock: { alignItems: 'flex-end' },
+  title: { fontSize: 14, color: COLORS.black, textAlign: 'right' },
+  subtitle: { fontSize: 8, color: COLORS.muted, marginTop: 2, textAlign: 'right' },
   meta: { fontSize: 8, color: COLORS.muted, textAlign: 'left' },
   table: { width: '100%' },
   headerRow: {
@@ -118,17 +148,23 @@ export type PdfHeaders = {
 function CasesDocument({
   rows,
   h,
+  logoSrc,
 }: {
   rows: ReadonlyArray<ExportRow>;
   h: PdfHeaders;
+  logoSrc: string;
 }): ReactElement {
   return (
     <Document>
       <Page size="A4" orientation="landscape" style={styles.page}>
         <View style={styles.header} fixed>
-          <View>
-            <Text style={styles.title}>{h.title}</Text>
-            <Text style={styles.subtitle}>{h.subtitle}</Text>
+          <View style={styles.brand}>
+            {/* eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf Image has no alt */}
+            <Image src={logoSrc} style={styles.logo} />
+            <View style={styles.titleBlock}>
+              <Text style={styles.title}>{h.title}</Text>
+              <Text style={styles.subtitle}>{h.subtitle}</Text>
+            </View>
           </View>
           <Text style={styles.meta}>{h.generatedAt}</Text>
         </View>
@@ -171,5 +207,6 @@ export async function generateCasesPdf(
   headers: PdfHeaders,
 ): Promise<Buffer> {
   await ensureFontRegistered();
-  return await renderToBuffer(<CasesDocument rows={rows} h={headers} />);
+  const logoSrc = await ensureLogoLoaded();
+  return await renderToBuffer(<CasesDocument rows={rows} h={headers} logoSrc={logoSrc} />);
 }
