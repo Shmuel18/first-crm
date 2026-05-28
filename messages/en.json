@@ -59,12 +59,107 @@
   "nav": {
     "dashboard": "Dashboard",
     "tasks": "Tasks",
+    "simulators": "Simulators",
     "team": "Team",
     "templates": "Templates",
     "auditLog": "Audit Log",
     "settings": "Settings",
     "primary": "Primary navigation",
     "unreadTasks": "{count, plural, =1 {1 open task} other {# open tasks}}"
+  },
+  "simulators": {
+    "eyebrow": "Mortgage simulators",
+    "backToCase": "Back to case",
+    "saved": {
+      "title": "Saved simulations",
+      "new": "New simulation",
+      "empty": "No saved simulations yet",
+      "tracks": "tracks"
+    },
+    "violations": {
+      "title": "The mortgage structure must be valid before saving",
+      "amount_mismatch": "Track total is {actual}, but mortgage amount is {limit}.",
+      "ltv_exceeded": "LTV is {actual}; the limit is {limit}.",
+      "fixed_share_too_low": "Fixed-rate share is {actual}; minimum is {limit}.",
+      "prime_share_too_high": "Prime share is {actual}; maximum is {limit}.",
+      "equal_principal_share_too_high": "Equal-principal share is {actual}; maximum is {limit}.",
+      "term_too_long": "Mortgage term is {actual} months; maximum is {limit} months."
+    },
+    "mix": {
+      "title": "Mix simulator",
+      "caseTitle": "Case mortgage mix",
+      "subtitle": "Enter rates manually and calculate live without a server round-trip.",
+      "save": "Save simulation",
+      "saving": "Saving...",
+      "saveSuccess": "Simulation saved",
+      "errors": {
+        "unauthorized": "You are not allowed to save simulations.",
+        "validation": "Some simulation fields are invalid.",
+        "rate_limited": "Too many saves. Try again later.",
+        "regulatory": "The mortgage structure does not meet the thresholds.",
+        "unknown": "Saving the simulation failed. Try again."
+      },
+      "inputs": {
+        "title": "Base data",
+        "scenarioTitle": "Simulation name",
+        "propertyKind": "Property kind",
+        "propertyValue": "Property value",
+        "equity": "Equity",
+        "mortgageAmount": "Mortgage amount",
+        "termMonths": "Term in months",
+        "advisorConclusion": "Advisor conclusion",
+        "propertyKinds": {
+          "first_home": "First home",
+          "replacement": "Replacement home",
+          "investment": "Investment"
+        }
+      },
+      "tracks": {
+        "title": "Tracks",
+        "add": "Add track",
+        "remove": "Remove track",
+        "type": "Type",
+        "amount": "Amount",
+        "rate": "Rate",
+        "term": "Months",
+        "repayment": "Repayment",
+        "cpi": "Annual CPI",
+        "grace": "Grace",
+        "extra": "Extra",
+        "types": {
+          "fixed_unlinked": "Fixed unlinked",
+          "fixed_linked": "Fixed linked",
+          "prime": "Prime",
+          "variable_unlinked": "Variable unlinked",
+          "variable_linked": "Variable linked",
+          "eligibility": "Eligibility"
+        },
+        "repayments": {
+          "spitzer": "Spitzer",
+          "equal_principal": "Equal principal",
+          "balloon": "Balloon/grace"
+        }
+      },
+      "results": {
+        "title": "Live result",
+        "firstPayment": "First payment",
+        "averagePayment": "Average payment",
+        "maxPayment": "Max payment",
+        "totalCost": "Total cost",
+        "totalInterest": "Total interest",
+        "ltv": "LTV",
+        "snapshotNote": "Saving creates a server-calculated snapshot for future reports.",
+        "paymentCurve": "Payment curve",
+        "balanceCurve": "Principal balance curve",
+        "yearLabel": "Year {year}"
+      },
+      "table": {
+        "title": "Amortization table - first 12 months",
+        "month": "Month",
+        "payment": "Payment",
+        "balance": "Balance"
+      }
+    }
   },
   "topbar": {
     "newCase": "New Case",

@@ -3,12 +3,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { CheckSquare, LayoutDashboard, Settings } from 'lucide-react';
+import { Calculator, CheckSquare, LayoutDashboard, Settings } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 type NavItem = {
   href: string;
-  labelKey: 'dashboard' | 'tasks' | 'settings';
+  labelKey: 'dashboard' | 'tasks' | 'simulators' | 'settings';
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
   criticalBadge?: number;
@@ -22,6 +22,7 @@ type NavItem = {
 const BASE_TOP_ITEMS: readonly NavItem[] = [
   { href: '/cases', labelKey: 'dashboard', icon: LayoutDashboard },
   { href: '/tasks', labelKey: 'tasks', icon: CheckSquare },
+  { href: '/simulators', labelKey: 'simulators', icon: Calculator },
 ] as const;
 
 const BOTTOM_ITEMS: readonly NavItem[] = [

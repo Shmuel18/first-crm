@@ -25,6 +25,8 @@ export async function listScenariosForCase(caseId: CaseId): Promise<MortgageScen
     .order('updated_at', { ascending: false });
 
   if (error) throw error;
+  // PostgREST cannot infer the embedded scenario_tracks relation from the
+  // explicit string select; SCENARIO_WITH_TRACKS is the shape contract.
   return (data ?? []) as unknown as MortgageScenarioWithTracks[];
 }
 
@@ -38,6 +40,8 @@ export async function listStandaloneScenarios(): Promise<MortgageScenarioWithTra
     .order('updated_at', { ascending: false });
 
   if (error) throw error;
+  // PostgREST cannot infer the embedded scenario_tracks relation from the
+  // explicit string select; SCENARIO_WITH_TRACKS is the shape contract.
   return (data ?? []) as unknown as MortgageScenarioWithTracks[];
 }
 
@@ -51,5 +55,7 @@ export async function getScenarioById(id: MortgageScenarioId): Promise<MortgageS
     .maybeSingle();
 
   if (error) throw error;
+  // PostgREST cannot infer the embedded scenario_tracks relation from the
+  // explicit string select; SCENARIO_WITH_TRACKS is the shape contract.
   return data as unknown as MortgageScenarioWithTracks | null;
 }

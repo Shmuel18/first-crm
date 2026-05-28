@@ -68,6 +68,8 @@ function buildSavePayload(input: SaveScenarioInput, resultSnapshot: unknown): Js
     equity: input.mix.equity,
     termMonths: input.mix.defaultTermMonths,
     propertyKind: input.propertyKind,
+    // Supabase's recursive Json type cannot infer a Zod/domain object with
+    // typed arrays, but both values are plain JSON-safe data produced here.
     inputs: input.mix as unknown as Json,
     resultSnapshot: resultSnapshot as Json,
     advisorConclusion: input.advisorConclusion,

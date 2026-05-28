@@ -59,12 +59,107 @@
   "nav": {
     "dashboard": "דשבורד",
     "tasks": "משימות",
+    "simulators": "סימולטורים",
     "team": "צוות",
     "templates": "תבניות",
     "auditLog": "יומן שינויים",
     "settings": "הגדרות",
     "primary": "ניווט ראשי",
     "unreadTasks": "{count, plural, =1 {משימה אחת פתוחה} other {# משימות פתוחות}}"
+  },
+  "simulators": {
+    "eyebrow": "סימולטורי משכנתא",
+    "backToCase": "חזרה לתיק",
+    "saved": {
+      "title": "סימולציות שמורות",
+      "new": "סימולציה חדשה",
+      "empty": "עדיין אין סימולציות שמורות",
+      "tracks": "מסלולים"
+    },
+    "violations": {
+      "title": "אי אפשר לשמור עד שמבנה המשכנתא תקין",
+      "amount_mismatch": "סכום המסלולים הוא {actual}, אבל סכום המשכנתא הוא {limit}.",
+      "ltv_exceeded": "אחוז המימון הוא {actual}; התקרה היא {limit}.",
+      "fixed_share_too_low": "חלק המסלולים הקבועים הוא {actual}; המינימום הוא {limit}.",
+      "prime_share_too_high": "חלק הפריים הוא {actual}; המקסימום הוא {limit}.",
+      "equal_principal_share_too_high": "חלק הקרן השווה הוא {actual}; המקסימום הוא {limit}.",
+      "term_too_long": "תקופת המשכנתא היא {actual} חודשים; המקסימום הוא {limit} חודשים."
+    },
+    "mix": {
+      "title": "סימולטור תמהיל",
+      "caseTitle": "תמהיל לתיק",
+      "subtitle": "הזן ריביות ידנית וקבל חישוב חי בלי פנייה לשרת.",
+      "save": "שמור סימולציה",
+      "saving": "שומר...",
+      "saveSuccess": "הסימולציה נשמרה",
+      "errors": {
+        "unauthorized": "אין הרשאה לשמור סימולציה.",
+        "validation": "יש נתונים לא תקינים בסימולציה.",
+        "rate_limited": "בוצעו יותר מדי שמירות. נסה שוב מאוחר יותר.",
+        "regulatory": "מבנה המשכנתא לא עומד בספים.",
+        "unknown": "שמירת הסימולציה נכשלה. נסה שוב."
+      },
+      "inputs": {
+        "title": "נתוני בסיס",
+        "scenarioTitle": "שם הסימולציה",
+        "propertyKind": "סוג נכס",
+        "propertyValue": "שווי נכס",
+        "equity": "הון עצמי",
+        "mortgageAmount": "סכום משכנתא",
+        "termMonths": "תקופה בחודשים",
+        "advisorConclusion": "מסקנת יועץ",
+        "propertyKinds": {
+          "first_home": "דירה יחידה",
+          "replacement": "משפר דיור",
+          "investment": "השקעה"
+        }
+      },
+      "tracks": {
+        "title": "מסלולים",
+        "add": "הוסף מסלול",
+        "remove": "הסר מסלול",
+        "type": "סוג",
+        "amount": "סכום",
+        "rate": "ריבית",
+        "term": "חודשים",
+        "repayment": "החזר",
+        "cpi": "מדד שנתי",
+        "grace": "גרייס",
+        "extra": "נוסף",
+        "types": {
+          "fixed_unlinked": "קבועה לא צמודה",
+          "fixed_linked": "קבועה צמודה",
+          "prime": "פריים",
+          "variable_unlinked": "משתנה לא צמודה",
+          "variable_linked": "משתנה צמודה",
+          "eligibility": "זכאות"
+        },
+        "repayments": {
+          "spitzer": "שפיצר",
+          "equal_principal": "קרן שווה",
+          "balloon": "בלון/גרייס"
+        }
+      },
+      "results": {
+        "title": "תוצאה חיה",
+        "firstPayment": "החזר ראשון",
+        "averagePayment": "החזר ממוצע",
+        "maxPayment": "החזר מקסימלי",
+        "totalCost": "עלות כוללת",
+        "totalInterest": "סך ריבית",
+        "ltv": "LTV",
+        "snapshotNote": "השמירה תייצר snapshot מחושב בשרת לדוח עתידי.",
+        "paymentCurve": "גרף החזר",
+        "balanceCurve": "גרף יתרת קרן",
+        "yearLabel": "שנה {year}"
+      },
+      "table": {
+        "title": "לוח סילוקין - 12 חודשים ראשונים",
+        "month": "חודש",
+        "payment": "החזר",
+        "balance": "יתרה"
+      }
+    }
   },
   "topbar": {
     "newCase": "פתיחת תיק חדש",
