@@ -196,10 +196,64 @@
         "bestNote": "התאים המודגשים מסמנים את הערך הטוב ביותר בכל שורה (נמוך יותר = עדיף)."
       }
     },
+    "scenario": {
+      "title": "סימולטור ריבית ומדד",
+      "subtitle": "בדוק כיצד עליית ריבית או מדד תשפיע על ההחזר החודשי לאורך חיי המשכנתא.",
+      "caseTitle": "תרחיש ריבית ומדד לתיק",
+      "mixTitle": "נתוני המשכנתא",
+      "mixSubtitle": "הזן את התמהיל שעליו ייבחן התרחיש.",
+      "scenarioTitle": "הגדרת התרחיש",
+      "scenarioSubtitle": "בחר תרחיש מוכן או התאם את הפרמטרים ידנית.",
+      "risk": {
+        "label": "רמת סיכון",
+        "low": "נמוך",
+        "medium": "בינוני",
+        "high": "גבוה"
+      },
+      "presets": {
+        "label": "תרחיש מוכן",
+        "calm": "רגוע",
+        "moderate": "בינוני",
+        "strict": "מחמיר",
+        "custom": "מותאם אישית"
+      },
+      "params": {
+        "title": "פרמטרים של התרחיש",
+        "primeDelta": "שינוי בריבית הפריים (%)",
+        "variableDelta": "שינוי בריבית המשתנה (%)",
+        "cpiAnnual": "מדד שנתי (%)",
+        "changeMonth": "חודש השינוי",
+        "monthOption": "חודש {month}",
+        "paymentThreshold": "רף החזר חודשי",
+        "thresholdPlaceholder": "לדוגמה: 6,000"
+      },
+      "result": {
+        "title": "תוצאת התרחיש",
+        "paymentIncrease": "עליית ההחזר",
+        "thresholdCross": "חציית רף ההחזר",
+        "noCross": "לא נחצה",
+        "monthValue": "חודש {month}",
+        "linkedGrowth": "גידול בקרן הצמודה",
+        "compareTitle": "השוואה: בלי שינוי מול תרחיש",
+        "metric": "פרמטר",
+        "baseline": "בלי שינוי",
+        "stressed": "תרחיש",
+        "delta": "הפרש",
+        "metrics": {
+          "firstPayment": "החזר ראשון",
+          "maxPayment": "החזר מקסימלי",
+          "totalInterest": "סך ריבית",
+          "totalIndexation": "סך הצמדה",
+          "totalCost": "עלות כוללת"
+        },
+        "overlayTitle": "החזר לאורך זמן"
+      }
+    },
     "tools": {
       "label": "כלי סימולטור",
       "mix": "תמהיל",
-      "compare": "השוואה"
+      "compare": "השוואה",
+      "scenario": "ריבית ומדד"
     }
   },
   "topbar": {

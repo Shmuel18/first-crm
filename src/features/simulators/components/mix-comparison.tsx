@@ -4,11 +4,11 @@ import { useTranslations } from 'next-intl';
 
 import { useMixComparison, type ComparisonBase } from '../hooks/use-mix-comparison';
 import type { PropertyKind, RegulatoryThresholds } from '../types';
-import { ComparisonBasePanel } from './comparison-base-panel';
 import { ComparisonOverlayChart } from './comparison-overlay-chart';
 import { ComparisonRankingCards } from './comparison-ranking-cards';
 import { ComparisonTable } from './comparison-table';
 import { ComparisonVariantTabs } from './comparison-variant-tabs';
+import { LoanBasePanel } from './loan-base-panel';
 import { RegulatoryViolationsBanner } from './regulatory-violations-banner';
 import { TrackEditor } from './track-editor';
 
@@ -24,7 +24,9 @@ export function MixComparison({ thresholds, initialBase, initialPropertyKind }: 
 
   return (
     <div className="space-y-5">
-      <ComparisonBasePanel
+      <LoanBasePanel
+        title={t('baseTitle')}
+        subtitle={t('baseSubtitle')}
         base={comp.base}
         propertyKind={comp.propertyKind}
         onPropertyKindChange={comp.setPropertyKind}

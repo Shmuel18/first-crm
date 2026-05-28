@@ -196,10 +196,64 @@
         "bestNote": "Highlighted cells mark the best value in each row (lower is better)."
       }
     },
+    "scenario": {
+      "title": "Interest & index simulator",
+      "subtitle": "See how a rise in interest or index would affect the monthly payment over the life of the mortgage.",
+      "caseTitle": "Interest & index scenario for case",
+      "mixTitle": "Mortgage details",
+      "mixSubtitle": "Enter the mix that the scenario will test.",
+      "scenarioTitle": "Scenario setup",
+      "scenarioSubtitle": "Pick a preset or adjust the parameters manually.",
+      "risk": {
+        "label": "Risk level",
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      },
+      "presets": {
+        "label": "Preset",
+        "calm": "Calm",
+        "moderate": "Moderate",
+        "strict": "Strict",
+        "custom": "Custom"
+      },
+      "params": {
+        "title": "Scenario parameters",
+        "primeDelta": "Prime rate change (%)",
+        "variableDelta": "Variable rate change (%)",
+        "cpiAnnual": "Annual CPI (%)",
+        "changeMonth": "Change month",
+        "monthOption": "Month {month}",
+        "paymentThreshold": "Monthly payment threshold",
+        "thresholdPlaceholder": "e.g. 6,000"
+      },
+      "result": {
+        "title": "Scenario result",
+        "paymentIncrease": "Payment increase",
+        "thresholdCross": "Threshold crossed",
+        "noCross": "Not crossed",
+        "monthValue": "Month {month}",
+        "linkedGrowth": "Linked principal growth",
+        "compareTitle": "Comparison: baseline vs scenario",
+        "metric": "Metric",
+        "baseline": "Baseline",
+        "stressed": "Scenario",
+        "delta": "Delta",
+        "metrics": {
+          "firstPayment": "First payment",
+          "maxPayment": "Max payment",
+          "totalInterest": "Total interest",
+          "totalIndexation": "Total indexation",
+          "totalCost": "Total cost"
+        },
+        "overlayTitle": "Payment over time"
+      }
+    },
     "tools": {
       "label": "Simulator tools",
       "mix": "Mix",
-      "compare": "Comparison"
+      "compare": "Comparison",
+      "scenario": "Interest & index"
     }
   },
   "topbar": {

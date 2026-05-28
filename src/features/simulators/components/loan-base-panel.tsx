@@ -7,6 +7,8 @@ import type { PropertyKind } from '../types';
 import { agorotToNis, nisToAgorot } from '../utils/format';
 
 type Props = {
+  title: string;
+  subtitle: string;
   base: ComparisonBase;
   propertyKind: PropertyKind;
   onPropertyKindChange: (value: PropertyKind) => void;
@@ -17,14 +19,13 @@ type Props = {
 const inputClass =
   'h-10 w-full rounded-lg border border-neutral-200 bg-white px-3 text-sm shadow-xs outline-none transition focus:border-brand-gold-text focus:ring-2 focus:ring-brand-gold-text/30';
 
-export function ComparisonBasePanel({ base, propertyKind, onPropertyKindChange, onMoneyChange, onTermChange }: Props) {
+export function LoanBasePanel({ title, subtitle, base, propertyKind, onPropertyKindChange, onMoneyChange, onTermChange }: Props) {
   const t = useTranslations('simulators.mix.inputs');
-  const tc = useTranslations('simulators.compare');
 
   return (
     <section className="rounded-xl border border-neutral-200 bg-white p-4">
-      <h2 className="mb-1 font-display text-lg font-semibold text-neutral-950">{tc('baseTitle')}</h2>
-      <p className="mb-4 text-sm text-neutral-500">{tc('baseSubtitle')}</p>
+      <h2 className="mb-1 font-display text-lg font-semibold text-neutral-950">{title}</h2>
+      <p className="mb-4 text-sm text-neutral-500">{subtitle}</p>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Field label={t('propertyKind')}>
           <select className={inputClass} value={propertyKind} onChange={(e) => onPropertyKindChange(parsePropertyKind(e.target.value))}>

@@ -19,6 +19,7 @@ export type RepaymentType = 'spitzer' | 'equal_principal' | 'balloon';
 export type ScenarioKind = 'mix' | 'comparison' | 'scenario';
 export type PropertyKind = 'first_home' | 'replacement' | 'investment';
 export type RiskLevel = 'low' | 'medium' | 'high';
+export type ScenarioPresetKey = 'calm' | 'moderate' | 'strict' | 'custom';
 
 export type MoneyAgorot = number;
 
