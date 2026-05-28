@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -1110,6 +1110,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "borrower_incomes_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "borrower_incomes_income_type_id_fkey"
             columns: ["income_type_id"]
             isOneToOne: false
@@ -1193,6 +1200,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "borrower_obligations_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "borrower_obligations_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
@@ -1201,12 +1215,6 @@ export type Database = {
           },
         ]
       }
-      // AUDIT-ACK: `foreign_residence_country` was added by hand to all
-      // three (Row/Insert/Update) here after migration 084 introduced the
-      // column, so the codebase compiles until the next supabase-cli type
-      // regeneration. Drop this hand-edit after running
-      // `npx supabase gen types typescript` against the project — the
-      // generator will re-emit the same fields and this comment can go.
       borrowers: {
         Row: {
           additional_citizenships: string | null
@@ -1555,6 +1563,27 @@ export type Database = {
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "case_expenses_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_expenses_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_expenses_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       case_financials: {
@@ -1750,8 +1779,8 @@ export type Database = {
           assigned_advisor_id: string | null
           case_blocker: string | null
           case_number: string
-          case_type_primary_id: string | null
           case_type_other_text: string | null
+          case_type_primary_id: string | null
           case_type_secondary_id: string | null
           city: string | null
           created_at: string
@@ -1777,8 +1806,8 @@ export type Database = {
           assigned_advisor_id?: string | null
           case_blocker?: string | null
           case_number?: string
-          case_type_primary_id?: string | null
           case_type_other_text?: string | null
+          case_type_primary_id?: string | null
           case_type_secondary_id?: string | null
           city?: string | null
           created_at?: string
@@ -1804,8 +1833,8 @@ export type Database = {
           assigned_advisor_id?: string | null
           case_blocker?: string | null
           case_number?: string
-          case_type_primary_id?: string | null
           case_type_other_text?: string | null
+          case_type_primary_id?: string | null
           case_type_secondary_id?: string | null
           city?: string | null
           created_at?: string
@@ -2328,7 +2357,116 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "message_templates_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "message_templates_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mortgage_scenarios: {
+        Row: {
+          advisor_conclusion: string | null
+          case_id: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          equity: number
+          id: string
+          inputs: Json
+          kind: string
+          mortgage_amount: number
+          primary_borrower_id: string | null
+          property_kind: string
+          property_value: number
+          result_snapshot: Json
+          term_months: number
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          advisor_conclusion?: string | null
+          case_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          equity: number
+          id?: string
+          inputs?: Json
+          kind: string
+          mortgage_amount: number
+          primary_borrower_id?: string | null
+          property_kind: string
+          property_value: number
+          result_snapshot?: Json
+          term_months: number
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          advisor_conclusion?: string | null
+          case_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          equity?: number
+          id?: string
+          inputs?: Json
+          kind?: string
+          mortgage_amount?: number
+          primary_borrower_id?: string | null
+          property_kind?: string
+          property_value?: number
+          result_snapshot?: Json
+          term_months?: number
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mortgage_scenarios_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mortgage_scenarios_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mortgage_scenarios_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mortgage_scenarios_primary_borrower_id_fkey"
+            columns: ["primary_borrower_id"]
+            isOneToOne: false
+            referencedRelation: "borrowers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mortgage_scenarios_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -2531,6 +2669,7 @@ export type Database = {
           phone_fax: string | null
           phone_main: string | null
           primary_color: string
+          regulatory_thresholds: Json
           secondary_color: string
           sla_status_thresholds: Json
           task_reminder_days_before: number
@@ -2572,6 +2711,7 @@ export type Database = {
           phone_fax?: string | null
           phone_main?: string | null
           primary_color?: string
+          regulatory_thresholds?: Json
           secondary_color?: string
           sla_status_thresholds?: Json
           task_reminder_days_before?: number
@@ -2613,6 +2753,7 @@ export type Database = {
           phone_fax?: string | null
           phone_main?: string | null
           primary_color?: string
+          regulatory_thresholds?: Json
           secondary_color?: string
           sla_status_thresholds?: Json
           task_reminder_days_before?: number
@@ -2919,6 +3060,95 @@ export type Database = {
         }
         Relationships: []
       }
+      scenario_tracks: {
+        Row: {
+          amount: number
+          annual_rate_pct: number
+          cpi_annual_pct: number | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          grace_months: number | null
+          id: string
+          mix_label: string
+          repayment_type: string
+          scenario_id: string
+          sort_order: number
+          term_months: number
+          track_type: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          amount: number
+          annual_rate_pct: number
+          cpi_annual_pct?: number | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          grace_months?: number | null
+          id?: string
+          mix_label?: string
+          repayment_type: string
+          scenario_id: string
+          sort_order?: number
+          term_months: number
+          track_type: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          amount?: number
+          annual_rate_pct?: number
+          cpi_annual_pct?: number | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          grace_months?: number | null
+          id?: string
+          mix_label?: string
+          repayment_type?: string
+          scenario_id?: string
+          sort_order?: number
+          term_months?: number
+          track_type?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scenario_tracks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scenario_tracks_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scenario_tracks_scenario_id_fkey"
+            columns: ["scenario_id"]
+            isOneToOne: false
+            referencedRelation: "mortgage_scenarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scenario_tracks_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stage_durations: {
         Row: {
           case_id: string
@@ -3144,6 +3374,7 @@ export type Database = {
     }
     Functions: {
       can_view_case: { Args: { p_case_id: string }; Returns: boolean }
+      cases_dashboard_bootstrap: { Args: never; Returns: Json }
       cleanup_old_audit_logs: { Args: never; Returns: number }
       cleanup_rate_limit_counters: { Args: never; Returns: number }
       cleanup_soft_deleted_records: { Args: never; Returns: Json }
@@ -3158,10 +3389,7 @@ export type Database = {
       }
       convert_lead_to_case: { Args: { p_lead_id: string }; Returns: string }
       create_case_draft: {
-        Args: {
-          p_borrowers: Json
-          p_request_details: string | null
-        }
+        Args: { p_borrowers: Json; p_request_details: string }
         Returns: string
       }
       create_case_with_financials: {
@@ -3186,6 +3414,7 @@ export type Database = {
       }
       generate_case_number: { Args: never; Returns: string }
       has_permission: { Args: { perm_key: string }; Returns: boolean }
+      has_permissions: { Args: { perm_keys: string[] }; Returns: Json }
       import_cases: { Args: { p_rows: Json }; Returns: Json }
       insert_overdue_notifications: { Args: { p_rows: Json }; Returns: number }
       is_active_profile: { Args: { uid: string }; Returns: boolean }
@@ -3194,18 +3423,18 @@ export type Database = {
       list_deleted_cases: {
         Args: { p_cutoff: string }
         Returns: {
-          assigned_advisor_first_name: string | null
-          assigned_advisor_last_name: string | null
+          assigned_advisor_first_name: string
+          assigned_advisor_last_name: string
           case_number: string
           deleted_at: string
-          deleted_by_first_name: string | null
-          deleted_by_last_name: string | null
+          deleted_by_first_name: string
+          deleted_by_last_name: string
           id: string
-          primary_borrower_first_name: string | null
-          primary_borrower_last_name: string | null
-          status_color: string | null
-          status_name_en: string | null
-          status_name_he: string | null
+          primary_borrower_first_name: string
+          primary_borrower_last_name: string
+          status_color: string
+          status_name_en: string
+          status_name_he: string
         }[]
       }
       permanently_delete_case: {
@@ -3238,12 +3467,17 @@ export type Database = {
         }
         Returns: string
       }
+      save_mortgage_scenario: { Args: { p_payload: Json }; Returns: string }
       save_notification_settings: {
         Args: {
           p_email_task_assigned: boolean
           p_email_task_completed: boolean
           p_sla?: Json
         }
+        Returns: undefined
+      }
+      save_regulatory_thresholds: {
+        Args: { p_thresholds: Json }
         Returns: undefined
       }
       set_primary_bank: {
@@ -3262,6 +3496,10 @@ export type Database = {
       soft_delete_case: { Args: { p_case_id: string }; Returns: boolean }
       soft_delete_case_expense: {
         Args: { p_case_id: string; p_expense_id: string }
+        Returns: boolean
+      }
+      soft_delete_scenario: {
+        Args: { p_scenario_id: string }
         Returns: boolean
       }
       update_borrower_in_case: {
