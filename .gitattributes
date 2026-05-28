@@ -1,0 +1,4 @@
+# Shell scripts must stay LF on every platform — a CRLF shebang breaks
+# execution on Linux ("bad interpreter: /usr/bin/env bash^M"). The deploy
+# script (scripts/deploy.sh) is authored on Windows but runs on the Vultr host.
+*.sh text eol=lf
