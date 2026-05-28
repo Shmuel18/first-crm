@@ -6,6 +6,7 @@ import { DEFAULT_REGULATORY_THRESHOLDS } from '../constants';
 import { aggregateMix } from '../domain/mix-aggregate';
 import { validateMix } from '../domain/regulatory-rules';
 import type { MixInput, PropertyKind, RegulatoryThresholds, TrackInput } from '../types';
+import { newTrack, normalizeTrack, remainingAmount } from '../utils/track-factory';
 
 type Params = {
   initialInput?: MixInput;
@@ -54,7 +55,7 @@ export function useMixCalculator({
   const addTrack = () =>
     setMix((current) => ({
       ...current,
-      tracks: [...current.tracks, newTrack('fixed_unlinked', remainingAmount(current), 4.5)],
+      tracks: [...current.tracks, newTrack('fixed_unlinked', remainingAmount(current.mortgageAmount, current.tracks), 4.5)],
     }));
   const removeTrack = (id: string) =>
     setMix((current) => ({
@@ -78,36 +79,4 @@ export function useMixCalculator({
     result,
     violations,
   };
-}
-
-function newTrack(
-  type: TrackInput['type'],
-  amount: number,
-  annualRatePct: number,
-  cpiAnnualPct: number | null = null,
-): TrackInput {
-  return {
-    id: `track-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    type,
-    amount,
-    annualRatePct,
-    termMonths: 360,
-    repayment: 'spitzer',
-    cpiAnnualPct,
-    graceMonths: null,
-  };
-}
-
-function normalizeTrack(track: TrackInput): TrackInput {
-  const linked = track.type.endsWith('_linked');
-  return {
-    ...track,
-    cpiAnnualPct: linked ? track.cpiAnnualPct ?? 0 : null,
-    graceMonths: track.repayment === 'balloon' ? track.graceMonths ?? 12 : null,
-  };
-}
-
-function remainingAmount(input: MixInput): number {
-  const used = input.tracks.reduce((sum, track) => sum + track.amount, 0);
-  return Math.max(0, input.mortgageAmount - used);
 }

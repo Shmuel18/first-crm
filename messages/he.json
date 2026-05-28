@@ -159,6 +159,47 @@
         "payment": "החזר",
         "balance": "יתרה"
       }
+    },
+    "compare": {
+      "title": "השוואת תמהילים",
+      "caseTitle": "השוואת תמהילים לתיק",
+      "subtitle": "בנה 2–4 תמהילים חלופיים לאותה הלוואה והשווה ביניהם בזמן אמת.",
+      "baseTitle": "נתוני הלוואה משותפים",
+      "baseSubtitle": "הנתונים האלה חלים על כל התמהילים בהשוואה.",
+      "editTitle": "עריכת תמהילים",
+      "editHint": "החלף לשוניות כדי לערוך כל תמהיל",
+      "variantsLabel": "תמהילים בהשוואה",
+      "variant": "תמהיל {label}",
+      "addVariant": "הוסף תמהיל",
+      "removeVariant": "הסר תמהיל {label}",
+      "overlayTitle": "החזר לאורך זמן",
+      "yearLabel": "שנה {year}",
+      "ranking": {
+        "cheapest": "הכי זול",
+        "mostStable": "הכי יציב",
+        "mostFlexible": "הכי גמיש",
+        "riskiest": "הכי מסוכן",
+        "variant": "תמהיל {label}"
+      },
+      "table": {
+        "title": "טבלת השוואה",
+        "metric": "פרמטר",
+        "firstPayment": "החזר ראשון",
+        "maxPayment": "החזר מקסימלי",
+        "totalCost": "עלות כוללת",
+        "totalInterest": "סך ריבית",
+        "totalIndexation": "סך הצמדה",
+        "paymentRisk": "סיכון לעליית החזר",
+        "balanceY5": "יתרה אחרי 5 שנים",
+        "balanceY10": "יתרה אחרי 10 שנים",
+        "balanceY15": "יתרה אחרי 15 שנים",
+        "bestNote": "התאים המודגשים מסמנים את הערך הטוב ביותר בכל שורה (נמוך יותר = עדיף)."
+      }
+    },
+    "tools": {
+      "label": "כלי סימולטור",
+      "mix": "תמהיל",
+      "compare": "השוואה"
     }
   },
   "topbar": {

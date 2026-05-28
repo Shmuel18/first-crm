@@ -159,6 +159,47 @@
         "payment": "Payment",
         "balance": "Balance"
       }
+    },
+    "compare": {
+      "title": "Mix comparison",
+      "caseTitle": "Compare mixes for case",
+      "subtitle": "Build 2-4 alternative mixes for the same loan and compare them live.",
+      "baseTitle": "Shared loan data",
+      "baseSubtitle": "These figures apply to every mix you compare.",
+      "editTitle": "Edit mixes",
+      "editHint": "Switch tabs to edit each mix",
+      "variantsLabel": "Compared mixes",
+      "variant": "Mix {label}",
+      "addVariant": "Add mix",
+      "removeVariant": "Remove mix {label}",
+      "overlayTitle": "Payment over time",
+      "yearLabel": "Year {year}",
+      "ranking": {
+        "cheapest": "Cheapest",
+        "mostStable": "Most stable",
+        "mostFlexible": "Most flexible",
+        "riskiest": "Riskiest",
+        "variant": "Mix {label}"
+      },
+      "table": {
+        "title": "Comparison table",
+        "metric": "Metric",
+        "firstPayment": "First payment",
+        "maxPayment": "Max payment",
+        "totalCost": "Total cost",
+        "totalInterest": "Total interest",
+        "totalIndexation": "Total indexation",
+        "paymentRisk": "Payment increase risk",
+        "balanceY5": "Balance after 5 years",
+        "balanceY10": "Balance after 10 years",
+        "balanceY15": "Balance after 15 years",
+        "bestNote": "Highlighted cells mark the best value in each row (lower is better)."
+      }
+    },
+    "tools": {
+      "label": "Simulator tools",
+      "mix": "Mix",
+      "compare": "Comparison"
     }
   },
   "topbar": {

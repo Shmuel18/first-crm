@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server';
 
 import { MixCalculator } from '@/features/simulators/components/mix-calculator';
 import { SavedScenariosList } from '@/features/simulators/components/saved-scenarios-list';
+import { SimulatorToolsNav } from '@/features/simulators/components/simulator-tools-nav';
 import { listStandaloneScenarios } from '@/features/simulators/services/scenarios.service';
 import { getRegulatoryThresholds } from '@/features/simulators/services/settings.service';
 import { userHasPermission } from '@/lib/auth/permissions';
@@ -28,6 +29,7 @@ export default async function StandaloneMixPage() {
           <p className="mt-1 text-sm text-neutral-500">{t('mix.subtitle')}</p>
         </div>
       </header>
+      <SimulatorToolsNav basePath="/simulators" />
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <MixCalculator thresholds={thresholds} />
         <SavedScenariosList scenarios={scenarios} />
