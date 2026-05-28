@@ -2,6 +2,7 @@ import { cache } from 'react';
 
 import { createClient } from '@/lib/supabase/server';
 import type { NotificationData, NotificationType } from '@/features/notifications/types';
+import { timeAsync } from '@/lib/perf/timing';
 
 export type LayoutBootstrap = {
   authenticated: boolean;
@@ -51,7 +52,14 @@ const UNAUTHED: LayoutBootstrap = {
  */
 export const getLayoutBootstrap = cache(async (): Promise<LayoutBootstrap> => {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc('layout_bootstrap');
+  const bootstrapClient = supabase as unknown as {
+    rpc(
+      fn: 'layout_bootstrap',
+    ): Promise<{ data: unknown; error: { message: string } | null }>;
+  };
+  const { data, error } = await timeAsync('layout.bootstrap.rpc', () =>
+    bootstrapClient.rpc('layout_bootstrap'),
+  );
 
   if (error || !data || typeof data !== 'object') {
     if (error) console.error('[layout_bootstrap] rpc error', error);
