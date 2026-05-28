@@ -65,6 +65,8 @@ export function ForgotPasswordForm() {
     );
   }
 
+  const hasError = state.error === 'invalid_input';
+
   return (
     <form action={formAction} className="space-y-5" noValidate>
       <div className="space-y-2">
@@ -83,6 +85,8 @@ export function ForgotPasswordForm() {
             required
             autoComplete="email"
             dir="ltr"
+            aria-invalid={hasError || undefined}
+            aria-describedby={hasError ? 'forgot-error' : undefined}
             className="ps-10 h-12 text-base bg-neutral-50 border-neutral-200 focus:border-brand-gold-text focus-visible:border-brand-gold-text focus-visible:ring-brand-gold-text/40"
             placeholder="moshe@kaufman.co.il"
           />
@@ -91,6 +95,7 @@ export function ForgotPasswordForm() {
 
       {!state.sent && state.error === 'invalid_input' && (
         <div
+          id="forgot-error"
           role="alert"
           className="rounded-lg bg-red-50 border border-red-200 px-3 py-2.5 text-sm text-red-700"
         >

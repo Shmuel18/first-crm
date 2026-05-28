@@ -39,7 +39,7 @@ A SaaS for **Kaufman Finance Group** - an Israeli mortgage advisor office. Repla
 |---|---|---|
 | Black | `#0A0A0A` | `brand-black` |
 | Gold (decorative fills, gradients) | `#C9A961` | `brand-gold` |
-| Gold-text (WCAG-AA-safe on white, 4.6:1) | `#A88840` | `brand-gold-text` |
+| Gold-text (WCAG-AA-safe on white, 4.8:1) | `#8A6E2D` | `brand-gold-text` |
 | Gold-light (soft accents) | `#E8C77B` | `brand-gold-light` |
 | Gold-dark (borders, gradient stops) | `#B8945A` | `brand-gold-dark` |
 | Gold-soft (warm-tint surfaces) | `#FAF8F3` | `brand-gold-soft` |
