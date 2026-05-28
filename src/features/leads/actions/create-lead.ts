@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
@@ -47,6 +45,5 @@ export async function createLeadAction(
 
   if (error || !data) return { ok: false, error: 'unknown', values };
 
-  revalidatePath('/cases');
   return { ok: true, leadId: data.id };
 }

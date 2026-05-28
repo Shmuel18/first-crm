@@ -72,6 +72,9 @@ export const env = createEnv({
     // instrumentation hook picks it up on the next cold start.
     SENTRY_DSN: z.string().url().optional(),
     SENTRY_ENVIRONMENT: z.string().optional(),
+    // Stable key for self-hosted Server Actions. Without it, a rebuild can
+    // leave open browser tabs submitting action IDs the new server rejects.
+    NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: z.string().min(24).optional(),
   },
   client: {
     NEXT_PUBLIC_SUPABASE_URL: z.string().url('NEXT_PUBLIC_SUPABASE_URL must be a valid URL'),
@@ -101,6 +104,7 @@ export const env = createEnv({
     BACKUP_ENCRYPTION_SALT_V2: process.env.BACKUP_ENCRYPTION_SALT_V2,
     SENTRY_DSN: process.env.SENTRY_DSN,
     SENTRY_ENVIRONMENT: process.env.SENTRY_ENVIRONMENT,
+    NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: process.env.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
@@ -145,6 +149,9 @@ if (env.NODE_ENV === 'production') {
   }
   if (!isGoogleOAuthConfigured()) {
     warnings.push('GOOGLE_OAUTH_* are unset — Drive integration (sync, backup destination, document upload mirror) is disabled.');
+  }
+  if (!env.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY) {
+    warnings.push('NEXT_SERVER_ACTIONS_ENCRYPTION_KEY is unset - self-hosted rebuilds can break open Server Action forms until users hard-refresh.');
   }
   if (warnings.length > 0) {
     console.warn('[env] production deploy is missing optional-but-critical config:\n  - ' + warnings.join('\n  - '));

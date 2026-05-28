@@ -58,6 +58,7 @@ const SECURITY_HEADERS = [
 ];
 
 const nextConfig: NextConfig = {
+  deploymentId: process.env.NEXT_DEPLOYMENT_ID,
   experimental: {
     serverActions: {
       // Document uploads now use direct-to-storage via Supabase signed-upload
