@@ -36,16 +36,16 @@ async function ensureFontRegistered(): Promise<void> {
 }
 
 /**
- * Load the brand mark as a base64 data URL (same rationale as the font:
- * @react-pdf needs an inline src that survives the serverless cwd). The
- * mark is gold-on-black — rendered as a small rounded badge in the header
- * so it reads as an intentional brand stamp on the white page. Cached per
- * lambda instance.
+ * Load the brand medallion as a base64 data URL (same rationale as the
+ * font: @react-pdf needs an inline src that survives the serverless cwd).
+ * logo-coin-square.png is the circular black+gold KAUFMAN coin pre-cropped
+ * to a tight transparent square, so it sits cleanly as a round badge on
+ * the white header. Cached per lambda instance.
  */
 let logoDataUrl: string | null = null;
 async function ensureLogoLoaded(): Promise<string> {
   if (logoDataUrl) return logoDataUrl;
-  const logoPath = path.join(process.cwd(), 'public', 'logo-mark.png');
+  const logoPath = path.join(process.cwd(), 'public', 'logo-coin-square.png');
   const buffer = await readFile(logoPath);
   logoDataUrl = `data:image/png;base64,${buffer.toString('base64')}`;
   return logoDataUrl;
@@ -74,13 +74,10 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS.gold,
   },
   brand: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8 },
-  logo: {
-    width: 53,
-    height: 34,
-    borderRadius: 4,
-    objectFit: 'contain',
-    backgroundColor: COLORS.black,
-  },
+  // The medallion is already a circular black+gold coin on a transparent
+  // square — no backgroundColor / borderRadius needed; it reads as a round
+  // brand stamp on the white header.
+  logo: { width: 40, height: 40, objectFit: 'contain' },
   titleBlock: { alignItems: 'flex-end' },
   title: { fontSize: 14, color: COLORS.black, textAlign: 'right' },
   subtitle: { fontSize: 8, color: COLORS.muted, marginTop: 2, textAlign: 'right' },
