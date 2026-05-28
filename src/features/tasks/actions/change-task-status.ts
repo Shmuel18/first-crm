@@ -82,6 +82,6 @@ export async function changeTaskStatusAction(taskId: string, status: string): Pr
 
   revalidatePath('/tasks');
   if (existing.case_id) revalidatePath(`/cases/${existing.case_id}`);
-  revalidatePath('/', 'layout');
+  revalidatePath('/(app)', 'layout');
   return { ok: true };
 }
