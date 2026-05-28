@@ -157,6 +157,13 @@ Every file lives in exactly one layer. Crossing layers requires going UP through
 - Use generated types in `src/types/database.ts`
 - **RLS (Row Level Security)** on every table
 - Migrations versioned in `/supabase/migrations`
+- **`CREATE INDEX` on a populated table must use `CONCURRENTLY`** so the
+  build doesn't take a write lock and stall live traffic. The catch:
+  `CREATE INDEX CONCURRENTLY` cannot run inside a transaction, and the
+  migration runner wraps each file in one — so a concurrent index goes in
+  its **own** migration file with no other statements beside it (otherwise
+  it fails with `CREATE INDEX CONCURRENTLY cannot run inside a transaction
+  block`).
 - Soft deletes via `deleted_at` where appropriate
 - **Never `select('*')` from a feature service.** Define a
   `TABLE_FULL_COLUMNS` const that mirrors the Row type and gates schema-add
