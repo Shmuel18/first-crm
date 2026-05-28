@@ -9,7 +9,7 @@ import {
   uploadBackup,
 } from '@/features/backup/services/drive-backup.service';
 import { getDriveClientIfConnected } from '@/features/integrations/services/drive-case-uploader';
-import { encryptWithKey, encryptWithKeyV2 } from '@/lib/crypto/secrets';
+import { decryptWithKey, encryptWithKey, encryptWithKeyV2 } from '@/lib/crypto/secrets';
 import { env } from '@/lib/env';
 
 /** Vercel Pro function cap. The backup serializes + encrypts + uploads every
@@ -56,8 +56,20 @@ export async function GET(request: Request): Promise<Response> {
       : encryptWithKey(json, env.BACKUP_ENCRYPTION_KEY);
     const folderId = await ensureBackupFolder(client);
     const filename = backupFilename();
-    await uploadBackup(client, folderId, filename, payload);
-    return NextResponse.json({ ok: true, filename, totalRows });
+    const { id } = await uploadBackup(client, folderId, filename, payload);
+
+    // Read-back verification: a backup we can't decrypt is worse than none —
+    // it looks like success until restore day. Download what we just wrote and
+    // confirm it round-trips byte-for-byte under the current key/salt.
+    const roundTrip = await client.downloadFileText(id);
+    const decrypted = decryptWithKey(roundTrip, env.BACKUP_ENCRYPTION_KEY, {
+      saltV2: env.BACKUP_ENCRYPTION_SALT_V2,
+    });
+    if (decrypted !== json) {
+      console.error('[cron/backup] read-back verification failed', { filename });
+      return NextResponse.json({ ok: false, error: 'verify_failed' }, { status: 500 });
+    }
+    return NextResponse.json({ ok: true, filename, totalRows, verified: true });
   } catch (err) {
     console.error('[cron/backup] failed', {
       message: err instanceof Error ? err.message : 'unknown',

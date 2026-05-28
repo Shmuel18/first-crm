@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react';
 
+import * as Sentry from '@sentry/nextjs';
+
 /**
  * Last-resort boundary for crashes in the root layout itself. It renders its
  * own <html>/<body> because it replaces the root layout, and therefore lives
@@ -17,6 +19,7 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     console.error(error);
+    Sentry.captureException(error);
   }, [error]);
 
   return (

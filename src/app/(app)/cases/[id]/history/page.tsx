@@ -7,6 +7,7 @@ import { BackArrow } from '@/components/shared/back-arrow';
 import { AuditLogTable } from '@/features/audit/components/audit-log-table';
 import { listAuditEntriesForCase } from '@/features/audit/services/audit.service';
 import { getCaseById } from '@/features/cases/services/cases.service';
+import { userHasPermission } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
 
@@ -21,7 +22,12 @@ export default async function CaseHistoryPage({ params }: Props) {
   const t = await getTranslations('case');
   const tc = await getTranslations('common');
   const locale = parseLocale(await getLocale());
-  const entries = await listAuditEntriesForCase(caseId);
+  // Manager-only financials must not leak into the timeline for users who can
+  // view the case but lack the fee permission.
+  const canViewFee = await userHasPermission('view_case_fee');
+  const entries = await listAuditEntriesForCase(caseId, undefined, {
+    includeFinancials: canViewFee,
+  });
 
   // Show the primary borrower's name in the header (more useful at a glance
   // than the internal case number, which the user can't memorise anyway).

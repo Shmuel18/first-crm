@@ -64,7 +64,8 @@ export async function inviteMemberAction(
   const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
     type: 'invite',
     email,
-    options: { redirectTo },
+    // handle_new_user (migration 059) refuses to create a profile without it.
+    options: { redirectTo, data: { invited_by: userRes.user.id } },
   });
 
   if (linkErr || !linkData.user) {

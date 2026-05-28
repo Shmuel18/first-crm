@@ -93,6 +93,7 @@ export async function listAuditEntries(limit = 100): Promise<AuditEntry[]> {
 export async function listAuditEntriesForCase(
   caseId: string,
   limit = 200,
+  opts: { includeFinancials?: boolean } = {},
 ): Promise<AuditEntry[]> {
   const admin = createAdminClient();
 
@@ -144,8 +145,11 @@ export async function listAuditEntriesForCase(
     { table: 'borrower_obligations', ids: obligationIds },
     { table: 'case_banks', ids: bankIds },
     { table: 'documents', ids: docIds },
-    // case_financials uses case_id as record_id (see comment above).
-    { table: 'case_financials', ids: [caseId] },
+    // case_financials holds the manager-only fee_amount / expected_income
+    // (record_id = case_id). Only surface its audit diffs when the caller
+    // holds view_case_fee — fail-safe: excluded unless explicitly opted in,
+    // so a forgetful caller can't leak those fields to any case-viewer.
+    ...(opts.includeFinancials ? [{ table: 'case_financials', ids: [caseId] }] : []),
   ].filter((t) => t.ids.length > 0);
 
   // Step 2: query audit_log for each target table+ids in parallel.

@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 
+import * as Sentry from '@sentry/nextjs';
 import { AlertTriangle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -18,6 +19,7 @@ export default function AppError({
 
   useEffect(() => {
     console.error(error);
+    Sentry.captureException(error);
   }, [error]);
 
   return (

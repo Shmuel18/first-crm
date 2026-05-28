@@ -91,11 +91,11 @@ export async function GET(request: Request): Promise<Response> {
     return NextResponse.json({ ok: false, error: 'storage_failed' }, { status: 500 });
   }
 
-  // Strip storage_path from metadata on the rows we successfully cleaned —
-  // both real removals and "already gone" (404). Either way the bytes are
-  // off Storage so the path is stale.
+  // Strip storage_path ONLY for blobs Storage confirmed it removed. Clearing
+  // the pointer for a path that still exists orphans the bytes permanently;
+  // already-gone paths just get re-scanned next run (harmless, self-limiting).
   const removedNames = new Set((removed ?? []).map((r) => r.name));
-  const updates = candidates.filter((c) => removedNames.has(c.path) || true);
+  const updates = candidates.filter((c) => removedNames.has(c.path));
   let updatedRows = 0;
   for (const c of updates) {
     const cleared = { ...c.metadata };
