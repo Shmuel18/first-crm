@@ -27,7 +27,7 @@ export async function markNotificationReadAction(notificationId: string): Promis
 
   if (error) return { ok: false, error: 'unknown' };
 
-  revalidatePath('/', 'layout');
+  revalidatePath('/(app)', 'layout');
   return { ok: true };
 }
 
@@ -44,6 +44,6 @@ export async function markAllNotificationsReadAction(): Promise<Result> {
 
   if (error) return { ok: false, error: 'unknown' };
 
-  revalidatePath('/', 'layout');
+  revalidatePath('/(app)', 'layout');
   return { ok: true };
 }
