@@ -93,6 +93,7 @@ export async function updateTaskAction(
   if (existing.case_id && existing.case_id !== newCaseId) {
     revalidatePath(`/cases/${existing.case_id}`);
   }
+  revalidatePath('/', 'layout');
 
   return { ok: true, taskId };
 }

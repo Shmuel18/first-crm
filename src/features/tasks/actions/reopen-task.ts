@@ -53,5 +53,6 @@ export async function reopenTaskAction(taskId: string): Promise<Result> {
 
   revalidatePath('/tasks');
   if (existing.case_id) revalidatePath(`/cases/${existing.case_id}`);
+  revalidatePath('/', 'layout');
   return { ok: true };
 }

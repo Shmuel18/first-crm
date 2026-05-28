@@ -74,6 +74,7 @@ export async function createTaskAction(
 
   revalidatePath('/tasks');
   if (parsed.data.case_id) revalidatePath(`/cases/${parsed.data.case_id}`);
+  revalidatePath('/', 'layout');
 
   return { ok: true, taskId: inserted.id };
 }
