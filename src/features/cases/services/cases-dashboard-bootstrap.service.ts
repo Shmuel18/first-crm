@@ -41,10 +41,12 @@ const EMPTY_BOOTSTRAP: CasesDashboardBootstrap = {
 
 export async function getCasesDashboardBootstrap(): Promise<CasesDashboardBootstrap> {
   const supabase = await createClient();
-  const callBootstrap = supabase.rpc as unknown as (
-    fn: 'cases_dashboard_bootstrap',
-  ) => PromiseLike<{ data: unknown; error: { code?: string; message: string } | null }>;
-  const { data, error } = await callBootstrap('cases_dashboard_bootstrap');
+  const bootstrapClient = supabase as unknown as {
+    rpc(
+      fn: 'cases_dashboard_bootstrap',
+    ): PromiseLike<{ data: unknown; error: { code?: string; message: string } | null }>;
+  };
+  const { data, error } = await bootstrapClient.rpc('cases_dashboard_bootstrap');
 
   if (error || !data) {
     if (error) {
