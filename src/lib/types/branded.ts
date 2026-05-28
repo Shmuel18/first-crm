@@ -24,6 +24,8 @@ export type DocumentId = Brand<string, 'DocumentId'>;
 export type TaskId = Brand<string, 'TaskId'>;
 export type IncomeId = Brand<string, 'IncomeId'>;
 export type ObligationId = Brand<string, 'ObligationId'>;
+export type MortgageScenarioId = Brand<string, 'MortgageScenarioId'>;
+export type ScenarioTrackId = Brand<string, 'ScenarioTrackId'>;
 
 // ============= Lookup IDs =============
 
@@ -51,6 +53,9 @@ export const asDocumentId = (s: string): DocumentId => s as DocumentId;
 export const asTaskId = (s: string): TaskId => s as TaskId;
 export const asIncomeId = (s: string): IncomeId => s as IncomeId;
 export const asObligationId = (s: string): ObligationId => s as ObligationId;
+export const asMortgageScenarioId = (s: string): MortgageScenarioId =>
+  s as MortgageScenarioId;
+export const asScenarioTrackId = (s: string): ScenarioTrackId => s as ScenarioTrackId;
 export const asStatusId = (s: string): StatusId => s as StatusId;
 export const asCaseTypeId = (s: string): CaseTypeId => s as CaseTypeId;
 export const asBankId = (s: string): BankId => s as BankId;
