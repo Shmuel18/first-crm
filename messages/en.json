@@ -254,6 +254,23 @@
       "mix": "Mix",
       "compare": "Comparison",
       "scenario": "Interest & index"
+    },
+    "report": {
+      "openReport": "Edit client report",
+      "title": "Client report",
+      "subtitle": "Add an advisor conclusion and download the report as a PDF.",
+      "conclusionLabel": "Advisor conclusion",
+      "conclusionPlaceholder": "Write your assessment and conclusion for the client here…",
+      "download": "Download PDF report",
+      "generating": "Generating…",
+      "backToScenario": "Back to simulation",
+      "backToSimulator": "Back to simulator",
+      "errors": {
+        "unauthorized": "You don't have permission to generate this report.",
+        "rate_limited": "Too many reports generated. Try again in an hour.",
+        "not_found": "Simulation not found.",
+        "render_failed": "Report generation failed. Please try again."
+      }
     }
   },
   "topbar": {

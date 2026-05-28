@@ -254,6 +254,23 @@
       "mix": "תמהיל",
       "compare": "השוואה",
       "scenario": "ריבית ומדד"
+    },
+    "report": {
+      "openReport": "עריכת דוח ללקוח",
+      "title": "דוח ללקוח",
+      "subtitle": "הוסיפו מסקנת יועץ והורידו את הדוח כקובץ PDF.",
+      "conclusionLabel": "מסקנת היועץ",
+      "conclusionPlaceholder": "כתבו כאן את חוות הדעת והמסקנה עבור הלקוח…",
+      "download": "הורדת דוח PDF",
+      "generating": "מפיק דוח…",
+      "backToScenario": "חזרה לסימולציה",
+      "backToSimulator": "חזרה לסימולטור",
+      "errors": {
+        "unauthorized": "אין לך הרשאה להפיק דוח זה.",
+        "rate_limited": "הופקו יותר מדי דוחות. נסו שוב בעוד שעה.",
+        "not_found": "הסימולציה לא נמצאה.",
+        "render_failed": "הפקת הדוח נכשלה. נסו שוב."
+      }
     }
   },
   "topbar": {
