@@ -11,6 +11,7 @@ type NavItem = {
   labelKey: 'dashboard' | 'tasks' | 'settings';
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
+  criticalBadge?: number;
   adminOnly?: boolean;
 };
 
@@ -29,14 +30,17 @@ const BOTTOM_ITEMS: readonly NavItem[] = [
 
 type SidebarProps = {
   tasksBadge?: number;
+  criticalTasksBadge?: number;
 };
 
-export function Sidebar({ tasksBadge }: SidebarProps) {
+export function Sidebar({ tasksBadge, criticalTasksBadge }: SidebarProps) {
   const pathname = usePathname();
   const t = useTranslations('nav');
 
   const topItems = BASE_TOP_ITEMS.map((item) =>
-    item.labelKey === 'tasks' ? { ...item, badge: tasksBadge } : item,
+    item.labelKey === 'tasks'
+      ? { ...item, badge: tasksBadge, criticalBadge: criticalTasksBadge }
+      : item,
   );
 
   return (
@@ -75,6 +79,8 @@ function SidebarLink({
   const Icon = item.icon;
   const isActive = pathname.startsWith(item.href);
   const badge = item.badge && item.badge > 0 ? item.badge : undefined;
+  const criticalBadge =
+    item.criticalBadge && item.criticalBadge > 0 ? item.criticalBadge : undefined;
   const accessibleName = badge ? `${label} — ${t('unreadTasks', { count: badge })}` : label;
 
   return (
@@ -95,9 +101,14 @@ function SidebarLink({
       {badge !== undefined && (
         <span
           aria-hidden="true"
-          className="absolute top-1.5 end-1.5 min-w-4 h-4 px-1 rounded-full bg-brand-gold text-brand-black text-[10px] font-bold flex items-center justify-center"
+          className={[
+            'absolute top-1.5 end-1.5 min-w-4 h-4 px-1 rounded-full text-[10px] font-bold flex items-center justify-center',
+            criticalBadge
+              ? 'task-critical-dot bg-red-600 text-white'
+              : 'bg-brand-gold text-brand-black',
+          ].join(' ')}
         >
-          {badge}
+          {criticalBadge ?? badge}
         </span>
       )}
 

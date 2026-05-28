@@ -12,7 +12,7 @@ import { TasksList } from '@/features/tasks/components/tasks-list';
 import { TasksStatStrip } from '@/features/tasks/components/tasks-stat-strip';
 import { TasksTagFilter } from '@/features/tasks/components/tasks-tag-filter';
 import { TasksViewTabs } from '@/features/tasks/components/tasks-view-tabs';
-import { capCompletedTasks, isOverdue } from '@/features/tasks/domain/task-state';
+import { capCompletedTasks, isImmediateTask, isOverdue } from '@/features/tasks/domain/task-state';
 import { filterTasksByTag } from '@/features/tasks/domain/task-tags';
 import {
   countPendingByView,
@@ -81,6 +81,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
     ]);
 
   const visibleTasks = filterTasksByTag(tasks, sp.tag ?? null);
+  const immediateCount = visibleTasks.filter((task) => isImmediateTask(task)).length;
   const openCount = visibleTasks.filter((task) => task.status === 'pending').length;
   const overdueCount = visibleTasks.filter((task) => isOverdue(task)).length;
   const doneCount = visibleTasks.filter((task) => task.status === 'completed').length;
@@ -100,7 +101,12 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
 
       <TasksTagFilter />
 
-      <TasksStatStrip open={openCount} overdue={overdueCount} done={doneCount} />
+      <TasksStatStrip
+        immediate={immediateCount}
+        open={openCount}
+        overdue={overdueCount}
+        done={doneCount}
+      />
 
       {caseId && caseLabel && (
         <div className="flex items-center justify-between gap-3 rounded-lg border border-brand-gold/40 bg-brand-gold-soft px-3 py-2">

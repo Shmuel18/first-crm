@@ -7,6 +7,7 @@ export type LayoutBootstrap = {
   authenticated: boolean;
   isAdmin: boolean;
   pendingTasks: number;
+  criticalTasks: number;
   unreadNotifications: number;
   profile: {
     first_name: string | null;
@@ -34,6 +35,7 @@ const UNAUTHED: LayoutBootstrap = {
   authenticated: false,
   isAdmin: false,
   pendingTasks: 0,
+  criticalTasks: 0,
   unreadNotifications: 0,
   profile: null,
   recentNotifications: [],
@@ -69,6 +71,7 @@ export const getLayoutBootstrap = cache(async (): Promise<LayoutBootstrap> => {
     authenticated: true,
     isAdmin: envelope.is_admin === true,
     pendingTasks: Number(envelope.pending_tasks ?? 0),
+    criticalTasks: Number(envelope.critical_tasks ?? 0),
     unreadNotifications: Number(envelope.unread_notifications ?? 0),
     profile: profile
       ? {

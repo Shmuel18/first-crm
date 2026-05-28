@@ -12,6 +12,7 @@ import type { Locale } from '@/lib/i18n/direction';
 
 import { TaskFormDialog } from './task-form-dialog';
 import { TasksList } from './tasks-list';
+import { isImmediateTask } from '../domain/task-state';
 import type { TaskWithRelations } from '../types';
 
 type Profile = { id: string; first_name: string | null; last_name: string | null };
@@ -76,6 +77,7 @@ export function CaseActionTaskPopover({
   const cases = caseOption ? [caseOption] : [
     { id: caseId, case_number: caseNumber, label: `#${caseNumber}` },
   ];
+  const immediateCount = tasks.filter(isImmediateTask).length;
 
   return (
     <div className="relative">
@@ -93,9 +95,14 @@ export function CaseActionTaskPopover({
           {tasks.length > 0 && (
             <span
               aria-hidden="true"
-              className="absolute -top-0.5 -end-0.5 min-w-4 h-4 px-1 rounded-full bg-brand-gold-text text-white text-[10px] font-semibold inline-flex items-center justify-center"
+              className={[
+                'absolute -top-0.5 -end-0.5 min-w-4 h-4 px-1 rounded-full text-[10px] font-semibold inline-flex items-center justify-center',
+                immediateCount > 0
+                  ? 'task-critical-dot bg-red-600 text-white'
+                  : 'bg-brand-gold-text text-white',
+              ].join(' ')}
             >
-              {tasks.length}
+              {immediateCount > 0 ? immediateCount : tasks.length}
             </span>
           )}
         </button>
@@ -113,6 +120,12 @@ export function CaseActionTaskPopover({
               {t('openTitle')}{' '}
               <span className="text-neutral-500 font-normal">({tasks.length})</span>
             </h3>
+            {immediateCount > 0 && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2 py-1 text-[11px] font-semibold text-red-700">
+                <span className="task-critical-dot size-1.5 rounded-full bg-red-600" />
+                {t('immediateCount', { count: immediateCount })}
+              </span>
+            )}
             <Link
               href={`/tasks?view=all&case=${caseId}`}
               onClick={() => setOpen(false)}

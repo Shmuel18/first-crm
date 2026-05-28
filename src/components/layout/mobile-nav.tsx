@@ -13,6 +13,7 @@ type NavItem = {
   labelKey: 'dashboard' | 'tasks' | 'settings';
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
+  criticalBadge?: number;
   adminOnly?: boolean;
 };
 
@@ -28,6 +29,7 @@ const BOTTOM_ITEMS: readonly NavItem[] = [
 
 type Props = {
   tasksBadge?: number;
+  criticalTasksBadge?: number;
 };
 
 /**
@@ -36,7 +38,7 @@ type Props = {
  * without this the entire app is unreachable from a phone (logo is the
  * only link). Always renders the trigger; the trigger is hidden on md+.
  */
-export function MobileNav({ tasksBadge }: Props) {
+export function MobileNav({ tasksBadge, criticalTasksBadge }: Props) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const t = useTranslations('nav');
@@ -49,7 +51,9 @@ export function MobileNav({ tasksBadge }: Props) {
   const close = () => setOpen(false);
 
   const topItems = BASE_TOP_ITEMS.map((i) =>
-    i.labelKey === 'tasks' ? { ...i, badge: tasksBadge } : i,
+    i.labelKey === 'tasks'
+      ? { ...i, badge: tasksBadge, criticalBadge: criticalTasksBadge }
+      : i,
   );
 
   return (
@@ -139,6 +143,8 @@ function MobileNavLink({
   const Icon = item.icon;
   const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
   const badge = item.badge && item.badge > 0 ? item.badge : undefined;
+  const criticalBadge =
+    item.criticalBadge && item.criticalBadge > 0 ? item.criticalBadge : undefined;
   const accessibleName = badgeLabel ? `${label} — ${badgeLabel}` : label;
 
   return (
@@ -160,9 +166,14 @@ function MobileNavLink({
       {badge !== undefined && (
         <span
           aria-hidden="true"
-          className="min-w-5 h-5 px-1.5 rounded-full bg-brand-gold text-brand-black text-xs font-bold inline-flex items-center justify-center"
+          className={[
+            'min-w-5 h-5 px-1.5 rounded-full text-xs font-bold inline-flex items-center justify-center',
+            criticalBadge
+              ? 'task-critical-dot bg-red-600 text-white'
+              : 'bg-brand-gold text-brand-black',
+          ].join(' ')}
         >
-          {badge}
+          {criticalBadge ?? badge}
         </span>
       )}
     </Link>

@@ -5,7 +5,14 @@ import type { Locale } from '@/lib/i18n/direction';
 import type { CaseId } from '@/lib/types/branded';
 
 import type { TaskListFilters } from '../schemas/task.schema';
-import type { TaskAssignee, TaskCaseOption, TaskStatus, TaskView, TaskWithRelations } from '../types';
+import type {
+  TaskAssignee,
+  TaskCaseOption,
+  TaskPriority,
+  TaskStatus,
+  TaskView,
+  TaskWithRelations,
+} from '../types';
 
 // Explicit column list (audit-driven). Mirrors the tasks Row type so schema
 // additions are gated by an intentional update here rather than auto-
@@ -35,6 +42,13 @@ const STATUS_ORDER: Record<TaskStatus, number> = {
   snoozed: 2,
   completed: 3,
   cancelled: 4,
+};
+
+const PRIORITY_ORDER: Record<TaskPriority, number> = {
+  critical: 0,
+  high: 1,
+  normal: 2,
+  low: 3,
 };
 
 export async function listTasks(filters: TaskListFilters): Promise<TaskWithRelations[]> {
@@ -72,7 +86,9 @@ export async function listTasks(filters: TaskListFilters): Promise<TaskWithRelat
   // is the contract, and DB CHECKs guarantee the narrowed priority/status.
   const rows = (data ?? []) as unknown as TaskWithRelations[];
   return rows.sort(
-    (a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9),
+    (a, b) =>
+      (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9) ||
+      (PRIORITY_ORDER[a.priority] ?? 9) - (PRIORITY_ORDER[b.priority] ?? 9),
   );
 }
 

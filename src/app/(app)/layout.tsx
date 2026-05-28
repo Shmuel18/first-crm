@@ -17,8 +17,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <TooltipProvider>
       <div className="h-dvh overflow-hidden bg-brand-surface">
-        <Topbar tasksBadge={bootstrap.pendingTasks} />
-      <Sidebar tasksBadge={bootstrap.pendingTasks} />
+        <Topbar tasksBadge={bootstrap.pendingTasks} criticalTasksBadge={bootstrap.criticalTasks} />
+        <Sidebar tasksBadge={bootstrap.pendingTasks} criticalTasksBadge={bootstrap.criticalTasks} />
       {/* The inner viewport owns scrolling. Sticky subheaders compensate for
           viewport padding so they pin flush under the fixed topbar. */}
       <main className="md:ms-16 h-[calc(100dvh-4rem)] overflow-hidden">

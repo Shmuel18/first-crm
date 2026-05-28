@@ -27,7 +27,17 @@ export function isActive(status: TaskStatus): boolean {
   return status === 'pending';
 }
 
+export function isImmediateTask(
+  task: Pick<TaskRow, 'priority' | 'status'>,
+): boolean {
+  return (
+    task.priority === 'critical' &&
+    (task.status === 'pending' || task.status === 'in_progress')
+  );
+}
+
 const PRIORITY_BADGE: Record<TaskPriority, string> = {
+  critical: 'bg-red-600 text-white border-red-600 shadow-sm',
   high: 'bg-red-100 text-red-800 border-red-200',
   normal: 'bg-amber-50 text-amber-800 border-amber-200',
   low: 'bg-neutral-100 text-neutral-700 border-neutral-200',
@@ -38,6 +48,7 @@ export function priorityBadgeClass(priority: TaskPriority): string {
 }
 
 const PRIORITY_EDGE_COLOR: Record<TaskPriority, string> = {
+  critical: '#DC2626',
   high: '#F87171',
   normal: '#C9A961',
   low: '#E5E5E5',

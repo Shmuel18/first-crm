@@ -1,15 +1,22 @@
 import { useTranslations } from 'next-intl';
 
 type Props = {
+  immediate: number;
   open: number;
   overdue: number;
   done: number;
 };
 
-export function TasksStatStrip({ open, overdue, done }: Props) {
+export function TasksStatStrip({ immediate, open, overdue, done }: Props) {
   const t = useTranslations('tasks.stats');
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <StatCard
+        label={t('immediate')}
+        value={immediate}
+        tone={immediate > 0 ? 'text-status-error-text' : 'text-neutral-900'}
+        urgent={immediate > 0}
+      />
       <StatCard label={t('open')} value={open} tone="text-neutral-900" />
       <StatCard
         label={t('overdue')}
@@ -21,9 +28,24 @@ export function TasksStatStrip({ open, overdue, done }: Props) {
   );
 }
 
-function StatCard({ label, value, tone }: { label: string; value: number; tone: string }) {
+function StatCard({
+  label,
+  value,
+  tone,
+  urgent = false,
+}: {
+  label: string;
+  value: number;
+  tone: string;
+  urgent?: boolean;
+}) {
   return (
-    <div className="relative overflow-hidden bg-white border border-neutral-200 rounded-xl px-4 py-3.5 shadow-sm">
+    <div
+      className={[
+        'relative overflow-hidden bg-white border border-neutral-200 rounded-xl px-4 py-3.5 shadow-sm',
+        urgent ? 'task-critical-surface border-red-200 bg-red-50/60' : '',
+      ].join(' ')}
+    >
       <p className="text-xs font-medium text-neutral-500">{label}</p>
       <p className={`font-display text-2xl font-bold tabular-nums leading-tight tracking-tight mt-1 ${tone}`}>
         {value}

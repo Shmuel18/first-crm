@@ -8,7 +8,7 @@ import { AlertTriangle, GripVertical } from 'lucide-react';
 
 import type { Locale } from '@/lib/i18n/direction';
 
-import { formatDueDate, isOverdue, priorityEdgeColor } from '../domain/task-state';
+import { formatDueDate, isImmediateTask, isOverdue, priorityEdgeColor } from '../domain/task-state';
 import { TaskTagChips } from './task-tag-chips';
 import type { TaskWithRelations } from '../types';
 
@@ -24,6 +24,7 @@ export function TaskBoardCard({ task, locale, onOpen }: Props) {
   });
 
   const overdue = isOverdue(task);
+  const immediate = isImmediateTask(task);
   const due = formatDueDate(task.due_date, locale);
   const assignee = task.assignee
     ? [task.assignee.first_name, task.assignee.last_name].filter(Boolean).join(' ').trim()
@@ -44,11 +45,20 @@ export function TaskBoardCard({ task, locale, onOpen }: Props) {
       {...listeners}
       {...attributes}
       onClick={() => onOpen(task)}
-      className="group rounded-lg border border-neutral-200 border-s-4 bg-white p-3 shadow-sm cursor-pointer active:cursor-grabbing touch-none"
+      className={[
+        'group rounded-lg border border-neutral-200 border-s-4 bg-white p-3 shadow-sm cursor-pointer active:cursor-grabbing touch-none',
+        immediate ? 'task-critical-surface bg-red-50/70 border-red-200' : '',
+      ].join(' ')}
     >
       <div className="flex items-start gap-1.5">
         <GripVertical className="size-3.5 text-neutral-300 mt-0.5 shrink-0 group-hover:text-neutral-400" />
         <p className="text-sm font-medium text-neutral-800 leading-snug flex-1">{task.title}</p>
+        {immediate && (
+          <span
+            aria-hidden="true"
+            className="task-critical-dot size-2 rounded-full bg-red-600 shrink-0 mt-1.5"
+          />
+        )}
       </div>
 
       {task.tags.length > 0 && (

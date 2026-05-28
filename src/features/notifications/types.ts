@@ -38,6 +38,7 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
 export type NotificationDataTask = {
   taskTitle: string;
   actorName: string | null;
+  priority?: string | null;
 };
 
 export type NotificationDataCaseStatusOverdue = {

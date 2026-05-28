@@ -13,7 +13,7 @@ export const TASK_STATUS_VALUES = [
 ] as const;
 export type TaskStatus = (typeof TASK_STATUS_VALUES)[number];
 
-export const TASK_PRIORITY_VALUES = ['low', 'normal', 'high'] as const;
+export const TASK_PRIORITY_VALUES = ['critical', 'high', 'normal', 'low'] as const;
 export type TaskPriority = (typeof TASK_PRIORITY_VALUES)[number];
 
 export const TASK_TAG_VALUES = [

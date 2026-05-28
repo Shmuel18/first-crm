@@ -1308,7 +1308,9 @@
     "overdue": "באיחור",
     "showAll": "הצג עוד {count} →",
     "openFull": "הצג הכל",
+    "immediateCount": "{count, plural, =1 {מיידית אחת} other {# מיידיות}}",
     "stats": {
+      "immediate": "מיידיות",
       "open": "פתוחות",
       "overdue": "באיחור",
       "done": "הושלמו"
@@ -1321,6 +1323,7 @@
       "all": "כל המשרד"
     },
     "priority": {
+      "critical": "מיידית",
       "high": "דחופה",
       "normal": "בינונית",
       "low": "רגילה"
@@ -1402,6 +1405,7 @@
     "aCase": "תיק",
     "unknownStatus": "סטטוס לא ידוע",
     "message": {
+      "task_assigned_critical": "{actor} הקצה לך משימה מיידית: {task}",
       "task_assigned": "{actor} הקצה לך משימה: {task}",
       "task_completed": "{actor} השלים משימה שהקצית: {task}",
       "case_status_overdue": "תיק {caseNumber} בסטטוס \"{statusName}\" כבר {days} ימים (סף: {threshold})",

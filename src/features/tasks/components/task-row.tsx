@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 
-import { Calendar, MoreHorizontal, Pencil, Trash2, User } from 'lucide-react';
+import { AlertTriangle, Calendar, MoreHorizontal, Pencil, Trash2, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
@@ -30,6 +30,7 @@ import { deleteTaskAction } from '../actions/delete-task';
 import { reopenTaskAction } from '../actions/reopen-task';
 import {
   formatDueDate,
+  isImmediateTask,
   isOverdue,
   priorityBadgeClass,
   priorityEdgeColor,
@@ -54,6 +55,7 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   const overdue = isOverdue(task);
+  const immediate = isImmediateTask(task);
   const completed = task.status === 'completed';
   const assigneeName =
     [task.assignee?.first_name, task.assignee?.last_name].filter(Boolean).join(' ') ||
@@ -92,7 +94,8 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
       className={[
         'group flex items-start gap-3 px-3 py-3 hover:bg-neutral-50/60 transition-colors',
         completed ? 'opacity-60' : '',
-        overdue ? 'bg-red-50/30' : '',
+        immediate ? 'task-critical-surface bg-red-50/70 hover:bg-red-50' : '',
+        overdue && !immediate ? 'bg-red-50/30' : '',
       ].join(' ')}
     >
       <button
@@ -126,7 +129,11 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
               priorityBadgeClass(task.priority),
             ].join(' ')}
           >
-            <span className="size-1.5 rounded-full bg-current opacity-55" />
+            {immediate ? (
+              <AlertTriangle className="size-3" aria-hidden="true" />
+            ) : (
+              <span className="size-1.5 rounded-full bg-current opacity-55" />
+            )}
             {tp(task.priority)}
           </span>
           {!compact && (

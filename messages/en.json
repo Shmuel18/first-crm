@@ -1308,7 +1308,9 @@
     "overdue": "Overdue",
     "showAll": "Show {count} more →",
     "openFull": "Show all",
+    "immediateCount": "{count, plural, =1 {1 immediate} other {# immediate}}",
     "stats": {
+      "immediate": "Immediate",
       "open": "Open",
       "overdue": "Overdue",
       "done": "Done"
@@ -1321,6 +1323,7 @@
       "all": "Whole office"
     },
     "priority": {
+      "critical": "Immediate",
       "high": "Urgent",
       "normal": "Medium",
       "low": "Normal"
@@ -1402,6 +1405,7 @@
     "aCase": "a case",
     "unknownStatus": "unknown status",
     "message": {
+      "task_assigned_critical": "{actor} assigned you an immediate task: {task}",
       "task_assigned": "{actor} assigned you a task: {task}",
       "task_completed": "{actor} completed a task you assigned: {task}",
       "case_status_overdue": "Case {caseNumber} has been in \"{statusName}\" for {days} days (threshold: {threshold})",
