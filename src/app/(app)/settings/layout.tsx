@@ -1,6 +1,7 @@
 import {
   Bell,
   Building2,
+  Calculator,
   HardDrive,
   MessageSquare,
   Plug,
@@ -56,6 +57,7 @@ const NAV_SECTIONS: SettingsNavSection[] = [
     titleKey: 'system',
     items: [
       { href: '/settings/templates', labelKey: 'templates', icon: MessageSquare, adminOnly: true },
+      { href: '/settings/simulators', labelKey: 'simulators', icon: Calculator, adminOnly: true },
       { href: '/settings/integrations', labelKey: 'integrations', icon: Plug, adminOnly: true },
     ],
   },

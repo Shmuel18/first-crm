@@ -952,11 +952,35 @@
       "office": "Office details",
       "people": "Team & permissions",
       "templates": "Message templates",
+      "simulators": "Simulator thresholds",
       "integrations": "Integrations",
       "import": "Data import",
       "auditLog": "Audit log",
       "recycleBin": "Deleted cases",
       "backup": "Backup & restore"
+    },
+    "simulators": {
+      "pageTitle": "Simulator settings",
+      "pageSubtitle": "Thresholds that control hard blocking for mortgage structure validity.",
+      "title": "Regulatory thresholds",
+      "subtitle": "These values are used by validateMix on the client and again on server save.",
+      "ltvTitle": "LTV caps",
+      "mixRulesTitle": "Mix rules",
+      "minFixedPct": "Minimum fixed",
+      "maxPrimePct": "Maximum prime",
+      "maxEqualPrincipalPct": "Maximum equal principal",
+      "maxTermMonths": "Maximum months",
+      "saved": "Thresholds saved",
+      "propertyKinds": {
+        "first_home": "First home",
+        "replacement": "Replacement home",
+        "investment": "Investment"
+      },
+      "errors": {
+        "unauthorized": "You are not allowed to update thresholds.",
+        "validation": "Some thresholds are invalid.",
+        "unknown": "Saving thresholds failed. Try again."
+      }
     },
     "profile": {
       "title": "Personal profile",

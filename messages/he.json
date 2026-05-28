@@ -952,11 +952,35 @@
       "office": "פרטי המשרד",
       "people": "צוות והרשאות",
       "templates": "תבניות הודעות",
+      "simulators": "ספי סימולטור",
       "integrations": "אינטגרציות",
       "import": "ייבוא נתונים",
       "auditLog": "יומן שינויים",
       "recycleBin": "ארכיון מחוקים",
       "backup": "גיבוי ושחזור"
+    },
+    "simulators": {
+      "pageTitle": "הגדרות סימולטור",
+      "pageSubtitle": "ספים השולטים בחסימה הקשיחה של תקינות מבנה המשכנתא.",
+      "title": "ספי רגולציה",
+      "subtitle": "ערכים אלה משמשים את validateMix בצד הלקוח ושוב בשמירה בשרת.",
+      "ltvTitle": "תקרות אחוז מימון",
+      "mixRulesTitle": "כללי תמהיל",
+      "minFixedPct": "מינימום קבועה",
+      "maxPrimePct": "מקסימום פריים",
+      "maxEqualPrincipalPct": "מקסימום קרן שווה",
+      "maxTermMonths": "מקסימום חודשים",
+      "saved": "הספים נשמרו",
+      "propertyKinds": {
+        "first_home": "דירה ראשונה",
+        "replacement": "דירה חליפית",
+        "investment": "השקעה"
+      },
+      "errors": {
+        "unauthorized": "אין לך הרשאה לעדכן ספים.",
+        "validation": "חלק מהספים אינם תקינים.",
+        "unknown": "שמירת הספים נכשלה. נסה שוב."
+      }
     },
     "profile": {
       "title": "פרופיל אישי",
