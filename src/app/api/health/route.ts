@@ -39,12 +39,14 @@ async function checkDb(): Promise<{ ok: boolean; ms: number; error?: string }> {
   const t0 = Date.now();
   try {
     const supabase = createAdminClient();
-    // Cheapest possible round-trip: SELECT against a row known to exist.
+    // Cheapest possible app-level round-trip: SELECT a single known row.
+    // Avoid count: 'exact' here; readiness should not pay COUNT overhead.
     // The single office_settings row (id=1) is guaranteed by migration 010.
     const { error } = await supabase
       .from('office_settings')
-      .select('id', { head: true, count: 'exact' })
-      .eq('id', 1);
+      .select('id')
+      .eq('id', 1)
+      .maybeSingle();
     if (error) return { ok: false, ms: Date.now() - t0, error: 'db_query_failed' };
     return { ok: true, ms: Date.now() - t0 };
   } catch (err) {
