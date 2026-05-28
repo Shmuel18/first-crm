@@ -542,6 +542,8 @@
       "errors": {
         "unauthorized": "Not authorized to perform this action",
         "generic": "Error saving. Please try again.",
+        "conflict": "This case was updated by someone else while you were editing. Reload to see the latest version, then re-apply your changes.",
+        "conflictReload": "Reload page",
         "mortgageExceedsProperty": "Mortgage cannot exceed property value"
       }
     },

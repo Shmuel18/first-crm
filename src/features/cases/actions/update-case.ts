@@ -7,41 +7,35 @@ import { z } from 'zod';
 
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
+import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
 import { sanitizeRichTextHtml } from '@/lib/utils/sanitize-html';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
 import { CaseFormSchema } from '../schemas/case.schema';
-import type { CaseActionState, CaseFormValues } from '../types';
+import type { CaseActionState } from '../types';
 
 const CaseIdSchema = z.string().uuid();
-
-function formDataToObject(fd: FormData): Record<string, FormDataEntryValue> {
-  const obj: Record<string, FormDataEntryValue> = {};
-  fd.forEach((value, key) => {
-    obj[key] = value;
-  });
-  return obj;
-}
-
-function formDataToValues(fd: FormData): CaseFormValues {
-  const out: CaseFormValues = {};
-  fd.forEach((value, key) => {
-    if (typeof value === 'string') out[key] = value;
-  });
-  return out;
-}
+// Version the edit form round-trips for optimistic locking (migration 056).
+const CaseVersionSchema = z.coerce.number().int().nonnegative();
 
 export async function updateCaseAction(
   _prevState: CaseActionState,
   formData: FormData,
 ): Promise<CaseActionState> {
   const values = formDataToValues(formData);
-  const rawCaseId = formData.get('case_id');
-  const caseIdResult = CaseIdSchema.safeParse(rawCaseId);
+
+  const caseIdResult = CaseIdSchema.safeParse(formData.get('case_id'));
   if (!caseIdResult.success) {
     return { ok: false, error: 'validation', values };
   }
   const caseId = caseIdResult.data;
+
+  // Optimistic-lock guard (migration 056): pin the loaded version in the
+  // UPDATE WHERE so a concurrent save hits 0 rows instead of silently winning.
+  const versionResult = CaseVersionSchema.safeParse(formData.get('version'));
+  if (!versionResult.success) {
+    return { ok: false, error: 'validation', values };
+  }
 
   const parsed = CaseFormSchema.safeParse(formDataToObject(formData));
   if (!parsed.success) {
@@ -62,17 +56,23 @@ export async function updateCaseAction(
   // permission gate, view_case_fee, per migration 027).
   const { fee_amount, expected_income, ...caseFields } = parsed.data;
 
-  const { error } = await supabase
+  const { data: updatedRows, error } = await supabase
     .from('cases')
     .update({
       ...caseFields,
       request_details: sanitizeRichTextHtml(parsed.data.request_details ?? null),
       updated_by: userRes.user.id,
     })
-    .eq('id', caseId);
+    .eq('id', caseId)
+    .eq('version', versionResult.data)
+    .select('id');
 
   if (error) {
     return { ok: false, error: 'unknown', values };
+  }
+  // 0 rows (after the edit check passed) = a concurrent writer bumped version first.
+  if (!updatedRows || updatedRows.length === 0) {
+    return { ok: false, error: 'conflict', values };
   }
 
   // Financials via RPC. Silent skip for non-admin (RPC returns false), but

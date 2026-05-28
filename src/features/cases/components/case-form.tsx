@@ -89,10 +89,14 @@ export function CaseForm({
   const value = (name: string) => fieldDefault(name, submitted, initialRecord);
 
   const genericError = getGenericError(state, t);
+  const isConflict = state.ok === false && state.error === 'conflict';
 
   return (
     <form action={formAction} className="space-y-6" noValidate>
       {mode === 'edit' && initial && <input type="hidden" name="case_id" value={initial.id} />}
+      {mode === 'edit' && initial && (
+        <input type="hidden" name="version" value={initial.version} />
+      )}
 
       <FormSection title={t('sections.caseInfo')}>
         <FormField label={t('fields.casePrimaryType')} error={fieldErrors.case_type_primary_id}>
@@ -204,6 +208,19 @@ export function CaseForm({
         </div>
       </FormSection>
 
+      {isConflict && (
+        <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          <p>{t('errors.conflict')}</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-1 font-medium underline underline-offset-2 hover:text-amber-900"
+          >
+            {t('errors.conflictReload')}
+          </button>
+        </div>
+      )}
+
       {genericError && (
         <div className="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
           {genericError}
@@ -234,5 +251,7 @@ function getGenericError(
   if (state.ok !== false) return null;
   if (state.error === 'idle' || state.error === 'validation') return null;
   if (state.error === 'unauthorized') return t('errors.unauthorized');
+  // Conflict gets its own actionable banner — don't double-render it here.
+  if (state.error === 'conflict') return null;
   return t('errors.generic');
 }
