@@ -23,7 +23,7 @@ import {
 import { getCaseById } from '@/features/cases/services/cases.service';
 import { CaseIncomesBlock } from '@/features/incomes/components/case-incomes-block';
 import { CaseObligationsBlock } from '@/features/obligations/components/case-obligations-block';
-import { userHasPermission } from '@/lib/auth/permissions';
+import { userHasPermissions } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
 
@@ -59,12 +59,16 @@ export default async function CaseDetailPage({ params }: Props) {
   // canSeeFinancials gates the manager-only agreed-fee row in the admin
   // block. The DB enforces the same gate via case_financials RLS — this
   // app-side check is for clean UX (hide the row) + defense-in-depth.
-  const [canSeeFinancials, canArchive, canRestore, canDelete] = await Promise.all([
-    userHasPermission('view_case_fee'),
-    userHasPermission('archive_case'),
-    userHasPermission('restore_archived_case'),
-    userHasPermission('delete_case'),
-  ]);
+  const permissions = await userHasPermissions(
+    'view_case_fee',
+    'archive_case',
+    'restore_archived_case',
+    'delete_case',
+  );
+  const canSeeFinancials = permissions.view_case_fee === true;
+  const canArchive = permissions.archive_case === true;
+  const canRestore = permissions.restore_archived_case === true;
+  const canDelete = permissions.delete_case === true;
 
   const borrowerNames =
     borrowers

@@ -31,11 +31,46 @@ export const userHasPermission = cache(
   },
 );
 
-export async function userHasAllPermissions(...keys: string[]): Promise<boolean> {
-  for (const k of keys) {
-    if (!(await userHasPermission(k))) return false;
+const userHasPermissionsCached = cache(async (cacheKey: string): Promise<Record<string, boolean>> => {
+  const keys = cacheKey.split('\0').filter(Boolean);
+  if (keys.length === 0) return {};
+
+  const supabase = await createClient();
+  const permissionClient = supabase as unknown as {
+    rpc(
+      fn: 'has_permissions',
+      args: { perm_keys: string[] },
+    ): PromiseLike<{ data: unknown; error: { code?: string; message: string } | null }>;
+  };
+  const { data, error } = await permissionClient.rpc('has_permissions', { perm_keys: keys });
+
+  if (error || !data || typeof data !== 'object' || Array.isArray(data)) {
+    if (error) {
+      console.error('has_permissions RPC failed', { keys, err: error.message });
+    }
+    const fallbackPairs = await Promise.all(keys.map(async (key) => [key, await userHasPermission(key)]));
+    return Object.fromEntries(fallbackPairs) as Record<string, boolean>;
   }
-  return true;
+
+  const result = data as Record<string, unknown>;
+  return Object.fromEntries(keys.map((key) => [key, result[key] === true]));
+});
+
+/**
+ * Batch permission helper for routes that need several independent UX gates.
+ * This preserves has_permission() semantics but avoids one Supabase HTTP
+ * round-trip per key. The wrapper keeps a deterministic cache key so React
+ * cache() can dedupe repeated checks inside a render/action.
+ */
+export async function userHasPermissions(...keys: string[]): Promise<Record<string, boolean>> {
+  const uniqueKeys = [...new Set(keys)].sort();
+  const permissions = await userHasPermissionsCached(uniqueKeys.join('\0'));
+  return Object.fromEntries(keys.map((key) => [key, permissions[key] === true]));
+}
+
+export async function userHasAllPermissions(...keys: string[]): Promise<boolean> {
+  const permissions = await userHasPermissions(...keys);
+  return keys.every((key) => permissions[key] === true);
 }
 
 /** True if the current user has the admin role (wraps the is_admin RPC). */
@@ -59,8 +94,9 @@ export const getCurrentUser = cache(async () => {
 export const userCanEditCase = cache(async (caseId: string): Promise<boolean> => {
   const supabase = await createClient();
 
-  if (await userHasPermission('edit_any_case')) return true;
-  if (!(await userHasPermission('edit_own_case'))) return false;
+  const permissions = await userHasPermissions('edit_any_case', 'edit_own_case');
+  if (permissions.edit_any_case === true) return true;
+  if (permissions.edit_own_case !== true) return false;
 
   const user = await getCurrentUser();
   if (!user) return false;
