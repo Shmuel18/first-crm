@@ -73,6 +73,16 @@ for k in SUPABASE_SERVICE_ROLE_KEY DATABASE_URL INTEGRATION_ENCRYPTION_KEY \
 done
 ok "env preserved + required keys present"
 
+# Keep secrets stable, but stamp the non-secret deployment id for this build.
+# next.config.ts consumes it at build time, and /api/health reports it so we
+# can verify which commit is actually running after a swap.
+if grep -qE "^NEXT_DEPLOYMENT_ID=" "$NEW/$ENV_FILE"; then
+  sed -i "s#^NEXT_DEPLOYMENT_ID=.*#NEXT_DEPLOYMENT_ID=$HEAD_SHA#" "$NEW/$ENV_FILE"
+else
+  printf '\nNEXT_DEPLOYMENT_ID=%s\n' "$HEAD_SHA" >> "$NEW/$ENV_FILE"
+fi
+ok "deployment id stamped as $HEAD_SHA"
+
 # --- 3. rollback point -------------------------------------------------------
 log "3/8  Tag running image as $PREV_IMG (rollback point)"
 if docker inspect "$NAME" >/dev/null 2>&1; then

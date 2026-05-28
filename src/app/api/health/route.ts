@@ -24,7 +24,14 @@ import { createAdminClient } from '@/lib/supabase/admin';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const BUILD_ID = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? 'local';
+const vercelCommit = process.env.VERCEL_GIT_COMMIT_SHA;
+const deploymentId = process.env.NEXT_DEPLOYMENT_ID;
+const BUILD_ID =
+  typeof vercelCommit === 'string' && vercelCommit.length > 0
+    ? vercelCommit.slice(0, 7)
+    : typeof deploymentId === 'string' && deploymentId.length > 0
+      ? deploymentId.slice(0, 7)
+      : 'local';
 
 type DeepStatus = 'ok' | 'degraded' | 'unconfigured';
 

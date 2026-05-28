@@ -20,6 +20,7 @@ import { LeadsCardList } from '@/features/leads/components/leads-card-list';
 import { LeadsTable } from '@/features/leads/components/leads-table';
 import { LeadsToolbar } from '@/features/leads/components/leads-toolbar';
 import { listLeads } from '@/features/leads/services/leads.service';
+import { timeAsync } from '@/lib/perf/timing';
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -46,17 +47,25 @@ export default async function CasesListPage({ searchParams }: Props) {
   const pagePromise =
     view === 'leads'
       ? null
-      : listCasesPaged({
-          isArchived: isArchive,
-          advisorId: filters.advisor ?? undefined,
-          statusId: filters.stage ?? undefined,
-          page,
-          pageSize: DASHBOARD_PAGE_SIZE,
-        });
+      : timeAsync(
+          'cases.page.listCasesPaged',
+          () =>
+            listCasesPaged({
+              isArchived: isArchive,
+              advisorId: filters.advisor ?? undefined,
+              statusId: filters.stage ?? undefined,
+              page,
+              pageSize: DASHBOARD_PAGE_SIZE,
+            }),
+          { view, page },
+        );
+  const leadsPromise =
+    view === 'leads' ? timeAsync('cases.page.listLeads', () => listLeads(), { view }) : null;
 
-  const [bootstrap, t] = await Promise.all([
-    getCasesDashboardBootstrap(),
+  const [bootstrap, t, leads] = await Promise.all([
+    timeAsync('cases.page.bootstrap', () => getCasesDashboardBootstrap(), { view }),
     getTranslations('dashboard'),
+    leadsPromise,
   ]);
 
   const {
@@ -72,20 +81,20 @@ export default async function CasesListPage({ searchParams }: Props) {
   let chrome: React.ReactNode = null;
   let scrollContent: React.ReactNode;
   if (view === 'leads') {
-    const leads = await listLeads();
+    const leadRows = leads ?? [];
     chrome = <LeadsToolbar assignees={advisorOptions} />;
     scrollContent =
-      leads.length === 0 ? (
+      leadRows.length === 0 ? (
         <EmptyMessage text={t('viewTabs.leadsEmpty')} />
       ) : (
         <>
           {/* Same breakpoint as the cases dashboard: the table needs ~900px
               of comfort width, so switch to cards below xl. */}
           <div className="xl:hidden">
-            <LeadsCardList leads={leads} />
+            <LeadsCardList leads={leadRows} />
           </div>
           <div className="hidden xl:block">
-            <LeadsTable leads={leads} />
+            <LeadsTable leads={leadRows} />
           </div>
         </>
       );

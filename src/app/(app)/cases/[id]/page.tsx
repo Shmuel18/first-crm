@@ -25,6 +25,7 @@ import { CaseIncomesBlock } from '@/features/incomes/components/case-incomes-blo
 import { CaseObligationsBlock } from '@/features/obligations/components/case-obligations-block';
 import { userHasPermissions } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
+import { timeAsync } from '@/lib/perf/timing';
 import { asCaseId } from '@/lib/types/branded';
 
 type Props = { params: Promise<{ id: string }> };
@@ -42,11 +43,11 @@ export default async function CaseDetailPage({ params }: Props) {
   // fetched by the action bar for the new top-of-page popover.
   const [caseData, borrowers, statusOptions, caseTypeOptions, advisorOptions] =
     await Promise.all([
-      getCaseById(caseId),
-      listBorrowersForCase(caseId),
-      listCaseStatusOptions(),
-      listCaseTypeOptions(),
-      listAdvisorOptions(),
+      timeAsync('cases.detail.getCaseById', () => getCaseById(caseId)),
+      timeAsync('cases.detail.listBorrowersForCase', () => listBorrowersForCase(caseId)),
+      timeAsync('cases.detail.listCaseStatusOptions', () => listCaseStatusOptions()),
+      timeAsync('cases.detail.listCaseTypeOptions', () => listCaseTypeOptions()),
+      timeAsync('cases.detail.listAdvisorOptions', () => listAdvisorOptions()),
     ]);
 
   if (!caseData) notFound();
@@ -59,11 +60,15 @@ export default async function CaseDetailPage({ params }: Props) {
   // canSeeFinancials gates the manager-only agreed-fee row in the admin
   // block. The DB enforces the same gate via case_financials RLS — this
   // app-side check is for clean UX (hide the row) + defense-in-depth.
-  const permissions = await userHasPermissions(
-    'view_case_fee',
-    'archive_case',
-    'restore_archived_case',
-    'delete_case',
+  const permissions = await timeAsync(
+    'cases.detail.permissions',
+    () =>
+      userHasPermissions(
+        'view_case_fee',
+        'archive_case',
+        'restore_archived_case',
+        'delete_case',
+      ),
   );
   const canSeeFinancials = permissions.view_case_fee === true;
   const canArchive = permissions.archive_case === true;
