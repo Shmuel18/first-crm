@@ -17,10 +17,12 @@
   --color-brand-gold: #C9A961;
   --color-brand-gold-light: #E8C77B;
   --color-brand-gold-dark: #B8945A;
-  /* WCAG-AA-safe gold for text/icons on light surfaces (4.6:1 on white).
-     #C9A961 itself only hits 2.2:1, so reserve it for decorative fills, gradients,
-     and text-on-black. */
-  --color-brand-gold-text: #A88840;
+  /* AA-safe gold for text/icons on light surfaces: 4.8:1 on white, 4.6:1 on
+     #FAFAFA — clears WCAG AA (4.5:1) for normal-size text. NOTE: the previous
+     value #A88840 was only 3.35:1 and FAILED AA, despite a comment that claimed
+     4.6:1. #C9A961 itself only hits 2.2:1, so reserve it for decorative fills,
+     gradients, and text-on-black. */
+  --color-brand-gold-text: #8A6E2D;
   --color-brand-surface: #FAFAFA;
   /* Warm gold-tint surface used as backgrounds for gold-themed sections
      (invite link region, backup panel hero, etc.). Pairs well with
@@ -98,7 +100,7 @@
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  --muted-foreground: oklch(0.53 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
@@ -189,7 +191,7 @@
 
   .brand-tagline {
     font-family: var(--font-frank-ruhl), serif;
-    color: #A88840;
+    color: #8A6E2D;
     letter-spacing: 0.25em;
     font-size: 0.625rem;
   }
@@ -264,7 +266,7 @@
   }
   .tiptap-content p.is-editor-empty:first-child::before {
     content: attr(data-placeholder);
-    color: #9ca3af;
+    color: #6b7280;
     pointer-events: none;
     float: inline-start;
     height: 0;

@@ -45,6 +45,8 @@ export function LoginForm() {
     unknown: 'errors.unknown',
   };
 
+  const hasError = Boolean(state.error);
+
   return (
     <form action={formAction} className="space-y-4" noValidate>
       <div className="space-y-2">
@@ -65,6 +67,8 @@ export function LoginForm() {
             required
             autoComplete="email"
             dir="ltr"
+            aria-invalid={hasError || undefined}
+            aria-describedby={hasError ? 'login-error' : undefined}
             className="h-11 bg-neutral-50 ps-10 text-base border-neutral-200 focus:border-brand-gold-text focus-visible:border-brand-gold-text focus-visible:ring-brand-gold-text/40"
             placeholder="moshe@kaufman.co.il"
           />
@@ -87,6 +91,8 @@ export function LoginForm() {
             required
             autoComplete="current-password"
             dir="ltr"
+            aria-invalid={hasError || undefined}
+            aria-describedby={hasError ? 'login-error' : undefined}
             className="h-11 bg-neutral-50 ps-10 text-base border-neutral-200 focus:border-brand-gold-text focus-visible:border-brand-gold-text focus-visible:ring-brand-gold-text/40"
             placeholder="••••••••"
           />
@@ -95,6 +101,7 @@ export function LoginForm() {
 
       {state.error && (
         <div
+          id="login-error"
           role="alert"
           className="rounded-lg bg-red-50 border border-red-200 px-3 py-2.5 text-sm text-red-700"
         >
