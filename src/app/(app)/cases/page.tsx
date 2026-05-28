@@ -7,7 +7,6 @@ import { DashboardFiltersBar } from '@/features/cases/components/dashboard-filte
 import { DashboardPagination } from '@/features/cases/components/dashboard-pagination';
 import { DashboardViewSelector } from '@/features/cases/components/dashboard-view-selector';
 import { DashboardWelcomeBanner } from '@/features/cases/components/dashboard-welcome-banner';
-import { listBankOptions } from '@/features/case-banks/services/case-banks.service';
 import {
   filterCases,
   parseCasePage,
@@ -15,17 +14,12 @@ import {
   parseDashboardFilters,
 } from '@/features/cases/domain/case-filters';
 import { applySort, parseCaseSort } from '@/features/cases/domain/case-sort';
-import {
-  getCurrentProfileName,
-  listAdvisorOptions,
-  listCaseStatusOptions,
-} from '@/features/cases/services/case-lookups.service';
-import { getCaseViewCounts, listCasesPaged } from '@/features/cases/services/cases.service';
-import { userHasPermission } from '@/lib/auth/permissions';
+import { getCasesDashboardBootstrap } from '@/features/cases/services/cases-dashboard-bootstrap.service';
+import { listCasesPaged } from '@/features/cases/services/cases.service';
 import { LeadsCardList } from '@/features/leads/components/leads-card-list';
 import { LeadsTable } from '@/features/leads/components/leads-table';
 import { LeadsToolbar } from '@/features/leads/components/leads-toolbar';
-import { countLeads, listLeads } from '@/features/leads/services/leads.service';
+import { listLeads } from '@/features/leads/services/leads.service';
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -48,8 +42,24 @@ export default async function CasesListPage({ searchParams }: Props) {
   const sort = parseCaseSort(sp);
   const page = parseCasePage(sp);
 
-  const [
-    activePage,
+  const isArchive = view === 'archive';
+  const pagePromise =
+    view === 'leads'
+      ? null
+      : listCasesPaged({
+          isArchived: isArchive,
+          advisorId: filters.advisor ?? undefined,
+          statusId: filters.stage ?? undefined,
+          page,
+          pageSize: DASHBOARD_PAGE_SIZE,
+        });
+
+  const [bootstrap, t] = await Promise.all([
+    getCasesDashboardBootstrap(),
+    getTranslations('dashboard'),
+  ]);
+
+  const {
     profile,
     statusOptions,
     bankOptions,
@@ -57,24 +67,7 @@ export default async function CasesListPage({ searchParams }: Props) {
     counts,
     leadsCount,
     canViewAll,
-    t,
-  ] = await Promise.all([
-    listCasesPaged({
-      isArchived: false,
-      advisorId: filters.advisor ?? undefined,
-      statusId: filters.stage ?? undefined,
-      page,
-      pageSize: DASHBOARD_PAGE_SIZE,
-    }),
-    getCurrentProfileName(),
-    listCaseStatusOptions(),
-    listBankOptions(),
-    listAdvisorOptions(),
-    getCaseViewCounts(),
-    countLeads(),
-    userHasPermission('view_all_cases'),
-    getTranslations('dashboard'),
-  ]);
+  } = bootstrap;
 
   let chrome: React.ReactNode = null;
   let scrollContent: React.ReactNode;
@@ -97,16 +90,8 @@ export default async function CasesListPage({ searchParams }: Props) {
         </>
       );
   } else {
-    const isArchive = view === 'archive';
-    const pageRes = isArchive
-      ? await listCasesPaged({
-          isArchived: true,
-          advisorId: filters.advisor ?? undefined,
-          statusId: filters.stage ?? undefined,
-          page,
-          pageSize: DASHBOARD_PAGE_SIZE,
-        })
-      : activePage;
+    if (!pagePromise) throw new Error('cases page data was not requested');
+    const pageRes = await pagePromise;
     const cases = pageRes.rows;
     const totalCount = pageRes.totalCount;
     const totalPages = Math.max(1, Math.ceil(totalCount / DASHBOARD_PAGE_SIZE));
