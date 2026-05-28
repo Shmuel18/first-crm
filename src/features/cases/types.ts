@@ -84,7 +84,12 @@ export type CaseTableRowData = {
   updatedAt: string;
 };
 
-export type CaseActionError = 'validation' | 'unauthorized' | 'not_found' | 'unknown';
+export type CaseActionError =
+  | 'validation'
+  | 'unauthorized'
+  | 'not_found'
+  | 'conflict'
+  | 'unknown';
 
 /** Values submitted in last attempt - used to preserve form data on error. */
 export type CaseFormValues = Partial<Record<string, string>>;

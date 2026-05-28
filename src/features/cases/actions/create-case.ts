@@ -5,27 +5,12 @@ import { redirect } from 'next/navigation';
 
 import { userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
+import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
 import { sanitizeRichTextHtml } from '@/lib/utils/sanitize-html';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
 import { CaseFormSchema } from '../schemas/case.schema';
-import type { CaseActionState, CaseFormValues } from '../types';
-
-function formDataToObject(fd: FormData): Record<string, FormDataEntryValue> {
-  const obj: Record<string, FormDataEntryValue> = {};
-  fd.forEach((value, key) => {
-    obj[key] = value;
-  });
-  return obj;
-}
-
-function formDataToValues(fd: FormData): CaseFormValues {
-  const out: CaseFormValues = {};
-  fd.forEach((value, key) => {
-    if (typeof value === 'string') out[key] = value;
-  });
-  return out;
-}
+import type { CaseActionState } from '../types';
 
 export async function createCaseAction(
   _prevState: CaseActionState,
