@@ -37,6 +37,8 @@ export const TaskFormSchema = z.object({
   assigned_to: optionalUuid,
   case_id: optionalUuid,
   due_date: optionalDate,
+  // Checkbox: present ('on') only when checked → true, otherwise false.
+  is_private: z.preprocess((v) => v === true || v === 'on' || v === 'true', z.boolean()),
 });
 
 export type TaskFormInput = z.infer<typeof TaskFormSchema>;

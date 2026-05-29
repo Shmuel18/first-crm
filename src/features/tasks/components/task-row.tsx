@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 
-import { AlertTriangle, Calendar, MoreHorizontal, Pencil, Trash2, User } from 'lucide-react';
+import { AlertTriangle, Calendar, Clock, Lock, MoreHorizontal, Pencil, Trash2, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
@@ -28,8 +28,10 @@ import type { Locale } from '@/lib/i18n/direction';
 import { completeTaskAction } from '../actions/complete-task';
 import { deleteTaskAction } from '../actions/delete-task';
 import { reopenTaskAction } from '../actions/reopen-task';
+import { snoozeTaskAction } from '../actions/snooze-task';
 import {
   formatDueDate,
+  formatSnoozeTime,
   isImmediateTask,
   isOverdue,
   priorityBadgeClass,
@@ -82,6 +84,14 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
       } else {
         toast.success(t('toast.deleted'));
       }
+    });
+  };
+
+  const handleSnooze = (preset: 'hour' | 'threeHours' | 'day') => {
+    startTransition(async () => {
+      const res = await snoozeTaskAction(task.id, preset);
+      if (!res.ok) toast.error(t('toast.snoozeFailed'));
+      else toast.success(t('toast.snoozed'));
     });
   };
 
@@ -152,6 +162,12 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
               {t('overdue')}
             </span>
           )}
+          {task.is_private && (
+            <span className="inline-flex items-center gap-1 ps-1.5 pe-2 h-5 rounded-full text-[10px] font-medium border border-brand-gold-dark/40 bg-brand-gold-soft text-brand-gold-text">
+              <Lock className="size-3" aria-hidden="true" />
+              {t('privateLabel')}
+            </span>
+          )}
         </div>
 
         {task.description && !compact && (
@@ -182,6 +198,12 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
               #{task.case.case_number}
             </Link>
           )}
+          {task.status === 'snoozed' && task.snoozed_until && (
+            <span className="inline-flex items-center gap-1 text-orange-600">
+              <Clock className="size-3" />
+              {t('snoozedUntil', { time: formatSnoozeTime(task.snoozed_until, locale) })}
+            </span>
+          )}
         </div>
 
         {task.tags.length > 0 && (
@@ -209,6 +231,23 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
             <Pencil className="size-3.5 me-2" />
             {tc('edit')}
           </DropdownMenuItem>
+          {(task.status === 'pending' || task.status === 'in_progress') && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleSnooze('hour')}>
+                <Clock className="size-3.5 me-2" />
+                {t('snooze.hour')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSnooze('threeHours')}>
+                <Clock className="size-3.5 me-2" />
+                {t('snooze.threeHours')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSnooze('day')}>
+                <Clock className="size-3.5 me-2" />
+                {t('snooze.day')}
+              </DropdownMenuItem>
+            </>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => setConfirmDeleteOpen(true)}

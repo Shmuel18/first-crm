@@ -54,6 +54,9 @@ export type TaskWithRelations = Omit<TaskRow, 'priority' | 'status'> & {
   priority: TaskPriority;
   status: TaskStatus;
   tags: TaskTag[];
+  // `is_private` (migration 098) isn't in the generated Row type yet; declared
+  // here and gated into the service column list, like `tags`.
+  is_private: boolean;
   assignee: TaskAssignee | null;
   creator: TaskAssignee | null;
   case: TaskCaseRef | null;
