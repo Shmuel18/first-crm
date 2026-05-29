@@ -1609,6 +1609,7 @@
       "day": "הזכר לי בעוד יום"
     },
     "snoozedUntil": "חוזר ב-{time}",
+    "changeStatus": "שנה סטטוס",
     "toast": {
       "completed": "המשימה סומנה כהושלמה",
       "reopened": "המשימה נפתחה מחדש",

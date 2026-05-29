@@ -24,7 +24,7 @@ const TASK_SELECT = `
   ${TASK_FULL_COLUMNS},
   assignee:profiles!tasks_assigned_to_fkey(id, first_name, last_name),
   creator:profiles!tasks_created_by_fkey(id, first_name, last_name),
-  case:cases!tasks_case_id_fkey(id, case_number)
+  case:cases!tasks_case_id_fkey(id, case_number, case_borrowers(is_primary, borrower:borrowers(first_name, last_name)))
 ` as const;
 
 const CASE_OPTION_SELECT = `
@@ -84,12 +84,28 @@ export async function listTasks(filters: TaskListFilters): Promise<TaskWithRelat
 
   // PostgREST can't infer the embedded-relation shape; the select string above
   // is the contract, and DB CHECKs guarantee the narrowed priority/status.
-  const rows = (data ?? []) as unknown as TaskWithRelations[];
-  return rows.sort(
-    (a, b) =>
-      (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9) ||
-      (PRIORITY_ORDER[a.priority] ?? 9) - (PRIORITY_ORDER[b.priority] ?? 9),
-  );
+  const rows = (data ?? []) as unknown as Array<
+    Omit<TaskWithRelations, 'case'> & {
+      case: { id: string; case_number: string; case_borrowers?: CaseBorrowerLink[] | null } | null;
+    }
+  >;
+  // Resolve each task's case ref to show the client's name (not the raw number).
+  return rows
+    .map((row) => ({ ...row, case: toCaseRef(row.case) }))
+    .sort(
+      (a, b) =>
+        (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9) ||
+        (PRIORITY_ORDER[a.priority] ?? 9) - (PRIORITY_ORDER[b.priority] ?? 9),
+    );
+}
+
+function toCaseRef(
+  c: { id: string; case_number: string; case_borrowers?: CaseBorrowerLink[] | null } | null,
+): TaskWithRelations['case'] {
+  if (!c) return null;
+  const borrower = primaryBorrower(c.case_borrowers ?? null);
+  const name = [borrower?.first_name, borrower?.last_name].filter(Boolean).join(' ').trim();
+  return { id: c.id, case_number: c.case_number, clientName: name || null };
 }
 
 export async function listTasksForCase(caseId: CaseId): Promise<TaskWithRelations[]> {

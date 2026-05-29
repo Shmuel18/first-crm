@@ -1609,6 +1609,7 @@
       "day": "Remind me in 1 day"
     },
     "snoozedUntil": "Returns {time}",
+    "changeStatus": "Change status",
     "toast": {
       "completed": "Task marked as completed",
       "reopened": "Task reopened",

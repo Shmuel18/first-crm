@@ -79,9 +79,9 @@ export function TaskBoardCard({ task, locale, onOpen }: Props) {
               href={`/cases/${task.case.id}`}
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => e.stopPropagation()}
-              className="text-xs font-mono text-brand-gold-text hover:text-brand-black transition shrink-0"
+              className="text-xs font-medium text-brand-gold-text hover:text-brand-black transition truncate min-w-0"
             >
-              #{task.case.case_number}
+              {task.case.clientName ?? `#${task.case.case_number}`}
             </Link>
           )}
           {due && (
@@ -97,11 +97,11 @@ export function TaskBoardCard({ task, locale, onOpen }: Props) {
           )}
         </div>
         {assignee && (
-          <span
-            title={assignee}
-            className="size-6 rounded-full bg-brand-black text-brand-gold text-[10px] font-bold flex items-center justify-center shrink-0"
-          >
-            {initials}
+          <span className="flex items-center gap-1.5 shrink-0 max-w-[55%]" title={assignee}>
+            <span className="size-5 rounded-full bg-brand-black text-brand-gold text-[9px] font-bold flex items-center justify-center shrink-0">
+              {initials}
+            </span>
+            <span className="truncate text-[11px] text-neutral-600">{assignee}</span>
           </span>
         )}
       </div>

@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { Locale } from '@/lib/i18n/direction';
 
+import { changeTaskStatusAction } from '../actions/change-task-status';
 import { completeTaskAction } from '../actions/complete-task';
 import { deleteTaskAction } from '../actions/delete-task';
 import { reopenTaskAction } from '../actions/reopen-task';
@@ -39,7 +40,7 @@ import {
   statusBadgeClass,
 } from '../domain/task-state';
 import { TaskTagChips } from './task-tag-chips';
-import type { TaskWithRelations } from '../types';
+import type { TaskStatus, TaskWithRelations } from '../types';
 
 type Props = {
   task: TaskWithRelations;
@@ -47,6 +48,10 @@ type Props = {
   onEdit: (task: TaskWithRelations) => void;
   compact?: boolean;
 };
+
+// Statuses offered from the list's status dropdown (parity with the board
+// columns). Snooze isn't here — it has its own timed "remind me" control.
+const LIST_STATUSES: readonly TaskStatus[] = ['pending', 'in_progress', 'completed', 'cancelled'];
 
 export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
   const t = useTranslations('tasks');
@@ -92,6 +97,13 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
       const res = await snoozeTaskAction(task.id, preset);
       if (!res.ok) toast.error(t('toast.snoozeFailed'));
       else toast.success(t('toast.snoozed'));
+    });
+  };
+
+  const handleStatus = (status: TaskStatus) => {
+    startTransition(async () => {
+      const res = await changeTaskStatusAction(task.id, status);
+      if (!res.ok) toast.error(t('toast.actionFailed'));
     });
   };
 
@@ -147,15 +159,30 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
             {tp(task.priority)}
           </span>
           {!compact && (
-            <span
-              className={[
-                'inline-flex items-center gap-1.5 ps-1.5 pe-2 h-5 rounded-full text-[10px] font-medium border',
-                statusBadgeClass(task.status),
-              ].join(' ')}
-            >
-              <span className="size-1.5 rounded-full bg-current opacity-55" />
-              {ts(task.status)}
-            </span>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <button
+                    type="button"
+                    aria-label={t('changeStatus')}
+                    className={[
+                      'inline-flex items-center gap-1.5 ps-1.5 pe-2 h-5 rounded-full text-[10px] font-medium border transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40',
+                      statusBadgeClass(task.status),
+                    ].join(' ')}
+                  />
+                }
+              >
+                <span className="size-1.5 rounded-full bg-current opacity-55" />
+                {ts(task.status)}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="min-w-32">
+                {LIST_STATUSES.filter((s) => s !== task.status).map((s) => (
+                  <DropdownMenuItem key={s} onClick={() => handleStatus(s)}>
+                    {ts(s)}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
           {overdue && (
             <span className="inline-flex items-center px-1.5 h-5 rounded-full text-[10px] font-medium bg-red-100 text-red-700 border border-red-200">
@@ -195,7 +222,7 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
               href={`/cases/${task.case.id}`}
               className="hover:text-brand-gold-text hover:underline decoration-brand-gold underline-offset-2"
             >
-              #{task.case.case_number}
+              {task.case.clientName ?? `#${task.case.case_number}`}
             </Link>
           )}
           {task.status === 'snoozed' && task.snoozed_until && (

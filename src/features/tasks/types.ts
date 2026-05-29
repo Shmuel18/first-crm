@@ -39,6 +39,8 @@ export type TaskAssignee = {
 export type TaskCaseRef = {
   id: string;
   case_number: string;
+  /** Primary borrower's name for display; null → fall back to #case_number. */
+  clientName: string | null;
 };
 
 /** Option shape for the "related case" picker in the task form. */
