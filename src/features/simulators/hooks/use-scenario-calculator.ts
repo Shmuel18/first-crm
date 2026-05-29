@@ -14,6 +14,25 @@ type Params = {
   initialPropertyKind?: PropertyKind;
 };
 
+export interface UseScenarioCalculatorResult {
+  mix: MixInput;
+  propertyKind: PropertyKind;
+  setPropertyKind: (value: PropertyKind) => void;
+  setMoney: (field: 'mortgageAmount' | 'propertyValue' | 'equity', value: number) => void;
+  setTermMonths: (value: number) => void;
+  addTrack: () => void;
+  removeTrack: (id: string) => void;
+  updateTrack: (id: string, patch: Partial<TrackInput>) => void;
+  presetKey: ScenarioPresetKey;
+  applyPreset: (key: Exclude<ScenarioPresetKey, 'custom'>) => void;
+  scenario: StressScenario;
+  setParam: (field: ScenarioParamKey, value: number) => void;
+  setPaymentThreshold: (value: number | null) => void;
+  result: StressResult;
+}
+
+// Prime entry is the Bank-of-Israel base; the engine adds the 1.5% margin, so
+// 4.5 renders as a realistic ~6% effective prime.
 const DEFAULT_MIX: MixInput = {
   mortgageAmount: 800_000_00,
   propertyValue: 1_200_000_00,
@@ -21,12 +40,15 @@ const DEFAULT_MIX: MixInput = {
   defaultTermMonths: 360,
   tracks: [
     newTrack('fixed_unlinked', 270_000_00, 4.5),
-    newTrack('prime', 260_000_00, 6.0),
+    newTrack('prime', 260_000_00, 4.5),
     newTrack('variable_linked', 270_000_00, 4.2, 2.5),
   ],
 };
 
-export function useScenarioCalculator({ initialInput, initialPropertyKind = 'first_home' }: Params = {}) {
+export function useScenarioCalculator({
+  initialInput,
+  initialPropertyKind = 'first_home',
+}: Params = {}): UseScenarioCalculatorResult {
   const [propertyKind, setPropertyKind] = useState<PropertyKind>(initialPropertyKind);
   const [mix, setMix] = useState<MixInput>(initialInput ?? DEFAULT_MIX);
   const [presetKey, setPresetKey] = useState<ScenarioPresetKey>('moderate');

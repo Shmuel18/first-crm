@@ -27,6 +27,28 @@ type Params = {
   thresholds?: RegulatoryThresholds;
 };
 
+export interface UseMixComparisonResult {
+  base: ComparisonBase;
+  setMoney: (field: 'mortgageAmount' | 'propertyValue' | 'equity', value: number) => void;
+  setTermMonths: (value: number) => void;
+  propertyKind: PropertyKind;
+  setPropertyKind: (value: PropertyKind) => void;
+  variants: ReadonlyArray<ComparisonVariant>;
+  activeLabel: string;
+  setActiveLabel: (label: string) => void;
+  activeTracks: ReadonlyArray<TrackInput>;
+  addTrack: () => void;
+  removeTrack: (id: string) => void;
+  updateTrack: (id: string, patch: Partial<TrackInput>) => void;
+  addVariant: () => void;
+  removeVariant: (label: string) => void;
+  canAddVariant: boolean;
+  canRemoveVariant: boolean;
+  comparison: MixComparisonResult;
+  violationsByLabel: Record<string, ReadonlyArray<RegulatoryViolation>>;
+  activeViolations: ReadonlyArray<RegulatoryViolation>;
+}
+
 const DEFAULT_BASE: ComparisonBase = {
   mortgageAmount: 800_000_00,
   propertyValue: 1_200_000_00,
@@ -38,7 +60,7 @@ export function useMixComparison({
   initialBase,
   initialPropertyKind = 'first_home',
   thresholds = DEFAULT_REGULATORY_THRESHOLDS,
-}: Params = {}) {
+}: Params = {}): UseMixComparisonResult {
   const [base, setBase] = useState<ComparisonBase>(initialBase ?? DEFAULT_BASE);
   const [propertyKind, setPropertyKind] = useState<PropertyKind>(initialPropertyKind);
   const [variants, setVariants] = useState<ReadonlyArray<ComparisonVariant>>(defaultVariants);
@@ -117,13 +139,13 @@ function defaultVariants(): ReadonlyArray<ComparisonVariant> {
       label: 'A',
       tracks: [
         newTrack('fixed_unlinked', 270_000_00, 4.5),
-        newTrack('prime', 260_000_00, 6.0),
+        newTrack('prime', 260_000_00, 4.5),
         newTrack('variable_linked', 270_000_00, 4.2, 2.5),
       ],
     },
     {
       label: 'B',
-      tracks: [newTrack('fixed_unlinked', 400_000_00, 4.6), newTrack('prime', 400_000_00, 6.0)],
+      tracks: [newTrack('fixed_unlinked', 400_000_00, 4.6), newTrack('prime', 400_000_00, 4.5)],
     },
   ];
 }

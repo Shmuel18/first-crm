@@ -37,7 +37,7 @@ export function stressMix(input: MixInput, scenario: StressScenario): StressResu
     paymentIncreasePct: increasePct,
     thresholdCrossMonth: thresholdMonth(stressed, scenario.paymentThreshold),
     linkedPrincipalGrowth: linkedGrowth,
-    risk: scoreRisk(increasePct, increase(input.mortgageAmount, linkedGrowth)),
+    risk: scoreRisk(increasePct, pctOf(linkedGrowth, input.mortgageAmount)),
   };
 }
 
@@ -81,6 +81,12 @@ function rateDelta(track: TrackInput, scenario: StressScenario): number {
 function increase(base: number, next: number): number {
   if (base <= 0) return next > 0 ? 100 : 0;
   return Math.round(((next - base) / base) * 1000) / 10;
+}
+
+/** `part` as a percentage of `whole` (one decimal). Used for linked-principal
+ *  growth relative to the original mortgage — feeds the risk score. */
+function pctOf(part: number, whole: number): number {
+  return whole > 0 ? Math.round((part / whole) * 1000) / 10 : 0;
 }
 
 function thresholdMonth(result: MixResult, threshold: number | null): number | null {

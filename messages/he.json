@@ -92,6 +92,8 @@
       "save": "שמור סימולציה",
       "saving": "שומר...",
       "saveSuccess": "הסימולציה נשמרה",
+      "update": "עדכן סימולציה",
+      "updateSuccess": "הסימולציה עודכנה",
       "errors": {
         "unauthorized": "אין הרשאה לשמור סימולציה.",
         "validation": "יש נתונים לא תקינים בסימולציה.",
@@ -126,6 +128,7 @@
         "cpi": "מדד שנתי",
         "grace": "גרייס",
         "extra": "נוסף",
+        "rateNote": "ריבית פריים = בסיס בנק ישראל + 1.5% מרווח; זכאות מוקטנת ב-0.5% ומוגבלת ל-3%.",
         "types": {
           "fixed_unlinked": "קבועה לא צמודה",
           "fixed_linked": "קבועה צמודה",
@@ -158,6 +161,16 @@
         "month": "חודש",
         "payment": "החזר",
         "balance": "יתרה"
+      },
+      "composition": {
+        "title": "הרכב התמהיל",
+        "empty": "הוסיפו מסלולים כדי לראות את הרכב התמהיל.",
+        "families": {
+          "fixed": "קבועה",
+          "prime": "פריים",
+          "variable": "משתנה",
+          "eligibility": "זכאות"
+        }
       }
     },
     "compare": {
@@ -257,6 +270,7 @@
     },
     "report": {
       "openReport": "עריכת דוח ללקוח",
+      "editScenario": "עריכת הסימולציה",
       "title": "דוח ללקוח",
       "subtitle": "הוסיפו מסקנת יועץ והורידו את הדוח כקובץ PDF.",
       "conclusionLabel": "מסקנת היועץ",
@@ -1539,6 +1553,7 @@
     "emptyCase": "אין עדיין משימות לתיק. לחץ למטה ליצירה.",
     "unassigned": "לא מוקצה",
     "overdue": "באיחור",
+    "privateLabel": "אישית",
     "showAll": "הצג עוד {count} →",
     "openFull": "הצג הכל",
     "immediateCount": "{count, plural, =1 {מיידית אחת} other {# מיידיות}}",
@@ -1588,12 +1603,20 @@
       "complete": "סמן כהושלם",
       "reopen": "פתח מחדש"
     },
+    "snooze": {
+      "hour": "הזכר לי בעוד שעה",
+      "threeHours": "הזכר לי בעוד 3 שעות",
+      "day": "הזכר לי בעוד יום"
+    },
+    "snoozedUntil": "חוזר ב-{time}",
     "toast": {
       "completed": "המשימה סומנה כהושלמה",
       "reopened": "המשימה נפתחה מחדש",
       "deleted": "המשימה נמחקה",
       "actionFailed": "הפעולה נכשלה. נסה שוב.",
-      "deleteFailed": "המחיקה נכשלה. נסה שוב."
+      "deleteFailed": "המחיקה נכשלה. נסה שוב.",
+      "snoozed": "המשימה נדחתה — נזכיר לך שוב.",
+      "snoozeFailed": "הדחייה נכשלה. נסה שוב."
     },
     "deleteDialog": {
       "title": "מחיקת משימה",
@@ -1614,7 +1637,10 @@
         "assignee": "מוקצה ל",
         "assigneeUnassigned": "— ללא הקצאה —",
         "case": "תיק קשור",
-        "caseNone": "— ללא תיק —"
+        "caseNone": "— ללא תיק —",
+        "private": "תזכורת אישית (פרטית)",
+        "privateHint": "רק את/ה תראה אותה — גם מנהל לא. משויכת אליך אוטומטית.",
+        "privateAssignee": "תזכורת אישית משויכת אליך אוטומטית."
       },
       "submit": {
         "create": "צור משימה",
@@ -1641,6 +1667,7 @@
       "task_assigned_critical": "{actor} הקצה לך משימה מיידית: {task}",
       "task_assigned": "{actor} הקצה לך משימה: {task}",
       "task_completed": "{actor} השלים משימה שהקצית: {task}",
+      "task_reminder": "תזכורת: {task}",
       "case_status_overdue": "תיק {caseNumber} בסטטוס \"{statusName}\" כבר {days} ימים (סף: {threshold})",
       "unknown": "התראה חדשה"
     }

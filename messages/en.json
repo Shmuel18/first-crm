@@ -92,6 +92,8 @@
       "save": "Save simulation",
       "saving": "Saving...",
       "saveSuccess": "Simulation saved",
+      "update": "Update simulation",
+      "updateSuccess": "Simulation updated",
       "errors": {
         "unauthorized": "You are not allowed to save simulations.",
         "validation": "Some simulation fields are invalid.",
@@ -126,6 +128,7 @@
         "cpi": "Annual CPI",
         "grace": "Grace",
         "extra": "Extra",
+        "rateNote": "Prime rate = Bank of Israel base + 1.5% margin; eligibility is discounted 0.5% and capped at 3%.",
         "types": {
           "fixed_unlinked": "Fixed unlinked",
           "fixed_linked": "Fixed linked",
@@ -158,6 +161,16 @@
         "month": "Month",
         "payment": "Payment",
         "balance": "Balance"
+      },
+      "composition": {
+        "title": "Mix composition",
+        "empty": "Add tracks to see the mix composition.",
+        "families": {
+          "fixed": "Fixed",
+          "prime": "Prime",
+          "variable": "Variable",
+          "eligibility": "Eligibility"
+        }
       }
     },
     "compare": {
@@ -257,6 +270,7 @@
     },
     "report": {
       "openReport": "Edit client report",
+      "editScenario": "Edit simulation",
       "title": "Client report",
       "subtitle": "Add an advisor conclusion and download the report as a PDF.",
       "conclusionLabel": "Advisor conclusion",
@@ -1539,6 +1553,7 @@
     "emptyCase": "No tasks for this case yet. Click below to create one.",
     "unassigned": "Unassigned",
     "overdue": "Overdue",
+    "privateLabel": "Private",
     "showAll": "Show {count} more →",
     "openFull": "Show all",
     "immediateCount": "{count, plural, =1 {1 immediate} other {# immediate}}",
@@ -1588,12 +1603,20 @@
       "complete": "Mark as completed",
       "reopen": "Reopen"
     },
+    "snooze": {
+      "hour": "Remind me in 1 hour",
+      "threeHours": "Remind me in 3 hours",
+      "day": "Remind me in 1 day"
+    },
+    "snoozedUntil": "Returns {time}",
     "toast": {
       "completed": "Task marked as completed",
       "reopened": "Task reopened",
       "deleted": "Task deleted",
       "actionFailed": "Action failed. Please try again.",
-      "deleteFailed": "Delete failed. Please try again."
+      "deleteFailed": "Delete failed. Please try again.",
+      "snoozed": "Task snoozed — we'll remind you.",
+      "snoozeFailed": "Snooze failed. Please try again."
     },
     "deleteDialog": {
       "title": "Delete task",
@@ -1614,7 +1637,10 @@
         "assignee": "Assigned to",
         "assigneeUnassigned": "— Unassigned —",
         "case": "Related case",
-        "caseNone": "— No case —"
+        "caseNone": "— No case —",
+        "private": "Personal (private) reminder",
+        "privateHint": "Only you can see it — not even a manager. Assigned to you automatically.",
+        "privateAssignee": "A personal reminder is assigned to you automatically."
       },
       "submit": {
         "create": "Create task",
@@ -1641,6 +1667,7 @@
       "task_assigned_critical": "{actor} assigned you an immediate task: {task}",
       "task_assigned": "{actor} assigned you a task: {task}",
       "task_completed": "{actor} completed a task you assigned: {task}",
+      "task_reminder": "Reminder: {task}",
       "case_status_overdue": "Case {caseNumber} has been in \"{statusName}\" for {days} days (threshold: {threshold})",
       "unknown": "New notification"
     }

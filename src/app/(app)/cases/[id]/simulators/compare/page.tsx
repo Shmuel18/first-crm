@@ -5,8 +5,8 @@ import { getTranslations } from 'next-intl/server';
 
 import { MixComparison } from '@/features/simulators/components/mix-comparison';
 import { SimulatorToolsNav } from '@/features/simulators/components/simulator-tools-nav';
-import type { ComparisonBase } from '@/features/simulators/hooks/use-mix-comparison';
 import { getRegulatoryThresholds } from '@/features/simulators/services/settings.service';
+import { seedBaseFromCase } from '@/features/simulators/utils/seed-mix';
 import { getCaseById } from '@/features/cases/services/cases.service';
 import { userHasPermission } from '@/lib/auth/permissions';
 import { asCaseId } from '@/lib/types/branded';
@@ -39,14 +39,7 @@ export default async function CaseComparePage({ params }: { params: Promise<{ id
         </Link>
       </header>
       <SimulatorToolsNav basePath={`/cases/${id}/simulators`} />
-      <MixComparison thresholds={thresholds} initialBase={buildInitialBase(caseData)} />
+      <MixComparison thresholds={thresholds} initialBase={seedBaseFromCase(caseData)} />
     </div>
   );
-}
-
-function buildInitialBase(caseData: NonNullable<Awaited<ReturnType<typeof getCaseById>>>): ComparisonBase {
-  const mortgage = Math.max(1, Number(caseData.requested_mortgage_amount ?? 800000) * 100);
-  const property = Math.max(mortgage, Number(caseData.property_value ?? 1200000) * 100);
-  const equity = Math.max(0, Number(caseData.equity ?? property / 100 - mortgage / 100) * 100);
-  return { mortgageAmount: mortgage, propertyValue: property, equity, defaultTermMonths: 360 };
 }

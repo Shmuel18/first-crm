@@ -29,7 +29,7 @@ export const DEFAULT_REGULATORY_THRESHOLDS: RegulatoryThresholds = {
     replacement: 70,
     investment: 50,
   },
-  minFixedPct: 33.3334,
+  minFixedPct: 33.3333,
   maxPrimePct: 66.6667,
   maxEqualPrincipalPct: 30,
   maxTermMonths: 360,

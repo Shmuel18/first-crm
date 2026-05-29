@@ -28,6 +28,7 @@ export function TrackEditor({ tracks, onAdd, onRemove, onUpdate }: Props) {
           {t('add')}
         </button>
       </div>
+      <p className="mb-3 text-xs text-neutral-500">{t('rateNote')}</p>
       <div className="space-y-3">
         {tracks.map((track) => (
           <TrackRow key={track.id} track={track} onRemove={onRemove} onUpdate={onUpdate} />

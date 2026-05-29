@@ -48,5 +48,23 @@ describe('validateMix', () => {
     expect(codes).toContain('prime_share_too_high');
     expect(codes).toContain('term_too_long');
   });
+
+  it('accepts an exact one-third fixed split as a boundary, not a violation', () => {
+    const mix: MixInput = {
+      mortgageAmount: 900_000,
+      propertyValue: 1_800_000,
+      equity: 900_000,
+      defaultTermMonths: 360,
+      tracks: [
+        track({ id: 'fixed', type: 'fixed_unlinked', amount: 300_000 }),
+        track({ id: 'prime', type: 'prime', amount: 300_000 }),
+        track({ id: 'var', type: 'variable_unlinked', amount: 300_000 }),
+      ],
+    };
+
+    const codes = validateMix(mix, DEFAULT_REGULATORY_THRESHOLDS, 'first_home').map((v) => v.code);
+
+    expect(codes).not.toContain('fixed_share_too_low');
+  });
 });
 

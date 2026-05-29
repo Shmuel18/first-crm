@@ -66,6 +66,8 @@ export const RegulatoryThresholdsSchema = z.object({
 });
 
 export const SaveScenarioSchema = z.object({
+  // Present → edit that scenario in place; absent/null → create a new one.
+  scenarioId: z.uuid().nullish(),
   caseId: z.uuid().nullable(),
   primaryBorrowerId: z.uuid().nullable(),
   kind: ScenarioKindSchema,

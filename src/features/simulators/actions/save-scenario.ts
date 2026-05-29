@@ -53,12 +53,14 @@ export async function saveScenarioAction(input: SaveScenarioInput): Promise<Save
   if (parsed.data.caseId) {
     revalidatePath(`/cases/${parsed.data.caseId}`);
     revalidatePath(`/cases/${parsed.data.caseId}/simulators`);
+    revalidatePath(`/cases/${parsed.data.caseId}/simulators/${data}`);
   }
   return { ok: true, scenarioId: data };
 }
 
 function buildSavePayload(input: SaveScenarioInput, resultSnapshot: unknown): Json {
   return {
+    scenarioId: input.scenarioId ?? null,
     caseId: input.caseId,
     primaryBorrowerId: input.primaryBorrowerId,
     kind: input.kind,

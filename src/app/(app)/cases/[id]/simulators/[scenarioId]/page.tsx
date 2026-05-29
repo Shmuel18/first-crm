@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { ArrowRight, Calculator, FileText } from 'lucide-react';
+import { ArrowRight, Calculator, FileText, Pencil } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 import { ScenarioSummary } from '@/features/simulators/components/scenario-summary';
@@ -15,8 +15,9 @@ export default async function CaseScenarioViewPage({
 }) {
   if (!(await userHasPermission('view_simulators'))) redirect('/cases');
   const { id, scenarioId } = await params;
-  const [data, t] = await Promise.all([
+  const [data, canEdit, t] = await Promise.all([
     loadScenarioReport(asMortgageScenarioId(scenarioId)),
+    userHasPermission('use_simulators'),
     getTranslations('simulators'),
   ]);
   if (!data) notFound();
@@ -40,6 +41,15 @@ export default async function CaseScenarioViewPage({
             <ArrowRight className="size-4 rtl:rotate-180" aria-hidden="true" />
             {t('report.backToSimulator')}
           </Link>
+          {canEdit ? (
+            <Link
+              href={`/cases/${id}/simulators/${scenarioId}/edit`}
+              className="inline-flex h-9 items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+            >
+              <Pencil className="size-4" aria-hidden="true" />
+              {t('report.editScenario')}
+            </Link>
+          ) : null}
           <Link
             href={`/cases/${id}/simulators/${scenarioId}/report`}
             className="inline-flex h-9 items-center gap-2 rounded-lg bg-brand-black px-3 text-sm font-semibold text-white hover:bg-neutral-800"

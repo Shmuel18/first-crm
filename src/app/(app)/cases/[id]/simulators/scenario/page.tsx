@@ -6,9 +6,9 @@ import { getTranslations } from 'next-intl/server';
 import { ScenarioCalculator } from '@/features/simulators/components/scenario-calculator';
 import { SimulatorToolsNav } from '@/features/simulators/components/simulator-tools-nav';
 import { getCaseById } from '@/features/cases/services/cases.service';
+import { seedMixFromCase } from '@/features/simulators/utils/seed-mix';
 import { userHasPermission } from '@/lib/auth/permissions';
 import { asCaseId } from '@/lib/types/branded';
-import type { MixInput } from '@/features/simulators/types';
 
 export default async function CaseScenarioPage({ params }: { params: Promise<{ id: string }> }) {
   if (!(await userHasPermission('view_simulators'))) redirect('/cases');
@@ -34,24 +34,7 @@ export default async function CaseScenarioPage({ params }: { params: Promise<{ i
         </Link>
       </header>
       <SimulatorToolsNav basePath={`/cases/${id}/simulators`} />
-      <ScenarioCalculator initialInput={buildInitialInput(caseData)} />
+      <ScenarioCalculator initialInput={seedMixFromCase(caseData)} />
     </div>
   );
-}
-
-function buildInitialInput(caseData: NonNullable<Awaited<ReturnType<typeof getCaseById>>>): MixInput {
-  const mortgage = Math.max(1, Number(caseData.requested_mortgage_amount ?? 800000) * 100);
-  const property = Math.max(mortgage, Number(caseData.property_value ?? 1200000) * 100);
-  const equity = Math.max(0, Number(caseData.equity ?? property / 100 - mortgage / 100) * 100);
-  return {
-    mortgageAmount: mortgage,
-    propertyValue: property,
-    equity,
-    defaultTermMonths: 360,
-    tracks: [
-      { id: 'case-fixed', type: 'fixed_unlinked', amount: Math.round(mortgage / 3), annualRatePct: 4.5, termMonths: 360, repayment: 'spitzer', cpiAnnualPct: null, graceMonths: null },
-      { id: 'case-prime', type: 'prime', amount: Math.round(mortgage / 3), annualRatePct: 6, termMonths: 360, repayment: 'spitzer', cpiAnnualPct: null, graceMonths: null },
-      { id: 'case-variable', type: 'variable_linked', amount: mortgage - Math.round(mortgage / 3) * 2, annualRatePct: 4.2, termMonths: 360, repayment: 'spitzer', cpiAnnualPct: 2.5, graceMonths: null },
-    ],
-  };
 }

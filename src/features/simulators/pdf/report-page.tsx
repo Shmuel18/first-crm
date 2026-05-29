@@ -2,7 +2,7 @@ import { Page, Text, View } from '@react-pdf/renderer';
 
 import type { Locale } from '@/lib/i18n/direction';
 
-import type { CurvePoint } from '../types';
+import { sampleAnnualCurve } from '../domain/curve-sampling';
 import { ReportChart } from './chart-svg';
 import type { ScenarioReportData } from './report-data.service';
 import { fmtDate } from './report-formatters';
@@ -39,10 +39,10 @@ export function ReportPage({ data, strings, locale }: Props) {
       <ResultsSection data={data} strings={strings} locale={locale} />
 
       <Text style={styles.sectionTitle}>{strings.charts.paymentTitle}</Text>
-      <ReportChart points={sampleYearly(data.result.paymentCurve)} color={COLOR_CHART} caption={strings.charts.yearsAxis} />
+      <ReportChart points={sampleAnnualCurve(data.result.paymentCurve)} color={COLOR_CHART} caption={strings.charts.yearsAxis} />
 
       <Text style={styles.sectionTitle}>{strings.charts.balanceTitle}</Text>
-      <ReportChart points={sampleYearly(data.result.balanceCurve)} color={COLOR_CHART_ALT} caption={strings.charts.yearsAxis} />
+      <ReportChart points={sampleAnnualCurve(data.result.balanceCurve)} color={COLOR_CHART_ALT} caption={strings.charts.yearsAxis} />
 
       <ConclusionSection data={data} strings={strings} locale={locale} />
 
@@ -54,10 +54,4 @@ export function ReportPage({ data, strings, locale }: Props) {
       </View>
     </Page>
   );
-}
-
-function sampleYearly(curve: ReadonlyArray<CurvePoint>): ReadonlyArray<{ year: number; value: number }> {
-  return curve
-    .filter((point) => point.monthIndex % 12 === 0)
-    .map((point) => ({ year: point.monthIndex / 12, value: point.value }));
 }
