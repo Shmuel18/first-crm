@@ -14,6 +14,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { BackArrow } from '@/components/shared/back-arrow';
+import { Tooltip } from '@/components/ui/tooltip';
 import { parseLocale } from '@/lib/i18n/direction';
 
 import { syncDriveDocumentsAction } from '../actions/sync-drive-documents';
@@ -85,13 +86,15 @@ export function DocumentsActionBar({
     <div className="bg-brand-gold-soft text-neutral-900 sticky top-[-1rem] sm:top-[-1.5rem] z-20 shadow-sm -mx-4 px-4 sm:-mx-6 sm:px-6 py-3 border-b border-brand-gold/20">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <Link
-            href={`/cases/${caseId}`}
-            aria-label={tPage('backToCase')}
-            className="inline-flex items-center justify-center size-7 border border-neutral-300 hover:border-brand-gold-text text-neutral-700 hover:text-brand-gold-text bg-white/60 rounded-md transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
-          >
-            <BackArrow locale={locale} className="size-3.5" aria-hidden="true" />
-          </Link>
+          <Tooltip content={tPage('backToCase')}>
+            <Link
+              href={`/cases/${caseId}`}
+              aria-label={tPage('backToCase')}
+              className="inline-flex items-center justify-center size-7 border border-neutral-300 hover:border-brand-gold-text text-neutral-700 hover:text-brand-gold-text bg-white/60 rounded-md transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
+            >
+              <BackArrow locale={locale} className="size-3.5" aria-hidden="true" />
+            </Link>
+          </Tooltip>
           <div className="flex items-center gap-2 flex-wrap min-w-0">
             <span className="font-display text-base font-semibold truncate max-w-md">
               {borrowerNames || tCase('withBorrowers')}
@@ -141,13 +144,15 @@ export function DocumentsActionBar({
             href={driveFolderId ? `https://drive.google.com/drive/folders/${driveFolderId}` : undefined}
             disabled={!driveFolderId}
           />
-          <Link
-            href={`/cases/${caseId}/history`}
-            aria-label={t('history')}
-            className="flex size-8 items-center justify-center rounded-md text-neutral-700 transition hover:bg-white hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
-          >
-            <ClipboardList className="size-3.5" aria-hidden="true" />
-          </Link>
+          <Tooltip content={t('history')}>
+            <Link
+              href={`/cases/${caseId}/history`}
+              aria-label={t('history')}
+              className="flex size-8 items-center justify-center rounded-md text-neutral-700 transition hover:bg-white hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
+            >
+              <ClipboardList className="size-3.5" aria-hidden="true" />
+            </Link>
+          </Tooltip>
         </div>
       </div>
     </div>
@@ -167,8 +172,8 @@ function BarIcon({
 }) {
   const className =
     'size-8 rounded-md text-neutral-700 hover:bg-white hover:text-brand-gold-text transition flex items-center justify-center disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-neutral-700 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50';
-  if (href && !disabled) {
-    return (
+  const trigger =
+    href && !disabled ? (
       <a
         href={href}
         target="_blank"
@@ -178,11 +183,10 @@ function BarIcon({
       >
         <Icon className="size-3.5" aria-hidden="true" />
       </a>
+    ) : (
+      <button type="button" disabled={disabled} aria-label={title} className={className}>
+        <Icon className="size-3.5" aria-hidden="true" />
+      </button>
     );
-  }
-  return (
-    <button type="button" disabled={disabled} aria-label={title} className={className}>
-      <Icon className="size-3.5" aria-hidden="true" />
-    </button>
-  );
+  return <Tooltip content={title}>{trigger}</Tooltip>;
 }
