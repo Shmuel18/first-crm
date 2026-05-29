@@ -41,14 +41,19 @@ export async function createTaskAction(
 
   // `tags` is a column from migration 034, not yet in the generated types; the
   // typed insert rejects excess keys, so cast (the value is still sent at runtime).
+  // A private task is a reminder to oneself — force self-assignment so it
+  // satisfies the tasks_private_self_assigned CHECK and stays invisible to others.
+  const isPrivate = parsed.data.is_private;
+  const assignee = isPrivate ? userId : parsed.data.assigned_to ?? null;
   const payload = {
     title: parsed.data.title,
     description: parsed.data.description ?? null,
     priority: parsed.data.priority ?? 'normal',
-    assigned_to: parsed.data.assigned_to ?? null,
+    assigned_to: assignee,
     case_id: parsed.data.case_id ?? null,
     due_date: parsed.data.due_date ?? null,
     tags: parseTaskTags(formData.getAll('tags').map(String)),
+    is_private: isPrivate,
     created_by: userId,
     updated_by: userId,
   } as TaskInsert;
@@ -61,7 +66,6 @@ export async function createTaskAction(
 
   if (error || !inserted) return { ok: false, error: 'unknown', values };
 
-  const assignee = parsed.data.assigned_to ?? null;
   if (assignee && assignee !== userId) {
     await sendTaskNotificationEmail({
       recipientId: assignee,

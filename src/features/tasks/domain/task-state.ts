@@ -86,6 +86,20 @@ export function formatDueDate(due: string | null, locale: 'he' | 'en'): string {
   return DUE_DATE_FORMAT[locale].format(date);
 }
 
+// Snooze times carry a clock component ("returns 14 Mar, 09:00"), unlike the
+// date-only due date. Cached like DUE_DATE_FORMAT.
+const SNOOZE_TIME_FORMAT: Record<'he' | 'en', Intl.DateTimeFormat> = {
+  he: new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+  en: new Intl.DateTimeFormat('en-US', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+};
+
+export function formatSnoozeTime(iso: string | null, locale: 'he' | 'en'): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (!Number.isFinite(date.getTime())) return '';
+  return SNOOZE_TIME_FORMAT[locale].format(date);
+}
+
 /**
  * Keep the board's "completed" column bounded: all active tasks pass through,
  * but only the first `limit` completed tasks are kept (the list is already

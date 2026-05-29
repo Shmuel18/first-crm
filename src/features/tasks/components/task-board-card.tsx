@@ -4,7 +4,8 @@ import Link from 'next/link';
 
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { AlertTriangle, GripVertical } from 'lucide-react';
+import { AlertTriangle, GripVertical, Lock } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import type { Locale } from '@/lib/i18n/direction';
 
@@ -19,6 +20,7 @@ type Props = {
 };
 
 export function TaskBoardCard({ task, locale, onOpen }: Props) {
+  const t = useTranslations('tasks');
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task.id,
   });
@@ -53,6 +55,9 @@ export function TaskBoardCard({ task, locale, onOpen }: Props) {
       <div className="flex items-start gap-1.5">
         <GripVertical className="size-3.5 text-neutral-300 mt-0.5 shrink-0 group-hover:text-neutral-400" />
         <p className="text-sm font-medium text-neutral-800 leading-snug flex-1">{task.title}</p>
+        {task.is_private && (
+          <Lock className="size-3 text-brand-gold-text shrink-0 mt-1" aria-label={t('privateLabel')} />
+        )}
         {immediate && (
           <span
             aria-hidden="true"

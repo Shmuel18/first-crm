@@ -18,7 +18,7 @@ import type {
 // additions are gated by an intentional update here rather than auto-
 // propagating to clients via `*`.
 const TASK_FULL_COLUMNS =
-  'id, title, description, status, priority, tags, due_date, snoozed_until, completed_at, completed_by, case_id, lead_id, assigned_to, automation_rule_id, is_automated, google_calendar_event_id, metadata, deleted_at, created_at, created_by, updated_at, updated_by' as const;
+  'id, title, description, status, priority, tags, is_private, due_date, snoozed_until, completed_at, completed_by, case_id, lead_id, assigned_to, automation_rule_id, is_automated, google_calendar_event_id, metadata, deleted_at, created_at, created_by, updated_at, updated_by' as const;
 
 const TASK_SELECT = `
   ${TASK_FULL_COLUMNS},

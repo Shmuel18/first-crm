@@ -5,12 +5,12 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
-import { CheckSquare, LayoutDashboard, Menu, Settings, X } from 'lucide-react';
+import { Calculator, CheckSquare, LayoutDashboard, Menu, Settings, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 type NavItem = {
   href: string;
-  labelKey: 'dashboard' | 'tasks' | 'settings';
+  labelKey: 'dashboard' | 'tasks' | 'simulators' | 'settings';
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
   criticalBadge?: number;
@@ -21,6 +21,7 @@ type NavItem = {
 const BASE_TOP_ITEMS: readonly NavItem[] = [
   { href: '/cases', labelKey: 'dashboard', icon: LayoutDashboard },
   { href: '/tasks', labelKey: 'tasks', icon: CheckSquare },
+  { href: '/simulators', labelKey: 'simulators', icon: Calculator },
 ] as const;
 
 const BOTTOM_ITEMS: readonly NavItem[] = [

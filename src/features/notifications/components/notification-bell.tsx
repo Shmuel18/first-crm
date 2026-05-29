@@ -72,10 +72,14 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
         });
       }
       case 'task_assigned':
-      case 'task_completed': {
+      case 'task_completed':
+      case 'task_reminder': {
         const d = n.data as Partial<NotificationDataTask>;
         const actor = d.actorName || t('someone');
         const task = d.taskTitle || t('aTask');
+        if (n.type === 'task_reminder') {
+          return t('message.task_reminder', { task });
+        }
         if (n.type === 'task_assigned' && d.priority === 'critical') {
           return t('message.task_assigned_critical', { actor, task });
         }

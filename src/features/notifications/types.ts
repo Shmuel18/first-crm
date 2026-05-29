@@ -6,6 +6,7 @@ export const NOTIFICATION_TYPE_VALUES = [
   'task_assigned',
   'task_completed',
   'case_status_overdue',
+  'task_reminder',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPE_VALUES)[number];
 
@@ -60,6 +61,7 @@ export type NotificationDataByType = {
   task_assigned: NotificationDataTask;
   task_completed: NotificationDataTask;
   case_status_overdue: NotificationDataCaseStatusOverdue;
+  task_reminder: NotificationDataTask;
 };
 
 /**

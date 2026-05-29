@@ -50,6 +50,13 @@
      named so semantic intent survives a Tailwind palette change. */
   --color-status-error-text: #991B1B;
   --color-status-success-text: #15803D;
+  /* Simulator chart series — distinct, accessible hues for overlaying up to
+     four mortgage mixes (A/B/C/D) on one chart. Named tokens keep hex out of
+     component classes and let the PDF SVG renderer reuse the same palette. */
+  --color-sim-series-1: #A88840;
+  --color-sim-series-2: #2563EB;
+  --color-sim-series-3: #0F9D58;
+  --color-sim-series-4: #7C3AED;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);

@@ -59,12 +59,233 @@
   "nav": {
     "dashboard": "דשבורד",
     "tasks": "משימות",
+    "simulators": "סימולטורים",
     "team": "צוות",
     "templates": "תבניות",
     "auditLog": "יומן שינויים",
     "settings": "הגדרות",
     "primary": "ניווט ראשי",
     "unreadTasks": "{count, plural, =1 {משימה אחת פתוחה} other {# משימות פתוחות}}"
+  },
+  "simulators": {
+    "eyebrow": "סימולטורי משכנתא",
+    "backToCase": "חזרה לתיק",
+    "saved": {
+      "title": "סימולציות שמורות",
+      "new": "סימולציה חדשה",
+      "empty": "עדיין אין סימולציות שמורות",
+      "tracks": "מסלולים"
+    },
+    "violations": {
+      "title": "אי אפשר לשמור עד שמבנה המשכנתא תקין",
+      "amount_mismatch": "סכום המסלולים הוא {actual}, אבל סכום המשכנתא הוא {limit}.",
+      "ltv_exceeded": "אחוז המימון הוא {actual}; התקרה היא {limit}.",
+      "fixed_share_too_low": "חלק המסלולים הקבועים הוא {actual}; המינימום הוא {limit}.",
+      "prime_share_too_high": "חלק הפריים הוא {actual}; המקסימום הוא {limit}.",
+      "equal_principal_share_too_high": "חלק הקרן השווה הוא {actual}; המקסימום הוא {limit}.",
+      "term_too_long": "תקופת המשכנתא היא {actual} חודשים; המקסימום הוא {limit} חודשים."
+    },
+    "mix": {
+      "title": "סימולטור תמהיל",
+      "caseTitle": "תמהיל לתיק",
+      "subtitle": "הזן ריביות ידנית וקבל חישוב חי בלי פנייה לשרת.",
+      "save": "שמור סימולציה",
+      "saving": "שומר...",
+      "saveSuccess": "הסימולציה נשמרה",
+      "update": "עדכן סימולציה",
+      "updateSuccess": "הסימולציה עודכנה",
+      "errors": {
+        "unauthorized": "אין הרשאה לשמור סימולציה.",
+        "validation": "יש נתונים לא תקינים בסימולציה.",
+        "rate_limited": "בוצעו יותר מדי שמירות. נסה שוב מאוחר יותר.",
+        "regulatory": "מבנה המשכנתא לא עומד בספים.",
+        "unknown": "שמירת הסימולציה נכשלה. נסה שוב."
+      },
+      "inputs": {
+        "title": "נתוני בסיס",
+        "scenarioTitle": "שם הסימולציה",
+        "propertyKind": "סוג נכס",
+        "propertyValue": "שווי נכס",
+        "equity": "הון עצמי",
+        "mortgageAmount": "סכום משכנתא",
+        "termMonths": "תקופה בחודשים",
+        "advisorConclusion": "מסקנת יועץ",
+        "propertyKinds": {
+          "first_home": "דירה יחידה",
+          "replacement": "משפר דיור",
+          "investment": "השקעה"
+        }
+      },
+      "tracks": {
+        "title": "מסלולים",
+        "add": "הוסף מסלול",
+        "remove": "הסר מסלול",
+        "type": "סוג",
+        "amount": "סכום",
+        "rate": "ריבית",
+        "term": "חודשים",
+        "repayment": "החזר",
+        "cpi": "מדד שנתי",
+        "grace": "גרייס",
+        "extra": "נוסף",
+        "rateNote": "ריבית פריים = בסיס בנק ישראל + 1.5% מרווח; זכאות מוקטנת ב-0.5% ומוגבלת ל-3%.",
+        "types": {
+          "fixed_unlinked": "קבועה לא צמודה",
+          "fixed_linked": "קבועה צמודה",
+          "prime": "פריים",
+          "variable_unlinked": "משתנה לא צמודה",
+          "variable_linked": "משתנה צמודה",
+          "eligibility": "זכאות"
+        },
+        "repayments": {
+          "spitzer": "שפיצר",
+          "equal_principal": "קרן שווה",
+          "balloon": "בלון/גרייס"
+        }
+      },
+      "results": {
+        "title": "תוצאה חיה",
+        "firstPayment": "החזר ראשון",
+        "averagePayment": "החזר ממוצע",
+        "maxPayment": "החזר מקסימלי",
+        "totalCost": "עלות כוללת",
+        "totalInterest": "סך ריבית",
+        "ltv": "LTV",
+        "snapshotNote": "השמירה תייצר snapshot מחושב בשרת לדוח עתידי.",
+        "paymentCurve": "גרף החזר",
+        "balanceCurve": "גרף יתרת קרן",
+        "yearLabel": "שנה {year}"
+      },
+      "table": {
+        "title": "לוח סילוקין - 12 חודשים ראשונים",
+        "month": "חודש",
+        "payment": "החזר",
+        "balance": "יתרה"
+      },
+      "composition": {
+        "title": "הרכב התמהיל",
+        "empty": "הוסיפו מסלולים כדי לראות את הרכב התמהיל.",
+        "families": {
+          "fixed": "קבועה",
+          "prime": "פריים",
+          "variable": "משתנה",
+          "eligibility": "זכאות"
+        }
+      }
+    },
+    "compare": {
+      "title": "השוואת תמהילים",
+      "caseTitle": "השוואת תמהילים לתיק",
+      "subtitle": "בנה 2–4 תמהילים חלופיים לאותה הלוואה והשווה ביניהם בזמן אמת.",
+      "baseTitle": "נתוני הלוואה משותפים",
+      "baseSubtitle": "הנתונים האלה חלים על כל התמהילים בהשוואה.",
+      "editTitle": "עריכת תמהילים",
+      "editHint": "החלף לשוניות כדי לערוך כל תמהיל",
+      "variantsLabel": "תמהילים בהשוואה",
+      "variant": "תמהיל {label}",
+      "addVariant": "הוסף תמהיל",
+      "removeVariant": "הסר תמהיל {label}",
+      "overlayTitle": "החזר לאורך זמן",
+      "yearLabel": "שנה {year}",
+      "ranking": {
+        "cheapest": "הכי זול",
+        "mostStable": "הכי יציב",
+        "mostFlexible": "הכי גמיש",
+        "riskiest": "הכי מסוכן",
+        "variant": "תמהיל {label}"
+      },
+      "table": {
+        "title": "טבלת השוואה",
+        "metric": "פרמטר",
+        "firstPayment": "החזר ראשון",
+        "maxPayment": "החזר מקסימלי",
+        "totalCost": "עלות כוללת",
+        "totalInterest": "סך ריבית",
+        "totalIndexation": "סך הצמדה",
+        "paymentRisk": "סיכון לעליית החזר",
+        "balanceY5": "יתרה אחרי 5 שנים",
+        "balanceY10": "יתרה אחרי 10 שנים",
+        "balanceY15": "יתרה אחרי 15 שנים",
+        "bestNote": "התאים המודגשים מסמנים את הערך הטוב ביותר בכל שורה (נמוך יותר = עדיף)."
+      }
+    },
+    "scenario": {
+      "title": "סימולטור ריבית ומדד",
+      "subtitle": "בדוק כיצד עליית ריבית או מדד תשפיע על ההחזר החודשי לאורך חיי המשכנתא.",
+      "caseTitle": "תרחיש ריבית ומדד לתיק",
+      "mixTitle": "נתוני המשכנתא",
+      "mixSubtitle": "הזן את התמהיל שעליו ייבחן התרחיש.",
+      "scenarioTitle": "הגדרת התרחיש",
+      "scenarioSubtitle": "בחר תרחיש מוכן או התאם את הפרמטרים ידנית.",
+      "risk": {
+        "label": "רמת סיכון",
+        "low": "נמוך",
+        "medium": "בינוני",
+        "high": "גבוה"
+      },
+      "presets": {
+        "label": "תרחיש מוכן",
+        "calm": "רגוע",
+        "moderate": "בינוני",
+        "strict": "מחמיר",
+        "custom": "מותאם אישית"
+      },
+      "params": {
+        "title": "פרמטרים של התרחיש",
+        "primeDelta": "שינוי בריבית הפריים (%)",
+        "variableDelta": "שינוי בריבית המשתנה (%)",
+        "cpiAnnual": "מדד שנתי (%)",
+        "changeMonth": "חודש השינוי",
+        "monthOption": "חודש {month}",
+        "paymentThreshold": "רף החזר חודשי",
+        "thresholdPlaceholder": "לדוגמה: 6,000"
+      },
+      "result": {
+        "title": "תוצאת התרחיש",
+        "paymentIncrease": "עליית ההחזר",
+        "thresholdCross": "חציית רף ההחזר",
+        "noCross": "לא נחצה",
+        "monthValue": "חודש {month}",
+        "linkedGrowth": "גידול בקרן הצמודה",
+        "compareTitle": "השוואה: בלי שינוי מול תרחיש",
+        "metric": "פרמטר",
+        "baseline": "בלי שינוי",
+        "stressed": "תרחיש",
+        "delta": "הפרש",
+        "metrics": {
+          "firstPayment": "החזר ראשון",
+          "maxPayment": "החזר מקסימלי",
+          "totalInterest": "סך ריבית",
+          "totalIndexation": "סך הצמדה",
+          "totalCost": "עלות כוללת"
+        },
+        "overlayTitle": "החזר לאורך זמן"
+      }
+    },
+    "tools": {
+      "label": "כלי סימולטור",
+      "mix": "תמהיל",
+      "compare": "השוואה",
+      "scenario": "ריבית ומדד"
+    },
+    "report": {
+      "openReport": "עריכת דוח ללקוח",
+      "editScenario": "עריכת הסימולציה",
+      "title": "דוח ללקוח",
+      "subtitle": "הוסיפו מסקנת יועץ והורידו את הדוח כקובץ PDF.",
+      "conclusionLabel": "מסקנת היועץ",
+      "conclusionPlaceholder": "כתבו כאן את חוות הדעת והמסקנה עבור הלקוח…",
+      "download": "הורדת דוח PDF",
+      "generating": "מפיק דוח…",
+      "backToScenario": "חזרה לסימולציה",
+      "backToSimulator": "חזרה לסימולטור",
+      "errors": {
+        "unauthorized": "אין לך הרשאה להפיק דוח זה.",
+        "rate_limited": "הופקו יותר מדי דוחות. נסו שוב בעוד שעה.",
+        "not_found": "הסימולציה לא נמצאה.",
+        "render_failed": "הפקת הדוח נכשלה. נסו שוב."
+      }
+    }
   },
   "topbar": {
     "newCase": "פתיחת תיק חדש",
@@ -857,11 +1078,35 @@
       "office": "פרטי המשרד",
       "people": "צוות והרשאות",
       "templates": "תבניות הודעות",
+      "simulators": "ספי סימולטור",
       "integrations": "אינטגרציות",
       "import": "ייבוא נתונים",
       "auditLog": "יומן שינויים",
       "recycleBin": "ארכיון מחוקים",
       "backup": "גיבוי ושחזור"
+    },
+    "simulators": {
+      "pageTitle": "הגדרות סימולטור",
+      "pageSubtitle": "ספים השולטים בחסימה הקשיחה של תקינות מבנה המשכנתא.",
+      "title": "ספי רגולציה",
+      "subtitle": "ערכים אלה משמשים את validateMix בצד הלקוח ושוב בשמירה בשרת.",
+      "ltvTitle": "תקרות אחוז מימון",
+      "mixRulesTitle": "כללי תמהיל",
+      "minFixedPct": "מינימום קבועה",
+      "maxPrimePct": "מקסימום פריים",
+      "maxEqualPrincipalPct": "מקסימום קרן שווה",
+      "maxTermMonths": "מקסימום חודשים",
+      "saved": "הספים נשמרו",
+      "propertyKinds": {
+        "first_home": "דירה ראשונה",
+        "replacement": "דירה חליפית",
+        "investment": "השקעה"
+      },
+      "errors": {
+        "unauthorized": "אין לך הרשאה לעדכן ספים.",
+        "validation": "חלק מהספים אינם תקינים.",
+        "unknown": "שמירת הספים נכשלה. נסה שוב."
+      }
     },
     "profile": {
       "title": "פרופיל אישי",
@@ -1308,6 +1553,7 @@
     "emptyCase": "אין עדיין משימות לתיק. לחץ למטה ליצירה.",
     "unassigned": "לא מוקצה",
     "overdue": "באיחור",
+    "privateLabel": "אישית",
     "showAll": "הצג עוד {count} →",
     "openFull": "הצג הכל",
     "immediateCount": "{count, plural, =1 {מיידית אחת} other {# מיידיות}}",
@@ -1357,12 +1603,20 @@
       "complete": "סמן כהושלם",
       "reopen": "פתח מחדש"
     },
+    "snooze": {
+      "hour": "הזכר לי בעוד שעה",
+      "threeHours": "הזכר לי בעוד 3 שעות",
+      "day": "הזכר לי בעוד יום"
+    },
+    "snoozedUntil": "חוזר ב-{time}",
     "toast": {
       "completed": "המשימה סומנה כהושלמה",
       "reopened": "המשימה נפתחה מחדש",
       "deleted": "המשימה נמחקה",
       "actionFailed": "הפעולה נכשלה. נסה שוב.",
-      "deleteFailed": "המחיקה נכשלה. נסה שוב."
+      "deleteFailed": "המחיקה נכשלה. נסה שוב.",
+      "snoozed": "המשימה נדחתה — נזכיר לך שוב.",
+      "snoozeFailed": "הדחייה נכשלה. נסה שוב."
     },
     "deleteDialog": {
       "title": "מחיקת משימה",
@@ -1383,7 +1637,10 @@
         "assignee": "מוקצה ל",
         "assigneeUnassigned": "— ללא הקצאה —",
         "case": "תיק קשור",
-        "caseNone": "— ללא תיק —"
+        "caseNone": "— ללא תיק —",
+        "private": "תזכורת אישית (פרטית)",
+        "privateHint": "רק את/ה תראה אותה — גם מנהל לא. משויכת אליך אוטומטית.",
+        "privateAssignee": "תזכורת אישית משויכת אליך אוטומטית."
       },
       "submit": {
         "create": "צור משימה",
@@ -1410,6 +1667,7 @@
       "task_assigned_critical": "{actor} הקצה לך משימה מיידית: {task}",
       "task_assigned": "{actor} הקצה לך משימה: {task}",
       "task_completed": "{actor} השלים משימה שהקצית: {task}",
+      "task_reminder": "תזכורת: {task}",
       "case_status_overdue": "תיק {caseNumber} בסטטוס \"{statusName}\" כבר {days} ימים (סף: {threshold})",
       "unknown": "התראה חדשה"
     }

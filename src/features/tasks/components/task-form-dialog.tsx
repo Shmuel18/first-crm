@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 
 import { Loader2 } from 'lucide-react';
@@ -74,6 +74,7 @@ export function TaskFormDialog({
 
   const initialRecord = (task ?? null) as Record<string, unknown> | null;
   const value = (name: string) => fieldDefault(name, submitted, initialRecord);
+  const [isPrivate, setIsPrivate] = useState<boolean>(Boolean(task?.is_private));
 
   const presetCase = presetCaseId ?? task?.case_id ?? '';
   const genericError = getGenericError(state, t);
@@ -156,14 +157,29 @@ export function TaskFormDialog({
             <TaskTagPicker defaultTags={task?.tags ?? []} />
           </FormField>
 
+          <label className="flex items-start gap-2 rounded-lg border border-neutral-200 bg-brand-gold-soft/40 p-3 text-sm">
+            <input
+              type="checkbox"
+              name="is_private"
+              checked={isPrivate}
+              onChange={(e) => setIsPrivate(e.target.checked)}
+              className="mt-0.5 size-4 rounded border-neutral-300 text-brand-gold-text focus:ring-2 focus:ring-brand-gold-text/40"
+            />
+            <span>
+              <span className="font-medium text-neutral-800">{t('fields.private')}</span>
+              <span className="mt-0.5 block text-xs text-neutral-500">{t('fields.privateHint')}</span>
+            </span>
+          </label>
+
           <FormField label={t('fields.assignee')} error={fieldErrors.assigned_to}>
-            <NativeSelect name="assigned_to" defaultValue={value('assigned_to')}>
+            <NativeSelect name="assigned_to" defaultValue={value('assigned_to')} disabled={isPrivate}>
               <option value="">{t('fields.assigneeUnassigned')}</option>
               {effectiveAssignees.map((p) => {
                 const name = [p.first_name, p.last_name].filter(Boolean).join(' ') || tc('noName');
                 return <option key={p.id} value={p.id}>{name}</option>;
               })}
             </NativeSelect>
+            {isPrivate && <p className="mt-1 text-xs text-neutral-500">{t('fields.privateAssignee')}</p>}
           </FormField>
 
           <FormField label={t('fields.case')} error={fieldErrors.case_id}>

@@ -37,7 +37,7 @@ export async function updateTaskAction(
   // Surface "not_found" cleanly before mutating; RLS would also catch this.
   const { data: existing } = await supabase
     .from('tasks')
-    .select('id, case_id, assigned_to')
+    .select('id, case_id, assigned_to, created_by')
     .eq('id', taskId)
     .is('deleted_at', null)
     .maybeSingle();
@@ -54,15 +54,20 @@ export async function updateTaskAction(
     if (!caseRow) return { ok: false, error: 'unauthorized', values };
   }
 
+  // A private task is a reminder to its creator — force assignment to the
+  // creator so it satisfies the self-assigned CHECK and stays private.
+  const isPrivate = parsed.data.is_private;
+  const assignee = isPrivate ? existing.created_by : parsed.data.assigned_to ?? null;
   // `tags` (mig 034) isn't typed yet; cast bypasses the excess-key check.
   const patch = {
     title: parsed.data.title,
     description: parsed.data.description ?? null,
     priority: parsed.data.priority ?? 'normal',
-    assigned_to: parsed.data.assigned_to ?? null,
+    assigned_to: assignee,
     case_id: parsed.data.case_id ?? null,
     due_date: parsed.data.due_date ?? null,
     tags: parseTaskTags(formData.getAll('tags').map(String)),
+    is_private: isPrivate,
     updated_by: userRes.user.id,
   } as TaskUpdate;
 
@@ -75,10 +80,9 @@ export async function updateTaskAction(
   if (error) return { ok: false, error: 'unknown', values };
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized', values };
 
-  const newAssignee = parsed.data.assigned_to ?? null;
-  if (newAssignee && newAssignee !== existing.assigned_to && newAssignee !== userRes.user.id) {
+  if (assignee && assignee !== existing.assigned_to && assignee !== userRes.user.id) {
     await sendTaskNotificationEmail({
-      recipientId: newAssignee,
+      recipientId: assignee,
       actorId: userRes.user.id,
       kind: 'task_assigned',
       taskTitle: parsed.data.title,

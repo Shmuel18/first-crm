@@ -37,6 +37,8 @@ const BACKUP_TABLES = [
   'profiles',
   'office_settings',
   'stage_durations',
+  'mortgage_scenarios',
+  'scenario_tracks',
 ] as const satisfies readonly (keyof Database['public']['Tables'])[];
 
 type BackupTable = (typeof BACKUP_TABLES)[number];

@@ -1,6 +1,7 @@
 import {
   Bell,
   Building2,
+  Calculator,
   HardDrive,
   MessageSquare,
   Plug,
@@ -13,6 +14,7 @@ import {
 } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
+import { userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
 import { SettingsNavLink } from './settings-nav-link';
@@ -22,6 +24,8 @@ type SettingsNavItem = {
   labelKey: string;
   icon: React.ComponentType<{ className?: string }>;
   adminOnly?: boolean;
+  /** Granular permission gate; aligns the nav with the route's own check. */
+  permission?: string;
   disabled?: boolean;
 };
 
@@ -56,6 +60,7 @@ const NAV_SECTIONS: SettingsNavSection[] = [
     titleKey: 'system',
     items: [
       { href: '/settings/templates', labelKey: 'templates', icon: MessageSquare, adminOnly: true },
+      { href: '/settings/simulators', labelKey: 'simulators', icon: Calculator, permission: 'manage_simulator_settings' },
       { href: '/settings/integrations', labelKey: 'integrations', icon: Plug, adminOnly: true },
     ],
   },
@@ -79,13 +84,18 @@ export default async function SettingsLayout({
 
   const supabase = await createClient();
   const { data: isAdmin } = await supabase.rpc('is_admin');
+  const canManageSimulators = await userHasPermission('manage_simulator_settings');
 
   // Filter items per section, then drop sections that ended up empty (e.g.
   // a non-admin sees no items in the office/data sections — better to hide
-  // the headers than to show a header above nothing).
+  // the headers than to show a header above nothing). Items with a granular
+  // `permission` are gated on that permission so the nav matches the route.
   const sections = NAV_SECTIONS.map((section) => ({
     titleKey: section.titleKey,
-    items: section.items.filter((it) => !it.adminOnly || isAdmin === true),
+    items: section.items.filter((it) => {
+      if (it.permission === 'manage_simulator_settings') return canManageSimulators;
+      return !it.adminOnly || isAdmin === true;
+    }),
   })).filter((section) => section.items.length > 0);
 
   return (

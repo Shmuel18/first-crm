@@ -123,7 +123,7 @@ export async function CaseActionBar({
         </div>
 
         <div className="flex items-center gap-0.5 shrink-0">
-          <ActionIcon icon={Calculator} title={t('actions.calculator')} comingSoonLabel={tc('comingSoon')} />
+          <ActionIcon icon={Calculator} title={t('actions.calculator')} href={`/cases/${caseId}/simulators/mix`} />
           <ActionIcon
             icon={ClipboardList}
             title={t('actions.history')}
