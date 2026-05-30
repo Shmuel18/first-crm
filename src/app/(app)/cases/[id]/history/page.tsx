@@ -10,6 +10,7 @@ import { getCaseById } from '@/features/cases/services/cases.service';
 import { userHasPermission } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -39,10 +40,7 @@ export default async function CaseHistoryPage({ params, searchParams }: Props) {
   // than the internal case number, which the user can't memorise anyway).
   const primaryBorrower = caseData.case_borrowers?.find((cb) => cb.is_primary)?.borrower;
   const borrowerName = primaryBorrower
-    ? [primaryBorrower.first_name, primaryBorrower.last_name]
-        .filter(Boolean)
-        .join(' ')
-        .trim() || tc('noName')
+    ? formatPersonName(primaryBorrower.first_name, primaryBorrower.last_name) || tc('noName')
     : tc('noName');
 
   return (

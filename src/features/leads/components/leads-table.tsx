@@ -1,5 +1,7 @@
 import { useTranslations } from 'next-intl';
 
+import { formatPersonName } from '@/lib/utils/person-name';
+
 import type { LeadRow } from '../types';
 
 import { ConvertLeadButton } from './convert-lead-button';
@@ -34,7 +36,7 @@ export function LeadsTable({ leads }: Props) {
         </thead>
         <tbody>
           {leads.map((lead, i) => {
-            const name = [lead.first_name, lead.last_name].filter(Boolean).join(' ').trim();
+            const name = formatPersonName(lead.first_name, lead.last_name);
             return (
               <tr key={lead.id} className="border-b border-neutral-100 hover:bg-neutral-50/60">
                 <Td className="text-neutral-400 tabular-nums">{i + 1}</Td>

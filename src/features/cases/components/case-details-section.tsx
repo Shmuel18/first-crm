@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { CurrencySign } from '@/components/ui/currency-sign';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 import { FieldGroup } from '@/features/borrowers/components/borrower-compact-fields';
 import { EditableField } from '@/features/borrowers/components/editable-field';
@@ -126,7 +127,7 @@ export function CaseDetailsSection({
   const advisorOptions = advisors.map((a) => ({
     value: a.id,
     label:
-      [a.first_name, a.last_name].filter(Boolean).join(' ') || tc('noName'),
+      formatPersonName(a.first_name, a.last_name) || tc('noName'),
   }));
   const blockerOptions = CASE_BLOCKER_VALUES.map((v) => ({
     value: v,

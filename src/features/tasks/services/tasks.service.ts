@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import type { Locale } from '@/lib/i18n/direction';
 import type { CaseId } from '@/lib/types/branded';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 import type { TaskListFilters } from '../schemas/task.schema';
 import type {
@@ -104,7 +105,7 @@ function toCaseRef(
 ): TaskWithRelations['case'] {
   if (!c) return null;
   const borrower = primaryBorrower(c.case_borrowers ?? null);
-  const name = [borrower?.first_name, borrower?.last_name].filter(Boolean).join(' ').trim();
+  const name = formatPersonName(borrower?.first_name, borrower?.last_name);
   return { id: c.id, case_number: c.case_number, clientName: name || null };
 }
 
@@ -205,7 +206,7 @@ export async function getCaseNumberLabel(caseId: CaseId): Promise<string | null>
   // `#{case_number}` if the case has no primary borrower yet (brand-new
   // or after the primary was removed).
   const borrower = primaryBorrower(data.case_borrowers);
-  const name = [borrower?.first_name, borrower?.last_name].filter(Boolean).join(' ');
+  const name = formatPersonName(borrower?.first_name, borrower?.last_name);
   return name || `#${data.case_number}`;
 }
 
@@ -221,6 +222,6 @@ function caseOptionLabel(
   borrower: BorrowerName | null,
   noName: string,
 ): string {
-  const name = [borrower?.first_name, borrower?.last_name].filter(Boolean).join(' ') || noName;
+  const name = formatPersonName(borrower?.first_name, borrower?.last_name) || noName;
   return `#${caseNumber} · ${name}`;
 }

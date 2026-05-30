@@ -8,6 +8,8 @@
  * pure logic.
  */
 
+import { formatPersonName } from '@/lib/utils/person-name';
+
 type CaseBorrowerJoin = {
   is_primary: boolean;
   borrower: {
@@ -41,8 +43,7 @@ export function getCaseClientLabel(caseItem: {
     .filter((cb) => cb.borrower !== null)
     .map((cb) => ({
       isPrimary: cb.is_primary,
-      name:
-        [cb.borrower!.first_name, cb.borrower!.last_name].filter(Boolean).join(' ').trim(),
+      name: formatPersonName(cb.borrower!.first_name, cb.borrower!.last_name),
     }))
     .filter((b) => b.name);
 

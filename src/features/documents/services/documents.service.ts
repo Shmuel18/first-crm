@@ -121,7 +121,7 @@ export async function resolveUploadContext(
   if (!caseRow.data) return null;
 
   const familyName =
-    [borrower.data?.first_name, borrower.data?.last_name].filter(Boolean).join('_') || 'Case';
+    [borrower.data?.last_name, borrower.data?.first_name].filter(Boolean).join('_') || 'Case';
   return {
     caseNumber: caseRow.data.case_number,
     familyName,

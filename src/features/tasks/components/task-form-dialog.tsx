@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { FormField, NativeSelect } from '@/components/shared/form-fields';
 import { fieldDefault } from '@/lib/utils/form-defaults';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 import { createTaskAction } from '../actions/create-task';
 import { updateTaskAction } from '../actions/update-task';
@@ -175,7 +176,7 @@ export function TaskFormDialog({
             <NativeSelect name="assigned_to" defaultValue={value('assigned_to')} disabled={isPrivate}>
               <option value="">{t('fields.assigneeUnassigned')}</option>
               {effectiveAssignees.map((p) => {
-                const name = [p.first_name, p.last_name].filter(Boolean).join(' ') || tc('noName');
+                const name = formatPersonName(p.first_name, p.last_name) || tc('noName');
                 return <option key={p.id} value={p.id}>{name}</option>;
               })}
             </NativeSelect>

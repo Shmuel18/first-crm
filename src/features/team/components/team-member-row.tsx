@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/shared/form-fields';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 import { setMemberActiveAction } from '../actions/set-member-active';
 import { updateMemberRoleAction } from '../actions/update-member-role';
@@ -35,7 +36,7 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
   const [pending, startTransition] = useTransition();
 
   const fullName =
-    [member.first_name, member.last_name].filter(Boolean).join(' ') || tc('noName');
+    formatPersonName(member.first_name, member.last_name) || tc('noName');
   const initials = (member.first_name?.[0] ?? member.email?.[0] ?? '?').toUpperCase();
   const roleName = (r: TeamRole) => (locale === 'he' ? r.name_he : r.name_en);
 

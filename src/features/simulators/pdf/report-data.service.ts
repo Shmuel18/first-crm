@@ -1,5 +1,6 @@
 import { getCaseById } from '@/features/cases/services/cases.service';
 import { asCaseId, type MortgageScenarioId } from '@/lib/types/branded';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 import { aggregateMix } from '../domain/mix-aggregate';
 import { MixInputSchema, PropertyKindSchema, ScenarioKindSchema } from '../schemas/simulator.schema';
@@ -77,9 +78,9 @@ async function loadCaseInfo(caseId: string): Promise<{ caseNumber: string; advis
   const caseData = await getCaseById(asCaseId(caseId));
   if (!caseData) return null;
   const advisorName =
-    [caseData.assigned_advisor?.first_name, caseData.assigned_advisor?.last_name]
-      .filter(Boolean)
-      .join(' ')
-      .trim() || null;
+    formatPersonName(
+      caseData.assigned_advisor?.first_name,
+      caseData.assigned_advisor?.last_name,
+    ) || null;
   return { caseNumber: caseData.case_number, advisorName };
 }

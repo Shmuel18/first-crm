@@ -3,6 +3,8 @@
 import { UserCircle2, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { formatPersonName } from '@/lib/utils/person-name';
+
 import { CaseBlock } from './case-block';
 import { DraftBorrowerCard } from './draft-borrower-card';
 
@@ -38,7 +40,7 @@ export function DraftBorrowersBlock({ borrowers, onAdd, onUpdate, onRemove }: Pr
 
   const borrowerNames =
     borrowers
-      .map((b) => [b.first_name, b.last_name].filter(Boolean).join(' '))
+      .map((b) => formatPersonName(b.first_name, b.last_name))
       .filter(Boolean)
       .join(' & ') || '';
 

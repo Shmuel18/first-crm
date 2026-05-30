@@ -13,6 +13,7 @@ import { getCaseById } from '@/features/cases/services/cases.service';
 import { autoSyncIfStale } from '@/features/integrations/services/drive-document-sync';
 import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -55,9 +56,7 @@ export default async function CaseDocumentsPage({ params }: Props) {
 
   const borrowerNames =
     borrowers
-      .map(({ borrower }) =>
-        [borrower.first_name, borrower.last_name].filter(Boolean).join(' '),
-      )
+      .map(({ borrower }) => formatPersonName(borrower.first_name, borrower.last_name))
       .filter(Boolean)
       .join(' & ') || '';
 

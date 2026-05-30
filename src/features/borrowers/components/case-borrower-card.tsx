@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Tooltip } from '@/components/ui/tooltip';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 import { removeBorrowerFromCaseAction } from '../actions/remove-borrower-from-case';
 import { updateBorrowerFieldAction, type EditableBorrowerField } from '../actions/update-borrower-field';
@@ -66,7 +67,7 @@ export function CaseBorrowerCard({
   const [localBorrower, setLocalBorrower] = useState(borrower);
 
   const fullName =
-    [localBorrower.first_name, localBorrower.last_name].filter(Boolean).join(' ') || tc('noName');
+    formatPersonName(localBorrower.first_name, localBorrower.last_name) || tc('noName');
 
   // Generic save bridge: each EditableField calls this with its field name,
   // we run the optimistic update + the server action and roll back on error.

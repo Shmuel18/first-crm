@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import type { CaseId, IncomeId } from '@/lib/types/branded';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 import { sumMonthlyIncomes } from '../domain/totals';
 import type { BorrowerIncomesGroup, IncomeRow, IncomeTypeOption, IncomeWithType } from '../types';
@@ -65,7 +66,7 @@ export async function listIncomesForCase(caseId: CaseId): Promise<BorrowerIncome
     return {
       borrowerId: borrower.id,
       borrowerName:
-        [borrower.first_name, borrower.last_name].filter(Boolean).join(' ').trim() || '—',
+        formatPersonName(borrower.first_name, borrower.last_name) || '—',
       incomes: own,
       monthlyTotal: sumMonthlyIncomes(own),
     };

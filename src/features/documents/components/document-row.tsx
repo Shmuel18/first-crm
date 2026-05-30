@@ -4,6 +4,7 @@ import { FileText, Image as ImageIcon, FileType2, User2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { cn } from '@/lib/utils';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 import type { DocumentStatus, DocumentWithRelations } from '../types';
 import { DocumentStatusChip } from './document-status-chip';
@@ -33,7 +34,7 @@ function formatSize(bytes: number | null): string {
 export function DocumentRow({ doc, onClick }: Props) {
   const tc = useTranslations('documents.card');
   const borrowerName = doc.borrower
-    ? [doc.borrower.first_name, doc.borrower.last_name].filter(Boolean).join(' ')
+    ? formatPersonName(doc.borrower.first_name, doc.borrower.last_name)
     : tc('borrowerGeneral');
 
   return (

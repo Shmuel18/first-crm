@@ -9,6 +9,7 @@ import { UserMenu } from '@/components/layout/user-menu';
 import { NotificationBell } from '@/features/notifications/components/notification-bell';
 import { parseLocale } from '@/lib/i18n/direction';
 import { getLayoutBootstrap } from '@/lib/layout/bootstrap';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 type TopbarProps = {
   tasksBadge?: number;
@@ -25,7 +26,7 @@ export async function Topbar({ tasksBadge, criticalTasksBadge }: TopbarProps = {
   const { profile, unreadNotifications, recentNotifications } = await getLayoutBootstrap();
 
   const fullName =
-    [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') ||
+    formatPersonName(profile?.first_name, profile?.last_name) ||
     profile?.email ||
     '';
   const initials = getInitials(profile?.first_name, profile?.last_name, profile?.email);

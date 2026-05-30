@@ -5,6 +5,8 @@ import { useState, useTransition, type RefObject } from 'react';
 import { Loader2, UserCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { formatPersonName } from '@/lib/utils/person-name';
+
 import {
   lookupReturningBorrowerAction,
   type ReturningBorrower,
@@ -80,7 +82,7 @@ export function ReturningClientAutofill({
   };
 
   const matchName = match
-    ? [match.first_name, match.last_name].filter(Boolean).join(' ').trim()
+    ? formatPersonName(match.first_name, match.last_name)
     : '';
 
   return (

@@ -4,6 +4,8 @@ import Link from 'next/link';
 
 import { useTranslations } from 'next-intl';
 
+import { formatPersonName } from '@/lib/utils/person-name';
+
 import {
   getCaseClientLabel,
   getPrimaryBank,
@@ -42,9 +44,8 @@ export function CasesCardList({ cases }: Props) {
         const client = getCaseClientLabel(c);
         const bank = getPrimaryBank(c);
         const advisorName =
-          [c.assigned_advisor?.first_name, c.assigned_advisor?.last_name]
-            .filter(Boolean)
-            .join(' ') || null;
+          formatPersonName(c.assigned_advisor?.first_name, c.assigned_advisor?.last_name) ||
+          null;
 
         const cardClass = [
           'block px-4 py-3 transition-colors',

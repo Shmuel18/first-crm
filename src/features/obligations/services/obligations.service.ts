@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import type { CaseId, ObligationId } from '@/lib/types/branded';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 import { sumMonthlyPayments, sumRemainingDebt } from '../domain/totals';
 import type { BorrowerObligationsGroup, ObligationRow } from '../types';
@@ -67,7 +68,7 @@ export async function listObligationsForCase(
     return {
       borrowerId: borrower.id,
       borrowerName:
-        [borrower.first_name, borrower.last_name].filter(Boolean).join(' ').trim() || '—',
+        formatPersonName(borrower.first_name, borrower.last_name) || '—',
       obligations: own,
       monthlyPaymentTotal: sumMonthlyPayments(own),
       remainingDebtTotal: sumRemainingDebt(own),

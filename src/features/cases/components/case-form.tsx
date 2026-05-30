@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { FormField, FormSection, NativeSelect } from '@/components/shared/form-fields';
 
 import { fieldDefault } from '@/lib/utils/form-defaults';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 import { createCaseAction } from '../actions/create-case';
 import { CASE_BLOCKER_VALUES, INSURANCE_STATUS_VALUES } from '../schemas/case.schema';
@@ -127,7 +128,7 @@ export function CaseForm({
           <NativeSelect name="assigned_advisor_id" defaultValue={value('assigned_advisor_id')}>
             <option value="">— {tc('notAssigned')} —</option>
             {advisors.map((a) => {
-              const name = [a.first_name, a.last_name].filter(Boolean).join(' ') || tc('noName');
+              const name = formatPersonName(a.first_name, a.last_name) || tc('noName');
               return <option key={a.id} value={a.id}>{name}</option>;
             })}
           </NativeSelect>

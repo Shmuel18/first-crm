@@ -8,6 +8,7 @@ import { AlertTriangle, GripVertical, Lock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import type { Locale } from '@/lib/i18n/direction';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 import { formatDueDate, isImmediateTask, isOverdue, priorityEdgeColor } from '../domain/task-state';
 import { TaskTagChips } from './task-tag-chips';
@@ -29,7 +30,7 @@ export function TaskBoardCard({ task, locale, onOpen }: Props) {
   const immediate = isImmediateTask(task);
   const due = formatDueDate(task.due_date, locale);
   const assignee = task.assignee
-    ? [task.assignee.first_name, task.assignee.last_name].filter(Boolean).join(' ').trim()
+    ? formatPersonName(task.assignee.first_name, task.assignee.last_name)
     : null;
   const initials =
     (task.assignee?.first_name?.[0] ?? '') + (task.assignee?.last_name?.[0] ?? '') || '?';

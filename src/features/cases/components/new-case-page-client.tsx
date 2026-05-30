@@ -16,6 +16,7 @@ import { DraftRequestDetailsBlock } from './draft-request-details-block';
 import { saveCaseDraftAction } from '../actions/save-case-draft';
 
 import type { Locale } from '@/lib/i18n/direction';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 /**
  * /cases/new mirrors the live case page. In draft mode only the first two
@@ -49,7 +50,7 @@ export function NewCasePageClient({ locale }: Props) {
 
   const borrowerNamesPreview =
     state.borrowers
-      .map((b) => [b.first_name, b.last_name].filter(Boolean).join(' '))
+      .map((b) => formatPersonName(b.first_name, b.last_name))
       .filter(Boolean)
       .join(' & ');
 
