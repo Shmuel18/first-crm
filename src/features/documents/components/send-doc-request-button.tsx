@@ -20,6 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Tooltip } from '@/components/ui/tooltip';
 import { buildWhatsAppLink } from '@/features/borrowers/domain/contact-links';
 import { parseLocale } from '@/lib/i18n/direction';
 
@@ -97,17 +98,19 @@ export function SendDocRequestButton({ caseId, title, borrower, checklist }: Pro
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <button
-              type="button"
-              aria-label={title}
-              className="flex size-8 items-center justify-center rounded-md text-neutral-700 transition hover:bg-white hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
-            />
-          }
-        >
-          <MessageSquare className="size-3.5" aria-hidden="true" />
-        </DropdownMenuTrigger>
+        <Tooltip content={title}>
+          <DropdownMenuTrigger
+            render={
+              <button
+                type="button"
+                aria-label={title}
+                className="flex size-8 items-center justify-center rounded-md text-neutral-700 transition hover:bg-white hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
+              />
+            }
+          >
+            <MessageSquare className="size-3.5" aria-hidden="true" />
+          </DropdownMenuTrigger>
+        </Tooltip>
         <DropdownMenuContent align="end" className="w-60">
           <DropdownMenuItem
             disabled={!hasEmail}
