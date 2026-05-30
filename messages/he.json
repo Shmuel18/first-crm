@@ -669,6 +669,14 @@
       "deleteDialog": {
         "title": "מחיקת תיק",
         "description": "התיק יוסתר מהדשבורד ויעבור ל\"ארכיון מחוקים\" בהגדרות. אפשר לשחזר משם תוך 14 ימים — אחרי זה הוא יימחק לצמיתות."
+      },
+      "sendMessageMenu": {
+        "viaEmail": "שלח באימייל",
+        "viaWhatsapp": "שלח ב-WhatsApp",
+        "noEmail": "אין אימייל ללקוח",
+        "noPhone": "אין טלפון ללקוח",
+        "whatsappGreeting": "שלום {name},",
+        "whatsappGreetingNoName": "שלום,"
       }
     },
     "scheduleMeeting": {

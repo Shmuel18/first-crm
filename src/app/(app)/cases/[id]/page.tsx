@@ -82,6 +82,19 @@ export default async function CaseDetailPage({ params }: Props) {
       .filter(Boolean)
       .join(' & ') || '';
 
+  // Primary borrower contact for the action bar's "send message to client"
+  // menu (WhatsApp / email). Prefer the flagged primary; fall back to the
+  // first borrower for legacy/imported data with no primary flag.
+  const primaryRecord = borrowers.find((row) => row.is_primary) ?? borrowers[0];
+  const primaryBorrower = primaryRecord
+    ? {
+        firstName: primaryRecord.borrower.first_name,
+        lastName: primaryRecord.borrower.last_name,
+        email: primaryRecord.borrower.email,
+        phone: primaryRecord.borrower.phone,
+      }
+    : null;
+
   // Banks linked to this case — passed to the admin block's inline list.
   // Each row has the bank info + banker_name + is_primary; the list
   // renders one row per bank with inline-edit + delete + primary toggle.
@@ -116,6 +129,7 @@ export default async function CaseDetailPage({ params }: Props) {
         caseTypePrimary={caseData.case_type_primary?.name_he ?? null}
         caseTypeSecondary={caseData.case_type_secondary?.name_he ?? null}
         borrowerNames={borrowerNames}
+        primaryBorrower={primaryBorrower}
         isArchived={caseData.is_archived}
         canArchive={canArchive}
         canRestore={canRestore}

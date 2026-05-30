@@ -1,12 +1,6 @@
 import Link from 'next/link';
 
-import {
-  Calculator,
-  Check,
-  ClipboardList,
-  Folder,
-  MessageSquare,
-} from 'lucide-react';
+import { Calculator, Check, ClipboardList, Folder } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import { BackArrow } from '@/components/shared/back-arrow';
@@ -24,6 +18,7 @@ import { CaseMoreMenu } from './case-more-menu';
 import { EditableStatusCell } from './editable-status-cell';
 import { GenerateBankPdfButton } from './generate-bank-pdf-button';
 import { ScheduleMeetingButton } from './schedule-meeting-button';
+import { SendClientMessageButton } from './send-client-message-button';
 import type { StatusOption } from '../services/case-lookups.service';
 
 type ActionBarProps = {
@@ -38,6 +33,12 @@ type ActionBarProps = {
   caseTypePrimary: string | null;
   caseTypeSecondary: string | null;
   borrowerNames: string;
+  primaryBorrower: {
+    firstName: string | null;
+    lastName: string | null;
+    email: string | null;
+    phone: string | null;
+  } | null;
   hasDocumentAlerts?: boolean;
   lastSavedAt?: string;
   isArchived: boolean;
@@ -56,6 +57,7 @@ export async function CaseActionBar({
   caseTypePrimary,
   caseTypeSecondary,
   borrowerNames,
+  primaryBorrower,
   hasDocumentAlerts,
   lastSavedAt,
   isArchived,
@@ -135,7 +137,7 @@ export async function CaseActionBar({
             hasAlert={hasDocumentAlerts}
             href={`/cases/${caseId}/documents`}
           />
-          <ActionIcon icon={MessageSquare} title={t('actions.sendMessage')} comingSoonLabel={tc('comingSoon')} />
+          <SendClientMessageButton title={t('actions.sendMessage')} borrower={primaryBorrower} />
           <CaseActionTaskPopover
             caseId={caseId}
             caseNumber={caseNumber}
