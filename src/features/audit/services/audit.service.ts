@@ -44,7 +44,11 @@ async function resolveEntries(rows: AuditRow[]): Promise<AuditEntry[]> {
     actorName: row.user_id ? nameById.get(row.user_id) ?? null : null,
     changes: extractChanges(row.action, row.changed_fields),
     wholeRow: extractWholeRow(row.action, row.changed_fields),
-  }));
+  }))
+    // Drop UPDATEs whose only changed columns were hidden (e.g. a Drive-sync
+    // touch that just rewrote `metadata`) — they carry no displayable diff, so
+    // rendering them would leave an empty history row.
+    .filter((e) => e.action !== 'UPDATE' || (e.changes !== null && Object.keys(e.changes).length > 0));
 
   // ── 2. FK display-name enrichment ──────────────────────────────────
   const idsByField = new Map<string, Set<string>>();

@@ -28,6 +28,7 @@ const DATE_FIELDS = new Set([
   'birth_date',
   'id_issue_date',
   'id_expiry_date',
+  'expiry_date',
   'created_at',
   'updated_at',
   'deleted_at',
