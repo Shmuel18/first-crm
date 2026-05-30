@@ -37,6 +37,7 @@ type SearchParams = Promise<{
   case?: string;
   display?: string;
   tag?: string;
+  focus?: string;
 }>;
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -56,6 +57,8 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
     : undefined;
   const caseId = z.uuid().safeParse(sp.case).success ? sp.case : undefined;
   const display: 'board' | 'list' = sp.display === 'list' ? 'list' : 'board';
+  const focus: 'immediate' | 'overdue' | null =
+    sp.focus === 'immediate' || sp.focus === 'overdue' ? sp.focus : null;
 
   const t = await getTranslations('tasks');
   const locale = parseLocale(await getLocale());
@@ -86,6 +89,16 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
   const overdueCount = visibleTasks.filter((task) => isOverdue(task)).length;
   const doneCount = visibleTasks.filter((task) => task.status === 'completed').length;
 
+  // Triage focus: clicking the "immediate"/"overdue" KPI filters what the
+  // board/list shows. The counts above stay on the full set so the strip
+  // doesn't collapse when you focus.
+  const focusedTasks =
+    focus === 'immediate'
+      ? visibleTasks.filter((task) => isImmediateTask(task))
+      : focus === 'overdue'
+        ? visibleTasks.filter((task) => isOverdue(task))
+        : visibleTasks;
+
   return (
     <div className="space-y-5">
       <PageHeader icon={<CheckSquare />} title={t('title')} subtitle={t('subtitle')} />
@@ -106,6 +119,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
         open={openCount}
         overdue={overdueCount}
         done={doneCount}
+        focus={focus}
       />
 
       {caseId && caseLabel && (
@@ -125,14 +139,14 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
 
       {display === 'board' ? (
         <TasksBoard
-          tasks={capCompletedTasks(visibleTasks, 50)}
+          tasks={capCompletedTasks(focusedTasks, 50)}
           locale={locale}
           assignees={assignees}
           cases={cases}
         />
       ) : (
         <TasksList
-          tasks={visibleTasks}
+          tasks={focusedTasks}
           assignees={assignees}
           cases={cases}
           locale={locale}
