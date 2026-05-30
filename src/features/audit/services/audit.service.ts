@@ -178,3 +178,26 @@ export async function listAuditEntriesForCase(
 
   return resolveEntries(top);
 }
+
+/**
+ * Document-only audit timeline for a case: just the `documents` rows belonging
+ * to the case (uploads, verifications, deletions). Powers the documents page's
+ * scoped "document history" view. Service-role read — the caller must have
+ * verified the case is viewable first.
+ */
+export async function listDocumentAuditForCase(caseId: string, limit = 200): Promise<AuditEntry[]> {
+  const admin = createAdminClient();
+  const { data: docsRes } = await admin.from('documents').select('id').eq('case_id', caseId);
+  const docIds = docsRes?.map((r) => r.id).filter((v): v is string => typeof v === 'string') ?? [];
+  if (docIds.length === 0) return [];
+
+  const { data, error } = await admin
+    .from('audit_log')
+    .select('id, action, table_name, record_id, timestamp, changed_fields, user_id')
+    .eq('table_name', 'documents')
+    .in('record_id', docIds)
+    .order('timestamp', { ascending: false })
+    .limit(limit);
+  if (error || !data) return [];
+  return resolveEntries(data as AuditRow[]);
+}

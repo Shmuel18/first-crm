@@ -146,7 +146,7 @@ export function DocumentsActionBar({
           />
           <Tooltip content={t('history')}>
             <Link
-              href={`/cases/${caseId}/history`}
+              href={`/cases/${caseId}/history?scope=documents`}
               aria-label={t('history')}
               className="flex size-8 items-center justify-center rounded-md text-neutral-700 transition hover:bg-white hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
             >

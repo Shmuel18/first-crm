@@ -617,6 +617,7 @@
   "case": {
     "history": {
       "title": "Case history",
+      "documentsTitle": "Document history",
       "subtitle": "All actions on case {caseNumber} for {borrower}",
       "backToCase": "Back to case",
       "truncatedNote": "Showing the last 200 entries. Older entries are available via the full audit log export."
