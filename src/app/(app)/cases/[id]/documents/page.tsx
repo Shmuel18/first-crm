@@ -44,15 +44,10 @@ export default async function CaseDocumentsPage({ params }: Props) {
 
   if (!caseData) notFound();
 
-  // Per-case requirements checklist (joins case_type_documents + the
-  // already-loaded documents to compute missing/pending/verified status).
-  // Returns [] when the case has no primary type — the component hides
-  // itself in that case so the page reads identically.
-  const checklist = await getCaseDocumentChecklist(
-    caseId,
-    caseData.case_type_primary?.id ?? null,
-    documents,
-  );
+  // Per-case requirements checklist. Materialized in case_checklist_items
+  // (seeded from the case-type template on first access, migration 099);
+  // folds in the already-loaded documents to derive each row's status.
+  const checklist = await getCaseDocumentChecklist(caseId, documents);
 
   const borrowerNames =
     borrowers

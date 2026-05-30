@@ -1,104 +1,94 @@
+import { z } from 'zod';
+
 import { createClient } from '@/lib/supabase/server';
 import type { CaseId } from '@/lib/types/branded';
 
 import type { DocumentWithRelations, DriveFolder } from '../types';
 
 /**
- * One entry in the per-case document-requirements checklist. Surfaces the
- * "which docs does this case still need" question on top of the live
- * documents page, computed by joining:
+ * One entry in the per-case document checklist. As of migration 099 the
+ * checklist is MATERIALIZED in case_checklist_items (seeded from the
+ * case_type_documents template on first access) so it can be ticked, added
+ * to, removed from and reordered per case.
  *
- *   - cases.case_type_primary_id      (which requirements apply)
- *   - case_type_documents             (the requirements config, admin-editable)
- *   - document_categories             (display name + folder)
- *   - case_statuses                   (the stage by which a doc is needed)
- *   - documents                       (what's already uploaded for the case)
+ * `status` is derived for the at-a-glance sidebar view:
+ *   - 'verified' — manually ticked (isDone) OR a verified doc exists
+ *   - 'missing'  — nothing uploaded and not ticked
+ *   - 'rejected' — every uploaded doc was rejected
+ *   - 'pending'  — uploaded, none verified yet, not ticked
  *
- * `status` is derived:
- *   - 'missing'  — no uploaded doc with this category
- *   - 'pending'  — uploaded, none verified yet
- *   - 'rejected' — every uploaded doc was rejected (verifier flagged)
- *   - 'verified' — at least one uploaded doc is verified
- *
- * Sorted by case_type_documents.sort_order (admin curates), then category.
+ * Decision (option 2): a manual tick OR a verified document closes the row.
  */
 export type ChecklistStatus = 'missing' | 'pending' | 'verified' | 'rejected';
 
 export type DocumentChecklistItem = {
-  categoryId: string;
+  itemId: string;
+  categoryId: string | null;
   categoryKey: string;
   nameHe: string;
   nameEn: string;
   driveFolder: DriveFolder | null;
   isRequired: boolean;
+  /** Free-text manual row (no linked document category). */
+  isManual: boolean;
+  /** The manual "received" tick from case_checklist_items. */
+  isDone: boolean;
   requiredAtStage: { id: string; key: string; name_he: string; name_en: string } | null;
   status: ChecklistStatus;
   uploadedCount: number;
   verifiedCount: number;
 };
 
-type CaseTypeDocRow = {
-  is_required: boolean;
-  sort_order: number;
-  category: {
-    id: string;
-    key: string;
-    name_he: string;
-    name_en: string;
-    drive_folder: string | null;
-    sort_order: number;
-    is_active: boolean;
-  } | null;
-  required_at_stage: {
-    id: string;
-    key: string;
-    name_he: string;
-    name_en: string;
-  } | null;
-};
+const StageSchema = z.object({
+  id: z.string(),
+  key: z.string(),
+  name_he: z.string(),
+  name_en: z.string(),
+});
+
+const RpcItemSchema = z.object({
+  id: z.string(),
+  categoryId: z.string().nullable(),
+  categoryKey: z.string().nullable(),
+  nameHe: z.string().nullable(),
+  nameEn: z.string().nullable(),
+  label: z.string().nullable(),
+  driveFolder: z.string().nullable(),
+  isRequired: z.boolean(),
+  isDone: z.boolean(),
+  source: z.enum(['template', 'manual']),
+  sortOrder: z.number(),
+  requiredAtStage: StageSchema.nullable(),
+});
+
+const RpcResultSchema = z.array(RpcItemSchema);
 
 /**
- * Fetch the checklist for a case. Returns [] when the case has no primary
- * type set (brand-new draft cases) or the type has no seeded requirements.
- * The caller passes the already-loaded documents list so we don't re-query.
+ * Load (and lazily materialize) the per-case checklist, then fold in the
+ * already-loaded documents to compute each row's display status. Returns []
+ * on any failure so the page renders identically to the no-checklist case.
  */
 export async function getCaseDocumentChecklist(
   caseId: CaseId,
-  caseTypePrimaryId: string | null,
   documents: ReadonlyArray<DocumentWithRelations>,
 ): Promise<DocumentChecklistItem[]> {
-  void caseId; // reserved for a future "this case overrides the global config" path
-  if (!caseTypePrimaryId) return [];
-
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('case_type_documents')
-    .select(
-      `
-      is_required,
-      sort_order,
-      category:document_categories!case_type_documents_document_category_id_fkey(
-        id, key, name_he, name_en, drive_folder, sort_order, is_active
-      ),
-      required_at_stage:case_statuses!case_type_documents_required_at_stage_id_fkey(
-        id, key, name_he, name_en
-      )
-    `,
-    )
-    .eq('case_type_id', caseTypePrimaryId);
+  const { data, error } = await supabase.rpc('get_or_create_case_checklist', {
+    p_case_id: caseId,
+  });
 
   if (error) {
-    console.error('[checklist] case_type_documents fetch failed', {
-      caseTypePrimaryId,
-      code: error.code ?? null,
-      message: error.message ?? null,
-    });
+    console.error('[checklist] get_or_create rpc failed', { code: error.code ?? null });
     return [];
   }
 
-  const rows = (data ?? []) as unknown as CaseTypeDocRow[];
+  const parsed = RpcResultSchema.safeParse(data);
+  if (!parsed.success) {
+    console.error('[checklist] unexpected rpc shape');
+    return [];
+  }
 
-  // Map: category_id → bucket of uploaded docs for the computed status.
+  // Map: category_id → uploaded docs, for the verified/pending derivation.
   const byCategory = new Map<string, DocumentWithRelations[]>();
   for (const d of documents) {
     if (!d.category?.id) continue;
@@ -107,38 +97,32 @@ export async function getCaseDocumentChecklist(
     byCategory.set(d.category.id, list);
   }
 
-  const items: DocumentChecklistItem[] = rows
-    .filter((r) => r.category && r.category.is_active)
-    .map((r): DocumentChecklistItem => {
-      const cat = r.category!;
-      const uploads = byCategory.get(cat.id) ?? [];
-      const verifiedCount = uploads.filter((d) => d.status === 'verified').length;
-      const rejectedCount = uploads.filter((d) => d.status === 'rejected').length;
-      let status: ChecklistStatus;
-      if (uploads.length === 0) status = 'missing';
-      else if (verifiedCount > 0) status = 'verified';
-      else if (rejectedCount === uploads.length) status = 'rejected';
-      else status = 'pending';
+  return parsed.data.map((r): DocumentChecklistItem => {
+    const uploads = r.categoryId ? (byCategory.get(r.categoryId) ?? []) : [];
+    const verifiedCount = uploads.filter((d) => d.status === 'verified').length;
+    const rejectedCount = uploads.filter((d) => d.status === 'rejected').length;
 
-      return {
-        categoryId: cat.id,
-        categoryKey: cat.key,
-        nameHe: cat.name_he,
-        nameEn: cat.name_en,
-        driveFolder: (cat.drive_folder as DriveFolder | null) ?? null,
-        isRequired: r.is_required,
-        requiredAtStage: r.required_at_stage,
-        status,
-        uploadedCount: uploads.length,
-        verifiedCount,
-      };
-    });
+    let status: ChecklistStatus;
+    if (r.isDone || verifiedCount > 0) status = 'verified';
+    else if (uploads.length === 0) status = 'missing';
+    else if (rejectedCount === uploads.length) status = 'rejected';
+    else status = 'pending';
 
-  // Stable order: required first, then by admin-curated sort_order, then category.
-  items.sort((a, b) => {
-    if (a.isRequired !== b.isRequired) return a.isRequired ? -1 : 1;
-    return a.nameHe.localeCompare(b.nameHe, 'he');
+    const fallback = r.label ?? '';
+    return {
+      itemId: r.id,
+      categoryId: r.categoryId,
+      categoryKey: r.categoryKey ?? '',
+      nameHe: r.nameHe ?? fallback,
+      nameEn: r.nameEn ?? fallback,
+      driveFolder: (r.driveFolder as DriveFolder | null) ?? null,
+      isRequired: r.isRequired,
+      isManual: r.source === 'manual',
+      isDone: r.isDone,
+      requiredAtStage: r.requiredAtStage,
+      status,
+      uploadedCount: uploads.length,
+      verifiedCount,
+    };
   });
-
-  return items;
 }
