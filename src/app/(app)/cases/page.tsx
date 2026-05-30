@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { CasesCardList } from '@/features/cases/components/cases-card-list';
 import { CasesEmptyState } from '@/features/cases/components/cases-empty-state';
 import { CasesTable } from '@/features/cases/components/cases-table';
+import { ClearFiltersButton } from '@/features/cases/components/clear-filters-button';
 import { DashboardFiltersBar } from '@/features/cases/components/dashboard-filters-bar';
 import { DashboardPagination } from '@/features/cases/components/dashboard-pagination';
 import { DashboardViewSelector } from '@/features/cases/components/dashboard-view-selector';
@@ -138,7 +139,12 @@ export default async function CasesListPage({ searchParams }: Props) {
         <CasesEmptyState />
       ) : visible.length === 0 ? (
         <>
-          <EmptyMessage text={t('filters.noMatches')} />
+          <div className="px-6 py-12 text-center">
+            <p className="text-sm text-neutral-500">{t('filters.noMatches')}</p>
+            <div className="mt-4 flex justify-center">
+              <ClearFiltersButton label={t('filters.clearFilters')} />
+            </div>
+          </div>
           {pager}
         </>
       ) : (

@@ -19,6 +19,7 @@ import type { CaseWithRelations } from '../types';
 
 import { CaseTableRow } from './case-table-row';
 import { SortableTh, Th } from './cases-table-headers';
+import { ClearFiltersButton } from './clear-filters-button';
 
 type StatusOption = { id: string; name_he: string; color: string; sort_order: number };
 type BankOption = { id: string; key: string; name_he: string; color: string; logo_url: string | null };
@@ -151,7 +152,14 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
   }, [sortCol, sortDirRaw]);
 
   if (filtered.length === 0) {
-    return <p className="px-6 py-12 text-center text-sm text-neutral-600">{tf('noMatches')}</p>;
+    return (
+      <div className="px-6 py-12 text-center">
+        <p className="text-sm text-neutral-600">{tf('noMatches')}</p>
+        <div className="mt-4 flex justify-center">
+          <ClearFiltersButton label={tf('clearFilters')} />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -179,6 +187,7 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
             <Th>{t('nationalId')}</Th>
             <SortableTh
               label={t('stage')}
+              tooltip={t('stageTooltip')}
               column="stage"
               sort={sortForHeaders}
               onSort={handleSort}

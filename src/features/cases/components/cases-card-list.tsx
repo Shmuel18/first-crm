@@ -16,6 +16,7 @@ import { useCaseQueryFilter } from '../hooks/use-case-query-filter';
 import type { CaseWithRelations } from '../types';
 
 import { CaseStatusBadge } from './case-status-badge';
+import { ClearFiltersButton } from './clear-filters-button';
 
 type Props = {
   cases: ReadonlyArray<CaseWithRelations>;
@@ -32,7 +33,12 @@ export function CasesCardList({ cases }: Props) {
 
   if (filtered.length === 0) {
     return (
-      <p className="px-6 py-12 text-center text-sm text-neutral-500">{t('filters.noMatches')}</p>
+      <div className="px-6 py-12 text-center">
+        <p className="text-sm text-neutral-500">{t('filters.noMatches')}</p>
+        <div className="mt-4 flex justify-center">
+          <ClearFiltersButton label={t('filters.clearFilters')} />
+        </div>
+      </div>
     );
   }
 

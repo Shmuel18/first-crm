@@ -368,6 +368,7 @@
       "hideClosedFrozen": "Hide completed & frozen",
       "all": "All",
       "clear": "Clear",
+      "clearFilters": "Clear filters",
       "noMatches": "No cases match the current filters",
       "tableCaption": "Cases table — {count, plural, =1 {1 case} other {# cases}}"
     },
@@ -405,6 +406,7 @@
       "clientName": "Client Name",
       "nationalId": "ID / Passport",
       "stage": "Stage",
+      "stageTooltip": "The case's current pipeline stage — from Lead to Done. Click a stage in the row to update it.",
       "bank": "Bank",
       "advisor": "Advisor",
       "shortNote": "Short Note"
