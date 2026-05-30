@@ -1515,6 +1515,82 @@ export type Database = {
           },
         ]
       }
+      case_checklist_items: {
+        Row: {
+          case_id: string
+          created_at: string
+          created_by: string | null
+          document_category_id: string | null
+          done_at: string | null
+          done_by: string | null
+          id: string
+          is_done: boolean
+          is_required: boolean
+          label: string | null
+          required_at_stage_id: string | null
+          sort_order: number
+          source: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          created_by?: string | null
+          document_category_id?: string | null
+          done_at?: string | null
+          done_by?: string | null
+          id?: string
+          is_done?: boolean
+          is_required?: boolean
+          label?: string | null
+          required_at_stage_id?: string | null
+          sort_order?: number
+          source?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          created_by?: string | null
+          document_category_id?: string | null
+          done_at?: string | null
+          done_by?: string | null
+          id?: string
+          is_done?: boolean
+          is_required?: boolean
+          label?: string | null
+          required_at_stage_id?: string | null
+          sort_order?: number
+          source?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_checklist_items_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_checklist_items_document_category_id_fkey"
+            columns: ["document_category_id"]
+            isOneToOne: false
+            referencedRelation: "document_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_checklist_items_required_at_stage_id_fkey"
+            columns: ["required_at_stage_id"]
+            isOneToOne: false
+            referencedRelation: "case_statuses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_expenses: {
         Row: {
           amount: number | null
@@ -3480,9 +3556,29 @@ export type Database = {
         Args: { p_thresholds: Json }
         Returns: undefined
       }
+      add_case_checklist_item: {
+        Args: { p_case_id: string; p_label: string }
+        Returns: string
+      }
+      get_or_create_case_checklist: {
+        Args: { p_case_id: string }
+        Returns: Json
+      }
+      remove_case_checklist_item: {
+        Args: { p_case_id: string; p_item_id: string }
+        Returns: boolean
+      }
+      reorder_case_checklist_items: {
+        Args: { p_case_id: string; p_ids: string[] }
+        Returns: boolean
+      }
       set_primary_bank: {
         Args: { p_bank_id: string; p_case_id: string; p_user_id: string }
         Returns: undefined
+      }
+      toggle_case_checklist_item: {
+        Args: { p_case_id: string; p_done: boolean; p_item_id: string }
+        Returns: boolean
       }
       set_request_audit_context: { Args: never; Returns: undefined }
       soft_delete_borrower_income: {

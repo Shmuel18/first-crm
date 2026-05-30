@@ -1401,6 +1401,20 @@
         "missing": "{count, plural, =1 {1 missing} other {# missing}}",
         "pending": "{count, plural, =1 {1 pending review} other {# pending review}}",
         "verified": "{count, plural, =1 {1 verified} other {# verified}}"
+      },
+      "manage": {
+        "open": "Manage",
+        "title": "Document checklist",
+        "progress": "{done} of {total} completed",
+        "empty": "No checklist items yet. Add one below, or set a case type to load the defaults.",
+        "add": "Add",
+        "addPlaceholder": "New item…",
+        "remove": "Remove",
+        "reorder": "Drag to reorder",
+        "markDone": "Mark as received",
+        "markUndone": "Mark as not received",
+        "removeConfirmTitle": "Remove this item?",
+        "removeConfirmBody": "{count, plural, =1 {This item has 1 uploaded document} other {This item has # uploaded documents}}. The document(s) will stay in the case — only the checklist row is removed."
       }
     },
     "syncIndicator": {

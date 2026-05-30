@@ -1401,6 +1401,20 @@
         "missing": "{count, plural, =1 {חסר 1} other {# חסרים}}",
         "pending": "{count, plural, =1 {1 ממתין לאימות} other {# ממתינים לאימות}}",
         "verified": "{count, plural, =1 {1 אומת} other {# אומתו}}"
+      },
+      "manage": {
+        "open": "ניהול",
+        "title": "צ׳ק-ליסט מסמכים",
+        "progress": "{done} מתוך {total} הושלמו",
+        "empty": "אין עדיין פריטים. הוסף פריט למטה, או הגדר סוג תיק כדי לטעון את ברירת המחדל.",
+        "add": "הוסף",
+        "addPlaceholder": "פריט חדש…",
+        "remove": "הסר",
+        "reorder": "גרור כדי לסדר מחדש",
+        "markDone": "סמן כהתקבל",
+        "markUndone": "סמן כלא התקבל",
+        "removeConfirmTitle": "להסיר את הפריט?",
+        "removeConfirmBody": "{count, plural, =1 {לפריט זה מצורף מסמך אחד} other {לפריט זה מצורפים # מסמכים}}. המסמך יישאר בתיק — רק שורת הצ׳ק-ליסט תוסר."
       }
     },
     "syncIndicator": {

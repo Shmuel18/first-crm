@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
-import { CheckCircle2, ClipboardList, Clock, FileWarning, XCircle } from 'lucide-react';
+import { CheckCircle2, ClipboardList, Clock, FileWarning, Pencil, XCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import type { Locale } from '@/lib/i18n/direction';
@@ -18,6 +18,8 @@ type Props = {
   locale: Locale;
   /** Opens the upload modal pre-targeted at this folder. Passed from the page. */
   onUploadToFolder: (folder: DriveFolder) => void;
+  /** Opens the editable checklist manager modal. */
+  onManage: () => void;
 };
 
 /**
@@ -34,13 +36,11 @@ type Props = {
  * lands on the next thing to chase. A toggle reveals every item (incl.
  * optional / recommended) for full visibility.
  */
-export function DocumentsChecklist({ items, locale, onUploadToFolder }: Props) {
+export function DocumentsChecklist({ items, locale, onUploadToFolder, onManage }: Props) {
   const t = useTranslations('documents.checklist');
   const [showAll, setShowAll] = useState(false);
 
   const { missing, summary } = useMemo(() => groupItems(items), [items]);
-
-  if (items.length === 0) return null;
 
   const visible = showAll ? items : missing;
 
@@ -59,19 +59,32 @@ export function DocumentsChecklist({ items, locale, onUploadToFolder }: Props) {
             t={t}
           />
         </div>
-        {summary.total > summary.missingRequired && (
+        <div className="flex items-center gap-3 shrink-0">
+          {summary.total > summary.missingRequired && (
+            <button
+              type="button"
+              onClick={() => setShowAll((v) => !v)}
+              className="text-xs text-brand-gold-text hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+            >
+              {showAll ? t('showMissingOnly') : t('showAll', { total: summary.total })}
+            </button>
+          )}
           <button
             type="button"
-            onClick={() => setShowAll((v) => !v)}
-            className="text-xs text-brand-gold-text hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 shrink-0"
+            onClick={onManage}
+            aria-label={t('manage.open')}
+            className="inline-flex items-center gap-1 text-xs text-brand-gold-text hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
           >
-            {showAll ? t('showMissingOnly') : t('showAll', { total: summary.total })}
+            <Pencil className="size-3.5" aria-hidden="true" />
+            {t('manage.open')}
           </button>
-        )}
+        </div>
       </header>
 
       <div className="p-2.5">
-        {visible.length === 0 ? (
+        {items.length === 0 ? (
+          <p className="text-center py-6 text-sm text-neutral-500">{t('manage.empty')}</p>
+        ) : visible.length === 0 ? (
           <p className="text-center py-6 text-sm text-emerald-700 inline-flex items-center justify-center gap-2 w-full">
             <CheckCircle2 className="size-4" aria-hidden="true" />
             {t('allDone')}

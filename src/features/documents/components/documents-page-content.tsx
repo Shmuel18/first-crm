@@ -2,10 +2,13 @@
 
 import { useMemo, useState } from 'react';
 
+import { useTranslations } from 'next-intl';
+
 import type { Locale } from '@/lib/i18n/direction';
 
 import type { DocumentChecklistItem } from '../services/document-checklist.service';
 import { DRIVE_FOLDERS, type DocumentWithRelations, type DocumentCategoryRow, type DriveFolder } from '../types';
+import { ChecklistManagerModal } from './checklist-manager-modal';
 import { DocumentsActionBar } from './documents-action-bar';
 import { DocumentsChecklist } from './documents-checklist';
 import { DocumentsSummary } from './documents-summary';
@@ -50,9 +53,11 @@ export function DocumentsPageContent({
   primaryBorrower,
   locale,
 }: Props) {
+  const t = useTranslations('documents.checklist');
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploadFolder, setUploadFolder] = useState<DriveFolder | null>(null);
   const [previewDoc, setPreviewDoc] = useState<DocumentWithRelations | null>(null);
+  const [manageOpen, setManageOpen] = useState(false);
 
   const { buckets, uncategorized } = useMemo(() => {
     const result: Record<DriveFolder, DocumentWithRelations[]> = {
@@ -122,6 +127,7 @@ export function DocumentsPageContent({
             items={checklist}
             locale={locale}
             onUploadToFolder={handleUploadFromFolder}
+            onManage={() => setManageOpen(true)}
           />
         </div>
 
@@ -168,6 +174,15 @@ export function DocumentsPageContent({
         doc={previewDoc}
         caseId={caseId}
         onClose={() => setPreviewDoc(null)}
+      />
+
+      <ChecklistManagerModal
+        open={manageOpen}
+        onOpenChange={setManageOpen}
+        caseId={caseId}
+        title={borrowerNames ? `${t('manage.title')} — ${borrowerNames}` : t('manage.title')}
+        items={checklist}
+        locale={locale}
       />
     </div>
   );
