@@ -590,7 +590,10 @@
       "referrer_name": "שם הממליץ",
       "case_blocker": "גורם מעכב",
       "insurance_status": "סטטוס ביטוח",
-      "version": "גרסה"
+      "version": "גרסה",
+      "category_id": "קטגוריה",
+      "status": "סטטוס מסמך",
+      "expiry_date": "תוקף"
     },
     "enums": {
       "residency_type": {
@@ -625,6 +628,12 @@
         "exists": "קיים",
         "in_progress": "בתהליך",
         "missing": "לא קיים"
+      },
+      "status": {
+        "new": "חדש",
+        "verified": "תקין",
+        "rejected": "נדחה",
+        "expired": "פג תוקף"
       }
     },
     "values": {
@@ -684,9 +693,6 @@
       },
       "minutes": "{count} דק׳",
       "open": "פתח בגוגל קלנדר"
-    },
-    "history": {
-      "title": "היסטוריית התיק"
     },
     "admin": {
       "sections": {

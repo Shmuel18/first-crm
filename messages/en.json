@@ -590,7 +590,10 @@
       "referrer_name": "Referrer name",
       "case_blocker": "Blocker",
       "insurance_status": "Insurance status",
-      "version": "Version"
+      "version": "Version",
+      "category_id": "Category",
+      "status": "Document status",
+      "expiry_date": "Expiry date"
     },
     "enums": {
       "residency_type": {
@@ -625,6 +628,12 @@
         "exists": "Exists",
         "in_progress": "In progress",
         "missing": "Missing"
+      },
+      "status": {
+        "new": "New",
+        "verified": "Verified",
+        "rejected": "Rejected",
+        "expired": "Expired"
       }
     },
     "values": {
@@ -684,9 +693,6 @@
       },
       "minutes": "{count} min",
       "open": "Open in Google Calendar"
-    },
-    "history": {
-      "title": "Case history"
     },
     "admin": {
       "sections": {

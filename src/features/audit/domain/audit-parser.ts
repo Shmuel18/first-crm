@@ -40,11 +40,30 @@ export type AuditRow = {
  * (i.e. INSERT/DELETE rows where the whole row is stored) return null so
  * the caller knows to fall back to `wholeRow`.
  */
+/**
+ * Internal/technical columns hidden from the audit display so the history
+ * stays readable: the `metadata` JSONB (which holds storage_path / source /
+ * etc.), the Drive sync ids, file size/mime, and the who/when verification
+ * stamps (already conveyed by the entry's actor + timestamp). Applies to every
+ * table — none are user-meaningful as a diff.
+ */
+const HIDDEN_FIELDS = new Set([
+  'metadata',
+  'drive_file_id',
+  'drive_file_url',
+  'file_size',
+  'mime_type',
+  'uploaded_by',
+  'verified_by',
+  'verified_at',
+]);
+
 export function extractChanges(action: string, changed: Json | null): AuditChangeMap | null {
   if (action !== 'UPDATE') return null;
   if (!changed || typeof changed !== 'object' || Array.isArray(changed)) return null;
   const out: AuditChangeMap = {};
   for (const [key, val] of Object.entries(changed)) {
+    if (HIDDEN_FIELDS.has(key)) continue;
     if (val && typeof val === 'object' && !Array.isArray(val) && 'old' in val && 'new' in val) {
       const pair = val as { old: Json | null; new: Json | null };
       out[key] = { old: pair.old, new: pair.new };

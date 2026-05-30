@@ -15,7 +15,7 @@ import type { Database } from '@/types/database';
  */
 const FK_NAME_LOOKUPS: ReadonlyArray<{
   field: string;
-  table: 'case_statuses' | 'case_types' | 'banks' | 'income_types';
+  table: 'case_statuses' | 'case_types' | 'banks' | 'income_types' | 'document_categories';
   nameColumn: 'name_he';
 }> = [
   { field: 'status_id', table: 'case_statuses', nameColumn: 'name_he' },
@@ -23,6 +23,7 @@ const FK_NAME_LOOKUPS: ReadonlyArray<{
   { field: 'case_type_secondary_id', table: 'case_types', nameColumn: 'name_he' },
   { field: 'bank_id', table: 'banks', nameColumn: 'name_he' },
   { field: 'income_type_id', table: 'income_types', nameColumn: 'name_he' },
+  { field: 'category_id', table: 'document_categories', nameColumn: 'name_he' },
 ];
 
 /**
