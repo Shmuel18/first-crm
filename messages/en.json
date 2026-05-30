@@ -678,6 +678,14 @@
       "deleteDialog": {
         "title": "Delete case",
         "description": "The case will be hidden from the dashboard and moved to \"Deleted cases\" in Settings. You can restore it from there within 14 days — after that it will be permanently deleted."
+      },
+      "sendMessageMenu": {
+        "viaEmail": "Send via email",
+        "viaWhatsapp": "Send via WhatsApp",
+        "noEmail": "No client email",
+        "noPhone": "No client phone",
+        "whatsappGreeting": "Hello {name},",
+        "whatsappGreetingNoName": "Hello,"
       }
     },
     "scheduleMeeting": {
