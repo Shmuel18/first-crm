@@ -38,6 +38,8 @@ export function EditableStatusCell({
   const [statusColor, setStatusColor] = useState(currentStatusColor);
   const [statusId, setStatusId] = useState(currentStatusId);
   const [isPending, startTransition] = useTransition();
+  // Brief "saved" pulse (gold flash + ✓) after a successful inline update.
+  const [justSaved, setJustSaved] = useState(false);
 
   // Re-sync from props after a server revalidation. The page renders TWO
   // EditableStatusCell instances (action bar + admin block); editing in
@@ -92,7 +94,10 @@ export function EditableStatusCell({
         setStatusName(prevName);
         setStatusColor(prevColor);
         toast.error(tc('saveFailed'));
+        return;
       }
+      setJustSaved(true);
+      window.setTimeout(() => setJustSaved(false), 1200);
     });
   };
 
@@ -108,11 +113,13 @@ export function EditableStatusCell({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={triggerLabel}
-        className="inline-flex items-center gap-1 cursor-pointer rounded-md disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
+        className={`inline-flex items-center gap-1 cursor-pointer rounded-md px-1 -mx-1 transition-colors duration-500 ease-emphasized motion-reduce:transition-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50 ${justSaved ? 'bg-brand-gold/20' : 'bg-transparent'}`}
       >
         <CaseStatusBadge name={statusName} color={statusColor} />
         {isPending ? (
           <Loader2 className="size-3 text-neutral-500 animate-spin" aria-hidden="true" />
+        ) : justSaved ? (
+          <Check className="size-3 text-emerald-600" aria-hidden="true" />
         ) : (
           <ChevronDown className="size-3 text-neutral-500" aria-hidden="true" />
         )}
