@@ -35,14 +35,18 @@ function TooltipContent({
 }) {
   return (
     <TooltipPrimitive.Portal>
-      <TooltipPrimitive.Positioner side={side} sideOffset={sideOffset}>
+      {/* z-index MUST sit on the Positioner — it's the positioned (absolute)
+          element. The Popup is position:static, where z-index is ignored, so
+          a sticky action-bar (z-20) painted OVER the tooltip wherever the two
+          overlapped (e.g. the topbar bell on case pages). z-[100] beats the
+          action bars (z-20) and inline dropdowns (z-50). */}
+      <TooltipPrimitive.Positioner side={side} sideOffset={sideOffset} className="z-[100]">
         <TooltipPrimitive.Popup
           className={cn(
-            // z-[100] beats the case-action-bar (z-20) and any inline dropdown
-            // (z-50). text-sm not text-xs — Hebrew at xs is hard to read.
-            // No animation: `tw-animate-css` keyframes don't reliably apply in
-            // Tailwind v4 and were leaving the popup at opacity-0.
-            'z-[100] max-w-xs rounded-md bg-neutral-900 px-2.5 py-1.5 text-sm font-medium text-white shadow-lg pointer-events-none',
+            // text-sm not text-xs — Hebrew at xs is hard to read. No animation:
+            // `tw-animate-css` keyframes don't reliably apply in Tailwind v4 and
+            // were leaving the popup at opacity-0.
+            'max-w-xs rounded-md bg-neutral-900 px-2.5 py-1.5 text-sm font-medium text-white shadow-lg pointer-events-none',
             className,
           )}
           {...props}
