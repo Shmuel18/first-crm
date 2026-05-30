@@ -583,7 +583,14 @@
       "expected_income": "Expected income",
       "created_at": "Created",
       "updated_at": "Updated",
-      "deleted_at": "Deleted"
+      "deleted_at": "Deleted",
+      "case_type_other_text": "Other case type (details)",
+      "short_note": "Short note",
+      "request_details": "Request details",
+      "referrer_name": "Referrer name",
+      "case_blocker": "Blocker",
+      "insurance_status": "Insurance status",
+      "version": "Version"
     },
     "enums": {
       "residency_type": {
@@ -605,6 +612,19 @@
         "male": "Male",
         "female": "Female",
         "other": "Other"
+      },
+      "case_blocker": {
+        "none": "Not blocked",
+        "client": "Client",
+        "bank": "Bank",
+        "office": "Office",
+        "appraiser": "Appraiser",
+        "lawyer": "Lawyer"
+      },
+      "insurance_status": {
+        "exists": "Exists",
+        "in_progress": "In progress",
+        "missing": "Missing"
       }
     },
     "values": {
