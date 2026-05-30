@@ -583,7 +583,14 @@
       "expected_income": "הכנסה צפויה",
       "created_at": "נוצר",
       "updated_at": "עודכן",
-      "deleted_at": "נמחק"
+      "deleted_at": "נמחק",
+      "case_type_other_text": "פירוט סוג עסקה אחר",
+      "short_note": "הערה קצרה",
+      "request_details": "פרטי הבקשה",
+      "referrer_name": "שם הממליץ",
+      "case_blocker": "גורם מעכב",
+      "insurance_status": "סטטוס ביטוח",
+      "version": "גרסה"
     },
     "enums": {
       "residency_type": {
@@ -605,6 +612,19 @@
         "male": "זכר",
         "female": "נקבה",
         "other": "אחר"
+      },
+      "case_blocker": {
+        "none": "לא מעוכב",
+        "client": "לקוח",
+        "bank": "בנק",
+        "office": "משרד",
+        "appraiser": "שמאי",
+        "lawyer": "עו״ד"
+      },
+      "insurance_status": {
+        "exists": "קיים",
+        "in_progress": "בתהליך",
+        "missing": "לא קיים"
       }
     },
     "values": {
