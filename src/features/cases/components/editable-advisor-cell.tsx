@@ -6,6 +6,8 @@ import { Check, ChevronDown, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { formatPersonName } from '@/lib/utils/person-name';
+
 import { quickUpdateCaseFieldAction } from '../actions/quick-update-case';
 import { calcDropdownPos, type DropdownPosition } from './dropdown-position';
 
@@ -23,7 +25,7 @@ type EditableAdvisorCellProps = {
 };
 
 function fullName(a: AdvisorOption, noNameFallback: string): string {
-  return [a.first_name, a.last_name].filter(Boolean).join(' ') || noNameFallback;
+  return formatPersonName(a.first_name, a.last_name) || noNameFallback;
 }
 
 function initials(name: string | null): string {

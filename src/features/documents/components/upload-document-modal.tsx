@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { FormField, NativeSelect } from '@/components/shared/form-fields';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 import { finalizeUploadAction } from '../actions/finalize-upload';
 import { prepareUploadAction } from '../actions/prepare-upload';
@@ -265,7 +266,7 @@ export function UploadDocumentModal({
               <option value="">{t('borrowerGeneral')}</option>
               {borrowers.map((b) => (
                 <option key={b.id} value={b.id}>
-                  {[b.firstName, b.lastName].filter(Boolean).join(' ') || '—'}
+                  {formatPersonName(b.firstName, b.lastName) || '—'}
                 </option>
               ))}
             </NativeSelect>

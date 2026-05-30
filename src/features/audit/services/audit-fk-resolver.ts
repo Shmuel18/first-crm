@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { formatPersonName } from '@/lib/utils/person-name';
 import type { Database } from '@/types/database';
 
 /**
@@ -49,7 +50,7 @@ export async function resolveFkDisplayNames(
         .select('id, first_name, last_name')
         .in('id', missing);
       for (const p of extraProfiles ?? []) {
-        nameById.set(p.id, [p.first_name, p.last_name].filter(Boolean).join(' ').trim() || null);
+        nameById.set(p.id, formatPersonName(p.first_name, p.last_name) || null);
       }
     }
     const advisorLookup = new Map<string, string>();

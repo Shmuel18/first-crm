@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { Locale } from '@/lib/i18n/direction';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 import { changeTaskStatusAction } from '../actions/change-task-status';
 import { completeTaskAction } from '../actions/complete-task';
@@ -65,7 +66,7 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
   const immediate = isImmediateTask(task);
   const completed = task.status === 'completed';
   const assigneeName =
-    [task.assignee?.first_name, task.assignee?.last_name].filter(Boolean).join(' ') ||
+    formatPersonName(task.assignee?.first_name, task.assignee?.last_name) ||
     t('unassigned');
 
   const handleToggleComplete = () => {

@@ -1,4 +1,5 @@
 import type { Locale } from '@/lib/i18n/direction';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 import {
   getCaseClientLabel,
@@ -35,7 +36,7 @@ export function buildExportRows(
     const secondaryCount = getSecondaryBanksCount(c);
     const advisor = c.assigned_advisor;
     const advisorName = advisor
-      ? [advisor.first_name, advisor.last_name].filter(Boolean).join(' ').trim()
+      ? formatPersonName(advisor.first_name, advisor.last_name)
       : '';
     const bankName = primaryBank ? pickName(primaryBank) : '';
     const bankLabel = primaryBank

@@ -11,6 +11,7 @@ import {
 } from '@/features/borrowers/services/borrowers.service';
 import { getRawCaseById } from '@/features/cases/services/cases.service';
 import { asBorrowerId, asCaseId } from '@/lib/types/branded';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 type Props = { params: Promise<{ id: string; borrowerId: string }> };
 
@@ -31,7 +32,7 @@ export default async function EditBorrowerPage({ params }: Props) {
   const tc = await getTranslations('common');
 
   const fullName =
-    [borrower.first_name, borrower.last_name].filter(Boolean).join(' ') || tc('noName');
+    formatPersonName(borrower.first_name, borrower.last_name) || tc('noName');
 
   return (
     <div className="max-w-3xl space-y-6">

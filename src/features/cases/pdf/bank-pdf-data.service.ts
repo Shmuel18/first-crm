@@ -2,6 +2,7 @@ import { listBorrowersForCase } from '@/features/borrowers/services/borrowers.se
 import { listIncomesForCase } from '@/features/incomes/services/incomes.service';
 import { listObligationsForCase } from '@/features/obligations/services/obligations.service';
 import type { CaseId } from '@/lib/types/branded';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 import { calculateLtv } from '../domain/calculations';
 import {
@@ -122,8 +123,7 @@ export async function loadCaseForBankPdf(caseId: CaseId): Promise<BankPdfData | 
     const b = j.borrower;
     const incomeGroup = incomeGroups.find((g) => g.borrowerId === b.id);
     const obligationGroup = obligationGroups.find((g) => g.borrowerId === b.id);
-    const fullName =
-      [b.first_name, b.last_name].filter(Boolean).join(' ').trim() || '(ללא שם)';
+    const fullName = formatPersonName(b.first_name, b.last_name) || '(ללא שם)';
     const ageYears = b.birth_date
       ? Math.floor(
           (Date.now() - new Date(b.birth_date).getTime()) /
@@ -210,10 +210,10 @@ export async function loadCaseForBankPdf(caseId: CaseId): Promise<BankPdfData | 
   );
 
   const advisorName =
-    [caseData.assigned_advisor?.first_name, caseData.assigned_advisor?.last_name]
-      .filter(Boolean)
-      .join(' ')
-      .trim() || null;
+    formatPersonName(
+      caseData.assigned_advisor?.first_name,
+      caseData.assigned_advisor?.last_name,
+    ) || null;
 
   return {
     case: {

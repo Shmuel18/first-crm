@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 import {
   collectFkIds,
@@ -30,7 +31,7 @@ async function resolveEntries(rows: AuditRow[]): Promise<AuditEntry[]> {
       .select('id, first_name, last_name')
       .in('id', userIds);
     for (const p of profiles ?? []) {
-      nameById.set(p.id, [p.first_name, p.last_name].filter(Boolean).join(' ').trim() || null);
+      nameById.set(p.id, formatPersonName(p.first_name, p.last_name) || null);
     }
   }
 

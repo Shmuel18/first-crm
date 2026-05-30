@@ -11,6 +11,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 import { DashboardExportButtons } from './dashboard-export-buttons';
 import { RowDensityControl } from './row-density-control';
@@ -56,7 +57,7 @@ export function DashboardFiltersBar({
   const banks: Option[] = bankOptions.map((b) => ({ id: b.id, name: b.name_he }));
   const advisors: Option[] = advisorOptions.map((a) => ({
     id: a.id,
-    name: [a.first_name, a.last_name].filter(Boolean).join(' ').trim() || '—',
+    name: formatPersonName(a.first_name, a.last_name) || '—',
   }));
 
   const showAdvisor = canFilterByAdvisor && advisors.length > 0;

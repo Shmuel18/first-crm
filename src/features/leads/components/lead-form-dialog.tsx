@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { FormField, NativeSelect } from '@/components/shared/form-fields';
 import { fieldDefault } from '@/lib/utils/form-defaults';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 import { createLeadAction } from '../actions/create-lead';
 import { LEAD_ACTION_INITIAL, type LeadActionState } from '../types';
@@ -98,7 +99,7 @@ export function LeadFormDialog({ open, onOpenChange, assignees }: Props) {
                 <option value="">{t('fields.assigneeUnassigned')}</option>
                 {assignees.map((a) => {
                   const name =
-                    [a.first_name, a.last_name].filter(Boolean).join(' ') || tc('noName');
+                    formatPersonName(a.first_name, a.last_name) || tc('noName');
                   return (
                     <option key={a.id} value={a.id}>
                       {name}

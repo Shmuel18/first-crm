@@ -1,5 +1,7 @@
 import { useTranslations } from 'next-intl';
 
+import { formatPersonName } from '@/lib/utils/person-name';
+
 import type { LeadRow } from '../types';
 
 import { ConvertLeadButton } from './convert-lead-button';
@@ -18,7 +20,7 @@ export function LeadsCardList({ leads }: Props) {
   return (
     <ul className="divide-y divide-neutral-200">
       {leads.map((lead, i) => {
-        const name = [lead.first_name, lead.last_name].filter(Boolean).join(' ').trim();
+        const name = formatPersonName(lead.first_name, lead.last_name);
         return (
           <li key={lead.id} className="px-4 py-3 bg-white">
             <div className="flex items-start justify-between gap-2">

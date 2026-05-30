@@ -1,3 +1,5 @@
+import { formatPersonName } from '@/lib/utils/person-name';
+
 import type { CaseTableRowData, CaseWithRelations } from '../types';
 
 import {
@@ -16,9 +18,7 @@ import { isFrozenCase, isStuckCase } from './case-state';
  */
 export function toRowData(c: CaseWithRelations, index: number): CaseTableRowData {
   const advisorName =
-    [c.assigned_advisor?.first_name, c.assigned_advisor?.last_name]
-      .filter(Boolean)
-      .join(' ') || null;
+    formatPersonName(c.assigned_advisor?.first_name, c.assigned_advisor?.last_name) || null;
   const primaryBank = getPrimaryBank(c);
 
   return {

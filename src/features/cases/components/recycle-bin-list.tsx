@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import type { Locale } from '@/lib/i18n/direction';
+import { formatPersonName } from '@/lib/utils/person-name';
 import { formatDateShort } from '@/lib/utils/format-date';
 
 import { permanentDeleteCaseAction } from '../actions/permanent-delete-case';
@@ -87,12 +88,11 @@ export function RecycleBinList({ rows, locale }: Props) {
     <>
       <ul className="rounded-xl border border-neutral-200 bg-white divide-y divide-neutral-100 overflow-hidden">
         {rows.map((row) => {
-          const fullName = [row.primaryBorrowerFirstName, row.primaryBorrowerLastName]
-            .filter(Boolean)
-            .join(' ');
-          const deletedByName = [row.deletedByFirstName, row.deletedByLastName]
-            .filter(Boolean)
-            .join(' ');
+          const fullName = formatPersonName(
+            row.primaryBorrowerFirstName,
+            row.primaryBorrowerLastName,
+          );
+          const deletedByName = formatPersonName(row.deletedByFirstName, row.deletedByLastName);
           const statusName =
             (locale === 'he' ? row.statusNameHe : row.statusNameEn) ?? '';
           const isNearPurge = row.daysUntilPurge <= NEAR_PURGE_DAYS;

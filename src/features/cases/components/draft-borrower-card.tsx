@@ -6,6 +6,7 @@ import { Mail, MessageCircle, Phone, Trash2, UserCircle2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 import { BorrowerCitizenshipQuestions } from '@/features/borrowers/components/borrower-citizenship-questions';
 import { FieldGroup } from '@/features/borrowers/components/borrower-compact-fields';
@@ -65,7 +66,7 @@ export function DraftBorrowerCard({ borrower, onChange, onRemove, canRemove }: P
   const [localBorrower, setLocalBorrower] = useState(borrower);
 
   const fullName =
-    [localBorrower.first_name, localBorrower.last_name].filter(Boolean).join(' ') ||
+    formatPersonName(localBorrower.first_name, localBorrower.last_name) ||
     tc('noName');
 
   // Single saveField bridge — accepts EditableBorrowerField names (the same

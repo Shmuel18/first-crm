@@ -104,7 +104,7 @@ const STRINGS_HE: Strings = {
     fields: {
       roleInCase: 'תפקיד בתיק',
       primarySuffix: ' (ראשי)',
-      fullName: 'שם ושם משפחה',
+      fullName: 'שם משפחה ושם פרטי',
       nationalId: 'מספר ת״ז',
       idIssueDate: 'תאריך הנפקת ת״ז',
       idExpiryDate: 'תוקף ת״ז',

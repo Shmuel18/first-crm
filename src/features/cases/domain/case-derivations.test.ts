@@ -33,7 +33,7 @@ describe('getCaseClientLabel', () => {
 
   it('returns the single borrower name', () => {
     expect(getCaseClientLabel({ case_borrowers: [cb(true, 'ישראל', 'ישראלי')] })).toBe(
-      'ישראל ישראלי',
+      'ישראלי ישראל',
     );
   });
 
@@ -41,7 +41,7 @@ describe('getCaseClientLabel', () => {
     const label = getCaseClientLabel({
       case_borrowers: [cb(false, 'דנה', 'כהן'), cb(true, 'ישראל', 'ישראלי')],
     });
-    expect(label).toBe('ישראל ישראלי +1');
+    expect(label).toBe('ישראלי ישראל +1');
   });
 
   it('ignores null borrowers and blank names', () => {
@@ -53,7 +53,7 @@ describe('getCaseClientLabel', () => {
           cb(false, 'דנה', 'כהן'),
         ],
       }),
-    ).toBe('דנה כהן');
+    ).toBe('כהן דנה');
   });
 });
 

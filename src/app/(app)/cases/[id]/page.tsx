@@ -27,6 +27,7 @@ import { userHasPermissions } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { timeAsync } from '@/lib/perf/timing';
 import { asCaseId } from '@/lib/types/branded';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -77,9 +78,7 @@ export default async function CaseDetailPage({ params }: Props) {
 
   const borrowerNames =
     borrowers
-      .map(({ borrower }) =>
-        [borrower.first_name, borrower.last_name].filter(Boolean).join(' '),
-      )
+      .map(({ borrower }) => formatPersonName(borrower.first_name, borrower.last_name))
       .filter(Boolean)
       .join(' & ') || '';
 
