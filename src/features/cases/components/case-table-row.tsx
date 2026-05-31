@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 
 import { useLocale, useTranslations } from 'next-intl';
 
+import { startNavProgress } from '@/components/layout/nav-progress';
 import { EditableBankCell } from '@/features/case-banks/components/editable-bank-cell';
 
 import { parseLocale } from '@/lib/i18n/direction';
@@ -41,7 +42,10 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }
     .filter(Boolean)
     .join(' ');
 
-  const navigateToCase = () => router.push(`/cases/${row.id}`);
+  const navigateToCase = () => {
+    startNavProgress();
+    router.push(`/cases/${row.id}`);
+  };
   const auditTooltip = t('updatedOn', { date: formatDateShort(row.updatedAt, locale) });
 
   // Keyboard a11y (#17): <tr onClick> alone is mouse-only. role="link" +

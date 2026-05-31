@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 import { getTranslations } from 'next-intl/server';
 
 export default async function SettingsLoading() {
@@ -28,7 +30,17 @@ export default async function SettingsLoading() {
           ))}
         </aside>
 
-        <main className="space-y-4">
+        <main className="relative space-y-4">
+          {/* Brand logo as the focal point while settings loads. */}
+          <div className="pointer-events-none absolute inset-x-0 top-16 flex justify-center">
+            <Image
+              src="/logo-mark.png"
+              alt=""
+              width={1152}
+              height={740}
+              className="h-10 w-auto opacity-90"
+            />
+          </div>
           <div className="h-32 rounded-xl bg-neutral-100" />
           <div className="h-48 rounded-xl bg-neutral-100" />
         </main>

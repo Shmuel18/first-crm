@@ -1,6 +1,9 @@
+import { Suspense } from 'react';
+
 import { Toaster } from 'sonner';
 import { getLocale, getTranslations } from 'next-intl/server';
 
+import { NavProgress } from '@/components/layout/nav-progress';
 import { RouteFocus } from '@/components/layout/route-focus';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Topbar } from '@/components/layout/topbar';
@@ -29,6 +32,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           {t('skipToContent')}
         </a>
         <RouteFocus />
+        <Suspense fallback={null}>
+          <NavProgress />
+        </Suspense>
         <Topbar tasksBadge={bootstrap.pendingTasks} criticalTasksBadge={bootstrap.criticalTasks} />
         <Sidebar tasksBadge={bootstrap.pendingTasks} criticalTasksBadge={bootstrap.criticalTasks} />
       {/* The inner viewport owns scrolling. Sticky subheaders compensate for
