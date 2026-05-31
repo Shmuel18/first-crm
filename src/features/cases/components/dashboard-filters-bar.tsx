@@ -55,10 +55,6 @@ export function DashboardFiltersBar({
     'targetDate',
     parseAsStringEnum([...TARGET_DATE_FILTER_VALUES]).withOptions(urlOpts),
   );
-  const [stuck, setStuck] = useQueryState(
-    'stuck',
-    parseAsBoolean.withDefault(false).withOptions(urlOpts),
-  );
   const [hideClosedFrozen, setHide] = useQueryState(
     'hideClosedFrozen',
     parseAsBoolean.withDefault(true).withOptions(urlOpts),
@@ -87,14 +83,13 @@ export function DashboardFiltersBar({
   // The free-text search lives in a sibling component (the view selector bar
   // above), so we deliberately leave `query` alone here — it would be a
   // surprise to wipe text the user typed in a different bar.
-  const anyActive = advisor !== null || stage !== null || bank !== null || targetDate !== null || stuck;
+  const anyActive = advisor !== null || stage !== null || bank !== null || targetDate !== null;
 
   const clearAll = () => {
     setAdvisor(null);
     setStage(null);
     setBank(null);
     setTargetDate(null);
-    setStuck(false);
   };
 
   return (
@@ -121,15 +116,6 @@ export function DashboardFiltersBar({
         options={targetDates}
         allLabel={t('all')}
       />
-      <button
-        type="button"
-        onClick={() => setStuck(!stuck)}
-        aria-pressed={stuck}
-        className={chipClass(stuck)}
-      >
-        {t('onlyStuck')}
-      </button>
-
       {anyActive && (
         <button
           type="button"

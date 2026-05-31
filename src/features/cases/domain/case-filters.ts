@@ -4,7 +4,7 @@
  * single listCases fetch rather than as extra SQL predicates.
  */
 
-import { isFrozenCase, isStuckCase } from './case-state';
+import { isFrozenCase } from './case-state';
 import {
   matchesTargetDateFilter,
   TARGET_DATE_FILTER_VALUES,
@@ -18,7 +18,6 @@ export type DashboardFilters = {
   stage: string | null;
   bank: string | null;
   targetDate: TargetDateFilter | null;
-  stuck: boolean;
   hideClosedFrozen: boolean;
 };
 
@@ -49,7 +48,6 @@ export function parseDashboardFilters(
     stage: first(sp.stage),
     bank: first(sp.bank),
     targetDate: parseTargetDateFilter(first(sp.targetDate)),
-    stuck: first(sp.stuck) === 'true',
     // Hiding done/frozen is the default view; only an explicit "false" disables it.
     hideClosedFrozen: first(sp.hideClosedFrozen) !== 'false',
   };
@@ -69,7 +67,6 @@ export function filterCases(
     ) {
       return false;
     }
-    if (f.stuck && !isStuckCase(c)) return false;
     if (!matchesTargetDateFilter(c.target_date, f.targetDate, now)) return false;
     if (f.hideClosedFrozen && isFrozenCase(c)) return false;
     return true;
