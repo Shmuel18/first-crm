@@ -32,10 +32,10 @@ export async function Topbar() {
       <div className="h-full px-4 flex items-center gap-3">
         <Link href="/cases" className="shrink-0" aria-label="Kaufman Finance Group">
           <Image
-            src="/logo-mark.png"
+            src="/logo.png"
             alt="Kaufman Finance Group"
-            width={1152}
-            height={740}
+            width={1536}
+            height={1024}
             priority
             className="h-10 w-auto"
           />
