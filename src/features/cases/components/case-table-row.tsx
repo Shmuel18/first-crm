@@ -25,9 +25,11 @@ type Props = {
   statusOptions: ReadonlyArray<StatusOption>;
   bankOptions: ReadonlyArray<BankOption>;
   advisorOptions: ReadonlyArray<AdvisorOption>;
+  // Advisor column hidden for users who only see their own cases (see CasesTable).
+  canViewAll: boolean;
 };
 
-export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }: Props) {
+export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions, canViewAll }: Props) {
   const router = useRouter();
   const t = useTranslations('dashboard.rowState');
   const locale = parseLocale(useLocale());
@@ -121,14 +123,16 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }
         />
       </td>
 
-      <td className="px-4 py-0 align-middle" onClick={(e) => e.stopPropagation()}>
-        <EditableAdvisorCell
-          caseId={row.id}
-          currentAdvisorId={row.advisorId}
-          currentAdvisorName={row.advisorName}
-          options={advisorOptions}
-        />
-      </td>
+      {canViewAll && (
+        <td className="px-4 py-0 align-middle" onClick={(e) => e.stopPropagation()}>
+          <EditableAdvisorCell
+            caseId={row.id}
+            currentAdvisorId={row.advisorId}
+            currentAdvisorName={row.advisorName}
+            options={advisorOptions}
+          />
+        </td>
+      )}
 
       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
         <EditableTextCell
