@@ -1,16 +1,17 @@
 import { getTranslations } from 'next-intl/server';
 
-import { LoadingLogo } from '@/components/shared/loading-logo';
-
 export default async function SettingsLoading() {
   const t = await getTranslations('common');
 
+  // No LoadingLogo here on purpose: /settings has an async sub-layout, so the
+  // parent (app)/loading already shows the logo while that layout loads. A
+  // second logo here would appear over the inner column and "jump" — so this
+  // inner skeleton stays logo-free.
   return (
-    <div className="relative -mt-6">
+    <div className="-mt-6">
       <span role="status" aria-live="polite" className="sr-only">
         {t('loading')}
       </span>
-      <LoadingLogo />
 
       <div
         className="bg-brand-gold-soft sticky top-[-1rem] sm:top-[-1.5rem] z-20 shadow-sm -mx-4 px-4 sm:-mx-6 sm:px-6 py-3 border-b border-brand-gold/20"
