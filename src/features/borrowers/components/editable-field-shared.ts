@@ -27,6 +27,11 @@ type CommonProps = {
    *  (national_id digits should hug the label side of the box) without
    *  forking the EditableField API for every cosmetic tweak. */
   inputClassName?: string;
+  /** Opt-in: render a numeric field with thousands separators (e.g. 7,000)
+   *  at rest, reverting to raw digits while focused. Only takes effect for
+   *  type='number'. Use for money / large counts — NOT for years or IDs,
+   *  where grouping (2,024) would be wrong. */
+  groupThousands?: boolean;
 };
 
 export type FieldProps = CommonProps &

@@ -150,6 +150,7 @@ export function IncomeRow({ caseId, income, incomeTypes, locale, canEdit, canDel
           value={row.amount_monthly === null ? null : String(row.amount_monthly)}
           onSave={(v) => saveField('amount_monthly', v === null ? null : Number(v))}
           adornment={<CurrencySign />}
+          groupThousands
         />
         <div className="sm:col-span-2">
           <EditableField

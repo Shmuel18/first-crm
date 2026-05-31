@@ -6,6 +6,7 @@ import { Loader2, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { GroupedNumberInput } from '@/components/shared/grouped-number-input';
 import { CurrencySign } from '@/components/ui/currency-sign';
 import { DatePickerPopover } from '@/components/ui/date-picker-popover';
 import { Tooltip } from '@/components/ui/tooltip';
@@ -168,15 +169,10 @@ function NumberCell({
   // money, so the ₪ adornment goes here unconditionally.
   return (
     <div className="flex items-center gap-1 min-w-0">
-      <input
-        type="number"
-        inputMode="decimal"
-        step="any"
+      <GroupedNumberInput
         value={local}
-        dir="ltr"
-        onChange={(e) => setLocal(e.target.value)}
-        onBlur={(e) => {
-          const raw = e.target.value.trim();
+        onChange={setLocal}
+        onCommit={(raw) => {
           const next = raw === '' ? null : Number(raw);
           if ((next === null && value === null) || next === value) return;
           if (next !== null && !Number.isFinite(next)) {
@@ -185,7 +181,9 @@ function NumberCell({
           }
           onSave(next);
         }}
-        className={`${baseInputClass} [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [appearance:textfield] text-end`}
+        inputMode="decimal"
+        dir="ltr"
+        className={`${baseInputClass} text-end`}
       />
       <CurrencySign />
     </div>

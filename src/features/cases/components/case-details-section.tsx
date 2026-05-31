@@ -202,6 +202,7 @@ export function CaseDetailsSection({
           onSave={(v) => saveFee(v)}
           dir="ltr"
           adornment={<CurrencySign />}
+          groupThousands
         />
       )}
       {/* Short note last + spans 2 columns so it gets the biggest visual

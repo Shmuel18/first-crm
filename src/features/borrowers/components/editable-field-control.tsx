@@ -1,5 +1,7 @@
 import { Check, Loader2 } from 'lucide-react';
 
+import { GroupedNumberInput } from '@/components/shared/grouped-number-input';
+
 import type { FieldProps } from './editable-field-shared';
 import { baseInputClass, errorInputClass } from './editable-field-shared';
 
@@ -90,6 +92,24 @@ export function renderControl(p: ControlRenderProps) {
         disabled={p.disabled || p.isPending}
         dir={p.resolvedDir}
         className={`${inputClass} [&::-webkit-calendar-picker-indicator]:hidden ${p.inputClassName ?? ''}`}
+      />
+    );
+  }
+
+  // Grouped-number opt-in: thousands separators (7,000) at rest, raw digits
+  // while editing. <input type='number'> can't display a comma, so this path
+  // renders as text. The committed value stays raw digits (see below).
+  if (p.type === 'number' && p.groupThousands) {
+    return (
+      <GroupedNumberInput
+        id={p.id}
+        value={p.localValue}
+        onChange={p.setLocalValue}
+        onCommit={p.save}
+        placeholder={p.placeholder}
+        disabled={p.disabled || p.isPending}
+        dir={p.resolvedDir}
+        className={`${inputClass} text-end ${p.inputClassName ?? ''}`}
       />
     );
   }
