@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useEffect, useMemo, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 
 import { Loader2 } from 'lucide-react';
@@ -90,30 +90,42 @@ export function TaskFormDialog({
       : assignees;
 
   const currentCase = task?.case ?? null;
-  const effectiveCases =
-    currentCase && !cases.some((c) => c.id === currentCase.id)
-      ? [
-          {
-            id: currentCase.id,
-            case_number: currentCase.case_number,
-            label: `#${currentCase.case_number}`,
-          },
-          ...cases,
-        ]
-      : cases;
+  const effectiveCases = useMemo(
+    () =>
+      currentCase && !cases.some((c) => c.id === currentCase.id)
+        ? [
+            {
+              id: currentCase.id,
+              case_number: currentCase.case_number,
+              label: `#${currentCase.case_number}`,
+            },
+            ...cases,
+          ]
+        : cases,
+    [cases, currentCase],
+  );
   const selectedCaseId = presetCase || value('case_id');
-  const [caseSearch, setCaseSearch] = useState('');
-  const normalizedCaseSearch = caseSearch.trim().toLowerCase();
-  const matchingCases = normalizedCaseSearch
-    ? effectiveCases.filter((c) =>
-        `${c.case_number} ${c.label}`.toLowerCase().includes(normalizedCaseSearch),
-      )
-    : effectiveCases;
-  const selectedCase = effectiveCases.find((c) => c.id === selectedCaseId);
-  const filteredCases =
-    selectedCase && !matchingCases.some((c) => c.id === selectedCase.id)
-      ? [selectedCase, ...matchingCases]
-      : matchingCases;
+  const resetKey = `${mode}:${task?.id ?? 'new'}:${selectedCaseId}`;
+  const [casePicker, setCasePicker] = useState({
+    resetKey,
+    search: '',
+    caseId: selectedCaseId,
+  });
+  const caseSearch = casePicker.resetKey === resetKey ? casePicker.search : '';
+  const chosenCaseId = casePicker.resetKey === resetKey ? casePicker.caseId : selectedCaseId;
+  const updateCasePicker = (patch: { search?: string; caseId?: string }) => {
+    setCasePicker((prev) => ({
+      resetKey,
+      search: patch.search ?? (prev.resetKey === resetKey ? prev.search : ''),
+      caseId: patch.caseId ?? (prev.resetKey === resetKey ? prev.caseId : selectedCaseId),
+    }));
+  };
+
+  const selectedCase = effectiveCases.find((c) => c.id === chosenCaseId);
+  const filteredCases = useMemo(
+    () => filterCaseOptions(effectiveCases, caseSearch, selectedCase),
+    [caseSearch, effectiveCases, selectedCase],
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -201,28 +213,32 @@ export function TaskFormDialog({
                 preset (locked) we submit it via a hidden input and leave the
                 visible select purely presentational (no name). */}
             {presetCaseId && <input type="hidden" name="case_id" value={presetCaseId} />}
-            {!presetCaseId && (
+            {presetCaseId ? (
               <Input
-                type="search"
-                value={caseSearch}
-                onChange={(e) => setCaseSearch(e.target.value)}
-                placeholder={t('fields.caseSearchPlaceholder')}
-                aria-label={t('fields.caseSearch')}
-                className="mb-2"
+                value={selectedCase?.label ?? ''}
+                disabled
+                aria-label={t('fields.case')}
               />
-            )}
-            <NativeSelect
-              name={presetCaseId ? undefined : 'case_id'}
-              defaultValue={selectedCaseId}
-              disabled={!!presetCaseId}
-            >
-              <option value="">{t('fields.caseNone')}</option>
-              {filteredCases.map((c) => (
-                <option key={c.id} value={c.id}>{c.label}</option>
-              ))}
-            </NativeSelect>
-            {!presetCaseId && filteredCases.length === 0 && (
-              <p className="mt-1 text-xs text-neutral-500">{t('fields.caseNoMatches')}</p>
+            ) : (
+              <CaseTypeahead
+                cases={filteredCases}
+                selectedCase={selectedCase}
+                search={caseSearch}
+                onSearchChange={(search) => updateCasePicker({ search })}
+                onSelect={(nextCase) => {
+                  updateCasePicker({ caseId: nextCase.id, search: '' });
+                }}
+                onClear={() => {
+                  updateCasePicker({ caseId: '', search: '' });
+                }}
+                labels={{
+                  search: t('fields.caseSearch'),
+                  placeholder: t('fields.caseSearchPlaceholder'),
+                  none: t('fields.caseNone'),
+                  noMatches: t('fields.caseNoMatches'),
+                  clear: tc('clear'),
+                }}
+              />
             )}
           </FormField>
 
@@ -245,6 +261,106 @@ export function TaskFormDialog({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function filterCaseOptions(
+  cases: ReadonlyArray<CaseOption>,
+  query: string,
+  selectedCase: CaseOption | undefined,
+): CaseOption[] {
+  const normalized = query.trim().toLowerCase();
+  const matches = normalized
+    ? cases.filter((c) => `${c.case_number} ${c.label}`.toLowerCase().includes(normalized))
+    : cases;
+  const visible = matches.slice(0, 8);
+  if (selectedCase && !visible.some((c) => c.id === selectedCase.id)) {
+    return [selectedCase, ...visible].slice(0, 8);
+  }
+  return visible;
+}
+
+function CaseTypeahead({
+  cases,
+  selectedCase,
+  search,
+  onSearchChange,
+  onSelect,
+  onClear,
+  labels,
+}: {
+  cases: ReadonlyArray<CaseOption>;
+  selectedCase: CaseOption | undefined;
+  search: string;
+  onSearchChange: (value: string) => void;
+  onSelect: (option: CaseOption) => void;
+  onClear: () => void;
+  labels: {
+    search: string;
+    placeholder: string;
+    none: string;
+    noMatches: string;
+    clear: string;
+  };
+}) {
+  return (
+    <div className="space-y-2">
+      <input type="hidden" name="case_id" value={selectedCase?.id ?? ''} />
+      <div className="rounded-lg border border-neutral-200 bg-white p-2">
+        <Input
+          type="search"
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder={selectedCase ? selectedCase.label : labels.placeholder}
+          aria-label={labels.search}
+          autoComplete="off"
+        />
+        <div className="mt-2 max-h-56 overflow-y-auto rounded-md border border-neutral-100 bg-neutral-50/60 p-1">
+          {cases.length === 0 ? (
+            <p className="px-2 py-2 text-xs text-neutral-500">{labels.noMatches}</p>
+          ) : (
+            <div role="listbox" aria-label={labels.search} className="space-y-1">
+              {cases.map((c) => {
+                const selected = c.id === selectedCase?.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    role="option"
+                    aria-selected={selected}
+                    onClick={() => onSelect(c)}
+                    className={`flex w-full items-center justify-between gap-3 rounded-md px-2.5 py-2 text-start text-sm transition ${
+                      selected
+                        ? 'bg-brand-gold/15 font-semibold text-brand-black'
+                        : 'text-neutral-700 hover:bg-white hover:text-neutral-950'
+                    }`}
+                  >
+                    <span className="min-w-0 truncate">{c.label}</span>
+                    <span className="shrink-0 text-xs text-neutral-400" dir="ltr">
+                      #{c.case_number}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="flex items-center justify-between gap-3 text-xs">
+        <span className="min-w-0 truncate text-neutral-500">
+          {selectedCase ? selectedCase.label : labels.none}
+        </span>
+        {selectedCase && (
+          <button
+            type="button"
+            onClick={onClear}
+            className="shrink-0 font-medium text-brand-gold-text transition hover:text-brand-black"
+          >
+            {labels.clear}
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
 
