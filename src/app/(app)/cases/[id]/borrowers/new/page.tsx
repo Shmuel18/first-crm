@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { ArrowRight } from 'lucide-react';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 
+import { BackArrow } from '@/components/shared/back-arrow';
 import { BorrowerForm } from '@/features/borrowers/components/borrower-form';
 import { getRawCaseById } from '@/features/cases/services/cases.service';
+import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
 
 type Props = { params: Promise<{ id: string }> };
@@ -17,6 +18,7 @@ export default async function NewBorrowerPage({ params }: Props) {
 
   const t = await getTranslations('case');
   const tc = await getTranslations('common');
+  const locale = parseLocale(await getLocale());
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -25,7 +27,7 @@ export default async function NewBorrowerPage({ params }: Props) {
           href={`/cases/${id}`}
           className="inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-900 mb-3"
         >
-          <ArrowRight className="size-4" />
+          <BackArrow locale={locale} className="size-4" />
           {tc('back')}
         </Link>
         <h1 className="text-2xl font-light text-neutral-900 font-mono">

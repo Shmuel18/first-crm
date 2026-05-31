@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { ArrowRight } from 'lucide-react';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 
+import { BackArrow } from '@/components/shared/back-arrow';
 import { CaseBankForm } from '@/features/case-banks/components/case-bank-form';
 import {
   getCaseBankById,
@@ -11,6 +11,7 @@ import {
   listCaseBankStatusOptions,
 } from '@/features/case-banks/services/case-banks.service';
 import { getRawCaseById } from '@/features/cases/services/cases.service';
+import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseBankId, asCaseId } from '@/lib/types/branded';
 
 type Props = { params: Promise<{ id: string; bankId: string }> };
@@ -27,6 +28,7 @@ export default async function EditCaseBankPage({ params }: Props) {
 
   const t = await getTranslations('case');
   const tc = await getTranslations('common');
+  const locale = parseLocale(await getLocale());
 
   const [banks, statuses] = await Promise.all([
     listBankOptions(),
@@ -40,7 +42,7 @@ export default async function EditCaseBankPage({ params }: Props) {
           href={`/cases/${id}`}
           className="inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-900 mb-3"
         >
-          <ArrowRight className="size-4" />
+          <BackArrow locale={locale} className="size-4" />
           {tc('back')}
         </Link>
         <h1 className="text-2xl font-light text-neutral-900 font-mono">
