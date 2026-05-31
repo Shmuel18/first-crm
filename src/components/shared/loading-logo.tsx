@@ -13,15 +13,21 @@ export function LoadingLogo(): React.ReactElement {
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute inset-0 flex items-center justify-center"
+      // z-10 lifts the mark above the (opaque) skeleton blocks; without it the
+      // transparent PNG let the skeleton show through and read as "behind".
+      className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center"
     >
-      <Image
-        src="/logo-coin-square.png"
-        alt=""
-        width={512}
-        height={512}
-        className="logo-loading h-28 w-auto sm:h-36"
-      />
+      {/* Frosted white halo so the mark is a clean focal point instead of
+          blending into the skeleton bars around it. */}
+      <span className="flex items-center justify-center rounded-full bg-white/85 p-8 shadow-lg ring-1 ring-black/5 backdrop-blur-sm sm:p-10">
+        <Image
+          src="/logo-coin-square.png"
+          alt=""
+          width={512}
+          height={512}
+          className="logo-loading h-28 w-auto sm:h-36"
+        />
+      </span>
     </div>
   );
 }
