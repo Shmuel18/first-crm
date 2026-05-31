@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
@@ -66,6 +64,10 @@ export async function addCaseBankAction(
     return { ok: false, error: 'unknown' };
   }
 
-  revalidatePath(`/cases/${caseId}`);
+  // No revalidatePath here on purpose. The inline banks list updates
+  // optimistically on the client (case-banks-inline-list.tsx), and it's the
+  // only consumer of this data on the page. Revalidating /cases/[id] used to
+  // re-render every block and lose the user's scroll position; the page
+  // re-fetches fresh on the next navigation anyway.
   return { ok: true, caseBankId: data.id };
 }
