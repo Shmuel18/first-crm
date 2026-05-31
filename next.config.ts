@@ -12,14 +12,14 @@ const cspDirectives = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isProduction ? '' : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
+  "img-src 'self' data: blob: https://*.supabase.co https://drive.google.com https://docs.google.com",
   "font-src 'self' data:",
   "connect-src 'self' https://*.supabase.co https://*.googleapis.com https://accounts.google.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
-  "frame-src 'none'",
+  "frame-src 'self' https://*.supabase.co https://drive.google.com https://docs.google.com",
   ...(shouldUpgradeInsecureRequests ? ['upgrade-insecure-requests'] : []),
 ];
 
