@@ -30,17 +30,23 @@ export async function Topbar() {
   return (
     <header className="h-16 bg-brand-black text-white sticky top-0 z-30 shadow-md">
       <div className="h-full px-4 flex items-center gap-3">
-        {/* -ms-4 cancels the header's inline padding on the start (right in RTL)
-            edge so the logo sits flush to the corner, aligned over the icon rail
-            below it (which is also flush to the edge). */}
-        <Link href="/cases" className="shrink-0 -ms-4" aria-label="Kaufman Finance Group">
+        {/* Sit the logo in a rail-width (w-16) column flush to the start (right)
+            edge — `-ms-4` cancels the header's inline padding — and center it,
+            so its center lines up with the icon rail's centered icons below it.
+            A logo wider than the rail can't center over it without clipping the
+            edge, so it's sized to fit the column. */}
+        <Link
+          href="/cases"
+          className="shrink-0 -ms-4 flex w-16 justify-center"
+          aria-label="Kaufman Finance Group"
+        >
           <Image
             src="/logo.png"
             alt="Kaufman Finance Group"
             width={1536}
             height={1024}
             priority
-            className="h-14 w-auto"
+            className="h-10 w-auto"
           />
         </Link>
 
