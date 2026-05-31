@@ -215,7 +215,12 @@ type BorrowerName = { first_name: string | null; last_name: string | null };
 type CaseBorrowerLink = { is_primary: boolean; borrower: BorrowerName | null };
 
 function primaryBorrower(links: CaseBorrowerLink[] | null): BorrowerName | null {
-  return links?.find((cb) => cb.is_primary)?.borrower ?? null;
+  // Prefer the flagged primary, but fall back to the first linked borrower —
+  // some cases have no is_primary set on case_borrowers, and the dashboard
+  // label (getCaseClientLabel) does the same fallback. Without it those cases
+  // render as "(no name)" here and break the task case-picker search by name.
+  const withBorrower = (links ?? []).filter((cb) => cb.borrower !== null);
+  return (withBorrower.find((cb) => cb.is_primary) ?? withBorrower[0])?.borrower ?? null;
 }
 
 function caseOptionLabel(
