@@ -1144,6 +1144,7 @@
       "profile": "Profile",
       "security": "Security",
       "notifications": "Notifications",
+      "display": "Display",
       "office": "Office details",
       "people": "Team & permissions",
       "templates": "Message templates",
@@ -1298,6 +1299,23 @@
       "saved": "Preferences saved",
       "errors": {
         "generic": "Save failed. Please try again."
+      }
+    },
+    "display": {
+      "title": "Case page display",
+      "subtitle": "Choose which blocks on the case page open automatically when you open a case",
+      "hint": "Checked blocks open expanded; the rest stay collapsed (the default).",
+      "saved": "Preferences saved",
+      "errors": {
+        "generic": "Save failed. Please try again."
+      },
+      "blocks": {
+        "borrowers": "Borrowers",
+        "requestDetails": "Request details",
+        "incomes": "Incomes",
+        "obligations": "Obligations",
+        "property": "Property & deal",
+        "admin": "Admin"
       }
     },
     "people": {
@@ -1791,19 +1809,25 @@
     "addMember": "+ Add member",
     "you": "you",
     "columns": {
-      "cases": "Active cases",
-      "tasks": "Open tasks"
+      "member": "Member",
+      "role": "Role",
+      "actions": "Actions"
     },
     "status": {
       "inactive": "Inactive"
     },
     "action": {
       "deactivate": "Deactivate",
-      "reactivate": "Reactivate"
+      "reactivate": "Reactivate",
+      "delete": "Delete"
     },
     "deactivateConfirm": {
       "title": "Deactivate this member?",
       "body": "{name} won't be able to sign in until reactivated. Their history and cases are preserved."
+    },
+    "deleteConfirm": {
+      "title": "Delete this member?",
+      "body": "{name} will be removed from the team and can no longer sign in. Their active cases and tasks move to you; their history and closed cases stay recorded under their name."
     },
     "toast": {
       "roleUpdated": "Role updated",
@@ -1811,6 +1835,8 @@
       "reactivated": "Member reactivated",
       "selfDeactivate": "You can't deactivate yourself",
       "selfRoleChange": "You can't change your own role. Ask another admin.",
+      "deleted": "Member deleted",
+      "selfDelete": "You can't delete yourself",
       "actionFailed": "Action failed. Please try again."
     },
     "invite": {

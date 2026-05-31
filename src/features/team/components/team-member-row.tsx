@@ -2,7 +2,7 @@
 
 import { useTransition } from 'react';
 
-import { Briefcase, CheckSquare, Power, PowerOff } from 'lucide-react';
+import { Mail, Power, PowerOff, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/shared/form-fields';
 import { formatPersonName } from '@/lib/utils/person-name';
 
+import { deleteMemberAction } from '../actions/delete-member';
 import { setMemberActiveAction } from '../actions/set-member-active';
 import { updateMemberRoleAction } from '../actions/update-member-role';
 import type { TeamMember, TeamRole } from '../types';
@@ -66,6 +67,19 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
     });
   };
 
+  const handleDelete = () => {
+    startTransition(async () => {
+      const res = await deleteMemberAction(member.id);
+      if (res.ok) {
+        toast.success(t('toast.deleted'));
+      } else if (res.error === 'self_delete') {
+        toast.error(t('toast.selfDelete'));
+      } else {
+        toast.error(t('toast.actionFailed'));
+      }
+    });
+  };
+
   return (
     <div
       className={[
@@ -79,32 +93,18 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="text-sm font-medium text-neutral-900 truncate">{fullName}</p>
-          {isSelf && <span className="text-[10px] text-neutral-600">({t('you')})</span>}
+          <p className="text-sm font-semibold text-neutral-900 truncate">{fullName}</p>
+          {isSelf && <span className="text-[10px] font-medium text-brand-gold-text">({t('you')})</span>}
           {!member.is_active && (
             <span className="inline-flex items-center px-1.5 h-5 rounded-full text-[10px] font-medium bg-neutral-200 text-neutral-800">
               {t('status.inactive')}
             </span>
           )}
         </div>
-        <p className="text-xs text-neutral-600 truncate" dir="ltr">{member.email}</p>
-      </div>
-
-      <div className="hidden sm:flex items-center gap-2 text-[11px] text-neutral-700">
-        <span
-          aria-label={`${t('columns.cases')}: ${member.activeCasesCount}`}
-          className="inline-flex items-center gap-1 rounded-md bg-neutral-50 border border-neutral-200 px-2 py-1 tabular-nums"
-        >
-          <Briefcase className="size-3.5 text-brand-gold-text" aria-hidden="true" />
-          {member.activeCasesCount}
-        </span>
-        <span
-          aria-label={`${t('columns.tasks')}: ${member.openTasksCount}`}
-          className="inline-flex items-center gap-1 rounded-md bg-neutral-50 border border-neutral-200 px-2 py-1 tabular-nums"
-        >
-          <CheckSquare className="size-3.5 text-brand-gold-text" aria-hidden="true" />
-          {member.openTasksCount}
-        </span>
+        <div className="flex items-center gap-1 text-xs text-neutral-500 mt-0.5">
+          <Mail className="size-3 shrink-0" aria-hidden="true" />
+          <span className="truncate" dir="ltr">{member.email}</span>
+        </div>
       </div>
 
       <NativeSelect
@@ -168,6 +168,38 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
           <Power className="size-4 text-green-600" />
         </Button>
       )}
+
+      <AlertDialog>
+        <AlertDialogTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              disabled={pending || isSelf}
+              aria-label={t('action.delete')}
+              title={isSelf ? t('toast.selfDelete') : t('action.delete')}
+            />
+          }
+        >
+          <Trash2 className="size-4 text-red-600" />
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogTitle>{t('deleteConfirm.title')}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {t('deleteConfirm.body', { name: fullName })}
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              render={
+                <Button variant="destructive" onClick={handleDelete}>
+                  {t('action.delete')}
+                </Button>
+              }
+            />
+            <AlertDialogCancel render={<Button variant="outline">{tc('cancel')}</Button>} />
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

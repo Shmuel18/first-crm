@@ -2908,6 +2908,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           dashboard_config: Json
+          deleted_at: string | null
           email: string | null
           first_name: string | null
           google_calendar_connected: boolean
@@ -2926,6 +2927,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           dashboard_config?: Json
+          deleted_at?: string | null
           email?: string | null
           first_name?: string | null
           google_calendar_connected?: boolean
@@ -2944,6 +2946,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           dashboard_config?: Json
+          deleted_at?: string | null
           email?: string | null
           first_name?: string | null
           google_calendar_connected?: boolean

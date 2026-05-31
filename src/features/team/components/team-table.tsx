@@ -38,6 +38,12 @@ export function TeamTable({ members, roles, currentUserId, locale }: Props) {
       </div>
 
       <div className="rounded-xl border border-neutral-200 bg-white divide-y divide-neutral-100 overflow-hidden shadow-sm">
+        <div className="hidden sm:flex items-center gap-3 px-4 py-2.5 bg-brand-gold-soft text-[11px] font-medium text-neutral-500">
+          <span className="size-10 shrink-0" aria-hidden="true" />
+          <span className="flex-1 min-w-0">{t('columns.member')}</span>
+          <span className="w-36">{t('columns.role')}</span>
+          <span className="w-20 text-end">{t('columns.actions')}</span>
+        </div>
         {members.map((member) => (
           <TeamMemberRow
             key={member.id}

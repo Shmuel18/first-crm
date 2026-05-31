@@ -10,8 +10,6 @@ export type TeamMember = Pick<
   'id' | 'first_name' | 'last_name' | 'email' | 'phone' | 'language' | 'is_active' | 'created_at'
 > & {
   role: TeamRole | null;
-  activeCasesCount: number;
-  openTasksCount: number;
 };
 
 export type InviteActionState =

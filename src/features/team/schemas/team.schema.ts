@@ -33,3 +33,7 @@ export const SetActiveSchema = z.object({
   userId: z.uuid(),
   isActive: z.boolean(),
 });
+
+export const DeleteMemberSchema = z.object({
+  userId: z.uuid(),
+});
