@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Frank_Ruhl_Libre, Heebo, Inter } from 'next/font/google';
 
 import { NextIntlClientProvider } from 'next-intl';
@@ -34,6 +34,11 @@ export const metadata: Metadata = {
     template: '%s · Kaufman Finance Group',
   },
   description: 'מערכת ניהול תיקי משכנתא',
+};
+
+export const viewport: Viewport = {
+  themeColor: '#0A0A0A',
+  viewportFit: 'cover',
 };
 
 export default async function RootLayout({
