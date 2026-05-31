@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import type { Database } from '@/types/database';
@@ -88,6 +86,9 @@ export async function quickUpdateCaseFieldAction(
   // Detail-page only. The dashboard relies on the inline cells' optimistic
   // state — invalidating /cases here would refetch the full 1000-row list
   // on every keystroke against a status/bank/advisor cell.
-  revalidatePath(`/cases/${caseId}`);
+  // No revalidatePath: inline cells are optimistic, and forcing a server
+  // refresh after the DB update can leave the client transition spinning while
+  // the updated value is already visible from another tab. The next natural
+  // navigation/refresh will read the canonical DB value.
   return { ok: true };
 }
