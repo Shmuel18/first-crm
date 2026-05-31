@@ -33,11 +33,13 @@ export async function Topbar() {
         {/* Sit the logo in a rail-width (w-16) column flush to the start (right)
             edge — `-ms-4` cancels the header's inline padding — and center it,
             so its center lines up with the icon rail's centered icons below it.
-            A logo wider than the rail can't center over it without clipping the
-            edge, so it's sized to fit the column. */}
+            The logo is sized a touch larger than the rail; the image carries
+            transparent side-padding, and `overflow-hidden` clips that padding
+            where it spills past the column so the mark stays centered over the
+            rail (same position) and never nudges page width. */}
         <Link
           href="/cases"
-          className="shrink-0 -ms-4 flex w-16 justify-center"
+          className="shrink-0 -ms-4 flex w-16 justify-center overflow-hidden"
           aria-label="Kaufman Finance Group"
         >
           <Image
@@ -46,7 +48,7 @@ export async function Topbar() {
             width={1536}
             height={1024}
             priority
-            className="h-10 w-auto"
+            className="h-12 w-auto max-w-none shrink-0"
           />
         </Link>
 
