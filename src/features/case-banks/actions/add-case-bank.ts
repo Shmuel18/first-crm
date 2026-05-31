@@ -27,47 +27,57 @@ export async function addCaseBankAction(
     return { ok: false, error: 'unauthorized' };
   }
 
-  // First (active) bank on the case becomes primary by default. The
-  // ensure_single_primary_bank trigger (migration 006) is a no-op when no
-  // other row claims primary, so it's safe to set is_primary here.
-  const { count: existingCount, error: countErr } = await supabase
+  // Every link for this case (active + soft-deleted). The partial unique index
+  // allows one ACTIVE row per bank, but soft-deleted rows can coexist — so
+  // re-adding a removed bank must REACTIVATE its row, never INSERT a duplicate.
+  // A duplicate (active + soft-deleted for the same bank) later breaks
+  // set_primary_bank's reactivate with a 23505. See migration 102.
+  const { data: caseBanks, error: lookupErr } = await supabase
     .from('case_banks')
-    .select('id', { count: 'exact', head: true })
-    .eq('case_id', caseId)
-    .is('deleted_at', null);
+    .select('id, bank_id, deleted_at')
+    .eq('case_id', caseId);
 
-  if (countErr) {
-    console.error('[addCaseBank] count error', countErr);
+  if (lookupErr) {
+    console.error('[addCaseBank] lookup error', lookupErr);
     return { ok: false, error: 'unknown' };
   }
-  const isPrimary = (existingCount ?? 0) === 0;
+
+  const links = caseBanks ?? [];
+  const thisBank = links.filter((r) => r.bank_id === bankId);
+  if (thisBank.some((r) => r.deleted_at === null)) {
+    return { ok: false, error: 'already_linked' };
+  }
+
+  // First (active) bank on the case becomes primary by default.
+  const isPrimary = links.every((r) => r.deleted_at !== null);
+  const fields = { is_primary: isPrimary, updated_by: userRes.user.id };
+
+  // Reactivate a soft-deleted link for this bank if one exists; else insert.
+  const softDeleted = thisBank.find((r) => r.deleted_at !== null);
+  if (softDeleted) {
+    const { error } = await supabase
+      .from('case_banks')
+      .update({ ...fields, deleted_at: null })
+      .eq('id', softDeleted.id);
+    if (error) {
+      console.error('[addCaseBank] reactivate error', error);
+      return { ok: false, error: 'unknown' };
+    }
+    return { ok: true, caseBankId: softDeleted.id };
+  }
 
   const { data, error } = await supabase
     .from('case_banks')
-    .insert({
-      case_id: caseId,
-      bank_id: bankId,
-      is_primary: isPrimary,
-      created_by: userRes.user.id,
-      updated_by: userRes.user.id,
-    })
+    .insert({ case_id: caseId, bank_id: bankId, ...fields, created_by: userRes.user.id })
     .select('id')
     .single();
 
   if (error) {
-    // 23505 = unique_violation — case_banks has UNIQUE(case_id, bank_id),
-    // so this fires when the user picks a bank already linked to the case.
-    if (error.code === '23505') {
-      return { ok: false, error: 'already_linked' };
-    }
+    if (error.code === '23505') return { ok: false, error: 'already_linked' };
     console.error('[addCaseBank] insert error', error);
     return { ok: false, error: 'unknown' };
   }
 
-  // No revalidatePath here on purpose. The inline banks list updates
-  // optimistically on the client (case-banks-inline-list.tsx), and it's the
-  // only consumer of this data on the page. Revalidating /cases/[id] used to
-  // re-render every block and lose the user's scroll position; the page
-  // re-fetches fresh on the next navigation anyway.
+  // No revalidatePath — the inline banks list updates optimistically client-side.
   return { ok: true, caseBankId: data.id };
 }
