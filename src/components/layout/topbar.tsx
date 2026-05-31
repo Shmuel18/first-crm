@@ -30,7 +30,10 @@ export async function Topbar() {
   return (
     <header className="h-16 bg-brand-black text-white sticky top-0 z-30 shadow-md">
       <div className="h-full px-4 flex items-center gap-3">
-        <Link href="/cases" className="shrink-0" aria-label="Kaufman Finance Group">
+        {/* -ms-4 cancels the header's inline padding on the start (right in RTL)
+            edge so the logo sits flush to the corner, aligned over the icon rail
+            below it (which is also flush to the edge). */}
+        <Link href="/cases" className="shrink-0 -ms-4" aria-label="Kaufman Finance Group">
           <Image
             src="/logo.png"
             alt="Kaufman Finance Group"
