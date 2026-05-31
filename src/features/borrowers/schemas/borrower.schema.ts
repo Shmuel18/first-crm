@@ -9,8 +9,8 @@ import {
   optionalEmail,
   optionalEnum,
   optionalInt,
-  optionalIsraeliId,
   optionalIsraeliPhone,
+  optionalNationalId,
   optionalNotes,
   optionalPastDate,
   optionalShortString,
@@ -66,7 +66,7 @@ export const BorrowerFormSchema = z.object({
   // rather fail at save time than silently ship "(ללא שם)" rows.
   first_name: requiredShortString(NAME_MAX),
   last_name: requiredShortString(NAME_MAX),
-  national_id: optionalIsraeliId,
+  national_id: optionalNationalId,
   // ID issue date must be in the past — an Israeli ID can't have been issued
   // in the future. Same constraint as birth_date so we reuse the helper.
   id_issue_date: optionalPastDate,

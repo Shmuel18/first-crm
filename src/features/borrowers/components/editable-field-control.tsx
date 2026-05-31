@@ -69,10 +69,30 @@ export function renderControl(p: ControlRenderProps) {
     );
   }
 
-  // For type='date': hide the browser's native calendar-picker indicator —
-  // it carries an un-translatable, un-styleable tooltip. Our own <Tooltip>
-  // wraps the external Calendar button instead.
-  const dateClass = p.type === 'date' ? '[&::-webkit-calendar-picker-indicator]:hidden' : '';
+  // Date inputs are UNCONTROLLED while editing. A controlled `value={}` re-renders
+  // on every keystroke, and the native date field then resets the year segment
+  // mid-entry — you could only ever land on a "000x" year. `defaultValue` + a
+  // `key` tied to the committed value lets the browser own the segments while
+  // typing; we commit on blur, and the key remounts the field only when the
+  // value is set externally (the calendar picker, or a parent resync/rollback).
+  // The webkit calendar indicator stays hidden — the external <DatePickerPopover>
+  // button drives the picker.
+  if (p.type === 'date') {
+    return (
+      <input
+        ref={p.inputRef}
+        id={p.id}
+        type="date"
+        key={p.value ?? ''}
+        defaultValue={p.localValue}
+        onBlur={(e) => p.save(e.target.value)}
+        placeholder={p.placeholder}
+        disabled={p.disabled || p.isPending}
+        dir={p.resolvedDir}
+        className={`${inputClass} [&::-webkit-calendar-picker-indicator]:hidden ${p.inputClassName ?? ''}`}
+      />
+    );
+  }
 
   // For type='number': suppress the browser's up/down spinner buttons. They
   // don't add value for our use cases (IDs, currency, counts) and clutter
@@ -100,22 +120,12 @@ export function renderControl(p: ControlRenderProps) {
       type={p.type}
       inputMode={inputMode}
       value={p.localValue}
-      onChange={(e) => {
-        const v = e.target.value;
-        p.setLocalValue(v);
-        // Date inputs commit instantly when the picker closes (no separate
-        // blur event), so save on change instead of waiting for blur.
-        if (p.type === 'date') p.save(v);
-      }}
-      onBlur={(e) => {
-        // Date already saved on change; skip blur to avoid a no-op round trip.
-        if (p.type === 'date') return;
-        p.save(e.target.value);
-      }}
+      onChange={(e) => p.setLocalValue(e.target.value)}
+      onBlur={(e) => p.save(e.target.value)}
       placeholder={p.placeholder}
       disabled={p.disabled || p.isPending}
       dir={p.resolvedDir}
-      className={`${inputClass} ${dateClass} ${numberClass} ${p.inputClassName ?? ''}`}
+      className={`${inputClass} ${numberClass} ${p.inputClassName ?? ''}`}
     />
   );
 }

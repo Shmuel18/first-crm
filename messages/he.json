@@ -52,12 +52,14 @@
       "invalidEnum": "ערך לא חוקי",
       "invalidBoolean": "ערך כן/לא לא תקין",
       "invalidIsraeliId": "תעודת זהות לא תקינה (9 ספרות + ספרת ביקורת)",
+      "invalidNationalId": "תעודת זהות או מספר דרכון לא תקינים",
       "invalidPhone": "מספר טלפון לא תקין",
       "invalidUrl": "כתובת אתר לא תקינה"
     }
   },
   "nav": {
     "dashboard": "דשבורד",
+    "cases": "תיקים",
     "tasks": "משימות",
     "simulators": "סימולטורים",
     "team": "צוות",

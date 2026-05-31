@@ -10,7 +10,7 @@ import { isNavItemActive } from './is-nav-item-active';
 
 type NavItem = {
   href: string;
-  labelKey: 'dashboard' | 'tasks' | 'simulators' | 'settings';
+  labelKey: 'cases' | 'tasks' | 'simulators' | 'settings';
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
   criticalBadge?: number;
@@ -22,7 +22,7 @@ type NavItem = {
 // for admins and advisors. Pages still live at /team, /templates, /audit-log
 // as redirects to /settings/<name> for back-compat with any old bookmarks.
 const BASE_TOP_ITEMS: readonly NavItem[] = [
-  { href: '/cases', labelKey: 'dashboard', icon: LayoutDashboard },
+  { href: '/cases', labelKey: 'cases', icon: LayoutDashboard },
   { href: '/tasks', labelKey: 'tasks', icon: CheckSquare },
   { href: '/simulators', labelKey: 'simulators', icon: Calculator },
 ] as const;

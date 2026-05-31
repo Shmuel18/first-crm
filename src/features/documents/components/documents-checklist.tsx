@@ -214,7 +214,11 @@ function StatusIcon({ status }: { status: ChecklistStatus }) {
 }
 
 function groupItems(items: ReadonlyArray<DocumentChecklistItem>) {
-  const missing = items.filter((i) => i.isRequired && i.status === 'missing');
+  // "Outstanding" = anything still missing (not yet uploaded), INCLUDING
+  // manually-added requirements (which aren't flagged `isRequired`). Without
+  // dropping the isRequired filter, an added requirement fell out of the
+  // default view entirely and the block falsely showed "all collected ✓".
+  const missing = items.filter((i) => i.status === 'missing');
   const pending = items.filter((i) => i.status === 'pending').length;
   const verified = items.filter((i) => i.status === 'verified').length;
   return {

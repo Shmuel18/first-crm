@@ -4,19 +4,13 @@ import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 
-import { MobileNav } from '@/components/layout/mobile-nav';
 import { UserMenu } from '@/components/layout/user-menu';
 import { NotificationBell } from '@/features/notifications/components/notification-bell';
 import { parseLocale } from '@/lib/i18n/direction';
 import { getLayoutBootstrap } from '@/lib/layout/bootstrap';
 import { formatPersonName } from '@/lib/utils/person-name';
 
-type TopbarProps = {
-  tasksBadge?: number;
-  criticalTasksBadge?: number;
-};
-
-export async function Topbar({ tasksBadge, criticalTasksBadge }: TopbarProps = {}) {
+export async function Topbar() {
   const t = await getTranslations('topbar');
   const locale = parseLocale(await getLocale());
 
@@ -36,14 +30,21 @@ export async function Topbar({ tasksBadge, criticalTasksBadge }: TopbarProps = {
   return (
     <header className="h-16 bg-brand-black text-white sticky top-0 z-30 shadow-md">
       <div className="h-full px-4 flex items-center gap-3">
-        <MobileNav tasksBadge={tasksBadge} criticalTasksBadge={criticalTasksBadge} />
-
-        <Link href="/cases" className="shrink-0" aria-label="Kaufman Finance Group">
+        {/* Sit the logo in a rail-width (w-16) column flush to the start (right)
+            edge — `-ms-4` cancels the header's inline padding — and center it,
+            so its center lines up with the icon rail's centered icons below it.
+            A logo wider than the rail can't center over it without clipping the
+            edge, so it's sized to fit the column. */}
+        <Link
+          href="/cases"
+          className="shrink-0 -ms-4 flex w-16 justify-center"
+          aria-label="Kaufman Finance Group"
+        >
           <Image
-            src="/logo-mark.png"
+            src="/logo.png"
             alt="Kaufman Finance Group"
-            width={1152}
-            height={740}
+            width={1536}
+            height={1024}
             priority
             className="h-10 w-auto"
           />

@@ -25,3 +25,17 @@ export function isValidIsraeliId(input: string): boolean {
   }
   return sum % 10 === 0;
 }
+
+/**
+ * Validates the borrower/lead "תעודת זהות" field, which doubles as the passport
+ * / foreign-ID field for foreign and returning residents.
+ *
+ * We deliberately do NOT enforce the Israeli checksum here: the field legitimately
+ * holds passport numbers (no checksum), partial numbers, and foreign IDs, and
+ * requiring the checksum blocked real data entry. This is a permissive sanity
+ * check only — letters/digits, a plausible length (4–20). Use `isValidIsraeliId`
+ * directly where a value is known to be an Israeli ID and must checksum.
+ */
+export function isValidIdOrPassport(input: string): boolean {
+  return /^[A-Za-z0-9]{4,20}$/.test(input.trim());
+}
