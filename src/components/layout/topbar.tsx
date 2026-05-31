@@ -40,7 +40,7 @@ export async function Topbar() {
             width={1536}
             height={1024}
             priority
-            className="h-12 w-auto"
+            className="h-14 w-auto"
           />
         </Link>
 
