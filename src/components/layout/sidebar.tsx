@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation';
 import { Calculator, CheckSquare, LayoutDashboard, Settings } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { isNavItemActive } from './is-nav-item-active';
+
 type NavItem = {
   href: string;
   labelKey: 'dashboard' | 'tasks' | 'simulators' | 'settings';
@@ -46,7 +48,7 @@ export function Sidebar({ tasksBadge, criticalTasksBadge }: SidebarProps) {
 
   return (
     <aside
-      aria-label={t('primary')}
+      aria-label={t('sidebar')}
       // z-30 (same as the topbar — they sit on different rows so they never
       // overlap visually) so the icon-hover tooltips render above the sticky
       // case / documents action bars in the main scroll area (which use z-20).
@@ -78,7 +80,7 @@ function SidebarLink({
 }) {
   const t = useTranslations('nav');
   const Icon = item.icon;
-  const isActive = pathname.startsWith(item.href);
+  const isActive = isNavItemActive(pathname, item.href);
   const badge = item.badge && item.badge > 0 ? item.badge : undefined;
   const criticalBadge =
     item.criticalBadge && item.criticalBadge > 0 ? item.criticalBadge : undefined;
@@ -93,10 +95,19 @@ function SidebarLink({
         'group relative h-12 rounded-lg flex items-center justify-center transition-colors',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black',
         isActive
-          ? 'bg-brand-gold/20 text-brand-gold-light'
+          ? 'bg-brand-gold/25 text-brand-gold-light'
           : 'text-neutral-300 hover:text-neutral-100 hover:bg-neutral-900',
       ].join(' ')}
     >
+      {/* Logical start-edge accent bar — clearly marks the active item on the
+          dark rail (RTL-safe via start-0). */}
+      {isActive && (
+        <span
+          aria-hidden="true"
+          className="absolute start-0 top-2 bottom-2 w-1 rounded-full bg-brand-gold"
+        />
+      )}
+
       <Icon className="size-5" aria-hidden="true" />
 
       {badge !== undefined && (

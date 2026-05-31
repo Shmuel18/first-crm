@@ -23,7 +23,8 @@ export async function Topbar({ tasksBadge, criticalTasksBadge }: TopbarProps = {
   // Reuses the cached bootstrap envelope from AppLayout — same RPC call,
   // no second round-trip even though both this component and the layout
   // independently call getLayoutBootstrap.
-  const { profile, unreadNotifications, recentNotifications } = await getLayoutBootstrap();
+  const { profile, unreadNotifications, recentNotifications, canCreateCase } =
+    await getLayoutBootstrap();
 
   const fullName =
     formatPersonName(profile?.first_name, profile?.last_name) ||
@@ -49,14 +50,16 @@ export async function Topbar({ tasksBadge, criticalTasksBadge }: TopbarProps = {
         </Link>
 
         <div className="flex items-center gap-2 shrink-0 ms-auto">
-          <Link
-            href="/cases/new"
-            aria-label={t('newCase')}
-            className="btn-gold inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-light focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black"
-          >
-            <Plus className="size-4" aria-hidden="true" />
-            <span className="hidden md:inline">{t('newCase')}</span>
-          </Link>
+          {canCreateCase && (
+            <Link
+              href="/cases/new"
+              aria-label={t('newCase')}
+              className="btn-gold inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-light focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black"
+            >
+              <Plus className="size-4" aria-hidden="true" />
+              <span className="hidden md:inline">{t('newCase')}</span>
+            </Link>
+          )}
 
           <NotificationBell
             initialUnread={unreadNotifications}

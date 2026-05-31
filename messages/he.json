@@ -65,6 +65,8 @@
     "auditLog": "יומן שינויים",
     "settings": "הגדרות",
     "primary": "ניווט ראשי",
+    "sidebar": "סרגל צד",
+    "skipToContent": "דלג לתוכן הראשי",
     "unreadTasks": "{count, plural, =1 {משימה אחת פתוחה} other {# משימות פתוחות}}"
   },
   "simulators": {
@@ -1103,6 +1105,7 @@
       "pageTitle": "הגדרות",
       "pageSubtitle": "פרופיל אישי, הגדרות משרד, אינטגרציות וגיבוי",
       "comingSoon": "בקרוב",
+      "sectionsLandmark": "מקטעי הגדרות",
       "sections": {
         "personal": "אישי",
         "office": "משרד",

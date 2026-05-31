@@ -65,6 +65,8 @@
     "auditLog": "Audit Log",
     "settings": "Settings",
     "primary": "Primary navigation",
+    "sidebar": "Sidebar",
+    "skipToContent": "Skip to main content",
     "unreadTasks": "{count, plural, =1 {1 open task} other {# open tasks}}"
   },
   "simulators": {
@@ -1103,6 +1105,7 @@
       "pageTitle": "Settings",
       "pageSubtitle": "Personal profile, office settings, integrations and backup",
       "comingSoon": "soon",
+      "sectionsLandmark": "Settings sections",
       "sections": {
         "personal": "Personal",
         "office": "Office",

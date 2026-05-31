@@ -65,6 +65,7 @@ export async function updateSession(request: NextRequest) {
     matches('/templates') ||
     matches('/audit-log') ||
     matches('/settings') ||
+    matches('/simulators') ||
     matches('/dashboard') ||
     // /auth/set-password is hit AFTER /auth/callback runs the code exchange
     // and writes session cookies. An unauth visit here is invalid (no session
@@ -78,6 +79,11 @@ export async function updateSession(request: NextRequest) {
   if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
+    // Preserve the intended destination so login can return the user there.
+    // Mirrors the same-origin `next` convention in /auth/callback.
+    const next = request.nextUrl.pathname + request.nextUrl.search;
+    url.search = '';
+    url.searchParams.set('next', next);
     return NextResponse.redirect(url);
   }
 

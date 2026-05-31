@@ -11,7 +11,7 @@ import { LoginForm } from './login-form';
 export const runtime = 'edge';
 
 type Props = {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
 };
 
 // Errors surfaced via redirect from /auth/callback (invalid/expired invite,
@@ -23,9 +23,18 @@ const ALLOWED_URL_ERROR_KEYS = new Set([
 
 export default async function LoginPage({ searchParams }: Props) {
   const t = await getTranslations('auth.login');
-  const { error } = await searchParams;
+  const { error, next } = await searchParams;
 
   const urlError = error && ALLOWED_URL_ERROR_KEYS.has(error) ? error : null;
+
+  // Only forward a same-origin app path; the action re-validates server-side.
+  const safeNext =
+    typeof next === 'string' &&
+    next.startsWith('/') &&
+    !next.startsWith('//') &&
+    !next.startsWith('/\\')
+      ? next
+      : null;
 
   return (
     <div className="w-full">
@@ -57,7 +66,7 @@ export default async function LoginPage({ searchParams }: Props) {
           </div>
         )}
 
-        <LoginForm />
+        <LoginForm next={safeNext} />
       </div>
 
       <div className="mt-4 text-center sm:mt-5">

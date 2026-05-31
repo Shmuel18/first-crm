@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState, useTransition } from 'react';
 
-import { Check, Globe, LogOut, Settings } from 'lucide-react';
+import { Check, Globe, Loader2, LogOut, Settings } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { logoutAction } from '@/features/auth/actions/logout';
@@ -22,6 +22,7 @@ export function UserMenu({ fullName, initials, roleName }: UserMenuProps) {
   const currentLocale = parseLocale(useLocale());
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [pendingLocale, setPendingLocale] = useState<Locale | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -36,14 +37,29 @@ export function UserMenu({ fullName, initials, roleName }: UserMenuProps) {
         setOpen(false);
       }
     };
+    // Escape closes the menu; focus-restore is handled by the wasOpen effect
+    // below. Don't close mid-switch — let the transition resolve first.
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isPending) setOpen(false);
+    };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [open]);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open, isPending]);
 
+  // Keep the menu OPEN while the locale switch is in flight (showing a spinner
+  // on the target option), then close once the transition resolves.
   const switchTo = (locale: Locale) => {
     if (locale === currentLocale || isPending) return;
-    startTransition(() => switchLocaleAction(locale));
-    setOpen(false);
+    setPendingLocale(locale);
+    startTransition(async () => {
+      await switchLocaleAction(locale);
+      setPendingLocale(null);
+      setOpen(false);
+    });
   };
 
   // Restore focus to the trigger only on the open→closed transition. Without
@@ -102,11 +118,15 @@ export function UserMenu({ fullName, initials, roleName }: UserMenuProps) {
               <LocaleOption
                 label={t('languageHebrew')}
                 active={currentLocale === 'he'}
+                disabled={isPending}
+                loading={pendingLocale === 'he'}
                 onClick={() => switchTo('he')}
               />
               <LocaleOption
                 label={t('languageEnglish')}
                 active={currentLocale === 'en'}
+                disabled={isPending}
+                loading={pendingLocale === 'en'}
                 onClick={() => switchTo('en')}
               />
             </div>
@@ -141,26 +161,36 @@ export function UserMenu({ fullName, initials, roleName }: UserMenuProps) {
 function LocaleOption({
   label,
   active,
+  disabled,
+  loading,
   onClick,
 }: {
   label: string;
   active: boolean;
+  disabled: boolean;
+  loading: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       aria-pressed={active}
+      aria-busy={loading || undefined}
       className={[
         'flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 disabled:opacity-60',
         active
           ? 'bg-brand-gold text-black'
           : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200',
       ].join(' ')}
     >
-      {active && <Check className="size-3" aria-hidden="true" />}
+      {loading ? (
+        <Loader2 className="size-3 animate-spin" aria-hidden="true" />
+      ) : (
+        active && <Check className="size-3" aria-hidden="true" />
+      )}
       {label}
     </button>
   );

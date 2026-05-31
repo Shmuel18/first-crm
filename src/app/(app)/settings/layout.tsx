@@ -106,7 +106,8 @@ export default async function SettingsLayout({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6 mt-6">
-        <aside className="space-y-6">
+        <aside>
+          <nav aria-label={t('sectionsLandmark')} className="space-y-6">
           {sections.map((section) => (
             <div key={section.titleKey} className="space-y-1">
               {/* Plain gold section header — no pill background, just the
@@ -146,6 +147,7 @@ export default async function SettingsLayout({
               })}
             </div>
           ))}
+          </nav>
         </aside>
 
         <main>{children}</main>

@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { ArrowRight } from 'lucide-react';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 
+import { BackArrow } from '@/components/shared/back-arrow';
 import { CaseForm } from '@/features/cases/components/case-form';
 import {
   getCaseFinancials,
@@ -13,6 +13,7 @@ import {
 } from '@/features/cases/services/case-lookups.service';
 import { getRawCaseById } from '@/features/cases/services/cases.service';
 import { isCurrentUserAdmin } from '@/lib/auth/permissions';
+import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
 
 type Props = { params: Promise<{ id: string }> };
@@ -24,6 +25,7 @@ export default async function EditCasePage({ params }: Props) {
 
   const t = await getTranslations('case.form');
   const tc = await getTranslations('common');
+  const locale = parseLocale(await getLocale());
 
   const [caseTypes, statuses, advisors, canSeeFinancials, financials] = await Promise.all([
     listCaseTypeOptions(),
@@ -46,7 +48,7 @@ export default async function EditCasePage({ params }: Props) {
           href={`/cases/${caseData.id}`}
           className="inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-900 mb-3"
         >
-          <ArrowRight className="size-4" />
+          <BackArrow locale={locale} className="size-4" />
           {tc('back')}
         </Link>
         <h1 className="text-2xl font-light text-neutral-900 font-mono">
