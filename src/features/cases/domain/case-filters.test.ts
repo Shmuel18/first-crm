@@ -33,7 +33,6 @@ const NO_FILTERS: DashboardFilters = {
   stage: null,
   bank: null,
   targetDate: null,
-  stuck: false,
   hideClosedFrozen: false,
 };
 
@@ -56,20 +55,18 @@ describe('parseDashboardFilters', () => {
       stage: null,
       bank: null,
       targetDate: null,
-      stuck: false,
       hideClosedFrozen: true,
     });
   });
 
   it('reads values and disables hideClosedFrozen only on explicit "false"', () => {
     expect(
-      parseDashboardFilters({ advisor: 'a1', stuck: 'true', hideClosedFrozen: 'false' }),
+      parseDashboardFilters({ advisor: 'a1', hideClosedFrozen: 'false' }),
     ).toEqual({
       advisor: 'a1',
       stage: null,
       bank: null,
       targetDate: null,
-      stuck: true,
       hideClosedFrozen: false,
     });
   });
@@ -103,12 +100,6 @@ describe('filterCases', () => {
       case_banks: [{ deleted_at: '2026-01-01', bank: { id: 'bank1' } }],
     });
     expect(filterCases([active, removed], { ...NO_FILTERS, bank: 'bank1' })).toEqual([active]);
-  });
-
-  it('keeps only stuck cases when the stuck filter is on', () => {
-    const stuck = makeCase({ status: { id: 'x', key: 'stuck' } });
-    const open = makeCase({ status: { id: 'y', key: 'open' } });
-    expect(filterCases([stuck, open], { ...NO_FILTERS, stuck: true })).toEqual([stuck]);
   });
 
   it('filters by manual target date state', () => {
