@@ -8,6 +8,8 @@ import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { Calculator, CheckSquare, LayoutDashboard, Menu, Settings, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { isNavItemActive } from './is-nav-item-active';
+
 type NavItem = {
   href: string;
   labelKey: 'dashboard' | 'tasks' | 'simulators' | 'settings';
@@ -67,10 +69,10 @@ export function MobileNav({ tasksBadge, criticalTasksBadge }: Props) {
       </DialogPrimitive.Trigger>
 
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Backdrop className="md:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px] data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 transition-opacity duration-200" />
+        <DialogPrimitive.Backdrop className="md:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px] data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 transition-opacity duration-200 motion-reduce:transition-none" />
         <DialogPrimitive.Popup
           className={[
-            'md:hidden fixed inset-y-0 start-0 z-50 w-[78%] max-w-[20rem]',
+            'md:hidden fixed inset-y-0 start-0 z-50 w-[72%] max-w-[18rem]',
             'bg-brand-black text-white border-e border-neutral-900 shadow-2xl',
             'flex flex-col',
             // Slide from the start edge — rtl: from the right, ltr: from the
@@ -80,6 +82,9 @@ export function MobileNav({ tasksBadge, criticalTasksBadge }: Props) {
             'data-[starting-style]:opacity-0 data-[starting-style]:-translate-x-full rtl:data-[starting-style]:translate-x-full',
             'data-[ending-style]:opacity-0 data-[ending-style]:-translate-x-full rtl:data-[ending-style]:translate-x-full',
             'transition-all duration-200',
+            // Vestibular safety: under reduced-motion drop the transition and
+            // neutralize the large cross-axis slide (fade-only via backdrop).
+            'motion-reduce:transition-none motion-reduce:data-[starting-style]:translate-x-0 motion-reduce:data-[ending-style]:translate-x-0',
           ].join(' ')}
         >
           <div className="h-16 flex items-center justify-between px-4 border-b border-neutral-900 shrink-0">
@@ -142,7 +147,7 @@ function MobileNavLink({
   badgeLabel?: string;
 }) {
   const Icon = item.icon;
-  const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+  const isActive = isNavItemActive(pathname, item.href);
   const badge = item.badge && item.badge > 0 ? item.badge : undefined;
   const criticalBadge =
     item.criticalBadge && item.criticalBadge > 0 ? item.criticalBadge : undefined;
@@ -155,13 +160,20 @@ function MobileNavLink({
       aria-label={accessibleName}
       aria-current={isActive ? 'page' : undefined}
       className={[
-        'flex items-center gap-3 px-3 py-3 rounded-lg text-base transition',
+        'relative flex items-center gap-3 px-3 py-3 rounded-lg text-base transition',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold',
         isActive
-          ? 'bg-brand-gold/20 text-brand-gold-light'
+          ? 'bg-brand-gold/25 text-brand-gold-light'
           : 'text-neutral-200 hover:text-white hover:bg-neutral-900',
       ].join(' ')}
     >
+      {/* Logical start-edge accent bar mirrors the desktop rail. */}
+      {isActive && (
+        <span
+          aria-hidden="true"
+          className="absolute start-0 top-2 bottom-2 w-1 rounded-full bg-brand-gold"
+        />
+      )}
       <Icon className="size-5 shrink-0" aria-hidden="true" />
       <span className="flex-1">{label}</span>
       {badge !== undefined && (
