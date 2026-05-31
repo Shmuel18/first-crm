@@ -18,7 +18,11 @@ export function SeriesOverlayChart({ title, series }: Props) {
     <section className="min-h-72 rounded-xl border border-neutral-200 bg-white p-4">
       <h2 className="mb-4 font-display text-lg font-semibold text-neutral-950">{title}</h2>
       <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
+        {/* minHeight gives the container a definite floor so Recharts never
+            measures a 0-height parent (which logs "width(-1)/height(-1)…"
+            when the chart briefly renders before/while its container is
+            laid out). */}
+        <ResponsiveContainer width="100%" height="100%" minHeight={256}>
           <LineChart data={data} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
             <XAxis dataKey="year" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
             <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12 }} width={64} />
