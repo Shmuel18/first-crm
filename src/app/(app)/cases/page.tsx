@@ -133,7 +133,7 @@ export default async function CasesListPage({ searchParams }: Props) {
               xl the table used to horizontally-scroll without indication,
               clipping the bank + advisor columns out of sight. */}
           <div className="xl:hidden">
-            <CasesCardList cases={visible} />
+            <CasesCardList cases={visible} canViewAll={canViewAll} />
           </div>
           <div className="hidden xl:block">
             <CasesTable
@@ -141,6 +141,7 @@ export default async function CasesListPage({ searchParams }: Props) {
               statusOptions={statusOptions}
               bankOptions={bankOptions}
               advisorOptions={advisorOptions}
+              canViewAll={canViewAll}
             />
           </div>
         </>

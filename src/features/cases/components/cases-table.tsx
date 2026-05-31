@@ -30,6 +30,11 @@ type Props = {
   statusOptions: ReadonlyArray<StatusOption>;
   bankOptions: ReadonlyArray<BankOption>;
   advisorOptions: ReadonlyArray<AdvisorOption>;
+  // The advisor column only renders for users who can see other advisors'
+  // cases (view_all_cases). A regular advisor sees only their own cases, so
+  // the column would always be "themselves" — pure noise. Mirrors the
+  // advisor filter, which is already gated the same way.
+  canViewAll: boolean;
 };
 
 const SORT_DIRS: SortDir[] = ['asc', 'desc'];
@@ -58,7 +63,7 @@ function readSavedSort(): { col: SortColumn; dir: SortDir } | null {
   }
 }
 
-export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }: Props) {
+export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions, canViewAll }: Props) {
   const t = useTranslations('dashboard.columns');
   const tf = useTranslations('dashboard.filters');
   const filtered = useCaseQueryFilter(cases);
@@ -173,7 +178,7 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
           <col className="w-48" />
           <col className="w-36" />
           <col className="w-44" />
-          <col className="w-44" />
+          {canViewAll && <col className="w-44" />}
           <col />
         </colgroup>
         <thead className="sticky top-[-1rem] z-10 sm:top-[-1.5rem]">
@@ -200,7 +205,7 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
               onSort={handleSort}
             />
             <Th>{t('bank')}</Th>
-            <Th>{t('advisor')}</Th>
+            {canViewAll && <Th>{t('advisor')}</Th>}
             <Th>{t('shortNote')}</Th>
           </tr>
         </thead>
@@ -212,6 +217,7 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
               statusOptions={statusOptions}
               bankOptions={bankOptions}
               advisorOptions={advisorOptions}
+              canViewAll={canViewAll}
             />
           ))}
         </tbody>

@@ -6,6 +6,7 @@ import { CalendarDays, Check, Loader2, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { DateInputWithPicker } from '@/components/ui/date-input-with-picker';
 import type { Locale } from '@/lib/i18n/direction';
 import { formatDateShort } from '@/lib/utils/format-date';
 
@@ -108,12 +109,9 @@ export function EditableTargetDateCell({ caseId, initialValue, locale }: Props) 
           >
             <label className="block text-xs font-medium text-neutral-600">
               {td('label')}
-              <input
-                type="date"
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                className="mt-1 h-10 w-full rounded-md border border-neutral-200 px-3 text-sm text-neutral-900 focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
-              />
+              <div className="mt-1">
+                <DateInputWithPicker value={value} onChange={setValue} pickerLabel={td('label')} />
+              </div>
             </label>
             <div className="mt-3 flex items-center justify-between gap-2">
               <button

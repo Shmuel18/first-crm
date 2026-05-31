@@ -23,6 +23,8 @@ import { ClearFiltersButton } from './clear-filters-button';
 
 type Props = {
   cases: ReadonlyArray<CaseWithRelations>;
+  // Advisor row hidden for users who only see their own cases (see CasesTable).
+  canViewAll: boolean;
 };
 
 /**
@@ -30,7 +32,7 @@ type Props = {
  * so on small screens we render one card per case (read + tap to open) instead
  * of forcing a horizontal scroll. Inline editing stays on the desktop table.
  */
-export function CasesCardList({ cases }: Props) {
+export function CasesCardList({ cases, canViewAll }: Props) {
   const t = useTranslations('dashboard');
   const locale = parseLocale(useLocale());
   const filtered = useCaseQueryFilter(cases);
@@ -92,7 +94,7 @@ export function CasesCardList({ cases }: Props) {
                   tone={getTargetDateState(c.target_date)}
                 />
                 <Field label={t('columns.bank')} value={bank?.name_he ?? null} />
-                <Field label={t('columns.advisor')} value={advisorName} />
+                {canViewAll && <Field label={t('columns.advisor')} value={advisorName} />}
               </dl>
 
               {c.short_note && (
