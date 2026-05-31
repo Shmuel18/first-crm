@@ -99,11 +99,23 @@ export function EditableTargetDateCell({ caseId, initialValue, locale }: Props) 
 
       {open && pos && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden="true" />
+          {/* Click-away = "leaving the cell" → commit the current value (not
+              discard). Escape cancels; Enter commits (see onKeyDown). */}
+          <div className="fixed inset-0 z-40" onClick={() => save(value)} aria-hidden="true" />
           <div
             ref={dropdownRef}
             role="dialog"
             aria-label={td('edit')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                save(value);
+              } else if (e.key === 'Escape') {
+                e.preventDefault();
+                setValue(savedValue);
+                setOpen(false);
+              }
+            }}
             className="fixed z-50 w-64 rounded-lg border border-neutral-200 bg-white p-3 shadow-xl"
             style={pos}
           >
