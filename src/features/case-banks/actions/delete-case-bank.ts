@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
@@ -38,6 +36,8 @@ export async function deleteCaseBankAction(
   }
   if (!deleted || deleted.length === 0) return { ok: false, error: 'unauthorized' };
 
-  revalidatePath(`/cases/${caseId}`);
+  // No revalidatePath — the inline banks list updates optimistically on the
+  // client (case-banks-inline-list). See add-case-bank for the full rationale:
+  // revalidating /cases/[id] re-rendered every block and lost scroll position.
   return { ok: true };
 }

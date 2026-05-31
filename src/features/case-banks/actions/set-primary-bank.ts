@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
@@ -39,8 +37,9 @@ export async function setPrimaryBankAction(
     return { ok: false, error: 'unknown' };
   }
 
-  // Detail-page only. The dashboard's bank cell uses optimistic state and
-  // would needlessly refetch the full 1000-row list otherwise.
-  revalidatePath(`/cases/${caseId}`);
+  // No revalidatePath: the detail page's inline banks list updates
+  // optimistically on the client (case-banks-inline-list), and the dashboard
+  // bank cell already manages its own optimistic state. Revalidating
+  // /cases/[id] re-rendered every block and lost the user's scroll position.
   return { ok: true };
 }

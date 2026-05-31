@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
@@ -95,6 +93,7 @@ export async function updateCaseBankFieldAction(
     return { ok: false, error: 'unknown' };
   }
 
-  revalidatePath(`/cases/${caseId}`);
+  // No revalidatePath — the row shows the edited value from its own local
+  // state (case-bank-inline-row); the saved value flows back on the next load.
   return { ok: true };
 }
