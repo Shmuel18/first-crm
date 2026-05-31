@@ -15,6 +15,7 @@ import {
   updateExpenseFieldAction,
   type EditableExpenseField,
 } from '../actions/update-expense-field';
+import { ExpenseReceiptCell } from './expense-receipt-cell';
 import type { CaseExpenseRow } from '../types';
 
 type Props = {
@@ -80,24 +81,32 @@ export function CaseExpenseRow({ caseId, expense, canEdit }: Props) {
           placeholder={t('fields.descriptionPlaceholder')}
         />
       </Cell>
-      <td className="w-9 px-1 py-1.5 align-middle">
-        {canEdit && (
-          <Tooltip content={tc('delete')}>
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={isDeleting}
-              aria-label={tc('delete')}
-              className="size-7 rounded inline-flex items-center justify-center text-neutral-400 hover:text-red-600 hover:bg-red-50 transition opacity-0 group-hover:opacity-100 focus-visible:opacity-100 disabled:opacity-50"
-            >
-              {isDeleting ? (
-                <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-              ) : (
-                <Trash2 className="size-3.5" aria-hidden="true" />
-              )}
-            </button>
-          </Tooltip>
-        )}
+      <td className="px-1 py-1.5 align-middle text-end whitespace-nowrap">
+        <span className="inline-flex items-center justify-end">
+          <ExpenseReceiptCell
+            caseId={caseId}
+            expenseId={row.id}
+            canEdit={canEdit}
+            initialName={row.receipt_name}
+          />
+          {canEdit && (
+            <Tooltip content={tc('delete')}>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={isDeleting}
+                aria-label={tc('delete')}
+                className="size-7 rounded inline-flex items-center justify-center text-neutral-400 hover:text-red-600 hover:bg-red-50 transition opacity-0 group-hover:opacity-100 focus-visible:opacity-100 disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Trash2 className="size-3.5" aria-hidden="true" />
+                )}
+              </button>
+            </Tooltip>
+          )}
+        </span>
       </td>
     </tr>
   );

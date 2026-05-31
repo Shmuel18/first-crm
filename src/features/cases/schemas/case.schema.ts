@@ -5,6 +5,7 @@ import {
   MONTHLY_AMOUNT_MAX_ILS,
   NAME_MAX,
   optionalCurrency,
+  optionalDate,
   optionalEnum,
   optionalLongText,
   optionalShortString,
@@ -57,6 +58,7 @@ export const CaseFormShape = z.object({
   city: optionalShortString(NAME_MAX),
   case_type_other_text: optionalShortString(NAME_MAX),
   short_note: optionalShortString(SHORT_NOTE_MAX),
+  target_date: optionalDate,
   request_details: optionalLongText(REQUEST_DETAILS_MAX),
 });
 

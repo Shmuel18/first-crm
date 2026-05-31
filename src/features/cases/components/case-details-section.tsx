@@ -46,6 +46,7 @@ type LocalCase = Pick<
   | 'assigned_advisor_id'
   | 'case_blocker'
   | 'insurance_status'
+  | 'target_date'
   | 'referrer_name'
   | 'short_note'
 >;
@@ -184,6 +185,12 @@ export function CaseDetailsSection({
         value={localCase.insurance_status}
         options={insuranceOptions}
         onSave={(v) => saveField('insurance_status', v)}
+      />
+      <EditableField
+        type="date"
+        label={tFields('targetDate')}
+        value={localCase.target_date}
+        onSave={(v) => saveField('target_date', v)}
       />
       {/* Manager-only agreed-fee. Lives on case_financials (RLS-gated),
           edited via a dedicated upsert RPC — see updateCaseFeeAmountAction. */}

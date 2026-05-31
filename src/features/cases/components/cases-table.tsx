@@ -164,13 +164,14 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
 
   return (
     <div>
-      <table className="w-full table-fixed min-w-[1100px]">
+      <table className="w-full table-fixed min-w-[1240px]">
         <caption className="sr-only">{tf('tableCaption', { count: filtered.length })}</caption>
         <colgroup>
           <col className="w-12" />
           <col className="w-52" />
           <col className="w-32" />
           <col className="w-48" />
+          <col className="w-36" />
           <col className="w-44" />
           <col className="w-44" />
           <col />
@@ -189,6 +190,12 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions }
               label={t('stage')}
               tooltip={t('stageTooltip')}
               column="stage"
+              sort={sortForHeaders}
+              onSort={handleSort}
+            />
+            <SortableTh
+              label={t('targetDate')}
+              column="targetDate"
               sort={sortForHeaders}
               onSort={handleSort}
             />

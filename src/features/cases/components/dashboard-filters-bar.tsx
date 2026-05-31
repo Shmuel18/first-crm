@@ -2,7 +2,7 @@
 
 import { ChevronDown, X } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { parseAsBoolean, parseAsString, useQueryState } from 'nuqs';
+import { parseAsBoolean, parseAsString, parseAsStringEnum, useQueryState } from 'nuqs';
 
 import {
   DropdownMenu,
@@ -15,6 +15,7 @@ import { formatPersonName } from '@/lib/utils/person-name';
 
 import { DashboardExportButtons } from './dashboard-export-buttons';
 import { RowDensityControl } from './row-density-control';
+import { TARGET_DATE_FILTER_VALUES } from '../domain/target-date';
 
 type Option = { id: string; name: string };
 
@@ -33,6 +34,10 @@ type Props = {
 const ALL = '__all';
 const urlOpts = { shallow: false } as const;
 
+function isTargetDateValue(value: string | null): value is (typeof TARGET_DATE_FILTER_VALUES)[number] {
+  return (TARGET_DATE_FILTER_VALUES as readonly string[]).includes(value ?? '');
+}
+
 export function DashboardFiltersBar({
   statusOptions,
   bankOptions,
@@ -46,6 +51,14 @@ export function DashboardFiltersBar({
   const [advisor, setAdvisor] = useQueryState('advisor', parseAsString.withOptions(urlOpts));
   const [stage, setStage] = useQueryState('stage', parseAsString.withOptions(urlOpts));
   const [bank, setBank] = useQueryState('bank', parseAsString.withOptions(urlOpts));
+  const [targetDate, setTargetDate] = useQueryState(
+    'targetDate',
+    parseAsStringEnum([...TARGET_DATE_FILTER_VALUES]).withOptions(urlOpts),
+  );
+  const [stuck, setStuck] = useQueryState(
+    'stuck',
+    parseAsBoolean.withDefault(false).withOptions(urlOpts),
+  );
   const [hideClosedFrozen, setHide] = useQueryState(
     'hideClosedFrozen',
     parseAsBoolean.withDefault(true).withOptions(urlOpts),
@@ -55,6 +68,11 @@ export function DashboardFiltersBar({
 
   const stages: Option[] = statusOptions.map((s) => ({ id: s.id, name: s.name_he }));
   const banks: Option[] = bankOptions.map((b) => ({ id: b.id, name: b.name_he }));
+  const targetDates: Option[] = [
+    { id: 'overdue', name: t('targetDate.overdue') },
+    { id: 'week', name: t('targetDate.week') },
+    { id: 'none', name: t('targetDate.none') },
+  ];
   const advisors: Option[] = advisorOptions.map((a) => ({
     id: a.id,
     name: formatPersonName(a.first_name, a.last_name) || '—',
@@ -69,12 +87,14 @@ export function DashboardFiltersBar({
   // The free-text search lives in a sibling component (the view selector bar
   // above), so we deliberately leave `query` alone here — it would be a
   // surprise to wipe text the user typed in a different bar.
-  const anyActive = advisor !== null || stage !== null || bank !== null;
+  const anyActive = advisor !== null || stage !== null || bank !== null || targetDate !== null || stuck;
 
   const clearAll = () => {
     setAdvisor(null);
     setStage(null);
     setBank(null);
+    setTargetDate(null);
+    setStuck(false);
   };
 
   return (
@@ -94,6 +114,21 @@ export function DashboardFiltersBar({
       )}
       <FilterSelect label={t('stage')} value={stage} onChange={setStage} options={stages} allLabel={t('all')} />
       <FilterSelect label={t('bank')} value={bank} onChange={setBank} options={banks} allLabel={t('all')} />
+      <FilterSelect
+        label={t('targetDate.label')}
+        value={targetDate}
+        onChange={(next) => setTargetDate(isTargetDateValue(next) ? next : null)}
+        options={targetDates}
+        allLabel={t('all')}
+      />
+      <button
+        type="button"
+        onClick={() => setStuck(!stuck)}
+        aria-pressed={stuck}
+        className={chipClass(stuck)}
+      >
+        {t('onlyStuck')}
+      </button>
 
       {anyActive && (
         <button

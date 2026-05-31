@@ -18,6 +18,7 @@ const ALLOWED_FIELDS = [
   'short_note',
   'case_blocker',
   'insurance_status',
+  'target_date',
   'referrer_name',
 ] as const satisfies ReadonlyArray<keyof CasesUpdate>;
 
@@ -58,6 +59,9 @@ export async function quickUpdateCaseFieldAction(
   }
 
   const finalValue = value === '' ? null : value;
+  if (field === 'target_date' && finalValue !== null && !/^\d{4}-\d{2}-\d{2}$/.test(finalValue)) {
+    return { ok: false, error: 'validation' };
+  }
   const updatePayload: CasesUpdate = {
     [field]: finalValue,
     updated_by: userRes.user.id,

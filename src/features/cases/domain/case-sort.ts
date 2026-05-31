@@ -17,10 +17,11 @@
  */
 
 import { getPrimaryBorrowerSortKey } from './case-derivations';
+import { compareTargetDates } from './target-date';
 
 import type { CaseWithRelations } from '../types';
 
-export const SORT_COLUMNS = ['name', 'stage'] as const;
+export const SORT_COLUMNS = ['name', 'stage', 'targetDate'] as const;
 export type SortColumn = (typeof SORT_COLUMNS)[number];
 export type SortDir = 'asc' | 'desc';
 
@@ -96,6 +97,12 @@ export function applySort(
       );
       break;
     }
+    case 'targetDate':
+      sorted.sort((a, b) => {
+        const cmp = compareTargetDates(a.target_date, b.target_date);
+        return (sort.dir === 'desc' ? -cmp : cmp) || tieBySurname(a, b);
+      });
+      break;
   }
   return sorted;
 }

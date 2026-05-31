@@ -27,6 +27,7 @@ type Props = {
   assignedAdvisorId: string | null;
   blocker: CaseBlocker | null;
   insurance: InsuranceStatus | null;
+  targetDate: string | null;
   referrerName: string | null;
   shortNote: string | null;
   /** All active case_banks rows (with bank + banker_name) for the inline
@@ -65,6 +66,7 @@ export async function CaseAdminBlock({
   assignedAdvisorId,
   blocker,
   insurance,
+  targetDate,
   referrerName,
   shortNote,
   bankRows,
@@ -96,6 +98,7 @@ export async function CaseAdminBlock({
           assigned_advisor_id: assignedAdvisorId,
           case_blocker: blocker,
           insurance_status: insurance,
+          target_date: targetDate,
           referrer_name: referrerName,
           short_note: shortNote,
         }}

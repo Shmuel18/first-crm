@@ -1,7 +1,14 @@
 import { createClient } from '@/lib/supabase/server';
 import type { BorrowerId, CaseId } from '@/lib/types/branded';
 
-import type { BorrowerRow, CaseBorrowerWithBorrower, RoleInCase } from '../types';
+import type { ReturningCriteria } from '../domain/returning-criteria';
+
+import type {
+  BorrowerRow,
+  CaseBorrowerWithBorrower,
+  ReturningBorrowerMatch,
+  RoleInCase,
+} from '../types';
 
 // Explicit column list (audit-driven). Mirrors the borrowers Row type so
 // schema additions go through an intentional update here. Used for both the
@@ -46,6 +53,62 @@ export async function getBorrowerById(id: BorrowerId): Promise<BorrowerRow | nul
 
   if (error) throw error;
   return data;
+}
+
+// Person-level columns for the returning-client search. Deliberately a subset
+// of the full row (no financials / deal flags) so the enumeration surface stays
+// minimal. Mirrors the ReturningBorrowerMatch Pick.
+const RETURNING_MATCH_COLUMNS =
+  'id, first_name, last_name, national_id, phone, landline_phone, email, preferred_language, id_issue_date, birth_date, marital_status, children_count, address, city, citizenship, residency_type, employment_status, employer_name' as const;
+
+const RETURNING_MATCH_LIMIT = 8;
+
+/**
+ * Find existing borrowers matching a single criterion, for returning-client
+ * autofill. RLS (borrowers_select) already scopes results to borrowers on the
+ * caller's own cases, so this can't surface anyone they can't access. Returns
+ * up to 8, newest-updated first, deduped by national_id. Never throws — a DB
+ * error logs and yields an empty list (caller treats it as "no match").
+ *
+ * Phone is matched exactly because it's stored canonically normalized
+ * ("0501234567"); the action normalizes the probe the same way before calling.
+ */
+export async function searchReturningBorrowers(
+  criteria: ReturningCriteria,
+): Promise<ReturningBorrowerMatch[]> {
+  const supabase = await createClient();
+  const base = supabase.from('borrowers').select(RETURNING_MATCH_COLUMNS).is('deleted_at', null);
+
+  const scoped =
+    criteria.by === 'nationalId'
+      ? base.eq('national_id', criteria.value)
+      : criteria.by === 'phone'
+        ? base.or(`phone.eq.${criteria.value},landline_phone.eq.${criteria.value}`)
+        : base
+            .ilike('first_name', `%${criteria.firstName}%`)
+            .ilike('last_name', `%${criteria.lastName}%`);
+
+  const { data, error } = await scoped
+    .order('updated_at', { ascending: false })
+    .limit(RETURNING_MATCH_LIMIT);
+
+  if (error) {
+    console.error('[searchReturningBorrowers] query failed', error.code);
+    return [];
+  }
+  return dedupeByNationalId(data ?? []);
+}
+
+/** Collapse rows sharing a national_id (keeps the first = newest). Rows with
+ *  no national_id are all kept — we can't prove they're the same person. */
+function dedupeByNationalId(rows: ReturningBorrowerMatch[]): ReturningBorrowerMatch[] {
+  const seen = new Set<string>();
+  return rows.filter((row) => {
+    if (!row.national_id) return true;
+    if (seen.has(row.national_id)) return false;
+    seen.add(row.national_id);
+    return true;
+  });
 }
 
 export async function getCaseBorrowerLink(

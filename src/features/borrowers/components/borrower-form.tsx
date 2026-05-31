@@ -1,20 +1,19 @@
 'use client';
 
 import { useActionState, useRef } from 'react';
-import { useFormStatus } from 'react-dom';
 
-import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { Button } from '@/components/ui/button';
 import { DateInputWithPicker } from '@/components/ui/date-input-with-picker';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { FormField, FormSection, NativeSelect } from '@/components/shared/form-fields';
 
 import { fieldDefault } from '@/lib/utils/form-defaults';
 
 import { saveBorrowerAction } from '../actions/save-borrower';
+import { useReturningFormBridge } from '../hooks/use-returning-form-bridge';
+import { BorrowerDetailSections } from './borrower-detail-sections';
+import { SubmitButton } from './borrower-submit-button';
 import { ReturningClientAutofill } from './returning-client-autofill';
 import {
   BORROWER_ACTION_INITIAL,
@@ -30,25 +29,7 @@ type Props = {
   initialIsPrimary?: boolean;
 };
 
-const MARITAL_STATUS_VALUES = ['single', 'married', 'divorced', 'widowed', 'common_law'] as const;
-const RESIDENCY_TYPE_VALUES = ['resident', 'foreign_resident', 'returning_resident'] as const;
-const EMPLOYMENT_STATUS_VALUES = ['employee', 'self_employed', 'unemployed', 'pensioner'] as const;
 const PREFERRED_LANGUAGE_VALUES = ['he', 'en'] as const;
-
-function SubmitButton({ isEdit }: { isEdit: boolean }) {
-  const { pending } = useFormStatus();
-  const t = useTranslations('borrowerForm');
-  const tc = useTranslations('common');
-  return (
-    <Button
-      type="submit"
-      disabled={pending}
-      className="bg-brand-black hover:bg-neutral-800 text-white h-11 min-w-32"
-    >
-      {pending ? <Loader2 className="size-4 animate-spin" /> : isEdit ? tc('save') : t('submit.create')}
-    </Button>
-  );
-}
 
 export function BorrowerForm({
   caseId,
@@ -65,6 +46,7 @@ export function BorrowerForm({
     BORROWER_ACTION_INITIAL,
   );
   const formRef = useRef<HTMLFormElement>(null);
+  const { probe, refreshProbe, onFill, clearMark } = useReturningFormBridge(formRef);
 
   const errs = state.ok === false && state.error === 'validation' ? state.fieldErrors ?? {} : {};
   const sub = state.ok === false && state.error !== 'idle' ? state.values : undefined;
@@ -84,7 +66,14 @@ export function BorrowerForm({
   const val = (name: string) => fieldDefault(name, sub, initialRecord);
 
   return (
-    <form ref={formRef} action={formAction} className="space-y-6" noValidate>
+    <form
+      ref={formRef}
+      action={formAction}
+      onBlur={refreshProbe}
+      onInput={clearMark}
+      className="space-y-6"
+      noValidate
+    >
       <input type="hidden" name="case_id" value={caseId} />
       {initial && <input type="hidden" name="borrower_id" value={initial.id} />}
 
@@ -128,7 +117,7 @@ export function BorrowerForm({
         </FormField>
         {!initial && (
           <div className="md:col-span-2">
-            <ReturningClientAutofill formRef={formRef} />
+            <ReturningClientAutofill probe={probe} onFill={onFill} />
           </div>
         )}
         <FormField label={t('fields.phone')} error={errs.phone}>
@@ -164,85 +153,7 @@ export function BorrowerForm({
         </FormField>
       </FormSection>
 
-      <FormSection title={t('sections.familyAddress')}>
-        <FormField label={t('fields.maritalStatus')} error={errs.marital_status}>
-          <NativeSelect name="marital_status" defaultValue={val('marital_status')}>
-            <option value="">{tc('select')}</option>
-            {MARITAL_STATUS_VALUES.map((m) => (
-              <option key={m} value={m}>{t(`maritalStatuses.${m}`)}</option>
-            ))}
-          </NativeSelect>
-        </FormField>
-        <FormField label={t('fields.childrenCount')} error={errs.children_count}>
-          <Input name="children_count" type="number" min={0} step="1" defaultValue={val('children_count')} />
-        </FormField>
-        <FormField label={t('fields.city')} error={errs.city}>
-          <Input name="city" defaultValue={val('city')} />
-        </FormField>
-        <div className="md:col-span-2">
-          <FormField label={t('fields.address')} error={errs.address}>
-            <Input name="address" defaultValue={val('address')} />
-          </FormField>
-        </div>
-      </FormSection>
-
-      <FormSection title={t('sections.citizenshipEmployment')}>
-        <FormField label={t('fields.citizenship')} error={errs.citizenship}>
-          <Input
-            name="citizenship"
-            placeholder={t('fields.citizenshipPlaceholder')}
-            defaultValue={val('citizenship')}
-          />
-        </FormField>
-        <FormField label={t('fields.residency')} error={errs.residency_type}>
-          <NativeSelect name="residency_type" defaultValue={val('residency_type')}>
-            <option value="">{tc('select')}</option>
-            {RESIDENCY_TYPE_VALUES.map((r) => (
-              <option key={r} value={r}>{t(`residencyTypes.${r}`)}</option>
-            ))}
-          </NativeSelect>
-        </FormField>
-        <FormField label={t('fields.employmentStatus')} error={errs.employment_status}>
-          <NativeSelect name="employment_status" defaultValue={val('employment_status')}>
-            <option value="">{tc('select')}</option>
-            {EMPLOYMENT_STATUS_VALUES.map((e) => (
-              <option key={e} value={e}>{t(`employmentStatuses.${e}`)}</option>
-            ))}
-          </NativeSelect>
-        </FormField>
-        <FormField label={t('fields.employerName')} error={errs.employer_name}>
-          <Input name="employer_name" defaultValue={val('employer_name')} />
-        </FormField>
-      </FormSection>
-
-      <FormSection title={t('sections.extra')}>
-        <FormField label={t('fields.creditRating')} error={errs.credit_rating}>
-          <Input
-            name="credit_rating"
-            defaultValue={val('credit_rating')}
-            placeholder={t('fields.creditRatingPlaceholder')}
-          />
-        </FormField>
-        <FormField label={t('fields.ownsOtherProperty')} error={errs.owns_other_property}>
-          <NativeSelect name="owns_other_property" defaultValue={val('owns_other_property')}>
-            <option value="">{t('fields.ownsOtherPropertyUnknown')}</option>
-            <option value="true">{tc('yes')}</option>
-            <option value="false">{tc('no')}</option>
-          </NativeSelect>
-        </FormField>
-        <FormField label={t('fields.relatedToSellers')} error={errs.related_to_sellers}>
-          <NativeSelect name="related_to_sellers" defaultValue={val('related_to_sellers')}>
-            <option value="">{t('fields.ownsOtherPropertyUnknown')}</option>
-            <option value="true">{tc('yes')}</option>
-            <option value="false">{tc('no')}</option>
-          </NativeSelect>
-        </FormField>
-        <div className="md:col-span-2">
-          <FormField label={t('fields.notes')} error={errs.notes}>
-            <Textarea name="notes" rows={3} defaultValue={val('notes')} />
-          </FormField>
-        </div>
-      </FormSection>
+      <BorrowerDetailSections val={val} errs={errs} />
 
       {genericError && (
         <div

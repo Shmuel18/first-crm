@@ -13,10 +13,13 @@ import { FieldGroup } from '@/features/borrowers/components/borrower-compact-fie
 import { QuickIconLink } from '@/features/borrowers/components/borrower-contact-actions';
 import { BorrowerMiscRow } from '@/features/borrowers/components/borrower-misc-row';
 import { EditableField } from '@/features/borrowers/components/editable-field';
+import { ReturningClientAutofill } from '@/features/borrowers/components/returning-client-autofill';
 import { calculateAge } from '@/features/borrowers/domain/age';
 import { buildMailLink, buildTelLink, buildWhatsAppLink } from '@/features/borrowers/domain/contact-links';
+import { applyMatchFields } from '@/features/borrowers/domain/returning-autofill-fields';
+import { useDraftReturningAutofill } from '@/features/borrowers/hooks/use-draft-returning-autofill';
 import type { EditableBorrowerField } from '@/features/borrowers/actions/update-borrower-field';
-import type { BorrowerRow } from '@/features/borrowers/types';
+import type { BorrowerRow, ReturningBorrowerMatch } from '@/features/borrowers/types';
 
 import type { DraftBorrower } from '../hooks/use-case-draft-state';
 
@@ -65,6 +68,18 @@ export function DraftBorrowerCard({ borrower, onChange, onRemove, canRemove }: P
   // "adjust on prop change" idiom in EditableField itself.
   const [localBorrower, setLocalBorrower] = useState(borrower);
 
+  // Returning-client autofill: probe derives from the live values; onFill
+  // merges an accepted match into draft state and amber-flags overwritten
+  // fields (markClass), cleared per-field when the user re-edits (clearMark).
+  const { probe, onFill, markClass, clearMark } = useDraftReturningAutofill(
+    localBorrower,
+    (match: ReturningBorrowerMatch) => {
+      const next = applyMatchFields(localBorrower, match);
+      setLocalBorrower(next);
+      onChange(next);
+    },
+  );
+
   const fullName =
     formatPersonName(localBorrower.first_name, localBorrower.last_name) ||
     tc('noName');
@@ -77,6 +92,7 @@ export function DraftBorrowerCard({ borrower, onChange, onRemove, canRemove }: P
     field: EditableBorrowerField,
     value: string | null,
   ): Promise<{ ok: true }> => {
+    clearMark(field);
     // children_count is the one non-string field a saveField call sends — the
     // BorrowerMiscRow stringifies it for us. Convert back to number for the
     // typed state shape; '' / null both clear the field.
@@ -142,24 +158,27 @@ export function DraftBorrowerCard({ borrower, onChange, onRemove, canRemove }: P
           label={tf('firstName')}
           value={localBorrower.first_name}
           onSave={(v) => saveField('first_name', v)}
+          inputClassName={markClass('first_name')}
         />
         <EditableField
           label={tf('lastName')}
           value={localBorrower.last_name}
           onSave={(v) => saveField('last_name', v)}
+          inputClassName={markClass('last_name')}
         />
         <EditableField
           label={tf('nationalId')}
           value={localBorrower.national_id}
           onSave={(v) => saveField('national_id', v)}
           dir="ltr"
-          inputClassName="text-end"
+          inputClassName={['text-end', markClass('national_id')].filter(Boolean).join(' ')}
         />
         <EditableField
           type="date"
           label={tf('idIssueDate')}
           value={localBorrower.id_issue_date}
           onSave={(v) => saveField('id_issue_date', v)}
+          inputClassName={markClass('id_issue_date')}
         />
         <EditableField
           type="date"
@@ -172,8 +191,11 @@ export function DraftBorrowerCard({ borrower, onChange, onRemove, canRemove }: P
           label={tf('birthDate')}
           value={localBorrower.birth_date}
           onSave={(v) => saveField('birth_date', v)}
+          inputClassName={markClass('birth_date')}
         />
       </FieldGroup>
+
+      <ReturningClientAutofill probe={probe} onFill={onFill} />
 
       {/* Contact — phone w/ WhatsApp+call adornments, email w/ mailto. */}
       <FieldGroup>
@@ -182,6 +204,7 @@ export function DraftBorrowerCard({ borrower, onChange, onRemove, canRemove }: P
           label={tf('phone')}
           value={localBorrower.phone}
           onSave={(v) => saveField('phone', v)}
+          inputClassName={markClass('phone')}
           adornment={
             waLink && telLink ? (
               <span className="inline-flex items-center gap-0.5">
@@ -202,6 +225,7 @@ export function DraftBorrowerCard({ borrower, onChange, onRemove, canRemove }: P
           label={tf('email')}
           value={localBorrower.email}
           onSave={(v) => saveField('email', v)}
+          inputClassName={markClass('email')}
           adornment={
             mailLink ? (
               <QuickIconLink href={mailLink} label={t('sendEmail')} icon={Mail} accent="neutral" />

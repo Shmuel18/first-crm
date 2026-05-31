@@ -368,6 +368,12 @@
       "advisor": "Advisor",
       "stage": "Stage",
       "bank": "Bank",
+      "targetDate": {
+        "label": "Target date",
+        "overdue": "Overdue",
+        "week": "This week",
+        "none": "No target"
+      },
       "onlyStuck": "Stuck only",
       "hideClosedFrozen": "Hide completed & frozen",
       "all": "All",
@@ -411,6 +417,7 @@
       "nationalId": "ID / Passport",
       "stage": "Stage",
       "stageTooltip": "The case's current pipeline stage — from Lead to Done. Click a stage in the row to update it.",
+      "targetDate": "Target date",
       "bank": "Bank",
       "advisor": "Advisor",
       "shortNote": "Short Note"
@@ -424,6 +431,12 @@
       "noBorrowers": "(No borrowers)",
       "recentlyUpdated": "Updated within 24h",
       "updatedOn": "Updated on {date}"
+    },
+    "targetDate": {
+      "label": "Target date",
+      "edit": "Edit target date",
+      "empty": "—",
+      "clear": "Clear"
     }
   },
   "leads": {
@@ -756,6 +769,7 @@
       "expectedIncome": "Expected income",
       "blocker": "Blocker",
       "insurance": "Insurance",
+      "targetDate": "Target date",
       "referrer": "Referred by",
       "shortNote": "Short note",
       "advisor": "Assigned advisor",
@@ -890,10 +904,10 @@
   },
   "borrowerForm": {
     "returning": {
-      "check": "Check returning client",
       "found": "Existing client found: {name}",
-      "fill": "Autofill details",
-      "none": "No client found with this ID"
+      "import": "Import details",
+      "chooseTitle": "Several existing clients found — pick one:",
+      "dismiss": "Dismiss"
     },
     "sections": {
       "roleInCase": "Role in case",
@@ -1062,6 +1076,20 @@
       "amount": "Amount",
       "description": "Description",
       "descriptionPlaceholder": "e.g. appraisal, courier, legal advice"
+    },
+    "receipt": {
+      "upload": "Upload invoice",
+      "view": "View invoice",
+      "replace": "Replace invoice",
+      "remove": "Remove invoice",
+      "uploaded": "Invoice uploaded",
+      "removed": "Invoice removed",
+      "errors": {
+        "tooLarge": "File too large (max 10MB)",
+        "type": "Unsupported file type (PDF or image only)",
+        "rateLimited": "Too many uploads, try again in a few minutes",
+        "generic": "Failed to upload the invoice"
+      }
     }
   },
   "obligations": {
@@ -1694,6 +1722,9 @@
         "assignee": "Assigned to",
         "assigneeUnassigned": "— Unassigned —",
         "case": "Related case",
+        "caseSearch": "Search cases",
+        "caseSearchPlaceholder": "Type client name or case number",
+        "caseNoMatches": "No matching cases",
         "caseNone": "— No case —",
         "private": "Personal (private) reminder",
         "privateHint": "Only you can see it — not even a manager. Assigned to you automatically.",

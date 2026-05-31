@@ -31,6 +31,7 @@ export const EDITABLE_CASE_FIELDS = [
   'assigned_advisor_id',
   'case_blocker',
   'insurance_status',
+  'target_date',
   'referrer_name',
   'short_note',
   // Rich-text body of the case. The action sanitises HTML before INSERT.

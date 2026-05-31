@@ -14,6 +14,7 @@ type TestCase = {
   assigned_advisor: { id: string } | null;
   status: { id: string; key: string } | null;
   case_banks: BankLink[];
+  target_date: string | null;
 };
 
 // Minimal fixture: filterCases only reads the fields below. Cast through
@@ -23,6 +24,7 @@ function makeCase(o: Partial<TestCase> = {}): CaseWithRelations {
     assigned_advisor: o.assigned_advisor ?? null,
     status: o.status ?? { id: 'open', key: 'open' },
     case_banks: o.case_banks ?? [],
+    target_date: o.target_date ?? null,
   } as unknown as CaseWithRelations;
 }
 
@@ -30,6 +32,7 @@ const NO_FILTERS: DashboardFilters = {
   advisor: null,
   stage: null,
   bank: null,
+  targetDate: null,
   stuck: false,
   hideClosedFrozen: false,
 };
@@ -52,6 +55,7 @@ describe('parseDashboardFilters', () => {
       advisor: null,
       stage: null,
       bank: null,
+      targetDate: null,
       stuck: false,
       hideClosedFrozen: true,
     });
@@ -64,6 +68,7 @@ describe('parseDashboardFilters', () => {
       advisor: 'a1',
       stage: null,
       bank: null,
+      targetDate: null,
       stuck: true,
       hideClosedFrozen: false,
     });
@@ -104,6 +109,16 @@ describe('filterCases', () => {
     const stuck = makeCase({ status: { id: 'x', key: 'stuck' } });
     const open = makeCase({ status: { id: 'y', key: 'open' } });
     expect(filterCases([stuck, open], { ...NO_FILTERS, stuck: true })).toEqual([stuck]);
+  });
+
+  it('filters by manual target date state', () => {
+    const overdue = makeCase({ target_date: '2026-05-01' });
+    const soon = makeCase({ target_date: '2026-05-31' });
+    const none = makeCase();
+    const now = new Date('2026-05-29T12:00:00');
+    expect(
+      filterCases([overdue, soon, none], { ...NO_FILTERS, targetDate: 'week' }, now),
+    ).toEqual([soon]);
   });
 
   it('hides closed and frozen cases when hideClosedFrozen is on', () => {

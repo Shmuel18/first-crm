@@ -368,6 +368,12 @@
       "advisor": "יועץ אחראי",
       "stage": "שלב בתהליך",
       "bank": "בנק",
+      "targetDate": {
+        "label": "תאריך יעד",
+        "overdue": "באיחור",
+        "week": "השבוע",
+        "none": "ללא יעד"
+      },
       "onlyStuck": "רק תקועים",
       "hideClosedFrozen": "הסתר בוצעו והוקפאו",
       "all": "הכל",
@@ -411,6 +417,7 @@
       "nationalId": "ת״ז / דרכון",
       "stage": "שלב בתהליך",
       "stageTooltip": "השלב הנוכחי של התיק בתהליך — מ׳ליד׳ ועד ׳בוצע׳. לחצו על שלב בשורה לעדכון מהיר.",
+      "targetDate": "תאריך יעד",
       "bank": "בנק",
       "advisor": "יועץ אחראי",
       "shortNote": "הערה קצרה"
@@ -424,6 +431,12 @@
       "noBorrowers": "(ללא לווים)",
       "recentlyUpdated": "עודכן ב-24 שעות אחרונות",
       "updatedOn": "עודכן ב-{date}"
+    },
+    "targetDate": {
+      "label": "תאריך יעד",
+      "edit": "עריכת תאריך יעד",
+      "empty": "—",
+      "clear": "נקה"
     }
   },
   "leads": {
@@ -756,6 +769,7 @@
       "expectedIncome": "הכנסה צפויה",
       "blocker": "גורם מעכב",
       "insurance": "ביטוחים",
+      "targetDate": "תאריך יעד",
       "referrer": "הופנה ע״י",
       "shortNote": "הערה קצרה",
       "advisor": "יועץ אחראי",
@@ -890,10 +904,10 @@
   },
   "borrowerForm": {
     "returning": {
-      "check": "בדוק לקוח חוזר",
       "found": "נמצא לקוח קיים: {name}",
-      "fill": "מלא פרטים",
-      "none": "לא נמצא לקוח עם ת״ז זו"
+      "import": "ייבא פרטים",
+      "chooseTitle": "נמצאו כמה לקוחות קיימים — בחר אחד:",
+      "dismiss": "התעלם"
     },
     "sections": {
       "roleInCase": "תפקיד בתיק",
@@ -1062,6 +1076,20 @@
       "amount": "סכום",
       "description": "תיאור",
       "descriptionPlaceholder": "לדוגמה: שמאות, שליחויות, ייעוץ משפטי"
+    },
+    "receipt": {
+      "upload": "העלה חשבונית",
+      "view": "צפה בחשבונית",
+      "replace": "החלף חשבונית",
+      "remove": "הסר חשבונית",
+      "uploaded": "החשבונית הועלתה",
+      "removed": "החשבונית הוסרה",
+      "errors": {
+        "tooLarge": "הקובץ גדול מדי (עד 10MB)",
+        "type": "סוג קובץ לא נתמך (PDF או תמונה בלבד)",
+        "rateLimited": "יותר מדי העלאות, נסה שוב בעוד כמה דקות",
+        "generic": "העלאת החשבונית נכשלה"
+      }
     }
   },
   "obligations": {
@@ -1694,6 +1722,9 @@
         "assignee": "מוקצה ל",
         "assigneeUnassigned": "— ללא הקצאה —",
         "case": "תיק קשור",
+        "caseSearch": "חיפוש תיקים",
+        "caseSearchPlaceholder": "הקלד שם לקוח או מספר תיק",
+        "caseNoMatches": "לא נמצאו תיקים תואמים",
         "caseNone": "— ללא תיק —",
         "private": "תזכורת אישית (פרטית)",
         "privateHint": "רק את/ה תראה אותה — גם מנהל לא. משויכת אליך אוטומטית.",

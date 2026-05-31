@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/shared/page-header';
 import { TasksBoard } from '@/features/tasks/components/tasks-board';
 import { TasksLayoutToggle } from '@/features/tasks/components/tasks-layout-toggle';
 import { TasksList } from '@/features/tasks/components/tasks-list';
+import { TaskCreateButton } from '@/features/tasks/components/task-create-button';
 import { TasksStatStrip } from '@/features/tasks/components/tasks-stat-strip';
 import { TasksTagFilter } from '@/features/tasks/components/tasks-tag-filter';
 import { TasksViewTabs } from '@/features/tasks/components/tasks-view-tabs';
@@ -109,7 +110,15 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
           isAdmin={isAdmin === true}
           counts={{ mine: mineCount, 'assigned-by-me': assignedByMeCount, all: allCount }}
         />
-        <TasksLayoutToggle />
+        <div className="flex items-center gap-2 ms-auto">
+          <TaskCreateButton
+            assignees={assignees}
+            cases={cases}
+            presetCaseId={caseId ?? null}
+            size="sm"
+          />
+          <TasksLayoutToggle />
+        </div>
       </div>
 
       <TasksTagFilter />
@@ -151,6 +160,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
           cases={cases}
           locale={locale}
           presetCaseId={caseId ?? null}
+          hideCreateButton
         />
       )}
     </div>
