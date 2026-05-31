@@ -20,7 +20,7 @@ export function LoadingLogo(): React.ReactElement {
         alt=""
         width={512}
         height={512}
-        className="logo-loading h-16 w-auto"
+        className="logo-loading h-28 w-auto sm:h-36"
       />
     </div>
   );
