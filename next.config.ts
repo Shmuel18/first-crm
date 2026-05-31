@@ -59,6 +59,10 @@ const SECURITY_HEADERS = [
 
 const nextConfig: NextConfig = {
   deploymentId: process.env.NEXT_DEPLOYMENT_ID,
+  // Hide Next's dev-only on-screen indicator (the bottom-start "N" overlay that
+  // opens dev tools). It overlapped app UI and read as a stray logo; it never
+  // ships in production, so this only cleans up the local dev view.
+  devIndicators: false,
   experimental: {
     serverActions: {
       // Document uploads now use direct-to-storage via Supabase signed-upload
