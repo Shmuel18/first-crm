@@ -6,6 +6,8 @@ import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import type { Database } from '@/types/database';
 
+import { isValidTargetDate } from '../domain/target-date';
+
 type CasesUpdate = Database['public']['Tables']['cases']['Update'];
 
 /**
@@ -59,7 +61,7 @@ export async function quickUpdateCaseFieldAction(
   }
 
   const finalValue = value === '' ? null : value;
-  if (field === 'target_date' && finalValue !== null && !/^\d{4}-\d{2}-\d{2}$/.test(finalValue)) {
+  if (field === 'target_date' && finalValue !== null && !isValidTargetDate(finalValue)) {
     return { ok: false, error: 'validation' };
   }
   const updatePayload: CasesUpdate = {
