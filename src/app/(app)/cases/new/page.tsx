@@ -1,6 +1,9 @@
+import { redirect } from 'next/navigation';
+
 import { getLocale } from 'next-intl/server';
 
 import { NewCasePageClient } from '@/features/cases/components/new-case-page-client';
+import { userHasPermission } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 
 /**
@@ -17,6 +20,10 @@ import { parseLocale } from '@/lib/i18n/direction';
  * /cases/[id].
  */
 export default async function NewCasePage() {
+  // Affordance↔guard parity with the topbar "New case" link and the
+  // create_case check in save-case-draft.ts.
+  if (!(await userHasPermission('create_case'))) redirect('/cases');
+
   const locale = parseLocale(await getLocale());
   return (
     <div className="max-w-5xl">

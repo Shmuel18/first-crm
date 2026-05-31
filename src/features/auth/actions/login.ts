@@ -18,6 +18,19 @@ export async function loginAction(
     password: formData.get('password'),
   };
 
+  // `next` is attacker-controllable (it comes from the URL via a hidden
+  // input), so it MUST be a same-origin app path. Reject anything that
+  // doesn't start with a single `/` (protocol-relative `//`, backslash
+  // `/\`, or an absolute URL). Mirrors the /auth/callback convention.
+  const nextRaw = formData.get('next');
+  const next =
+    typeof nextRaw === 'string' &&
+    nextRaw.startsWith('/') &&
+    !nextRaw.startsWith('//') &&
+    !nextRaw.startsWith('/\\')
+      ? nextRaw
+      : '/cases';
+
   const parsed = LoginSchema.safeParse(raw);
   if (!parsed.success) {
     return { error: 'invalid_input' };
@@ -58,5 +71,5 @@ export async function loginAction(
     return { error: 'unknown' };
   }
 
-  redirect('/cases');
+  redirect(next);
 }

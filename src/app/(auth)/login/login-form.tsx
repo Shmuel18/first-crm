@@ -34,7 +34,11 @@ function SubmitButton() {
   );
 }
 
-export function LoginForm() {
+type LoginFormProps = {
+  next?: string | null;
+};
+
+export function LoginForm({ next }: LoginFormProps) {
   const t = useTranslations('auth.login');
   const [state, formAction] = useActionState(loginAction, LOGIN_INITIAL_STATE);
 
@@ -49,6 +53,7 @@ export function LoginForm() {
 
   return (
     <form action={formAction} className="space-y-4" noValidate>
+      {next && <input type="hidden" name="next" value={next} />}
       <div className="space-y-2">
         <Label htmlFor="email" className="text-neutral-700 text-sm font-medium">
           {t('emailLabel')}

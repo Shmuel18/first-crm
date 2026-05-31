@@ -1,5 +1,6 @@
 import { cache } from 'react';
 
+import { userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import type { NotificationData, NotificationType } from '@/features/notifications/types';
 import { timeAsync } from '@/lib/perf/timing';
@@ -7,6 +8,7 @@ import { timeAsync } from '@/lib/perf/timing';
 export type LayoutBootstrap = {
   authenticated: boolean;
   isAdmin: boolean;
+  canCreateCase: boolean;
   pendingTasks: number;
   criticalTasks: number;
   unreadNotifications: number;
@@ -35,6 +37,7 @@ export type LayoutBootstrap = {
 const UNAUTHED: LayoutBootstrap = {
   authenticated: false,
   isAdmin: false,
+  canCreateCase: false,
   pendingTasks: 0,
   criticalTasks: 0,
   unreadNotifications: 0,
@@ -69,6 +72,10 @@ export const getLayoutBootstrap = cache(async (): Promise<LayoutBootstrap> => {
   const envelope = data as Record<string, unknown>;
   if (envelope.authenticated !== true) return UNAUTHED;
 
+  // Same check save-case-draft.ts enforces — keeps the "New case" affordance
+  // in lockstep with the server guard so a non-permitted user never sees it.
+  const canCreateCase = await userHasPermission('create_case');
+
   const profile = envelope.profile as Record<string, unknown> | null;
   const role =
     profile && typeof profile === 'object' && 'role' in profile
@@ -78,6 +85,7 @@ export const getLayoutBootstrap = cache(async (): Promise<LayoutBootstrap> => {
   return {
     authenticated: true,
     isAdmin: envelope.is_admin === true,
+    canCreateCase,
     pendingTasks: Number(envelope.pending_tasks ?? 0),
     criticalTasks: Number(envelope.critical_tasks ?? 0),
     unreadNotifications: Number(envelope.unread_notifications ?? 0),

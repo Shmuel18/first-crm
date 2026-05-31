@@ -2,6 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 
 import { env } from '@/lib/env';
 import { SUPPORTED_LOCALES, type Locale } from '@/lib/i18n/direction';
@@ -34,13 +35,15 @@ export async function switchLocaleAction(locale: Locale): Promise<void> {
     httpOnly: false,
   });
 
-  // Mirror the cookie into profiles.language. Best-effort: if the DB
-  // write fails (RLS / network), the cookie change still applies so the
-  // user's UI flips — the next profile save will reconcile. Log so the
-  // drift is visible in logs instead of silent.
-  const supabase = await createClient();
-  const { data: userRes } = await supabase.auth.getUser();
-  if (userRes.user) {
+  // The cookie set above is what flips the UI. The profiles.language mirror
+  // is only for cross-device persistence, so push it past the response with
+  // `after()` (serverless-safe) — the user doesn't wait on getUser() + the
+  // UPDATE before the locale change takes effect. Best-effort: a failed
+  // write (RLS / network) is logged, and the next profile save reconciles.
+  after(async () => {
+    const supabase = await createClient();
+    const { data: userRes } = await supabase.auth.getUser();
+    if (!userRes.user) return;
     const { error } = await supabase
       .from('profiles')
       .update({ language: locale, updated_by: userRes.user.id })
@@ -53,7 +56,7 @@ export async function switchLocaleAction(locale: Locale): Promise<void> {
         message: error.message ?? null,
       });
     }
-  }
+  });
 
   revalidatePath('/', 'layout');
 }

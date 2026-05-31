@@ -1,10 +1,11 @@
 import { redirect } from 'next/navigation';
 
 /**
- * Page moved to /settings/team to keep admin-only management together
- * under Settings. This redirect preserves any existing bookmarks /
- * deep-links from before the move.
+ * Page moved under Settings to keep admin-only management together. Point
+ * straight at the final target (/settings/people?tab=members) so this
+ * legacy bookmark / deep-link doesn't pay a second redirect hop through
+ * /settings/team.
  */
 export default function TeamPage(): never {
-  redirect('/settings/team');
+  redirect('/settings/people?tab=members');
 }
