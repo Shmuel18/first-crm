@@ -453,9 +453,30 @@
   animation: task-critical-dot-pulse 1s ease-in-out infinite;
 }
 
+/* Loading-screen brand mark: a slow "breathe" (scale + opacity) with a soft
+   gold glow — more premium than a flat opacity pulse. */
+@keyframes logo-breathe {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+.logo-loading {
+  animation: logo-breathe 1.8s var(--ease-standard) infinite;
+  filter: drop-shadow(0 0 10px rgba(201, 169, 97, 0.25));
+  will-change: transform, opacity;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .task-critical-surface,
-  .task-critical-dot {
+  .task-critical-dot,
+  .logo-loading {
     animation: none;
   }
 }

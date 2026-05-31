@@ -1,15 +1,17 @@
-import Image from 'next/image';
-
 import { getTranslations } from 'next-intl/server';
+
+import { LoadingLogo } from '@/components/shared/loading-logo';
 
 export default async function SettingsLoading() {
   const t = await getTranslations('common');
 
   return (
-    <div className="-mt-6">
+    <div className="relative -mt-6">
       <span role="status" aria-live="polite" className="sr-only">
         {t('loading')}
       </span>
+      <LoadingLogo />
+
       <div
         className="bg-brand-gold-soft sticky top-[-1rem] sm:top-[-1.5rem] z-20 shadow-sm -mx-4 px-4 sm:-mx-6 sm:px-6 py-3 border-b border-brand-gold/20"
         aria-hidden
@@ -30,17 +32,7 @@ export default async function SettingsLoading() {
           ))}
         </aside>
 
-        <main className="relative space-y-4">
-          {/* Brand logo as the focal point while settings loads. */}
-          <div className="pointer-events-none absolute inset-x-0 top-16 flex justify-center">
-            <Image
-              src="/logo-mark.png"
-              alt=""
-              width={1152}
-              height={740}
-              className="h-10 w-auto opacity-90"
-            />
-          </div>
+        <main className="space-y-4">
           <div className="h-32 rounded-xl bg-neutral-100" />
           <div className="h-48 rounded-xl bg-neutral-100" />
         </main>
