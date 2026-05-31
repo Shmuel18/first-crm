@@ -25,3 +25,21 @@ export function isValidIsraeliId(input: string): boolean {
   }
   return sum % 10 === 0;
 }
+
+/**
+ * Accepts an Israeli national ID (validated by checksum) OR a passport /
+ * foreign ID number. The same "תעודת זהות" field doubles as the passport field
+ * for foreign and returning residents, so the Israeli checksum can't be required
+ * unconditionally.
+ *
+ * Heuristic: a purely-numeric value of up to 9 digits is treated as an Israeli
+ * ID and must pass the checksum (so a mistyped real ID is still caught). Any
+ * other shape — contains letters, or 10+ characters — is treated as a passport
+ * and accepted when it's alphanumeric and a plausible length (4–20).
+ */
+export function isValidIdOrPassport(input: string): boolean {
+  const trimmed = input.trim();
+  if (!trimmed) return false;
+  if (/^\d{1,9}$/.test(trimmed)) return isValidIsraeliId(trimmed);
+  return /^[A-Za-z0-9]{4,20}$/.test(trimmed);
+}

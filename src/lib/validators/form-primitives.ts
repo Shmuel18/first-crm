@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { isValidIsraeliId } from './israeli-id';
+import { isValidIdOrPassport, isValidIsraeliId } from './israeli-id';
 import { isValidIsraeliPhone, normalizeIsraeliPhone } from './il-phone';
 
 /**
@@ -193,6 +193,23 @@ export const optionalIsraeliId = z.preprocess(
     .optional()
     .refine((v) => !v || isValidIsraeliId(v), {
       error: 'common.errors.invalidIsraeliId',
+    }),
+);
+
+/**
+ * Optional national ID — accepts a valid Israeli ID (checksum) OR a passport /
+ * foreign ID number. The borrower & lead "תעודת זהות" field doubles as the
+ * passport field for foreign + returning residents, so it must not hard-require
+ * the Israeli checksum.
+ */
+export const optionalNationalId = z.preprocess(
+  emptyToNull,
+  z
+    .string()
+    .nullable()
+    .optional()
+    .refine((v) => !v || isValidIdOrPassport(v), {
+      error: 'common.errors.invalidNationalId',
     }),
 );
 

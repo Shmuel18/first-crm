@@ -41,6 +41,7 @@ export function NewCasePageClient({ locale }: Props) {
   } = useCaseDraftState();
 
   const [genericError, setGenericError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<string[]>([]);
   const [pending, startTransition] = useTransition();
 
   const hasNamedBorrower = state.borrowers.some(
@@ -57,6 +58,7 @@ export function NewCasePageClient({ locale }: Props) {
   const onSave = (): void => {
     if (!canSave) return;
     setGenericError(null);
+    setFieldErrors([]);
     const payload = {
       request_details: state.requestDetailsHtml || null,
       borrowers: state.borrowers.map((b) => {
@@ -73,6 +75,10 @@ export function NewCasePageClient({ locale }: Props) {
       if (result.ok === false) {
         if (result.error === 'validation') {
           setGenericError(tDraft('errors.validation'));
+          // Surface the specific reasons (deduped translated messages, e.g.
+          // "Invalid ID or passport") so the user knows what to fix instead of
+          // staring at a generic "one or more fields are invalid".
+          setFieldErrors(Array.from(new Set(Object.values(result.fieldErrors))));
         } else if (result.error === 'unauthorized') {
           setGenericError(tDraft('errors.unauthorized'));
         } else if (result.error === 'setup') {
@@ -99,7 +105,14 @@ export function NewCasePageClient({ locale }: Props) {
           role="alert"
           className="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700"
         >
-          {genericError}
+          <p>{genericError}</p>
+          {fieldErrors.length > 0 && (
+            <ul className="mt-1.5 list-disc space-y-0.5 ps-5 text-xs">
+              {fieldErrors.map((msg) => (
+                <li key={msg}>{msg}</li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 

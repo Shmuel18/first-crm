@@ -4,8 +4,8 @@ import {
   NAME_MAX,
   NOTES_MAX,
   optionalEmail,
-  optionalIsraeliId,
   optionalIsraeliPhone,
+  optionalNationalId,
   optionalNotes,
   optionalShortString,
   optionalUuid,
@@ -20,7 +20,7 @@ export const LeadFormSchema = z.object({
   last_name: optionalShortString(NAME_MAX),
   phone: optionalIsraeliPhone,
   email: optionalEmail,
-  national_id: optionalIsraeliId,
+  national_id: optionalNationalId,
   notes: optionalNotes(NOTES_MAX),
   assigned_to: optionalUuid,
 });

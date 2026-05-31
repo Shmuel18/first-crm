@@ -52,6 +52,7 @@
       "invalidEnum": "Invalid value",
       "invalidBoolean": "Invalid yes/no value",
       "invalidIsraeliId": "Invalid Israeli ID (9 digits + checksum)",
+      "invalidNationalId": "Invalid ID or passport number",
       "invalidPhone": "Invalid phone number",
       "invalidUrl": "Invalid website URL"
     }
