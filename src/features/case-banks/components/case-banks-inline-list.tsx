@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 
 import Image from 'next/image';
 
@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { Tooltip } from '@/components/ui/tooltip';
+import { calcDropdownPos, type DropdownPosition } from '@/features/cases/components/dropdown-position';
 
 import { addCaseBankAction } from '../actions/add-case-bank';
 import { deleteCaseBankAction } from '../actions/delete-case-bank';
@@ -47,12 +48,37 @@ export function CaseBanksInlineList({ caseId, rows, banks, canEdit }: Props) {
   const tc = useTranslations('common');
   const [pickerOpen, setPickerOpen] = useState(false);
   const [isAdding, startAdd] = useTransition();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<DropdownPosition | null>(null);
 
   // Banks not yet linked to the case — what the picker offers.
   const availableBanks = useMemo(() => {
     const used = new Set(rows.map((r) => r.bank?.id).filter(Boolean));
     return banks.filter((b) => !used.has(b.id));
   }, [banks, rows]);
+
+  // Close the (fixed-position) picker on scroll/resize so it never drifts away
+  // from its trigger — scrolling inside the dropdown itself is exempt.
+  useEffect(() => {
+    if (!pickerOpen) return;
+    const onScroll = (e: Event) => {
+      if (dropdownRef.current?.contains(e.target as Node)) return;
+      setPickerOpen(false);
+    };
+    const onResize = () => setPickerOpen(false);
+    window.addEventListener('scroll', onScroll, true);
+    window.addEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', onResize);
+    };
+  }, [pickerOpen]);
+
+  const openPicker = () => {
+    setPos(calcDropdownPos(triggerRef.current));
+    setPickerOpen(true);
+  };
 
   const handleAdd = (bankId: string) => {
     setPickerOpen(false);
@@ -84,11 +110,14 @@ export function CaseBanksInlineList({ caseId, rows, banks, canEdit }: Props) {
       )}
 
       {canEdit && availableBanks.length > 0 && (
-        <div className="relative">
+        <div>
           <button
+            ref={triggerRef}
             type="button"
-            onClick={() => setPickerOpen((v) => !v)}
+            onClick={() => (pickerOpen ? setPickerOpen(false) : openPicker())}
             disabled={isAdding}
+            aria-haspopup="listbox"
+            aria-expanded={pickerOpen}
             className="inline-flex items-center gap-1 text-xs font-medium text-brand-gold-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 rounded disabled:opacity-50"
           >
             {isAdding ? (
@@ -98,17 +127,23 @@ export function CaseBanksInlineList({ caseId, rows, banks, canEdit }: Props) {
             )}
             {t('addBank')}
           </button>
-          {pickerOpen && (
+          {pickerOpen && pos && (
             <>
               <div
                 className="fixed inset-0 z-40"
                 onClick={() => setPickerOpen(false)}
                 aria-hidden="true"
               />
+              {/* position:fixed (computed from the trigger) so the picker
+                  escapes the case-page scroll container's overflow — an
+                  absolute dropdown got clipped at the viewport edge and the
+                  options were unreachable. */}
               <div
+                ref={dropdownRef}
                 role="listbox"
                 aria-label={t('addBank')}
-                className="absolute z-50 top-6 start-0 bg-white border border-neutral-200 rounded-lg shadow-xl py-1 min-w-52 max-h-72 overflow-y-auto scrollbar-thin"
+                style={pos}
+                className="fixed z-50 bg-white border border-neutral-200 rounded-lg shadow-xl py-1 min-w-52 max-h-72 overflow-y-auto scrollbar-thin"
               >
                 {availableBanks.map((b) => (
                   <button
