@@ -5,18 +5,16 @@ import { CasesEmptyState } from '@/features/cases/components/cases-empty-state';
 import { CasesTable } from '@/features/cases/components/cases-table';
 import { ClearFiltersButton } from '@/features/cases/components/clear-filters-button';
 import { DashboardFiltersBar } from '@/features/cases/components/dashboard-filters-bar';
-import { DashboardPagination } from '@/features/cases/components/dashboard-pagination';
 import { DashboardViewSelector } from '@/features/cases/components/dashboard-view-selector';
 import { DashboardWelcomeBanner } from '@/features/cases/components/dashboard-welcome-banner';
 import {
   filterCases,
-  parseCasePage,
   parseCaseView,
   parseDashboardFilters,
 } from '@/features/cases/domain/case-filters';
 import { applySort, parseCaseSort } from '@/features/cases/domain/case-sort';
 import { getCasesDashboardBootstrap } from '@/features/cases/services/cases-dashboard-bootstrap.service';
-import { listCasesPaged } from '@/features/cases/services/cases.service';
+import { listCases } from '@/features/cases/services/cases.service';
 import { LeadsCardList } from '@/features/leads/components/leads-card-list';
 import { LeadsTable } from '@/features/leads/components/leads-table';
 import { LeadsToolbar } from '@/features/leads/components/leads-toolbar';
@@ -31,34 +29,31 @@ function EmptyMessage({ text }: { text: string }) {
   return <p className="px-6 py-12 text-center text-sm text-neutral-500">{text}</p>;
 }
 
-// Page size for SQL pagination. 50 picks up the next round of the pipeline
-// without a noticeable hop on scroll — Kaufman runs ~80 active cases, so
-// most days the second page is empty and the pager doesn't render at all.
-// Tune up if the dashboard ever holds substantially more cases per advisor.
-const DASHBOARD_PAGE_SIZE = 50;
-
 export default async function CasesListPage({ searchParams }: Props) {
   const sp = await searchParams;
   const view = parseCaseView(sp);
   const filters = parseDashboardFilters(sp);
   const sort = parseCaseSort(sp);
-  const page = parseCasePage(sp);
 
   const isArchive = view === 'archive';
-  const pagePromise =
+  // Fetch the full active/archive set (no SQL pagination). At Kaufman scale
+  // (~80 cases) this is one cheap query, and it lets the instant client-side
+  // search (name / national-id / case-number), the column sort, and the
+  // derived filters operate over EVERY case rather than only the first
+  // loaded page. Revisit (move search server-side) only if the book ever
+  // grows into the many hundreds.
+  const casesPromise =
     view === 'leads'
       ? null
       : timeAsync(
-          'cases.page.listCasesPaged',
+          'cases.page.listCases',
           () =>
-            listCasesPaged({
+            listCases({
               isArchived: isArchive,
               advisorId: filters.advisor ?? undefined,
               statusId: filters.stage ?? undefined,
-              page,
-              pageSize: DASHBOARD_PAGE_SIZE,
             }),
-          { view, page },
+          { view },
         );
   const leadsPromise =
     view === 'leads' ? timeAsync('cases.page.listLeads', () => listLeads(), { view }) : null;
@@ -100,18 +95,13 @@ export default async function CasesListPage({ searchParams }: Props) {
         </>
       );
   } else {
-    if (!pagePromise) throw new Error('cases page data was not requested');
-    const pageRes = await pagePromise;
-    const cases = pageRes.rows;
-    const totalCount = pageRes.totalCount;
-    const totalPages = Math.max(1, Math.ceil(totalCount / DASHBOARD_PAGE_SIZE));
+    if (!casesPromise) throw new Error('cases page data was not requested');
+    const cases = await casesPromise;
     // In the archive, "hide closed & frozen" would hide exactly the cases that
     // were archived (completed / on-hold), so don't apply it there.
     //
-    // Derived filters (stuck, hideClosedFrozen) and sort run on the current
-    // page only — at 50 rows/page the user can scan a page and move on.
-    // Pagination tracks the SQL count, not the derived-visible count, so
-    // "page 2 of 3" stays stable across re-filters.
+    // Derived filters (stuck, hideClosedFrozen), the column sort, and the
+    // header search box all operate over the full set fetched above.
     const visible = applySort(
       filterCases(cases, isArchive ? { ...filters, hideClosedFrozen: false } : filters),
       sort,
@@ -126,27 +116,16 @@ export default async function CasesListPage({ searchParams }: Props) {
         isArchiveView={isArchive}
       />
     );
-    const pager = (
-      <DashboardPagination
-        currentPage={page}
-        totalPages={totalPages}
-        pageSize={DASHBOARD_PAGE_SIZE}
-        totalCount={totalCount}
-      />
-    );
     scrollContent =
       cases.length === 0 ? (
         <CasesEmptyState />
       ) : visible.length === 0 ? (
-        <>
-          <div className="px-6 py-12 text-center">
-            <p className="text-sm text-neutral-500">{t('filters.noMatches')}</p>
-            <div className="mt-4 flex justify-center">
-              <ClearFiltersButton label={t('filters.clearFilters')} />
-            </div>
+        <div className="px-6 py-12 text-center">
+          <p className="text-sm text-neutral-500">{t('filters.noMatches')}</p>
+          <div className="mt-4 flex justify-center">
+            <ClearFiltersButton label={t('filters.clearFilters')} />
           </div>
-          {pager}
-        </>
+        </div>
       ) : (
         <>
           {/* Cards up to ~iPad landscape; the table needs ~1100px of comfort
@@ -164,7 +143,6 @@ export default async function CasesListPage({ searchParams }: Props) {
               advisorOptions={advisorOptions}
             />
           </div>
-          {pager}
         </>
       );
   }
@@ -173,7 +151,7 @@ export default async function CasesListPage({ searchParams }: Props) {
   // just goes full-bleed by cancelling the layout's p-6 with -m-6. Sticky
   // bits (the table header) anchor to the layout's scroll container.
   return (
-    <div className="-m-6 bg-white">
+    <div className="-m-4 sm:-m-6 bg-white">
       <DashboardWelcomeBanner firstName={profile?.first_name ?? ''} />
       <DashboardViewSelector
         activeCount={counts.active}
