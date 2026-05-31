@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import { Toaster } from 'sonner';
 import { getLocale, getTranslations } from 'next-intl/server';
 
+import { BottomNav } from '@/components/layout/bottom-nav';
 import { NavProgress } from '@/components/layout/nav-progress';
 import { RouteFocus } from '@/components/layout/route-focus';
 import { Sidebar } from '@/components/layout/sidebar';
@@ -35,8 +36,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <Suspense fallback={null}>
           <NavProgress />
         </Suspense>
-        <Topbar tasksBadge={bootstrap.pendingTasks} criticalTasksBadge={bootstrap.criticalTasks} />
+        <Topbar />
         <Sidebar tasksBadge={bootstrap.pendingTasks} criticalTasksBadge={bootstrap.criticalTasks} />
+        <BottomNav tasksBadge={bootstrap.pendingTasks} criticalTasksBadge={bootstrap.criticalTasks} />
       {/* The inner viewport owns scrolling. Sticky subheaders compensate for
           viewport padding so they pin flush under the fixed topbar. */}
       <main
@@ -44,7 +46,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         tabIndex={-1}
         className="md:ms-16 h-[calc(100dvh-4rem)] overflow-hidden outline-none"
       >
-        <div className="app-scrollbar app-scroll-viewport h-full overflow-y-auto p-4 sm:p-6">
+        <div className="app-scrollbar app-scroll-viewport h-full overflow-y-auto p-4 sm:p-6 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
           <div dir={dir} className="min-w-0">
             {children}
           </div>
@@ -52,6 +54,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </main>
       <Toaster
         position="bottom-center"
+        mobileOffset={{ bottom: '5rem' }}
         toastOptions={{
           style: { fontFamily: 'var(--font-sans)' },
         }}

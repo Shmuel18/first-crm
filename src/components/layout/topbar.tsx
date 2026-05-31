@@ -4,19 +4,13 @@ import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 
-import { MobileNav } from '@/components/layout/mobile-nav';
 import { UserMenu } from '@/components/layout/user-menu';
 import { NotificationBell } from '@/features/notifications/components/notification-bell';
 import { parseLocale } from '@/lib/i18n/direction';
 import { getLayoutBootstrap } from '@/lib/layout/bootstrap';
 import { formatPersonName } from '@/lib/utils/person-name';
 
-type TopbarProps = {
-  tasksBadge?: number;
-  criticalTasksBadge?: number;
-};
-
-export async function Topbar({ tasksBadge, criticalTasksBadge }: TopbarProps = {}) {
+export async function Topbar() {
   const t = await getTranslations('topbar');
   const locale = parseLocale(await getLocale());
 
@@ -36,8 +30,6 @@ export async function Topbar({ tasksBadge, criticalTasksBadge }: TopbarProps = {
   return (
     <header className="h-16 bg-brand-black text-white sticky top-0 z-30 shadow-md">
       <div className="h-full px-4 flex items-center gap-3">
-        <MobileNav tasksBadge={tasksBadge} criticalTasksBadge={criticalTasksBadge} />
-
         <Link href="/cases" className="shrink-0" aria-label="Kaufman Finance Group">
           <Image
             src="/logo-mark.png"
