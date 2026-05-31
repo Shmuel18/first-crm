@@ -68,6 +68,7 @@ export type CaseTableRowData = {
   statusId: string | null;
   statusName: string | null;
   statusColor: string | null;
+  targetDate: string | null;
   primaryBank: {
     id: string;
     key: string;

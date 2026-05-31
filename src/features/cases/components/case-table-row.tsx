@@ -12,6 +12,7 @@ import { formatDateShort } from '@/lib/utils/format-date';
 
 import { EditableAdvisorCell } from './editable-advisor-cell';
 import { EditableStatusCell } from './editable-status-cell';
+import { EditableTargetDateCell } from './editable-target-date-cell';
 import { EditableTextCell } from './editable-text-cell';
 import type { CaseTableRowData } from '../types';
 
@@ -100,6 +101,14 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions }
           currentStatusName={row.statusName}
           currentStatusColor={row.statusColor}
           options={statusOptions}
+        />
+      </td>
+
+      <td className="px-4 py-0 align-middle" onClick={(e) => e.stopPropagation()}>
+        <EditableTargetDateCell
+          caseId={row.id}
+          initialValue={row.targetDate}
+          locale={locale}
         />
       </td>
 

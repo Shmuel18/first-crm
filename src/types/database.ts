@@ -1602,6 +1602,10 @@ export type Database = {
           description: string | null
           expense_date: string | null
           id: string
+          receipt_drive_url: string | null
+          receipt_mime: string | null
+          receipt_name: string | null
+          receipt_path: string | null
           updated_at: string
           updated_by: string | null
         }
@@ -1615,6 +1619,10 @@ export type Database = {
           description?: string | null
           expense_date?: string | null
           id?: string
+          receipt_drive_url?: string | null
+          receipt_mime?: string | null
+          receipt_name?: string | null
+          receipt_path?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -1628,6 +1636,10 @@ export type Database = {
           description?: string | null
           expense_date?: string | null
           id?: string
+          receipt_drive_url?: string | null
+          receipt_mime?: string | null
+          receipt_name?: string | null
+          receipt_path?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -1874,6 +1886,7 @@ export type Database = {
           requested_mortgage_amount: number | null
           short_note: string | null
           status_id: string | null
+          target_date: string | null
           updated_at: string
           updated_by: string | null
           version: number
@@ -1901,6 +1914,7 @@ export type Database = {
           requested_mortgage_amount?: number | null
           short_note?: string | null
           status_id?: string | null
+          target_date?: string | null
           updated_at?: string
           updated_by?: string | null
           version?: number
@@ -1928,6 +1942,7 @@ export type Database = {
           requested_mortgage_amount?: number | null
           short_note?: string | null
           status_id?: string | null
+          target_date?: string | null
           updated_at?: string
           updated_by?: string | null
           version?: number

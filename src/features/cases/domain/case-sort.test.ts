@@ -9,6 +9,7 @@ type TestCase = {
   id?: string;
   status: { id: string; sort_order?: number } | null;
   case_borrowers: Borrower[];
+  target_date: string | null;
 };
 
 // Minimal fixture — applySort + getPrimaryBorrowerSortKey read only the
@@ -19,6 +20,7 @@ function makeCase(o: Partial<TestCase> & { id?: string }): CaseWithRelations {
     id: o.id ?? Math.random().toString(36).slice(2),
     status: o.status ?? null,
     case_borrowers: o.case_borrowers ?? [],
+    target_date: o.target_date ?? null,
   } as unknown as CaseWithRelations;
 }
 
@@ -52,6 +54,10 @@ describe('parseCaseSort', () => {
     expect(parseCaseSort({ sort: 'stage', dir: 'desc' })).toEqual({
       column: 'stage',
       dir: 'desc',
+    });
+    expect(parseCaseSort({ sort: 'targetDate' })).toEqual({
+      column: 'targetDate',
+      dir: 'asc',
     });
   });
 
@@ -188,6 +194,21 @@ describe('applySort', () => {
 
       const desc = applySort([sameStageA, sameStageB], { column: 'stage', dir: 'desc' }, STATUS_OPTIONS);
       expect(desc.map((c) => c.id)).toEqual(['B', 'A']); // tiebreaker stays asc surname
+    });
+  });
+
+  describe('target date sort', () => {
+    const overdue = makeCase({ id: 'overdue', target_date: '2026-05-01' });
+    const future = makeCase({ id: 'future', target_date: '2026-06-10' });
+    const none = makeCase({ id: 'none', target_date: null });
+
+    it('orders dated cases before missing dates', () => {
+      const result = applySort(
+        [none, future, overdue],
+        { column: 'targetDate', dir: 'asc' },
+        STATUS_OPTIONS,
+      );
+      expect(result.map((c) => c.id)).toEqual(['overdue', 'future', 'none']);
     });
   });
 });

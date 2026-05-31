@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
+import { parseLocale } from '@/lib/i18n/direction';
+import { formatDateShort } from '@/lib/utils/format-date';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import {
@@ -12,6 +14,7 @@ import {
   getPrimaryBorrowerNationalId,
 } from '../domain/case-derivations';
 import { isFrozenCase, isStuckCase } from '../domain/case-state';
+import { getTargetDateState, type TargetDateState } from '../domain/target-date';
 import { useCaseQueryFilter } from '../hooks/use-case-query-filter';
 import type { CaseWithRelations } from '../types';
 
@@ -29,6 +32,7 @@ type Props = {
  */
 export function CasesCardList({ cases }: Props) {
   const t = useTranslations('dashboard');
+  const locale = parseLocale(useLocale());
   const filtered = useCaseQueryFilter(cases);
 
   if (filtered.length === 0) {
@@ -49,6 +53,7 @@ export function CasesCardList({ cases }: Props) {
         const frozen = isFrozenCase(c);
         const client = getCaseClientLabel(c);
         const bank = getPrimaryBank(c);
+        const targetDate = c.target_date ? formatDateShort(c.target_date, locale) : null;
         const advisorName =
           formatPersonName(c.assigned_advisor?.first_name, c.assigned_advisor?.last_name) ||
           null;
@@ -81,6 +86,11 @@ export function CasesCardList({ cases }: Props) {
 
               <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                 <Field label={t('columns.nationalId')} value={getPrimaryBorrowerNationalId(c)} />
+                <Field
+                  label={t('columns.targetDate')}
+                  value={targetDate}
+                  tone={getTargetDateState(c.target_date)}
+                />
                 <Field label={t('columns.bank')} value={bank?.name_he ?? null} />
                 <Field label={t('columns.advisor')} value={advisorName} />
               </dl>
@@ -96,11 +106,25 @@ export function CasesCardList({ cases }: Props) {
   );
 }
 
-function Field({ label, value }: { label: string; value: string | null }) {
+function Field({
+  label,
+  value,
+  tone = 'none',
+}: {
+  label: string;
+  value: string | null;
+  tone?: TargetDateState;
+}) {
+  const valueClass =
+    tone === 'overdue'
+      ? 'text-red-700'
+      : tone === 'soon'
+        ? 'text-brand-gold-text'
+        : 'text-neutral-700';
   return (
     <div className="flex gap-1.5">
       <dt className="text-neutral-400">{label}:</dt>
-      <dd className="truncate text-neutral-700">{value ?? '—'}</dd>
+      <dd className={`truncate ${valueClass}`}>{value ?? '—'}</dd>
     </div>
   );
 }

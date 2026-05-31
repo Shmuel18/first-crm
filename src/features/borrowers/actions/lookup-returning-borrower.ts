@@ -5,72 +5,58 @@ import { z } from 'zod';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 
-export type ReturningBorrower = {
-  first_name: string | null;
-  last_name: string | null;
-  phone: string | null;
-  landline_phone: string | null;
-  email: string | null;
-  preferred_language: string | null;
-  id_issue_date: string | null;
-  birth_date: string | null;
-  marital_status: string | null;
-  children_count: number | null;
-  address: string | null;
-  city: string | null;
-  citizenship: string | null;
-  residency_type: string | null;
-  employment_status: string | null;
-  employer_name: string | null;
-  related_to_sellers: boolean | null;
-};
+import { chooseReturningCriteria } from '../domain/returning-criteria';
+import { searchReturningBorrowers } from '../services/borrowers.service';
 
-// national_id may be an Israeli ID or a passport, so don't enforce a checksum —
-// just a sane length before hitting the DB.
-const NationalIdSchema = z.string().trim().min(4).max(32);
+import type { ReturningBorrowerMatch, ReturningProbe } from '../types';
+
+const ProbeSchema = z.object({
+  nationalId: z.string().trim().max(32).optional(),
+  firstName: z.string().trim().max(120).optional(),
+  lastName: z.string().trim().max(120).optional(),
+  phone: z.string().trim().max(32).optional(),
+});
+
+export type ReturningProbeInput = z.input<typeof ProbeSchema>;
 
 /**
- * Looks up an existing borrower by exact national_id for "returning client"
- * autofill. RLS (borrowers_select) limits results to borrowers on cases the
- * caller can already view, so this can't surface a client they can't access.
- * Returns null when nothing matches or the input is invalid.
+ * Returning-client lookup for borrower autofill. Auth + a 30/min rate limit
+ * gate every call (failMode='closed' — a DB blip must not silently open the
+ * enumeration door); RLS does the real scoping. Returns [] on any miss,
+ * invalid input, throttle, or below-threshold probe.
+ *
+ * 30/min (up from 10) accommodates the auto-detect-on-blur flow, where filling
+ * one borrower fires up to 3 lookups (name / ID / phone). Still far below what
+ * a scripted enumeration would need, and RLS caps exposure to the caller's own
+ * clients regardless. The criterion is chosen server-side via
+ * chooseReturningCriteria — never trusted from the client.
  */
 export async function lookupReturningBorrowerAction(
-  nationalId: string,
-): Promise<ReturningBorrower | null> {
-  const parsed = NationalIdSchema.safeParse(nationalId);
-  if (!parsed.success) return null;
+  probe: ReturningProbeInput,
+): Promise<ReturningBorrowerMatch[]> {
+  const parsed = ProbeSchema.safeParse(probe);
+  if (!parsed.success) return [];
+
+  const criteria = chooseReturningCriteria({
+    firstName: parsed.data.firstName,
+    lastName: parsed.data.lastName,
+    nationalId: parsed.data.nationalId,
+    phone: parsed.data.phone,
+  } satisfies ReturningProbe);
+  if (!criteria) return [];
 
   const supabase = await createClient();
   const { data: userRes } = await supabase.auth.getUser();
-  if (!userRes.user) return null;
+  if (!userRes.user) return [];
 
-  // Lookup is an enumeration oracle (national_id → exists?). Even though RLS
-  // limits results to borrowers on the caller's cases, a malicious advisor
-  // could probe many IDs to map out their case roster faster than legitimate
-  // use. 10/min is generous for a real "is this a returning client?" flow.
-  // failMode='closed' — a DB hiccup must NOT silently disable this gate;
-  // refusing legitimate lookups for ~1 min is preferable to opening the
-  // enumeration door.
   const allowed = await checkRateLimit({
     action: 'lookup_borrower',
     subject: `user:${userRes.user.id}`,
-    max: 10,
+    max: 30,
     windowSeconds: 60,
     failMode: 'closed',
   });
-  if (!allowed) return null;
+  if (!allowed) return [];
 
-  const { data } = await supabase
-    .from('borrowers')
-    .select(
-      'first_name, last_name, phone, landline_phone, email, preferred_language, id_issue_date, birth_date, marital_status, children_count, address, city, citizenship, residency_type, employment_status, employer_name, related_to_sellers',
-    )
-    .eq('national_id', parsed.data)
-    .is('deleted_at', null)
-    .order('updated_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  return data ?? null;
+  return searchReturningBorrowers(criteria);
 }

@@ -29,6 +29,7 @@ export function toRowData(c: CaseWithRelations, index: number): CaseTableRowData
     statusId: c.status_id,
     statusName: c.status?.name_he ?? null,
     statusColor: c.status?.color ?? null,
+    targetDate: c.target_date,
     primaryBank: primaryBank
       ? {
           id: primaryBank.id,

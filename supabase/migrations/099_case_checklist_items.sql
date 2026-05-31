@@ -51,6 +51,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_case_checklist_case_category
 CREATE INDEX IF NOT EXISTS idx_case_checklist_case
   ON public.case_checklist_items(case_id);
 
+DROP TRIGGER IF EXISTS trg_case_checklist_items_updated_at ON public.case_checklist_items;
 CREATE TRIGGER trg_case_checklist_items_updated_at
   BEFORE UPDATE ON public.case_checklist_items
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();

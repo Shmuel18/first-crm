@@ -25,3 +25,40 @@ export type BorrowerActionState =
   | { ok: false; error: 'idle' };
 
 export const BORROWER_ACTION_INITIAL: BorrowerActionState = { ok: false, error: 'idle' };
+
+/**
+ * A returning-client search hit. Person-level fields only (a subset of
+ * BorrowerRow) — enough to autofill a new borrower and to render a
+ * disambiguation row (name · city · phone). Deal-scoped fields are excluded
+ * by construction. `id` is included for React keys / dedup, `national_id`
+ * so a name/phone match can still backfill the ID the user hasn't typed.
+ */
+export type ReturningBorrowerMatch = Pick<
+  BorrowerRow,
+  | 'id'
+  | 'first_name'
+  | 'last_name'
+  | 'national_id'
+  | 'phone'
+  | 'landline_phone'
+  | 'email'
+  | 'preferred_language'
+  | 'id_issue_date'
+  | 'birth_date'
+  | 'marital_status'
+  | 'children_count'
+  | 'address'
+  | 'city'
+  | 'citizenship'
+  | 'residency_type'
+  | 'employment_status'
+  | 'employer_name'
+>;
+
+/** Current values the autofill watches to decide whether to search. */
+export type ReturningProbe = {
+  firstName: string | null | undefined;
+  lastName: string | null | undefined;
+  nationalId: string | null | undefined;
+  phone: string | null | undefined;
+};

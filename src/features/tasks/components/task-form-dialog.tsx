@@ -101,6 +101,19 @@ export function TaskFormDialog({
           ...cases,
         ]
       : cases;
+  const selectedCaseId = presetCase || value('case_id');
+  const [caseSearch, setCaseSearch] = useState('');
+  const normalizedCaseSearch = caseSearch.trim().toLowerCase();
+  const matchingCases = normalizedCaseSearch
+    ? effectiveCases.filter((c) =>
+        `${c.case_number} ${c.label}`.toLowerCase().includes(normalizedCaseSearch),
+      )
+    : effectiveCases;
+  const selectedCase = effectiveCases.find((c) => c.id === selectedCaseId);
+  const filteredCases =
+    selectedCase && !matchingCases.some((c) => c.id === selectedCase.id)
+      ? [selectedCase, ...matchingCases]
+      : matchingCases;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -188,16 +201,29 @@ export function TaskFormDialog({
                 preset (locked) we submit it via a hidden input and leave the
                 visible select purely presentational (no name). */}
             {presetCaseId && <input type="hidden" name="case_id" value={presetCaseId} />}
+            {!presetCaseId && (
+              <Input
+                type="search"
+                value={caseSearch}
+                onChange={(e) => setCaseSearch(e.target.value)}
+                placeholder={t('fields.caseSearchPlaceholder')}
+                aria-label={t('fields.caseSearch')}
+                className="mb-2"
+              />
+            )}
             <NativeSelect
               name={presetCaseId ? undefined : 'case_id'}
-              defaultValue={presetCase || value('case_id')}
+              defaultValue={selectedCaseId}
               disabled={!!presetCaseId}
             >
               <option value="">{t('fields.caseNone')}</option>
-              {effectiveCases.map((c) => (
+              {filteredCases.map((c) => (
                 <option key={c.id} value={c.id}>{c.label}</option>
               ))}
             </NativeSelect>
+            {!presetCaseId && filteredCases.length === 0 && (
+              <p className="mt-1 text-xs text-neutral-500">{t('fields.caseNoMatches')}</p>
+            )}
           </FormField>
 
           {genericError && (

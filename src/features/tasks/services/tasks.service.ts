@@ -156,8 +156,9 @@ export async function listCaseOptions(locale: Locale): Promise<TaskCaseOption[]>
     .from('cases')
     .select(CASE_OPTION_SELECT)
     .is('deleted_at', null)
+    .order('is_archived', { ascending: true })
     .order('case_number', { ascending: false })
-    .limit(200);
+    .limit(1000);
 
   return (data ?? []).map((row) => ({
     id: row.id,

@@ -5,6 +5,11 @@
  */
 
 import { isFrozenCase, isStuckCase } from './case-state';
+import {
+  matchesTargetDateFilter,
+  TARGET_DATE_FILTER_VALUES,
+  type TargetDateFilter,
+} from './target-date';
 
 import type { CaseWithRelations } from '../types';
 
@@ -12,12 +17,19 @@ export type DashboardFilters = {
   advisor: string | null;
   stage: string | null;
   bank: string | null;
+  targetDate: TargetDateFilter | null;
   stuck: boolean;
   hideClosedFrozen: boolean;
 };
 
 function first(v: string | string[] | undefined): string | null {
   return (Array.isArray(v) ? v[0] : v) ?? null;
+}
+
+function parseTargetDateFilter(value: string | null): TargetDateFilter | null {
+  return (TARGET_DATE_FILTER_VALUES as readonly string[]).includes(value ?? '')
+    ? (value as TargetDateFilter)
+    : null;
 }
 
 export type CaseView = 'active' | 'archive' | 'leads';
@@ -36,6 +48,7 @@ export function parseDashboardFilters(
     advisor: first(sp.advisor),
     stage: first(sp.stage),
     bank: first(sp.bank),
+    targetDate: parseTargetDateFilter(first(sp.targetDate)),
     stuck: first(sp.stuck) === 'true',
     // Hiding done/frozen is the default view; only an explicit "false" disables it.
     hideClosedFrozen: first(sp.hideClosedFrozen) !== 'false',
@@ -45,6 +58,7 @@ export function parseDashboardFilters(
 export function filterCases(
   cases: ReadonlyArray<CaseWithRelations>,
   f: DashboardFilters,
+  now = new Date(),
 ): CaseWithRelations[] {
   return cases.filter((c) => {
     if (f.advisor && c.assigned_advisor?.id !== f.advisor) return false;
@@ -56,6 +70,7 @@ export function filterCases(
       return false;
     }
     if (f.stuck && !isStuckCase(c)) return false;
+    if (!matchesTargetDateFilter(c.target_date, f.targetDate, now)) return false;
     if (f.hideClosedFrozen && isFrozenCase(c)) return false;
     return true;
   });
