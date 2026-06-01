@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import {
   CASE_BLOCK_KEYS,
   type CaseBlockPreferences,
@@ -33,8 +31,11 @@ export async function updateCaseBlocksAction(
   const ok = await updateMyCaseBlockPreferences(prefs);
   if (!ok) return { ok: false, error: 'unknown' };
 
-  // The case pages read these on their own render, so only the settings page
-  // needs revalidating; the new defaults apply on the next case-page load.
-  revalidatePath('/settings/display');
+  // No revalidatePath here. The toggles are uncontrolled (the DOM already
+  // reflects the user's choice after saving) and case pages read these prefs
+  // fresh on their own render — so nothing on screen needs re-rendering.
+  // Revalidating forced the action's response to wait on a full RSC re-render
+  // round-trip, which kept the Submit button's `pending` state stuck (the same
+  // spinner-hang seen with add-bank). The success toast confirms the save.
   return { ok: true };
 }
