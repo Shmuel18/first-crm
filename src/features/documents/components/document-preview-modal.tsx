@@ -27,10 +27,18 @@ import { DocumentStatusChip } from './document-status-chip';
 type Props = {
   doc: DocumentWithRelations | null;
   caseId: string;
+  canDeleteDocuments: boolean;
+  canVerifyDocuments: boolean;
   onClose: () => void;
 };
 
-export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
+export function DocumentPreviewModal({
+  doc,
+  caseId,
+  canDeleteDocuments,
+  canVerifyDocuments,
+  onClose,
+}: Props) {
   const t = useTranslations('documents.previewModal');
   const tErr = useTranslations('documents.errors');
   const locale = parseLocale(useLocale());
@@ -87,17 +95,31 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
 
   const updateStatus = (next: DocumentStatus) =>
     startTransition(async () => {
+      if (!canVerifyDocuments) {
+        setError(tErr('unauthorized'));
+        return;
+      }
       const res = await updateDocumentStatusAction(doc.id, caseId, next);
-      if (!res.ok) setError(tErr('statusUpdateFailed'));
-      else onClose();
+      if (!res.ok) {
+        setError(res.error === 'unauthorized' ? tErr('unauthorized') : tErr('statusUpdateFailed'));
+      } else {
+        onClose();
+      }
     });
 
   const handleDeleteConfirmed = () =>
     startTransition(async () => {
       setConfirmDelete(false);
+      if (!canDeleteDocuments) {
+        setError(tErr('unauthorized'));
+        return;
+      }
       const res = await deleteDocumentAction(doc.id, caseId);
-      if (!res.ok) setError(tErr('deleteFailed'));
-      else onClose();
+      if (!res.ok) {
+        setError(res.error === 'unauthorized' ? tErr('unauthorized') : tErr('deleteFailed'));
+      } else {
+        onClose();
+      }
     });
 
   const isImage = doc.mime_type?.startsWith('image/') ?? false;
@@ -162,6 +184,8 @@ export function DocumentPreviewModal({ doc, caseId, onClose }: Props) {
         <DocumentPreviewActions
           status={status}
           pending={isPending}
+          canDeleteDocuments={canDeleteDocuments}
+          canVerifyDocuments={canVerifyDocuments}
           onUpdateStatus={updateStatus}
           confirmDeleteOpen={confirmDelete}
           onConfirmDeleteOpenChange={setConfirmDelete}

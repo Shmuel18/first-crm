@@ -39,6 +39,8 @@ type Props = {
     phone: string | null;
   } | null;
   locale: Locale;
+  canDeleteDocuments: boolean;
+  canVerifyDocuments: boolean;
 };
 
 export function DocumentsPageContent({
@@ -52,6 +54,8 @@ export function DocumentsPageContent({
   checklist,
   primaryBorrower,
   locale,
+  canDeleteDocuments,
+  canVerifyDocuments,
 }: Props) {
   const t = useTranslations('documents.checklist');
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -173,6 +177,8 @@ export function DocumentsPageContent({
         key={`preview-${previewDoc?.id ?? 'none'}`}
         doc={previewDoc}
         caseId={caseId}
+        canDeleteDocuments={canDeleteDocuments}
+        canVerifyDocuments={canVerifyDocuments}
         onClose={() => setPreviewDoc(null)}
       />
 

@@ -11,6 +11,7 @@ import {
 } from '@/features/documents/services/documents.service';
 import { getCaseById } from '@/features/cases/services/cases.service';
 import { autoSyncIfStale } from '@/features/integrations/services/drive-document-sync';
+import { userHasPermissions } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
 import { formatPersonName } from '@/lib/utils/person-name';
@@ -34,12 +35,13 @@ export default async function CaseDocumentsPage({ params }: Props) {
     });
   });
 
-  const [caseData, documents, categories, borrowers, locale] = await Promise.all([
+  const [caseData, documents, categories, borrowers, locale, documentPermissions] = await Promise.all([
     getCaseById(caseId),
     listDocumentsForCase(caseId),
     listDocumentCategories(),
     listBorrowersForCase(caseId),
     getLocale().then(parseLocale),
+    userHasPermissions('delete_document', 'verify_document'),
   ]);
 
   if (!caseData) notFound();
@@ -93,6 +95,8 @@ export default async function CaseDocumentsPage({ params }: Props) {
       checklist={checklist}
       primaryBorrower={primaryBorrower}
       locale={locale}
+      canDeleteDocuments={documentPermissions.delete_document === true}
+      canVerifyDocuments={documentPermissions.verify_document === true}
     />
   );
 }

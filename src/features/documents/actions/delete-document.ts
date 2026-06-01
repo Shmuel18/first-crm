@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 
 import { z } from 'zod';
 
+import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
 type Result =
@@ -41,6 +42,12 @@ export async function deleteDocumentAction(
   const supabase = await createClient();
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
+  if (!(await userHasPermission('delete_document'))) {
+    return { ok: false, error: 'unauthorized' };
+  }
+  if (!(await userCanEditCase(parsed.data.caseId))) {
+    return { ok: false, error: 'unauthorized' };
+  }
 
   // Defense-in-depth: doc must belong to the supplied case + still exist.
   const { data: doc, error: fetchErr } = await supabase

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
+import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import type { Database } from '@/types/database';
 
@@ -26,6 +27,12 @@ export async function updateDocumentStatusAction(
   const supabase = await createClient();
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
+  if (!(await userHasPermission('verify_document'))) {
+    return { ok: false, error: 'unauthorized' };
+  }
+  if (!(await userCanEditCase(caseId))) {
+    return { ok: false, error: 'unauthorized' };
+  }
 
   const update: DocumentUpdate = { status: parsed.data };
   if (parsed.data === 'verified') {
