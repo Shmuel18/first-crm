@@ -18,7 +18,7 @@ const CASE_SELECT_WITH_RELATIONS = `
   assigned_advisor:profiles!cases_assigned_advisor_id_fkey(id, first_name, last_name, phone, email),
   case_borrowers(is_primary, borrower:borrowers(id, first_name, last_name, national_id)),
   case_banks(id, is_primary, deleted_at, banker_name, bank:banks(id, key, name_he, name_en, color, logo_url)),
-  case_financials(fee_amount, expected_income)
+  case_financials(fee_amount, expected_income, fee_paid, fee_paid_at)
 ` as const;
 
 export type CaseListFilters = {

@@ -876,6 +876,7 @@
       "equity": "Down payment",
       "ltv": "LTV",
       "feeAmount": "Agreed fee",
+      "feePaid": "Paid",
       "expectedIncome": "Expected income",
       "blocker": "Blocker",
       "insurance": "Insurance",
