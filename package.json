@@ -61,7 +61,7 @@
     "supabase": "^2.101.0",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^4.1.7"
+    "vitest": "^4.1.8"
   },
   "overrides": {
     "tmp": "^0.2.6",
