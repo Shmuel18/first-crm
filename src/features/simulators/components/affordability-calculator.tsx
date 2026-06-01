@@ -23,6 +23,8 @@ type State = Record<MoneyFieldKey, MoneyAgorot> & {
   maxDtiPct: number;
 };
 
+export type AffordabilityCalculatorInitialState = Partial<State>;
+
 const DEFAULT_STATE: State = {
   propertyKind: 'first_home',
   propertyValue: 2_300_000_00,
@@ -39,10 +41,14 @@ const DEFAULT_STATE: State = {
 const inputClass =
   'h-10 w-full rounded-lg border border-neutral-200 bg-white px-3 text-sm shadow-xs outline-none transition focus:border-brand-gold-text focus:ring-2 focus:ring-brand-gold-text/30';
 
-export function AffordabilityCalculator() {
+export function AffordabilityCalculator({
+  initialState = {},
+}: {
+  initialState?: AffordabilityCalculatorInitialState;
+}) {
   const t = useTranslations('simulators.affordability');
   const tMix = useTranslations('simulators.mix.inputs');
-  const [state, setState] = useState<State>(DEFAULT_STATE);
+  const [state, setState] = useState<State>(() => ({ ...DEFAULT_STATE, ...initialState }));
 
   const monthlyTrack = useMemo<TrackInput>(
     () => ({

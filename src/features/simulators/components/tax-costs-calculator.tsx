@@ -28,6 +28,8 @@ type State = {
   movingAmount: MoneyAgorot;
 };
 
+export type TaxCostsCalculatorInitialState = Partial<State>;
+
 const DEFAULT_STATE: State = {
   profile: 'single_home',
   propertyValue: 2_300_000_00,
@@ -60,9 +62,13 @@ const FLAT_SIX_PCT: readonly PurchaseTaxBracket[] = [{ fromAmount: 0, toAmount: 
 const inputClass =
   'h-10 w-full rounded-lg border border-neutral-200 bg-white px-3 text-sm shadow-xs outline-none transition focus:border-brand-gold-text focus:ring-2 focus:ring-brand-gold-text/30';
 
-export function TaxCostsCalculator() {
+export function TaxCostsCalculator({
+  initialState = {},
+}: {
+  initialState?: TaxCostsCalculatorInitialState;
+}) {
   const t = useTranslations('simulators.tax');
-  const [state, setState] = useState<State>(DEFAULT_STATE);
+  const [state, setState] = useState<State>(() => ({ ...DEFAULT_STATE, ...initialState }));
 
   const brackets = useMemo(() => bracketsFor(state.profile), [state.profile]);
   const purchaseTax = useMemo(
