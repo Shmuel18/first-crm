@@ -1423,6 +1423,7 @@
       "blocks": {
         "borrowers": "Borrowers",
         "requestDetails": "Request details",
+        "comments": "Comments",
         "incomes": "Incomes",
         "obligations": "Obligations",
         "property": "Property & deal",
@@ -1683,6 +1684,10 @@
       "insurance_collateral": {
         "title": "Approvals & collateral",
         "subtitle": "Life insurance · land registry · appraisal · purchase"
+      },
+      "misc": {
+        "title": "Miscellaneous",
+        "subtitle": "Invoices · other documents"
       }
     },
     "status": {
@@ -1764,6 +1769,27 @@
     "orderedList": "Ordered list",
     "blockquote": "Quote"
   },
+  "caseComments": {
+    "blockTitle": "Comments",
+    "you": "You",
+    "empty": "No comments yet. Post an update for the team.",
+    "edited": "(edited)",
+    "deleteDialog": {
+      "title": "Delete comment",
+      "description": "This comment will be permanently deleted."
+    },
+    "composer": {
+      "placeholder": "Internal note for the team…",
+      "label": "Write a comment",
+      "hint": "Ctrl+Enter to post",
+      "post": "Post"
+    },
+    "toast": {
+      "postFailed": "Couldn't post the comment. Please try again.",
+      "editFailed": "Couldn't edit the comment. Please try again.",
+      "deleteFailed": "Couldn't delete the comment. Please try again."
+    }
+  },
   "tasks": {
     "title": "Tasks",
     "openTitle": "Open tasks",
@@ -1831,6 +1857,7 @@
     },
     "snoozedUntil": "Returns {time}",
     "changeStatus": "Change status",
+    "reassign": "Reassign task",
     "toast": {
       "completed": "Task marked as completed",
       "reopened": "Task reopened",
@@ -1838,11 +1865,20 @@
       "actionFailed": "Action failed. Please try again.",
       "deleteFailed": "Delete failed. Please try again.",
       "snoozed": "Task snoozed — we'll remind you.",
-      "snoozeFailed": "Snooze failed. Please try again."
+      "snoozeFailed": "Snooze failed. Please try again.",
+      "reassigned": "Task reassigned",
+      "reassignFailed": "Couldn't reassign the task. Please try again."
     },
     "deleteDialog": {
       "title": "Delete task",
       "description": "\"{title}\" will be removed from the list and kept in the recovery window."
+    },
+    "reassignDialog": {
+      "title": "Reassign task",
+      "description": "Choose who should take over \"{title}\".",
+      "assigneeLabel": "New assignee",
+      "placeholder": "Choose a teammate…",
+      "submit": "Reassign"
     },
     "form": {
       "title": {
@@ -1893,6 +1929,7 @@
       "task_assigned": "{actor} assigned you a task: {task}",
       "task_completed": "{actor} completed a task you assigned: {task}",
       "task_reminder": "Reminder: {task}",
+      "case_mention": "{actor} mentioned you: {preview}",
       "case_status_overdue": "Case {caseNumber} has been in \"{statusName}\" for {days} days (threshold: {threshold})",
       "unknown": "New notification"
     }

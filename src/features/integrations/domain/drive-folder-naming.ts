@@ -26,8 +26,9 @@ export const DRIVE_SUBFOLDER_NAMES: Record<string, string> = {
   income_il: '02_תעסוקה_והכנסות',
   income_abroad: '03_הכנסות_מחול',
   insurance_collateral: '04_אישורים_וביטחונות',
-  // Office-expense invoices (feature #8). Mirrored best-effort from Storage.
-  expenses: '05_חשבוניות_והוצאות',
+  // Catch-all. Office-expense invoices are mirrored here too (no dedicated
+  // invoices folder) — see receipt-drive.service.ts.
+  misc: '05_שונות',
 };
 
 /**

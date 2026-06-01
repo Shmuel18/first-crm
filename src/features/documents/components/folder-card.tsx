@@ -1,6 +1,14 @@
 'use client';
 
-import { Briefcase, ChevronLeft, FileText, Globe2, ShieldCheck, UserSquare2 } from 'lucide-react';
+import {
+  Briefcase,
+  ChevronLeft,
+  FileText,
+  Files,
+  Globe2,
+  ShieldCheck,
+  UserSquare2,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import type { DriveFolder } from '../types';
@@ -17,6 +25,7 @@ export const FOLDER_ICON: Record<DriveFolder, React.ComponentType<{ className?: 
   income_il: Briefcase,
   income_abroad: Globe2,
   insurance_collateral: ShieldCheck,
+  misc: Files,
 };
 
 const FOLDER_ACCENT: Record<DriveFolder, string> = {
@@ -24,6 +33,7 @@ const FOLDER_ACCENT: Record<DriveFolder, string> = {
   income_il: 'border-emerald-100 hover:border-emerald-300 bg-emerald-50/40',
   income_abroad: 'border-violet-100 hover:border-violet-300 bg-violet-50/40',
   insurance_collateral: 'border-amber-100 hover:border-amber-300 bg-amber-50/40',
+  misc: 'border-slate-100 hover:border-slate-300 bg-slate-50/40',
 };
 
 export const FOLDER_ICON_TINT: Record<DriveFolder, string> = {
@@ -31,6 +41,7 @@ export const FOLDER_ICON_TINT: Record<DriveFolder, string> = {
   income_il: 'text-emerald-700 bg-emerald-100',
   income_abroad: 'text-violet-700 bg-violet-100',
   insurance_collateral: 'text-amber-800 bg-amber-100',
+  misc: 'text-slate-700 bg-slate-100',
 };
 
 /**

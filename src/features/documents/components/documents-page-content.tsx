@@ -80,6 +80,7 @@ export function DocumentsPageContent({
       income_il: [],
       income_abroad: [],
       insurance_collateral: [],
+      misc: [],
     };
     const unc: DocumentWithRelations[] = [];
     for (const doc of documents) {
@@ -98,6 +99,7 @@ export function DocumentsPageContent({
       income_il: [],
       income_abroad: [],
       insurance_collateral: [],
+      misc: [],
     };
     for (const item of checklist) {
       const f = item.driveFolder;

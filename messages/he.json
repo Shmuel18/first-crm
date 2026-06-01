@@ -1423,6 +1423,7 @@
       "blocks": {
         "borrowers": "לווים",
         "requestDetails": "פרטי הבקשה",
+        "comments": "תגובות",
         "incomes": "הכנסות",
         "obligations": "התחייבויות",
         "property": "נכס ועסקה",
@@ -1683,6 +1684,10 @@
       "insurance_collateral": {
         "title": "אישורים וביטחונות",
         "subtitle": "ביטוח חיים · נסח טאבו · שמאות · חוזה רכישה"
+      },
+      "misc": {
+        "title": "שונות",
+        "subtitle": "חשבוניות · מסמכים נוספים"
       }
     },
     "status": {
@@ -1764,6 +1769,27 @@
     "orderedList": "רשימה ממוספרת",
     "blockquote": "ציטוט"
   },
+  "caseComments": {
+    "blockTitle": "תגובות",
+    "you": "את/ה",
+    "empty": "אין עדיין תגובות. כתוב עדכון לצוות.",
+    "edited": "(נערך)",
+    "deleteDialog": {
+      "title": "מחיקת תגובה",
+      "description": "התגובה תימחק לצמיתות."
+    },
+    "composer": {
+      "placeholder": "תגובה פנימית לצוות…",
+      "label": "כתיבת תגובה",
+      "hint": "Ctrl+Enter לשליחה",
+      "post": "פרסם"
+    },
+    "toast": {
+      "postFailed": "פרסום התגובה נכשל. נסה שוב.",
+      "editFailed": "עריכת התגובה נכשלה. נסה שוב.",
+      "deleteFailed": "מחיקת התגובה נכשלה. נסה שוב."
+    }
+  },
   "tasks": {
     "title": "משימות",
     "openTitle": "משימות פתוחות",
@@ -1831,6 +1857,7 @@
     },
     "snoozedUntil": "חוזר ב-{time}",
     "changeStatus": "שנה סטטוס",
+    "reassign": "העבר משימה",
     "toast": {
       "completed": "המשימה סומנה כהושלמה",
       "reopened": "המשימה נפתחה מחדש",
@@ -1838,11 +1865,20 @@
       "actionFailed": "הפעולה נכשלה. נסה שוב.",
       "deleteFailed": "המחיקה נכשלה. נסה שוב.",
       "snoozed": "המשימה נדחתה — נזכיר לך שוב.",
-      "snoozeFailed": "הדחייה נכשלה. נסה שוב."
+      "snoozeFailed": "הדחייה נכשלה. נסה שוב.",
+      "reassigned": "המשימה הועברה",
+      "reassignFailed": "העברת המשימה נכשלה. נסה שוב."
     },
     "deleteDialog": {
       "title": "מחיקת משימה",
       "description": "המשימה \"{title}\" תוסר מהרשימה ותעבור לארכיון לתקופת השחזור."
+    },
+    "reassignDialog": {
+      "title": "העברת משימה",
+      "description": "בחר את העובד שיקבל את המשימה \"{title}\".",
+      "assigneeLabel": "אחראי חדש",
+      "placeholder": "בחר עובד…",
+      "submit": "העבר"
     },
     "form": {
       "title": {
@@ -1893,6 +1929,7 @@
       "task_assigned": "{actor} הקצה לך משימה: {task}",
       "task_completed": "{actor} השלים משימה שהקצית: {task}",
       "task_reminder": "תזכורת: {task}",
+      "case_mention": "{actor} תייג אותך: {preview}",
       "case_status_overdue": "תיק {caseNumber} בסטטוס \"{statusName}\" כבר {days} ימים (סף: {threshold})",
       "unknown": "התראה חדשה"
     }

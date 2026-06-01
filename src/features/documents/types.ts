@@ -17,13 +17,15 @@ export type DriveFolder =
   | 'identity'
   | 'income_il'
   | 'income_abroad'
-  | 'insurance_collateral';
+  | 'insurance_collateral'
+  | 'misc';
 
 export const DRIVE_FOLDERS: readonly DriveFolder[] = [
   'identity',
   'income_il',
   'income_abroad',
   'insurance_collateral',
+  'misc',
 ] as const;
 
 export type DocumentWithRelations = DocumentRow & {

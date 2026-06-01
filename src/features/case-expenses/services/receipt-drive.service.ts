@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 
 /**
  * Best-effort: mirror an uploaded expense invoice into the case's Drive
- * "05_חשבוניות_והוצאות" subfolder (feature #8, decision #3) and record the web
+ * "05_שונות" misc subfolder (invoices share the catch-all folder) and record the web
  * link on the expense row. NEVER throws and NEVER blocks the upload — Supabase
  * Storage is the canonical store; Drive is a convenience mirror. A replaced or
  * removed receipt's previous Drive copy is intentionally left in place (same
@@ -38,7 +38,7 @@ export async function mirrorReceiptToDrive(
       caseId,
       caseNumber: caseRow.case_number,
       familyName,
-      driveFolder: 'expenses',
+      driveFolder: 'misc',
       file,
     });
     if (!out.ok) return;
