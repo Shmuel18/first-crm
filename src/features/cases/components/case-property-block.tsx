@@ -138,7 +138,7 @@ export function CasePropertyBlock({ caseId, initial, caseTypes }: Props) {
   };
 
   return (
-    <CaseBlock title={t('blocks.property')} icon={<Home />} fullWidth>
+    <CaseBlock title={t('blocks.property')} icon={<Home />} fullWidth blockKey="property">
       <FieldGroup cols={4}>
         <TransactionPurposePicker
           label={tf('transactionPurpose')}
@@ -163,6 +163,7 @@ export function CasePropertyBlock({ caseId, initial, caseTypes }: Props) {
           onSave={(v) => saveField('property_value', v)}
           dir="ltr"
           adornment={<CurrencySign />}
+          groupThousands
         />
         <EditableField
           type="number"
@@ -175,6 +176,7 @@ export function CasePropertyBlock({ caseId, initial, caseTypes }: Props) {
           onSave={(v) => saveField('requested_mortgage_amount', v)}
           dir="ltr"
           adornment={<CurrencySign />}
+          groupThousands
         />
       </FieldGroup>
     </CaseBlock>

@@ -10,6 +10,7 @@ import { listBorrowersForCase } from '@/features/borrowers/services/borrowers.se
 import { CaseActionBar } from '@/features/cases/components/case-action-bar';
 import { CaseAdminBlock } from '@/features/cases/components/case-admin-block';
 import { CaseBlock } from '@/features/cases/components/case-block';
+import { CaseBlockPrefsProvider } from '@/features/cases/components/case-block-prefs-context';
 import { CaseBlockSkeleton } from '@/features/cases/components/case-block-skeleton';
 import { AddBorrowerButton } from '@/features/borrowers/components/add-borrower-button';
 import { CasePropertyBlock } from '@/features/cases/components/case-property-block';
@@ -20,6 +21,7 @@ import {
   listCaseStatusOptions,
   listCaseTypeOptions,
 } from '@/features/cases/services/case-lookups.service';
+import { getMyCaseBlockPreferences } from '@/features/cases/services/case-block-preferences.service';
 import { getCaseById } from '@/features/cases/services/cases.service';
 import { CaseIncomesBlock } from '@/features/incomes/components/case-incomes-block';
 import { CaseObligationsBlock } from '@/features/obligations/components/case-obligations-block';
@@ -42,13 +44,14 @@ export default async function CaseDetailPage({ params }: Props) {
   // options, and the borrowers list feeds the header's client-name display.
   // Incomes and obligations stream in below via <Suspense>; tasks are
   // fetched by the action bar for the new top-of-page popover.
-  const [caseData, borrowers, statusOptions, caseTypeOptions, advisorOptions] =
+  const [caseData, borrowers, statusOptions, caseTypeOptions, advisorOptions, blockPrefs] =
     await Promise.all([
       timeAsync('cases.detail.getCaseById', () => getCaseById(caseId)),
       timeAsync('cases.detail.listBorrowersForCase', () => listBorrowersForCase(caseId)),
       timeAsync('cases.detail.listCaseStatusOptions', () => listCaseStatusOptions()),
       timeAsync('cases.detail.listCaseTypeOptions', () => listCaseTypeOptions()),
       timeAsync('cases.detail.listAdvisorOptions', () => listAdvisorOptions()),
+      getMyCaseBlockPreferences(),
     ]);
 
   if (!caseData) notFound();
@@ -136,11 +139,13 @@ export default async function CaseDetailPage({ params }: Props) {
         canDelete={canDelete}
       />
 
+      <CaseBlockPrefsProvider prefs={blockPrefs}>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <CaseBlock
           title={t('blocks.borrowers')}
           icon={<UserCircle2 />}
           fullWidth
+          blockKey="borrowers"
           // RightSlot summary: borrower names instead of a button — aligns
           // with the Incomes / Obligations blocks which surface a money
           // total in the same spot. The "+ Add borrower" button moved
@@ -246,6 +251,7 @@ export default async function CaseDetailPage({ params }: Props) {
           locale={locale}
         />
       </div>
+      </CaseBlockPrefsProvider>
 
     </div>
   );

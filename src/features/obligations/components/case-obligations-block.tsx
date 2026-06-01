@@ -64,6 +64,7 @@ export async function CaseObligationsBlock({ caseId }: Props) {
       title={t('blockTitle')}
       icon={<CreditCard />}
       fullWidth
+      blockKey="obligations"
       rightSlot={
         view.obligations.length > 0 && (
           <span className="text-xs text-neutral-600">

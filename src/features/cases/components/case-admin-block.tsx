@@ -88,7 +88,7 @@ export async function CaseAdminBlock({
   ]);
 
   return (
-    <CaseBlock title={t('blocks.admin')} icon={<Wallet />} fullWidth>
+    <CaseBlock title={t('blocks.admin')} icon={<Wallet />} fullWidth blockKey="admin">
       {/* Section 1 — Case details (8 inline fields). */}
       <SectionHeader title={tAdmin('sections.caseDetails')} />
       <CaseDetailsSection

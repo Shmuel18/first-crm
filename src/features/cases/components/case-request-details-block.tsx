@@ -64,7 +64,7 @@ export function CaseRequestDetailsBlock({ caseId, initialHtml }: Props) {
   };
 
   return (
-    <CaseBlock title={t('blocks.requestDetails')} icon={<FileText />} fullWidth>
+    <CaseBlock title={t('blocks.requestDetails')} icon={<FileText />} fullWidth blockKey="requestDetails">
       <RichTextEditor
         value={html}
         onChange={setHtml}

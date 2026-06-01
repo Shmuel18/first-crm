@@ -4,10 +4,17 @@ import { useState } from 'react';
 
 import { ChevronDown } from 'lucide-react';
 
+import type { CaseBlockKey } from '../domain/case-block-preferences';
+
+import { useCaseBlockPrefs } from './case-block-prefs-context';
+
 type CaseBlockProps = {
   title: string;
   icon: React.ReactNode;
   defaultOpen?: boolean;
+  /** When set, the open/closed default comes from the user's saved block
+   *  preferences (Settings → Display), falling back to defaultOpen. */
+  blockKey?: CaseBlockKey;
   children: React.ReactNode;
   rightSlot?: React.ReactNode;
   fullWidth?: boolean;
@@ -21,11 +28,15 @@ export function CaseBlock({
   // override per-block when a section needs to be revealed up front
   // (e.g. a dialog rendering a single block inline).
   defaultOpen = false,
+  blockKey,
   children,
   rightSlot,
   fullWidth,
 }: CaseBlockProps) {
-  const [open, setOpen] = useState(defaultOpen);
+  // A user's saved preference (if any) wins over the per-call default.
+  const prefs = useCaseBlockPrefs();
+  const initialOpen = blockKey && prefs ? prefs[blockKey] : defaultOpen;
+  const [open, setOpen] = useState(initialOpen);
 
   return (
     <section

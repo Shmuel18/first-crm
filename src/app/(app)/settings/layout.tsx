@@ -3,6 +3,7 @@ import {
   Building2,
   Calculator,
   HardDrive,
+  LayoutGrid,
   MessageSquare,
   Plug,
   ScrollText,
@@ -47,6 +48,7 @@ const NAV_SECTIONS: SettingsNavSection[] = [
       { href: '/settings/profile', labelKey: 'profile', icon: UserCog },
       { href: '/settings/security', labelKey: 'security', icon: ShieldCheck },
       { href: '/settings/notifications', labelKey: 'notifications', icon: Bell },
+      { href: '/settings/display', labelKey: 'display', icon: LayoutGrid },
     ],
   },
   {

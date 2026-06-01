@@ -59,6 +59,7 @@ export async function CaseIncomesBlock({ caseId }: Props) {
       title={t('blockTitle')}
       icon={<Wallet />}
       fullWidth
+      blockKey="incomes"
       rightSlot={
         groups.length > 0 && (
           <span className="text-xs text-neutral-600">
