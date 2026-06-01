@@ -18,7 +18,7 @@
 -- =============================================================================
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
-SELECT plan(11);
+SELECT plan(10);
 
 -- ---- fixed ids -------------------------------------------------------------
 -- users
