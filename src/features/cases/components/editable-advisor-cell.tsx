@@ -28,14 +28,6 @@ function fullName(a: AdvisorOption, noNameFallback: string): string {
   return formatPersonName(a.first_name, a.last_name) || noNameFallback;
 }
 
-function initials(name: string | null): string {
-  if (!name) return '?';
-  const parts = name.split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return '?';
-  if (parts.length === 1) return parts[0]![0]!;
-  return parts[0]![0]! + parts[1]![0]!;
-}
-
 export function EditableAdvisorCell({
   caseId,
   currentAdvisorId,
@@ -108,15 +100,7 @@ export function EditableAdvisorCell({
         className="inline-flex items-center gap-2 cursor-pointer rounded-md disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
       >
         {advisorName ? (
-          <>
-            <span className="text-sm text-neutral-700 whitespace-nowrap">{advisorName}</span>
-            <span
-              aria-hidden="true"
-              className="size-7 rounded-full btn-gold flex items-center justify-center text-[10px] font-bold"
-            >
-              {initials(advisorName)}
-            </span>
-          </>
+          <span className="text-sm text-neutral-700 whitespace-nowrap">{advisorName}</span>
         ) : (
           <span className="text-sm text-neutral-600">{tc('notAssigned')}</span>
         )}
@@ -159,15 +143,7 @@ export function EditableAdvisorCell({
                   onClick={() => handleSelect(opt)}
                   className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-start hover:bg-neutral-50 focus-visible:outline-none focus-visible:bg-brand-gold-soft"
                 >
-                  <span className="inline-flex items-center gap-2">
-                    <span
-                      aria-hidden="true"
-                      className="size-5 rounded-full btn-gold flex items-center justify-center text-[9px] font-bold"
-                    >
-                      {initials(name)}
-                    </span>
-                    {name}
-                  </span>
+                  <span>{name}</span>
                   {isSelected && (
                     <Check className="size-3.5 text-brand-gold-text" aria-hidden="true" />
                   )}
