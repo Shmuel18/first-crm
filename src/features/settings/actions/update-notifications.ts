@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { isCurrentUserAdmin } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
@@ -98,6 +96,8 @@ export async function updateNotificationsAction(
     return { ok: false, error: 'unknown' };
   }
 
-  revalidatePath('/settings/notifications');
+  // No revalidatePath: the form is controlled, so it keeps the saved values on
+  // screen, and the page re-fetches fresh on the next visit. Dropping the
+  // round-trip also fixes the Save-spinner hang.
   return { ok: true };
 }

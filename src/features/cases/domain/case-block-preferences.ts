@@ -11,6 +11,7 @@
 export const CASE_BLOCK_KEYS = [
   'borrowers',
   'requestDetails',
+  'comments',
   'incomes',
   'obligations',
   'property',
@@ -25,6 +26,7 @@ export type CaseBlockPreferences = Record<CaseBlockKey, boolean>;
 export const DEFAULT_CASE_BLOCK_PREFERENCES: CaseBlockPreferences = {
   borrowers: false,
   requestDetails: false,
+  comments: false,
   incomes: false,
   obligations: false,
   property: false,

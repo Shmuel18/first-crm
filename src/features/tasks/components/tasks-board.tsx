@@ -17,6 +17,7 @@ import type { Locale } from '@/lib/i18n/direction';
 import { changeTaskStatusAction } from '../actions/change-task-status';
 import { TaskBoardColumn } from './task-board-column';
 import { TaskFormDialog } from './task-form-dialog';
+import { TaskReassignDialog } from './task-reassign-dialog';
 import type { TaskStatus, TaskWithRelations } from '../types';
 
 const BOARD_COLUMNS: TaskStatus[] = ['pending', 'in_progress', 'snoozed', 'completed'];
@@ -45,6 +46,7 @@ export function TasksBoard({ tasks, locale, assignees, cases }: Props) {
   }
 
   const [editing, setEditing] = useState<TaskWithRelations | null>(null);
+  const [reassignTarget, setReassignTarget] = useState<TaskWithRelations | null>(null);
 
   // Small activation distance so a click (open) isn't read as a drag.
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
@@ -80,6 +82,7 @@ export function TasksBoard({ tasks, locale, assignees, cases }: Props) {
               locale={locale}
               emptyLabel={tb('empty')}
               onOpen={setEditing}
+              onReassign={setReassignTarget}
             />
           ))}
         </div>
@@ -94,6 +97,15 @@ export function TasksBoard({ tasks, locale, assignees, cases }: Props) {
         task={editing}
         assignees={assignees}
         cases={cases}
+      />
+
+      <TaskReassignDialog
+        open={reassignTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setReassignTarget(null);
+        }}
+        task={reassignTarget}
+        assignees={assignees}
       />
     </>
   );

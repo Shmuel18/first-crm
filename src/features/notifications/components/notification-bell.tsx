@@ -21,6 +21,7 @@ import {
 import { formatRelativeTime } from '../domain/format';
 import type {
   Notification,
+  NotificationDataCaseMention,
   NotificationDataCaseStatusOverdue,
   NotificationDataTask,
 } from '../types';
@@ -84,6 +85,11 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
           return t('message.task_assigned_critical', { actor, task });
         }
         return t(`message.${n.type}`, { actor, task });
+      }
+      case 'case_mention': {
+        const d = n.data as Partial<NotificationDataCaseMention>;
+        const actor = d.actorName || t('someone');
+        return t('message.case_mention', { actor, preview: d.preview ?? '' });
       }
       default: {
         // Exhaustiveness check — TS errors here when a new
