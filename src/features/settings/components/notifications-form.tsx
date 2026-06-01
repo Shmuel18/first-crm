@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useId } from 'react';
+import { useActionState, useEffect, useId, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 
 import { Loader2 } from 'lucide-react';
@@ -13,7 +13,7 @@ import { FormField } from '@/components/shared/form-fields';
 import type { NotificationPreferences } from '@/features/notifications/types';
 
 import { updateNotificationsAction } from '../actions/update-notifications';
-import type { SlaStatusKey, SlaThresholds } from '../schemas/sla.schema';
+import type { SlaThresholds } from '../schemas/sla.schema';
 import type { SlaStatusRow } from '../services/sla.service';
 import { SETTINGS_ACTION_INITIAL, type SettingsActionState } from '../types';
 
@@ -28,18 +28,30 @@ type Props = {
   locale: 'he' | 'en';
 };
 
+// Terminal statuses (`closed`) make no sense for time-in-status alerts.
+function visibleOf(statuses: ReadonlyArray<SlaStatusRow>): SlaStatusRow[] {
+  return statuses.filter((s) => !s.is_terminal);
+}
+
+function seedSla(
+  statuses: ReadonlyArray<SlaStatusRow>,
+  thresholds: SlaThresholds,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const s of visibleOf(statuses)) {
+    const v = thresholds[s.key];
+    out[s.key] = v != null ? String(v) : '';
+  }
+  return out;
+}
+
 /**
- * Single notifications-settings form. Two visual sections (email prefs +
- * status SLA thresholds) wrap one `<form>` with one save button so the
- * user has one Save action to click + one toast to confirm.
+ * Single notifications-settings form (email prefs + status SLA thresholds) with
+ * one Save. Fields are controlled so they survive React 19's post-action form
+ * reset and a validation error keeps the user's input — which is also why
+ * update-notifications no longer needs `revalidatePath`.
  */
-export function NotificationsForm({
-  preferences,
-  thresholds,
-  statuses,
-  showSla,
-  locale,
-}: Props) {
+export function NotificationsForm({ preferences, thresholds, statuses, showSla, locale }: Props) {
   const t = useTranslations('settings.notifications');
   const tSla = useTranslations('settings.sla');
   const tc = useTranslations('common');
@@ -49,6 +61,20 @@ export function NotificationsForm({
     SETTINGS_ACTION_INITIAL,
   );
 
+  const [email, setEmail] = useState<NotificationPreferences>(preferences);
+  const [prefRef, setPrefRef] = useState(preferences);
+  if (prefRef !== preferences) {
+    setPrefRef(preferences);
+    setEmail(preferences);
+  }
+
+  const [sla, setSla] = useState<Record<string, string>>(() => seedSla(statuses, thresholds));
+  const [thrRef, setThrRef] = useState(thresholds);
+  if (thrRef !== thresholds) {
+    setThrRef(thresholds);
+    setSla(seedSla(statuses, thresholds));
+  }
+
   useEffect(() => {
     if (state.ok === true) toast.success(t('saved'));
     else if (state.ok === false && (state.error === 'unauthorized' || state.error === 'unknown'))
@@ -57,29 +83,6 @@ export function NotificationsForm({
 
   const fieldErrors =
     state.ok === false && state.error === 'validation' ? state.fieldErrors ?? {} : {};
-  const submitted =
-    state.ok === false && state.error !== 'idle' ? state.values ?? {} : undefined;
-
-  const initialValue = (key: SlaStatusKey): string => {
-    const fieldName = `sla_${key}`;
-    if (submitted && fieldName in submitted) return submitted[fieldName] ?? '';
-    const v = thresholds[key];
-    return v != null ? String(v) : '';
-  };
-
-  // Email toggles need the same form-state round-trip the SLA inputs get:
-  // on validation error, the user's just-clicked toggle state must persist,
-  // not silently revert to whatever was in the DB at page load. Checkboxes
-  // submit as `on` when checked and are simply ABSENT from FormData when
-  // unchecked, so we read presence-not-truthy from `submitted`.
-  const toggleInitial = (name: string, fallback: boolean): boolean => {
-    if (submitted === undefined) return fallback;
-    return submitted[name] === 'on';
-  };
-
-  // Terminal statuses (`closed`) make no sense for "time-in-status" alerts
-  // — they're the end state. Hide them from the form entirely.
-  const visibleStatuses = statuses.filter((s) => !s.is_terminal);
 
   return (
     <form action={formAction} className="space-y-10" noValidate>
@@ -94,12 +97,14 @@ export function NotificationsForm({
           <ToggleRow
             name="email_task_assigned"
             label={t('emailTaskAssigned')}
-            defaultChecked={toggleInitial('email_task_assigned', preferences.email_task_assigned)}
+            checked={email.email_task_assigned}
+            onCheckedChange={(next) => setEmail((v) => ({ ...v, email_task_assigned: next }))}
           />
           <ToggleRow
             name="email_task_completed"
             label={t('emailTaskCompleted')}
-            defaultChecked={toggleInitial('email_task_completed', preferences.email_task_completed)}
+            checked={email.email_task_completed}
+            onCheckedChange={(next) => setEmail((v) => ({ ...v, email_task_completed: next }))}
           />
         </div>
       </section>
@@ -113,12 +118,13 @@ export function NotificationsForm({
           </header>
           <p className="text-sm text-neutral-600">{tSla('intro')}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {visibleStatuses.map((s) => (
+            {visibleOf(statuses).map((s) => (
               <SlaThresholdRow
                 key={s.key}
-                statusKey={s.key}
+                fieldName={`sla_${s.key}`}
                 label={locale === 'he' ? s.name_he : s.name_en}
-                defaultValue={initialValue(s.key)}
+                value={sla[s.key] ?? ''}
+                onValueChange={(next) => setSla((m) => ({ ...m, [s.key]: next }))}
                 error={fieldErrors[`sla_${s.key}`]}
                 placeholder={tSla('placeholder')}
                 daysUnit={tSla('daysUnit')}
@@ -136,34 +142,28 @@ export function NotificationsForm({
 }
 
 /**
- * One row in the SLA threshold grid. Owns its own `useId` so FormField's
- * `htmlFor` can target the actual <Input> instead of the wrapper <div>
- * (a wrapped input is the only way to put "days" suffix text next to a
- * narrow number input without rebuilding the input primitive).
- *
- * Without this, FormField's cloneElement injects `id` onto the first
- * valid child — which is the flex-div wrapper — and the Label's htmlFor
- * points there. Result: clicking the label does nothing, screen readers
- * never associate the label with the input, and `aria-invalid` lands on
- * a non-form element.
+ * One SLA threshold row. Owns its own `useId` so FormField's `htmlFor` targets
+ * the actual <Input> instead of the wrapper <div> (the "days" suffix needs the
+ * input wrapped, which would otherwise misdirect the label + aria-invalid).
  */
 function SlaThresholdRow({
-  statusKey,
+  fieldName,
   label,
-  defaultValue,
+  value,
+  onValueChange,
   error,
   placeholder,
   daysUnit,
 }: {
-  statusKey: SlaStatusKey;
+  fieldName: string;
   label: string;
-  defaultValue: string;
+  value: string;
+  onValueChange: (next: string) => void;
   error?: string;
   placeholder: string;
   daysUnit: string;
 }) {
   const inputId = useId();
-  const fieldName = `sla_${statusKey}`;
   return (
     <FormField label={label} error={error} htmlFor={inputId}>
       <div className="flex items-center gap-2">
@@ -176,7 +176,8 @@ function SlaThresholdRow({
           step={1}
           inputMode="numeric"
           placeholder={placeholder}
-          defaultValue={defaultValue}
+          value={value}
+          onChange={(e) => onValueChange(e.target.value)}
           dir="ltr"
           aria-invalid={error ? 'true' : undefined}
           className="max-w-32 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [appearance:textfield]"
@@ -192,11 +193,13 @@ function SlaThresholdRow({
 function ToggleRow({
   name,
   label,
-  defaultChecked,
+  checked,
+  onCheckedChange,
 }: {
   name: string;
   label: string;
-  defaultChecked: boolean;
+  checked: boolean;
+  onCheckedChange: (next: boolean) => void;
 }) {
   // The peer/peer-checked selector relies on the checkbox preceding the visual
   // track in the DOM, so the input goes first; the label wraps both for an
@@ -206,7 +209,8 @@ function ToggleRow({
       <input
         type="checkbox"
         name={name}
-        defaultChecked={defaultChecked}
+        checked={checked}
+        onChange={(e) => onCheckedChange(e.target.checked)}
         className="peer sr-only"
       />
       <span className="text-sm text-neutral-800">{label}</span>

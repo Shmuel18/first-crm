@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 
 import { Loader2 } from 'lucide-react';
@@ -33,6 +33,18 @@ export function CaseBlocksForm({ preferences }: Props) {
     SETTINGS_ACTION_INITIAL,
   );
 
+  // Controlled toggle state. React 19 auto-resets a `<form action>` once the
+  // action finishes, which would snap uncontrolled toggles back to their
+  // initial `defaultChecked` (the un-revalidated `preferences` prop) — making a
+  // just-saved "off" visually flip back "on". Owning the state keeps the user's
+  // choice on screen; the save itself already persisted.
+  const [values, setValues] = useState<CaseBlockPreferences>(preferences);
+  const [syncedRef, setSyncedRef] = useState(preferences);
+  if (syncedRef !== preferences) {
+    setSyncedRef(preferences);
+    setValues(preferences);
+  }
+
   useEffect(() => {
     if (state.ok === true) toast.success(t('saved'));
     else if (state.ok === false && (state.error === 'unauthorized' || state.error === 'unknown'))
@@ -52,7 +64,8 @@ export function CaseBlocksForm({ preferences }: Props) {
             key={key}
             name={`block_${key}`}
             label={t(`blocks.${key}`)}
-            defaultChecked={preferences[key]}
+            checked={values[key]}
+            onCheckedChange={(next) => setValues((v) => ({ ...v, [key]: next }))}
           />
         ))}
       </div>
@@ -67,15 +80,23 @@ export function CaseBlocksForm({ preferences }: Props) {
 function ToggleRow({
   name,
   label,
-  defaultChecked,
+  checked,
+  onCheckedChange,
 }: {
   name: string;
   label: string;
-  defaultChecked: boolean;
+  checked: boolean;
+  onCheckedChange: (next: boolean) => void;
 }) {
   return (
     <label className="flex items-center justify-between gap-3 px-4 py-3 cursor-pointer group has-[:focus-visible]:bg-neutral-50">
-      <input type="checkbox" name={name} defaultChecked={defaultChecked} className="peer sr-only" />
+      <input
+        type="checkbox"
+        name={name}
+        checked={checked}
+        onChange={(e) => onCheckedChange(e.target.checked)}
+        className="peer sr-only"
+      />
       <span className="text-sm text-neutral-800">{label}</span>
       <span
         aria-hidden="true"

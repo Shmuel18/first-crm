@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import type { Locale } from '@/lib/i18n/direction';
 
 import { TaskFormDialog } from './task-form-dialog';
+import { TaskReassignDialog } from './task-reassign-dialog';
 import { TaskRow } from './task-row';
 import { TASK_STATUS_VALUES, type TaskStatus, type TaskWithRelations } from '../types';
 
@@ -51,6 +52,7 @@ export function TasksList({
   const [dialogState, setDialogState] = useState<
     { mode: 'create' } | { mode: 'edit'; task: TaskWithRelations } | null
   >(null);
+  const [reassignTarget, setReassignTarget] = useState<TaskWithRelations | null>(null);
 
   const renderRow = (task: TaskWithRelations) => (
     <TaskRow
@@ -59,6 +61,7 @@ export function TasksList({
       locale={locale}
       compact={compact}
       onEdit={(target) => setDialogState({ mode: 'edit', task: target })}
+      onReassign={setReassignTarget}
     />
   );
 
@@ -143,6 +146,13 @@ export function TasksList({
           cases={cases}
         />
       )}
+
+      <TaskReassignDialog
+        open={reassignTarget !== null}
+        onOpenChange={(o) => !o && setReassignTarget(null)}
+        task={reassignTarget}
+        assignees={assignees}
+      />
     </div>
   );
 }

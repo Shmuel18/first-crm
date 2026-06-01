@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { isCurrentUserAdmin } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
@@ -36,6 +34,8 @@ export async function updateOfficeAction(
   if (error) return { ok: false, error: 'unknown', values };
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized', values };
 
-  revalidatePath('/settings/office');
+  // No revalidatePath: the form is controlled, so it keeps the saved values on
+  // screen, and the page re-fetches fresh office settings on the next visit.
+  // Dropping the round-trip also fixes the Save-spinner hang.
   return { ok: true };
 }

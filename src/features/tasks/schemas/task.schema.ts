@@ -50,3 +50,13 @@ export const TaskListFiltersSchema = z.object({
 });
 
 export type TaskListFilters = z.infer<typeof TaskListFiltersSchema>;
+
+// Quick "hand this task to another teammate" action. The assignee must be a
+// real user id — unassigning is not a reassignment, so the UI disables submit
+// on an empty value and the server rejects a non-uuid here.
+export const ReassignTaskSchema = z.object({
+  taskId: z.uuid({ error: 'common.errors.invalidUuid' }),
+  assigneeId: z.uuid({ error: 'common.errors.invalidUuid' }),
+});
+
+export type ReassignTaskInput = z.infer<typeof ReassignTaskSchema>;
