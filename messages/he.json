@@ -479,6 +479,7 @@
       "advisor": "יועץ אחראי",
       "stage": "שלב בתהליך",
       "bank": "בנק",
+      "referrer": "מפנה",
       "targetDate": {
         "label": "תאריך יעד",
         "overdue": "באיחור",

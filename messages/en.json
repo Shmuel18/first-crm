@@ -479,6 +479,7 @@
       "advisor": "Advisor",
       "stage": "Stage",
       "bank": "Bank",
+      "referrer": "Referrer",
       "targetDate": {
         "label": "Target date",
         "overdue": "Overdue",
