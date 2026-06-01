@@ -102,12 +102,17 @@ log "4/9  Build $IMG (env mounted as BuildKit secret)"
   || die "build failed — production untouched, nothing swapped"
 ok "image built"
 
-# --- helper: poll an HTTP endpoint until it answers --------------------------
-wait_http() { # $1=port
-  local port="$1" code
+# --- helper: poll /api/health until the DATA PLANE is up --------------------
+wait_http() { # $1=port — up only when /api/health reports the data plane is up
+  # /api/health does a real DB round-trip and returns 503 if the DB is
+  # unreachable. GET / would 200 from the login shell even with a broken DB,
+  # passing the smoke test AND the post-swap gate so auto-rollback never fires.
+  # Requiring 200 + {"ok":true} makes both gates catch data-plane failures.
+  local port="$1" body
   for _ in $(seq 1 20); do
-    code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "http://localhost:${port}/" || true)"
-    case "$code" in 200|301|302|307|308) return 0 ;; esac
+    if body="$(curl -fsS --max-time 5 "http://localhost:${port}/api/health" 2>/dev/null)"; then
+      case "$body" in *'"ok":true'*) return 0 ;; esac
+    fi
     sleep 2
   done
   return 1
