@@ -57,6 +57,17 @@ export default async function RootLayout({
       className={`${heebo.variable} ${inter.variable} ${frankRuhl.variable} h-full antialiased`}
     >
       <body className="min-h-full font-sans">
+        {/* Polyfill crypto.randomUUID for INSECURE (HTTP) contexts. The browser
+            only exposes crypto.randomUUID over HTTPS/localhost; the demo runs on
+            plain HTTP, so any call (ours or a library's) would otherwise throw
+            "crypto.randomUUID is not a function" and crash the view. Runs before
+            hydration. (Proper long-term fix: serve over HTTPS.) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              '(function(){try{var c=globalThis.crypto;if(c&&typeof c.randomUUID!=="function"&&typeof c.getRandomValues==="function"){c.randomUUID=function(){var b=c.getRandomValues(new Uint8Array(16));b[6]=b[6]&15|64;b[8]=b[8]&63|128;for(var s="",i=0;i<16;i++){s+=(b[i]+256).toString(16).slice(1);if(i===3||i===5||i===7||i===9)s+="-";}return s;};}}catch(e){}})();',
+          }}
+        />
         <NuqsAdapter>
           <NextIntlClientProvider locale={locale} messages={messages}>
             {children}

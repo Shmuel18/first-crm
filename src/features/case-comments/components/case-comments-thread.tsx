@@ -55,7 +55,10 @@ export function CaseCommentsThread({
   }, [comments.length]);
 
   const handlePost = async (body: string): Promise<boolean> => {
-    const tempId = `temp-${crypto.randomUUID()}`;
+    // Plain client-unique id (NOT crypto.randomUUID — undefined on insecure
+    // HTTP contexts). Only needs to be unique within this session to reconcile
+    // the optimistic bubble with its saved row.
+    const tempId = `temp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
     const optimistic: CaseCommentView = {
       id: tempId,
       authorId: currentUserId,
