@@ -32,6 +32,7 @@ const NO_FILTERS: DashboardFilters = {
   advisor: null,
   stage: null,
   bank: null,
+  referrer: null,
   targetDate: null,
   hideClosedFrozen: false,
 };
@@ -54,6 +55,7 @@ describe('parseDashboardFilters', () => {
       advisor: null,
       stage: null,
       bank: null,
+      referrer: null,
       targetDate: null,
       hideClosedFrozen: true,
     });
@@ -66,6 +68,7 @@ describe('parseDashboardFilters', () => {
       advisor: 'a1',
       stage: null,
       bank: null,
+      referrer: null,
       targetDate: null,
       hideClosedFrozen: false,
     });

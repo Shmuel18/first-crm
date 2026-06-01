@@ -26,6 +26,10 @@ type Props = {
   // Only users who can see other advisors' cases (view_all_cases) get the
   // advisor picker; a regular advisor only sees their own cases anyway.
   canFilterByAdvisor: boolean;
+  /** Distinct referrer names (cases.referrer_name) for the picker. */
+  referrerOptions: ReadonlyArray<string>;
+  /** Manager-only: the referrer filter shows only when true. */
+  canFilterByReferrer: boolean;
   // The archive intentionally shows closed/frozen cases, so the
   // "hide closed & frozen" toggle is suppressed there.
   isArchiveView?: boolean;
@@ -43,6 +47,8 @@ export function DashboardFiltersBar({
   bankOptions,
   advisorOptions,
   canFilterByAdvisor,
+  referrerOptions,
+  canFilterByReferrer,
   isArchiveView = false,
 }: Props) {
   const t = useTranslations('dashboard.filters');
@@ -51,6 +57,7 @@ export function DashboardFiltersBar({
   const [advisor, setAdvisor] = useQueryState('advisor', parseAsString.withOptions(urlOpts));
   const [stage, setStage] = useQueryState('stage', parseAsString.withOptions(urlOpts));
   const [bank, setBank] = useQueryState('bank', parseAsString.withOptions(urlOpts));
+  const [referrer, setReferrer] = useQueryState('referrer', parseAsString.withOptions(urlOpts));
   const [targetDate, setTargetDate] = useQueryState(
     'targetDate',
     parseAsStringEnum([...TARGET_DATE_FILTER_VALUES]).withOptions(urlOpts),
@@ -74,7 +81,11 @@ export function DashboardFiltersBar({
     name: formatPersonName(a.first_name, a.last_name) || '—',
   }));
 
+  // Referrer values are free text — the id IS the name (exact-match filter).
+  const referrers: Option[] = referrerOptions.map((r) => ({ id: r, name: r }));
+
   const showAdvisor = canFilterByAdvisor && advisors.length > 0;
+  const showReferrer = canFilterByReferrer && referrers.length > 0;
 
   // The "hide completed & frozen" toggle is an independent display preference,
   // not a filter the user "applied" — clearing the chips shouldn't reset it,
@@ -83,12 +94,18 @@ export function DashboardFiltersBar({
   // The free-text search lives in a sibling component (the view selector bar
   // above), so we deliberately leave `query` alone here — it would be a
   // surprise to wipe text the user typed in a different bar.
-  const anyActive = advisor !== null || stage !== null || bank !== null || targetDate !== null;
+  const anyActive =
+    advisor !== null ||
+    stage !== null ||
+    bank !== null ||
+    referrer !== null ||
+    targetDate !== null;
 
   const clearAll = () => {
     setAdvisor(null);
     setStage(null);
     setBank(null);
+    setReferrer(null);
     setTargetDate(null);
   };
 
@@ -109,6 +126,15 @@ export function DashboardFiltersBar({
       )}
       <FilterSelect label={t('stage')} value={stage} onChange={setStage} options={stages} allLabel={t('all')} />
       <FilterSelect label={t('bank')} value={bank} onChange={setBank} options={banks} allLabel={t('all')} />
+      {showReferrer && (
+        <FilterSelect
+          label={t('referrer')}
+          value={referrer}
+          onChange={setReferrer}
+          options={referrers}
+          allLabel={t('all')}
+        />
+      )}
       <FilterSelect
         label={t('targetDate.label')}
         value={targetDate}

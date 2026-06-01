@@ -19,6 +19,7 @@ import { LeadsCardList } from '@/features/leads/components/leads-card-list';
 import { LeadsTable } from '@/features/leads/components/leads-table';
 import { LeadsToolbar } from '@/features/leads/components/leads-toolbar';
 import { listLeads } from '@/features/leads/services/leads.service';
+import { isCurrentUserAdmin } from '@/lib/auth/permissions';
 import { timeAsync } from '@/lib/perf/timing';
 
 type Props = {
@@ -58,10 +59,11 @@ export default async function CasesListPage({ searchParams }: Props) {
   const leadsPromise =
     view === 'leads' ? timeAsync('cases.page.listLeads', () => listLeads(), { view }) : null;
 
-  const [bootstrap, t, leads] = await Promise.all([
+  const [bootstrap, t, leads, isManager] = await Promise.all([
     timeAsync('cases.page.bootstrap', () => getCasesDashboardBootstrap(), { view }),
     getTranslations('dashboard'),
     leadsPromise,
+    isCurrentUserAdmin(),
   ]);
 
   const {
@@ -107,12 +109,25 @@ export default async function CasesListPage({ searchParams }: Props) {
       sort,
       statusOptions,
     );
+    // Distinct referrer names for the manager-only referrer filter. Derived
+    // from the loaded set (no extra query); only built for managers.
+    const referrerOptions = isManager
+      ? [
+          ...new Set(
+            cases
+              .map((c) => c.referrer_name)
+              .filter((r): r is string => !!r && r.trim() !== ''),
+          ),
+        ].sort((a, b) => a.localeCompare(b, 'he'))
+      : [];
     chrome = (
       <DashboardFiltersBar
         statusOptions={statusOptions}
         bankOptions={bankOptions}
         advisorOptions={advisorOptions}
         canFilterByAdvisor={canViewAll}
+        referrerOptions={referrerOptions}
+        canFilterByReferrer={isManager}
         isArchiveView={isArchive}
       />
     );

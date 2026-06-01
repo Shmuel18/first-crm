@@ -17,6 +17,9 @@ export type DashboardFilters = {
   advisor: string | null;
   stage: string | null;
   bank: string | null;
+  /** Exact match on cases.referrer_name. Manager-only filter (the picker is
+   *  gated in the UI), so non-managers never set it. */
+  referrer: string | null;
   targetDate: TargetDateFilter | null;
   hideClosedFrozen: boolean;
 };
@@ -47,6 +50,7 @@ export function parseDashboardFilters(
     advisor: first(sp.advisor),
     stage: first(sp.stage),
     bank: first(sp.bank),
+    referrer: first(sp.referrer),
     targetDate: parseTargetDateFilter(first(sp.targetDate)),
     // Hiding done/frozen is the default view; only an explicit "false" disables it.
     hideClosedFrozen: first(sp.hideClosedFrozen) !== 'false',
@@ -67,6 +71,7 @@ export function filterCases(
     ) {
       return false;
     }
+    if (f.referrer && c.referrer_name !== f.referrer) return false;
     if (!matchesTargetDateFilter(c.target_date, f.targetDate, now)) return false;
     if (f.hideClosedFrozen && isFrozenCase(c)) return false;
     return true;
