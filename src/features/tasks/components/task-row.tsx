@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 
-import { AlertTriangle, Calendar, Clock, Lock, MoreHorizontal, Pencil, Trash2, User } from 'lucide-react';
+import { AlertTriangle, Calendar, Clock, Lock, MoreHorizontal, Pencil, Trash2, User, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
@@ -40,13 +40,13 @@ import {
   priorityEdgeColor,
   statusBadgeClass,
 } from '../domain/task-state';
-import { TaskTagChips } from './task-tag-chips';
 import type { TaskStatus, TaskWithRelations } from '../types';
 
 type Props = {
   task: TaskWithRelations;
   locale: Locale;
   onEdit: (task: TaskWithRelations) => void;
+  onReassign?: (task: TaskWithRelations) => void;
   compact?: boolean;
 };
 
@@ -54,7 +54,7 @@ type Props = {
 // columns). Snooze isn't here — it has its own timed "remind me" control.
 const LIST_STATUSES: readonly TaskStatus[] = ['pending', 'in_progress', 'completed', 'cancelled'];
 
-export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
+export function TaskRow({ task, locale, onEdit, onReassign, compact = false }: Props) {
   const t = useTranslations('tasks');
   const tp = useTranslations('tasks.priority');
   const ts = useTranslations('tasks.status');
@@ -234,11 +234,6 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
           )}
         </div>
 
-        {task.tags.length > 0 && (
-          <div className="mt-1.5">
-            <TaskTagChips tags={task.tags} />
-          </div>
-        )}
       </div>
 
       <DropdownMenu>
@@ -259,6 +254,12 @@ export function TaskRow({ task, locale, onEdit, compact = false }: Props) {
             <Pencil className="size-3.5 me-2" />
             {tc('edit')}
           </DropdownMenuItem>
+          {onReassign && !task.is_private && (
+            <DropdownMenuItem onClick={() => onReassign(task)}>
+              <UserPlus className="size-3.5 me-2" />
+              {t('reassign')}
+            </DropdownMenuItem>
+          )}
           {(task.status === 'pending' || task.status === 'in_progress') && (
             <>
               <DropdownMenuSeparator />

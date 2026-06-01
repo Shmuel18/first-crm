@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/shared/form-fields';
+import { roleManagementLabel } from '@/lib/auth/role-label';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import { deleteMemberAction } from '../actions/delete-member';
@@ -34,12 +35,13 @@ type Props = {
 export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
   const t = useTranslations('team');
   const tc = useTranslations('common');
+  const tLevel = useTranslations('settings.roles.levels');
   const [pending, startTransition] = useTransition();
 
   const fullName =
     formatPersonName(member.first_name, member.last_name) || tc('noName');
   const initials = (member.first_name?.[0] ?? member.email?.[0] ?? '?').toUpperCase();
-  const roleName = (r: TeamRole) => (locale === 'he' ? r.name_he : r.name_en);
+  const roleName = (r: TeamRole) => roleManagementLabel(r, locale, tLevel);
 
   const handleRoleChange = (roleId: string) => {
     startTransition(async () => {

@@ -4,24 +4,31 @@ import Link from 'next/link';
 
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { AlertTriangle, GripVertical, Lock } from 'lucide-react';
+import { AlertTriangle, GripVertical, Lock, MoreHorizontal, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import type { Locale } from '@/lib/i18n/direction';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import { formatDueDate, isImmediateTask, isOverdue, priorityEdgeColor } from '../domain/task-state';
-import { TaskTagChips } from './task-tag-chips';
 import type { TaskWithRelations } from '../types';
 
 type Props = {
   task: TaskWithRelations;
   locale: Locale;
   onOpen: (task: TaskWithRelations) => void;
+  onReassign?: (task: TaskWithRelations) => void;
 };
 
-export function TaskBoardCard({ task, locale, onOpen }: Props) {
+export function TaskBoardCard({ task, locale, onOpen, onReassign }: Props) {
   const t = useTranslations('tasks');
+  const tc = useTranslations('common');
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task.id,
   });
@@ -65,13 +72,30 @@ export function TaskBoardCard({ task, locale, onOpen }: Props) {
             className="task-critical-dot size-2 rounded-full bg-red-600 shrink-0 mt-1.5"
           />
         )}
+        {onReassign && !task.is_private && (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <button
+                  type="button"
+                  aria-label={tc('more')}
+                  onClick={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  className="-mt-0.5 shrink-0 text-neutral-300 opacity-0 transition hover:text-neutral-600 focus-visible:opacity-100 group-hover:opacity-100"
+                />
+              }
+            >
+              <MoreHorizontal className="size-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-32">
+              <DropdownMenuItem onClick={() => onReassign(task)}>
+                <UserPlus className="size-3.5 me-2" />
+                {t('reassign')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
-
-      {task.tags.length > 0 && (
-        <div className="mt-2 ps-5">
-          <TaskTagChips tags={task.tags} />
-        </div>
-      )}
 
       <div className="flex items-center justify-between gap-2 mt-2 ps-5">
         <div className="flex items-center gap-2 min-w-0">

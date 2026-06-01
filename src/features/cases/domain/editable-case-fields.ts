@@ -31,6 +31,8 @@ export const EDITABLE_CASE_FIELDS = [
   'assigned_advisor_id',
   'case_blocker',
   'insurance_status',
+  'insurance_agent_name',
+  'appraiser_name',
   'target_date',
   'referrer_name',
   'short_note',

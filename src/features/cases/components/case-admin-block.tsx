@@ -27,6 +27,8 @@ type Props = {
   assignedAdvisorId: string | null;
   blocker: CaseBlocker | null;
   insurance: InsuranceStatus | null;
+  insuranceAgentName: string | null;
+  appraiserName: string | null;
   targetDate: string | null;
   referrerName: string | null;
   shortNote: string | null;
@@ -66,6 +68,8 @@ export async function CaseAdminBlock({
   assignedAdvisorId,
   blocker,
   insurance,
+  insuranceAgentName,
+  appraiserName,
   targetDate,
   referrerName,
   shortNote,
@@ -98,6 +102,8 @@ export async function CaseAdminBlock({
           assigned_advisor_id: assignedAdvisorId,
           case_blocker: blocker,
           insurance_status: insurance,
+          insurance_agent_name: insuranceAgentName,
+          appraiser_name: appraiserName,
           target_date: targetDate,
           referrer_name: referrerName,
           short_note: shortNote,

@@ -23,7 +23,6 @@ import { formatPersonName } from '@/lib/utils/person-name';
 
 import { createTaskAction } from '../actions/create-task';
 import { updateTaskAction } from '../actions/update-task';
-import { TaskTagPicker } from './task-tag-picker';
 import {
   TASK_ACTION_INITIAL,
   TASK_PRIORITY_VALUES,
@@ -56,7 +55,6 @@ export function TaskFormDialog({
   const t = useTranslations('tasks.form');
   const tc = useTranslations('common');
   const tp = useTranslations('tasks.priority');
-  const tt = useTranslations('tasks.tags');
 
   const action = mode === 'create' ? createTaskAction : updateTaskAction;
   const [state, formAction] = useActionState<TaskActionState, FormData>(
@@ -166,10 +164,6 @@ export function TaskFormDialog({
               />
             </FormField>
           </div>
-
-          <FormField label={tt('label')}>
-            <TaskTagPicker defaultTags={task?.tags ?? []} />
-          </FormField>
 
           <label className="flex items-start gap-2 rounded-lg border border-neutral-200 bg-brand-gold-soft/40 p-3 text-sm">
             <input

@@ -879,6 +879,8 @@
       "expectedIncome": "Expected income",
       "blocker": "Blocker",
       "insurance": "Insurance",
+      "insuranceAgent": "Insurance agent",
+      "appraiser": "Appraiser",
       "targetDate": "Target date",
       "referrer": "Referred by",
       "shortNote": "Short note",
@@ -982,6 +984,8 @@
     "borrower": {
       "borrower": "Borrower",
       "guarantor": "Guarantor",
+      "rights_owner": "Rights holder",
+      "mortgaging_borrower": "Mortgaging borrower",
       "primarySuffix": "Primary",
       "id": "ID",
       "phone": "Mobile",
@@ -1443,6 +1447,10 @@
       "title": "Roles & permissions",
       "subtitle": "Manage which permissions each role has in the system",
       "adminLocked": "The manager role includes all permissions and cannot be edited.",
+      "levels": {
+        "base": "Mortgage Advisor",
+        "extended": "Mortgage Advisor (Extended)"
+      },
       "categories": {
         "view": "Viewing",
         "cases": "Cases",
@@ -1834,17 +1842,6 @@
       "list": "List",
       "board": "Board",
       "empty": "No tasks"
-    },
-    "tags": {
-      "label": "Tags",
-      "all": "All",
-      "meeting": "Meeting",
-      "lead": "Lead",
-      "export": "Export",
-      "legal": "Legal",
-      "docs": "Docs",
-      "followup": "Follow-up",
-      "bank": "Bank"
     },
     "action": {
       "complete": "Mark as completed",

@@ -21,7 +21,7 @@ export function TasksStatStrip({ immediate, open, overdue, done, focus }: Props)
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // Toggle ?focus= while preserving the other filters (view / tag / display /
+  // Toggle ?focus= while preserving the other filters (view / display /
   // case). Clicking the already-active card clears the focus.
   const toggleFocus = (next: Focus) => {
     const params = new URLSearchParams(searchParams.toString());

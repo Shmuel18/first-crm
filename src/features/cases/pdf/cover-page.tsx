@@ -1,5 +1,6 @@
 import { Page, Text, View } from '@react-pdf/renderer';
 
+import type { RoleInCase } from '@/features/borrowers/types';
 import type { Locale } from '@/lib/i18n/direction';
 
 import type { BankPdfData } from './bank-pdf-data.service';
@@ -145,8 +146,18 @@ function buildFieldRows(
 ): Row[] {
   const f = strings.cover.fields;
   const dash = strings.values.dash;
-  const roleLabel = (role: 'borrower' | 'guarantor') =>
-    role === 'borrower' ? strings.values.borrower : strings.values.guarantor;
+  const roleLabel = (role: RoleInCase) => {
+    switch (role) {
+      case 'guarantor':
+        return strings.values.guarantor;
+      case 'rights_owner':
+        return strings.values.rights_owner;
+      case 'mortgaging_borrower':
+        return strings.values.mortgaging_borrower;
+      default:
+        return strings.values.borrower;
+    }
+  };
 
   return [
     {

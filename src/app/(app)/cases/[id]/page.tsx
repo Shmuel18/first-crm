@@ -2,11 +2,12 @@ import { Suspense } from 'react';
 
 import { notFound } from 'next/navigation';
 
-import { Receipt, UserCircle2, Wallet } from 'lucide-react';
+import { MessagesSquare, Receipt, UserCircle2, Wallet } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import { CaseBorrowerCard } from '@/features/borrowers/components/case-borrower-card';
 import { listBorrowersForCase } from '@/features/borrowers/services/borrowers.service';
+import { CaseCommentsBlock } from '@/features/case-comments/components/case-comments-block';
 import { CaseActionBar } from '@/features/cases/components/case-action-bar';
 import { CaseAdminBlock } from '@/features/cases/components/case-admin-block';
 import { CaseBlock } from '@/features/cases/components/case-block';
@@ -37,6 +38,7 @@ export default async function CaseDetailPage({ params }: Props) {
   const { id } = await params;
 
   const t = await getTranslations('case');
+  const tComments = await getTranslations('caseComments');
 
   const caseId = asCaseId(id);
 
@@ -196,6 +198,12 @@ export default async function CaseDetailPage({ params }: Props) {
           initialHtml={caseData.request_details}
         />
 
+        <Suspense
+          fallback={<CaseBlockSkeleton title={tComments('blockTitle')} icon={<MessagesSquare />} />}
+        >
+          <CaseCommentsBlock caseId={caseData.id} />
+        </Suspense>
+
         <Suspense fallback={<CaseBlockSkeleton title={t('blocks.incomes')} icon={<Wallet />} />}>
           <CaseIncomesBlock caseId={caseData.id} />
         </Suspense>
@@ -236,6 +244,8 @@ export default async function CaseDetailPage({ params }: Props) {
           assignedAdvisorId={caseData.assigned_advisor?.id ?? null}
           blocker={caseData.case_blocker as CaseBlocker | null}
           insurance={caseData.insurance_status as InsuranceStatus | null}
+          insuranceAgentName={caseData.insurance_agent_name}
+          appraiserName={caseData.appraiser_name}
           targetDate={caseData.target_date}
           referrerName={caseData.referrer_name}
           shortNote={caseData.short_note}

@@ -49,6 +49,8 @@ export const CaseFormShape = z.object({
   assigned_advisor_id: optionalUuid,
   case_blocker: optionalEnum(CASE_BLOCKER_VALUES),
   insurance_status: optionalEnum(INSURANCE_STATUS_VALUES),
+  insurance_agent_name: optionalShortString(NAME_MAX),
+  appraiser_name: optionalShortString(NAME_MAX),
   referrer_name: optionalShortString(NAME_MAX),
   property_value: optionalCurrency(CURRENCY_MAX_ILS),
   requested_mortgage_amount: optionalCurrency(CURRENCY_MAX_ILS),

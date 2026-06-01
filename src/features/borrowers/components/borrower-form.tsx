@@ -11,6 +11,7 @@ import { FormField, FormSection, NativeSelect } from '@/components/shared/form-f
 import { fieldDefault } from '@/lib/utils/form-defaults';
 
 import { saveBorrowerAction } from '../actions/save-borrower';
+import { ROLE_IN_CASE_VALUES } from '../schemas/borrower.schema';
 import { useReturningFormBridge } from '../hooks/use-returning-form-bridge';
 import { BorrowerDetailSections } from './borrower-detail-sections';
 import { SubmitButton } from './borrower-submit-button';
@@ -81,8 +82,11 @@ export function BorrowerForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField label={t('fields.role')} required error={errs.role_in_case}>
             <NativeSelect name="role_in_case" defaultValue={roleDefault}>
-              <option value="borrower">{tCase('borrower.borrower')}</option>
-              <option value="guarantor">{tCase('borrower.guarantor')}</option>
+              {ROLE_IN_CASE_VALUES.map((r) => (
+                <option key={r} value={r}>
+                  {tCase(`borrower.${r}`)}
+                </option>
+              ))}
             </NativeSelect>
           </FormField>
           <label htmlFor="borrower-is-primary" className="flex items-center gap-2 cursor-pointer self-end pb-2">

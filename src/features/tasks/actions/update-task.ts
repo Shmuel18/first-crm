@@ -8,7 +8,6 @@ import { createClient } from '@/lib/supabase/server';
 import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
-import { parseTaskTags } from '../domain/task-tags';
 import { TaskFormSchema } from '../schemas/task.schema';
 import type { TaskActionState, TaskUpdate } from '../types';
 
@@ -58,7 +57,7 @@ export async function updateTaskAction(
   // creator so it satisfies the self-assigned CHECK and stays private.
   const isPrivate = parsed.data.is_private;
   const assignee = isPrivate ? existing.created_by : parsed.data.assigned_to ?? null;
-  // `tags` (mig 034) isn't typed yet; cast bypasses the excess-key check.
+  // `is_private` (mig 098) isn't typed yet; cast bypasses the excess-key check.
   const patch = {
     title: parsed.data.title,
     description: parsed.data.description ?? null,
@@ -66,7 +65,6 @@ export async function updateTaskAction(
     assigned_to: assignee,
     case_id: parsed.data.case_id ?? null,
     due_date: parsed.data.due_date ?? null,
-    tags: parseTaskTags(formData.getAll('tags').map(String)),
     is_private: isPrivate,
     updated_by: userRes.user.id,
   } as TaskUpdate;
