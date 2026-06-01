@@ -39,6 +39,8 @@ type Props = {
    *  canSeeFinancials — non-managers receive null and the field hides. */
   canSeeFinancials: boolean;
   feeAmount: number | null;
+  feePaid: boolean;
+  feePaidAt: string | null;
   /** Lookups passed down from the page. */
   statuses: ReadonlyArray<StatusOption>;
   advisors: ReadonlyArray<AdvisorOption>;
@@ -76,6 +78,8 @@ export async function CaseAdminBlock({
   bankRows,
   canSeeFinancials,
   feeAmount,
+  feePaid,
+  feePaidAt,
   statuses,
   advisors,
   locale,
@@ -114,6 +118,8 @@ export async function CaseAdminBlock({
         advisors={advisors}
         canSeeFinancials={canSeeFinancials}
         initialFeeAmount={feeAmount}
+        initialFeePaid={feePaid}
+        initialFeePaidAt={feePaidAt}
       />
 
       {/* Sections 2 + 3 — Banks and Office expenses side-by-side on

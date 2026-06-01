@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
 import { CurrencySign } from '@/components/ui/currency-sign';
 import { formatPersonName } from '@/lib/utils/person-name';
@@ -11,6 +12,7 @@ import { FieldGroup } from '@/features/borrowers/components/borrower-compact-fie
 import { EditableField } from '@/features/borrowers/components/editable-field';
 
 import { updateCaseFeeAmountAction } from '../actions/update-case-fee-amount';
+import { updateCaseFeePaidAction } from '../actions/update-case-fee-paid';
 import { updateCaseFieldAction } from '../actions/update-case-field';
 import {
   isEditableCaseField,
@@ -64,6 +66,8 @@ type Props = {
   /** Manager-only: agreed fee shows + is editable only when this is true. */
   canSeeFinancials: boolean;
   initialFeeAmount: number | null;
+  initialFeePaid: boolean;
+  initialFeePaidAt: string | null;
 };
 
 export function CaseDetailsSection({
@@ -75,6 +79,8 @@ export function CaseDetailsSection({
   advisors,
   canSeeFinancials,
   initialFeeAmount,
+  initialFeePaid,
+  initialFeePaidAt,
 }: Props) {
   const tFields = useTranslations('case.fields');
   const tBlocker = useTranslations('case.blocker');
@@ -90,6 +96,32 @@ export function CaseDetailsSection({
     setFeeRef(initialFeeAmount);
     setLocalFee(initialFeeAmount);
   }
+
+  // "Fee paid" checkbox state (manager-only). Stamps fee_paid_at on check.
+  const [localPaid, setLocalPaid] = useState<boolean>(initialFeePaid);
+  const [localPaidAt, setLocalPaidAt] = useState<string | null>(initialFeePaidAt);
+  const [paidRef, setPaidRef] = useState<boolean>(initialFeePaid);
+  if (initialFeePaid !== paidRef) {
+    setPaidRef(initialFeePaid);
+    setLocalPaid(initialFeePaid);
+    setLocalPaidAt(initialFeePaidAt);
+  }
+
+  const savePaid = (checked: boolean) => {
+    const prevPaid = localPaid;
+    const prevAt = localPaidAt;
+    setLocalPaid(checked);
+    setLocalPaidAt(checked ? new Date().toISOString() : null);
+    void updateCaseFeePaidAction(caseId, checked).then((res) => {
+      if (!res.ok) {
+        setLocalPaid(prevPaid);
+        setLocalPaidAt(prevAt);
+        toast.error(tc('saveFailed'));
+      } else {
+        setLocalPaidAt(res.paidAt);
+      }
+    });
+  };
 
   const saveFee = async (
     value: string | null,
@@ -204,18 +236,35 @@ export function CaseDetailsSection({
         value={localCase.target_date}
         onSave={(v) => saveField('target_date', v)}
       />
-      {/* Manager-only agreed-fee. Lives on case_financials (RLS-gated),
-          edited via a dedicated upsert RPC — see updateCaseFeeAmountAction. */}
+      {/* Manager-only agreed-fee + a "paid" checkbox (case_financials,
+          RLS-gated). The checkbox stamps fee_paid_at on check. */}
       {canSeeFinancials && (
-        <EditableField
-          type="number"
-          label={tFields('feeAmount')}
-          value={localFee == null ? null : String(localFee)}
-          onSave={(v) => saveFee(v)}
-          dir="ltr"
-          adornment={<CurrencySign />}
-          groupThousands
-        />
+        <>
+          <EditableField
+            type="number"
+            label={tFields('feeAmount')}
+            value={localFee == null ? null : String(localFee)}
+            onSave={(v) => saveFee(v)}
+            dir="ltr"
+            adornment={<CurrencySign />}
+            groupThousands
+          />
+          <LabeledCell label={tFields('feePaid')}>
+            <label className="inline-flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={localPaid}
+                onChange={(e) => savePaid(e.target.checked)}
+                className="size-4 rounded border-neutral-300 text-brand-gold-text focus:ring-2 focus:ring-brand-gold-text/40"
+              />
+              {localPaid && localPaidAt && (
+                <span className="text-xs text-neutral-500">
+                  {new Date(localPaidAt).toLocaleDateString()}
+                </span>
+              )}
+            </label>
+          </LabeledCell>
+        </>
       )}
       {/* Short note last + spans 2 columns so it gets the biggest visual
           slot in the row (the dashboard surfaces this same field — give

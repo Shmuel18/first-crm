@@ -52,7 +52,12 @@ export type CaseWithRelations = CaseRow & {
     } | null;
   }> | null;
   /** Manager-only financials. RLS on case_financials returns null for non-admins. */
-  case_financials: { fee_amount: number | null; expected_income: number | null } | null;
+  case_financials: {
+    fee_amount: number | null;
+    expected_income: number | null;
+    fee_paid: boolean;
+    fee_paid_at: string | null;
+  } | null;
 };
 
 /**
