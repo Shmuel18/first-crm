@@ -167,6 +167,9 @@
         "cpi": "מדד שנתי",
         "grace": "גרייס",
         "extra": "נוסף",
+        "monthly": "החזר חודשי",
+        "totalCost": "עלות כוללת",
+        "ratio": "יחס לשקל",
         "rateNote": "ריבית פריים = בסיס בנק ישראל + 1.5% מרווח; זכאות מוקטנת ב-0.5% ומוגבלת ל-3%.",
         "types": {
           "fixed_unlinked": "קבועה לא צמודה",
@@ -190,6 +193,9 @@
         "totalCost": "עלות כוללת",
         "totalInterest": "סך ריבית",
         "ltv": "LTV",
+        "maxPaymentMonth": "בחודש {month}",
+        "weightedRate": "ריבית משוקללת",
+        "costPerShekel": "יחס לשקל",
         "snapshotNote": "השמירה תייצר snapshot מחושב בשרת לדוח עתידי.",
         "paymentCurve": "גרף החזר",
         "balanceCurve": "גרף יתרת קרן",
@@ -210,6 +216,24 @@
           "variable": "משתנה",
           "eligibility": "זכאות"
         }
+      },
+      "breakdown": {
+        "title": "פירוק ההחזר החודשי",
+        "principal": "קרן",
+        "interest": "ריבית",
+        "payment": "החזר חודשי",
+        "yearLabel": "שנה {year}"
+      },
+      "monthState": {
+        "title": "מצב ההלוואה בחודש",
+        "monthLabel": "בחר חודש",
+        "monthValue": "חודש {month}",
+        "closingBalance": "יתרת קרן",
+        "paidToDate": "שולם עד כה",
+        "principalReduced": "ירד מהקרן",
+        "interestPaid": "ריבית והצמדה ששולמו",
+        "monthlyPayment": "תשלום חודשי",
+        "remainingToPay": "נותר לתשלום"
       }
     },
     "compare": {

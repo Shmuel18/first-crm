@@ -23,3 +23,7 @@ export function formatPct(value: number | null): string {
   if (value === null || !Number.isFinite(value)) return '-';
   return `${value.toFixed(1)}%`;
 }
+
+export function formatRatio(value: number): string {
+  return Number.isFinite(value) ? value.toFixed(2) : '-';
+}

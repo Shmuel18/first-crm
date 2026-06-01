@@ -84,6 +84,7 @@ export interface TrackResult {
   totalInterest: MoneyAgorot;
   totalIndexation: MoneyAgorot;
   totalCost: MoneyAgorot;
+  costPerShekel: number;
   balanceAt: { y5: MoneyAgorot; y10: MoneyAgorot; y15: MoneyAgorot };
 }
 
@@ -92,12 +93,22 @@ export interface MixResult {
   firstPayment: MoneyAgorot;
   averagePayment: MoneyAgorot;
   maxPayment: MoneyAgorot;
+  /** 1-based month index where the aggregate payment peaks (0 when empty). */
+  maxPaymentMonth: number;
   totalInterest: MoneyAgorot;
   totalIndexation: MoneyAgorot;
   totalCost: MoneyAgorot;
+  /** Total cost ÷ borrowed principal — ₪ repaid per ₪ borrowed. */
+  costPerShekel: number;
+  /** Amount-weighted average effective annual rate across tracks (%). */
+  weightedRatePct: number;
   ltv: number | null;
   paymentCurve: ReadonlyArray<CurvePoint>;
   balanceCurve: ReadonlyArray<CurvePoint>;
+  /** Per-month principal portion of the aggregate payment. */
+  principalCurve: ReadonlyArray<CurvePoint>;
+  /** Per-month interest portion of the aggregate payment. */
+  interestCurve: ReadonlyArray<CurvePoint>;
   balanceAt: { y5: MoneyAgorot; y10: MoneyAgorot; y15: MoneyAgorot };
 }
 

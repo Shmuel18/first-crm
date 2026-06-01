@@ -1,3 +1,4 @@
+import { costPerShekel } from './mix-metrics';
 import { averageMoney, sumMoney } from './money';
 
 import type { AmortizationRow, MoneyAgorot, TrackResult } from '../types';
@@ -5,8 +6,10 @@ import type { AmortizationRow, MoneyAgorot, TrackResult } from '../types';
 export function summarizeTrack(
   trackId: string,
   rows: ReadonlyArray<AmortizationRow>,
+  principal: MoneyAgorot,
 ): TrackResult {
   const payments = rows.map((row) => row.payment);
+  const totalCost = sumMoney(payments);
   return {
     trackId,
     rows,
@@ -15,7 +18,8 @@ export function summarizeTrack(
     maxPayment: payments.length ? Math.max(...payments) : 0,
     totalInterest: sumMoney(rows.map((row) => row.interest)),
     totalIndexation: sumMoney(rows.map((row) => row.indexation)),
-    totalCost: sumMoney(payments),
+    totalCost,
+    costPerShekel: costPerShekel(totalCost, principal),
     balanceAt: {
       y5: balanceAt(rows, 60),
       y10: balanceAt(rows, 120),

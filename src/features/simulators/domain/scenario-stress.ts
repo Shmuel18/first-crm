@@ -27,7 +27,7 @@ export function stressMix(input: MixInput, scenario: StressScenario): StressResu
   const baseline = aggregateMix(input);
   const stressed = aggregateTrackResults(
     input,
-    input.tracks.map((track) => summarizeTrack(track.id, stressedRows(track, scenario))),
+    input.tracks.map((track) => summarizeTrack(track.id, stressedRows(track, scenario), track.amount)),
   );
   const increasePct = increase(baseline.maxPayment, stressed.maxPayment);
   const linkedGrowth = stressed.totalIndexation - baseline.totalIndexation;

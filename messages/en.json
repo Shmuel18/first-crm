@@ -167,6 +167,9 @@
         "cpi": "Annual CPI",
         "grace": "Grace",
         "extra": "Extra",
+        "monthly": "Monthly",
+        "totalCost": "Total cost",
+        "ratio": "Cost per ₪",
         "rateNote": "Prime rate = Bank of Israel base + 1.5% margin; eligibility is discounted 0.5% and capped at 3%.",
         "types": {
           "fixed_unlinked": "Fixed unlinked",
@@ -190,6 +193,9 @@
         "totalCost": "Total cost",
         "totalInterest": "Total interest",
         "ltv": "LTV",
+        "maxPaymentMonth": "in month {month}",
+        "weightedRate": "Weighted rate",
+        "costPerShekel": "Cost per ₪",
         "snapshotNote": "Saving creates a server-calculated snapshot for future reports.",
         "paymentCurve": "Payment curve",
         "balanceCurve": "Principal balance curve",
@@ -210,6 +216,24 @@
           "variable": "Variable",
           "eligibility": "Eligibility"
         }
+      },
+      "breakdown": {
+        "title": "Monthly payment breakdown",
+        "principal": "Principal",
+        "interest": "Interest",
+        "payment": "Monthly payment",
+        "yearLabel": "Year {year}"
+      },
+      "monthState": {
+        "title": "Loan status at month",
+        "monthLabel": "Choose month",
+        "monthValue": "Month {month}",
+        "closingBalance": "Principal balance",
+        "paidToDate": "Paid to date",
+        "principalReduced": "Principal reduced",
+        "interestPaid": "Interest & indexation paid",
+        "monthlyPayment": "Monthly payment",
+        "remainingToPay": "Remaining to pay"
       }
     },
     "compare": {

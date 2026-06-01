@@ -14,6 +14,8 @@ import { KpiStrip } from './kpi-strip';
 import { MixChart } from './mix-chart';
 import { MixCompositionBar } from './mix-composition-bar';
 import { MixInputsPanel } from './mix-inputs-panel';
+import { MonthStatePanel } from './month-state-panel';
+import { PaymentBreakdownChart } from './payment-breakdown-chart';
 import { RegulatoryViolationsBanner } from './regulatory-violations-banner';
 import { TrackEditor } from './track-editor';
 
@@ -80,6 +82,7 @@ export function MixCalculator({
       />
       <TrackEditor
         tracks={calc.mix.tracks}
+        summaries={calc.result.tracks}
         onAdd={calc.addTrack}
         onRemove={calc.removeTrack}
         onUpdate={calc.updateTrack}
@@ -97,9 +100,13 @@ export function MixCalculator({
         </button>
       </div>
       <div className="grid gap-5 lg:grid-cols-2">
-        <MixChart titleKey="paymentCurve" points={calc.result.paymentCurve} />
+        <PaymentBreakdownChart
+          principalCurve={calc.result.principalCurve}
+          interestCurve={calc.result.interestCurve}
+        />
         <MixChart titleKey="balanceCurve" points={calc.result.balanceCurve} />
       </div>
+      <MonthStatePanel result={calc.result} mortgageAmount={calc.mix.mortgageAmount} />
       <AmortizationTable result={calc.result} />
     </div>
   );
