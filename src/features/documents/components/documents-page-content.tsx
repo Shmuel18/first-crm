@@ -2,22 +2,30 @@
 
 import { useMemo, useState } from 'react';
 
+import { AlertCircle, ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import type { Locale } from '@/lib/i18n/direction';
 
 import type { DocumentChecklistItem } from '../services/document-checklist.service';
-import { DRIVE_FOLDERS, type DocumentWithRelations, type DocumentCategoryRow, type DriveFolder } from '../types';
+import {
+  DRIVE_FOLDERS,
+  type DocumentCategoryRow,
+  type DocumentWithRelations,
+  type DriveFolder,
+} from '../types';
 import { ChecklistManagerModal } from './checklist-manager-modal';
 import { DocumentsActionBar } from './documents-action-bar';
-import { DocumentsChecklist } from './documents-checklist';
-import { DocumentsSummary } from './documents-summary';
 import { DocumentPreviewModal } from './document-preview-modal';
 import { FolderCard } from './folder-card';
+import { FolderDetail } from './folder-detail';
 import { UncategorizedCard } from './uncategorized-card';
 import { UploadDocumentModal } from './upload-document-modal';
 
 type Borrower = { id: string; firstName: string | null; lastName: string | null };
+
+/** Grid view when null; otherwise the drill-in target. */
+type Selection = DriveFolder | 'uncategorized' | null;
 
 type Props = {
   caseId: string;
@@ -58,10 +66,13 @@ export function DocumentsPageContent({
   canVerifyDocuments,
 }: Props) {
   const t = useTranslations('documents.checklist');
+  const td = useTranslations('documents.detail');
+  const tu = useTranslations('documents.uncategorized');
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploadFolder, setUploadFolder] = useState<DriveFolder | null>(null);
   const [previewDoc, setPreviewDoc] = useState<DocumentWithRelations | null>(null);
   const [manageOpen, setManageOpen] = useState(false);
+  const [selected, setSelected] = useState<Selection>(null);
 
   const { buckets, uncategorized } = useMemo(() => {
     const result: Record<DriveFolder, DocumentWithRelations[]> = {
@@ -73,31 +84,27 @@ export function DocumentsPageContent({
     const unc: DocumentWithRelations[] = [];
     for (const doc of documents) {
       const f = doc.category?.drive_folder as DriveFolder | undefined;
-      if (f && (DRIVE_FOLDERS as readonly string[]).includes(f)) {
-        result[f].push(doc);
-      } else {
-        unc.push(doc);
-      }
+      if (f && (DRIVE_FOLDERS as readonly string[]).includes(f)) result[f].push(doc);
+      else unc.push(doc);
     }
     return { buckets: result, uncategorized: unc };
   }, [documents]);
 
-  const totals = useMemo(() => {
-    const total = documents.length;
-    const verified = documents.filter((d) => d.status === 'verified').length;
-    const pending = documents.filter((d) => d.status === 'new').length;
-    const requiredItems = checklist.filter((item) => item.isRequired);
-    const missing = requiredItems.filter((item) => item.status === 'missing').length;
-    const collected = requiredItems.length - missing;
-    return {
-      total,
-      verified,
-      pending,
-      missing,
-      requiredTotal: requiredItems.length,
-      collected,
+  // Required-doc checklist grouped by folder, so "what's still missing" lives
+  // inside each folder's drill-in rather than a separate sidebar.
+  const checklistByFolder = useMemo(() => {
+    const byFolder: Record<DriveFolder, DocumentChecklistItem[]> = {
+      identity: [],
+      income_il: [],
+      income_abroad: [],
+      insurance_collateral: [],
     };
-  }, [checklist, documents]);
+    for (const item of checklist) {
+      const f = item.driveFolder;
+      if (f && (DRIVE_FOLDERS as readonly string[]).includes(f)) byFolder[f].push(item);
+    }
+    return byFolder;
+  }, [checklist]);
 
   const handleUploadFromFolder = (folder: DriveFolder) => {
     setUploadFolder(folder);
@@ -109,8 +116,11 @@ export function DocumentsPageContent({
     setUploadOpen(true);
   };
 
+  const missingFor = (folder: DriveFolder): number =>
+    checklistByFolder[folder].filter((i) => i.status === 'missing').length;
+
   return (
-    <div className="space-y-5 -mt-6">
+    <div className="space-y-4 -mt-6">
       <DocumentsActionBar
         caseId={caseId}
         caseNumber={caseNumber}
@@ -121,43 +131,87 @@ export function DocumentsPageContent({
         checklist={checklist}
       />
 
-      <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-        <DocumentsSummary {...totals} />
-      </section>
+      {selected === null && (
+        <>
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => setManageOpen(true)}
+              className="inline-flex items-center gap-1.5 text-xs text-brand-gold-text hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+            >
+              <Pencil className="size-3.5" aria-hidden="true" />
+              {td('manage')}
+            </button>
+          </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[360px_minmax(0,1fr)] gap-4 items-start">
-        <div className="xl:sticky xl:top-24">
-          <DocumentsChecklist
-            items={checklist}
-            locale={locale}
-            onUploadToFolder={handleUploadFromFolder}
-            onManage={() => setManageOpen(true)}
-          />
-        </div>
-
-        <div className="space-y-4">
-          {uncategorized.length > 0 && (
-            <UncategorizedCard
-              documents={uncategorized}
-              categories={categories}
-              caseId={caseId}
-              onPreview={setPreviewDoc}
-            />
-          )}
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {DRIVE_FOLDERS.map((folder) => (
               <FolderCard
                 key={folder}
                 folder={folder}
-                documents={buckets[folder]}
-                onUpload={handleUploadFromFolder}
-                onPreview={setPreviewDoc}
+                documentCount={buckets[folder].length}
+                missingCount={missingFor(folder)}
+                onOpen={setSelected}
               />
             ))}
+
+            {uncategorized.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setSelected('uncategorized')}
+                className="group w-full text-start rounded-xl border border-amber-200 bg-amber-50/50 p-4 shadow-sm transition hover:border-amber-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="p-2.5 rounded-lg bg-amber-100 text-amber-700">
+                    <AlertCircle className="size-6" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h2 className="font-display text-sm font-semibold text-neutral-950 leading-tight">
+                      {tu('title', { count: uncategorized.length })}
+                    </h2>
+                    <p className="text-xs text-neutral-500 mt-0.5 line-clamp-2">{tu('subtitle')}</p>
+                  </div>
+                  <ChevronLeft
+                    aria-hidden="true"
+                    className="size-4 text-neutral-400 shrink-0 ltr:rotate-180"
+                  />
+                </div>
+              </button>
+            )}
           </div>
+        </>
+      )}
+
+      {selected !== null && selected !== 'uncategorized' && (
+        <FolderDetail
+          folder={selected}
+          documents={buckets[selected]}
+          checklistItems={checklistByFolder[selected]}
+          locale={locale}
+          onBack={() => setSelected(null)}
+          onUpload={handleUploadFromFolder}
+          onPreview={setPreviewDoc}
+        />
+      )}
+
+      {selected === 'uncategorized' && (
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={() => setSelected(null)}
+            className="inline-flex items-center gap-1 text-sm text-neutral-600 hover:text-neutral-900 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+          >
+            <ChevronRight className="size-4 ltr:rotate-180" aria-hidden="true" />
+            {td('back')}
+          </button>
+          <UncategorizedCard
+            documents={uncategorized}
+            categories={categories}
+            caseId={caseId}
+            onPreview={setPreviewDoc}
+          />
         </div>
-      </div>
+      )}
 
       {/* `key` forces a fresh mount on open/close so child state (fileName,
           useActionState result, refs) resets without per-effect setState. */}

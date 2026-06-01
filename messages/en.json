@@ -1729,9 +1729,18 @@
     },
     "card": {
       "documentCount": "{count} documents",
+      "missingCount": "{count} missing",
       "addDocument": "Add document",
       "noDocuments": "No documents in this category",
       "borrowerGeneral": "General"
+    },
+    "detail": {
+      "back": "All folders",
+      "uploadedTitle": "Uploaded documents",
+      "requiredTitle": "Still required",
+      "requiredEmpty": "Everything collected in this category",
+      "noFiles": "No documents in this folder yet",
+      "manage": "Manage document list"
     },
     "errors": {
       "fileRequired": "Please choose a file to upload",

@@ -1729,9 +1729,18 @@
     },
     "card": {
       "documentCount": "{count} מסמכים",
+      "missingCount": "{count} חסרים",
       "addDocument": "הוסף מסמך",
       "noDocuments": "אין מסמכים בקטגוריה זו",
       "borrowerGeneral": "כללי"
+    },
+    "detail": {
+      "back": "כל התיקיות",
+      "uploadedTitle": "מסמכים שהועלו",
+      "requiredTitle": "עדיין נדרש",
+      "requiredEmpty": "הכול נאסף בקטגוריה זו",
+      "noFiles": "אין עדיין מסמכים בתיקייה זו",
+      "manage": "נהל רשימת מסמכים"
     },
     "errors": {
       "fileRequired": "יש לבחור קובץ להעלאה",
