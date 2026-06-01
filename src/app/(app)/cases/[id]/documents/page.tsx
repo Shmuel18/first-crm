@@ -10,6 +10,7 @@ import {
   listDocumentsForCase,
 } from '@/features/documents/services/documents.service';
 import { getCaseById } from '@/features/cases/services/cases.service';
+import { provisionCaseDriveFolders } from '@/features/integrations/services/drive-case-uploader';
 import { autoSyncIfStale } from '@/features/integrations/services/drive-document-sync';
 import { userHasPermissions } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
@@ -82,6 +83,18 @@ export default async function CaseDocumentsPage({ params }: Props) {
     'drive' in caseData.metadata
       ? ((caseData.metadata as { drive?: { case_folder_id?: string } }).drive?.case_folder_id ?? null)
       : null;
+
+  // First time a case's documents are opened without a Drive folder yet,
+  // provision its folder tree (best-effort, fire-and-forget). Once the id is
+  // stored, "open in Drive" + sync light up and later visits skip this. Existing
+  // cases get an empty tree to drag their current Drive files into.
+  if (!driveFolderId) {
+    void provisionCaseDriveFolders({
+      caseId: caseData.id,
+      caseNumber: caseData.case_number,
+      familyName: borrowerNames || 'Case',
+    }).catch(() => undefined);
+  }
 
   return (
     <DocumentsPageContent

@@ -177,6 +177,43 @@ export async function uploadCaseDocumentToDrive(
   }
 }
 
+/**
+ * Best-effort: ensure the case's Drive folder + every category subfolder exist
+ * (creating them if missing) and persist the folder id. No-ops when Drive isn't
+ * connected, and never throws. Idempotent — ensureCaseFolder/ensureSubfolder
+ * short-circuit on the cached ids, so a repeat call costs nothing Drive-side.
+ * Lets a case's "open in Drive" + sync work without waiting for a first upload,
+ * and gives the office an empty folder tree to drop existing files into.
+ */
+export async function provisionCaseDriveFolders(input: {
+  caseId: string;
+  caseNumber: string;
+  familyName: string;
+}): Promise<void> {
+  const client = await getDriveClientIfConnected();
+  if (!client) return;
+  try {
+    const meta = await getCaseDriveMeta(input.caseId);
+    const rootId = await ensureRootFolder(client);
+    const caseFolderId = await ensureCaseFolder(
+      client,
+      rootId,
+      input.caseId,
+      input.caseNumber,
+      input.familyName,
+      meta,
+    );
+    for (const folder of Object.keys(DRIVE_SUBFOLDER_NAMES)) {
+      await ensureSubfolder(client, input.caseId, caseFolderId, folder, meta);
+    }
+  } catch (err) {
+    console.error('[provisionCaseDriveFolders] best-effort provision failed', {
+      caseId: input.caseId,
+      message: err instanceof Error ? err.message : 'unknown',
+    });
+  }
+}
+
 /** Best-effort delete from Drive. Never throws. */
 export async function deleteCaseDocumentFromDrive(driveFileId: string): Promise<void> {
   const client = await getDriveClientIfConnected();
