@@ -12,7 +12,34 @@ export const TrackTypeSchema = z.enum([
 ]);
 
 export const RepaymentTypeSchema = z.enum(['spitzer', 'equal_principal', 'balloon']);
-export const ScenarioKindSchema = z.enum(['mix', 'comparison', 'scenario']);
+export const ScenarioKindSchema = z.enum([
+  'mix',
+  'comparison',
+  'scenario',
+  'capacity',
+  'early_repayment',
+  'refinance',
+]);
+export const SimulatorKindSchema = z.enum([
+  ...ScenarioKindSchema.options,
+  'max_mortgage',
+  'dti',
+  'ltv',
+  'monthly_payment',
+  'prime_impact',
+  'cpi_impact',
+  'fixed_variable_compare',
+  'repayment_type_compare',
+  'balloon_bullet',
+  'purchase_tax',
+  'closing_costs',
+  'guarantor_impact',
+  'bank_offer_comparison',
+  'best_bank_fit',
+  'approval_probability',
+  'rent_vs_buy',
+  'client_report',
+]);
 export const PropertyKindSchema = z.enum(['first_home', 'replacement', 'investment']);
 
 const moneyAgorot = z.coerce
@@ -90,4 +117,5 @@ export type MixInputForm = z.infer<typeof MixInputSchema>;
 export type SaveScenarioInput = z.infer<typeof SaveScenarioSchema>;
 export type RegulatoryThresholdsInput = z.infer<typeof RegulatoryThresholdsSchema>;
 export type StressScenarioInput = z.infer<typeof StressScenarioSchema>;
+export type SimulatorKindInput = z.infer<typeof SimulatorKindSchema>;
 

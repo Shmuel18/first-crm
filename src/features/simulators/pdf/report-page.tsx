@@ -18,7 +18,7 @@ export function ReportPage({ data, strings, locale }: Props) {
       <View style={styles.header}>
         <View style={styles.headerRight}>
           <Text style={styles.title}>{data.meta.title}</Text>
-          <Text style={styles.subtitle}>{strings.kind[data.meta.kind]}</Text>
+          <Text style={styles.subtitle}>{strings.kind[data.meta.kind] ?? strings.kind.mix}</Text>
         </View>
         <View style={styles.brandBlock}>
           <View style={styles.brandBar} />

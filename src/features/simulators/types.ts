@@ -16,7 +16,26 @@ export type TrackType =
   | 'eligibility';
 
 export type RepaymentType = 'spitzer' | 'equal_principal' | 'balloon';
-export type ScenarioKind = 'mix' | 'comparison' | 'scenario';
+export type ScenarioKind = 'mix' | 'comparison' | 'scenario' | 'capacity' | 'early_repayment' | 'refinance';
+export type SimulatorKind =
+  | ScenarioKind
+  | 'max_mortgage'
+  | 'dti'
+  | 'ltv'
+  | 'monthly_payment'
+  | 'prime_impact'
+  | 'cpi_impact'
+  | 'fixed_variable_compare'
+  | 'repayment_type_compare'
+  | 'balloon_bullet'
+  | 'purchase_tax'
+  | 'closing_costs'
+  | 'guarantor_impact'
+  | 'bank_offer_comparison'
+  | 'best_bank_fit'
+  | 'approval_probability'
+  | 'rent_vs_buy'
+  | 'client_report';
 export type PropertyKind = 'first_home' | 'replacement' | 'investment';
 export type RiskLevel = 'low' | 'medium' | 'high';
 export type ScenarioPresetKey = 'calm' | 'moderate' | 'strict' | 'custom';

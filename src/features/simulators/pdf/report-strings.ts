@@ -13,7 +13,7 @@ type Strings = {
   brandSub: string;
   documentTitle: (title: string) => string;
   meta: { date: string; caseNumber: string; advisor: string };
-  kind: Record<ScenarioKind, string>;
+  kind: Partial<Record<ScenarioKind, string>> & Pick<Record<ScenarioKind, string>, 'mix' | 'comparison' | 'scenario'>;
   loan: {
     title: string;
     propertyValue: string;
