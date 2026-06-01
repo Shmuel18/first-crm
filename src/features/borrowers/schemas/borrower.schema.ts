@@ -41,7 +41,12 @@ export const EMPLOYMENT_STATUS_VALUES = [
 ] as const;
 export type EmploymentStatus = (typeof EMPLOYMENT_STATUS_VALUES)[number];
 
-export const ROLE_IN_CASE_VALUES = ['borrower', 'guarantor'] as const;
+export const ROLE_IN_CASE_VALUES = [
+  'borrower',
+  'guarantor',
+  'rights_owner',
+  'mortgaging_borrower',
+] as const;
 export type RoleInCase = (typeof ROLE_IN_CASE_VALUES)[number];
 
 export const PREFERRED_LANGUAGE_VALUES = ['he', 'en'] as const;

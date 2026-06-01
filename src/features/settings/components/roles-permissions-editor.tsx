@@ -6,6 +6,7 @@ import { Check, Lock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { roleManagementLabel } from '@/lib/auth/role-label';
 import type { Locale } from '@/lib/i18n/direction';
 
 import { toggleRolePermissionAction } from '../actions/toggle-role-permission';
@@ -33,6 +34,7 @@ const CATEGORY_ORDER: PermissionCategory[] = [
 
 export function RolesPermissionsEditor({ roles, permissions, granted, locale }: Props) {
   const t = useTranslations('settings.roles');
+  const tLevel = useTranslations('settings.roles.levels');
 
   const [selectedRoleId, setSelectedRoleId] = useState(
     () => roles.find((r) => r.key !== 'admin')?.id ?? roles[0]?.id ?? '',
@@ -50,7 +52,7 @@ export function RolesPermissionsEditor({ roles, permissions, granted, locale }: 
   const grouped = useMemo(() => groupByCategory(permissions), [permissions]);
   const selectedRole = roles.find((r) => r.id === selectedRoleId) ?? null;
   const isAdminRole = selectedRole?.key === 'admin';
-  const roleName = (r: RoleRow) => (locale === 'he' ? r.name_he : r.name_en);
+  const roleName = (r: RoleRow) => roleManagementLabel(r, locale, tLevel);
 
   const isOn = (permId: string) =>
     isAdminRole || (grantedMap[selectedRoleId]?.has(permId) ?? false);

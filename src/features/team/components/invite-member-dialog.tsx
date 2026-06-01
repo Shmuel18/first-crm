@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { FormField, NativeSelect } from '@/components/shared/form-fields';
+import { roleManagementLabel } from '@/lib/auth/role-label';
 
 import { inviteMemberAction } from '../actions/invite-member';
 import { INVITE_ACTION_INITIAL, type InviteActionState, type TeamRole } from '../types';
@@ -30,6 +31,7 @@ type Props = {
 export function InviteMemberDialog({ open, onOpenChange, roles, locale }: Props) {
   const t = useTranslations('team.invite');
   const tc = useTranslations('common');
+  const tLevel = useTranslations('settings.roles.levels');
 
   const [state, formAction] = useActionState<InviteActionState, FormData>(
     inviteMemberAction,
@@ -41,7 +43,7 @@ export function InviteMemberDialog({ open, onOpenChange, roles, locale }: Props)
   const submitted = state.ok === false && state.error !== 'idle' ? state.values : undefined;
   const val = (name: string) => submitted?.[name] ?? '';
 
-  const roleName = (r: TeamRole) => (locale === 'he' ? r.name_he : r.name_en);
+  const roleName = (r: TeamRole) => roleManagementLabel(r, locale, tLevel);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

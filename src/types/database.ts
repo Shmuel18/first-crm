@@ -1876,6 +1876,8 @@ export type Database = {
           deleted_at: string | null
           equity: number | null
           id: string
+          appraiser_name: string | null
+          insurance_agent_name: string | null
           insurance_status: string | null
           is_archived: boolean
           metadata: Json
@@ -1904,6 +1906,8 @@ export type Database = {
           deleted_at?: string | null
           equity?: number | null
           id?: string
+          appraiser_name?: string | null
+          insurance_agent_name?: string | null
           insurance_status?: string | null
           is_archived?: boolean
           metadata?: Json
@@ -1932,6 +1936,8 @@ export type Database = {
           deleted_at?: string | null
           equity?: number | null
           id?: string
+          appraiser_name?: string | null
+          insurance_agent_name?: string | null
           insurance_status?: string | null
           is_archived?: boolean
           metadata?: Json

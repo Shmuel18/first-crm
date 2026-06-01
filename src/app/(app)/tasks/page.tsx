@@ -11,10 +11,8 @@ import { TasksLayoutToggle } from '@/features/tasks/components/tasks-layout-togg
 import { TasksList } from '@/features/tasks/components/tasks-list';
 import { TaskCreateButton } from '@/features/tasks/components/task-create-button';
 import { TasksStatStrip } from '@/features/tasks/components/tasks-stat-strip';
-import { TasksTagFilter } from '@/features/tasks/components/tasks-tag-filter';
 import { TasksViewTabs } from '@/features/tasks/components/tasks-view-tabs';
 import { capCompletedTasks, isImmediateTask, isOverdue } from '@/features/tasks/domain/task-state';
-import { filterTasksByTag } from '@/features/tasks/domain/task-tags';
 import {
   countPendingByView,
   getCaseNumberLabel,
@@ -37,7 +35,6 @@ type SearchParams = Promise<{
   status?: string;
   case?: string;
   display?: string;
-  tag?: string;
   focus?: string;
 }>;
 
@@ -84,7 +81,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
       caseId ? getCaseNumberLabel(asCaseId(caseId)) : Promise.resolve(null),
     ]);
 
-  const visibleTasks = filterTasksByTag(tasks, sp.tag ?? null);
+  const visibleTasks = tasks;
   const immediateCount = visibleTasks.filter((task) => isImmediateTask(task)).length;
   const openCount = visibleTasks.filter((task) => task.status === 'pending').length;
   const overdueCount = visibleTasks.filter((task) => isOverdue(task)).length;
@@ -120,8 +117,6 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
           <TasksLayoutToggle />
         </div>
       </div>
-
-      <TasksTagFilter />
 
       <TasksStatStrip
         immediate={immediateCount}

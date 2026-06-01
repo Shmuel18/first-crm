@@ -236,6 +236,8 @@ export default async function CaseDetailPage({ params }: Props) {
           assignedAdvisorId={caseData.assigned_advisor?.id ?? null}
           blocker={caseData.case_blocker as CaseBlocker | null}
           insurance={caseData.insurance_status as InsuranceStatus | null}
+          insuranceAgentName={caseData.insurance_agent_name}
+          appraiserName={caseData.appraiser_name}
           targetDate={caseData.target_date}
           referrerName={caseData.referrer_name}
           shortNote={caseData.short_note}

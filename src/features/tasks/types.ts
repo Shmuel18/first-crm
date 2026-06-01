@@ -16,17 +16,6 @@ export type TaskStatus = (typeof TASK_STATUS_VALUES)[number];
 export const TASK_PRIORITY_VALUES = ['critical', 'high', 'normal', 'low'] as const;
 export type TaskPriority = (typeof TASK_PRIORITY_VALUES)[number];
 
-export const TASK_TAG_VALUES = [
-  'meeting',
-  'lead',
-  'export',
-  'legal',
-  'docs',
-  'followup',
-  'bank',
-] as const;
-export type TaskTag = (typeof TASK_TAG_VALUES)[number];
-
 export const TASK_VIEW_VALUES = ['mine', 'assigned-by-me', 'all'] as const;
 export type TaskView = (typeof TASK_VIEW_VALUES)[number];
 
@@ -55,9 +44,8 @@ export type TaskCaseOption = {
 export type TaskWithRelations = Omit<TaskRow, 'priority' | 'status'> & {
   priority: TaskPriority;
   status: TaskStatus;
-  tags: TaskTag[];
   // `is_private` (migration 098) isn't in the generated Row type yet; declared
-  // here and gated into the service column list, like `tags`.
+  // here and gated into the service column list.
   is_private: boolean;
   assignee: TaskAssignee | null;
   creator: TaskAssignee | null;

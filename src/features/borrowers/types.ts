@@ -1,11 +1,15 @@
 import type { Database } from '@/types/database';
 
+import type { RoleInCase } from './schemas/borrower.schema';
+
 export type BorrowerRow = Database['public']['Tables']['borrowers']['Row'];
 export type BorrowerInsert = Database['public']['Tables']['borrowers']['Insert'];
 
 export type CaseBorrowerRow = Database['public']['Tables']['case_borrowers']['Row'];
 
-export type RoleInCase = 'borrower' | 'guarantor';
+// Single source of truth for the enum lives in the schema; re-exported here
+// so feature files can keep importing RoleInCase from '../types'.
+export type { RoleInCase };
 
 /** Borrower joined with their role on a specific case. */
 export type CaseBorrowerWithBorrower = {

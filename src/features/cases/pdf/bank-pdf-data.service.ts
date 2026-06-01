@@ -1,4 +1,5 @@
 import { listBorrowersForCase } from '@/features/borrowers/services/borrowers.service';
+import type { RoleInCase } from '@/features/borrowers/types';
 import { listIncomesForCase } from '@/features/incomes/services/incomes.service';
 import { listObligationsForCase } from '@/features/obligations/services/obligations.service';
 import type { CaseId } from '@/lib/types/branded';
@@ -38,7 +39,7 @@ export type BankPdfData = {
   borrowers: Array<{
     id: string;
     fullName: string;
-    role: 'borrower' | 'guarantor';
+    role: RoleInCase;
     isPrimary: boolean;
     nationalId: string | null;
     idIssueDate: string | null;
@@ -181,8 +182,9 @@ export async function loadCaseForBankPdf(caseId: CaseId): Promise<BankPdfData | 
 
   // Role-based splits. Israeli mortgage banks count borrower income at 100%
   // but discount guarantor income heavily — separating them lets the PDF
-  // show both numbers transparently.
-  const isBorrower = (b: (typeof borrowers)[number]) => b.role === 'borrower';
+  // show both numbers transparently. rights_owner / mortgaging_borrower are
+  // principal parties (not guarantors), so they fold into the borrower side.
+  const isBorrower = (b: (typeof borrowers)[number]) => b.role !== 'guarantor';
   const isGuarantor = (b: (typeof borrowers)[number]) => b.role === 'guarantor';
   const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
 

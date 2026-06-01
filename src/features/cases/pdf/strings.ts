@@ -73,6 +73,8 @@ type Strings = {
     dash: string;
     borrower: string;
     guarantor: string;
+    rights_owner: string;
+    mortgaging_borrower: string;
     gender: Record<string, string>;
     maritalStatus: Record<string, string>;
     residency: Record<string, string>;
@@ -166,6 +168,8 @@ const STRINGS_HE: Strings = {
     dash: '—',
     borrower: 'לווה',
     guarantor: 'ערב',
+    rights_owner: 'בעל זכויות',
+    mortgaging_borrower: 'לווה ממשכן',
     gender: {
       male: 'זכר',
       female: 'נקבה',
@@ -266,6 +270,8 @@ const STRINGS_EN: Strings = {
     dash: '—',
     borrower: 'Borrower',
     guarantor: 'Guarantor',
+    rights_owner: 'Rights holder',
+    mortgaging_borrower: 'Mortgaging borrower',
     gender: {
       male: 'Male',
       female: 'Female',

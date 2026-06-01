@@ -879,6 +879,8 @@
       "expectedIncome": "הכנסה צפויה",
       "blocker": "גורם מעכב",
       "insurance": "ביטוחים",
+      "insuranceAgent": "שם סוכן ביטוח",
+      "appraiser": "שם שמאי",
       "targetDate": "תאריך יעד",
       "referrer": "הופנה ע״י",
       "shortNote": "הערה קצרה",
@@ -982,6 +984,8 @@
     "borrower": {
       "borrower": "לווה",
       "guarantor": "ערב",
+      "rights_owner": "בעל זכויות",
+      "mortgaging_borrower": "לווה ממשכן",
       "primarySuffix": "ראשי",
       "id": "ת״ז",
       "phone": "נייד",
@@ -1443,6 +1447,10 @@
       "title": "תפקידים והרשאות",
       "subtitle": "נהל אילו הרשאות יש לכל תפקיד במערכת",
       "adminLocked": "תפקיד המנהל כולל את כל ההרשאות במערכת ולא ניתן לעריכה.",
+      "levels": {
+        "base": "יועץ משכנתאות",
+        "extended": "יועץ משכנתאות מורחב"
+      },
       "categories": {
         "view": "צפייה",
         "cases": "תיקים",
@@ -1834,17 +1842,6 @@
       "list": "רשימה",
       "board": "לוח",
       "empty": "אין משימות"
-    },
-    "tags": {
-      "label": "תגיות",
-      "all": "הכל",
-      "meeting": "פגישה",
-      "lead": "ליד",
-      "export": "ייצוא",
-      "legal": "משפטי",
-      "docs": "מסמכים",
-      "followup": "מעקב",
-      "bank": "בנק"
     },
     "action": {
       "complete": "סמן כהושלם",

@@ -46,6 +46,8 @@ type LocalCase = Pick<
   | 'assigned_advisor_id'
   | 'case_blocker'
   | 'insurance_status'
+  | 'insurance_agent_name'
+  | 'appraiser_name'
   | 'target_date'
   | 'referrer_name'
   | 'short_note'
@@ -185,6 +187,16 @@ export function CaseDetailsSection({
         value={localCase.insurance_status}
         options={insuranceOptions}
         onSave={(v) => saveField('insurance_status', v)}
+      />
+      <EditableField
+        label={tFields('insuranceAgent')}
+        value={localCase.insurance_agent_name}
+        onSave={(v) => saveField('insurance_agent_name', v)}
+      />
+      <EditableField
+        label={tFields('appraiser')}
+        value={localCase.appraiser_name}
+        onSave={(v) => saveField('appraiser_name', v)}
       />
       <EditableField
         type="date"

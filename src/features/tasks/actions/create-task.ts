@@ -7,7 +7,6 @@ import { createClient } from '@/lib/supabase/server';
 import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
-import { parseTaskTags } from '../domain/task-tags';
 import { TaskFormSchema } from '../schemas/task.schema';
 import type { TaskActionState, TaskInsert } from '../types';
 
@@ -39,10 +38,10 @@ export async function createTaskAction(
     if (!caseRow) return { ok: false, error: 'unauthorized', values };
   }
 
-  // `tags` is a column from migration 034, not yet in the generated types; the
-  // typed insert rejects excess keys, so cast (the value is still sent at runtime).
   // A private task is a reminder to oneself — force self-assignment so it
-  // satisfies the tasks_private_self_assigned CHECK and stays invisible to others.
+  // satisfies the tasks_private_self_assigned CHECK and stays invisible to
+  // others. `is_private` (migration 098) isn't in the generated types yet, so
+  // the payload is cast to TaskInsert (the value is still sent at runtime).
   const isPrivate = parsed.data.is_private;
   const assignee = isPrivate ? userId : parsed.data.assigned_to ?? null;
   const payload = {
@@ -52,7 +51,6 @@ export async function createTaskAction(
     assigned_to: assignee,
     case_id: parsed.data.case_id ?? null,
     due_date: parsed.data.due_date ?? null,
-    tags: parseTaskTags(formData.getAll('tags').map(String)),
     is_private: isPrivate,
     created_by: userId,
     updated_by: userId,

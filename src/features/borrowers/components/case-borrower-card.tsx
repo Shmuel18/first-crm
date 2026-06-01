@@ -21,6 +21,8 @@ import { formatPersonName } from '@/lib/utils/person-name';
 
 import { removeBorrowerFromCaseAction } from '../actions/remove-borrower-from-case';
 import { updateBorrowerFieldAction, type EditableBorrowerField } from '../actions/update-borrower-field';
+import { updateBorrowerRoleAction } from '../actions/update-borrower-role';
+import { ROLE_IN_CASE_VALUES } from '../schemas/borrower.schema';
 import { buildMailLink, buildTelLink, buildWhatsAppLink } from '../domain/contact-links';
 import { calculateAge } from '../domain/age';
 
@@ -65,6 +67,7 @@ export function CaseBorrowerCard({
   // refresh immediately. On error we restore the previous value here AND the
   // EditableField rolls back its own input via its `value` prop effect.
   const [localBorrower, setLocalBorrower] = useState(borrower);
+  const [localRole, setLocalRole] = useState<RoleInCase>(roleInCase);
 
   const fullName =
     formatPersonName(localBorrower.first_name, localBorrower.last_name) || tc('noName');
@@ -84,6 +87,25 @@ export function CaseBorrowerCard({
     }
     return { ok: true };
   };
+
+  // Role lives on case_borrowers (junction), so it routes through its own
+  // action rather than the borrower-table saveField bridge above.
+  const saveRole = async (
+    value: string | null,
+  ): Promise<{ ok: true } | { ok: false; message?: string }> => {
+    const next = ROLE_IN_CASE_VALUES.find((r) => r === value);
+    if (!next) return { ok: false };
+    const prev = localRole;
+    setLocalRole(next);
+    const result = await updateBorrowerRoleAction(caseId, borrower.id, next);
+    if (!result.ok) {
+      setLocalRole(prev);
+      return { ok: false, message: result.message };
+    }
+    return { ok: true };
+  };
+
+  const roleOptions = ROLE_IN_CASE_VALUES.map((r) => ({ value: r, label: t(r) }));
 
   // Quick-action icons next to phone / email fields — built from the live
   // optimistic value so they appear/disappear as the user types and saves.
@@ -117,7 +139,7 @@ export function CaseBorrowerCard({
           <div className="flex flex-col min-w-0">
             <span className="font-medium text-neutral-900 text-sm truncate">{fullName}</span>
             <span className="text-xs text-neutral-500 flex items-center gap-1.5 flex-wrap">
-              <span>{t(roleInCase)}</span>
+              <span>{t(localRole)}</span>
               {localBorrower.related_to_sellers === true && (
                 <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-medium">
                   {t('relatedToSellers')}
@@ -161,6 +183,17 @@ export function CaseBorrowerCard({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Role on the case (case_borrowers.role_in_case) — inline editable. */}
+      <div className="sm:max-w-xs">
+        <EditableField
+          type="select"
+          label={tf('role')}
+          value={localRole}
+          options={roleOptions}
+          onSave={saveRole}
+        />
+      </div>
 
       {/* Identity names — row 1: first | last | id */}
       <FieldGroup cols={3}>
