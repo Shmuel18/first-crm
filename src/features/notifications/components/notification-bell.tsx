@@ -96,10 +96,11 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
   };
 
   const handleClick = (n: Notification) => {
+    // Reading removes the notification from the bell entirely (not just the
+    // highlight). Drop it locally for instant feedback; the server mark-read +
+    // layout revalidate keep it gone on the next render.
+    setItems((prev) => prev.filter((it) => it.id !== n.id));
     if (!n.read_at) {
-      setItems((prev) =>
-        prev.map((it) => (it.id === n.id ? { ...it, read_at: new Date().toISOString() } : it)),
-      );
       setUnread((u) => Math.max(0, u - 1));
       startTransition(() => {
         void markNotificationReadAction(n.id);
@@ -109,7 +110,9 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
   };
 
   const handleMarkAll = () => {
-    setItems((prev) => prev.map((it) => ({ ...it, read_at: it.read_at ?? new Date().toISOString() })));
+    // Clear the bell — every shown notification is unread, so reading them all
+    // empties the list.
+    setItems([]);
     setUnread(0);
     startTransition(() => {
       void markAllNotificationsReadAction();
@@ -187,19 +190,14 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
                 <button
                   type="button"
                   onClick={() => handleClick(n)}
-                  aria-label={n.read_at ? message(n) : `${t('unreadIndicator')} — ${message(n)}`}
-                  className={[
-                    'w-full text-start px-3 py-2.5 border-b border-neutral-100 last:border-0 hover:bg-neutral-50 focus-visible:outline-none focus-visible:bg-brand-gold-soft transition flex gap-2.5',
-                    n.read_at ? '' : 'bg-brand-gold-soft',
-                  ].join(' ')}
+                  aria-label={`${t('unreadIndicator')} — ${message(n)}`}
+                  className="w-full text-start px-3 py-2.5 border-b border-neutral-100 last:border-0 bg-brand-gold-soft hover:bg-neutral-50 focus-visible:outline-none focus-visible:bg-brand-gold-soft transition flex gap-2.5"
                 >
-                  {!n.read_at && (
-                    <span
-                      aria-hidden="true"
-                      className="mt-1.5 size-2 rounded-full bg-brand-gold-text shrink-0"
-                    />
-                  )}
-                  <span className={n.read_at ? 'ps-4.5' : ''}>
+                  <span
+                    aria-hidden="true"
+                    className="mt-1.5 size-2 rounded-full bg-brand-gold-text shrink-0"
+                  />
+                  <span>
                     <span className="block text-sm text-neutral-800 leading-snug">
                       {message(n)}
                     </span>

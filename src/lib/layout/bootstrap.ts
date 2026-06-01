@@ -100,8 +100,14 @@ export const getLayoutBootstrap = cache(async (): Promise<LayoutBootstrap> => {
           roleNameEn: role?.name_en ?? null,
         }
       : null,
+    // Bell shows UNREAD only: a read notification disappears from the bell
+    // (not just loses its highlight). The RPC returns the 15 most-recent
+    // read+unread; keep the unread subset so a reload matches the client's
+    // remove-on-read behavior in NotificationBell.
     recentNotifications: Array.isArray(envelope.recent_notifications)
-      ? (envelope.recent_notifications as LayoutBootstrap['recentNotifications'])
+      ? (envelope.recent_notifications as LayoutBootstrap['recentNotifications']).filter(
+          (n) => !n.read_at,
+        )
       : [],
   };
 });
