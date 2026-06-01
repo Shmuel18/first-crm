@@ -249,21 +249,20 @@ export function CaseDetailsSection({
             adornment={<CurrencySign />}
             groupThousands
           />
-          <LabeledCell label={tFields('feePaid')}>
-            <label className="inline-flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={localPaid}
-                onChange={(e) => savePaid(e.target.checked)}
-                className="size-4 rounded border-neutral-300 text-brand-gold-text focus:ring-2 focus:ring-brand-gold-text/40"
-              />
-              {localPaid && localPaidAt && (
-                <span className="text-xs text-neutral-500">
-                  {new Date(localPaidAt).toLocaleDateString()}
-                </span>
-              )}
-            </label>
-          </LabeledCell>
+          <label className="inline-flex items-center gap-2 self-center text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={localPaid}
+              onChange={(e) => savePaid(e.target.checked)}
+              className="size-4 rounded border-neutral-300 accent-brand-gold-text cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+            />
+            <span className="text-neutral-700">{tFields('feePaid')}</span>
+            {localPaid && localPaidAt && (
+              <span className="text-xs text-neutral-400">
+                {new Date(localPaidAt).toLocaleDateString()}
+              </span>
+            )}
+          </label>
         </>
       )}
       {/* Short note last + spans 2 columns so it gets the biggest visual
