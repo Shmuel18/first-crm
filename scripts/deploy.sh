@@ -19,9 +19,12 @@
 #   4. docker build with .env.production mounted as a BuildKit secret
 #      (the Dockerfile reads /run/secrets/env_production at build time)
 #   5. Smoke-test the new image on a throwaway port BEFORE touching :3747
-#   6. Swap: stop+rm old container, run new with the exact same run-config
-#   7. Final health check on :3747; auto-rollback to :prev if it fails
-#   8. Rotate dirs: first-crm -> first-crm_prev, first-crm_new -> first-crm
+#   6. Apply DB migrations (supabase db push) BEFORE the swap, so new code
+#      never serves against a schema missing its columns/RPCs. Aborts the
+#      deploy on failure. Skippable with SKIP_MIGRATIONS=1 (supervised migrate).
+#   7. Swap: stop+rm old container, run new with the exact same run-config
+#   8. Final health check on :3747; auto-rollback to :prev if it fails
+#   9. Rotate dirs: first-crm -> first-crm_prev, first-crm_new -> first-crm
 #
 # Hard rules (shared host with trinity / moishesh / polybot):
 #   * Only ever touches the `first-crm` container + /opt/first-crm* dirs.
@@ -54,14 +57,14 @@ command -v git    >/dev/null || die "git not found"
 [ -f "$DIR/$ENV_FILE" ] || die "$DIR/$ENV_FILE missing — cannot preserve env"
 
 # --- 1. fresh clone ----------------------------------------------------------
-log "1/8  Fresh clone -> $NEW"
+log "1/9  Fresh clone -> $NEW"
 rm -rf "$NEW"
 git clone --depth 1 "$REPO" "$NEW"
 HEAD_SHA="$(git -C "$NEW" rev-parse --short HEAD)"
 ok "cloned main @ $HEAD_SHA"
 
 # --- 2. preserve env (copy — never regenerate) -------------------------------
-log "2/8  Preserve $ENV_FILE (copy existing — secrets never regenerated)"
+log "2/9  Preserve $ENV_FILE (copy existing — secrets never regenerated)"
 cp "$DIR/$ENV_FILE" "$NEW/$ENV_FILE"
 # These are the build-time-required keys the env schema enforces in prod.
 # Abort early with a clear message instead of a cryptic 'next build' failure.
@@ -84,7 +87,7 @@ fi
 ok "deployment id stamped as $HEAD_SHA"
 
 # --- 3. rollback point -------------------------------------------------------
-log "3/8  Tag running image as $PREV_IMG (rollback point)"
+log "3/9  Tag running image as $PREV_IMG (rollback point)"
 if docker inspect "$NAME" >/dev/null 2>&1; then
   docker tag "$(docker inspect "$NAME" --format '{{.Image}}')" "$PREV_IMG"
   ok "tagged current image as $PREV_IMG"
@@ -93,7 +96,7 @@ else
 fi
 
 # --- 4. build (env as BuildKit secret) --------------------------------------
-log "4/8  Build $IMG (env mounted as BuildKit secret)"
+log "4/9  Build $IMG (env mounted as BuildKit secret)"
 ( cd "$NEW" && DOCKER_BUILDKIT=1 docker build \
     --secret id=env_production,src="$ENV_FILE" -t "$IMG" . ) \
   || die "build failed — production untouched, nothing swapped"
@@ -111,22 +114,66 @@ wait_http() { # $1=port
 }
 
 # --- 5. smoke-test new image on a throwaway port -----------------------------
-log "5/8  Smoke-test new image on :$TEST_PORT (before swap)"
+log "5/9  Smoke-test new image on :$TEST_PORT (before swap)"
 docker rm -f "${NAME}_test" >/dev/null 2>&1 || true
 docker run -d --name "${NAME}_test" --env-file "$NEW/$ENV_FILE" -p "$TEST_PORT:$PORT" "$IMG" >/dev/null
 if wait_http "$TEST_PORT"; then ok "new image healthy on :$TEST_PORT"; SMOKE=1; else SMOKE=0; fi
 docker rm -f "${NAME}_test" >/dev/null 2>&1 || true
 [ "$SMOKE" = 1 ] || die "new image failed smoke test — production untouched"
 
-# --- 6. swap -----------------------------------------------------------------
-log "6/8  Swap container on :$PORT"
+# --- 6. apply DB migrations BEFORE the swap ----------------------------------
+# New code must never serve against a schema missing its columns/RPCs — the #1
+# cause of post-deploy 500s this script was missing. Migrations are additive,
+# so the still-running OLD container is safe against the new schema for the few
+# seconds until the swap; a migration failure ABORTS before the swap, leaving
+# production on the old image. Mechanism mirrors the (disabled) CI deploy.yml —
+# supabase link + db push — but reads the 3 migration secrets from the
+# preserved .env.production instead of GitHub secrets. `db push` only applies
+# migrations not yet recorded remotely, so it is a no-op when nothing pends.
+#
+# SKIP_MIGRATIONS=1 ships code WITHOUT migrating — use ONLY when a sensitive
+# migration (e.g. the audit-log re-partition) was already applied by hand in a
+# supervised window and you just want to deploy the code.
+log "6/9  Apply DB migrations (before swap)"
+if [ "${SKIP_MIGRATIONS:-0}" = 1 ]; then
+  printf '\033[1;31m  ⚠ SKIP_MIGRATIONS=1 — not applying migrations; asserting the remote\n     schema is already up to date. New code will 500 if it is not.\033[0m\n'
+else
+  command -v supabase >/dev/null \
+    || die "supabase CLI not found on host. Install once: curl -fsSL https://supabase.com/install.sh | sh  (or see https://supabase.com/docs/guides/cli), then re-run. To ship code without migrating, re-run with SKIP_MIGRATIONS=1."
+  get_env() { # $1=key — read a value from the preserved env file, strip quotes
+    local v
+    v="$(grep -E "^$1=" "$NEW/$ENV_FILE" 2>/dev/null | head -1 | cut -d= -f2- || true)"
+    v="${v%$'\r'}"                                  # strip trailing CR (CRLF-safe)
+    v="${v%\"}"; v="${v#\"}"; v="${v%\'}"; v="${v#\'}"
+    printf '%s' "$v"
+  }
+  MIG_REF="$(get_env SUPABASE_PROJECT_REF)"
+  MIG_PW="$(get_env SUPABASE_DB_PASSWORD)"
+  MIG_TOKEN="$(get_env SUPABASE_ACCESS_TOKEN)"
+  { [ -n "$MIG_REF" ] && [ -n "$MIG_PW" ] && [ -n "$MIG_TOKEN" ]; } || die \
+"migration secrets missing from $DIR/$ENV_FILE. Add these 3 lines once (ref + DB
+   password from the Supabase dashboard; access token from
+   supabase.com/dashboard/account/tokens), then re-run:
+     SUPABASE_PROJECT_REF=...
+     SUPABASE_DB_PASSWORD=...
+     SUPABASE_ACCESS_TOKEN=...
+   Or ship without migrating via SKIP_MIGRATIONS=1 if you applied them manually."
+  ( cd "$NEW" \
+      && SUPABASE_ACCESS_TOKEN="$MIG_TOKEN" supabase link --project-ref "$MIG_REF" --password "$MIG_PW" \
+      && SUPABASE_ACCESS_TOKEN="$MIG_TOKEN" supabase db push --password "$MIG_PW" ) \
+    || die "DB migration failed — production untouched, nothing swapped. Fix or apply the migration, then re-run."
+  ok "migrations applied — remote schema up to date"
+fi
+
+# --- 7. swap -----------------------------------------------------------------
+log "7/9  Swap container on :$PORT"
 docker stop "$NAME" >/dev/null 2>&1 || true
 docker rm   "$NAME" >/dev/null 2>&1 || true
 docker run -d --name "$NAME" --env-file "$NEW/$ENV_FILE" \
   -p "$PORT:$PORT" --restart unless-stopped "$IMG" >/dev/null
 
-# --- 7. final health check + auto-rollback -----------------------------------
-log "7/8  Final health check on :$PORT"
+# --- 8. final health check + auto-rollback -----------------------------------
+log "8/9  Final health check on :$PORT"
 if ! wait_http "$PORT"; then
   log "✖ health check FAILED — rolling back to $PREV_IMG"
   docker stop "$NAME" >/dev/null 2>&1 || true
@@ -140,8 +187,8 @@ if ! wait_http "$PORT"; then
 fi
 ok "live + healthy on :$PORT"
 
-# --- 8. rotate dirs ----------------------------------------------------------
-log "8/8  Rotate dirs (keep previous as $PREV)"
+# --- 9. rotate dirs ----------------------------------------------------------
+log "9/9  Rotate dirs (keep previous as $PREV)"
 rm -rf "$PREV"
 mv "$DIR" "$PREV"
 mv "$NEW" "$DIR"
