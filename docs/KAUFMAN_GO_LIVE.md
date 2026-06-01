@@ -17,6 +17,11 @@ Work top-to-bottom. Mark `[x]` as you go.
 - No PITR = a destructive admin action at 14:00 can't be rolled back from a 02:00 backup that's missing the bad change
 - Costs $25/mo total — single highest leverage spend before paying customers
 
+> 📕 **Recovery decision guide:** which tool to use for a mass-delete vs. corruption vs. bad-edit vs.
+> a broken deploy is documented in [`docs/RESTORE_RUNBOOK.md`](./RESTORE_RUNBOOK.md). Short version:
+> the Drive "Restore" is **merge-only** (re-inserts *deleted* rows, never repairs *changed* ones) —
+> corruption / bad edits / point-in-time rollback need **PITR**, not the Drive restore.
+
 ### 1.2 Generate a Vercel account + project
 - [ ] Sign up at https://vercel.com (or log in)
 - [ ] Import the GitHub repo (`Shmuel18/first-crm`) as a new project
