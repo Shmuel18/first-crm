@@ -184,26 +184,11 @@ export function CaseBorrowerCard({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Identity names — row 1: role | first | last | id. The role
-          (case_borrowers.role_in_case) is a label-less dropdown here — its
-          value is self-describing and the role also shows in the card header. */}
+      {/* Identity names — row 1: first | last | id | role. The role
+          (case_borrowers.role_in_case) is a small label-less dropdown at the
+          END of the row; its value is self-describing and the role also shows
+          in the card header. */}
       <FieldGroup cols={4}>
-        <select
-          aria-label={tf('role')}
-          value={localRole}
-          onChange={(e) => {
-            void saveRole(e.target.value).then((r) => {
-              if (!r.ok) toast.error(r.message || tc('saveFailed'));
-            });
-          }}
-          className="h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
-        >
-          {roleOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
         <EditableField
           label={tf('firstName')}
           value={localBorrower.first_name}
@@ -221,6 +206,22 @@ export function CaseBorrowerCard({
           dir="ltr"
           inputClassName="text-end"
         />
+        <select
+          aria-label={tf('role')}
+          value={localRole}
+          onChange={(e) => {
+            void saveRole(e.target.value).then((r) => {
+              if (!r.ok) toast.error(r.message || tc('saveFailed'));
+            });
+          }}
+          className="h-9 w-36 self-center rounded-md border border-neutral-200 bg-white px-2.5 text-sm focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+        >
+          {roleOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
       </FieldGroup>
 
       {/* Contact — row 2: phone | email. Moved above the date row so the
