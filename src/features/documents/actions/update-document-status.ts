@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { refresh, revalidatePath } from 'next/cache';
 
 import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
@@ -57,5 +57,6 @@ export async function updateDocumentStatusAction(
 
   revalidatePath(`/cases/${caseId}/documents`);
   revalidatePath(`/cases/${caseId}`);
+  refresh();
   return { ok: true };
 }

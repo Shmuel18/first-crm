@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { refresh, revalidatePath } from 'next/cache';
 
 import { z } from 'zod';
 
@@ -62,7 +62,15 @@ export async function deleteDocumentAction(
     console.error('[deleteDocument] fetch failed', fetchErr);
     return { ok: false, error: 'unknown' };
   }
-  if (!doc) return { ok: false, error: 'not_found' };
+  if (!doc) {
+    // Delete is intentionally idempotent: if another tab/session already
+    // soft-deleted the row, clear the stale preview instead of surfacing a
+    // false failure to the user.
+    revalidatePath(`/cases/${parsed.data.caseId}/documents`);
+    revalidatePath(`/cases/${parsed.data.caseId}`);
+    refresh();
+    return { ok: true };
+  }
 
   // soft_delete_document_with_tombstone (migration 027) is on the remote
   // DB but not surfaced by `supabase gen types` — narrow the call instead
@@ -85,5 +93,6 @@ export async function deleteDocumentAction(
 
   revalidatePath(`/cases/${parsed.data.caseId}/documents`);
   revalidatePath(`/cases/${parsed.data.caseId}`);
+  refresh();
   return { ok: true };
 }
