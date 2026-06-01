@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { GitCompareArrows, Layers, TrendingUp } from 'lucide-react';
+import { GitCompareArrows, Layers, ReceiptText, TrendingUp, WalletCards } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 type Props = { basePath: string };
@@ -11,6 +11,8 @@ const TOOLS = [
   { segment: 'mix', key: 'mix', Icon: Layers },
   { segment: 'compare', key: 'compare', Icon: GitCompareArrows },
   { segment: 'scenario', key: 'scenario', Icon: TrendingUp },
+  { segment: 'affordability', key: 'affordability', Icon: WalletCards },
+  { segment: 'tax', key: 'tax', Icon: ReceiptText },
 ] as const;
 
 export function SimulatorToolsNav({ basePath }: Props) {

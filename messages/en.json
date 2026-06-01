@@ -74,6 +74,41 @@
   "simulators": {
     "eyebrow": "Mortgage simulators",
     "backToCase": "Back to case",
+    "hub": {
+      "eyebrow": "Mortgage simulators",
+      "title": "Advisor mortgage workspace",
+      "subtitle": "Fast, manual-input calculators for client conversations: mix building, stress checks, affordability, tax and closing costs. No live bank-rate dependency.",
+      "primaryAction": "Start with a mix",
+      "availableTitle": "Available tools",
+      "nextTitle": "Next build stages",
+      "mix": {
+        "description": "Build a full mortgage mix with rates, tracks, payment methods, regulatory checks and amortization."
+      },
+      "compare": {
+        "description": "Compare 2-4 alternative mixes and see which is cheaper, steadier, more flexible or riskier."
+      },
+      "scenario": {
+        "description": "Stress-test rate and CPI changes and show the client how repayment can move over time."
+      },
+      "affordability": {
+        "description": "Estimate maximum mortgage, monthly payment, DTI and LTV from income, equity and obligations."
+      },
+      "tax": {
+        "description": "Calculate purchase tax and closing cash needs from Israeli tax brackets and advisor-entered cost assumptions."
+      },
+      "refinance": {
+        "title": "Refinance",
+        "description": "Compare current and new loans, break-even, fees and total savings."
+      },
+      "earlyRepayment": {
+        "title": "Early repayment",
+        "description": "Evaluate which track to repay and whether to reduce payment or shorten term."
+      },
+      "clientReport": {
+        "title": "Client report",
+        "description": "A polished PDF that pulls the chosen simulations, charts, risks and advisor conclusion."
+      }
+    },
     "saved": {
       "title": "Saved simulations",
       "new": "New simulation",
@@ -266,11 +301,87 @@
         "overlayTitle": "Payment over time"
       }
     },
+    "affordability": {
+      "eyebrow": "Capacity",
+      "title": "Affordability & capacity",
+      "subtitle": "Estimate how much the client can responsibly borrow using income, obligations, equity, LTV and debt-ratio constraints.",
+      "inputsTitle": "Client and property data",
+      "inputsSubtitle": "All figures are advisor-entered and recalculated live in the browser.",
+      "propertyValue": "Property value",
+      "equity": "Equity",
+      "requestedMortgage": "Requested mortgage",
+      "netIncome": "Net monthly income",
+      "obligations": "Existing monthly obligations",
+      "annualRate": "Annual rate estimate (%)",
+      "termMonths": "Term in months",
+      "warningDti": "Warning debt ratio (%)",
+      "maxDti": "Max debt ratio (%)",
+      "results": {
+        "maximumMortgage": "Maximum mortgage",
+        "monthlyPayment": "Estimated monthly payment",
+        "dti": "Total DTI",
+        "ltv": "LTV"
+      },
+      "decision": {
+        "title": "Decision drivers",
+        "paymentCap": "Payment capacity",
+        "binding": "Binding constraint",
+        "maxByLtv": "LTV ceiling",
+        "excess": "Excess above LTV"
+      },
+      "constraints": {
+        "payment": "Debt-ratio/payment",
+        "ltv": "LTV limit",
+        "equity": "Equity gap"
+      }
+    },
+    "tax": {
+      "eyebrow": "Tax and costs",
+      "title": "Purchase tax & closing costs",
+      "subtitle": "Estimate purchase tax and cash-to-close from Israeli brackets and advisor-entered transaction costs.",
+      "inputsTitle": "Transaction assumptions",
+      "inputsSubtitle": "Purchase-tax defaults use Israel Tax Authority residential brackets published for 16.1.2025-15.1.2028; special cases still require professional review.",
+      "buyerProfile": "Buyer profile",
+      "ownershipShare": "Ownership share (%)",
+      "propertyValue": "Property value",
+      "mortgageAmount": "Mortgage amount",
+      "equity": "Equity",
+      "availableCash": "Available cash",
+      "lawyerPct": "Legal fee (%)",
+      "brokerPct": "Broker fee (%)",
+      "bankOpeningPct": "Bank opening fee (%)",
+      "appraiserAmount": "Appraisal",
+      "movingAmount": "Moving / setup",
+      "profiles": {
+        "single_home": "Single home",
+        "replacement_home": "Replacement home",
+        "additional_home": "Additional home",
+        "land": "Land",
+        "commercial": "Commercial"
+      },
+      "costs": {
+        "purchaseTax": "Purchase tax",
+        "lawyer": "Legal fee",
+        "broker": "Broker fee",
+        "appraiser": "Appraisal",
+        "bankOpening": "Bank opening fee",
+        "moving": "Moving / setup"
+      },
+      "summary": {
+        "purchaseTax": "Purchase tax",
+        "totalCosts": "Total closing costs",
+        "cashToClose": "Cash to close",
+        "financingGap": "Financing gap"
+      },
+      "breakdownTitle": "Cost breakdown"
+    },
     "tools": {
       "label": "Simulator tools",
       "mix": "Mix",
       "compare": "Comparison",
-      "scenario": "Interest & index"
+      "scenario": "Interest & index",
+      "affordability": "Affordability",
+      "tax": "Tax & costs"
     },
     "report": {
       "openReport": "Edit client report",
