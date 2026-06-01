@@ -16,6 +16,12 @@ const DeleteDocumentSchema = z.object({
   caseId: z.string().uuid(),
 });
 
+function refreshDocumentViews(caseId: string) {
+  revalidatePath(`/cases/${caseId}/documents`);
+  revalidatePath(`/cases/${caseId}`);
+  refresh();
+}
+
 /**
  * Soft-delete: stamp documents.deleted_at and STOP. The blob in Supabase
  * Storage (and the Drive file, if any) stay put until retention purge runs.
@@ -66,9 +72,7 @@ export async function deleteDocumentAction(
     // Delete is intentionally idempotent: if another tab/session already
     // soft-deleted the row, clear the stale preview instead of surfacing a
     // false failure to the user.
-    revalidatePath(`/cases/${parsed.data.caseId}/documents`);
-    revalidatePath(`/cases/${parsed.data.caseId}`);
-    refresh();
+    refreshDocumentViews(parsed.data.caseId);
     return { ok: true };
   }
 
@@ -88,11 +92,26 @@ export async function deleteDocumentAction(
 
   if (deleteErr) {
     console.error('[deleteDocument] rpc failed', deleteErr);
+    const { data: activeDoc, error: refetchErr } = await supabase
+      .from('documents')
+      .select('id')
+      .eq('id', parsed.data.documentId)
+      .eq('case_id', parsed.data.caseId)
+      .is('deleted_at', null)
+      .maybeSingle();
+
+    if (refetchErr) {
+      console.error('[deleteDocument] refetch after rpc failure failed', refetchErr);
+    } else if (!activeDoc) {
+      // Treat delete races as success. The desired state (not visible in the
+      // active documents list) already happened; the UI just needs fresh data.
+      refreshDocumentViews(parsed.data.caseId);
+      return { ok: true };
+    }
+
     return { ok: false, error: 'unknown' };
   }
 
-  revalidatePath(`/cases/${parsed.data.caseId}/documents`);
-  revalidatePath(`/cases/${parsed.data.caseId}`);
-  refresh();
+  refreshDocumentViews(parsed.data.caseId);
   return { ok: true };
 }
