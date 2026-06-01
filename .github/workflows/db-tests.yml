@@ -1,0 +1,34 @@
+name: DB tests (RLS / pgTAP)
+
+# Runs the permission / RLS isolation suite (supabase/tests/) against a fresh
+# local Supabase stack: boots Postgres, applies ALL migrations, then runs pgTAP.
+# This is the security boundary the whole product rests on — see QA-1.
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/tests/**'
+      - '.github/workflows/db-tests.yml'
+  workflow_dispatch:
+
+jobs:
+  rls-tests:
+    name: RLS / permission isolation (pgTAP)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase (boots Postgres + applies all migrations)
+        run: supabase start
+
+      - name: Run pgTAP RLS suite
+        run: supabase test db
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop --no-backup || true
