@@ -1,0 +1,56 @@
+# Deploying first-crm (production)
+
+> Production runs as a **Docker container on the Vultr host** — NOT Vercel.
+> (The Vercel + `.github/workflows/deploy.yml` path is historical and disabled.)
+> Host IP / SSH details: see `FRANKFURT_MIGRATION_HANDOFF.md`.
+
+## TL;DR
+
+```bash
+# 1. If the PR added migrations, apply them FIRST in the Supabase SQL Editor
+#    (see "Migrations" below). Then:
+ssh root@<vultr-host>
+curl -fsSL https://raw.githubusercontent.com/Shmuel18/first-crm/main/scripts/deploy.sh -o /opt/deploy-first-crm.sh
+SKIP_MIGRATIONS=1 bash /opt/deploy-first-crm.sh
+# 2. Verify:
+curl -s localhost:3747/api/health      # expect {"ok":true,"db":<ms>}
+```
+
+## Migrations (manual, by design)
+
+Migrations are applied **by hand in the Supabase SQL Editor**, *before* deploying.
+The deploy is therefore always run with **`SKIP_MIGRATIONS=1`** — `deploy.sh` does
+not apply migrations itself in this workflow.
+
+When a PR adds files under `supabase/migrations/`:
+1. Supabase Dashboard → **SQL Editor**.
+2. Run each NEW migration's SQL, in filename order (oldest first). Apply only the
+   ones not yet applied.
+3. Deploy with `SKIP_MIGRATIONS=1` (above).
+
+**Why not auto-apply on deploy?** `deploy.sh` step 6 *can* run `supabase db push`
+(omit `SKIP_MIGRATIONS`), but that requires the migration-history table
+(`supabase_migrations.schema_migrations`) to be in sync — which it is **not** when
+migrations are applied via the SQL Editor. Keeping migrations manual avoids a
+risky one-time history reconciliation on the production DB.
+
+**To switch to auto-migrate later:** stop using the SQL Editor for migrations,
+reconcile the history once (`supabase migration repair --status applied ...`),
+install the Supabase CLI on the host, and deploy **without** `SKIP_MIGRATIONS`
+(step 6 derives a session connection from `DATABASE_URL` — no extra secret).
+
+## Deploy safety (built into `scripts/deploy.sh`)
+
+- Fresh-clones `main`; **preserves** `.env.production` (never regenerates secrets).
+- Builds + **smoke-tests** the new image on a throwaway port BEFORE touching `:3747`.
+- Swaps the container, runs a health check, and **auto-rolls-back to `first-crm:prev`** if it fails.
+- Keeps the previous build: image `first-crm:prev`, dir `/opt/first-crm_prev`.
+
+If you forget `SKIP_MIGRATIONS=1`, step 6 aborts **before the swap** with a clear
+message (production untouched) — just re-run with the flag.
+
+## Related runbooks
+
+- **Code rollback** → `FRANKFURT_MIGRATION_HANDOFF.md` (`first-crm:prev` / `/opt/first-crm_prev`).
+- **Data recovery / restore** → `RESTORE_RUNBOOK.md` (Drive restore is merge-only; corruption → PITR).
+- **Scheduled jobs (cron)** → installed by `scripts/cron/install-first-crm-cron.sh` (host scheduler, not Vercel cron). The nightly backup needs Google Drive connected in-app (Settings → Integrations) or it skips with `drive_not_connected`.
