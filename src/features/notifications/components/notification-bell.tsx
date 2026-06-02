@@ -19,6 +19,7 @@ import {
   markAllNotificationsReadAction,
   markNotificationReadAction,
 } from '../actions/mark-read';
+import { refreshTaskSurfacesAction } from '../actions/refresh-task-surfaces';
 import { formatRelativeTime } from '../domain/format';
 import type {
   Notification,
@@ -34,6 +35,10 @@ type Props = {
   notifications: ReadonlyArray<Notification>;
   locale: Locale;
 };
+
+function isTaskNotification(type: NotificationType): boolean {
+  return type === 'task_assigned' || type === 'task_completed' || type === 'task_reminder';
+}
 
 export function NotificationBell({ initialUnread, notifications, locale }: Props) {
   const t = useTranslations('notifications');
@@ -53,6 +58,19 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
     const supabase = createClient();
     let channel: ReturnType<typeof supabase.channel> | null = null;
     let cancelled = false;
+    let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const requestTaskSurfacesRefresh = () => {
+      if (refreshTimer) clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => {
+        refreshTimer = null;
+        startTransition(() => {
+          void refreshTaskSurfacesAction().catch(() => {
+            router.refresh();
+          });
+        });
+      }, 100);
+    };
 
     void (async () => {
       const { data } = await supabase.auth.getUser();
@@ -81,7 +99,7 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
             // shows in the list / badge live, not only after a manual refresh.
             // (The red state is derived from `items` below — hasUnreadCritical —
             // so it stays red as long as an unread critical task is present.)
-            router.refresh();
+            if (isTaskNotification(notif.type)) requestTaskSurfacesRefresh();
           },
         )
         .subscribe();
@@ -89,9 +107,10 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
 
     return () => {
       cancelled = true;
+      if (refreshTimer) clearTimeout(refreshTimer);
       if (channel) void supabase.removeChannel(channel);
     };
-  }, []);
+  }, [router, startTransition]);
 
   // The bell lives in the persistent (app) layout's Topbar, which isn't
   // remounted on navigation. Reconcile to fresh server props during render

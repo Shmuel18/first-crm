@@ -5,25 +5,36 @@ import { revalidatePath } from 'next/cache';
 import { sendTaskNotificationEmail } from '@/features/notifications/services/notification-email';
 import { createClient } from '@/lib/supabase/server';
 
-import { emitTaskEvent } from '../lib/emit-task-event';
 import { ReassignTaskSchema } from '../schemas/task.schema';
-import type { TaskUpdate } from '../types';
 
 type Result =
   | { ok: true }
   | { ok: false; error: 'unauthorized' | 'not_found' | 'validation' | 'unknown' };
 
+type ReassignTaskRpcResult = {
+  ok?: boolean;
+  error?: 'unauthorized' | 'not_found' | 'validation' | 'unknown';
+  task_id?: string;
+  case_id?: string | null;
+  title?: string;
+  no_change?: boolean;
+};
+
+type ReassignTaskRpcClient = {
+  rpc(
+    fn: 'reassign_task',
+    args: { p_task_id: string; p_assignee_id: string; p_note: string | null },
+  ): Promise<{ data: unknown; error: { code?: string; message: string } | null }>;
+};
+
 /**
- * Hand a task to another active teammate. Permission rides on the existing
- * tasks RLS + guard trigger (029): whoever may edit a task may reassign it, and
- * the DB rejects an inactive/unknown assignee. Private tasks are reminders bound
- * to their creator — the UI hides this action for them and the
- * tasks_private_self_assigned CHECK blocks a cross-user reassignment, so we
- * don't special-case it here. The in-app bell notification to the new assignee
- * fires automatically via the notify_task_change trigger (028/089).
+ * Hand a task to another active teammate.
  *
- * @param note  Optional handoff note typed by the reassigning user. Stored as a
- *              follow-up 'comment' row immediately after the 'reassigned' event.
+ * The database RPC checks that the caller is the assignee, creator, an
+ * all-cases user, or admin, then performs the update as SECURITY DEFINER. That
+ * avoids the RLS trap where the NEW row is no longer assigned to the actor
+ * after a handoff, which is exactly what happens when returning a task to its
+ * creator.
  */
 export async function reassignTaskAction(
   taskId: string,
@@ -38,73 +49,58 @@ export async function reassignTaskAction(
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
   const userId = userRes.user.id;
 
-  const { data: existing } = await supabase
-    .from('tasks')
-    .select('id, case_id, assigned_to, title')
-    .eq('id', parsed.data.taskId)
-    .is('deleted_at', null)
-    .maybeSingle();
-  if (!existing) return { ok: false, error: 'not_found' };
-
-  // Already assigned to the target → nothing to do.
-  if (existing.assigned_to === parsed.data.assigneeId) return { ok: true };
-
-  // Resolve assignee name for the event body (best-effort).
-  const { data: assigneeProfile } = await supabase
-    .from('profiles')
-    .select('first_name, last_name')
-    .eq('id', parsed.data.assigneeId)
-    .maybeSingle();
-  const assigneeName = assigneeProfile
-    ? [assigneeProfile.first_name, assigneeProfile.last_name].filter(Boolean).join(' ') || 'יועץ'
-    : 'יועץ';
-
-  // .select() row-count guard: tasks_select is broader than tasks_update, so an
-  // RLS-denied UPDATE affects 0 rows with no error — treat that as unauthorized.
-  const patch: TaskUpdate = { assigned_to: parsed.data.assigneeId, updated_by: userId };
-  const { data: updated, error } = await supabase
-    .from('tasks')
-    .update(patch)
-    .eq('id', parsed.data.taskId)
-    .select('id');
+  const rpcClient = supabase as unknown as ReassignTaskRpcClient;
+  const { data, error } = await rpcClient.rpc('reassign_task', {
+    p_task_id: parsed.data.taskId,
+    p_assignee_id: parsed.data.assigneeId,
+    p_note: parsed.data.note?.trim() || null,
+  });
   if (error) {
-    console.error('[reassignTask] db error', error);
+    console.error('[reassignTask] rpc error', { code: error.code, message: error.message });
     return { ok: false, error: 'unknown' };
   }
-  if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
 
-  // Emit 'reassigned' system event.
-  await emitTaskEvent(supabase, {
-    taskId: parsed.data.taskId,
-    authorId: userId,
-    eventType: 'reassigned',
-    body: `הועברה ל${assigneeName}`,
-    metadata: { to_user_id: parsed.data.assigneeId, from_user_id: existing.assigned_to },
-  });
+  const result = normalizeRpcResult(data);
+  if (!result.ok) return { ok: false, error: result.error ?? 'unknown' };
 
-  // If the reassigning user added a handoff note, store it as a comment too.
-  const trimmedNote = parsed.data.note?.trim();
-  if (trimmedNote) {
-    await emitTaskEvent(supabase, {
-      taskId: parsed.data.taskId,
-      authorId: userId,
-      eventType: 'comment',
-      body: trimmedNote,
+  if (!result.no_change && result.title) {
+    // Best-effort email mirror (never throws), matching create/update-task.
+    await sendTaskNotificationEmail({
+      recipientId: parsed.data.assigneeId,
+      actorId: userId,
+      kind: 'task_assigned',
+      taskTitle: result.title,
+      caseId: result.case_id ?? null,
     });
   }
 
-  // Best-effort email mirror (never throws), matching create/update-task.
-  await sendTaskNotificationEmail({
-    recipientId: parsed.data.assigneeId,
-    actorId: userId,
-    kind: 'task_assigned',
-    taskTitle: existing.title,
-    caseId: existing.case_id,
-  });
-
-  // Skip the heavy ('/(app)','layout') shell revalidate (see create-task note) —
-  // badge updates on next nav; keeps the action POST light to avoid 503s.
+  // Keep the action POST light; the recipient's realtime bell refreshes their
+  // shell, while this revalidates the task page/case page for the actor.
   revalidatePath('/tasks');
-  if (existing.case_id) revalidatePath(`/cases/${existing.case_id}`);
+  if (result.case_id) revalidatePath(`/cases/${result.case_id}`);
   return { ok: true };
+}
+
+function normalizeRpcResult(data: unknown): ReassignTaskRpcResult {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return { ok: false, error: 'unknown' };
+  }
+
+  const raw = data as Record<string, unknown>;
+  const error =
+    raw.error === 'unauthorized' ||
+    raw.error === 'not_found' ||
+    raw.error === 'validation' ||
+    raw.error === 'unknown'
+      ? raw.error
+      : undefined;
+
+  return {
+    ok: raw.ok === true,
+    error,
+    task_id: typeof raw.task_id === 'string' ? raw.task_id : undefined,
+    case_id: typeof raw.case_id === 'string' ? raw.case_id : null,
+    title: typeof raw.title === 'string' ? raw.title : undefined,
+    no_change: raw.no_change === true,
+  };
 }
