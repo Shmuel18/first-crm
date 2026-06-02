@@ -2,6 +2,7 @@
 
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 import type { TaskCommentAuthor, TaskCommentWithAuthor } from '../types';
 
@@ -72,4 +73,25 @@ export async function getTaskCommentsAction(
   });
 
   return { ok: true, comments };
+}
+
+export async function getTaskMentionableProfilesAction(): Promise<
+  { ok: true; members: Array<{ id: string; name: string }> } | { ok: false; error: 'unauthorized' }
+> {
+  const supabase = await createClient();
+  const { data: userRes } = await supabase.auth.getUser();
+  if (!userRes.user) return { ok: false, error: 'unauthorized' };
+
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from('profiles')
+    .select('id, first_name, last_name')
+    .eq('is_active', true)
+    .order('first_name');
+
+  const members = (data ?? [])
+    .map((p) => ({ id: p.id, name: formatPersonName(p.first_name, p.last_name) || '' }))
+    .filter((m) => m.name.length > 0);
+
+  return { ok: true, members };
 }

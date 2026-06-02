@@ -1,16 +1,21 @@
 'use client';
 
 import { useEffect, useRef, useState, useTransition } from 'react';
+import type { ChangeEvent, KeyboardEvent } from 'react';
 
 import { Loader2, Send } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { findMentionQuery, insertMention, parseMentionBody } from '@/features/case-comments/domain/mentions';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import { addTaskCommentAction } from '../actions/add-task-comment';
-import { getTaskCommentsAction } from '../services/task-comments.service';
+import {
+  getTaskCommentsAction,
+  getTaskMentionableProfilesAction,
+} from '../services/task-comments.service';
 import type { TaskCommentWithAuthor } from '../types';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -35,6 +40,10 @@ const EVENT_ICON: Record<string, string> = {
   reopened: '↩',
   snoozed: '⏱',
 };
+
+type Member = { id: string; name: string };
+
+const MAX_SUGGESTIONS = 6;
 
 // ── sub-components ────────────────────────────────────────────────────────────
 
@@ -78,7 +87,18 @@ function CommentRow({ item }: { item: TaskCommentWithAuthor }) {
           </time>
         </div>
         <p className="text-sm text-neutral-700 mt-0.5 whitespace-pre-wrap break-words leading-snug">
-          {item.body}
+          {parseMentionBody(item.body).map((seg, i) =>
+            seg.type === 'mention' ? (
+              <span
+                key={`m${i}`}
+                className="rounded bg-brand-gold-soft px-1 font-medium text-brand-gold-text"
+              >
+                @{seg.name}
+              </span>
+            ) : (
+              <span key={`t${i}`}>{seg.value}</span>
+            ),
+          )}
         </p>
       </div>
     </div>
@@ -97,7 +117,17 @@ export function TaskThread({ taskId }: Props) {
   const [loadPending, startLoad] = useTransition();
   const [sendPending, startSend] = useTransition();
   const [draft, setDraft] = useState('');
+  const [members, setMembers] = useState<Member[]>([]);
+  const [mention, setMention] = useState<{ start: number; query: string } | null>(null);
+  const [activeIdx, setActiveIdx] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const suggestions = mention
+    ? members
+        .filter((m) => m.name.toLowerCase().includes(mention.query.toLowerCase()))
+        .slice(0, MAX_SUGGESTIONS)
+    : [];
 
   const reload = () => {
     startLoad(async () => {
@@ -109,6 +139,13 @@ export function TaskThread({ taskId }: Props) {
   // Load on mount and when taskId changes.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { reload(); }, [taskId]);
+
+  useEffect(() => {
+    startLoad(async () => {
+      const res = await getTaskMentionableProfilesAction();
+      if (res.ok) setMembers(res.members);
+    });
+  }, []);
 
   // Scroll to bottom when new comments arrive.
   useEffect(() => {
@@ -125,8 +162,63 @@ export function TaskThread({ taskId }: Props) {
         return;
       }
       setDraft('');
+      setMention(null);
       reload();
     });
+  };
+
+  const handleDraftChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    const { value, selectionStart } = e.target;
+    setDraft(value);
+    setMention(findMentionQuery(value, selectionStart ?? value.length));
+    setActiveIdx(0);
+  };
+
+  const applyMention = (m: Member) => {
+    if (!mention) return;
+    const caret = textareaRef.current?.selectionStart ?? draft.length;
+    const next = insertMention(draft, mention.start, caret, m.name, m.id);
+    setDraft(next.value);
+    setMention(null);
+    requestAnimationFrame(() => {
+      const el = textareaRef.current;
+      if (!el) return;
+      el.focus();
+      el.setSelectionRange(next.caret, next.caret);
+    });
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (mention && suggestions.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setActiveIdx((i) => (i + 1) % suggestions.length);
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setActiveIdx((i) => (i - 1 + suggestions.length) % suggestions.length);
+        return;
+      }
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        const picked = suggestions[activeIdx];
+        if (picked) {
+          e.preventDefault();
+          applyMention(picked);
+          return;
+        }
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setMention(null);
+        return;
+      }
+    }
+
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      handleSend();
+    }
   };
 
   return (
@@ -155,22 +247,41 @@ export function TaskThread({ taskId }: Props) {
       <div className="border-t border-neutral-200 mx-0" />
 
       {/* ── compose area ── */}
-      <div className="px-4 py-3 flex items-end gap-2">
+      <div className="relative px-4 py-3 flex items-end gap-2">
         <textarea
+          ref={textareaRef}
           value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-              e.preventDefault();
-              handleSend();
-            }
-          }}
+          onChange={handleDraftChange}
+          onKeyDown={handleKeyDown}
           placeholder={t('placeholder')}
           rows={2}
           maxLength={4000}
           disabled={sendPending}
           className="flex-1 resize-none rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/30 disabled:opacity-50"
         />
+        {mention && suggestions.length > 0 && (
+          <ul className="absolute bottom-full start-4 z-20 mb-1 max-h-56 w-64 overflow-y-auto rounded-lg border border-neutral-200 bg-white py-1 shadow-lg">
+            {suggestions.map((m, i) => (
+              <li key={m.id}>
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    applyMention(m);
+                  }}
+                  className={[
+                    'w-full px-3 py-1.5 text-start text-sm',
+                    i === activeIdx
+                      ? 'bg-brand-gold-soft text-brand-gold-text'
+                      : 'hover:bg-neutral-50',
+                  ].join(' ')}
+                >
+                  @{m.name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
         <Button
           type="button"
           size="icon"

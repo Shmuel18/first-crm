@@ -27,6 +27,7 @@ import type {
   NotificationDataCaseMention,
   NotificationDataCaseStatusOverdue,
   NotificationDataTask,
+  NotificationDataTaskMention,
   NotificationType,
 } from '../types';
 
@@ -37,7 +38,12 @@ type Props = {
 };
 
 function isTaskNotification(type: NotificationType): boolean {
-  return type === 'task_assigned' || type === 'task_completed' || type === 'task_reminder';
+  return (
+    type === 'task_assigned' ||
+    type === 'task_completed' ||
+    type === 'task_reminder' ||
+    type === 'task_mention'
+  );
 }
 
 export function NotificationBell({ initialUnread, notifications, locale }: Props) {
@@ -168,6 +174,13 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
         const d = n.data as Partial<NotificationDataCaseMention>;
         const actor = d.actorName || t('someone');
         return t('message.case_mention', { actor, preview: d.preview ?? '' });
+      }
+      case 'task_mention': {
+        const d = n.data as Partial<NotificationDataTaskMention>;
+        const actor = d.actorName || t('someone');
+        const task = d.taskTitle || t('aTask');
+        const preview = [task, d.preview].filter(Boolean).join(': ');
+        return t('message.case_mention', { actor, preview });
       }
       case 'backup_stale':
         return t('message.backup_stale');
