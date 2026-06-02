@@ -13,7 +13,7 @@ export type ImportField = (typeof IMPORT_FIELDS)[number];
 /** One mapped row, ready to send to the import_cases RPC. */
 export type ImportRow = Partial<Record<ImportField, string>>;
 
-export type ImportRowError = { row: number; message: string };
+export type ImportRowError = { row: number; code: string };
 
 export type ImportResult =
   | { ok: true; created: number; total: number; errors: ImportRowError[] }

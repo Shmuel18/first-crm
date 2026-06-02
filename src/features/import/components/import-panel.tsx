@@ -9,6 +9,11 @@ import { toast } from 'sonner';
 import { importCasesAction } from '../actions/import-cases';
 import type { ImportResult } from '../types';
 
+// Map a server row-error code to a known i18n key (defends against an unknown
+// future code so next-intl never renders a missing key).
+const KNOWN_ROW_CODES = new Set(['missing_name', 'duplicate_in_file', 'national_id_exists']);
+const rowErrorKey = (code: string): string => (KNOWN_ROW_CODES.has(code) ? code : 'unknown');
+
 export function ImportPanel() {
   const t = useTranslations('settings.import');
   const [pending, startTransition] = useTransition();
@@ -26,8 +31,12 @@ export function ImportPanel() {
     startTransition(async () => {
       const res = await importCasesAction(formData);
       setResult(res);
-      if (res.ok) toast.success(t('done', { count: res.created }));
-      else toast.error(t(`errors.${res.error}`));
+      if (res.ok) {
+        if (res.errors.length > 0) toast.error(t('blockedToast', { count: res.errors.length }));
+        else toast.success(t('done', { count: res.created }));
+      } else {
+        toast.error(t(`errors.${res.error}`));
+      }
     });
   };
 
@@ -82,27 +91,26 @@ export function ImportPanel() {
         </button>
       </form>
 
-      {result?.ok && (
-        <section className="space-y-3">
-          <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-            <CheckCircle2 className="size-4 shrink-0" />
-            {t('summary', { created: result.created, total: result.total })}
-          </div>
-          {result.errors.length > 0 && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-              <p className="text-sm font-medium text-amber-900 mb-1">
-                {t('errorsTitle', { count: result.errors.length })}
-              </p>
-              <ul className="space-y-0.5 max-h-60 overflow-y-auto">
-                {result.errors.map((err) => (
-                  <li key={err.row} className="text-xs text-amber-800">
-                    {t('rowError', { row: err.row, message: err.message })}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </section>
+      {result?.ok && result.errors.length === 0 && (
+        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+          <CheckCircle2 className="size-4 shrink-0" />
+          {t('summary', { created: result.created, total: result.total })}
+        </div>
+      )}
+
+      {result?.ok && result.errors.length > 0 && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+          <p className="text-sm font-medium text-amber-900 mb-1">
+            {t('blockedTitle', { count: result.errors.length })}
+          </p>
+          <ul className="space-y-0.5 max-h-60 overflow-y-auto">
+            {result.errors.map((err) => (
+              <li key={err.row} className="text-xs text-amber-800">
+                {t(`rowErrors.${rowErrorKey(err.code)}`, { row: err.row })}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {result && !result.ok && (
