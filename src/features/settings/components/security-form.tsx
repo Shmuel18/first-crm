@@ -15,8 +15,6 @@ import { changePasswordAction } from '../actions/change-password';
 import { signOutEverywhereAction } from '../actions/sign-out-everywhere';
 import { SETTINGS_ACTION_INITIAL, type SettingsActionState } from '../types';
 
-import { MfaSection } from './mfa-section';
-
 export function SecurityForm() {
   const t = useTranslations('settings.security');
   const formRef = useRef<HTMLFormElement>(null);
@@ -65,7 +63,11 @@ export function SecurityForm() {
         </div>
       </form>
 
-      <MfaSection />
+      {/* MFA UI is intentionally NOT rendered yet (SEC-AUTH-2). The full
+          enroll/verify/disable flow exists (mfa-section.tsx + actions/mfa.ts),
+          but login does NOT enforce AAL2 — so a "2FA enabled" badge would give
+          a false sense of security. Re-mount <MfaSection /> here once AAL2 is
+          enforced (needs Supabase Pro + a middleware/login AAL check). */}
 
       <form action={signOutEverywhereAction}>
         <h3 className="text-sm font-semibold text-neutral-900 mb-1">{t('sections.sessions')}</h3>
