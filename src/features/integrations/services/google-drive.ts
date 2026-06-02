@@ -270,12 +270,31 @@ export class GoogleDriveClient {
     return out;
   }
 
+  /**
+   * Paginated like listFolderFilesPaginated. A case folder normally holds only
+   * a dozen category subfolders, but a missing subfolder here means its files
+   * are never scanned and would look "deleted" to the sweeper — so we must not
+   * silently truncate at one page. Throws on any failed page so the caller's
+   * safeListSubfolders flips listingsComplete=false instead of acting on a
+   * partial view.
+   */
   async listSubfolders(parentId: string): Promise<{ id: string; name: string }[]> {
     const q = `'${parentId}' in parents and trashed = false and mimeType = '${FOLDER_MIME}'`;
-    const url = `${DRIVE_API}/files?q=${encodeURIComponent(q)}&fields=files(id,name)&pageSize=200&spaces=drive`;
-    const res = await this.authedFetchRetry(url);
-    if (!res.ok) throw new Error(`Drive list subfolders failed: ${res.status}`);
-    const data = (await res.json()) as { files: { id: string; name: string }[] };
-    return data.files ?? [];
+    const fields = 'nextPageToken,files(id,name)';
+    const out: { id: string; name: string }[] = [];
+    let pageToken: string | undefined;
+    do {
+      const params = new URLSearchParams({ q, fields, pageSize: '1000', spaces: 'drive' });
+      if (pageToken) params.set('pageToken', pageToken);
+      const res = await this.authedFetchRetry(`${DRIVE_API}/files?${params.toString()}`);
+      if (!res.ok) throw new Error(`Drive list subfolders failed: ${res.status}`);
+      const data = (await res.json()) as {
+        files: { id: string; name: string }[];
+        nextPageToken?: string;
+      };
+      if (data.files) out.push(...data.files);
+      pageToken = data.nextPageToken;
+    } while (pageToken);
+    return out;
   }
 }
