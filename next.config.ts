@@ -14,7 +14,10 @@ const cspDirectives = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://*.supabase.co https://drive.google.com https://docs.google.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co https://*.googleapis.com https://accounts.google.com",
+  // wss://*.supabase.co — the Realtime WebSocket (instant notification bell).
+  // Without it the browser blocks the wss connection under connect-src and the
+  // bell only updates on navigation/refresh.
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.googleapis.com https://accounts.google.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
