@@ -18,7 +18,7 @@
 -- =============================================================================
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
-SELECT plan(19);
+SELECT plan(23);
 
 -- ---- fixed ids -------------------------------------------------------------
 -- users
@@ -204,6 +204,27 @@ SELECT is(
        {"first_name":"Dup2","national_id":"800000005"}]'::jsonb)->'errors'->0->>'code'),
   'duplicate_in_file', 'in-file duplicate national_id is reported');
 SELECT pg_temp.logout();
+
+-- ===========================================================================
+-- Backup-stale bell notification (SRE-2 follow-up, migration 128)
+-- ===========================================================================
+SELECT pg_temp.logout();
+-- Exactly one admin (manager) is seeded → notifies exactly 1.
+SELECT is((SELECT public.notify_admins_backup_stale(NULL)), 1,
+  'backup-stale notifies the active admin');
+-- Dedupe: a second call while the alert is unread inserts nothing.
+SELECT is((SELECT public.notify_admins_backup_stale(NULL)), 0,
+  'dedupe: a second backup-stale call inserts nothing while unread');
+SELECT is(
+  (SELECT count(*)::int FROM public.notifications
+    WHERE type = 'backup_stale' AND read_at IS NULL),
+  1, 'exactly one unread backup_stale alert exists');
+-- A successful backup auto-resolves the open alert.
+SELECT public.record_backup_success();
+SELECT is(
+  (SELECT count(*)::int FROM public.notifications
+    WHERE type = 'backup_stale' AND read_at IS NULL),
+  0, 'record_backup_success auto-resolves the open backup-stale alert');
 
 SELECT * FROM finish();
 ROLLBACK;

@@ -8,6 +8,7 @@ export const NOTIFICATION_TYPE_VALUES = [
   'case_status_overdue',
   'task_reminder',
   'case_mention',
+  'backup_stale',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPE_VALUES)[number];
 
@@ -61,6 +62,11 @@ export type NotificationDataCaseMention = {
   commentId: string;
 };
 
+export type NotificationDataBackupStale = {
+  /** ISO of the last successful backup, or null if none has ever run. */
+  lastBackupAt: string | null;
+};
+
 /**
  * Discriminated union over `notification.type`. Index by type to get the
  * exact shape — `NotificationDataByType['case_status_overdue']` is the
@@ -72,6 +78,7 @@ export type NotificationDataByType = {
   case_status_overdue: NotificationDataCaseStatusOverdue;
   task_reminder: NotificationDataTask;
   case_mention: NotificationDataCaseMention;
+  backup_stale: NotificationDataBackupStale;
 };
 
 /**
@@ -84,6 +91,7 @@ export type NotificationData =
   | NotificationDataTask
   | NotificationDataCaseStatusOverdue
   | NotificationDataCaseMention
+  | NotificationDataBackupStale
   | Record<string, never>;
 
 export type Notification = Omit<NotificationRow, 'data' | 'type'> & {

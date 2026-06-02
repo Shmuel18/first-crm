@@ -145,6 +145,8 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
         const actor = d.actorName || t('someone');
         return t('message.case_mention', { actor, preview: d.preview ?? '' });
       }
+      case 'backup_stale':
+        return t('message.backup_stale');
       default: {
         // Exhaustiveness check — TS errors here when a new
         // NotificationType is added without a render branch.
@@ -173,7 +175,13 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
     // the case page 404. Routing every task notification to /tasks is safe for
     // all roles and future task types.
     const isCaseNotification = n.type === 'case_status_overdue' || n.type === 'case_mention';
-    router.push(isCaseNotification && n.case_id ? `/cases/${n.case_id}` : '/tasks');
+    const href =
+      n.type === 'backup_stale'
+        ? '/settings/integrations'
+        : isCaseNotification && n.case_id
+          ? `/cases/${n.case_id}`
+          : '/tasks';
+    router.push(href);
   };
 
   const handleMarkAll = () => {

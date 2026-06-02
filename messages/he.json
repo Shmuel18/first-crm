@@ -1997,6 +1997,7 @@
       "task_reminder": "תזכורת: {task}",
       "case_mention": "{actor} תייג אותך: {preview}",
       "case_status_overdue": "תיק {caseNumber} בסטטוס \"{statusName}\" כבר {days} ימים (סף: {threshold})",
+      "backup_stale": "אין גיבוי תקין — בדוק את החיבור ל-Google Drive (הגדרות → אינטגרציות)",
       "unknown": "התראה חדשה"
     }
   },

@@ -6,6 +6,7 @@ import {
   getActiveAdminEmails,
   getLastBackupAt,
   isBackupStale,
+  notifyAdminsBackupStale,
 } from '@/features/backup/services/backup-freshness.service';
 import { sendEmail } from '@/lib/email/send';
 import { env } from '@/lib/env';
@@ -16,9 +17,8 @@ export const maxDuration = 30;
  * SRE-2: daily staleness watchdog. The nightly /api/cron/backup stamps
  * office_settings.last_backup_at on a verified success; this checks it and, if
  * there's been no successful backup in the staleness window, emails all active
- * admins. CRON_SECRET-gated like the other cron routes. The in-app bell alert
- * is a deliberate follow-up; the Settings → Integrations card already shows the
- * same status passively.
+ * admins AND raises a deduped in-app bell alert for each. CRON_SECRET-gated like
+ * the other cron routes; the Settings → Integrations card shows the same status.
  *
  * Returns ok:true even when stale — the watchdog itself RAN correctly; the
  * staleness is reported in the body (so the cron wrapper logs it) + the email.
@@ -56,11 +56,24 @@ export async function GET(request: Request): Promise<Response> {
     const r = await sendEmail({ to, subject, html });
     if (r.ok && !('skipped' in r && r.skipped === true)) alerted += 1;
   }
+
+  // In-app bell for every admin (deduped to one unread per admin, mig 128) — the
+  // channel that works regardless of Resend config + delivers live (mig 127).
+  const notified = await notifyAdminsBackupStale(lastBackupAt);
+
   console.warn('[cron/backup-watchdog] backup stale', {
     lastBackupAt,
     admins: emails.length,
     alerted,
+    notified,
   });
 
-  return NextResponse.json({ ok: true, stale: true, lastBackupAt, admins: emails.length, alerted });
+  return NextResponse.json({
+    ok: true,
+    stale: true,
+    lastBackupAt,
+    admins: emails.length,
+    alerted,
+    notified,
+  });
 }

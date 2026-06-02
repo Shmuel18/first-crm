@@ -48,3 +48,17 @@ export async function getActiveAdminEmails(): Promise<string[]> {
   ).rpc('active_admin_emails');
   return data ?? [];
 }
+
+/** Raise a deduped in-app 'backup_stale' bell for every active admin (mig 128). */
+export async function notifyAdminsBackupStale(lastBackupAt: string | null): Promise<number> {
+  const admin = createAdminClient();
+  const { data } = await (
+    admin as unknown as {
+      rpc: (
+        fn: 'notify_admins_backup_stale',
+        args: { p_last_backup_at: string | null },
+      ) => Promise<{ data: number | null }>;
+    }
+  ).rpc('notify_admins_backup_stale', { p_last_backup_at: lastBackupAt });
+  return data ?? 0;
+}
