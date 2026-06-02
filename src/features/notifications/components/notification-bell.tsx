@@ -83,6 +83,12 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
               setBlink(true);
               window.setTimeout(() => setBlink(false), 6000);
             }
+            // The bell is realtime, but the tasks LIST and the sidebar task
+            // badge are server-rendered — they only refreshed on navigation, so
+            // a new task "arrived" in the bell but not in the list/badge until a
+            // manual refresh. A soft refresh re-fetches those server components
+            // (no full reload) so the task + badge update live alongside the bell.
+            router.refresh();
           },
         )
         .subscribe();
