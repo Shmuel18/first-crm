@@ -63,6 +63,7 @@
     "cases": "תיקים",
     "tasks": "משימות",
     "simulators": "סימולטורים",
+    "statistics": "סטטיסטיקות",
     "team": "צוות",
     "templates": "תבניות",
     "auditLog": "יומן שינויים",
@@ -71,6 +72,54 @@
     "sidebar": "סרגל צד",
     "skipToContent": "דלג לתוכן הראשי",
     "unreadTasks": "{count, plural, =1 {משימה אחת פתוחה} other {# משימות פתוחות}}"
+  },
+  "statistics": {
+    "title": "סטטיסטיקות וניתוח",
+    "subtitle": "ביצועי המשרד — תיקים שנפתחו ובוצעו, צבר התיקים, ופילוח לפי יועץ.",
+    "vsLastMonth": "מהחודש שעבר",
+    "period": {
+      "label": "תקופת הדיווח",
+      "this_month": "החודש",
+      "last_month": "חודש שעבר",
+      "last_3_months": "3 חודשים אחרונים",
+      "this_year": "השנה"
+    },
+    "kpi": {
+      "activeCases": "תיקים פעילים",
+      "openedInPeriod": "נפתחו",
+      "executedInPeriod": "בוצעו",
+      "stuckCases": "תקועים",
+      "avgCycleDays": "ימים בממוצע עד ביצוע",
+      "avgCycleDaysHint": "מפתיחת התיק ועד ביצוע",
+      "leadsConverted": "לידים שהומרו"
+    },
+    "trend": {
+      "title": "נפתחו מול בוצעו לפי חודש",
+      "opened": "נפתחו",
+      "executed": "בוצעו"
+    },
+    "pipeline": {
+      "title": "צבר התיקים לפי שלב",
+      "empty": "אין תיקים פעילים להצגה."
+    },
+    "advisor": {
+      "title": "פילוח לפי יועץ",
+      "name": "יועץ",
+      "activeCases": "פעילים",
+      "executed": "בוצעו",
+      "empty": "אין פעילות יועצים בתקופה זו."
+    },
+    "financial": {
+      "title": "נתונים כספיים",
+      "managerOnly": "למנהל בלבד",
+      "activeLoanVolume": "נפח משכנתאות פעיל",
+      "executedFees": "שכר טרחה (בוצעו)",
+      "expectedIncome": "הכנסה צפויה (בוצעו)"
+    },
+    "empty": {
+      "title": "אין עדיין נתונים להצגה",
+      "body": "ככל שתיקים יתקדמו בין השלבים, הסטטיסטיקות יופיעו כאן. אם בדיוק עלית לאוויר, ודא שמיגרציית הסטטיסטיקות הורצה במסד הנתונים."
+    }
   },
   "simulators": {
     "eyebrow": "סימולטורי משכנתא",

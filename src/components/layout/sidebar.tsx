@@ -3,14 +3,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { Calculator, CheckSquare, LayoutDashboard, Settings } from 'lucide-react';
+import { BarChart3, Calculator, CheckSquare, LayoutDashboard, Settings } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { isNavItemActive } from './is-nav-item-active';
 
 type NavItem = {
   href: string;
-  labelKey: 'cases' | 'tasks' | 'simulators' | 'settings';
+  labelKey: 'cases' | 'tasks' | 'simulators' | 'statistics' | 'settings';
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
   criticalBadge?: number;
@@ -25,6 +25,7 @@ const BASE_TOP_ITEMS: readonly NavItem[] = [
   { href: '/cases', labelKey: 'cases', icon: LayoutDashboard },
   { href: '/tasks', labelKey: 'tasks', icon: CheckSquare },
   { href: '/simulators', labelKey: 'simulators', icon: Calculator },
+  { href: '/statistics', labelKey: 'statistics', icon: BarChart3, adminOnly: true },
 ] as const;
 
 const BOTTOM_ITEMS: readonly NavItem[] = [
@@ -34,13 +35,14 @@ const BOTTOM_ITEMS: readonly NavItem[] = [
 type SidebarProps = {
   tasksBadge?: number;
   criticalTasksBadge?: number;
+  isManager?: boolean;
 };
 
-export function Sidebar({ tasksBadge, criticalTasksBadge }: SidebarProps) {
+export function Sidebar({ tasksBadge, criticalTasksBadge, isManager }: SidebarProps) {
   const pathname = usePathname();
   const t = useTranslations('nav');
 
-  const topItems = BASE_TOP_ITEMS.map((item) =>
+  const topItems = BASE_TOP_ITEMS.filter((item) => !item.adminOnly || isManager).map((item) =>
     item.labelKey === 'tasks'
       ? { ...item, badge: tasksBadge, criticalBadge: criticalTasksBadge }
       : item,

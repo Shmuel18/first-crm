@@ -3,44 +3,53 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { Calculator, CheckSquare, LayoutDashboard, Settings } from 'lucide-react';
+import { BarChart3, Calculator, CheckSquare, LayoutDashboard, Settings } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { isNavItemActive } from './is-nav-item-active';
 
 type NavItem = {
   href: string;
-  labelKey: 'cases' | 'tasks' | 'simulators' | 'settings';
+  labelKey: 'cases' | 'tasks' | 'simulators' | 'statistics' | 'settings';
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
   criticalBadge?: number;
+  adminOnly?: boolean;
 };
 
-// The office has exactly four flat destinations — the textbook case for a
-// bottom tab bar over a hamburger drawer.
+// Flat destinations for the bottom tab bar — four for advisors, five for the
+// manager (the manager-only Statistics tab). Still few enough that a
+// thumb-reachable tab bar beats a hamburger drawer.
 const ITEMS: readonly NavItem[] = [
   { href: '/cases', labelKey: 'cases', icon: LayoutDashboard },
   { href: '/tasks', labelKey: 'tasks', icon: CheckSquare },
   { href: '/simulators', labelKey: 'simulators', icon: Calculator },
+  { href: '/statistics', labelKey: 'statistics', icon: BarChart3, adminOnly: true },
   { href: '/settings', labelKey: 'settings', icon: Settings },
 ] as const;
 
 type Props = {
   tasksBadge?: number;
   criticalTasksBadge?: number;
+  isManager?: boolean;
 };
 
 /**
  * Fixed bottom tab bar for phones (`md:hidden`). Replaces the hamburger drawer:
- * with only four destinations, a thumb-reachable bottom bar with an always-on
- * "you are here" beats a two-tap top-start menu for an advisor working from a
- * phone all day. The desktop icon rail (`hidden md:flex`) takes over at md+.
+ * with only a handful of destinations, a thumb-reachable bottom bar with an
+ * always-on "you are here" beats a two-tap top-start menu for an advisor
+ * working from a phone all day. The desktop icon rail (`hidden md:flex`) takes
+ * over at md+.
  */
-export function BottomNav({ tasksBadge, criticalTasksBadge }: Props): React.ReactElement {
+export function BottomNav({
+  tasksBadge,
+  criticalTasksBadge,
+  isManager,
+}: Props): React.ReactElement {
   const pathname = usePathname();
   const t = useTranslations('nav');
 
-  const items = ITEMS.map((item) =>
+  const items = ITEMS.filter((item) => !item.adminOnly || isManager).map((item) =>
     item.labelKey === 'tasks'
       ? { ...item, badge: tasksBadge, criticalBadge: criticalTasksBadge }
       : item,

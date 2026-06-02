@@ -37,8 +37,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <NavProgress />
         </Suspense>
         <Topbar />
-        <Sidebar tasksBadge={bootstrap.pendingTasks} criticalTasksBadge={bootstrap.criticalTasks} />
-        <BottomNav tasksBadge={bootstrap.pendingTasks} criticalTasksBadge={bootstrap.criticalTasks} />
+        <Sidebar
+          tasksBadge={bootstrap.pendingTasks}
+          criticalTasksBadge={bootstrap.criticalTasks}
+          isManager={bootstrap.isAdmin}
+        />
+        <BottomNav
+          tasksBadge={bootstrap.pendingTasks}
+          criticalTasksBadge={bootstrap.criticalTasks}
+          isManager={bootstrap.isAdmin}
+        />
       {/* The inner viewport owns scrolling. Sticky subheaders compensate for
           viewport padding so they pin flush under the fixed topbar. */}
       <main

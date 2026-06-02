@@ -63,6 +63,7 @@
     "cases": "Cases",
     "tasks": "Tasks",
     "simulators": "Simulators",
+    "statistics": "Statistics",
     "team": "Team",
     "templates": "Templates",
     "auditLog": "Audit Log",
@@ -71,6 +72,54 @@
     "sidebar": "Sidebar",
     "skipToContent": "Skip to main content",
     "unreadTasks": "{count, plural, =1 {1 open task} other {# open tasks}}"
+  },
+  "statistics": {
+    "title": "Statistics & analytics",
+    "subtitle": "Office performance — cases opened and executed, pipeline, and per-advisor breakdown.",
+    "vsLastMonth": "vs last month",
+    "period": {
+      "label": "Reporting period",
+      "this_month": "This month",
+      "last_month": "Last month",
+      "last_3_months": "Last 3 months",
+      "this_year": "This year"
+    },
+    "kpi": {
+      "activeCases": "Active cases",
+      "openedInPeriod": "Opened",
+      "executedInPeriod": "Executed",
+      "stuckCases": "Stuck",
+      "avgCycleDays": "Avg. days to execution",
+      "avgCycleDaysHint": "From case opening to execution",
+      "leadsConverted": "Leads converted"
+    },
+    "trend": {
+      "title": "Opened vs executed by month",
+      "opened": "Opened",
+      "executed": "Executed"
+    },
+    "pipeline": {
+      "title": "Pipeline by stage",
+      "empty": "No active cases to show."
+    },
+    "advisor": {
+      "title": "By advisor",
+      "name": "Advisor",
+      "activeCases": "Active",
+      "executed": "Executed",
+      "empty": "No advisor activity in this period."
+    },
+    "financial": {
+      "title": "Financials",
+      "managerOnly": "Manager only",
+      "activeLoanVolume": "Active loan volume",
+      "executedFees": "Fees (executed)",
+      "expectedIncome": "Expected income (executed)"
+    },
+    "empty": {
+      "title": "No data available yet",
+      "body": "Once cases move through their stages, statistics will appear here. If you've just deployed, make sure the statistics database migration has been applied."
+    }
   },
   "simulators": {
     "eyebrow": "Mortgage simulators",
