@@ -134,7 +134,16 @@ export function TaskBoardCard({ task, locale, onOpen, onReassign, onThread }: Pr
           >
             <MoreHorizontal className="size-4" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-32">
+          {/* stopPropagation on the content: menu items are portaled to <body>
+              but React bubbles their click events through the REACT tree — up to
+              the card's onClick (onOpen) — so clicking delete/reassign also
+              opened the edit dialog. Stop it at the menu so only the item's own
+              handler runs. */}
+          <DropdownMenuContent
+            align="end"
+            className="min-w-32"
+            onClick={(e) => e.stopPropagation()}
+          >
             {onReassign && !task.is_private && (
               <DropdownMenuItem onClick={() => onReassign(task)}>
                 <UserPlus className="size-3.5 me-2" />
@@ -187,7 +196,10 @@ export function TaskBoardCard({ task, locale, onOpen, onReassign, onThread }: Pr
       </div>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent>
+        {/* Same portal-bubbling guard: the confirm/cancel buttons are portaled
+            but bubble through the React tree to the card's onClick, which
+            re-opened the edit dialog on confirm. Stop it at the dialog. */}
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
           <AlertDialogTitle>{t('deleteDialog.title')}</AlertDialogTitle>
           <AlertDialogDescription>
             {t('deleteDialog.description', { title: task.title })}
