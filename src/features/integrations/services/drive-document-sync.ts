@@ -101,8 +101,17 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
       .not('drive_file_id', 'is', null),
     supabase.from('document_drive_tombstones').select('drive_file_id').eq('case_id', caseId),
   ]);
-  if (tombstonesRes.error) {
-    return { ok: false, reason: 'error', message: tombstonesRes.error.message };
+  // All three reference reads must succeed before we import or sweep. The
+  // listingsComplete guard only covers Drive *listing* failures; a transient
+  // failure of these DB reads is just as dangerous and slips past it:
+  //  - categories fails → empty folder→category map → every subfolder's files
+  //    are skipped (never added to seenDriveIds), so the sweeper treats present
+  //    files as "missing" and soft-deletes them once the grace window expires.
+  //  - existing-docs fails → empty existingByDriveId → every Drive file looks
+  //    new → duplicate document rows on re-import.
+  const refError = categoriesRes.error ?? existingRes.error ?? tombstonesRes.error;
+  if (refError) {
+    return { ok: false, reason: 'error', message: refError.message };
   }
 
   const firstCategoryPerFolder = new Map<string, string>();
