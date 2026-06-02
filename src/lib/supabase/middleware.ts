@@ -67,6 +67,7 @@ export async function updateSession(request: NextRequest) {
     matches('/audit-log') ||
     matches('/settings') ||
     matches('/simulators') ||
+    matches('/statistics') ||
     matches('/dashboard') ||
     // /auth/set-password is hit AFTER /auth/callback runs the code exchange
     // and writes session cookies. An unauth visit here is invalid (no session
