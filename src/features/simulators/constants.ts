@@ -2,7 +2,6 @@ import type { StressScenario } from './domain/scenario-stress';
 import type { RegulatoryThresholds, ScenarioPresetKey } from './types';
 
 export const MAX_TRACKS = 12;
-export const DEFAULT_PRIME_MARGIN_PCT = 1.5;
 export const ELIGIBILITY_DISCOUNT_PCT = 0.5;
 export const ELIGIBILITY_MAX_RATE_PCT = 3;
 

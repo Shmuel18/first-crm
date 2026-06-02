@@ -194,7 +194,7 @@
         "totalInterest": "סך ריבית",
         "ltv": "LTV",
         "maxPaymentMonth": "בחודש {month}",
-        "weightedRate": "ריבית משוקללת",
+        "effectiveRate": "ריבית אפקטיבית",
         "costPerShekel": "יחס לשקל",
         "snapshotNote": "השמירה תייצר snapshot מחושב בשרת לדוח עתידי.",
         "paymentCurve": "גרף החזר",
@@ -234,6 +234,15 @@
         "interestPaid": "ריבית והצמדה ששולמו",
         "monthlyPayment": "תשלום חודשי",
         "remainingToPay": "נותר לתשלום"
+      },
+      "baskets": {
+        "title": "סלים אחידים (בנק ישראל)",
+        "hint": "טען מבנה תמהיל סטנדרטי לפי סכום ההלוואה הנוכחי, ואז התאם ריביות.",
+        "kinds": {
+          "fixed_only": { "label": "סל 1 — 100% קבועה", "desc": "כל ההלוואה בקבועה לא צמודה" },
+          "thirds": { "label": "סל 2 — שליש·שליש·שליש", "desc": "קבועה · פריים · משתנה צמודה" },
+          "halves": { "label": "סל 3 — חצי·חצי", "desc": "קבועה · פריים" }
+        }
       }
     },
     "compare": {

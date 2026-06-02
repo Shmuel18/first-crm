@@ -42,3 +42,38 @@ export function cloneTracksWithNewIds(tracks: ReadonlyArray<TrackInput>): TrackI
 export function buildMixInput(base: Omit<MixInput, 'tracks'>, tracks: ReadonlyArray<TrackInput>): MixInput {
   return { ...base, tracks };
 }
+
+export type UniformBasketKind = 'fixed_only' | 'thirds' | 'halves';
+
+// Bank of Israel "uniform baskets" — the standard comparison mixes. Rates are
+// editable example defaults; the first (fixed) track absorbs rounding so the
+// split sums to the loan exactly and stays at/above the min-fixed share.
+const BASKETS: Record<
+  UniformBasketKind,
+  ReadonlyArray<{ type: TrackType; share: number; rate: number; cpi: number | null }>
+> = {
+  fixed_only: [{ type: 'fixed_unlinked', share: 1, rate: 4.86, cpi: null }],
+  thirds: [
+    { type: 'fixed_unlinked', share: 1 / 3, rate: 4.86, cpi: null },
+    { type: 'prime', share: 1 / 3, rate: 5.25, cpi: null },
+    { type: 'variable_linked', share: 1 / 3, rate: 2.04, cpi: 2 },
+  ],
+  halves: [
+    { type: 'fixed_unlinked', share: 1 / 2, rate: 4.86, cpi: null },
+    { type: 'prime', share: 1 / 2, rate: 5.25, cpi: null },
+  ],
+};
+
+export function buildUniformBasket(
+  kind: UniformBasketKind,
+  mortgageAmount: number,
+  termMonths: number,
+): TrackInput[] {
+  const config = BASKETS[kind];
+  const amounts = config.map((slice) => Math.round(mortgageAmount * slice.share));
+  const drift = mortgageAmount - amounts.reduce((sum, value) => sum + value, 0);
+  return config.map((slice, index) => ({
+    ...newTrack(slice.type, (amounts[index] ?? 0) + (index === 0 ? drift : 0), slice.rate, slice.cpi),
+    termMonths,
+  }));
+}

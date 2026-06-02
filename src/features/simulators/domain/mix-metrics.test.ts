@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { costPerShekel, peakMonth, weightedAnnualRatePct } from './mix-metrics';
+import { blendedEffectiveRatePct, costPerShekel, peakMonth } from './mix-metrics';
 
 import type { CurvePoint, TrackInput } from '../types';
 
@@ -26,22 +26,29 @@ describe('costPerShekel', () => {
   });
 });
 
-describe('weightedAnnualRatePct', () => {
-  it('weights each track rate by its amount', () => {
-    const rate = weightedAnnualRatePct([
+describe('blendedEffectiveRatePct', () => {
+  it('compounds a nominal rate to its effective annual rate (matches BoI)', () => {
+    // single 4.86% fixed track → (1 + 4.86/1200)^12 − 1 ≈ 4.97%
+    expect(blendedEffectiveRatePct([track({ annualRatePct: 4.86 })])).toBeCloseTo(4.97, 1);
+  });
+
+  it('uses the entered prime rate directly — no auto margin', () => {
+    // prime 5.25 → effective ≈ 5.38%, NOT 6.75%
+    expect(blendedEffectiveRatePct([track({ type: 'prime', annualRatePct: 5.25 })])).toBeLessThan(5.5);
+  });
+
+  it('weights each track by its amount', () => {
+    const rate = blendedEffectiveRatePct([
       track({ amount: 300_000, annualRatePct: 4 }),
       track({ amount: 100_000, annualRatePct: 8 }),
     ]);
-    expect(rate).toBeCloseTo(5); // (300k*4 + 100k*8) / 400k
-  });
-
-  it('uses the effective rate — prime adds its 1.5% margin', () => {
-    const rate = weightedAnnualRatePct([track({ type: 'prime', amount: 100_000, annualRatePct: 4.5 })]);
-    expect(rate).toBeCloseTo(6);
+    // weighted nominal 5% → effective just above 5%
+    expect(rate).toBeGreaterThan(5);
+    expect(rate).toBeLessThan(5.3);
   });
 
   it('is 0 for an empty mix', () => {
-    expect(weightedAnnualRatePct([])).toBe(0);
+    expect(blendedEffectiveRatePct([])).toBe(0);
   });
 });
 

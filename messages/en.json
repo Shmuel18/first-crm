@@ -194,7 +194,7 @@
         "totalInterest": "Total interest",
         "ltv": "LTV",
         "maxPaymentMonth": "in month {month}",
-        "weightedRate": "Weighted rate",
+        "effectiveRate": "Effective rate",
         "costPerShekel": "Cost per ₪",
         "snapshotNote": "Saving creates a server-calculated snapshot for future reports.",
         "paymentCurve": "Payment curve",
@@ -234,6 +234,15 @@
         "interestPaid": "Interest & indexation paid",
         "monthlyPayment": "Monthly payment",
         "remainingToPay": "Remaining to pay"
+      },
+      "baskets": {
+        "title": "Uniform baskets (Bank of Israel)",
+        "hint": "Load a standard mix structure for the current loan amount, then adjust the rates.",
+        "kinds": {
+          "fixed_only": { "label": "Basket 1 — 100% fixed", "desc": "Entire loan in fixed unlinked" },
+          "thirds": { "label": "Basket 2 — thirds", "desc": "Fixed · prime · linked variable" },
+          "halves": { "label": "Basket 3 — halves", "desc": "Fixed · prime" }
+        }
       }
     },
     "compare": {

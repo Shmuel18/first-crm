@@ -7,15 +7,17 @@ export function costPerShekel(totalCost: MoneyAgorot, principal: MoneyAgorot): n
   return principal > 0 ? totalCost / principal : 0;
 }
 
-/** Amount-weighted average effective annual rate (%) across the mix. Prime and
- *  eligibility tracks contribute their *effective* rate (incl. margin/cap). */
-export function weightedAnnualRatePct(tracks: ReadonlyArray<TrackInput>): number {
+/** Amount-weighted *effective* annual rate (%), monthly-compounded — a 4.86%
+ *  nominal track reads as ~4.97%, matching the Bank of Israel "total expected
+ *  interest" figure. Each track first resolves to its all-in rate (eligibility
+ *  discount/cap), then compounds. */
+export function blendedEffectiveRatePct(tracks: ReadonlyArray<TrackInput>): number {
   const total = tracks.reduce((sum, track) => sum + track.amount, 0);
   if (total <= 0) return 0;
-  const weighted = tracks.reduce(
-    (sum, track) => sum + track.amount * effectiveAnnualRatePct(track),
-    0,
-  );
+  const weighted = tracks.reduce((sum, track) => {
+    const effective = (Math.pow(1 + effectiveAnnualRatePct(track) / 1200, 12) - 1) * 100;
+    return sum + track.amount * effective;
+  }, 0);
   return weighted / total;
 }
 

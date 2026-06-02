@@ -10,6 +10,7 @@ import { saveScenarioAction } from '../actions/save-scenario';
 import { useMixCalculator } from '../hooks/use-mix-calculator';
 import type { MixInput, PropertyKind, RegulatoryThresholds } from '../types';
 import { AmortizationTable } from './amortization-table';
+import { BasketPresets } from './basket-presets';
 import { KpiStrip } from './kpi-strip';
 import { MixChart } from './mix-chart';
 import { MixCompositionBar } from './mix-composition-bar';
@@ -80,6 +81,7 @@ export function MixCalculator({
         onMoneyChange={calc.setMoney}
         onTermChange={calc.setTermMonths}
       />
+      <BasketPresets onLoad={calc.loadBasket} />
       <TrackEditor
         tracks={calc.mix.tracks}
         summaries={calc.result.tracks}

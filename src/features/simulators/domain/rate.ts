@@ -1,5 +1,4 @@
 import {
-  DEFAULT_PRIME_MARGIN_PCT,
   ELIGIBILITY_DISCOUNT_PCT,
   ELIGIBILITY_MAX_RATE_PCT,
 } from '../constants';
@@ -15,7 +14,10 @@ export function monthlyCpiRate(cpiAnnualPct: number | null): number {
 }
 
 export function effectiveAnnualRatePct(track: TrackInput): number {
-  if (track.type === 'prime') return track.annualRatePct + DEFAULT_PRIME_MARGIN_PCT;
+  // Prime is entered as the all-in annual rate the borrower actually pays
+  // (matching the Bank of Israel comparison tool and real bank offers, where
+  // prime = BoI base + 1.5% ± the bank's margin), so nothing is added here.
+  // Eligibility is the one regulated exception: discounted 0.5%, capped at 3%.
   if (track.type === 'eligibility') {
     return Math.min(track.annualRatePct - ELIGIBILITY_DISCOUNT_PCT, ELIGIBILITY_MAX_RATE_PCT);
   }

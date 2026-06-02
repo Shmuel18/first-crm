@@ -1,6 +1,6 @@
 import { calculateLtv } from '@/features/cases/domain/calculations';
 
-import { costPerShekel, peakMonth, weightedAnnualRatePct } from './mix-metrics';
+import { blendedEffectiveRatePct, costPerShekel, peakMonth } from './mix-metrics';
 import { averageMoney, sumMoney } from './money';
 import { buildTrackSchedule } from './track-payment';
 import { summarizeTrack } from './track-summary';
@@ -35,7 +35,7 @@ export function aggregateTrackResults(
     totalIndexation: sumMoney(tracks.map((track) => track.totalIndexation)),
     totalCost,
     costPerShekel: costPerShekel(totalCost, input.mortgageAmount),
-    weightedRatePct: weightedAnnualRatePct(input.tracks),
+    effectiveRatePct: blendedEffectiveRatePct(input.tracks),
     ltv: calculateLtv(input.propertyValue, input.mortgageAmount),
     paymentCurve: payments,
     balanceCurve: balances,

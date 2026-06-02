@@ -14,7 +14,13 @@ import type {
   RegulatoryViolation,
   TrackInput,
 } from '../types';
-import { newTrack, normalizeTrack, remainingAmount } from '../utils/track-factory';
+import {
+  buildUniformBasket,
+  newTrack,
+  normalizeTrack,
+  remainingAmount,
+  type UniformBasketKind,
+} from '../utils/track-factory';
 
 type Params = {
   initialInput?: MixInput;
@@ -37,22 +43,23 @@ export interface UseMixCalculatorResult {
   updateTrack: (id: string, patch: Partial<TrackInput>) => void;
   addTrack: () => void;
   removeTrack: (id: string) => void;
+  loadBasket: (kind: UniformBasketKind) => void;
   result: MixResult;
   violations: ReadonlyArray<RegulatoryViolation>;
   composition: ReadonlyArray<CompositionSlice>;
 }
 
-// Prime tracks model the entered rate as the Bank-of-Israel base; the engine
-// adds the 1.5% prime margin, so 4.5 here renders as a realistic ~6% effective.
+// Rates are the all-in annual rate per track (what the borrower actually pays).
+// Prime is entered directly (≈ BoI base + 1.5% ± the bank's margin), not derived.
 const DEFAULT_MIX: MixInput = {
   mortgageAmount: 800_000_00,
   propertyValue: 1_200_000_00,
   equity: 400_000_00,
   defaultTermMonths: 360,
   tracks: [
-    newTrack('fixed_unlinked', 270_000_00, 4.5),
-    newTrack('prime', 260_000_00, 4.5),
-    newTrack('variable_linked', 270_000_00, 4.2, 2.5),
+    newTrack('fixed_unlinked', 270_000_00, 4.9),
+    newTrack('prime', 260_000_00, 6),
+    newTrack('variable_linked', 270_000_00, 3.5, 2),
   ],
 };
 
@@ -95,6 +102,11 @@ export function useMixCalculator({
       ...current,
       tracks: current.tracks.length === 1 ? current.tracks : current.tracks.filter((t) => t.id !== id),
     }));
+  const loadBasket = (kind: UniformBasketKind) =>
+    setMix((current) => ({
+      ...current,
+      tracks: buildUniformBasket(kind, current.mortgageAmount, current.defaultTermMonths),
+    }));
 
   return {
     title,
@@ -109,6 +121,7 @@ export function useMixCalculator({
     updateTrack,
     addTrack,
     removeTrack,
+    loadBasket,
     result,
     violations,
     composition,

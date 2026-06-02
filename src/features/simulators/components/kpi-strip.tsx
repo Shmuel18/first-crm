@@ -28,7 +28,7 @@ export function KpiStrip({ result }: Props) {
       sub: result.maxPaymentMonth > 0 ? t('maxPaymentMonth', { month: result.maxPaymentMonth }) : undefined,
       icon: TrendingUp,
     },
-    { key: 'weightedRate', label: t('weightedRate'), value: formatPct(result.weightedRatePct), icon: Percent },
+    { key: 'effectiveRate', label: t('effectiveRate'), value: formatPct(result.effectiveRatePct), icon: Percent },
     { key: 'totalInterest', label: t('totalInterest'), value: formatMoney(result.totalInterest), icon: Banknote },
     { key: 'totalCost', label: t('totalCost'), value: formatMoney(result.totalCost), icon: PiggyBank },
     { key: 'costPerShekel', label: t('costPerShekel'), value: formatRatio(result.costPerShekel), icon: Ratio },

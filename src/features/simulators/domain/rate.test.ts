@@ -20,8 +20,8 @@ describe('rate helpers', () => {
     expect(monthlyRate(12)).toBe(0.01);
   });
 
-  it('treats prime as Bank-of-Israel rate plus the configured 1.5% margin', () => {
-    expect(effectiveAnnualRatePct(track('prime', 4))).toBe(5.5);
+  it('uses the entered prime rate directly (all-in, no auto margin)', () => {
+    expect(effectiveAnnualRatePct(track('prime', 5.25))).toBe(5.25);
   });
 
   it('discounts eligibility and caps it at 3%', () => {

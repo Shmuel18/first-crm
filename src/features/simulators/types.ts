@@ -100,8 +100,9 @@ export interface MixResult {
   totalCost: MoneyAgorot;
   /** Total cost ÷ borrowed principal — ₪ repaid per ₪ borrowed. */
   costPerShekel: number;
-  /** Amount-weighted average effective annual rate across tracks (%). */
-  weightedRatePct: number;
+  /** Amount-weighted effective annual rate (%), monthly-compounded — matches
+   *  the Bank of Israel "total expected interest" figure. */
+  effectiveRatePct: number;
   ltv: number | null;
   paymentCurve: ReadonlyArray<CurvePoint>;
   balanceCurve: ReadonlyArray<CurvePoint>;
