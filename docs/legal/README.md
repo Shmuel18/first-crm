@@ -26,6 +26,10 @@
 | `TERMS_OF_SERVICE.md` | Provider → office | Terms binding the paying customer's use of the Service |
 | `SUB_PROCESSORS.md` | Provider → office | Register of third-party processors (for the DPA + privacy notice) |
 
+> **Breach response** is operational, so it lives outside this folder:
+> `../INCIDENT_RESPONSE.md`. Its "Notify (legal)" section — the data-breach
+> notification duties under Israeli law — is a draft that also needs counsel review.
+
 ## Placeholders
 
 Anything only you / counsel can decide is marked **`[[FILL: ...]]`** — registered
