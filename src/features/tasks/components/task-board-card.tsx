@@ -154,7 +154,14 @@ export function TaskBoardCard({ task, locale, onOpen, onReassign, onThread }: Pr
               </DropdownMenuItem>
             )}
             <DropdownMenuItem
-              onClick={() => setConfirmOpen(true)}
+              onClick={() => {
+                // The ⋯ menu is modal: while it closes (~100ms exit) it keeps the
+                // rest of the page — including a dialog opened in the same tick —
+                // inert/aria-hidden, so the confirm's focused button landed inside
+                // an aria-hidden region (a11y warning). Open the confirm only after
+                // the menu has finished closing.
+                window.setTimeout(() => setConfirmOpen(true), 160);
+              }}
               className="text-red-600 focus:text-red-700 focus:bg-red-50"
             >
               <Trash2 className="size-3.5 me-2" />
