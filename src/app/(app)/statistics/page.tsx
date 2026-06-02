@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 
 import { StatisticsView } from '@/features/statistics/components/statistics-view';
-import { parseStatisticsPeriod } from '@/features/statistics/domain/period';
+import { parseCustomRange, parseStatisticsPeriod } from '@/features/statistics/domain/period';
 import {
   getStatisticsMonthlyTrend,
   getStatisticsSummary,
@@ -26,9 +26,10 @@ export default async function StatisticsPage({ searchParams }: Props) {
 
   const sp = await searchParams;
   const period = parseStatisticsPeriod(sp.period);
+  const range = period === 'custom' ? parseCustomRange(sp) : null;
 
   const [summary, trend] = await Promise.all([
-    getStatisticsSummary(period),
+    getStatisticsSummary(period, range),
     getStatisticsMonthlyTrend(TREND_MONTHS),
   ]);
 

@@ -1,7 +1,7 @@
 import { DEFAULT_STATISTICS_PERIOD, STATISTICS_PERIODS } from '../types';
 
 import type { Locale } from '@/lib/i18n/direction';
-import type { StatisticsPeriod } from '../types';
+import type { DateRange, StatisticsPeriod } from '../types';
 
 /**
  * Narrow an untrusted URL search param to a known period preset, falling back
@@ -14,6 +14,34 @@ export function parseStatisticsPeriod(
   return (STATISTICS_PERIODS as readonly string[]).includes(raw ?? '')
     ? (raw as StatisticsPeriod)
     : DEFAULT_STATISTICS_PERIOD;
+}
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+function pickFirst(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function isValidIsoDate(value: string): boolean {
+  if (!ISO_DATE.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00Z`);
+  // Round-trip guards against well-formatted-but-impossible dates (e.g. 13/40).
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
+/**
+ * Parse & validate a custom range from URL params. Returns null unless both
+ * `from` and `to` are real YYYY-MM-DD dates with from <= to (lexical compare
+ * is correct for zero-padded ISO dates).
+ */
+export function parseCustomRange(
+  searchParams: Record<string, string | string[] | undefined>,
+): DateRange | null {
+  const from = pickFirst(searchParams.from);
+  const to = pickFirst(searchParams.to);
+  if (!from || !to || !isValidIsoDate(from) || !isValidIsoDate(to)) return null;
+  if (from > to) return null;
+  return { from, to };
 }
 
 const MONTH_FMT: Record<Locale, Intl.DateTimeFormat> = {

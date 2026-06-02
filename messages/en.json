@@ -82,7 +82,11 @@
       "this_month": "This month",
       "last_month": "Last month",
       "last_3_months": "Last 3 months",
-      "this_year": "This year"
+      "this_year": "This year",
+      "custom": "Custom",
+      "rangeFrom": "From",
+      "rangeTo": "To",
+      "rangeInvalid": "“From” must be on or before “To”."
     },
     "kpi": {
       "activeCases": "Active cases",

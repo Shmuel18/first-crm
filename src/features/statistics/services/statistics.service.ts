@@ -6,7 +6,7 @@ import {
 } from '../schemas/statistics.schema';
 
 import type { MonthlyTrend, StatisticsSummary } from '../schemas/statistics.schema';
-import type { StatisticsPeriod } from '../types';
+import type { DateRange, StatisticsPeriod } from '../types';
 
 /**
  * Data access for the manager statistics dashboard. Both reads go through the
@@ -22,7 +22,7 @@ import type { StatisticsPeriod } from '../types';
 type SummaryRpcClient = {
   rpc(
     fn: 'get_statistics_summary',
-    args: { p_period: StatisticsPeriod },
+    args: { p_period: StatisticsPeriod; p_from: string | null; p_to: string | null },
   ): Promise<{ data: unknown; error: { message: string } | null }>;
 };
 
@@ -35,12 +35,15 @@ type TrendRpcClient = {
 
 export async function getStatisticsSummary(
   period: StatisticsPeriod,
+  range?: DateRange | null,
 ): Promise<StatisticsSummary | null> {
   const supabase = await createClient();
   const client = supabase as unknown as SummaryRpcClient;
 
   const { data, error } = await client.rpc('get_statistics_summary', {
     p_period: period,
+    p_from: range?.from ?? null,
+    p_to: range?.to ?? null,
   });
   if (error) {
     console.error('[statistics] get_statistics_summary rpc error', error);

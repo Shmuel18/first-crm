@@ -82,7 +82,11 @@
       "this_month": "החודש",
       "last_month": "חודש שעבר",
       "last_3_months": "3 חודשים אחרונים",
-      "this_year": "השנה"
+      "this_year": "השנה",
+      "custom": "מותאם",
+      "rangeFrom": "מ-",
+      "rangeTo": "עד",
+      "rangeInvalid": "תאריך ההתחלה חייב להיות לפני תאריך הסיום או שווה לו."
     },
     "kpi": {
       "activeCases": "תיקים פעילים",

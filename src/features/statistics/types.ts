@@ -8,22 +8,25 @@ export type {
 
 /**
  * Reporting-period presets driving the KPI / advisor / financial sections.
- * The trend chart always shows a trailing window independent of this. Custom
- * date ranges are intentionally out of scope for v1 — these presets cover the
- * "end of month" question the dashboard exists to answer.
+ * The trend chart always shows a trailing window independent of this.
  */
-export const STATISTICS_PERIODS = [
+export const STATISTICS_PRESETS = [
   'this_month',
   'last_month',
   'last_3_months',
   'this_year',
 ] as const;
 
+export type StatisticsPreset = (typeof STATISTICS_PRESETS)[number];
+
+/** All valid period keys — the presets plus an explicit custom range. */
+export const STATISTICS_PERIODS = [...STATISTICS_PRESETS, 'custom'] as const;
+
 export type StatisticsPeriod = (typeof STATISTICS_PERIODS)[number];
 
 export const DEFAULT_STATISTICS_PERIOD: StatisticsPeriod = 'this_month';
 
-/** A resolved half-open instant range [from, to) in ISO-8601. */
+/** An inclusive custom range as ISO calendar dates (YYYY-MM-DD). */
 export type DateRange = {
   from: string;
   to: string;
