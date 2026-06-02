@@ -19,6 +19,7 @@ const inter = Inter({
   variable: '--font-inter',
   subsets: ['latin'],
   display: 'swap',
+  preload: false,
 });
 
 const frankRuhl = Frank_Ruhl_Libre({
@@ -26,6 +27,7 @@ const frankRuhl = Frank_Ruhl_Libre({
   subsets: ['hebrew', 'latin'],
   weight: ['400', '500', '700', '900'],
   display: 'swap',
+  preload: false,
 });
 
 export const metadata: Metadata = {
