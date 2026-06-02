@@ -112,7 +112,14 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
         void markNotificationReadAction(n.id);
       });
     }
-    router.push(n.case_id ? `/cases/${n.case_id}` : '/tasks');
+    // Only genuinely case-scoped notifications deep-link to the case. A task
+    // notification must NOT route to its linked case: the assignee can always
+    // see their own task, but the case may be invisible to them under RLS
+    // (advisors see only cases where they're the assigned advisor), which made
+    // the case page 404. Routing every task notification to /tasks is safe for
+    // all roles and future task types.
+    const isCaseNotification = n.type === 'case_status_overdue' || n.type === 'case_mention';
+    router.push(isCaseNotification && n.case_id ? `/cases/${n.case_id}` : '/tasks');
   };
 
   const handleMarkAll = () => {
