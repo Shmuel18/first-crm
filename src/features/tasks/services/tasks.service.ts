@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 
+import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import type { Locale } from '@/lib/i18n/direction';
 import type { CaseId } from '@/lib/types/branded';
@@ -138,7 +139,17 @@ export async function countPendingByView(view: TaskView): Promise<number> {
 }
 
 export async function listAssignableProfiles(): Promise<TaskAssignee[]> {
-  const supabase = await createClient();
+  // AUDIT-ACK: admin (service-role) client by design. profiles RLS is
+  // self-or-admin (mig 011), so the cookie-bound client returns only the
+  // caller's own row for a non-admin — the task-assignee picker (create +
+  // reassign) then offered an advisor ONLY themselves. Return the active team
+  // (id + names only — no sensitive columns) so anyone who works tasks can
+  // assign to a colleague. Matches "anyone with case access can assign to
+  // anyone with case access" for this small office.
+  // NOTE: not yet scoped to a specific case's accessors — a per-case,
+  // permission-aware RPC is the refinement if cross-case mis-assignment ever
+  // becomes a problem.
+  const supabase = createAdminClient();
   const { data } = await supabase
     .from('profiles')
     .select('id, first_name, last_name')
