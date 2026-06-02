@@ -3,13 +3,13 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 
 /**
- * SEC-AUTH-1 session helpers wrapping two RPCs added in migration 121.
+ * SEC-AUTH-1 session helpers wrapping two RPCs added in migration 122.
  *
  * `src/types/database.ts` is generated from the live schema and does not yet
  * include these functions, so the `rpc` calls are cast through `unknown` to a
  * minimal local shape. Keeping the cast HERE (one justified place) means the
  * middleware and the team actions stay fully typed. Regenerate the Supabase
- * types after migration 121 is applied to drop these casts.
+ * types after migration 122 is applied to drop these casts.
  */
 
 type ActiveRpc = {

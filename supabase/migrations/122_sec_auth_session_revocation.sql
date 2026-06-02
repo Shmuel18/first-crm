@@ -1,5 +1,5 @@
 -- =============================================================================
--- Migration 121: SEC-AUTH-1 — session revocation on deactivate / delete
+-- Migration 122: SEC-AUTH-1 — session revocation on deactivate / delete
 -- =============================================================================
 -- Deactivating or soft-deleting a team member (setMemberActiveAction /
 -- deleteMemberAction → profiles.is_active=false [+ deleted_at]) previously left
