@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { Tooltip } from '@/components/ui/tooltip';
+import { formatCurrency } from '@/lib/utils/format-currency';
 
 import { deleteObligationAction } from '../actions/delete-obligation';
 import {
@@ -50,12 +51,6 @@ export function ObligationRow({ caseId, obligation, locale, canEdit }: Props) {
     setPropRef(obligation);
     setRow(obligation);
   }
-
-  const fmt = new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-US', {
-    style: 'currency',
-    currency: 'ILS',
-    maximumFractionDigits: 0,
-  });
 
   // Optimistic single-field save bridge. EditableField rolls back its own
   // input value on failure via its `value` prop effect.
@@ -106,7 +101,7 @@ export function ObligationRow({ caseId, obligation, locale, canEdit }: Props) {
   const hasMonthlyAmount =
     row.monthly_payment !== null && row.monthly_payment !== undefined;
   const headerSubtitle = hasMonthlyAmount
-    ? fmt.format(Number(row.monthly_payment))
+    ? formatCurrency(Number(row.monthly_payment), locale)
     : null;
   const isEmpty = !row.lender && !hasMonthlyAmount && row.months_remaining === null;
 

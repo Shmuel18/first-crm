@@ -5,6 +5,7 @@ import { CaseBlock } from '@/features/cases/components/case-block';
 import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
+import { formatCurrency } from '@/lib/utils/format-currency';
 
 import { listIncomesForCase, listIncomeTypeOptions } from '../services/incomes.service';
 import { BorrowerIncomesGroup } from './borrower-incomes-group';
@@ -48,11 +49,6 @@ export async function CaseIncomesBlock({ caseId }: Props) {
   }
 
   const totalAcrossBorrowers = groups.reduce((sum, g) => sum + g.monthlyTotal, 0);
-  const fmt = new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-US', {
-    style: 'currency',
-    currency: 'ILS',
-    maximumFractionDigits: 0,
-  });
 
   return (
     <CaseBlock
@@ -64,7 +60,7 @@ export async function CaseIncomesBlock({ caseId }: Props) {
         groups.length > 0 && (
           <span className="text-xs text-neutral-600">
             {t('grandTotal')}:{' '}
-            <span className="font-semibold text-neutral-900">{fmt.format(totalAcrossBorrowers)}</span>
+            <span className="font-semibold text-neutral-900">{formatCurrency(totalAcrossBorrowers, locale)}</span>
           </span>
         )
       }

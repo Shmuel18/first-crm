@@ -6,6 +6,8 @@ import { Loader2, Plus, Wallet } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { formatCurrency } from '@/lib/utils/format-currency';
+
 import { createEmptyIncomeAction } from '../actions/create-empty-income';
 import { IncomeRow } from './income-row';
 import type { IncomeTypeOption, IncomeWithType } from '../types';
@@ -40,12 +42,6 @@ export function BorrowerIncomesGroup({
   const t = useTranslations('incomes');
   const tc = useTranslations('common');
   const [isAdding, startAdd] = useTransition();
-
-  const fmt = new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-US', {
-    style: 'currency',
-    currency: 'ILS',
-    maximumFractionDigits: 0,
-  });
 
   const handleAdd = () => {
     startAdd(async () => {
@@ -91,7 +87,7 @@ export function BorrowerIncomesGroup({
             <span className="font-medium text-neutral-900 text-sm truncate">{borrowerName}</span>
             <span className="text-xs text-neutral-500">
               {t('monthlyTotal')}:{' '}
-              <span className="font-semibold text-neutral-800">{fmt.format(monthlyTotal)}</span>
+              <span className="font-semibold text-neutral-800">{formatCurrency(monthlyTotal, locale)}</span>
             </span>
           </div>
         </div>
