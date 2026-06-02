@@ -2,6 +2,7 @@
 
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
 const BUCKET = 'case-documents';
@@ -34,7 +35,7 @@ export async function removeExpenseReceiptAction(
     .is('deleted_at', null)
     .maybeSingle();
   if (fetchErr) {
-    console.error('[removeExpenseReceipt] fetch failed', fetchErr);
+    console.error('[removeExpenseReceipt] fetch failed', safeDbError(fetchErr));
     return { ok: false, error: 'unknown' };
   }
   const path = existing?.receipt_path ?? null;
@@ -52,7 +53,7 @@ export async function removeExpenseReceiptAction(
     .eq('case_id', caseId)
     .is('deleted_at', null);
   if (updErr) {
-    console.error('[removeExpenseReceipt] update failed', updErr);
+    console.error('[removeExpenseReceipt] update failed', safeDbError(updErr));
     return { ok: false, error: 'unknown' };
   }
 

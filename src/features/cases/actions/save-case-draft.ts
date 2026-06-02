@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 import { userHasPermission } from '@/lib/auth/permissions';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 import { sanitizeRichTextHtml } from '@/lib/utils/sanitize-html';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
@@ -66,10 +67,7 @@ export async function saveCaseDraftAction(
   if (rpcErr || !caseId) {
     console.error('[saveCaseDraft] rpc failed', {
       userId: userRes.user.id,
-      code: rpcErr?.code ?? null,
-      message: rpcErr?.message ?? null,
-      details: rpcErr?.details ?? null,
-      hint: rpcErr?.hint ?? null,
+      ...safeDbError(rpcErr),
     });
     if (rpcErr?.code === '42883' || rpcErr?.message?.includes('create_case_draft')) {
       return { ok: false, error: 'setup' };

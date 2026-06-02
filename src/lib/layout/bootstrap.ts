@@ -1,6 +1,7 @@
 import { cache } from 'react';
 
 import { userHasPermission } from '@/lib/auth/permissions';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 import type { NotificationData, NotificationType } from '@/features/notifications/types';
 import { timeAsync } from '@/lib/perf/timing';
@@ -65,7 +66,7 @@ export const getLayoutBootstrap = cache(async (): Promise<LayoutBootstrap> => {
   );
 
   if (error || !data || typeof data !== 'object') {
-    if (error) console.error('[layout_bootstrap] rpc error', error);
+    if (error) console.error('[layout_bootstrap] rpc error', safeDbError(error));
     return UNAUTHED;
   }
 

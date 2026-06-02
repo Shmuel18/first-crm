@@ -3,6 +3,7 @@
 import { randomUUID } from 'node:crypto';
 
 import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
 import { sanitizeFilename } from '../domain/sanitize-filename';
@@ -93,7 +94,7 @@ export async function prepareUploadAction(
     .from(BUCKET)
     .createSignedUploadUrl(path);
   if (error || !data) {
-    console.error('[prepareUpload] signed url failed', error);
+    console.error('[prepareUpload] signed url failed', safeDbError(error));
     return { ok: false, error: 'storage' };
   }
 

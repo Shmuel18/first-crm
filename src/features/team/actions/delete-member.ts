@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import { revokeUserSessions } from '@/lib/auth/session';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
 import { DeleteMemberSchema } from '../schemas/team.schema';
@@ -50,7 +51,7 @@ export async function deleteMemberAction(userId: string): Promise<Result> {
     .is('deleted_at', null)
     .eq('is_archived', false);
   if (caseErr) {
-    console.error('[deleteMember] case reassign failed', caseErr);
+    console.error('[deleteMember] case reassign failed', safeDbError(caseErr));
     return { ok: false, error: 'unknown' };
   }
 
@@ -61,7 +62,7 @@ export async function deleteMemberAction(userId: string): Promise<Result> {
     .eq('status', 'pending')
     .is('deleted_at', null);
   if (taskErr) {
-    console.error('[deleteMember] task reassign failed', taskErr);
+    console.error('[deleteMember] task reassign failed', safeDbError(taskErr));
     return { ok: false, error: 'unknown' };
   }
 
@@ -73,7 +74,7 @@ export async function deleteMemberAction(userId: string): Promise<Result> {
     .eq('id', parsed.data.userId)
     .select('id');
   if (profErr) {
-    console.error('[deleteMember] soft-delete failed', profErr);
+    console.error('[deleteMember] soft-delete failed', safeDbError(profErr));
     return { ok: false, error: 'unknown' };
   }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };

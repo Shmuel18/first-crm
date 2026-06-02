@@ -1,6 +1,7 @@
 'use server';
 
 import { userCanEditCase } from '@/lib/auth/permissions';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
 type Result =
@@ -38,7 +39,7 @@ export async function addCaseBankAction(
     .eq('case_id', caseId);
 
   if (lookupErr) {
-    console.error('[addCaseBank] lookup error', lookupErr);
+    console.error('[addCaseBank] lookup error', safeDbError(lookupErr));
     return { ok: false, error: 'unknown' };
   }
 
@@ -60,7 +61,7 @@ export async function addCaseBankAction(
       .update({ ...fields, deleted_at: null })
       .eq('id', softDeleted.id);
     if (error) {
-      console.error('[addCaseBank] reactivate error', error);
+      console.error('[addCaseBank] reactivate error', safeDbError(error));
       return { ok: false, error: 'unknown' };
     }
     return { ok: true, caseBankId: softDeleted.id };
@@ -74,7 +75,7 @@ export async function addCaseBankAction(
 
   if (error) {
     if (error.code === '23505') return { ok: false, error: 'already_linked' };
-    console.error('[addCaseBank] insert error', error);
+    console.error('[addCaseBank] insert error', safeDbError(error));
     return { ok: false, error: 'unknown' };
   }
 

@@ -3,6 +3,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
 type Result = { ok: true } | { ok: false; error: 'validation' | 'unauthorized' | 'unknown' };
@@ -32,7 +33,7 @@ export async function deleteCaseCommentAction(commentId: string): Promise<Result
     .select('id');
 
   if (error) {
-    console.error('[deleteCaseComment] delete failed', error);
+    console.error('[deleteCaseComment] delete failed', safeDbError(error));
     return { ok: false, error: 'unknown' };
   }
   const rows = (data ?? []) as Array<{ id: string }>;

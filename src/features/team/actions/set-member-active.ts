@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import { revokeUserSessions } from '@/lib/auth/session';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
 import { SetActiveSchema } from '../schemas/team.schema';
@@ -40,7 +41,7 @@ export async function setMemberActiveAction(userId: string, isActive: boolean): 
     .select('id');
 
   if (error) {
-    console.error('[setMemberActive] db error', error);
+    console.error('[setMemberActive] db error', safeDbError(error));
     return { ok: false, error: 'unknown' };
   }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };

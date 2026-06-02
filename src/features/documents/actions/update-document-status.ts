@@ -4,6 +4,7 @@ import { refresh, revalidatePath } from 'next/cache';
 
 import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import type { Database } from '@/types/database';
 
 import { DocumentStatusSchema } from '../schemas/document.schema';
@@ -51,7 +52,7 @@ export async function updateDocumentStatusAction(
     .eq('case_id', caseId); // defense-in-depth: doc must belong to the supplied case
 
   if (error) {
-    console.error('[updateDocumentStatus] db error', error);
+    console.error('[updateDocumentStatus] db error', safeDbError(error));
     return { ok: false, error: 'unknown' };
   }
 

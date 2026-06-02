@@ -1,6 +1,7 @@
 'use server';
 
 import { userHasPermission } from '@/lib/auth/permissions';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
 type Result =
@@ -28,7 +29,7 @@ export async function getDocumentPreviewUrlAction(
     .maybeSingle();
 
   if (error) {
-    console.error('[getDocumentPreviewUrl] doc fetch failed', error);
+    console.error('[getDocumentPreviewUrl] doc fetch failed', safeDbError(error));
     return { ok: false, error: 'unknown' };
   }
   if (!doc) return { ok: false, error: 'not_found' };

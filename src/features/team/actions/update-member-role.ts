@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
 import { UpdateRoleSchema } from '../schemas/team.schema';
@@ -41,7 +42,7 @@ export async function updateMemberRoleAction(userId: string, roleId: string): Pr
     .select('id');
 
   if (error) {
-    console.error('[updateMemberRole] db error', error);
+    console.error('[updateMemberRole] db error', safeDbError(error));
     return { ok: false, error: 'unknown' };
   }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };

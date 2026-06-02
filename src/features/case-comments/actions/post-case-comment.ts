@@ -2,6 +2,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
 import { PostCaseCommentSchema } from '../schemas/case-comment.schema';
@@ -43,7 +44,7 @@ export async function postCaseCommentAction(caseId: string, body: string): Promi
   if (error || !data) {
     // Includes the RLS rejection path (caller can't view the case). Return a
     // generic code — don't leak which gate failed.
-    console.error('[postCaseComment] insert failed', error);
+    console.error('[postCaseComment] insert failed', safeDbError(error));
     return { ok: false, error: 'unknown' };
   }
 

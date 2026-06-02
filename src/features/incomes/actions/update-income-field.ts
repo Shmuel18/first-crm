@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import { userCanEditCase } from '@/lib/auth/permissions';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 import { asBorrowerId, asCaseId } from '@/lib/types/branded';
 import type { Database } from '@/types/database';
@@ -93,7 +94,7 @@ export async function updateIncomeFieldAction(
     .select('id');
 
   if (error) {
-    console.error('[updateIncomeField] db error', error);
+    console.error('[updateIncomeField] db error', safeDbError(error));
     return { ok: false, error: 'unknown' };
   }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };

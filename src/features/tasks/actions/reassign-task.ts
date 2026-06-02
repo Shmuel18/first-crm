@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import { sendTaskNotificationEmail } from '@/features/notifications/services/notification-email';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
 import { ReassignTaskSchema } from '../schemas/task.schema';
@@ -56,7 +57,7 @@ export async function reassignTaskAction(
     p_note: parsed.data.note?.trim() || null,
   });
   if (error) {
-    console.error('[reassignTask] rpc error', { code: error.code, message: error.message });
+    console.error('[reassignTask] rpc error', safeDbError(error));
     return { ok: false, error: 'unknown' };
   }
 

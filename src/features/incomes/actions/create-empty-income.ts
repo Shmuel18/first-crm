@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import { userCanEditCase } from '@/lib/auth/permissions';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 import { asBorrowerId, asCaseId } from '@/lib/types/branded';
 
@@ -42,7 +43,7 @@ export async function createEmptyIncomeAction(
     .single();
 
   if (error || !created) {
-    console.error('[createEmptyIncome] db error', error);
+    console.error('[createEmptyIncome] db error', safeDbError(error));
     return { ok: false, error: 'unknown' };
   }
 
