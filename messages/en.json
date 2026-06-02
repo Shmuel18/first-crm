@@ -1389,7 +1389,8 @@
       "sections": {
         "identity": "Identity",
         "contact": "Contact",
-        "address": "Address"
+        "address": "Address",
+        "retention": "Data retention"
       },
       "fields": {
         "officeName": "Office name",
@@ -1401,7 +1402,13 @@
         "website": "Website",
         "street": "Street & number",
         "city": "City",
-        "postalCode": "Postal code"
+        "postalCode": "Postal code",
+        "auditRetentionDays": "Audit log retention (days)",
+        "deletedRetentionDays": "Deleted items retention (days)"
+      },
+      "help": {
+        "auditRetention": "How many days the audit log is kept before automatic deletion. Set this to your office's legal retention obligations (default: 365).",
+        "deletedRetention": "How many days deleted items stay in the recycle bin before permanent deletion (default: 14)."
       },
       "errors": {
         "generic": "Save failed. Please try again."

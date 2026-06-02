@@ -24,6 +24,19 @@ export const OfficeFormSchema = z.object({
     z.url({ error: 'common.errors.invalidUrl' }).nullable().optional(),
   ),
   tax_id: optionalShortString(40),
+  // Data-retention knobs (office_settings, NOT NULL ints). Coerced from the
+  // form's string FormData; bounded so a typo can't wipe records or keep them
+  // forever. Set per the office's legal retention obligations (LEGAL-4).
+  audit_log_retention_days: z.coerce
+    .number({ error: 'common.errors.required' })
+    .int({ error: 'common.errors.required' })
+    .min(30, { error: 'common.errors.tooSmall' })
+    .max(3650, { error: 'common.errors.tooLarge' }),
+  deleted_records_retention_days: z.coerce
+    .number({ error: 'common.errors.required' })
+    .int({ error: 'common.errors.required' })
+    .min(1, { error: 'common.errors.tooSmall' })
+    .max(3650, { error: 'common.errors.tooLarge' }),
 });
 
 export type OfficeFormInput = z.infer<typeof OfficeFormSchema>;
