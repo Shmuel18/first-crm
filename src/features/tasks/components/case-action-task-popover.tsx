@@ -57,14 +57,23 @@ export function CaseActionTaskPopover({
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Close on click outside the trigger + panel. Skipped while the create
-  // dialog is open so clicks inside the Radix portal don't close us.
+  // dialog is open so clicks inside the portal don't close us.
   useEffect(() => {
     if (!open || dialogOpen) return;
     const handler = (e: MouseEvent) => {
-      const target = e.target as Node;
+      const target = e.target as HTMLElement | null;
       if (
         panelRef.current?.contains(target) ||
-        buttonRef.current?.contains(target)
+        buttonRef.current?.contains(target) ||
+        // The rows render their ⋯ menu and its edit / reassign / thread
+        // dialogs + delete-confirm into a Base UI portal at <body>, so those
+        // clicks land OUTSIDE panelRef. Treating them as "outside" would close
+        // the popover and unmount the row mid-action — e.g. clicking "delete"
+        // closed the popover before the confirm dialog could even appear, so
+        // nothing happened. Keep the popover open while interacting with them.
+        target?.closest('[role="menu"]') ||
+        target?.closest('[role="dialog"]') ||
+        target?.closest('[role="alertdialog"]')
       ) {
         return;
       }
