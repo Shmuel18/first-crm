@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { CurrencySign } from '@/components/ui/currency-sign';
 import { Tooltip } from '@/components/ui/tooltip';
 import { EditableField } from '@/features/borrowers/components/editable-field';
+import { formatCurrency } from '@/lib/utils/format-currency';
 
 import { deleteIncomeAction } from '../actions/delete-income';
 import {
@@ -57,12 +58,6 @@ export function IncomeRow({ caseId, income, incomeTypes, locale, canEdit, canDel
     setRow(income);
   }
 
-  const fmt = new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-US', {
-    style: 'currency',
-    currency: 'ILS',
-    maximumFractionDigits: 0,
-  });
-
   const typeOptions = useMemo(
     () =>
       incomeTypes.map((it) => ({
@@ -98,7 +93,7 @@ export function IncomeRow({ caseId, income, incomeTypes, locale, canEdit, canDel
 
   const headerSubtitle =
     row.amount_monthly !== null && row.amount_monthly !== undefined
-      ? fmt.format(Number(row.amount_monthly))
+      ? formatCurrency(Number(row.amount_monthly), locale)
       : tf('amountMonthly');
 
   return (

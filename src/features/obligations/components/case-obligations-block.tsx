@@ -5,6 +5,7 @@ import { CaseBlock } from '@/features/cases/components/case-block';
 import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
+import { formatCurrency } from '@/lib/utils/format-currency';
 
 import { listObligationsFlatForCase } from '../services/obligations.service';
 import { CaseObligationsList } from './case-obligations-list';
@@ -53,12 +54,6 @@ export async function CaseObligationsBlock({ caseId }: Props) {
     console.error(`[CaseObligationsBlock] data fetch failed — ${summary}`);
   }
 
-  const fmt = new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-US', {
-    style: 'currency',
-    currency: 'ILS',
-    maximumFractionDigits: 0,
-  });
-
   return (
     <CaseBlock
       title={t('blockTitle')}
@@ -70,7 +65,7 @@ export async function CaseObligationsBlock({ caseId }: Props) {
           <span className="text-xs text-neutral-600">
             {t('grandTotal')}:{' '}
             <span className="font-semibold text-neutral-900">
-              {fmt.format(view.monthlyPaymentTotal)}
+              {formatCurrency(view.monthlyPaymentTotal, locale)}
             </span>
           </span>
         )

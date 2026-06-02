@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Tooltip } from '@/components/ui/tooltip';
+import { formatCurrency } from '@/lib/utils/format-currency';
 
 import { deleteObligationAction } from '../actions/delete-obligation';
 import { ObligationFormDialog } from './obligation-form-dialog';
@@ -58,12 +59,6 @@ export function BorrowerObligationsGroup({
   const [confirmTarget, setConfirmTarget] = useState<ObligationRow | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const fmt = new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-US', {
-    style: 'currency',
-    currency: 'ILS',
-    maximumFractionDigits: 0,
-  });
-
   const handleDelete = (obligation: ObligationRow) => {
     setDeletingId(obligation.id);
     startTransition(async () => {
@@ -93,14 +88,14 @@ export function BorrowerObligationsGroup({
               <span>
                 {t('monthlyTotal')}:{' '}
                 <span className="font-semibold text-neutral-800">
-                  {fmt.format(monthlyPaymentTotal)}
+                  {formatCurrency(monthlyPaymentTotal, locale)}
                 </span>
               </span>
               {remainingDebtTotal > 0 && (
                 <span>
                   · {t('remainingTotal')}:{' '}
                   <span className="font-semibold text-neutral-800">
-                    {fmt.format(remainingDebtTotal)}
+                    {formatCurrency(remainingDebtTotal, locale)}
                   </span>
                 </span>
               )}
@@ -142,7 +137,7 @@ export function BorrowerObligationsGroup({
                 )}
               </div>
               <span className="font-mono text-sm text-neutral-900 shrink-0" dir="ltr">
-                {ob.monthly_payment !== null ? fmt.format(Number(ob.monthly_payment)) : '—'}
+                {ob.monthly_payment !== null ? formatCurrency(Number(ob.monthly_payment), locale) : '—'}
               </span>
               {canEdit && (
                 <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition">
