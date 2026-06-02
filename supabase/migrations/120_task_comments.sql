@@ -1,5 +1,5 @@
 -- =============================================================================
--- Migration 119: task_comments — thread per task (events + free comments)
+-- Migration 120: task_comments — thread per task (events + free comments)
 -- =============================================================================
 -- Each task gets a chronological thread mixing two kinds of rows:
 --   event_type = 'comment'               → free text typed by a team member
