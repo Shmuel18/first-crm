@@ -18,6 +18,7 @@ import { changeTaskStatusAction } from '../actions/change-task-status';
 import { TaskBoardColumn } from './task-board-column';
 import { TaskFormDialog } from './task-form-dialog';
 import { TaskReassignDialog } from './task-reassign-dialog';
+import { TaskThreadDialog } from './task-thread-dialog';
 import type { TaskStatus, TaskWithRelations } from '../types';
 
 const BOARD_COLUMNS: TaskStatus[] = ['pending', 'in_progress', 'snoozed', 'completed'];
@@ -47,6 +48,7 @@ export function TasksBoard({ tasks, locale, assignees, cases }: Props) {
 
   const [editing, setEditing] = useState<TaskWithRelations | null>(null);
   const [reassignTarget, setReassignTarget] = useState<TaskWithRelations | null>(null);
+  const [threadTarget, setThreadTarget] = useState<TaskWithRelations | null>(null);
 
   // Small activation distance so a click (open) isn't read as a drag.
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
@@ -83,6 +85,7 @@ export function TasksBoard({ tasks, locale, assignees, cases }: Props) {
               emptyLabel={tb('empty')}
               onOpen={setEditing}
               onReassign={setReassignTarget}
+              onThread={setThreadTarget}
             />
           ))}
         </div>
@@ -106,6 +109,14 @@ export function TasksBoard({ tasks, locale, assignees, cases }: Props) {
         }}
         task={reassignTarget}
         assignees={assignees}
+      />
+
+      <TaskThreadDialog
+        open={threadTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setThreadTarget(null);
+        }}
+        task={threadTarget}
       />
     </>
   );

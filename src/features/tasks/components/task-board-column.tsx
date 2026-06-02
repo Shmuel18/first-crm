@@ -23,6 +23,7 @@ type Props = {
   emptyLabel: string;
   onOpen: (task: TaskWithRelations) => void;
   onReassign?: (task: TaskWithRelations) => void;
+  onThread?: (task: TaskWithRelations) => void;
 };
 
 export function TaskBoardColumn({
@@ -33,6 +34,7 @@ export function TaskBoardColumn({
   emptyLabel,
   onOpen,
   onReassign,
+  onThread,
 }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
@@ -63,6 +65,7 @@ export function TaskBoardColumn({
               locale={locale}
               onOpen={onOpen}
               onReassign={onReassign}
+              onThread={onThread}
             />
           ))
         )}

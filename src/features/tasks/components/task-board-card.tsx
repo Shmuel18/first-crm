@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { AlertTriangle, GripVertical, Lock, MoreHorizontal, Trash2, UserPlus } from 'lucide-react';
+import { AlertTriangle, GripVertical, Lock, MessageSquare, MoreHorizontal, Trash2, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
@@ -37,9 +37,10 @@ type Props = {
   locale: Locale;
   onOpen: (task: TaskWithRelations) => void;
   onReassign?: (task: TaskWithRelations) => void;
+  onThread?: (task: TaskWithRelations) => void;
 };
 
-export function TaskBoardCard({ task, locale, onOpen, onReassign }: Props) {
+export function TaskBoardCard({ task, locale, onOpen, onReassign, onThread }: Props) {
   const t = useTranslations('tasks');
   const tc = useTranslations('common');
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -100,6 +101,22 @@ export function TaskBoardCard({ task, locale, onOpen, onReassign }: Props) {
             aria-hidden="true"
             className="task-critical-dot size-2 rounded-full bg-red-600 shrink-0 mt-1.5"
           />
+        )}
+        {/* Thread button. Stops propagation (click + pointerdown) so it doesn't
+            open the edit dialog or start a drag. */}
+        {onThread && (
+          <button
+            type="button"
+            aria-label={t('thread.open')}
+            onClick={(e) => {
+              e.stopPropagation();
+              onThread(task);
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="-mt-0.5 shrink-0 text-neutral-300 opacity-0 transition hover:text-brand-gold-text focus-visible:opacity-100 group-hover:opacity-100"
+          >
+            <MessageSquare className="size-4" aria-hidden="true" />
+          </button>
         )}
         {/* ⋯ menu — reassign (non-private) + delete. Stops propagation so it
             doesn't open the edit dialog or start a drag. */}
