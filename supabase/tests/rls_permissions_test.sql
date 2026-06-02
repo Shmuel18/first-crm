@@ -18,7 +18,7 @@
 -- =============================================================================
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
-SELECT plan(10);
+SELECT plan(15);
 
 -- ---- fixed ids -------------------------------------------------------------
 -- users
@@ -141,6 +141,40 @@ UPDATE public.leads SET status = 'converted' WHERE id = :'lead_a';
 SELECT pg_temp.logout();
 SELECT is((SELECT status FROM public.leads WHERE id = :'lead_a'), 'active',
   'advisor B''s UPDATE of advisor A''s lead changed nothing (IDOR closed, mig 116)');
+
+-- ===========================================================================
+-- Lead → case conversion happy path (convert_lead_to_case, migration 124).
+-- Regression guard: the function used to UPDATE a non-existent column
+-- (converted_case_id) and threw undefined_column at RUNTIME, so conversion was
+-- silently broken since migration 053. This actually performs a conversion —
+-- the auth-denial-only tests above never reached the broken UPDATE.
+-- ===========================================================================
+\set lead_c '99999999-9999-9999-9999-999999999999'
+SELECT pg_temp.logout();
+INSERT INTO public.leads (id, first_name, last_name, national_id, status, assigned_to, created_by)
+VALUES (:'lead_c', 'Lead', 'C', '900000003', 'active', :'advisor_a', :'manager');
+
+-- Manager (admin: create_case + view_all_leads) converts. Must NOT throw.
+SELECT pg_temp.login_as(:'manager');
+SELECT lives_ok(
+  $$ SELECT public.convert_lead_to_case('99999999-9999-9999-9999-999999999999'::uuid) $$,
+  'convert_lead_to_case succeeds on the happy path (no undefined-column throw)');
+
+SELECT pg_temp.logout();
+SELECT is((SELECT status FROM public.leads WHERE id = :'lead_c'), 'converted',
+  'converted lead is marked converted');
+SELECT ok((SELECT converted_to_case_id IS NOT NULL FROM public.leads WHERE id = :'lead_c'),
+  'converted lead has converted_to_case_id set (the fixed column)');
+SELECT ok((SELECT converted_at IS NOT NULL FROM public.leads WHERE id = :'lead_c'),
+  'converted lead has converted_at set (restored regression)');
+SELECT is(
+  (SELECT count(*)::int
+     FROM public.cases c
+     JOIN public.leads l ON l.converted_to_case_id = c.id
+    WHERE l.id = :'lead_c'
+      AND c.status_id = (SELECT id FROM public.case_statuses WHERE key = 'case_opened')),
+  1,
+  'conversion created exactly one case_opened case linked from the lead');
 
 SELECT * FROM finish();
 ROLLBACK;
