@@ -24,6 +24,12 @@ export async function saveBorrowerAction(
     return { ok: false, error: 'validation', values };
   }
 
+  // Optimistic lock (migration 123): the edit form round-trips borrowers.version.
+  // Absent/empty for new borrowers → null → the RPC skips the version check.
+  const versionRaw = formData.get('version');
+  const expectedVersion =
+    typeof versionRaw === 'string' && /^\d+$/.test(versionRaw) ? Number(versionRaw) : null;
+
   const parsed = BorrowerFormSchema.safeParse(formDataToObject(formData));
   if (!parsed.success) {
     const fieldErrors = await resolveSchemaErrors(parsed.error);
@@ -46,6 +52,7 @@ export async function saveBorrowerAction(
     roleInCase: role_in_case,
     isPrimary: is_primary,
     userId: userRes.user.id,
+    expectedVersion,
   });
   if (!result.ok) return { ok: false, error: result.error, values };
 

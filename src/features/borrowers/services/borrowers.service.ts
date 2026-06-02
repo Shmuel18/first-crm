@@ -162,11 +162,14 @@ export type SaveBorrowerInput = {
   /** Kept for API compatibility; the RPC stamps updated_by/created_by from
    *  auth.uid() server-side. Callers can keep passing this — it's ignored. */
   userId: string;
+  /** Optimistic lock: the borrowers.version the edit form loaded. Pinned in the
+   *  RPC's UPDATE so a concurrent save returns 'conflict'. Omit for new borrowers. */
+  expectedVersion?: number | null;
 };
 
 export type SaveBorrowerResult =
   | { ok: true; borrowerId: string }
-  | { ok: false; error: 'unauthorized' | 'primary_exists' | 'unknown' };
+  | { ok: false; error: 'unauthorized' | 'primary_exists' | 'conflict' | 'unknown' };
 
 // Postgres unique-violation code — surfaces when uq_case_borrowers_one_primary
 // (migration 024) rejects a second primary borrower on the same case.
@@ -174,6 +177,10 @@ const PG_UNIQUE_VIOLATION = '23505';
 // Postgres "insufficient privilege" — RPC raises this when the per-case
 // scope check fails (caller can't edit this case OR borrower not on it).
 const PG_INSUFFICIENT_PRIVILEGE = '42501';
+// serialization_failure — raised by the RPC when the pinned borrower version no
+// longer matches (a concurrent edit bumped it). Maps to an optimistic-lock
+// 'conflict' the form surfaces as "reload, someone changed this".
+const PG_LOCK_CONFLICT = '40001';
 
 /**
  * Persist a borrower for a case atomically via the save_borrower_for_case_full
@@ -194,21 +201,40 @@ export async function saveBorrowerForCase(
 ): Promise<SaveBorrowerResult> {
   const supabase = await createClient();
 
-  const { data: borrowerId, error } = await supabase.rpc('save_borrower_for_case_full', {
+  // The generated RPC types don't yet include the p_expected_version param added
+  // in migration 123 (regenerate database.ts to drop this cast). The shim also
+  // models p_borrower_id as nullable (NULL = insert) — the SQL handles NULL
+  // though the generated type narrows it to string.
+  const { data: borrowerId, error } = await (
+    supabase as unknown as {
+      rpc: (
+        fn: 'save_borrower_for_case_full',
+        args: {
+          p_case_id: string;
+          p_borrower_id: string | null;
+          p_fields: unknown;
+          p_role: string;
+          p_is_primary: boolean;
+          p_expected_version: number | null;
+        },
+      ) => Promise<{ data: string | null; error: { code?: string; message: string } | null }>;
+    }
+  ).rpc('save_borrower_for_case_full', {
     p_case_id: input.caseId,
-    // p_borrower_id is nullable in the SQL (NULL = insert new) but the
-    // generated types narrow it to `string`. The function explicitly
-    // handles NULL — keep that contract with an `as string` cast.
-    p_borrower_id: input.borrowerId as string,
-    p_fields: input.borrowerFields as never,
+    p_borrower_id: input.borrowerId,
+    p_fields: input.borrowerFields,
     p_role: input.roleInCase,
     p_is_primary: input.isPrimary,
+    p_expected_version: input.expectedVersion ?? null,
   });
 
   if (error) {
     if (error.code === PG_UNIQUE_VIOLATION) {
       // uq_case_borrowers_one_primary — promoting a second primary borrower.
       return { ok: false, error: 'primary_exists' };
+    }
+    if (error.code === PG_LOCK_CONFLICT) {
+      return { ok: false, error: 'conflict' };
     }
     if (error.code === PG_INSUFFICIENT_PRIVILEGE) {
       return { ok: false, error: 'unauthorized' };

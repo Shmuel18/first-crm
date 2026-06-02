@@ -78,13 +78,18 @@ export function EditableTextCell({
     setEditing(false);
 
     startTransition(async () => {
-      const result = await quickUpdateCaseFieldAction(caseId, field, newValue || null);
+      const result = await quickUpdateCaseFieldAction(
+        caseId,
+        field,
+        newValue || null,
+        previousSaved || null,
+      );
       if (result.ok) {
         setShowSaved(true);
       } else {
         setSavedValue(previousSaved);
         setValue(previousSaved);
-        toast.error(tc('saveFailed'));
+        toast.error(result.error === 'conflict' ? tc('changedElsewhere') : tc('saveFailed'));
       }
     });
   };

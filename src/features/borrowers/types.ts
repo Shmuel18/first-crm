@@ -22,7 +22,7 @@ export type BorrowerActionState =
   | { ok: true; borrowerId: string }
   | {
       ok: false;
-      error: 'validation' | 'unauthorized' | 'primary_exists' | 'unknown';
+      error: 'validation' | 'unauthorized' | 'primary_exists' | 'conflict' | 'unknown';
       fieldErrors?: Record<string, string>;
       values?: Partial<Record<string, string>>;
     }

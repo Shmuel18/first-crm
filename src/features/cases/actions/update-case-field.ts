@@ -23,7 +23,7 @@ type CaseUpdate = Database['public']['Tables']['cases']['Update'];
  * dedicated actions). Mirrors updateBorrowerFieldAction's contract.
  */
 
-type CaseFieldErr = 'invalid_field' | 'validation' | 'unauthorized' | 'unknown';
+type CaseFieldErr = 'invalid_field' | 'validation' | 'unauthorized' | 'conflict' | 'unknown';
 export type UpdateCaseFieldResult =
   | { ok: true }
   | { ok: false; error: CaseFieldErr; message?: string };
@@ -32,6 +32,7 @@ export async function updateCaseFieldAction(
   caseId: string,
   field: string,
   rawValue: unknown,
+  expectedOld?: string | null,
 ): Promise<UpdateCaseFieldResult> {
   if (!isEditableCaseField(field)) {
     return { ok: false, error: 'invalid_field' };
@@ -63,11 +64,15 @@ export async function updateCaseFieldAction(
     updated_by: userRes.user.id,
   } as CaseUpdate;
 
-  const { error } = await supabase
-    .from('cases')
-    .update(patch)
-    .eq('id', caseId)
-    .is('deleted_at', null);
+  // Per-field optimistic compare-and-swap (DB-2) for the free-text inline
+  // editor (request_details): when the caller passes the value it loaded, a
+  // concurrent change to that field makes this match 0 rows → 'conflict'.
+  let query = supabase.from('cases').update(patch).eq('id', caseId).is('deleted_at', null);
+  if (expectedOld !== undefined) {
+    const normExpected = expectedOld === '' ? null : expectedOld;
+    query = normExpected === null ? query.is(safeField, null) : query.eq(safeField, normExpected);
+  }
+  const { data: updated, error } = await query.select('id');
 
   if (error) {
     // Flat JSON so the Supabase error props survive serialization (matches
@@ -84,6 +89,10 @@ export async function updateCaseFieldAction(
       }),
     );
     return { ok: false, error: 'unknown' };
+  }
+  // CAS guard: 0 rows with a pinned old value = a concurrent writer changed it.
+  if (expectedOld !== undefined && (!updated || updated.length === 0)) {
+    return { ok: false, error: 'conflict' };
   }
 
   revalidatePath(`/cases/${caseId}`);

@@ -30,6 +30,7 @@ export async function quickUpdateCaseFieldAction(
   caseId: string,
   field: AllowedField,
   value: string | null,
+  expectedOld?: string | null,
 ): Promise<UpdateResult> {
   if (!ALLOWED_FIELDS.includes(field)) {
     return { ok: false, error: 'invalid_field' };
@@ -67,20 +68,29 @@ export async function quickUpdateCaseFieldAction(
     updated_by: userRes.user.id,
   };
 
+  // Per-field optimistic compare-and-swap (DB-2): when the caller passes the
+  // value it loaded (free-text cells like the note), pin it in the WHERE so a
+  // concurrent change to THIS field hits 0 rows. Other cells omit expectedOld
+  // and keep last-write-wins (single value, no real data loss). No row-version
+  // here → no false conflicts when a different field of the case changed.
+  let query = supabase.from('cases').update(updatePayload).eq('id', caseId);
+  if (expectedOld !== undefined) {
+    const normExpected = expectedOld === '' ? null : expectedOld;
+    query = normExpected === null ? query.is(field, null) : query.eq(field, normExpected);
+  }
+
   // .select() confirms a row was actually updated — an RLS-denied write
   // affects 0 rows with no error, which must surface as a failure.
-  const { data: updated, error } = await supabase
-    .from('cases')
-    .update(updatePayload)
-    .eq('id', caseId)
-    .select('id');
+  const { data: updated, error } = await query.select('id');
 
   if (error) {
     console.error('[quickUpdateCaseField] db error', { caseId, field, code: error.code });
     return { ok: false, error: 'unknown' };
   }
   if (!updated || updated.length === 0) {
-    return { ok: false, error: 'unauthorized' };
+    // With a CAS guard, 0 rows (after the edit check passed) = a concurrent
+    // writer changed this field first; without one it's an RLS denial.
+    return { ok: false, error: expectedOld !== undefined ? 'conflict' : 'unauthorized' };
   }
 
   // Detail-page only. The dashboard relies on the inline cells' optimistic

@@ -36,6 +36,7 @@
     "done": "Done",
     "savedAgo": "Saved",
     "saveFailed": "Save failed. Try again.",
+    "changedElsewhere": "Changed by someone else — reload to see the latest.",
     "noStatus": "No status",
     "comingSoon": "Coming soon",
     "errors": {
@@ -1129,6 +1130,7 @@
     "errors": {
       "unauthorized": "Not authorized",
       "primaryExists": "Another borrower is already marked primary on this case. Unmark them first, then promote this borrower.",
+      "conflict": "This borrower was changed by someone else while you were editing. Reload to see the current version, then re-apply your changes.",
       "generic": "Error saving. Please try again."
     },
     "maritalStatuses": {
