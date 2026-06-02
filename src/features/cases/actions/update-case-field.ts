@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import { userCanEditCase } from '@/lib/auth/permissions';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 import { sanitizeRichTextHtml } from '@/lib/utils/sanitize-html';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
@@ -79,14 +80,7 @@ export async function updateCaseFieldAction(
     // updateBorrowerFieldAction's logging shape).
     console.error(
       '[updateCaseField] update error',
-      JSON.stringify({
-        caseId,
-        field: safeField,
-        code: error.code ?? null,
-        message: error.message ?? null,
-        details: error.details ?? null,
-        hint: error.hint ?? null,
-      }),
+      JSON.stringify({ caseId, field: safeField, ...safeDbError(error) }),
     );
     return { ok: false, error: 'unknown' };
   }

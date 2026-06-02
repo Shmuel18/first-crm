@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import { userCanEditCase } from '@/lib/auth/permissions';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 import { asBorrowerId, asCaseId } from '@/lib/types/branded';
 import type { Database } from '@/types/database';
@@ -97,15 +98,7 @@ export async function updateObligationFieldAction(
   if (error) {
     console.error(
       '[updateObligationField] db error',
-      JSON.stringify({
-        obligationId,
-        caseId,
-        field: safeField,
-        code: error.code ?? null,
-        message: error.message ?? null,
-        details: error.details ?? null,
-        hint: error.hint ?? null,
-      }),
+      JSON.stringify({ obligationId, caseId, field: safeField, ...safeDbError(error) }),
     );
     return { ok: false, error: 'unknown' };
   }

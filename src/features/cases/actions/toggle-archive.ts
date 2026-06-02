@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import { userCanEditCase } from '@/lib/auth/permissions';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
 type Result =
@@ -31,7 +32,7 @@ export async function toggleArchiveAction(
     .select('id');
 
   if (error) {
-    console.error('[toggleArchive] db error', error);
+    console.error('[toggleArchive] db error', safeDbError(error));
     return { ok: false, error: 'unknown' };
   }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
 type Result =
@@ -40,7 +41,7 @@ export async function deleteTaskAction(taskId: string): Promise<Result> {
     .select('id');
 
   if (error) {
-    console.error('[deleteTask] db error', error);
+    console.error('[deleteTask] db error', safeDbError(error));
     return { ok: false, error: 'unknown' };
   }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };

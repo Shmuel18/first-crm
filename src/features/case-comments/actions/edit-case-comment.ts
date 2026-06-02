@@ -2,6 +2,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
 import { EditCaseCommentSchema } from '../schemas/case-comment.schema';
@@ -33,7 +34,7 @@ export async function editCaseCommentAction(commentId: string, body: string): Pr
     .select('id');
 
   if (error) {
-    console.error('[editCaseComment] update failed', error);
+    console.error('[editCaseComment] update failed', safeDbError(error));
     return { ok: false, error: 'unknown' };
   }
   const rows = (data ?? []) as Array<{ id: string }>;

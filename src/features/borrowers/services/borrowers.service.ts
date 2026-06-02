@@ -1,3 +1,4 @@
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 import type { BorrowerId, CaseId } from '@/lib/types/branded';
 
@@ -239,7 +240,7 @@ export async function saveBorrowerForCase(
     if (error.code === PG_INSUFFICIENT_PRIVILEGE) {
       return { ok: false, error: 'unauthorized' };
     }
-    console.error('[saveBorrowerForCase] rpc error', error);
+    console.error('[saveBorrowerForCase] rpc error', safeDbError(error));
     return { ok: false, error: 'unknown' };
   }
   if (!borrowerId) {

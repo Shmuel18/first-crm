@@ -1,6 +1,7 @@
 'use server';
 
 import { createAdminClient } from '@/lib/supabase/admin';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
 const BUCKET = 'case-documents';
@@ -33,7 +34,7 @@ export async function getExpenseReceiptUrlAction(
     .is('deleted_at', null)
     .maybeSingle();
   if (error) {
-    console.error('[getExpenseReceiptUrl] fetch failed', error);
+    console.error('[getExpenseReceiptUrl] fetch failed', safeDbError(error));
     return { ok: false, error: 'unknown' };
   }
   if (!row?.receipt_path) return { ok: false, error: 'not_found' };

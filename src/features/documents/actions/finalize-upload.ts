@@ -6,6 +6,7 @@ import { fileTypeFromBuffer } from 'file-type';
 
 import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { uploadCaseDocumentToDrive } from '@/features/integrations/services/drive-case-uploader';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
 import { sanitizeFilename } from '../domain/sanitize-filename';
@@ -184,7 +185,7 @@ export async function finalizeUploadAction(
   });
 
   if (insertErr) {
-    console.error('[finalizeUpload] insert failed', insertErr);
+    console.error('[finalizeUpload] insert failed', safeDbError(insertErr));
     await cleanupBlob(supabase, input.storagePath);
     // Drive blob is intentionally NOT cleaned up here — the existing
     // uploadDocumentBlobs path doesn't either, and an orphan Drive file

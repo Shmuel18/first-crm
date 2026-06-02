@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import { createClient } from '@/lib/supabase/server';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 
 type Result =
   | { ok: true }
@@ -38,7 +39,7 @@ export async function assignDocumentCategoryAction(
     .eq('case_id', caseId); // defense-in-depth: doc must belong to the supplied case
 
   if (error) {
-    console.error('[assignDocumentCategory] db error', error);
+    console.error('[assignDocumentCategory] db error', safeDbError(error));
     return { ok: false, error: 'unknown' };
   }
 

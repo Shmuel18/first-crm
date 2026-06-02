@@ -1,6 +1,7 @@
 'use server';
 
 import { userCanEditCase } from '@/lib/auth/permissions';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
 type Result = { ok: true } | { ok: false; error: 'unauthorized' | 'unknown' };
@@ -31,7 +32,7 @@ export async function deleteCaseBankAction(
     .is('deleted_at', null)
     .select('id');
   if (error) {
-    console.error('[deleteCaseBank] db error', error);
+    console.error('[deleteCaseBank] db error', safeDbError(error));
     return { ok: false, error: 'unknown' };
   }
   if (!deleted || deleted.length === 0) return { ok: false, error: 'unauthorized' };

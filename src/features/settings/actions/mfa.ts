@@ -1,5 +1,6 @@
 'use server';
 
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
 export type MfaStatus =
@@ -57,7 +58,7 @@ export async function enrollMfaAction(): Promise<MfaEnrollResult> {
 
   const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
   if (error || !data) {
-    console.error('[enrollMfa] supabase error', error);
+    console.error('[enrollMfa] supabase error', safeDbError(error));
     return { ok: false, error: 'unknown' };
   }
 
@@ -112,7 +113,7 @@ export async function disableMfaAction(factorId: string): Promise<MfaDisableResu
 
   const { error } = await supabase.auth.mfa.unenroll({ factorId });
   if (error) {
-    console.error('[disableMfa] supabase error', error);
+    console.error('[disableMfa] supabase error', safeDbError(error));
     return { ok: false, error: 'unknown' };
   }
   return { ok: true };

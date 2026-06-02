@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
 import { sendTaskNotificationEmail } from '@/features/notifications/services/notification-email';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
 import { emitTaskEvent } from '../lib/emit-task-event';
@@ -63,7 +64,7 @@ export async function changeTaskStatusAction(taskId: string, status: string): Pr
     .eq('id', parsed.data.taskId)
     .select('id');
   if (error) {
-    console.error('[changeTaskStatus] db error', error);
+    console.error('[changeTaskStatus] db error', safeDbError(error));
     return { ok: false, error: 'unknown' };
   }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };

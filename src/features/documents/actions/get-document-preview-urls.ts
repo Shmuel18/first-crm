@@ -1,6 +1,7 @@
 'use server';
 
 import { userHasPermission } from '@/lib/auth/permissions';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
 import { DOCUMENTS_BUCKET } from '../services/documents.service';
@@ -43,7 +44,7 @@ export async function getDocumentPreviewUrlsAction(
     .in('id', documentIds.slice(0, MAX_BATCH))
     .is('deleted_at', null);
   if (error) {
-    console.error('[getDocumentPreviewUrls] doc fetch failed', error);
+    console.error('[getDocumentPreviewUrls] doc fetch failed', safeDbError(error));
     return { ok: false, error: 'unknown' };
   }
 

@@ -5,6 +5,7 @@ import { refresh, revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
 import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
 type Result =
@@ -65,7 +66,7 @@ export async function deleteDocumentAction(
     .maybeSingle();
 
   if (fetchErr) {
-    console.error('[deleteDocument] fetch failed', fetchErr);
+    console.error('[deleteDocument] fetch failed', safeDbError(fetchErr));
     return { ok: false, error: 'unknown' };
   }
   if (!doc) {
@@ -91,7 +92,7 @@ export async function deleteDocumentAction(
   });
 
   if (deleteErr) {
-    console.error('[deleteDocument] rpc failed', deleteErr);
+    console.error('[deleteDocument] rpc failed', safeDbError(deleteErr));
     const { data: activeDoc, error: refetchErr } = await supabase
       .from('documents')
       .select('id')
@@ -101,7 +102,7 @@ export async function deleteDocumentAction(
       .maybeSingle();
 
     if (refetchErr) {
-      console.error('[deleteDocument] refetch after rpc failure failed', refetchErr);
+      console.error('[deleteDocument] refetch after rpc failure failed', safeDbError(refetchErr));
     } else if (!activeDoc) {
       // Treat delete races as success. The desired state (not visible in the
       // active documents list) already happened; the UI just needs fresh data.

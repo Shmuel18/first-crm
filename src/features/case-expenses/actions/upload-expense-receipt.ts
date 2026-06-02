@@ -8,6 +8,7 @@ import { sanitizeFilename } from '@/features/documents/domain/sanitize-filename'
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
 import { RECEIPT_ALLOWED_MIME_TYPES, RECEIPT_MAX_FILE_SIZE_BYTES } from '../schemas/receipt.schema';
@@ -115,7 +116,7 @@ export async function uploadExpenseReceiptAction(
     .is('deleted_at', null);
   if (updErr) {
     await admin.storage.from(BUCKET).remove([path]).catch(() => undefined);
-    console.error('[uploadExpenseReceipt] row update failed', updErr);
+    console.error('[uploadExpenseReceipt] row update failed', safeDbError(updErr));
     return { ok: false, error: 'storage' };
   }
 
