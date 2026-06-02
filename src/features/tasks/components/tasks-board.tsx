@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import {
   DndContext,
+  KeyboardSensor,
   PointerSensor,
   type DragEndEvent,
   useSensor,
@@ -51,7 +52,14 @@ export function TasksBoard({ tasks, locale, assignees, cases }: Props) {
   const [threadTarget, setThreadTarget] = useState<TaskWithRelations | null>(null);
 
   // Small activation distance so a click (open) isn't read as a drag.
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+  // KeyboardSensor adds keyboard operability (A11Y-1): focus a card (Tab), pick
+  // it up (Space/Enter), move across columns with arrow keys, drop (Space/Enter),
+  // cancel (Esc). The card already spreads dnd's focusable attributes + keyboard
+  // listeners, so the board just needed the sensor wired in.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor),
+  );
 
   const onDragEnd = (event: DragEndEvent) => {
     if (!event.over) return;
