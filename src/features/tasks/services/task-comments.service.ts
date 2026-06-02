@@ -1,23 +1,25 @@
 'use server';
 
+import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 
-import type { TaskCommentWithAuthor } from '../types';
+import type { TaskCommentAuthor, TaskCommentWithAuthor } from '../types';
 
+// No PostgREST author embed. profiles RLS is self-or-admin (mig 011), so a
+// non-admin viewer (an advisor) can't read a colleague's profile row — the
+// embed returned author=null and `item.author.first_name` crashed the thread
+// render. We select author_id and resolve display names server-side with the
+// admin client below (names only), so every participant sees who wrote each row.
 const COMMENT_COLUMNS = `
   id,
   task_id,
+  author_id,
   body,
   event_type,
   metadata,
   created_at,
   edited_at,
-  deleted_at,
-  author:profiles!task_comments_author_id_fkey (
-    id,
-    first_name,
-    last_name
-  )
+  deleted_at
 ` as const;
 
 /**
@@ -46,11 +48,28 @@ export async function getTaskCommentsAction(
     return { ok: false, error: 'unknown' };
   }
 
-  // The Supabase join returns author as an object (single row) — narrow the type.
-  const comments = (data ?? []).map((row) => ({
-    ...row,
-    author: Array.isArray(row.author) ? row.author[0] : row.author,
-  })) as TaskCommentWithAuthor[];
+  const rows = data ?? [];
+
+  // Resolve author names with the admin client (service role bypasses the
+  // self-or-admin profiles RLS). Names only, and only for the author_ids that
+  // appear in THIS thread. Mirrors notification-email's actor-name resolution.
+  const authorIds = [...new Set(rows.map((row) => row.author_id))];
+  const nameById = new Map<string, TaskCommentAuthor>();
+  if (authorIds.length > 0) {
+    const admin = createAdminClient();
+    const { data: profiles } = await admin
+      .from('profiles')
+      .select('id, first_name, last_name')
+      .in('id', authorIds);
+    for (const p of profiles ?? []) {
+      nameById.set(p.id, { id: p.id, first_name: p.first_name, last_name: p.last_name });
+    }
+  }
+
+  const comments: TaskCommentWithAuthor[] = rows.map((row) => {
+    const { author_id, ...rest } = row;
+    return { ...rest, author: nameById.get(author_id) ?? null };
+  });
 
   return { ok: true, comments };
 }

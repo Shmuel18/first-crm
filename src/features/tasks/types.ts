@@ -12,7 +12,12 @@ export type TaskCommentAuthor = {
 };
 
 export type TaskCommentWithAuthor = Omit<TaskCommentRow, 'author_id'> & {
-  author: TaskCommentAuthor;
+  // Nullable: the author's profile may be unresolvable (e.g. a deleted member).
+  // The UI must null-guard. Names are resolved server-side via the admin client
+  // because profiles RLS (self-or-admin, mig 011) blocks a non-admin viewer from
+  // reading a colleague's row — the old PostgREST embed returned null here and
+  // crashed the thread render for advisors.
+  author: TaskCommentAuthor | null;
 };
 
 export type TaskRow = Database['public']['Tables']['tasks']['Row'];

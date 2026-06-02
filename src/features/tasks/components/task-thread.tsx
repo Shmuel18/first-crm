@@ -39,7 +39,7 @@ const EVENT_ICON: Record<string, string> = {
 // ── sub-components ────────────────────────────────────────────────────────────
 
 function SystemEventRow({ item }: { item: TaskCommentWithAuthor }) {
-  const authorName = formatPersonName(item.author.first_name, item.author.last_name) || 'מערכת';
+  const authorName = formatPersonName(item.author?.first_name, item.author?.last_name) || 'מערכת';
   const icon = EVENT_ICON[item.event_type] ?? '·';
   return (
     <div className="flex items-start gap-2 py-1.5 text-xs text-neutral-500">
@@ -56,8 +56,8 @@ function SystemEventRow({ item }: { item: TaskCommentWithAuthor }) {
 }
 
 function CommentRow({ item }: { item: TaskCommentWithAuthor }) {
-  const authorName = formatPersonName(item.author.first_name, item.author.last_name) || 'יועץ';
-  const initials = [item.author.first_name?.[0], item.author.last_name?.[0]]
+  const authorName = formatPersonName(item.author?.first_name, item.author?.last_name) || 'יועץ';
+  const initials = [item.author?.first_name?.[0], item.author?.last_name?.[0]]
     .filter(Boolean)
     .join('')
     .toUpperCase() || '?';
