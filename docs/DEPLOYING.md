@@ -54,3 +54,4 @@ message (production untouched) — just re-run with the flag.
 - **Code rollback** → `FRANKFURT_MIGRATION_HANDOFF.md` (`first-crm:prev` / `/opt/first-crm_prev`).
 - **Data recovery / restore** → `RESTORE_RUNBOOK.md` (Drive restore is merge-only; corruption → PITR).
 - **Scheduled jobs (cron)** → installed by `scripts/cron/install-first-crm-cron.sh` (host scheduler, not Vercel cron). The nightly backup needs Google Drive connected in-app (Settings → Integrations) or it skips with `drive_not_connected`.
+- **First admin / fresh install** → `BOOTSTRAP.md` (provision the first manager on an empty DB — the app has no self-signup; needed after a clean-project restore).
