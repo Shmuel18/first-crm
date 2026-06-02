@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 
 import type { Locale } from '@/lib/i18n/direction';
 
+import { useDocumentPreviews } from '../hooks/use-document-previews';
 import type { DocumentChecklistItem } from '../services/document-checklist.service';
 import type { DocumentWithRelations, DriveFolder } from '../types';
 import { DocumentCard } from './document-card';
@@ -42,6 +43,8 @@ export function FolderDetail({
 
   const Icon = FOLDER_ICON[folder];
   const missing = checklistItems.filter((i) => i.status === 'missing');
+  // Inline thumbnails for this folder's files — fetched once the folder opens.
+  const previews = useDocumentPreviews(documents);
 
   return (
     <section className="rounded-xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
@@ -87,7 +90,12 @@ export function FolderDetail({
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {documents.map((doc) => (
-                <DocumentCard key={doc.id} doc={doc} onClick={onPreview} />
+                <DocumentCard
+                  key={doc.id}
+                  doc={doc}
+                  previewUrl={previews.get(doc.id) ?? null}
+                  onClick={onPreview}
+                />
               ))}
             </div>
           )}
