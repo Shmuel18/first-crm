@@ -1,5 +1,5 @@
 -- =============================================================================
--- Migration 133: Manager statistics RPCs
+-- Migration 135: Manager statistics RPCs
 -- =============================================================================
 -- Purpose: Power the manager-only /statistics dashboard. Two SECURITY DEFINER
 --   functions, each gated on public.is_admin() up front (non-admins get

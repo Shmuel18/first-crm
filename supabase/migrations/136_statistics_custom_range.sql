@@ -1,7 +1,7 @@
 -- =============================================================================
--- Migration 135: Custom date range for the statistics summary
+-- Migration 136: Custom date range for the statistics summary
 -- =============================================================================
--- Extends get_statistics_summary (migration 133) with an explicit custom range.
+-- Extends get_statistics_summary (migration 135) with an explicit custom range.
 -- The single-arg signature is dropped first — keeping both it and the new
 -- 3-arg overload (which has DEFAULTs) would make a 1-arg call ambiguous.
 --
