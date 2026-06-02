@@ -73,6 +73,21 @@ export async function createCaseAction(
     });
     if (finErr) {
       console.error('case_financials upsert failed', { caseId: data.id, err: finErr.message });
+      // The cases row already committed (separate request). Remove the orphan so
+      // the user's retry creates ONE clean case instead of a duplicate (DB-3).
+      // Guarded + best-effort: delete_failed_case (migration 119) only removes a
+      // just-created, borrower-less, financials-less case owned by the caller.
+      const { error: cleanupErr } = await (
+        supabase as unknown as {
+          rpc: (
+            fn: 'delete_failed_case',
+            args: { p_case_id: string },
+          ) => Promise<{ error: { message: string } | null }>;
+        }
+      ).rpc('delete_failed_case', { p_case_id: data.id });
+      if (cleanupErr) {
+        console.error('orphan-case cleanup failed', { caseId: data.id, err: cleanupErr.message });
+      }
       return { ok: false, error: 'unknown', values };
     }
   }
