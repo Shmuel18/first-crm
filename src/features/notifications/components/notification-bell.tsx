@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 
 import { Bell, CheckCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Tooltip } from '@/components/ui/tooltip';
 import type { Locale } from '@/lib/i18n/direction';
+import { createClient } from '@/lib/supabase/client';
 
 import {
   markAllNotificationsReadAction,
@@ -21,9 +22,11 @@ import {
 import { formatRelativeTime } from '../domain/format';
 import type {
   Notification,
+  NotificationData,
   NotificationDataCaseMention,
   NotificationDataCaseStatusOverdue,
   NotificationDataTask,
+  NotificationType,
 } from '../types';
 
 type Props = {
@@ -39,6 +42,57 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
 
   const [items, setItems] = useState(notifications);
   const [unread, setUnread] = useState(initialUnread);
+  // Brief red pulse when a CRITICAL task notification arrives live.
+  const [blink, setBlink] = useState(false);
+
+  // Realtime: a new notification for THIS user lands in the bell the instant
+  // it's created — no navigation/refresh (migration 127 puts `notifications`
+  // in the supabase_realtime publication). The bell lives in the persistent
+  // (app) layout, so this subscription is created once and lives for the
+  // session. RLS (user_id = auth.uid) + the explicit user_id filter mean we
+  // only ever receive our own rows.
+  useEffect(() => {
+    const supabase = createClient();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let cancelled = false;
+
+    void (async () => {
+      const { data } = await supabase.auth.getUser();
+      const uid = data.user?.id;
+      if (!uid || cancelled) return;
+      channel = supabase
+        .channel(`notifications:${uid}`)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${uid}` },
+          (payload) => {
+            // Realtime payloads are loosely typed; the new row is a
+            // notifications Row — narrow type/data to the bell's union.
+            const row = payload.new as Record<string, unknown>;
+            const notif = {
+              ...row,
+              type: row.type as NotificationType,
+              data: (row.data ?? {}) as NotificationData,
+            } as Notification;
+            // Dedupe: a later layout re-render may also bring this row in via
+            // props (the reconcile effect resets to server state).
+            setItems((prev) => (prev.some((n) => n.id === notif.id) ? prev : [notif, ...prev]));
+            setUnread((u) => u + 1);
+            const d = notif.data as Partial<NotificationDataTask>;
+            if (notif.type === 'task_assigned' && d.priority === 'critical') {
+              setBlink(true);
+              window.setTimeout(() => setBlink(false), 6000);
+            }
+          },
+        )
+        .subscribe();
+    })();
+
+    return () => {
+      cancelled = true;
+      if (channel) void supabase.removeChannel(channel);
+    };
+  }, []);
 
   // The bell lives in the persistent (app) layout's Topbar, which isn't
   // remounted on navigation. Reconcile to fresh server props during render
@@ -145,13 +199,19 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
             <button
               type="button"
               aria-label={ariaLabel}
-              className="relative size-10 rounded-lg border border-brand-black-border hover:border-brand-gold hover:bg-brand-black-soft transition flex items-center justify-center text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-light focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black"
+              className={`relative size-10 rounded-lg border transition flex items-center justify-center text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-light focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black ${
+                blink
+                  ? 'border-red-500 ring-2 ring-red-500 animate-pulse'
+                  : 'border-brand-black-border hover:border-brand-gold hover:bg-brand-black-soft'
+              }`}
             >
               <Bell className="size-4" aria-hidden="true" />
               {unread > 0 && (
                 <span
                   aria-hidden="true"
-                  className="absolute -top-1 -end-1 min-w-4 h-4 px-1 rounded-full bg-brand-gold text-brand-black text-[10px] font-bold flex items-center justify-center"
+                  className={`absolute -top-1 -end-1 min-w-4 h-4 px-1 rounded-full text-[10px] font-bold flex items-center justify-center ${
+                    blink ? 'bg-red-600 text-white' : 'bg-brand-gold text-brand-black'
+                  }`}
                 >
                   {unread > 9 ? '9+' : unread}
                 </span>
