@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 
 import { NextResponse } from 'next/server';
 
+import { recordBackupSuccess } from '@/features/backup/services/backup-freshness.service';
 import { buildBackupSnapshot } from '@/features/backup/services/backup-snapshot.service';
 import {
   backupFilename,
@@ -69,6 +70,9 @@ export async function GET(request: Request): Promise<Response> {
       console.error('[cron/backup] read-back verification failed', { filename });
       return NextResponse.json({ ok: false, error: 'verify_failed' }, { status: 500 });
     }
+    // SRE-2: stamp the verified success so the staleness watchdog + Settings
+    // card know a real backup happened. Best-effort — never fail a good backup.
+    await recordBackupSuccess();
     return NextResponse.json({ ok: true, filename, totalRows, verified: true });
   } catch (err) {
     console.error('[cron/backup] failed', {
