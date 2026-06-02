@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
+import { revokeUserSessions } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
 
 import { SetActiveSchema } from '../schemas/team.schema';
@@ -43,6 +44,20 @@ export async function setMemberActiveAction(userId: string, isActive: boolean): 
     return { ok: false, error: 'unknown' };
   }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
+
+  // SEC-AUTH-1: on deactivation, hard-revoke the member's sessions so it takes
+  // effect now (the middleware gate also bounces them; this kills the refresh
+  // token so the session can't be renewed). Best-effort — the flag already
+  // flipped, so a revoke hiccup must not fail the operation.
+  if (!parsed.data.isActive) {
+    const revoke = await revokeUserSessions(supabase, parsed.data.userId);
+    if (!revoke.ok) {
+      console.error('[setMemberActive] session revoke failed', {
+        userId: parsed.data.userId,
+        error: revoke.error,
+      });
+    }
+  }
 
   revalidatePath('/team');
   return { ok: true };

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 import { createServerClient } from '@supabase/ssr';
 
+import { isCurrentUserActive } from '@/lib/auth/session';
 import { env } from '@/lib/env';
 
 import type { Database } from '@/types/database';
@@ -91,6 +92,30 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/cases';
     return NextResponse.redirect(url);
+  }
+
+  // SEC-AUTH-1: a member deactivated/deleted mid-session keeps a valid cookie
+  // (refresh rotation renews it). RLS blocks their writes, not app access/reads.
+  // On every authenticated protected request, re-check active status and, if the
+  // account is gone, drop the session cookies and bounce to /login. Only runs
+  // for logged-in users on protected routes, so auth/static traffic pays nothing.
+  if (user && isProtectedRoute) {
+    const { active, error: activeError } = await isCurrentUserActive(supabase);
+    // Fail-closed on an explicit FALSE only. A transient RPC error is NOT treated
+    // as inactive (a DB blip shouldn't sign everyone out); RLS still guards data
+    // and the next request re-checks.
+    if (!activeError && active === false) {
+      await supabase.auth.signOut();
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      url.search = '';
+      url.searchParams.set('reason', 'deactivated');
+      const redirect = NextResponse.redirect(url);
+      // Carry the just-cleared auth cookies onto the redirect, otherwise the
+      // browser keeps the session and the isAuthRoute rule ping-pongs it back.
+      response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+      return redirect;
+    }
   }
 
   return response;
