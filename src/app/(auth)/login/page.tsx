@@ -11,7 +11,7 @@ import { LoginForm } from './login-form';
 export const runtime = 'edge';
 
 type Props = {
-  searchParams: Promise<{ error?: string; next?: string }>;
+  searchParams: Promise<{ error?: string; next?: string; reason?: string }>;
 };
 
 // Errors surfaced via redirect from /auth/callback (invalid/expired invite,
@@ -23,9 +23,12 @@ const ALLOWED_URL_ERROR_KEYS = new Set([
 
 export default async function LoginPage({ searchParams }: Props) {
   const t = await getTranslations('auth.login');
-  const { error, next } = await searchParams;
+  const { error, next, reason } = await searchParams;
 
   const urlError = error && ALLOWED_URL_ERROR_KEYS.has(error) ? error : null;
+  // SEC-AUTH-1: middleware redirects a deactivated/deleted member here with
+  // ?reason=deactivated after dropping their session — show a calm notice.
+  const showDeactivated = reason === 'deactivated';
 
   // Only forward a same-origin app path; the action re-validates server-side.
   const safeNext =
@@ -56,6 +59,15 @@ export default async function LoginPage({ searchParams }: Props) {
           <h1 className="font-display text-2xl text-neutral-900 mb-1">{t('title')}</h1>
           <p className="text-sm text-neutral-500">{t('subtitle')}</p>
         </div>
+
+        {showDeactivated && (
+          <div
+            role="status"
+            className="mb-5 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2.5 text-sm text-amber-800"
+          >
+            {t('signedOutDeactivated')}
+          </div>
+        )}
 
         {urlError && (
           <div

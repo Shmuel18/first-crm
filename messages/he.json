@@ -467,6 +467,7 @@
       "forgotPassword": "שכחת סיסמה? פנה למנהל המערכת לאיפוס.",
       "forgotPasswordLink": "שכחת סיסמה?",
       "footer": "© 2026 Kaufman Finance Group · כל הזכויות שמורות",
+      "signedOutDeactivated": "החשבון שלך אינו פעיל עוד. לפרטים פנה למנהל המערכת.",
       "errors": {
         "invalidInput": "אימייל או סיסמה לא תקינים",
         "invalidCredentials": "אימייל או סיסמה שגויים",

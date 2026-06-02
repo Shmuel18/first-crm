@@ -467,6 +467,7 @@
       "forgotPassword": "Forgot password? Contact the system administrator to reset it.",
       "forgotPasswordLink": "Forgot password?",
       "footer": "© 2026 Kaufman Finance Group · All rights reserved",
+      "signedOutDeactivated": "Your account is no longer active. Please contact your administrator.",
       "errors": {
         "invalidInput": "Invalid email or password",
         "invalidCredentials": "Incorrect email or password",

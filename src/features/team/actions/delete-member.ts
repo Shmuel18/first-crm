@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
+import { revokeUserSessions } from '@/lib/auth/session';
 import { createClient } from '@/lib/supabase/server';
 
 import { DeleteMemberSchema } from '../schemas/team.schema';
@@ -76,6 +77,17 @@ export async function deleteMemberAction(userId: string): Promise<Result> {
     return { ok: false, error: 'unknown' };
   }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
+
+  // SEC-AUTH-1: revoke the deleted member's sessions so they're signed out now,
+  // not whenever their token happens to expire. Best-effort (the soft-delete
+  // already succeeded); the middleware gate is the hard guarantee.
+  const revoke = await revokeUserSessions(supabase, parsed.data.userId);
+  if (!revoke.ok) {
+    console.error('[deleteMember] session revoke failed', {
+      userId: parsed.data.userId,
+      error: revoke.error,
+    });
+  }
 
   revalidatePath('/settings/people');
   return { ok: true };
