@@ -73,9 +73,20 @@ export async function completeTaskAction(taskId: string): Promise<Result> {
     body: '✓ הושלמה',
   });
 
-  // Skip the heavy ('/(app)','layout') shell revalidate (see create-task note) —
-  // badge updates on next nav; keeps the action POST light to avoid 503s.
+  // Completing the task clears the actor's own "assigned" alert for it, so the
+  // bell stops showing it as unread (and stops the persistent red for a
+  // critical one) the moment they handle it — not only when they open the bell.
+  // Best-effort; own rows only (notifications RLS = user_id = auth.uid()).
+  await supabase
+    .from('notifications')
+    .update({ read_at: new Date().toISOString() })
+    .eq('task_id', idParsed.data)
+    .eq('user_id', userRes.user.id)
+    .is('read_at', null);
+
   revalidatePath('/tasks');
   if (existing.case_id) revalidatePath(`/cases/${existing.case_id}`);
+  // Refresh the shell too so the sidebar task badge / critical dot clears now.
+  revalidatePath('/(app)', 'layout');
   return { ok: true };
 }

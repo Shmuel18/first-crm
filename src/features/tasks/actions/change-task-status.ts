@@ -97,9 +97,23 @@ export async function changeTaskStatusAction(taskId: string, status: string): Pr
     metadata: { old_status: existing.status, new_status: newStatus },
   });
 
-  // Skip the heavy ('/(app)','layout') shell revalidate (see create-task note) —
-  // badge updates on next nav; keeps the action POST light to avoid 503s.
+  // Resolving the task (done/cancelled) clears the actor's own "assigned" alert
+  // for it — so the bell stops showing it as unread (and drops the persistent
+  // red for a critical one) the moment they handle it. Best-effort; own rows
+  // only (notifications RLS = user_id = auth.uid()).
+  if (newStatus === 'completed' || newStatus === 'cancelled') {
+    await supabase
+      .from('notifications')
+      .update({ read_at: new Date().toISOString() })
+      .eq('task_id', parsed.data.taskId)
+      .eq('user_id', userId)
+      .is('read_at', null);
+  }
+
   revalidatePath('/tasks');
   if (existing.case_id) revalidatePath(`/cases/${existing.case_id}`);
+  // Refresh the shell too so the sidebar task badge / critical dot reflects the
+  // new status now (not only on the next navigation).
+  revalidatePath('/(app)', 'layout');
   return { ok: true };
 }
