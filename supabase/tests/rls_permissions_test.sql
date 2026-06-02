@@ -18,7 +18,7 @@
 -- =============================================================================
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
-SELECT plan(15);
+SELECT plan(19);
 
 -- ---- fixed ids -------------------------------------------------------------
 -- users
@@ -175,6 +175,35 @@ SELECT is(
       AND c.status_id = (SELECT id FROM public.case_statuses WHERE key = 'case_opened')),
   1,
   'conversion created exactly one case_opened case linked from the lead');
+
+-- ===========================================================================
+-- Bulk import: all-or-nothing (import_cases RPC, migration 125)
+-- ===========================================================================
+SELECT pg_temp.login_as(:'manager');
+SELECT is(
+  (SELECT (public.import_cases(
+     '[{"first_name":"Imp","last_name":"One","national_id":"800000001"},
+       {"first_name":"Imp","last_name":"Two","national_id":"800000002"}]'::jsonb)->>'created')::int),
+  2, 'clean import creates every row');
+
+-- A file with one bad row (row 2 has no name) must import ZERO and persist nothing.
+SELECT is(
+  (SELECT (public.import_cases(
+     '[{"first_name":"Good","national_id":"800000003"},
+       {"national_id":"800000004"}]'::jsonb)->>'created')::int),
+  0, 'all-or-nothing: a single bad row imports zero');
+SELECT pg_temp.logout();
+SELECT is((SELECT count(*)::int FROM public.borrowers WHERE national_id = '800000003'), 0,
+  'all-or-nothing: the valid row in a rejected file is NOT persisted');
+
+-- In-file duplicate national_id is reported (and blocks the import).
+SELECT pg_temp.login_as(:'manager');
+SELECT is(
+  (SELECT public.import_cases(
+     '[{"first_name":"Dup","national_id":"800000005"},
+       {"first_name":"Dup2","national_id":"800000005"}]'::jsonb)->'errors'->0->>'code'),
+  'duplicate_in_file', 'in-file duplicate national_id is reported');
+SELECT pg_temp.logout();
 
 SELECT * FROM finish();
 ROLLBACK;

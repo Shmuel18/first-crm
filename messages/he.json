@@ -1578,8 +1578,14 @@
       "importing": "מייבא...",
       "done": "הייבוא הושלם — {count} תיקים נוצרו",
       "summary": "נוצרו {created} מתוך {total} שורות",
-      "errorsTitle": "{count} שורות נכשלו:",
-      "rowError": "שורה {row}: {message}",
+      "blockedTitle": "הייבוא נחסם — תקן {count} שורות והעלה שוב. שום דבר לא יובא (הכל-או-כלום).",
+      "blockedToast": "הייבוא נחסם — {count} שורות דורשות תיקון.",
+      "rowErrors": {
+        "missing_name": "שורה {row}: חסר שם",
+        "duplicate_in_file": "שורה {row}: ת\"ז כפולה בתוך הקובץ",
+        "national_id_exists": "שורה {row}: ת\"ז כבר קיימת במערכת",
+        "unknown": "שורה {row}: שגיאה"
+      },
       "errors": {
         "unauthorized": "אין הרשאה לייבא",
         "no_file": "לא נבחר קובץ",
