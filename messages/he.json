@@ -115,7 +115,8 @@
     },
     "financial": {
       "title": "נתונים כספיים",
-      "managerOnly": "למנהל בלבד",
+      "reveal": "הצג",
+      "hide": "הסתר",
       "activeLoanVolume": "נפח משכנתאות פעיל",
       "executedFees": "שכר טרחה (בוצעו)",
       "expectedIncome": "הכנסה צפויה (בוצעו)"

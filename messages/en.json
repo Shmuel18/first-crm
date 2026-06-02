@@ -115,7 +115,8 @@
     },
     "financial": {
       "title": "Financials",
-      "managerOnly": "Manager only",
+      "reveal": "Show",
+      "hide": "Hide",
       "activeLoanVolume": "Active loan volume",
       "executedFees": "Fees (executed)",
       "expectedIncome": "Expected income (executed)"
