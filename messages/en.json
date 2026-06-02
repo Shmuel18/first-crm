@@ -766,8 +766,15 @@
       "insurance_status": "Insurance status",
       "version": "Version",
       "category_id": "Category",
-      "status": "Document status",
-      "expiry_date": "Expiry date"
+      "status": "Status",
+      "expiry_date": "Expiry date",
+      "title": "Title",
+      "priority": "Priority",
+      "assigned_to": "Assigned to",
+      "due_date": "Due date",
+      "snoozed_until": "Snoozed until",
+      "completed_at": "Completed at",
+      "is_private": "Private"
     },
     "enums": {
       "residency_type": {
@@ -807,7 +814,18 @@
         "new": "New",
         "verified": "Verified",
         "rejected": "Rejected",
-        "expired": "Expired"
+        "expired": "Expired",
+        "pending": "Open",
+        "in_progress": "In progress",
+        "completed": "Completed",
+        "snoozed": "Snoozed",
+        "cancelled": "Cancelled"
+      },
+      "priority": {
+        "critical": "Immediate",
+        "high": "Urgent",
+        "normal": "Normal",
+        "low": "Low"
       }
     },
     "values": {

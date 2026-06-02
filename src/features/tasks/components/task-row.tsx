@@ -242,7 +242,8 @@ export function TaskRow({ task, locale, onEdit, onReassign, onThread, compact = 
           type="button"
           onClick={() => onThread(task)}
           aria-label={t('thread.open')}
-          className="shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition p-1 rounded text-neutral-400 hover:text-brand-gold-text hover:bg-brand-gold-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+          // Touch devices have no hover: always visible < md, hover-reveal at md+.
+          className="shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 transition p-1 rounded text-neutral-400 hover:text-brand-gold-text hover:bg-brand-gold-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
         >
           <MessageSquare className="size-4" aria-hidden="true" />
         </button>
@@ -255,7 +256,7 @@ export function TaskRow({ task, locale, onEdit, onReassign, onThread, compact = 
               variant="ghost"
               size="icon-sm"
               aria-label={tc('more')}
-              className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition"
+              className="opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 transition"
             />
           }
         >

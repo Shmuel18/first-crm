@@ -40,26 +40,37 @@ export async function resolveFkDisplayNames(
 ): Promise<Map<string, Map<string, string>>> {
   const lookups = new Map<string, Map<string, string>>();
 
-  // Profile lookups (assigned_advisor_id) fold in directly from the actor
-  // names we already fetched. Missing entries get a single fill-in query.
-  const advisorIds = idsByField.get('assigned_advisor_id');
-  if (advisorIds && advisorIds.size > 0) {
-    const missing = [...advisorIds].filter((id) => !nameById.has(id));
-    if (missing.length > 0) {
-      const { data: extraProfiles } = await admin
-        .from('profiles')
-        .select('id, first_name, last_name')
-        .in('id', missing);
-      for (const p of extraProfiles ?? []) {
-        nameById.set(p.id, formatPersonName(p.first_name, p.last_name) || null);
-      }
+  // Columns that hold a profile id and should resolve to a person's name —
+  // the case's responsible advisor plus the task who/whom columns (so a task's
+  // reassign / completion shows a name, not a raw UUID, in the case timeline).
+  const PROFILE_FIELDS = ['assigned_advisor_id', 'assigned_to', 'completed_by', 'created_by'] as const;
+
+  // Gather every profile id referenced across those fields, backfill the names
+  // we don't already have in ONE query, then build a per-field id→name lookup.
+  const allProfileIds = new Set<string>();
+  for (const field of PROFILE_FIELDS) {
+    const ids = idsByField.get(field);
+    if (ids) for (const id of ids) allProfileIds.add(id);
+  }
+  const missing = [...allProfileIds].filter((id) => !nameById.has(id));
+  if (missing.length > 0) {
+    const { data: extraProfiles } = await admin
+      .from('profiles')
+      .select('id, first_name, last_name')
+      .in('id', missing);
+    for (const p of extraProfiles ?? []) {
+      nameById.set(p.id, formatPersonName(p.first_name, p.last_name) || null);
     }
-    const advisorLookup = new Map<string, string>();
-    for (const id of advisorIds) {
+  }
+  for (const field of PROFILE_FIELDS) {
+    const ids = idsByField.get(field);
+    if (!ids || ids.size === 0) continue;
+    const lookup = new Map<string, string>();
+    for (const id of ids) {
       const name = nameById.get(id);
-      if (name) advisorLookup.set(id, name);
+      if (name) lookup.set(id, name);
     }
-    if (advisorLookup.size > 0) lookups.set('assigned_advisor_id', advisorLookup);
+    if (lookup.size > 0) lookups.set(field, lookup);
   }
 
   // Static-FK lookups run in parallel — each is one IN-clause query.

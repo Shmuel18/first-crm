@@ -125,7 +125,7 @@ export function TaskBoardCard({ task, locale, onOpen, onReassign, onThread }: Pr
               onThread(task);
             }}
             onPointerDown={(e) => e.stopPropagation()}
-            className="-mt-0.5 shrink-0 text-neutral-300 opacity-0 transition hover:text-brand-gold-text focus-visible:opacity-100 group-hover:opacity-100"
+            className="-mt-0.5 shrink-0 text-neutral-300 transition hover:text-brand-gold-text opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
           >
             <MessageSquare className="size-4" aria-hidden="true" />
           </button>
@@ -140,7 +140,7 @@ export function TaskBoardCard({ task, locale, onOpen, onReassign, onThread }: Pr
                 aria-label={tc('more')}
                 onClick={(e) => e.stopPropagation()}
                 onPointerDown={(e) => e.stopPropagation()}
-                className="-mt-0.5 shrink-0 text-neutral-300 opacity-0 transition hover:text-neutral-600 focus-visible:opacity-100 group-hover:opacity-100"
+                className="-mt-0.5 shrink-0 text-neutral-300 transition hover:text-neutral-600 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
               />
             }
           >

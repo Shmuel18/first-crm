@@ -111,10 +111,13 @@ export async function listAuditEntriesForCase(
   // for fee_amount / expected_income changes land with record_id=caseId.
   // Querying by record_id=caseId here surfaces them in the case timeline
   // without an extra join.
-  const [caseBorrowers, banksRes, docsRes] = await Promise.all([
+  const [caseBorrowers, banksRes, docsRes, tasksRes] = await Promise.all([
     admin.from('case_borrowers').select('borrower_id').eq('case_id', caseId),
     admin.from('case_banks').select('id').eq('case_id', caseId),
     admin.from('documents').select('id').eq('case_id', caseId),
+    // Tasks linked to this case — their audit rows (create / status / assignee /
+    // complete / delete) belong on the case timeline too.
+    admin.from('tasks').select('id').eq('case_id', caseId),
   ]);
 
   const borrowerIds =
@@ -125,6 +128,8 @@ export async function listAuditEntriesForCase(
     banksRes.data?.map((r) => r.id).filter((v): v is string => typeof v === 'string') ?? [];
   const docIds =
     docsRes.data?.map((r) => r.id).filter((v): v is string => typeof v === 'string') ?? [];
+  const taskIds =
+    tasksRes.data?.map((r) => r.id).filter((v): v is string => typeof v === 'string') ?? [];
 
   // Incomes & obligations live one hop further — borrower_id is the link.
   const [incomesRes, obligationsRes] = await Promise.all([
@@ -150,6 +155,7 @@ export async function listAuditEntriesForCase(
     { table: 'borrower_obligations', ids: obligationIds },
     { table: 'case_banks', ids: bankIds },
     { table: 'documents', ids: docIds },
+    { table: 'tasks', ids: taskIds },
     // case_financials holds the manager-only fee_amount / expected_income
     // (record_id = case_id). Only surface its audit diffs when the caller
     // holds view_case_fee — fail-safe: excluded unless explicitly opted in,

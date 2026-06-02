@@ -766,8 +766,15 @@
       "insurance_status": "סטטוס ביטוח",
       "version": "גרסה",
       "category_id": "קטגוריה",
-      "status": "סטטוס מסמך",
-      "expiry_date": "תוקף"
+      "status": "סטטוס",
+      "expiry_date": "תוקף",
+      "title": "כותרת",
+      "priority": "עדיפות",
+      "assigned_to": "מוקצה ל",
+      "due_date": "תאריך יעד",
+      "snoozed_until": "נדחה עד",
+      "completed_at": "הושלם בתאריך",
+      "is_private": "פרטית"
     },
     "enums": {
       "residency_type": {
@@ -807,7 +814,18 @@
         "new": "חדש",
         "verified": "תקין",
         "rejected": "נדחה",
-        "expired": "פג תוקף"
+        "expired": "פג תוקף",
+        "pending": "פתוחה",
+        "in_progress": "בעבודה",
+        "completed": "הושלמה",
+        "snoozed": "מושהית",
+        "cancelled": "בוטלה"
+      },
+      "priority": {
+        "critical": "מיידית",
+        "high": "דחופה",
+        "normal": "בינונית",
+        "low": "רגילה"
       }
     },
     "values": {
