@@ -18,12 +18,12 @@
  */
 import * as Sentry from '@sentry/nextjs';
 
-import { env } from '@/lib/env';
+import { publicEnv } from '@/lib/public-env';
 import { sentryBeforeSend } from '@/lib/sentry/pii-scrub';
 
-if (env.NEXT_PUBLIC_SENTRY_DSN) {
+if (publicEnv.NEXT_PUBLIC_SENTRY_DSN) {
   Sentry.init({
-    dsn: env.NEXT_PUBLIC_SENTRY_DSN,
+    dsn: publicEnv.NEXT_PUBLIC_SENTRY_DSN,
     tracesSampleRate: 0.1,
     // Interaction breadcrumbs (clicks, fetches) so a production error carries the
     // trail that led to it. The scrubber strips PII from breadcrumb data on send.
