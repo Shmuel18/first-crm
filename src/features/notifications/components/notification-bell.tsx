@@ -42,8 +42,6 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
 
   const [items, setItems] = useState(notifications);
   const [unread, setUnread] = useState(initialUnread);
-  // Brief red pulse when a CRITICAL task notification arrives live.
-  const [blink, setBlink] = useState(false);
 
   // Realtime: a new notification for THIS user lands in the bell the instant
   // it's created — no navigation/refresh (migration 127 puts `notifications`
@@ -78,16 +76,11 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
             // props (the reconcile effect resets to server state).
             setItems((prev) => (prev.some((n) => n.id === notif.id) ? prev : [notif, ...prev]));
             setUnread((u) => u + 1);
-            const d = notif.data as Partial<NotificationDataTask>;
-            if (notif.type === 'task_assigned' && d.priority === 'critical') {
-              setBlink(true);
-              window.setTimeout(() => setBlink(false), 6000);
-            }
             // The bell is realtime, but the tasks LIST and the sidebar task
-            // badge are server-rendered — they only refreshed on navigation, so
-            // a new task "arrived" in the bell but not in the list/badge until a
-            // manual refresh. A soft refresh re-fetches those server components
-            // (no full reload) so the task + badge update live alongside the bell.
+            // badge are server-rendered — refresh them so a newly-assigned task
+            // shows in the list / badge live, not only after a manual refresh.
+            // (The red state is derived from `items` below — hasUnreadCritical —
+            // so it stays red as long as an unread critical task is present.)
             router.refresh();
           },
         )
@@ -205,6 +198,13 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
   const tooltipLabel =
     unread > 0 ? `${t('title')} (${unread})` : t('title');
 
+  // Persistent red: stay red (pulsing) as long as there's an UNREAD critical
+  // task notification — an "immediate" task keeps shouting until it's read,
+  // not just a brief pulse. Derived from items, so reading it clears the red.
+  const hasUnreadCritical = items.some(
+    (n) => n.type === 'task_assigned' && (n.data as Partial<NotificationDataTask>).priority === 'critical',
+  );
+
   return (
     <DropdownMenu>
       <Tooltip content={tooltipLabel}>
@@ -214,7 +214,7 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
               type="button"
               aria-label={ariaLabel}
               className={`relative size-10 rounded-lg border transition flex items-center justify-center text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-light focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black ${
-                blink
+                hasUnreadCritical
                   ? 'border-red-500 ring-2 ring-red-500 animate-pulse'
                   : 'border-brand-black-border hover:border-brand-gold hover:bg-brand-black-soft'
               }`}
@@ -224,7 +224,7 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
                 <span
                   aria-hidden="true"
                   className={`absolute -top-1 -end-1 min-w-4 h-4 px-1 rounded-full text-[10px] font-bold flex items-center justify-center ${
-                    blink ? 'bg-red-600 text-white' : 'bg-brand-gold text-brand-black'
+                    hasUnreadCritical ? 'bg-red-600 text-white' : 'bg-brand-gold text-brand-black'
                   }`}
                 >
                   {unread > 9 ? '9+' : unread}
