@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import type { Database } from '@/types/database';
 
 import { isValidTargetDate } from '../domain/target-date';
+import { CaseFormShape } from '../schemas/case.schema';
 
 type CasesUpdate = Database['public']['Tables']['cases']['Update'];
 
@@ -59,7 +60,17 @@ export async function quickUpdateCaseFieldAction(
     return { ok: false, error: 'unauthorized' };
   }
 
-  const finalValue = value === '' ? null : value;
+  // Validate with the same per-field rule the full form uses — CaseFormShape is
+  // exposed for exactly this. Bounds free text (short_note/referrer_name),
+  // checks the enums (case_blocker/insurance_status) and UUIDs. Closes the
+  // inline-edit validation gap (BE-2): these cells previously wrote straight to
+  // the DB with no length/format check.
+  const fieldSchema = CaseFormShape.shape[field];
+  const parsed = fieldSchema.safeParse(value);
+  if (!parsed.success) {
+    return { ok: false, error: 'validation' };
+  }
+  const finalValue = parsed.data ?? null;
   if (field === 'target_date' && finalValue !== null && !isValidTargetDate(finalValue)) {
     return { ok: false, error: 'validation' };
   }
