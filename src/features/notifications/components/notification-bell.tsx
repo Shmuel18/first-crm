@@ -153,6 +153,12 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
         if (n.type === 'task_reminder') {
           return t('message.task_reminder', { task });
         }
+        if (n.type === 'task_assigned' && d.assignmentKind === 'returned_to_creator') {
+          return t('message.task_returned_to_creator', { actor, task });
+        }
+        if (n.type === 'task_assigned' && d.assignmentKind === 'reassigned') {
+          return t('message.task_reassigned_to_you', { actor, task });
+        }
         if (n.type === 'task_assigned' && d.priority === 'critical') {
           return t('message.task_assigned_critical', { actor, task });
         }

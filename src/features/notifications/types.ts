@@ -42,6 +42,7 @@ export type NotificationDataTask = {
   taskTitle: string;
   actorName: string | null;
   priority?: string | null;
+  assignmentKind?: 'assigned' | 'reassigned' | 'returned_to_creator' | null;
 };
 
 export type NotificationDataCaseStatusOverdue = {

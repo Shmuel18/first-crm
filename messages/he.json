@@ -2011,6 +2011,8 @@
     "message": {
       "task_assigned_critical": "{actor} הקצה לך משימה מיידית: {task}",
       "task_assigned": "{actor} הקצה לך משימה: {task}",
+      "task_reassigned_to_you": "{actor} העביר אליך משימה: {task}",
+      "task_returned_to_creator": "{actor} החזיר לך משימה: {task}",
       "task_completed": "{actor} השלים משימה שהקצית: {task}",
       "task_reminder": "תזכורת: {task}",
       "case_mention": "{actor} תייג אותך: {preview}",

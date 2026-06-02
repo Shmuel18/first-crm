@@ -2011,6 +2011,8 @@
     "message": {
       "task_assigned_critical": "{actor} assigned you an immediate task: {task}",
       "task_assigned": "{actor} assigned you a task: {task}",
+      "task_reassigned_to_you": "{actor} reassigned a task to you: {task}",
+      "task_returned_to_creator": "{actor} returned a task to you: {task}",
       "task_completed": "{actor} completed a task you assigned: {task}",
       "task_reminder": "Reminder: {task}",
       "case_mention": "{actor} mentioned you: {preview}",
