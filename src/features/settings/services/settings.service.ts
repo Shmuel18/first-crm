@@ -31,7 +31,7 @@ export async function getOfficeSettings(): Promise<OfficeSettings | null> {
   const { data } = await supabase
     .from('office_settings')
     .select(
-      'office_name, office_tagline, address_street, address_city, address_postal_code, phone_main, phone_fax, email_main, website_url, tax_id',
+      'office_name, office_tagline, address_street, address_city, address_postal_code, phone_main, phone_fax, email_main, website_url, tax_id, audit_log_retention_days, deleted_records_retention_days',
     )
     .eq('id', 1)
     .maybeSingle();

@@ -30,10 +30,21 @@ export function OfficeForm({ office }: Props) {
   // a `revalidatePath` round-trip (which is why update-office no longer
   // revalidates — that round-trip was the Save-spinner hang).
   const [values, setValues] = useState<OfficeSettings>(office);
+  // Retention values are ints; the form holds them as strings (FormData is
+  // string-only and the schema coerces). Kept controlled so the React-19
+  // form auto-reset doesn't revert them to the pre-save value.
+  const [retention, setRetention] = useState({
+    audit: String(office.audit_log_retention_days),
+    deleted: String(office.deleted_records_retention_days),
+  });
   const [syncedRef, setSyncedRef] = useState(office);
   if (syncedRef !== office) {
     setSyncedRef(office);
     setValues(office);
+    setRetention({
+      audit: String(office.audit_log_retention_days),
+      deleted: String(office.deleted_records_retention_days),
+    });
   }
 
   useEffect(() => {
@@ -143,6 +154,47 @@ export function OfficeForm({ office }: Props) {
             onChange={(e) => set('address_postal_code', e.target.value)}
             dir="ltr"
           />
+        </FormField>
+      </FormSection>
+
+      <FormSection title={t('sections.retention')}>
+        <FormField
+          label={t('fields.auditRetentionDays')}
+          error={fieldErrors.audit_log_retention_days}
+        >
+          <Input
+            name="audit_log_retention_days"
+            type="number"
+            min={30}
+            max={3650}
+            inputMode="numeric"
+            dir="ltr"
+            value={retention.audit}
+            onChange={(e) => setRetention((r) => ({ ...r, audit: e.target.value }))}
+            aria-describedby="audit-retention-help"
+          />
+          <p id="audit-retention-help" className="text-xs text-neutral-500">
+            {t('help.auditRetention')}
+          </p>
+        </FormField>
+        <FormField
+          label={t('fields.deletedRetentionDays')}
+          error={fieldErrors.deleted_records_retention_days}
+        >
+          <Input
+            name="deleted_records_retention_days"
+            type="number"
+            min={1}
+            max={3650}
+            inputMode="numeric"
+            dir="ltr"
+            value={retention.deleted}
+            onChange={(e) => setRetention((r) => ({ ...r, deleted: e.target.value }))}
+            aria-describedby="deleted-retention-help"
+          />
+          <p id="deleted-retention-help" className="text-xs text-neutral-500">
+            {t('help.deletedRetention')}
+          </p>
         </FormField>
       </FormSection>
 

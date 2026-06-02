@@ -31,4 +31,6 @@ export type OfficeSettings = {
   email_main: string | null;
   website_url: string | null;
   tax_id: string | null;
+  audit_log_retention_days: number;
+  deleted_records_retention_days: number;
 };
