@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 
 import { getTranslations } from 'next-intl/server';
 
+import { getLastBackupAt, isBackupStale } from '@/features/backup/services/backup-freshness.service';
 import { DriveIntegrationCard } from '@/features/integrations/components/drive-integration-card';
 import { getDriveIntegrationView } from '@/features/integrations/services/integrations.service';
 import { isGoogleOAuthConfigured } from '@/lib/env';
@@ -18,6 +19,7 @@ export default async function IntegrationsPage({ searchParams }: Props) {
   const t = await getTranslations('settings.integrations');
 
   const view = await getDriveIntegrationView();
+  const lastBackupAt = await getLastBackupAt();
 
   return (
     <div className="space-y-4">
@@ -33,6 +35,8 @@ export default async function IntegrationsPage({ searchParams }: Props) {
         oauthConfigured={isGoogleOAuthConfigured()}
         errorReason={params.error ?? null}
         connectedFlag={params.connected === 'google_drive'}
+        lastBackupAt={lastBackupAt}
+        backupStale={isBackupStale(lastBackupAt)}
       />
     </div>
   );

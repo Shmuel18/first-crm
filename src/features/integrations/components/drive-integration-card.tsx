@@ -32,6 +32,8 @@ type Props = {
   oauthConfigured: boolean;
   errorReason?: string | null;
   connectedFlag?: boolean;
+  lastBackupAt?: string | null;
+  backupStale?: boolean;
 };
 
 export function DriveIntegrationCard({
@@ -39,6 +41,8 @@ export function DriveIntegrationCard({
   oauthConfigured,
   errorReason,
   connectedFlag,
+  lastBackupAt,
+  backupStale,
 }: Props) {
   const t = useTranslations('settings.integrations.drive');
   const tCommon = useTranslations('common');
@@ -83,6 +87,23 @@ export function DriveIntegrationCard({
         {errorReason && (
           <Banner intent="error" message={prettifyError(errorReason, t)} icon={AlertCircle} />
         )}
+
+        {lastBackupAt !== undefined &&
+          (backupStale ? (
+            <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              <AlertCircle className="size-4 shrink-0" />
+              <span>{lastBackupAt ? t('backupStale') : t('backupNever')}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-700">
+              <CheckCircle2 className="size-4 shrink-0 text-emerald-600" />
+              <span>
+                {t('backupLastAt', {
+                  when: lastBackupAt ? new Date(lastBackupAt).toLocaleString(dateLocale) : '',
+                })}
+              </span>
+            </div>
+          ))}
 
         {!oauthConfigured && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">

@@ -17,9 +17,10 @@
 #   * CRON_SECRET is read LIVE from .env.production at call time by the wrapper,
 #     so the secret never lands in git or in the crontab.
 #   * Schedules are interpreted as UTC (CRON_TZ) to match Vercel Cron exactly.
-#   * Failure visibility today = /var/log/first-crm-cron.log (HTTP code + body)
-#     + non-zero exit. Push alerting on backup failure / a "backup older than
-#     26h" sentinel is a separate app-level follow-up (needs Resend) — NOT here.
+#   * Failure visibility = /var/log/first-crm-cron.log (HTTP code + body) +
+#     non-zero exit. The backup-watchdog cron (06:00 UTC) checks backup
+#     freshness and emails admins if there's been no successful backup in 26h
+#     (SRE-2); the Settings → Integrations card shows the same status.
 # =============================================================================
 set -euo pipefail
 
@@ -82,6 +83,7 @@ MAILTO=""
 30 3 * * *   root /usr/local/bin/first-crm-cron.sh cleanup-orphaned-blobs
 0 5 * * *    root /usr/local/bin/first-crm-cron.sh status-sla-check
 */15 * * * * root /usr/local/bin/first-crm-cron.sh task-reminders
+0 6 * * *    root /usr/local/bin/first-crm-cron.sh backup-watchdog
 CRONEOF
 chmod 0644 "$CRONFILE"
 
@@ -89,5 +91,5 @@ chmod 0644 "$CRONFILE"
 systemctl reload cron 2>/dev/null || systemctl reload crond 2>/dev/null || service cron reload 2>/dev/null || true
 
 echo "✓ installed $WRAPPER"
-echo "✓ installed $CRONFILE (UTC; backup 02:00, cleanup 03:30, sla 05:00, reminders */15m)"
+echo "✓ installed $CRONFILE (UTC; backup 02:00, cleanup 03:30, sla 05:00, reminders */15m, watchdog 06:00)"
 echo "  test now:   $WRAPPER backup   &&  tail -n 3 /var/log/first-crm-cron.log"
