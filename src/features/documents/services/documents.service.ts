@@ -6,6 +6,9 @@ import {
   type DocumentWithRelations,
 } from '../types';
 
+/** Private Storage bucket holding all case documents (migration 017). */
+export const DOCUMENTS_BUCKET = 'case-documents';
+
 // Explicit column list (audit-driven). Mirrors the documents Row type so
 // schema additions are gated by an intentional update here rather than
 // auto-propagating to clients via `*`.
@@ -75,7 +78,7 @@ export async function signedUrlFor(
 ): Promise<string | null> {
   const supabase = await createClient();
   const { data, error } = await supabase.storage
-    .from('case-documents')
+    .from(DOCUMENTS_BUCKET)
     .createSignedUrl(storagePath, expiresInSeconds);
 
   if (error || !data) return null;

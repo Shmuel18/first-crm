@@ -214,9 +214,30 @@ export async function provisionCaseDriveFolders(input: {
   }
 }
 
-/** Best-effort delete from Drive. Never throws. */
-export async function deleteCaseDocumentFromDrive(driveFileId: string): Promise<void> {
+/**
+ * Best-effort erase of Drive targets — a case folder and/or individual files.
+ * Resolves the Drive client ONCE (avoids re-auth per id) and reports which ids
+ * were actually deleted, so callers can clear their stored references only for
+ * confirmed deletions. A 404 counts as deleted (already gone). Never throws.
+ * Deleting a case folder also removes every file inside it in one call.
+ */
+export async function eraseDriveTargets(targets: {
+  folderId?: string | null;
+  fileIds: string[];
+}): Promise<{ connected: boolean; deleted: string[]; failed: string[] }> {
   const client = await getDriveClientIfConnected();
-  if (!client) return;
-  await client.deleteFile(driveFileId).catch(() => undefined);
+  if (!client) return { connected: false, deleted: [], failed: [] };
+
+  const ids = [...(targets.folderId ? [targets.folderId] : []), ...targets.fileIds];
+  const deleted: string[] = [];
+  const failed: string[] = [];
+  for (const id of ids) {
+    try {
+      await client.deleteFile(id);
+      deleted.push(id);
+    } catch {
+      failed.push(id);
+    }
+  }
+  return { connected: true, deleted, failed };
 }
