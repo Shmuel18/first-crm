@@ -1,5 +1,20 @@
 import type { Database } from '@/types/database';
 
+export type TaskCommentRow = Database['public']['Tables']['task_comments']['Row'];
+export type TaskCommentInsert = Database['public']['Tables']['task_comments']['Insert'];
+
+export type TaskEventType = TaskCommentRow['event_type'];
+
+export type TaskCommentAuthor = {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+};
+
+export type TaskCommentWithAuthor = Omit<TaskCommentRow, 'author_id'> & {
+  author: TaskCommentAuthor;
+};
+
 export type TaskRow = Database['public']['Tables']['tasks']['Row'];
 export type TaskInsert = Database['public']['Tables']['tasks']['Insert'];
 export type TaskUpdate = Database['public']['Tables']['tasks']['Update'];

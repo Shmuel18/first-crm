@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 
-import { AlertTriangle, Calendar, Clock, Lock, MoreHorizontal, Pencil, Trash2, User, UserPlus } from 'lucide-react';
+import { AlertTriangle, Calendar, Clock, Lock, MessageSquare, MoreHorizontal, Pencil, Trash2, User, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
@@ -47,6 +47,7 @@ type Props = {
   locale: Locale;
   onEdit: (task: TaskWithRelations) => void;
   onReassign?: (task: TaskWithRelations) => void;
+  onThread?: (task: TaskWithRelations) => void;
   compact?: boolean;
 };
 
@@ -54,7 +55,7 @@ type Props = {
 // columns). Snooze isn't here — it has its own timed "remind me" control.
 const LIST_STATUSES: readonly TaskStatus[] = ['pending', 'in_progress', 'completed', 'cancelled'];
 
-export function TaskRow({ task, locale, onEdit, onReassign, compact = false }: Props) {
+export function TaskRow({ task, locale, onEdit, onReassign, onThread, compact = false }: Props) {
   const t = useTranslations('tasks');
   const tp = useTranslations('tasks.priority');
   const ts = useTranslations('tasks.status');
@@ -235,6 +236,17 @@ export function TaskRow({ task, locale, onEdit, onReassign, compact = false }: P
         </div>
 
       </div>
+
+      {onThread && (
+        <button
+          type="button"
+          onClick={() => onThread(task)}
+          aria-label={t('thread.open')}
+          className="shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition p-1 rounded text-neutral-400 hover:text-brand-gold-text hover:bg-brand-gold-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+        >
+          <MessageSquare className="size-4" aria-hidden="true" />
+        </button>
+      )}
 
       <DropdownMenu>
         <DropdownMenuTrigger

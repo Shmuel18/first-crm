@@ -3294,6 +3294,50 @@ export type Database = {
           },
         ]
       }
+      task_comments: {
+        Row: {
+          id: string
+          task_id: string
+          author_id: string
+          body: string
+          event_type: 'comment' | 'created' | 'assigned' | 'reassigned' | 'status_changed' | 'completed' | 'reopened' | 'snoozed'
+          metadata: Json | null
+          created_at: string
+          edited_at: string | null
+          deleted_at: string | null
+        }
+        Insert: {
+          id?: string
+          task_id: string
+          author_id: string
+          body: string
+          event_type?: 'comment' | 'created' | 'assigned' | 'reassigned' | 'status_changed' | 'completed' | 'reopened' | 'snoozed'
+          metadata?: Json | null
+          created_at?: string
+          edited_at?: string | null
+          deleted_at?: string | null
+        }
+        Update: {
+          id?: string
+          task_id?: string
+          author_id?: string
+          body?: string
+          event_type?: 'comment' | 'created' | 'assigned' | 'reassigned' | 'status_changed' | 'completed' | 'reopened' | 'snoozed'
+          metadata?: Json | null
+          created_at?: string
+          edited_at?: string | null
+          deleted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assigned_to: string | null

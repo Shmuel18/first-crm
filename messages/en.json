@@ -239,9 +239,18 @@
         "title": "Uniform baskets (Bank of Israel)",
         "hint": "Load a standard mix structure for the current loan amount, then adjust the rates.",
         "kinds": {
-          "fixed_only": { "label": "Basket 1 — 100% fixed", "desc": "Entire loan in fixed unlinked" },
-          "thirds": { "label": "Basket 2 — thirds", "desc": "Fixed · prime · linked variable" },
-          "halves": { "label": "Basket 3 — halves", "desc": "Fixed · prime" }
+          "fixed_only": {
+            "label": "Basket 1 — 100% fixed",
+            "desc": "Entire loan in fixed unlinked"
+          },
+          "thirds": {
+            "label": "Basket 2 — thirds",
+            "desc": "Fixed · prime · linked variable"
+          },
+          "halves": {
+            "label": "Basket 3 — halves",
+            "desc": "Fixed · prime"
+          }
         }
       }
     },
@@ -1910,7 +1919,11 @@
       "description": "Choose who should take over \"{title}\".",
       "assigneeLabel": "New assignee",
       "placeholder": "Choose a teammate…",
-      "submit": "Reassign"
+      "submit": "Reassign",
+      "noteLabel": "Handoff note (optional)",
+      "notePlaceholder": "What did you do? What needs to happen next?",
+      "noteHint": "Will appear in the task thread",
+      "backToCreator": "Back to creator"
     },
     "form": {
       "title": {
@@ -1944,6 +1957,15 @@
         "notFound": "Task not found or you don't have access.",
         "generic": "Save failed. Please try again."
       }
+    },
+    "thread": {
+      "title": "Task Thread",
+      "open": "Open thread",
+      "empty": "No activity yet in this thread.",
+      "placeholder": "Write a message...",
+      "send": "Send",
+      "hint": "Ctrl+Enter to send",
+      "sendFailed": "Failed to send message. Try again."
     }
   },
   "notifications": {

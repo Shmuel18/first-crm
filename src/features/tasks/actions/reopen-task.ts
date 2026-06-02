@@ -5,6 +5,8 @@ import { z } from 'zod';
 
 import { createClient } from '@/lib/supabase/server';
 
+import { emitTaskEvent } from '../lib/emit-task-event';
+
 type Result =
   | { ok: true }
   | { ok: false; error: 'unauthorized' | 'not_found' | 'validation' | 'unknown' };
@@ -50,6 +52,13 @@ export async function reopenTaskAction(taskId: string): Promise<Result> {
     return { ok: false, error: 'unknown' };
   }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
+
+  await emitTaskEvent(supabase, {
+    taskId: idParsed.data,
+    authorId: userRes.user.id,
+    eventType: 'reopened',
+    body: '↩ נפתחה מחדש',
+  });
 
   revalidatePath('/tasks');
   if (existing.case_id) revalidatePath(`/cases/${existing.case_id}`);

@@ -6,7 +6,16 @@ import { z } from 'zod';
 import { sendTaskNotificationEmail } from '@/features/notifications/services/notification-email';
 import { createClient } from '@/lib/supabase/server';
 
+import { emitTaskEvent } from '../lib/emit-task-event';
 import { TASK_STATUS_VALUES, type TaskUpdate } from '../types';
+
+const STATUS_LABEL: Record<string, string> = {
+  pending: 'פתוחה',
+  in_progress: 'בעבודה',
+  completed: 'הושלמה',
+  snoozed: 'מושהית',
+  cancelled: 'בוטלה',
+};
 
 type Result =
   | { ok: true }
@@ -79,6 +88,14 @@ export async function changeTaskStatusAction(taskId: string, status: string): Pr
       console.error('task-completed notification failed', err);
     }
   }
+
+  await emitTaskEvent(supabase, {
+    taskId: parsed.data.taskId,
+    authorId: userId,
+    eventType: 'status_changed',
+    body: `שונה סטטוס ל«${STATUS_LABEL[newStatus] ?? newStatus}»`,
+    metadata: { old_status: existing.status, new_status: newStatus },
+  });
 
   revalidatePath('/tasks');
   if (existing.case_id) revalidatePath(`/cases/${existing.case_id}`);
