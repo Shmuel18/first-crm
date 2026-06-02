@@ -88,9 +88,19 @@ ok "deployment id stamped as $HEAD_SHA"
 
 # --- 3. rollback point -------------------------------------------------------
 log "3/9  Tag running image as $PREV_IMG (rollback point)"
-if docker inspect "$NAME" >/dev/null 2>&1; then
-  docker tag "$(docker inspect "$NAME" --format '{{.Image}}')" "$PREV_IMG"
-  ok "tagged current image as $PREV_IMG"
+# Tag the current :latest (= the running build) as :prev. We tag the REPO:TAG,
+# NOT `docker inspect <container> .Image`: BuildKit/containerd report the
+# container's image as a config DIGEST that `docker tag` can't reference
+# ("No such image: sha256:…"), which aborted the deploy at this step. The
+# :latest tag points at the same running image and IS taggable.
+if docker image inspect "$IMG" >/dev/null 2>&1; then
+  docker tag "$IMG" "$PREV_IMG"
+  ok "tagged $IMG as $PREV_IMG"
+elif docker inspect "$NAME" >/dev/null 2>&1; then
+  # No :latest (unusual) — fall back to the container's image id; tolerate
+  # failure so a quirky image store can't block the whole deploy.
+  docker tag "$(docker inspect "$NAME" --format '{{.Image}}')" "$PREV_IMG" \
+    || echo "  (couldn't tag running image — proceeding without a rollback point)"
 else
   echo "  (no running $NAME container — first deploy, no rollback point)"
 fi
