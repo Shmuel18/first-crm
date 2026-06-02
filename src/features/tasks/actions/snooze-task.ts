@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 import { createClient } from '@/lib/supabase/server';
 
+import { emitTaskEvent } from '../lib/emit-task-event';
 import type { TaskUpdate } from '../types';
 
 type Result = { ok: true } | { ok: false; error: 'unauthorized' | 'not_found' | 'validation' | 'unknown' };
@@ -56,6 +57,15 @@ export async function snoozeTaskAction(taskId: string, preset: string): Promise<
     return { ok: false, error: 'unknown' };
   }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
+
+  const presetLabel = { hour: 'שעה', threeHours: '3 שעות', day: 'יום' }[parsed.data.preset];
+  await emitTaskEvent(supabase, {
+    taskId: parsed.data.taskId,
+    authorId: userRes.user.id,
+    eventType: 'snoozed',
+    body: `⏱ נדחתה ל${presetLabel}`,
+    metadata: { snoozed_until: until },
+  });
 
   revalidatePath('/tasks');
   if (existing.case_id) revalidatePath(`/cases/${existing.case_id}`);

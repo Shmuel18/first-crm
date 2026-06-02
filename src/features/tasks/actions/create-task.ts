@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
+import { emitTaskEvent } from '../lib/emit-task-event';
 import { TaskFormSchema } from '../schemas/task.schema';
 import type { TaskActionState, TaskInsert } from '../types';
 
@@ -63,6 +64,14 @@ export async function createTaskAction(
     .single();
 
   if (error || !inserted) return { ok: false, error: 'unknown', values };
+
+  // Emit 'created' event into the new task's thread.
+  await emitTaskEvent(supabase, {
+    taskId: inserted.id,
+    authorId: userId,
+    eventType: 'created',
+    body: '✦ נוצרה',
+  });
 
   if (assignee && assignee !== userId) {
     await sendTaskNotificationEmail({

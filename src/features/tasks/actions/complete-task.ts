@@ -6,6 +6,8 @@ import { z } from 'zod';
 import { sendTaskNotificationEmail } from '@/features/notifications/services/notification-email';
 import { createClient } from '@/lib/supabase/server';
 
+import { emitTaskEvent } from '../lib/emit-task-event';
+
 type Result =
   | { ok: true }
   | { ok: false; error: 'unauthorized' | 'not_found' | 'validation' | 'unknown' };
@@ -63,6 +65,13 @@ export async function completeTaskAction(taskId: string): Promise<Result> {
       caseId: existing.case_id,
     });
   }
+
+  await emitTaskEvent(supabase, {
+    taskId: idParsed.data,
+    authorId: userRes.user.id,
+    eventType: 'completed',
+    body: '✓ הושלמה',
+  });
 
   revalidatePath('/tasks');
   if (existing.case_id) revalidatePath(`/cases/${existing.case_id}`);

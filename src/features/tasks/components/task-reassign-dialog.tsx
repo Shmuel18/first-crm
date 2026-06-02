@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 
-import { Loader2 } from 'lucide-react';
+import { Loader2, RotateCcw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
@@ -37,6 +37,7 @@ export function TaskReassignDialog({ open, onOpenChange, task, assignees }: Prop
 
   const currentId = task?.assignee?.id ?? task?.assigned_to ?? '';
   const [selected, setSelected] = useState<string>(currentId);
+  const [note, setNote] = useState('');
 
   // Re-seed the selection when a different task opens the dialog — render-time
   // reconciliation (no effect), mirroring TasksBoard's prop-sync pattern.
@@ -44,6 +45,7 @@ export function TaskReassignDialog({ open, onOpenChange, task, assignees }: Prop
   if ((task?.id ?? null) !== seededFor) {
     setSeededFor(task?.id ?? null);
     setSelected(currentId);
+    setNote('');
   }
 
   // The active-profiles list is bounded; make sure the current assignee is
@@ -56,10 +58,15 @@ export function TaskReassignDialog({ open, onOpenChange, task, assignees }: Prop
 
   const unchanged = !selected || selected === currentId;
 
+  // "חזרה ליוצר" — quick-fill the creator as the new assignee.
+  const creatorId = task?.created_by ?? null;
+  const showBackToCreator =
+    creatorId && creatorId !== currentId && options.some((a) => a.id === creatorId);
+
   const handleSubmit = () => {
     if (!task || unchanged) return;
     startTransition(async () => {
-      const res = await reassignTaskAction(task.id, selected);
+      const res = await reassignTaskAction(task.id, selected, note.trim() || undefined);
       if (!res.ok) {
         toast.error(t('toast.reassignFailed'));
         return;
@@ -81,25 +88,50 @@ export function TaskReassignDialog({ open, onOpenChange, task, assignees }: Prop
           )}
         </DialogHeader>
 
-        <FormField label={t('reassignDialog.assigneeLabel')}>
-          <NativeSelect
-            value={selected}
-            onChange={(e) => setSelected(e.target.value)}
-            disabled={pending}
-          >
-            <option value="" disabled>
-              {t('reassignDialog.placeholder')}
-            </option>
-            {options.map((p) => {
-              const name = formatPersonName(p.first_name, p.last_name) || tc('noName');
-              return (
-                <option key={p.id} value={p.id}>
-                  {name}
-                </option>
-              );
-            })}
-          </NativeSelect>
-        </FormField>
+        <div className="space-y-4">
+          <FormField label={t('reassignDialog.assigneeLabel')}>
+            <NativeSelect
+              value={selected}
+              onChange={(e) => setSelected(e.target.value)}
+              disabled={pending}
+            >
+              <option value="" disabled>
+                {t('reassignDialog.placeholder')}
+              </option>
+              {options.map((p) => {
+                const name = formatPersonName(p.first_name, p.last_name) || tc('noName');
+                return (
+                  <option key={p.id} value={p.id}>
+                    {name}
+                  </option>
+                );
+              })}
+            </NativeSelect>
+            {showBackToCreator && (
+              <button
+                type="button"
+                onClick={() => setSelected(creatorId!)}
+                className="mt-1.5 inline-flex items-center gap-1 text-xs text-brand-gold-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 rounded"
+              >
+                <RotateCcw className="size-3" aria-hidden="true" />
+                {t('reassignDialog.backToCreator')}
+              </button>
+            )}
+          </FormField>
+
+          <FormField label={t('reassignDialog.noteLabel')}>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder={t('reassignDialog.notePlaceholder')}
+              rows={3}
+              maxLength={4000}
+              disabled={pending}
+              className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm resize-none focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/30 disabled:opacity-50"
+            />
+            <p className="mt-1 text-xs text-neutral-500">{t('reassignDialog.noteHint')}</p>
+          </FormField>
+        </div>
 
         <DialogFooter>
           <Button

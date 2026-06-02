@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { sendTaskNotificationEmail } from '@/features/notifications/services/notification-email';
 import { createClient } from '@/lib/supabase/server';
 
+import { emitTaskEvent } from '../lib/emit-task-event';
 import { ReassignTaskSchema } from '../schemas/task.schema';
 import type { TaskUpdate } from '../types';
 
@@ -20,9 +21,16 @@ type Result =
  * tasks_private_self_assigned CHECK blocks a cross-user reassignment, so we
  * don't special-case it here. The in-app bell notification to the new assignee
  * fires automatically via the notify_task_change trigger (028/089).
+ *
+ * @param note  Optional handoff note typed by the reassigning user. Stored as a
+ *              follow-up 'comment' row immediately after the 'reassigned' event.
  */
-export async function reassignTaskAction(taskId: string, assigneeId: string): Promise<Result> {
-  const parsed = ReassignTaskSchema.safeParse({ taskId, assigneeId });
+export async function reassignTaskAction(
+  taskId: string,
+  assigneeId: string,
+  note?: string,
+): Promise<Result> {
+  const parsed = ReassignTaskSchema.safeParse({ taskId, assigneeId, note });
   if (!parsed.success) return { ok: false, error: 'validation' };
 
   const supabase = await createClient();
@@ -41,6 +49,16 @@ export async function reassignTaskAction(taskId: string, assigneeId: string): Pr
   // Already assigned to the target → nothing to do.
   if (existing.assigned_to === parsed.data.assigneeId) return { ok: true };
 
+  // Resolve assignee name for the event body (best-effort).
+  const { data: assigneeProfile } = await supabase
+    .from('profiles')
+    .select('first_name, last_name')
+    .eq('id', parsed.data.assigneeId)
+    .maybeSingle();
+  const assigneeName = assigneeProfile
+    ? [assigneeProfile.first_name, assigneeProfile.last_name].filter(Boolean).join(' ') || 'יועץ'
+    : 'יועץ';
+
   // .select() row-count guard: tasks_select is broader than tasks_update, so an
   // RLS-denied UPDATE affects 0 rows with no error — treat that as unauthorized.
   const patch: TaskUpdate = { assigned_to: parsed.data.assigneeId, updated_by: userId };
@@ -54,6 +72,26 @@ export async function reassignTaskAction(taskId: string, assigneeId: string): Pr
     return { ok: false, error: 'unknown' };
   }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
+
+  // Emit 'reassigned' system event.
+  await emitTaskEvent(supabase, {
+    taskId: parsed.data.taskId,
+    authorId: userId,
+    eventType: 'reassigned',
+    body: `הועברה ל${assigneeName}`,
+    metadata: { to_user_id: parsed.data.assigneeId, from_user_id: existing.assigned_to },
+  });
+
+  // If the reassigning user added a handoff note, store it as a comment too.
+  const trimmedNote = parsed.data.note?.trim();
+  if (trimmedNote) {
+    await emitTaskEvent(supabase, {
+      taskId: parsed.data.taskId,
+      authorId: userId,
+      eventType: 'comment',
+      body: trimmedNote,
+    });
+  }
 
   // Best-effort email mirror (never throws), matching create/update-task.
   await sendTaskNotificationEmail({

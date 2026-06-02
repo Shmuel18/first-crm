@@ -57,6 +57,20 @@ export type TaskListFilters = z.infer<typeof TaskListFiltersSchema>;
 export const ReassignTaskSchema = z.object({
   taskId: z.uuid({ error: 'common.errors.invalidUuid' }),
   assigneeId: z.uuid({ error: 'common.errors.invalidUuid' }),
+  // Optional context message written by the person handing off the task.
+  // Stored as a follow-up 'comment' row immediately after the 'reassigned' event.
+  note: z.string().max(4000).optional(),
 });
 
 export type ReassignTaskInput = z.infer<typeof ReassignTaskSchema>;
+
+// Free-text comment added manually to a task's thread.
+export const AddTaskCommentSchema = z.object({
+  taskId: z.uuid({ error: 'common.errors.invalidUuid' }),
+  body: z
+    .string({ error: 'common.errors.required' })
+    .min(1, { error: 'common.errors.required' })
+    .max(4000, { error: 'common.errors.tooLarge' }),
+});
+
+export type AddTaskCommentInput = z.infer<typeof AddTaskCommentSchema>;

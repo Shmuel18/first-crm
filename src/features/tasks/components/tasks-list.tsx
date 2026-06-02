@@ -11,6 +11,7 @@ import type { Locale } from '@/lib/i18n/direction';
 import { TaskFormDialog } from './task-form-dialog';
 import { TaskReassignDialog } from './task-reassign-dialog';
 import { TaskRow } from './task-row';
+import { TaskThreadDialog } from './task-thread-dialog';
 import { TASK_STATUS_VALUES, type TaskStatus, type TaskWithRelations } from '../types';
 
 type Profile = { id: string; first_name: string | null; last_name: string | null };
@@ -53,6 +54,7 @@ export function TasksList({
     { mode: 'create' } | { mode: 'edit'; task: TaskWithRelations } | null
   >(null);
   const [reassignTarget, setReassignTarget] = useState<TaskWithRelations | null>(null);
+  const [threadTarget, setThreadTarget] = useState<TaskWithRelations | null>(null);
 
   const renderRow = (task: TaskWithRelations) => (
     <TaskRow
@@ -62,6 +64,7 @@ export function TasksList({
       compact={compact}
       onEdit={(target) => setDialogState({ mode: 'edit', task: target })}
       onReassign={setReassignTarget}
+      onThread={setThreadTarget}
     />
   );
 
@@ -152,6 +155,12 @@ export function TasksList({
         onOpenChange={(o) => !o && setReassignTarget(null)}
         task={reassignTarget}
         assignees={assignees}
+      />
+
+      <TaskThreadDialog
+        open={threadTarget !== null}
+        onOpenChange={(o) => !o && setThreadTarget(null)}
+        task={threadTarget}
       />
     </div>
   );
