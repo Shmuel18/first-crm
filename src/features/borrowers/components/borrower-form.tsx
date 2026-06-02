@@ -59,7 +59,9 @@ export function BorrowerForm({
         ? t('errors.unauthorized')
         : state.error === 'primary_exists'
           ? t('errors.primaryExists')
-          : t('errors.generic')
+          : state.error === 'conflict'
+            ? t('errors.conflict')
+            : t('errors.generic')
       : null;
 
   const roleDefault = sub?.role_in_case ?? initialRole;
@@ -77,6 +79,7 @@ export function BorrowerForm({
     >
       <input type="hidden" name="case_id" value={caseId} />
       {initial && <input type="hidden" name="borrower_id" value={initial.id} />}
+      {initial && <input type="hidden" name="version" value={initial.version} />}
 
       <FormSection title={t('sections.roleInCase')}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

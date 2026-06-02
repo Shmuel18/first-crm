@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 
 import { FileText } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
 import { updateCaseFieldAction } from '../actions/update-case-field';
 
@@ -39,6 +40,7 @@ type Props = {
 export function CaseRequestDetailsBlock({ caseId, initialHtml }: Props) {
   const t = useTranslations('case');
   const tForm = useTranslations('case.form.fields');
+  const tc = useTranslations('common');
 
   const [html, setHtml] = useState<string>(initialHtml ?? '');
   const [savedHtml, setSavedHtml] = useState<string>(initialHtml ?? '');
@@ -53,6 +55,7 @@ export function CaseRequestDetailsBlock({ caseId, initialHtml }: Props) {
       caseId,
       'request_details',
       normalised || null,
+      savedHtml === '' ? null : savedHtml,
     );
     if (result.ok) {
       setSavedHtml(normalised);
@@ -60,6 +63,7 @@ export function CaseRequestDetailsBlock({ caseId, initialHtml }: Props) {
       // Revert local state on failure so the next blur compares against
       // the last server-confirmed value, not the rejected draft.
       setHtml(savedHtml);
+      toast.error(result.error === 'conflict' ? tc('changedElsewhere') : tc('saveFailed'));
     }
   };
 
