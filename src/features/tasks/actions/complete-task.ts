@@ -73,8 +73,9 @@ export async function completeTaskAction(taskId: string): Promise<Result> {
     body: '✓ הושלמה',
   });
 
+  // Skip the heavy ('/(app)','layout') shell revalidate (see create-task note) —
+  // badge updates on next nav; keeps the action POST light to avoid 503s.
   revalidatePath('/tasks');
   if (existing.case_id) revalidatePath(`/cases/${existing.case_id}`);
-  revalidatePath('/(app)', 'layout');
   return { ok: true };
 }

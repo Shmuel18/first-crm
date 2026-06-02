@@ -97,8 +97,9 @@ export async function changeTaskStatusAction(taskId: string, status: string): Pr
     metadata: { old_status: existing.status, new_status: newStatus },
   });
 
+  // Skip the heavy ('/(app)','layout') shell revalidate (see create-task note) —
+  // badge updates on next nav; keeps the action POST light to avoid 503s.
   revalidatePath('/tasks');
   if (existing.case_id) revalidatePath(`/cases/${existing.case_id}`);
-  revalidatePath('/(app)', 'layout');
   return { ok: true };
 }

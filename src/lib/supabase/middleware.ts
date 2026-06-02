@@ -99,7 +99,20 @@ export async function updateSession(request: NextRequest) {
   // On every authenticated protected request, re-check active status and, if the
   // account is gone, drop the session cookies and bounce to /login. Only runs
   // for logged-in users on protected routes, so auth/static traffic pays nothing.
-  if (user && isProtectedRoute) {
+  // Skip the active-status RPC on speculative RSC PREFETCHES. Next fires a burst
+  // of prefetches for visible nav links (and after every server-action
+  // revalidation), and adding a DB round-trip to each saturates the auth path —
+  // the cause of intermittent 503s on a small single instance. A prefetch never
+  // renders to the user; the REAL navigation that follows is not a prefetch and
+  // runs this gate, so the deactivation check still closes on the next actual
+  // request (SEC-AUTH-1's own "next request re-checks" guarantee). getUser()
+  // above still runs so the session stays fresh.
+  const isPrefetch =
+    request.headers.get('next-router-prefetch') === '1' ||
+    request.headers.get('purpose') === 'prefetch' ||
+    request.headers.get('x-purpose') === 'prefetch';
+
+  if (user && isProtectedRoute && !isPrefetch) {
     const { active, error: activeError } = await isCurrentUserActive(supabase);
     // Fail-closed on an explicit FALSE only. A transient RPC error is NOT treated
     // as inactive (a DB blip shouldn't sign everyone out); RLS still guards data

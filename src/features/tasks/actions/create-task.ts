@@ -83,9 +83,13 @@ export async function createTaskAction(
     });
   }
 
+  // NOTE: intentionally NOT revalidating the ('/(app)','layout') shell here.
+  // That forced a full layout re-render (layout_bootstrap RPC + perm check) into
+  // the action's POST response and, combined with the per-request auth round-trip
+  // in middleware, contributed to intermittent 503s. The sidebar task badge
+  // refreshes on the next navigation instead of instantly — an acceptable trade.
   revalidatePath('/tasks');
   if (parsed.data.case_id) revalidatePath(`/cases/${parsed.data.case_id}`);
-  revalidatePath('/(app)', 'layout');
 
   return { ok: true, taskId: inserted.id };
 }
