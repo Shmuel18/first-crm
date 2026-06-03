@@ -13,9 +13,14 @@ import type { ResendInviteResult } from '../types';
 /**
  * Re-issue a fresh set-password link for an EXISTING member — e.g. their first
  * invite link expired or was consumed by a link-preview bot. Avoids the
- * delete-from-DB-then-reinvite dance: generateLink({type:'invite'}) errors with
- * "email exists" on a known user, so we mint a `recovery` link instead (valid
- * for existing users) that lands on /auth/set-password via /auth/confirm.
+ * delete-from-DB-then-reinvite dance.
+ *
+ * Uses a `magiclink` (passwordless sign-in), NOT `recovery`: generateLink
+ * type:'invite' errors "email exists" on a known user, and type:'recovery'
+ * fails for an invited member who never set a password (there's nothing to
+ * "recover" → verifyOtp rejects it, surfaced as invalid_invite). magiclink
+ * signs in any confirmed user regardless of password state, then /auth/confirm
+ * forwards to /auth/set-password.
  *
  * Emails it when Resend is configured; otherwise returns the one-time link for
  * the admin to share manually (mirrors inviteMemberAction).
@@ -50,13 +55,13 @@ export async function resendInviteAction(userId: string): Promise<ResendInviteRe
   if (profErr || !profile?.email) return { ok: false, error: 'not_found' };
 
   const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
-    type: 'recovery',
+    type: 'magiclink',
     email: profile.email,
   });
   const tokenHash = linkData?.properties?.hashed_token ?? null;
   if (linkErr || !tokenHash) return { ok: false, error: 'unknown' };
 
-  const inviteLink = `${env.NEXT_PUBLIC_APP_URL}/auth/confirm?token_hash=${tokenHash}&type=recovery&next=/auth/set-password`;
+  const inviteLink = `${env.NEXT_PUBLIC_APP_URL}/auth/confirm?token_hash=${tokenHash}&type=magiclink&next=/auth/set-password`;
 
   const locale = (await getLocale()) === 'en' ? 'en' : 'he';
   const emailed = await sendInviteEmail({
