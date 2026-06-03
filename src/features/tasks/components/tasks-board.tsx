@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import type { Locale } from '@/lib/i18n/direction';
 
 import { changeTaskStatusAction } from '../actions/change-task-status';
+import { boardCoordinateGetter } from './board-coordinate-getter';
 import { TaskBoardColumn } from './task-board-column';
 import { TaskFormDialog } from './task-form-dialog';
 import { TaskReassignDialog } from './task-reassign-dialog';
@@ -56,9 +57,11 @@ export function TasksBoard({ tasks, locale, assignees, cases }: Props) {
   // it up (Space/Enter), move across columns with arrow keys, drop (Space/Enter),
   // cancel (Esc). The card already spreads dnd's focusable attributes + keyboard
   // listeners, so the board just needed the sensor wired in.
+  // boardCoordinateGetter snaps each arrow press to the adjacent column instead
+  // of nudging 25px at a time (unusable on a 4-column board).
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: boardCoordinateGetter }),
   );
 
   const onDragEnd = (event: DragEndEvent) => {
