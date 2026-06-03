@@ -2125,7 +2125,8 @@
     "action": {
       "deactivate": "Deactivate",
       "reactivate": "Reactivate",
-      "delete": "Delete"
+      "delete": "Delete",
+      "resend": "Resend invite"
     },
     "deactivateConfirm": {
       "title": "Deactivate this member?",
@@ -2143,7 +2144,11 @@
       "selfRoleChange": "You can't change your own role. Ask another admin.",
       "deleted": "Member deleted",
       "selfDelete": "You can't delete yourself",
-      "actionFailed": "Action failed. Please try again."
+      "actionFailed": "Action failed. Please try again.",
+      "resentEmail": "Invite re-sent by email"
+    },
+    "resend": {
+      "title": "New invite link"
     },
     "invite": {
       "title": "Add team member",
