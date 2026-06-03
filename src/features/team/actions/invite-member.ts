@@ -56,16 +56,11 @@ export async function inviteMemberAction(
 
   const admin = createAdminClient();
 
-  // Supabase appends ?code=... (and type=invite) to the redirectTo URL. Our
-  // /auth/callback exchanges the code for a session, then forwards to
-  // `next` which puts the user on the set-password page.
-  const redirectTo = `${env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/auth/set-password`;
-
   const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
     type: 'invite',
     email,
     // handle_new_user (migration 059) refuses to create a profile without it.
-    options: { redirectTo, data: { invited_by: userRes.user.id } },
+    options: { data: { invited_by: userRes.user.id } },
   });
 
   if (linkErr || !linkData.user) {
@@ -76,14 +71,20 @@ export async function inviteMemberAction(
     return { ok: false, error: 'unknown', values };
   }
 
-  const inviteLink = linkData.properties?.action_link ?? null;
-  if (!inviteLink) {
-    // Defensive: generateLink shouldn't succeed without action_link, but if
-    // the Supabase API changes shape we'd rather fail loudly than create a
-    // user nobody can finish onboarding.
+  // Build the invite link against our token_hash route (/auth/confirm), NOT the
+  // action_link: the action_link resolves through Supabase's /verify endpoint
+  // which returns the session in the URL hash (implicit flow) — unreadable by a
+  // server route, so /auth/callback saw no `code` ("missing_code"). token_hash +
+  // verifyOtp is the SSR-correct path. See src/app/auth/confirm/route.ts.
+  const tokenHash = linkData.properties?.hashed_token ?? null;
+  if (!tokenHash) {
+    // Defensive: generateLink shouldn't succeed without a token, but if the
+    // Supabase API changes shape we'd rather fail loudly than create a user
+    // nobody can finish onboarding.
     await admin.auth.admin.deleteUser(linkData.user.id);
     return { ok: false, error: 'unknown', values };
   }
+  const inviteLink = `${env.NEXT_PUBLIC_APP_URL}/auth/confirm?token_hash=${tokenHash}&type=invite&next=/auth/set-password`;
 
   // The handle_new_user trigger created a default profile; fill in chosen values.
   const { error: updateErr } = await admin
