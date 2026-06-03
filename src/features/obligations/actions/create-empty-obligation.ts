@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
@@ -46,6 +44,8 @@ export async function createEmptyObligationAction(
     return { ok: false, error: 'unknown' };
   }
 
-  revalidatePath(`/cases/${caseId}`);
+  // No revalidatePath — CaseObligationsClient inserts the row optimistically
+  // and recomputes the total client-side, avoiding a full case-page re-render
+  // (FE-1).
   return { ok: true, obligationId: created.id };
 }
