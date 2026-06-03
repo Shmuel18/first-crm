@@ -1,119 +1,68 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 
-import { Loader2, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { toast } from 'sonner';
 
 import { GroupedNumberInput } from '@/components/shared/grouped-number-input';
 import { CurrencySign } from '@/components/ui/currency-sign';
 import { DatePickerPopover } from '@/components/ui/date-picker-popover';
 import { Tooltip } from '@/components/ui/tooltip';
 
-import { deleteObligationAction } from '../actions/delete-obligation';
-import {
-  updateObligationFieldAction,
-  type EditableObligationField,
-} from '../actions/update-obligation-field';
-import { monthsUntil } from '../domain/months-remaining';
+import { type EditableObligationField } from '../actions/update-obligation-field';
 import type { ObligationRow as ObligationRowData } from '../types';
 
 type Props = {
-  caseId: string;
   obligation: ObligationRowData;
   canEdit: boolean;
+  /** Persist one cell. The parent (CaseObligationsClient) owns the optimistic
+   *  state + rollback + the end_date→months smart default, so the row only
+   *  reports edits. */
+  onSaveField: (field: EditableObligationField, value: unknown) => void;
+  /** Remove the row. The parent deletes optimistically (the row vanishes
+   *  immediately), so there is no per-row spinner. */
+  onDelete: () => void;
 };
 
 /**
- * Single obligation rendered as a table row. Inline-editable cells (no
- * dialog, no expand/collapse) — each cell saves on blur via the shared
- * updateObligationFieldAction. Column order matches the requested layout:
- * loan balance · monthly payment · end date · months left · lender.
+ * Single obligation rendered as a table row. Inline-editable cells (no dialog,
+ * no expand/collapse) — each cell saves on blur via the parent's onSaveField.
+ * Column order: loan balance · monthly payment · end date · months left · lender.
  */
-export function ObligationTableRow({ caseId, obligation, canEdit }: Props) {
+export function ObligationTableRow({ obligation, canEdit, onSaveField, onDelete }: Props) {
   const t = useTranslations('obligations');
   const tc = useTranslations('common');
-  const [row, setRow] = useState(obligation);
-  const [isDeleting, startDelete] = useTransition();
-
-  // Resync from server after revalidation.
-  const [propRef, setPropRef] = useState(obligation);
-  if (obligation !== propRef) {
-    setPropRef(obligation);
-    setRow(obligation);
-  }
-
-  const saveField = async (field: EditableObligationField, value: unknown) => {
-    const prev = row[field];
-    setRow((r) => ({ ...r, [field]: value as never }));
-    const result = await updateObligationFieldAction(obligation.id, caseId, field, value);
-    if (!result.ok) {
-      setRow((r) => ({ ...r, [field]: prev as never }));
-      return;
-    }
-
-    // Smart default: when end_date is filled, derive and persist
-    // months_remaining from it. The user can still override the months
-    // value manually after — only this direction is automatic. Clearing
-    // end_date leaves months_remaining as-is so a hand-typed value
-    // doesn't disappear unexpectedly.
-    if (field === 'end_date' && typeof value === 'string' && value) {
-      const prevMonths = row.months_remaining;
-      const months = monthsUntil(value);
-      setRow((r) => ({ ...r, months_remaining: months as never }));
-      const monthsResult = await updateObligationFieldAction(
-        obligation.id,
-        caseId,
-        'months_remaining',
-        months,
-      );
-      if (!monthsResult.ok) {
-        setRow((r) => ({ ...r, months_remaining: prevMonths as never }));
-      }
-    }
-  };
-
-  const handleDelete = () => {
-    startDelete(async () => {
-      const result = await deleteObligationAction(obligation.id, obligation.borrower_id, caseId);
-      if (result.ok) toast.success(t('deleteSuccess'));
-      else toast.error(t('deleteError'));
-    });
-  };
 
   return (
     <tr className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50/50 transition group">
       <Cell>
-        <NumberCell
-          value={row.loan_amount}
-          onSave={(v) => saveField('loan_amount', v)}
-        />
+        <NumberCell value={obligation.loan_amount} onSave={(v) => onSaveField('loan_amount', v)} />
       </Cell>
       <Cell>
         <NumberCell
-          value={row.monthly_payment}
-          onSave={(v) => saveField('monthly_payment', v)}
+          value={obligation.monthly_payment}
+          onSave={(v) => onSaveField('monthly_payment', v)}
         />
       </Cell>
       <Cell>
         <DateCell
-          value={row.end_date}
-          onSave={(v) => saveField('end_date', v)}
+          value={obligation.end_date}
+          onSave={(v) => onSaveField('end_date', v)}
           label={tc('selectDate')}
         />
       </Cell>
       <Cell>
         <NumberCell
-          value={row.months_remaining}
-          onSave={(v) => saveField('months_remaining', v)}
+          value={obligation.months_remaining}
+          onSave={(v) => onSaveField('months_remaining', v)}
           integer
         />
       </Cell>
       <Cell>
         <TextCell
-          value={row.lender}
-          onSave={(v) => saveField('lender', v)}
+          value={obligation.lender}
+          onSave={(v) => onSaveField('lender', v)}
           placeholder={t('unnamedLender')}
         />
       </Cell>
@@ -122,16 +71,11 @@ export function ObligationTableRow({ caseId, obligation, canEdit }: Props) {
           <Tooltip content={tc('delete')}>
             <button
               type="button"
-              onClick={handleDelete}
-              disabled={isDeleting}
+              onClick={onDelete}
               aria-label={tc('delete')}
-              className="size-7 rounded inline-flex items-center justify-center text-neutral-400 hover:text-red-600 hover:bg-red-50 transition opacity-0 group-hover:opacity-100 focus-visible:opacity-100 disabled:opacity-50"
+              className="size-7 rounded inline-flex items-center justify-center text-neutral-400 hover:text-red-600 hover:bg-red-50 transition opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
             >
-              {isDeleting ? (
-                <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-              ) : (
-                <Trash2 className="size-3.5" aria-hidden="true" />
-              )}
+              <Trash2 className="size-3.5" aria-hidden="true" />
             </button>
           </Tooltip>
         )}

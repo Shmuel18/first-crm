@@ -1,14 +1,11 @@
-import { CreditCard } from 'lucide-react';
-import { getLocale, getTranslations } from 'next-intl/server';
+import { getLocale } from 'next-intl/server';
 
-import { CaseBlock } from '@/features/cases/components/case-block';
 import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
-import { formatCurrency } from '@/lib/utils/format-currency';
 
 import { listObligationsFlatForCase } from '../services/obligations.service';
-import { CaseObligationsList } from './case-obligations-list';
+import { CaseObligationsClient } from './case-obligations-client';
 
 type Props = { caseId: string };
 
@@ -18,11 +15,14 @@ type Props = { caseId: string };
  * instead of splitting per borrower. New obligations are billed to the
  * primary borrower in the DB; the visible list is unified.
  *
+ * This Server Component only fetches + gates on permission; the block shell,
+ * the reactive grand-total header and the optimistic list all live in
+ * CaseObligationsClient so inline edits don't revalidate the whole case page.
+ *
  * Hidden when the caller lacks `view_case_obligations` so an empty shell
  * doesn't leak the case structure to non-viewers.
  */
 export async function CaseObligationsBlock({ caseId }: Props) {
-  const t = await getTranslations('obligations');
   const [canView, canEdit] = await Promise.all([
     userHasPermission('view_case_obligations'),
     userCanEditCase(caseId),
@@ -55,35 +55,12 @@ export async function CaseObligationsBlock({ caseId }: Props) {
   }
 
   return (
-    <CaseBlock
-      title={t('blockTitle')}
-      icon={<CreditCard />}
-      fullWidth
-      blockKey="obligations"
-      rightSlot={
-        view.obligations.length > 0 && (
-          <span className="text-xs text-neutral-600">
-            {t('grandTotal')}:{' '}
-            <span className="font-semibold text-neutral-900">
-              {formatCurrency(view.monthlyPaymentTotal, locale)}
-            </span>
-          </span>
-        )
-      }
-    >
-      {view.primaryBorrowerId === null ? (
-        <p className="text-sm text-neutral-600 text-center py-4">{t('noBorrowers')}</p>
-      ) : (
-        <CaseObligationsList
-          caseId={caseId}
-          primaryBorrowerId={view.primaryBorrowerId}
-          obligations={view.obligations}
-          monthlyPaymentTotal={view.monthlyPaymentTotal}
-          remainingDebtTotal={view.remainingDebtTotal}
-          locale={locale}
-          canEdit={canEdit}
-        />
-      )}
-    </CaseBlock>
+    <CaseObligationsClient
+      caseId={caseId}
+      primaryBorrowerId={view.primaryBorrowerId}
+      initialObligations={view.obligations}
+      locale={locale}
+      canEdit={canEdit}
+    />
   );
 }
