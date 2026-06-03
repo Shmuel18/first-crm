@@ -9,9 +9,12 @@
 #   Fetch + run (recommended):
 #     curl -fsSL https://raw.githubusercontent.com/Shmuel18/first-crm/main/scripts/deploy.sh -o /opt/deploy-first-crm.sh
 #     bash /opt/deploy-first-crm.sh
+#   Deploy a non-default branch (e.g. once this host becomes the dev/staging
+#   environment after Vercel owns production for `main`):
+#     DEPLOY_BRANCH=dev bash /opt/deploy-first-crm.sh
 #
 # Flow (every step reversible; production untouched until the swap):
-#   1. Fresh shallow clone of `main` -> /opt/first-crm_new
+#   1. Fresh shallow clone of $BRANCH (DEPLOY_BRANCH, default main) -> /opt/first-crm_new
 #   2. PRESERVE the existing .env.production (copy it — never regenerate
 #      secrets; regenerating NEXT_SERVER_ACTIONS_ENCRYPTION_KEY would
 #      invalidate in-flight server-action IDs in open browser tabs)
@@ -46,6 +49,11 @@ TEST_PORT=3798
 IMG="first-crm:latest"
 PREV_IMG="first-crm:prev"
 ENV_FILE=".env.production"
+# Branch this host deploys. Default stays `main` so this stays a no-op for the
+# current setup. Once Vercel owns production for `main`, this Vultr host becomes
+# the dev/staging environment — flip the default to `dev` here (or pass
+# DEPLOY_BRANCH=dev per run) so it serves the dev line instead of production.
+BRANCH="${DEPLOY_BRANCH:-main}"
 
 log()  { printf '\n\033[1;33m▶ %s\033[0m\n' "$*"; }
 ok()   { printf '\033[1;32m✓ %s\033[0m\n' "$*"; }
@@ -57,11 +65,11 @@ command -v git    >/dev/null || die "git not found"
 [ -f "$DIR/$ENV_FILE" ] || die "$DIR/$ENV_FILE missing — cannot preserve env"
 
 # --- 1. fresh clone ----------------------------------------------------------
-log "1/9  Fresh clone -> $NEW"
+log "1/9  Fresh clone ($BRANCH) -> $NEW"
 rm -rf "$NEW"
-git clone --depth 1 "$REPO" "$NEW"
+git clone --depth 1 --branch "$BRANCH" "$REPO" "$NEW"
 HEAD_SHA="$(git -C "$NEW" rev-parse --short HEAD)"
-ok "cloned main @ $HEAD_SHA"
+ok "cloned $BRANCH @ $HEAD_SHA"
 
 # --- 2. preserve env (copy — never regenerate) -------------------------------
 log "2/9  Preserve $ENV_FILE (copy existing — secrets never regenerated)"
