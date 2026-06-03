@@ -6,6 +6,7 @@ import { Home, Receipt, Wallet } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useCaseDraftState } from '../hooks/use-case-draft-state';
+import { useUnsavedLinkGuard } from '../hooks/use-unsaved-link-guard';
 
 import { DraftActionBar } from './draft-action-bar';
 import { DraftAdminBlock } from './draft-admin-block';
@@ -39,6 +40,11 @@ export function NewCasePageClient({ locale }: Props) {
     setRequestDetails,
     clearDirty,
   } = useCaseDraftState();
+
+  // Warn before an in-app link click discards a half-filled draft (the App
+  // Router doesn't fire beforeunload for SPA nav — UX-2). Tab close/refresh
+  // is still covered by the beforeunload in useCaseDraftState.
+  useUnsavedLinkGuard(state.isDirty, tDraft('unsavedWarning'));
 
   const [genericError, setGenericError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<string[]>([]);
