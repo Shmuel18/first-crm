@@ -1,21 +1,16 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 
-import { Loader2, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { toast } from 'sonner';
 
 import { GroupedNumberInput } from '@/components/shared/grouped-number-input';
 import { CurrencySign } from '@/components/ui/currency-sign';
 import { DatePickerPopover } from '@/components/ui/date-picker-popover';
 import { Tooltip } from '@/components/ui/tooltip';
 
-import { deleteExpenseAction } from '../actions/delete-expense';
-import {
-  updateExpenseFieldAction,
-  type EditableExpenseField,
-} from '../actions/update-expense-field';
+import { type EditableExpenseField } from '../actions/update-expense-field';
 import { ExpenseReceiptCell } from './expense-receipt-cell';
 import type { CaseExpenseRow } from '../types';
 
@@ -23,6 +18,12 @@ type Props = {
   caseId: string;
   expense: CaseExpenseRow;
   canEdit: boolean;
+  /** Persist one cell. The parent (CaseExpensesList) owns the optimistic state
+   *  + rollback, so the row only reports edits. */
+  onSaveField: (field: EditableExpenseField, value: unknown) => void;
+  /** Remove the row. The parent deletes optimistically (the row vanishes
+   *  immediately), so there is no per-row spinner. */
+  onDelete: () => void;
 };
 
 /**
@@ -30,55 +31,26 @@ type Props = {
  * a per-row delete. Same look-and-feel as obligation-table-row so the
  * admin block's two tables (expenses + open tasks) read consistently.
  */
-export function CaseExpenseRow({ caseId, expense, canEdit }: Props) {
+export function CaseExpenseRow({ caseId, expense, canEdit, onSaveField, onDelete }: Props) {
   const tc = useTranslations('common');
   const t = useTranslations('expenses');
-  const [row, setRow] = useState(expense);
-  const [isDeleting, startDelete] = useTransition();
-
-  // Resync from server after revalidation.
-  const [propRef, setPropRef] = useState(expense);
-  if (expense !== propRef) {
-    setPropRef(expense);
-    setRow(expense);
-  }
-
-  const saveField = async (field: EditableExpenseField, value: unknown) => {
-    const prev = row[field];
-    setRow((r) => ({ ...r, [field]: value as never }));
-    const result = await updateExpenseFieldAction(expense.id, caseId, field, value);
-    if (!result.ok) {
-      setRow((r) => ({ ...r, [field]: prev as never }));
-    }
-  };
-
-  const handleDelete = () => {
-    startDelete(async () => {
-      const result = await deleteExpenseAction(expense.id, caseId);
-      if (result.ok) toast.success(t('deleteSuccess'));
-      else toast.error(t('deleteError'));
-    });
-  };
 
   return (
     <tr className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50/50 transition group">
       <Cell>
         <DateCell
-          value={row.expense_date}
-          onSave={(v) => saveField('expense_date', v)}
+          value={expense.expense_date}
+          onSave={(v) => onSaveField('expense_date', v)}
           label={tc('selectDate')}
         />
       </Cell>
       <Cell>
-        <NumberCell
-          value={row.amount}
-          onSave={(v) => saveField('amount', v)}
-        />
+        <NumberCell value={expense.amount} onSave={(v) => onSaveField('amount', v)} />
       </Cell>
       <Cell>
         <TextCell
-          value={row.description}
-          onSave={(v) => saveField('description', v)}
+          value={expense.description}
+          onSave={(v) => onSaveField('description', v)}
           placeholder={t('fields.descriptionPlaceholder')}
         />
       </Cell>
@@ -86,24 +58,19 @@ export function CaseExpenseRow({ caseId, expense, canEdit }: Props) {
         <span className="inline-flex items-center justify-end">
           <ExpenseReceiptCell
             caseId={caseId}
-            expenseId={row.id}
+            expenseId={expense.id}
             canEdit={canEdit}
-            initialName={row.receipt_name}
+            initialName={expense.receipt_name}
           />
           {canEdit && (
             <Tooltip content={tc('delete')}>
               <button
                 type="button"
-                onClick={handleDelete}
-                disabled={isDeleting}
+                onClick={onDelete}
                 aria-label={tc('delete')}
-                className="size-7 rounded inline-flex items-center justify-center text-neutral-400 hover:text-red-600 hover:bg-red-50 transition opacity-0 group-hover:opacity-100 focus-visible:opacity-100 disabled:opacity-50"
+                className="size-7 rounded inline-flex items-center justify-center text-neutral-400 hover:text-red-600 hover:bg-red-50 transition opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
               >
-                {isDeleting ? (
-                  <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-                ) : (
-                  <Trash2 className="size-3.5" aria-hidden="true" />
-                )}
+                <Trash2 className="size-3.5" aria-hidden="true" />
               </button>
             </Tooltip>
           )}

@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
@@ -46,6 +44,7 @@ export async function createEmptyExpenseAction(caseId: string): Promise<Result> 
     return { ok: false, error: 'unknown' };
   }
 
-  revalidatePath(`/cases/${caseId}`);
+  // No revalidatePath — CaseExpensesList inserts the row optimistically (FE-1),
+  // avoiding a full case-page re-render + scroll-jump.
   return { ok: true, expenseId: data.id };
 }

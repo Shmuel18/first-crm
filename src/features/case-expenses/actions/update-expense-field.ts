@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
@@ -89,6 +87,7 @@ export async function updateExpenseFieldAction(
     return { ok: false, error: 'unknown' };
   }
 
-  revalidatePath(`/cases/${caseId}`);
+  // No revalidatePath — the client updates the cell optimistically (FE-1);
+  // revalidating re-rendered the whole case page and lost scroll.
   return { ok: true };
 }

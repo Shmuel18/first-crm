@@ -1,12 +1,18 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 
 import { Loader2, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { createEmptyExpenseAction } from '../actions/create-empty-expense';
+import { deleteExpenseAction } from '../actions/delete-expense';
+import {
+  updateExpenseFieldAction,
+  type EditableExpenseField,
+} from '../actions/update-expense-field';
+import { emptyExpenseRow } from './case-expense-empty-row';
 import { CaseExpenseRow } from './case-expense-row';
 import type { CaseExpenseRow as CaseExpenseRowData } from '../types';
 
@@ -20,8 +26,12 @@ type Props = {
  * Compact expenses list embedded inside the admin block. Three columns
  * (date / amount / description) plus per-row delete. The "+ הוסף הוצאה"
  * affordance is a small text link at the bottom — expenses are a side
- * detail in the admin block, not a primary block, so no full-width
- * dashed CTA. Headers only appear when there are rows worth labeling.
+ * detail in the admin block, not a primary block.
+ *
+ * Owns the list as client state so add / delete / inline edit apply
+ * optimistically — the actions no longer call revalidatePath, which used to
+ * re-render the whole heavy case page and discard scroll (FE-1). Mirrors the
+ * case-banks / obligations pattern; resyncs to server truth on prop change.
  */
 export function CaseExpensesList({ caseId, expenses, canEdit }: Props) {
   const t = useTranslations('expenses');
@@ -29,15 +39,68 @@ export function CaseExpensesList({ caseId, expenses, canEdit }: Props) {
   const tc = useTranslations('common');
   const [isAdding, startAdd] = useTransition();
 
+  const [rows, setRows] = useState<CaseExpenseRowData[]>(() => [...expenses]);
+  const sig = expenses
+    .map(
+      (e) =>
+        `${e.id}:${e.expense_date ?? ''}:${e.amount ?? ''}:${e.description ?? ''}:${e.receipt_name ?? ''}`,
+    )
+    .join('|');
+  const [prevSig, setPrevSig] = useState(sig);
+  if (sig !== prevSig) {
+    setPrevSig(sig);
+    setRows([...expenses]);
+  }
+
   const handleAdd = () => {
     if (!canEdit) return;
+    const tempId = `optimistic-${prevSig.length}-${rows.length}`;
+    setRows((prev) => [...prev, emptyExpenseRow(tempId, caseId)]);
     startAdd(async () => {
       const result = await createEmptyExpenseAction(caseId);
-      if (!result.ok) toast.error(tc('saveFailed'));
+      if (!result.ok) {
+        setRows((prev) => prev.filter((r) => r.id !== tempId));
+        toast.error(tc('saveFailed'));
+        return;
+      }
+      setRows((prev) => prev.map((r) => (r.id === tempId ? { ...r, id: result.expenseId } : r)));
     });
   };
 
-  const hasExpenses = expenses.length > 0;
+  const handleDelete = (id: string) => {
+    const index = rows.findIndex((r) => r.id === id);
+    const removed = rows[index];
+    if (!removed) return;
+    setRows((prev) => prev.filter((r) => r.id !== id));
+    void deleteExpenseAction(id, caseId).then((result) => {
+      if (result.ok) {
+        toast.success(t('deleteSuccess'));
+        return;
+      }
+      setRows((prev) => {
+        const next = [...prev];
+        next.splice(Math.min(index, next.length), 0, removed);
+        return next;
+      });
+      toast.error(t('deleteError'));
+    });
+  };
+
+  const saveField = async (id: string, field: EditableExpenseField, value: unknown) => {
+    const target = rows.find((r) => r.id === id);
+    if (!target) return;
+    const prev = target[field];
+    // `as never` for the computed-key write: EditableExpenseField spans
+    // string/number/null columns, so a dynamic [field] assignment can't be
+    // proven type-safe at compile time; the action validates the field+value.
+    setRows((cur) => cur.map((r) => (r.id === id ? { ...r, [field]: value as never } : r)));
+    const result = await updateExpenseFieldAction(id, caseId, field, value);
+    if (!result.ok) {
+      setRows((cur) => cur.map((r) => (r.id === id ? { ...r, [field]: prev as never } : r)));
+    }
+  };
+
+  const hasExpenses = rows.length > 0;
   const addButton = canEdit ? (
     <button
       type="button"
@@ -76,8 +139,15 @@ export function CaseExpensesList({ caseId, expenses, canEdit }: Props) {
             </tr>
           </thead>
           <tbody>
-            {expenses.map((ex) => (
-              <CaseExpenseRow key={ex.id} caseId={caseId} expense={ex} canEdit={canEdit} />
+            {rows.map((ex) => (
+              <CaseExpenseRow
+                key={ex.id}
+                caseId={caseId}
+                expense={ex}
+                canEdit={canEdit}
+                onSaveField={(field, value) => saveField(ex.id, field, value)}
+                onDelete={() => handleDelete(ex.id)}
+              />
             ))}
           </tbody>
         </table>
