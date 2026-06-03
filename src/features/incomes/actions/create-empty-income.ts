@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
@@ -47,6 +45,8 @@ export async function createEmptyIncomeAction(
     return { ok: false, error: 'unknown' };
   }
 
-  revalidatePath(`/cases/${caseId}`);
+  // No revalidatePath — CaseIncomesClient inserts the row optimistically and
+  // recomputes the subtotal + grand total client-side (FE-1), avoiding a full
+  // case-page re-render + scroll-jump.
   return { ok: true, incomeId: created.id };
 }

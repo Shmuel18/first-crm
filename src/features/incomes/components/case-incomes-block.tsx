@@ -1,24 +1,24 @@
-import { Wallet } from 'lucide-react';
-import { getLocale, getTranslations } from 'next-intl/server';
+import { getLocale } from 'next-intl/server';
 
-import { CaseBlock } from '@/features/cases/components/case-block';
 import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
-import { formatCurrency } from '@/lib/utils/format-currency';
 
 import { listIncomesForCase, listIncomeTypeOptions } from '../services/incomes.service';
-import { BorrowerIncomesGroup } from './borrower-incomes-group';
+import { CaseIncomesClient } from './case-incomes-client';
 
 type Props = { caseId: string };
 
 /**
- * Server block that lists incomes per borrower on a case. Hidden entirely
- * when the caller lacks `view_case_incomes`, so it never renders an empty
- * shell that could leak the borrower list.
+ * Server block that lists incomes per borrower on a case. Hidden entirely when
+ * the caller lacks `view_case_incomes`, so it never renders an empty shell that
+ * could leak the borrower list.
+ *
+ * Only fetches + gates here; the block shell, the reactive grand total, each
+ * borrower's optimistic list and the eager "primary employment" init all live
+ * in CaseIncomesClient so inline edits don't revalidate the whole case page.
  */
 export async function CaseIncomesBlock({ caseId }: Props) {
-  const t = await getTranslations('incomes');
   const [canView, canEdit] = await Promise.all([
     userHasPermission('view_case_incomes'),
     userCanEditCase(caseId),
@@ -48,52 +48,13 @@ export async function CaseIncomesBlock({ caseId }: Props) {
     console.error(`[CaseIncomesBlock] data fetch failed — ${summary}`);
   }
 
-  const totalAcrossBorrowers = groups.reduce((sum, g) => sum + g.monthlyTotal, 0);
-
   return (
-    <CaseBlock
-      title={t('blockTitle')}
-      icon={<Wallet />}
-      fullWidth
-      blockKey="incomes"
-      rightSlot={
-        groups.length > 0 && (
-          <span className="text-xs text-neutral-600">
-            {t('grandTotal')}:{' '}
-            <span className="font-semibold text-neutral-900">{formatCurrency(totalAcrossBorrowers, locale)}</span>
-          </span>
-        )
-      }
-    >
-      {groups.length === 0 ? (
-        <p className="text-sm text-neutral-600 text-center py-4">{t('noBorrowers')}</p>
-      ) : (
-        // Side-by-side layout when there are exactly 2 borrowers (the
-        // common case for couples) — each per-borrower income card gets
-        // half the row instead of stretching full width. 1 or 3+ borrowers
-        // fall back to a stacked layout where each card stays readable.
-        <div
-          className={
-            groups.length === 2
-              ? 'grid grid-cols-1 lg:grid-cols-2 gap-4'
-              : 'space-y-5'
-          }
-        >
-          {groups.map((g) => (
-            <BorrowerIncomesGroup
-              key={g.borrowerId}
-              caseId={caseId}
-              borrowerId={g.borrowerId}
-              borrowerName={g.borrowerName}
-              incomes={g.incomes}
-              monthlyTotal={g.monthlyTotal}
-              incomeTypes={incomeTypes}
-              locale={locale}
-              canEdit={canEdit}
-            />
-          ))}
-        </div>
-      )}
-    </CaseBlock>
+    <CaseIncomesClient
+      caseId={caseId}
+      initialGroups={groups}
+      incomeTypes={incomeTypes}
+      locale={locale}
+      canEdit={canEdit}
+    />
   );
 }

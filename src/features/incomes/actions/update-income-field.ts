@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
@@ -99,6 +97,8 @@ export async function updateIncomeFieldAction(
   }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
 
-  revalidatePath(`/cases/${caseId}`);
+  // No revalidatePath — the client updates the field + subtotal/grand total
+  // optimistically (FE-1); revalidating re-rendered the whole case page and
+  // lost scroll.
   return { ok: true };
 }

@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import { asBorrowerId, asCaseId } from '@/lib/types/branded';
@@ -44,6 +42,7 @@ export async function deleteIncomeAction(
   }
   if (deleted !== true) return { ok: false, error: 'unauthorized' };
 
-  revalidatePath(`/cases/${caseId}`);
+  // No revalidatePath — the client removes the row + recomputes totals
+  // optimistically (FE-1), avoiding a full case-page re-render.
   return { ok: true };
 }
