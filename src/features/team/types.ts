@@ -31,3 +31,9 @@ export type InviteActionState =
   | { ok: false; error: 'idle' };
 
 export const INVITE_ACTION_INITIAL: InviteActionState = { ok: false, error: 'idle' };
+
+/** Result of re-issuing a set-password link for an existing member (called
+ *  imperatively from a member row, not via a form). */
+export type ResendInviteResult =
+  | { ok: true; emailed: boolean; inviteLink: string | null }
+  | { ok: false; error: 'unauthorized' | 'not_found' | 'rate_limited' | 'unknown' };

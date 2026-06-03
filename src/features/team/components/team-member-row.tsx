@@ -1,8 +1,8 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 
-import { Mail, Power, PowerOff, Trash2 } from 'lucide-react';
+import { Mail, Power, PowerOff, Send, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
@@ -21,8 +21,10 @@ import { roleManagementLabel } from '@/lib/auth/role-label';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import { deleteMemberAction } from '../actions/delete-member';
+import { resendInviteAction } from '../actions/resend-invite';
 import { setMemberActiveAction } from '../actions/set-member-active';
 import { updateMemberRoleAction } from '../actions/update-member-role';
+import { ResendLinkDialog } from './resend-link-dialog';
 import type { TeamMember, TeamRole } from '../types';
 
 type Props = {
@@ -37,6 +39,7 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
   const tc = useTranslations('common');
   const tLevel = useTranslations('settings.roles.levels');
   const [pending, startTransition] = useTransition();
+  const [resendLink, setResendLink] = useState<string | null>(null);
 
   const fullName =
     formatPersonName(member.first_name, member.last_name) || tc('noName');
@@ -65,6 +68,22 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
         toast.error(t('toast.selfDeactivate'));
       } else {
         toast.error(t('toast.actionFailed'));
+      }
+    });
+  };
+
+  const handleResend = () => {
+    startTransition(async () => {
+      const res = await resendInviteAction(member.id);
+      if (!res.ok) {
+        toast.error(t('toast.actionFailed'));
+        return;
+      }
+      if (res.emailed) {
+        toast.success(t('toast.resentEmail'));
+      } else if (res.inviteLink) {
+        // Email not configured — surface the one-time link for manual sharing.
+        setResendLink(res.inviteLink);
       }
     });
   };
@@ -122,6 +141,19 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
           <option key={r.id} value={r.id}>{roleName(r)}</option>
         ))}
       </NativeSelect>
+
+      {!isSelf && (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          disabled={pending}
+          onClick={handleResend}
+          aria-label={t('action.resend')}
+          title={t('action.resend')}
+        >
+          <Send className="size-4 text-brand-gold-text" />
+        </Button>
+      )}
 
       {member.is_active ? (
         <AlertDialog>
@@ -202,6 +234,8 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ResendLinkDialog link={resendLink} onClose={() => setResendLink(null)} />
     </div>
   );
 }

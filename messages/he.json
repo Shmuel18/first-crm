@@ -2125,7 +2125,8 @@
     "action": {
       "deactivate": "השבת",
       "reactivate": "הפעל מחדש",
-      "delete": "מחק"
+      "delete": "מחק",
+      "resend": "שלח שוב הזמנה"
     },
     "deactivateConfirm": {
       "title": "להשבית את חבר הצוות?",
@@ -2143,7 +2144,11 @@
       "selfRoleChange": "אי אפשר לשנות את התפקיד של עצמך. בקש ממנהל אחר.",
       "deleted": "חבר הצוות נמחק",
       "selfDelete": "אי אפשר למחוק את עצמך",
-      "actionFailed": "הפעולה נכשלה. נסה שוב."
+      "actionFailed": "הפעולה נכשלה. נסה שוב.",
+      "resentEmail": "ההזמנה נשלחה שוב במייל"
+    },
+    "resend": {
+      "title": "קישור הזמנה חדש"
     },
     "invite": {
       "title": "הוספת חבר צוות",
