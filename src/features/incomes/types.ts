@@ -28,6 +28,10 @@ export type BorrowerIncomesGroup = {
   monthlyTotal: number;
 };
 
+/** Result of an inline field save, surfaced to EditableField so it can show
+ *  its own save / rollback indicator. */
+export type IncomeSaveResult = { ok: true } | { ok: false; message?: string };
+
 export type IncomeActionState =
   | { ok: true; incomeId: string }
   | {
