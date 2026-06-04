@@ -54,6 +54,17 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
   const [items, setItems] = useState(notifications);
   const [unread, setUnread] = useState(initialUnread);
 
+  // Relative timestamps ("a second ago") are computed during render, so without
+  // a re-render they freeze — a realtime-arrived row would read "a second ago"
+  // indefinitely until the next refresh/interaction. Tick every 30s so the
+  // times stay accurate without a manual refresh (30s is plenty for the
+  // minute/hour-scale relative formatting below).
+  const [, setNowTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setNowTick((t) => t + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
   // Realtime: a new notification for THIS user lands in the bell the instant
   // it's created — no navigation/refresh (migration 127 puts `notifications`
   // in the supabase_realtime publication). The bell lives in the persistent

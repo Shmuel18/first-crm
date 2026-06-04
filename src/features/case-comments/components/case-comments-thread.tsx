@@ -47,6 +47,15 @@ export function CaseCommentsThread({
     setComments(initialComments);
   }
 
+  // Relative timestamps in the bubbles ("a second ago") are computed at render,
+  // so without a re-render they freeze. Tick every 30s so they stay current
+  // without a manual refresh — one timer for the whole thread, not per bubble.
+  const [, setNowTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setNowTick((tick) => tick + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
   // Keep the newest comment in view when the count changes — DOM-only side
   // effect (no setState), the legitimate use of useEffect.
   useEffect(() => {
