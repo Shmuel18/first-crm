@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, type FocusEvent, type ReactNode } from 'react';
+
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -35,7 +37,6 @@ export function RichTextEditor({ value, onChange, onBlur, placeholder, minRows =
     ],
     content: value,
     onUpdate: ({ editor: ed }) => onChange(ed.getHTML()),
-    onBlur: ({ editor: ed }) => onBlur?.(ed.getHTML()),
     editorProps: {
       attributes: {
         class: 'tiptap-content focus:outline-none p-3 leading-relaxed',
@@ -43,6 +44,12 @@ export function RichTextEditor({ value, onChange, onBlur, placeholder, minRows =
       },
     },
   });
+
+  useEffect(() => {
+    if (!editor) return;
+    if (editor.getHTML() === value) return;
+    editor.commands.setContent(value || '', { emitUpdate: false });
+  }, [editor, value]);
 
   if (!editor) {
     return (
@@ -55,8 +62,17 @@ export function RichTextEditor({ value, onChange, onBlur, placeholder, minRows =
     );
   }
 
+  const handleContainerBlur = (event: FocusEvent<HTMLDivElement>) => {
+    const nextFocus = event.relatedTarget;
+    if (nextFocus && event.currentTarget.contains(nextFocus as Node)) return;
+    onBlur?.(editor.getHTML());
+  };
+
   return (
-    <div className="border border-neutral-200 rounded-md overflow-hidden bg-white focus-within:border-brand-gold focus-within:ring-2 focus-within:ring-brand-gold/20 transition">
+    <div
+      onBlur={handleContainerBlur}
+      className="border border-neutral-200 rounded-md overflow-hidden bg-white focus-within:border-brand-gold focus-within:ring-2 focus-within:ring-brand-gold/20 transition"
+    >
       <Toolbar editor={editor} />
       <EditorContent editor={editor} />
     </div>
@@ -143,7 +159,7 @@ function ToolBtn({
   active: boolean;
   onClick: () => void;
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <button

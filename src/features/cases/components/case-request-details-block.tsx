@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import dynamic from 'next/dynamic';
 
@@ -44,27 +44,58 @@ export function CaseRequestDetailsBlock({ caseId, initialHtml }: Props) {
 
   const [html, setHtml] = useState<string>(initialHtml ?? '');
   const [savedHtml, setSavedHtml] = useState<string>(initialHtml ?? '');
+  const savedHtmlRef = useRef(savedHtml);
+  const isSavingRef = useRef(false);
+  const pendingSaveRef = useRef<string | null>(null);
+
+  const [initialRef, setInitialRef] = useState<string>(initialHtml ?? '');
+  if ((initialHtml ?? '') !== initialRef) {
+    const nextInitial = initialHtml ?? '';
+    setInitialRef(nextInitial);
+    setHtml(nextInitial);
+    setSavedHtml(nextInitial);
+  }
 
   const handleBlur = async (next: string): Promise<void> => {
     // TipTap returns "<p></p>" for an empty editor — treat that as null
     // so the empty state and DB shape stay consistent with the rest of
     // the schema (cases.request_details is nullable).
     const normalised = next === '<p></p>' ? '' : next;
-    if (normalised === savedHtml) return;
-    const result = await updateCaseFieldAction(
-      caseId,
-      'request_details',
-      normalised || null,
-      savedHtml === '' ? null : savedHtml,
-    );
-    if (result.ok) {
-      setSavedHtml(normalised);
-    } else {
-      // Revert local state on failure so the next blur compares against
-      // the last server-confirmed value, not the rejected draft.
-      setHtml(savedHtml);
-      toast.error(result.error === 'conflict' ? tc('changedElsewhere') : tc('saveFailed'));
+    if (savedHtmlRef.current !== savedHtml) {
+      savedHtmlRef.current = savedHtml;
+      pendingSaveRef.current = null;
     }
+    if (normalised === savedHtmlRef.current) return;
+
+    pendingSaveRef.current = normalised;
+    if (isSavingRef.current) return;
+
+    isSavingRef.current = true;
+    while (pendingSaveRef.current !== null) {
+      const nextHtml = pendingSaveRef.current;
+      pendingSaveRef.current = null;
+
+      const previousHtml = savedHtmlRef.current;
+      if (nextHtml === previousHtml) continue;
+
+      const result = await updateCaseFieldAction(
+        caseId,
+        'request_details',
+        nextHtml || null,
+        previousHtml === '' ? null : previousHtml,
+      );
+      if (result.ok) {
+        savedHtmlRef.current = nextHtml;
+        setSavedHtml(nextHtml);
+        continue;
+      }
+
+      pendingSaveRef.current = null;
+      setHtml(previousHtml);
+      toast.error(result.error === 'conflict' ? tc('changedElsewhere') : tc('saveFailed'));
+      break;
+    }
+    isSavingRef.current = false;
   };
 
   return (

@@ -70,8 +70,36 @@ export async function updateCaseFieldAction(
   // concurrent change to that field makes this match 0 rows → 'conflict'.
   let query = supabase.from('cases').update(patch).eq('id', caseId).is('deleted_at', null);
   if (expectedOld !== undefined) {
-    const normExpected = expectedOld === '' ? null : expectedOld;
-    query = normExpected === null ? query.is(safeField, null) : query.eq(safeField, normExpected);
+    const { data: current, error: currentError } = await supabase
+      .from('cases')
+      .select(safeField)
+      .eq('id', caseId)
+      .is('deleted_at', null)
+      .maybeSingle();
+
+    if (currentError) {
+      console.error(
+        '[updateCaseField] current read error',
+        JSON.stringify({ caseId, field: safeField, ...safeDbError(currentError) }),
+      );
+      return { ok: false, error: 'unknown' };
+    }
+    if (!current) {
+      return { ok: false, error: 'unauthorized' };
+    }
+
+    const currentValue = current[safeField as keyof typeof current];
+    if (
+      normalizeComparableValue(safeField, currentValue) !==
+      normalizeComparableValue(safeField, expectedOld)
+    ) {
+      return { ok: false, error: 'conflict' };
+    }
+
+    query =
+      currentValue == null
+        ? query.is(safeField, null)
+        : query.eq(safeField, currentValue as never);
   }
   const { data: updated, error } = await query.select('id');
 
@@ -97,5 +125,15 @@ export async function updateCaseFieldAction(
 // fields pass through unchanged.
 function maybeSanitize(field: EditableCaseField, parsed: unknown): unknown {
   if (field !== 'request_details') return parsed ?? null;
-  return sanitizeRichTextHtml(typeof parsed === 'string' ? parsed : null);
+  return normalizeComparableValue(field, parsed);
+}
+
+function normalizeComparableValue(field: EditableCaseField, value: unknown): string | null {
+  if (value == null || value === '') return null;
+
+  const stringValue = String(value);
+  if (field !== 'request_details') return stringValue;
+
+  const sanitized = sanitizeRichTextHtml(stringValue).trim();
+  return sanitized === '' || sanitized === '<p></p>' ? null : sanitized;
 }
