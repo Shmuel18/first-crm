@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { isValidIdOrPassport, isValidIsraeliId } from './israeli-id';
-import { isValidIsraeliPhone, normalizeIsraeliPhone } from './il-phone';
+import { isValidPhone, normalizePhone } from './il-phone';
 
 /**
  * Shared Zod primitives for form schemas.
@@ -214,22 +214,25 @@ export const optionalNationalId = z.preprocess(
 );
 
 /**
- * Optional Israeli phone. Stored in its canonical normalized form
- * ("0501234567") so duplicate search works consistently regardless of how
- * the advisor typed it ("050-1234567", "+972-50-1234567", etc.).
+ * Optional phone — Israeli OR foreign. Israeli numbers are stored in canonical
+ * form ("0501234567") so duplicate search + tel:/WhatsApp links stay consistent
+ * regardless of how the advisor typed it ("050-1234567", "+972-50-1234567");
+ * foreign numbers (overseas residents) are accepted and stored as typed. Export
+ * name kept for import stability across the phone-field schemas.
  */
 export const optionalIsraeliPhone = z.preprocess(
   (v) => {
     if (v === '' || v === null || v === undefined) return null;
     if (typeof v !== 'string') return v;
-    // Normalize valid input; pass through invalid so the refine rejects it.
-    return normalizeIsraeliPhone(v) ?? v;
+    // Israeli → canonical 0XXXXXXXX; foreign → kept as typed. Invalid strings
+    // pass through so the refine rejects them with a translated error.
+    return normalizePhone(v) ?? v;
   },
   z
     .string()
     .nullable()
     .optional()
-    .refine((v) => !v || isValidIsraeliPhone(v), {
+    .refine((v) => !v || isValidPhone(v), {
       error: 'common.errors.invalidPhone',
     }),
 );
