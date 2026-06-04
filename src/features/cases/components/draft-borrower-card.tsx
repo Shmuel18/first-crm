@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 
 import { Mail, MessageCircle, Phone, Trash2, UserCircle2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -18,6 +18,7 @@ import { calculateAge } from '@/features/borrowers/domain/age';
 import { buildMailLink, buildTelLink, buildWhatsAppLink } from '@/features/borrowers/domain/contact-links';
 import { applyMatchFields } from '@/features/borrowers/domain/returning-autofill-fields';
 import { useDraftReturningAutofill } from '@/features/borrowers/hooks/use-draft-returning-autofill';
+import { ROLE_IN_CASE_VALUES } from '@/features/borrowers/schemas/borrower.schema';
 import type { EditableBorrowerField } from '@/features/borrowers/actions/update-borrower-field';
 import type { BorrowerRow, ReturningBorrowerMatch } from '@/features/borrowers/types';
 
@@ -109,6 +110,17 @@ export function DraftBorrowerCard({ borrower, onChange, onRemove, canRemove }: P
     return { ok: true };
   };
 
+  // role_in_case lives on the case_borrowers junction (not the borrowers
+  // table), so it isn't an EditableBorrowerField — set it straight into draft
+  // state. create_case_draft (migration 142) persists it when the case saves.
+  const roleSelectId = useId();
+  const setRole = (value: string): void => {
+    const role = ROLE_IN_CASE_VALUES.find((r) => r === value) ?? 'borrower';
+    const next = { ...localBorrower, role_in_case: role };
+    setLocalBorrower(next);
+    onChange(next);
+  };
+
   // Quick-action contact links — built from the live optimistic value so
   // they appear/disappear as the user types and blurs (matches live card).
   const waLink = buildWhatsAppLink(localBorrower.phone);
@@ -150,6 +162,27 @@ export function DraftBorrowerCard({ borrower, onChange, onRemove, canRemove }: P
             <Trash2 className="size-4" />
           </Button>
         )}
+      </div>
+
+      {/* Client type (role) — editable in the draft so it's chosen at
+          creation, not only after the case is saved. Persisted by
+          create_case_draft (migration 142). */}
+      <div className="flex items-center gap-2 text-sm">
+        <label htmlFor={roleSelectId} className="text-neutral-500 shrink-0">
+          {tf('role')}
+        </label>
+        <select
+          id={roleSelectId}
+          value={localBorrower.role_in_case ?? 'borrower'}
+          onChange={(e) => setRole(e.target.value)}
+          className="h-9 w-44 rounded-md border border-neutral-200 bg-white px-2.5 text-sm focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+        >
+          {ROLE_IN_CASE_VALUES.map((r) => (
+            <option key={r} value={r}>
+              {t(r)}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Identity — 2 rows of 3 cells, same shape as the live card. */}
