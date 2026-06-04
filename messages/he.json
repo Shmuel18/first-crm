@@ -2038,7 +2038,19 @@
         "caseNone": "— ללא תיק —",
         "private": "תזכורת אישית (פרטית)",
         "privateHint": "רק את/ה תראה אותה — גם מנהל לא. משויכת אליך אוטומטית.",
-        "privateAssignee": "תזכורת אישית משויכת אליך אוטומטית."
+        "privateAssignee": "תזכורת אישית משויכת אליך אוטומטית.",
+        "attachments": "מסמכים מצורפים",
+        "attachmentsPlaceholder": "צרף מסמכים למשימה",
+        "attachmentsSelected": "{count} קבצים נבחרו",
+        "attachmentsHint": "המסמכים יישמרו בתיק הקשור ויופיעו גם בעמוד המסמכים.",
+        "attachmentsNeedCase": "כדי לצרף מסמכים צריך לבחור תיק קשור.",
+        "attachmentsUploading": "המשימה נוצרה. מעלה את המסמכים...",
+        "attachmentsClear": "נקה קבצים",
+        "attachmentsTooMany": "אפשר לצרף עד 5 קבצים למשימה.",
+        "attachmentsFileRequired": "יש לבחור קובץ לצירוף.",
+        "attachmentsTooLarge": "אחד הקבצים חורג ממגבלת 20MB.",
+        "attachmentsTypeNotAllowed": "אחד מסוגי הקבצים לא נתמך.",
+        "attachmentsFailed": "המשימה נוצרה, אבל צירוף המסמכים נכשל. אפשר להעלות אותם מעמוד המסמכים."
       },
       "submit": {
         "create": "צור משימה",

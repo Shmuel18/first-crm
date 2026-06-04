@@ -1,12 +1,13 @@
 'use client';
 
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useCallback, useEffect, useRef, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 
-import { Loader2 } from 'lucide-react';
+import { Loader2, Upload as UploadIcon, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
+import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE_BYTES } from '@/features/documents/schemas/document.schema';
 import {
   Dialog,
   DialogContent,
@@ -22,6 +23,10 @@ import { fieldDefault } from '@/lib/utils/form-defaults';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import { createTaskAction } from '../actions/create-task';
+import {
+  finalizeTaskAttachmentUploadAction,
+  prepareTaskAttachmentUploadAction,
+} from '../actions/task-attachment-upload';
 import { updateTaskAction } from '../actions/update-task';
 import {
   TASK_ACTION_INITIAL,
@@ -62,10 +67,6 @@ export function TaskFormDialog({
     TASK_ACTION_INITIAL,
   );
 
-  useEffect(() => {
-    if (state.ok === true) onOpenChange(false);
-  }, [state, onOpenChange]);
-
   const fieldErrors =
     state.ok === false && state.error === 'validation' ? state.fieldErrors ?? {} : {};
   const submitted =
@@ -74,8 +75,12 @@ export function TaskFormDialog({
   const initialRecord = (task ?? null) as Record<string, unknown> | null;
   const value = (name: string) => fieldDefault(name, submitted, initialRecord);
   const [isPrivate, setIsPrivate] = useState<boolean>(Boolean(task?.is_private));
+  const [selectedCaseId, setSelectedCaseId] = useState<string>(presetCaseId ?? task?.case_id ?? '');
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [attachmentError, setAttachmentError] = useState<string | null>(null);
+  const [attachmentPending, setAttachmentPending] = useState(false);
+  const handledTaskIdRef = useRef<string | null>(null);
 
-  const presetCase = presetCaseId ?? task?.case_id ?? '';
   const genericError = getGenericError(state, t);
 
   // The option lists are bounded (newest 200 cases, active profiles only). In
@@ -99,7 +104,81 @@ export function TaskFormDialog({
           ...cases,
         ]
       : cases;
-  const selectedCaseId = presetCase || value('case_id');
+  const resetAttachmentState = useCallback((): void => {
+    setSelectedCaseId(presetCaseId ?? task?.case_id ?? '');
+    setAttachments([]);
+    setAttachmentError(null);
+    setAttachmentPending(false);
+    handledTaskIdRef.current = null;
+  }, [presetCaseId, task?.case_id]);
+
+  const handleDialogOpenChange = useCallback((nextOpen: boolean): void => {
+    if (!nextOpen) resetAttachmentState();
+    onOpenChange(nextOpen);
+  }, [onOpenChange, resetAttachmentState]);
+
+  useEffect(() => {
+    if (state.ok !== true) return;
+    if (handledTaskIdRef.current === state.taskId) return;
+    handledTaskIdRef.current = state.taskId;
+
+    if (mode !== 'create' || attachments.length === 0 || !selectedCaseId) {
+      queueMicrotask(() => handleDialogOpenChange(false));
+      return;
+    }
+
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) {
+        setAttachmentPending(true);
+        setAttachmentError(null);
+      }
+    });
+
+    void (async () => {
+      for (const file of attachments) {
+        const prep = await prepareTaskAttachmentUploadAction({
+          taskId: state.taskId,
+          caseId: selectedCaseId,
+          fileName: file.name,
+          fileSize: file.size,
+          mimeType: file.type,
+        });
+        if (!prep.ok) throw new Error(prep.message ?? prep.error);
+
+        const putRes = await fetch(prep.signedUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': file.type,
+            'x-upsert': 'false',
+          },
+          body: file,
+        });
+        if (!putRes.ok) throw new Error('uploadFailed');
+
+        const final = await finalizeTaskAttachmentUploadAction({
+          taskId: state.taskId,
+          caseId: selectedCaseId,
+          documentId: prep.documentId,
+          storagePath: prep.path,
+          fileName: prep.safeFileName,
+          fileSize: file.size,
+        });
+        if (!final.ok) throw new Error(final.message ?? final.error);
+      }
+
+      if (!cancelled) handleDialogOpenChange(false);
+    })().catch((err) => {
+      if (!cancelled) setAttachmentError(mapAttachmentError(err, t));
+    }).finally(() => {
+      if (!cancelled) setAttachmentPending(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [attachments, handleDialogOpenChange, mode, selectedCaseId, state, t]);
+
   const [caseSearch, setCaseSearch] = useState('');
   const normalizedCaseSearch = caseSearch.trim().toLowerCase();
   const matchingCases = normalizedCaseSearch
@@ -113,8 +192,10 @@ export function TaskFormDialog({
       ? [selectedCase, ...matchingCases]
       : matchingCases;
 
+  const attachmentCaseMissing = mode === 'create' && attachments.length > 0 && !selectedCaseId;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>
@@ -207,7 +288,8 @@ export function TaskFormDialog({
             )}
             <NativeSelect
               name={presetCaseId ? undefined : 'case_id'}
-              defaultValue={selectedCaseId}
+              value={selectedCaseId}
+              onChange={(e) => setSelectedCaseId(e.target.value)}
               disabled={!!presetCaseId}
             >
               <option value="">{t('fields.caseNone')}</option>
@@ -220,18 +302,80 @@ export function TaskFormDialog({
             )}
           </FormField>
 
-          {genericError && (
+          {mode === 'create' && (
+            <FormField
+              label={t('fields.attachments')}
+              error={
+                attachmentError ??
+                (attachmentCaseMissing ? t('fields.attachmentsNeedCase') : undefined)
+              }
+            >
+              <div className="flex items-center gap-2">
+                <label
+                  htmlFor="task-attachments"
+                  className={`flex h-10 flex-1 cursor-pointer items-center gap-2 rounded-md border border-dashed px-3 text-sm transition focus-within:border-brand-gold-text focus-within:ring-2 focus-within:ring-brand-gold-text/30 ${
+                    attachmentCaseMissing
+                      ? 'border-amber-300 bg-amber-50 text-amber-800'
+                      : 'border-neutral-300 bg-neutral-50 text-neutral-700 hover:border-brand-gold-text hover:bg-brand-gold/8'
+                  }`}
+                >
+                  <UploadIcon className="size-4 shrink-0" />
+                  <span className="truncate">
+                    {attachments.length > 0
+                      ? t('fields.attachmentsSelected', { count: attachments.length })
+                      : t('fields.attachmentsPlaceholder')}
+                  </span>
+                </label>
+                {attachments.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAttachments([]);
+                      setAttachmentError(null);
+                    }}
+                    className="flex size-9 items-center justify-center rounded-md border border-neutral-200 text-neutral-500 transition hover:border-rose-200 hover:text-rose-600"
+                    aria-label={t('fields.attachmentsClear')}
+                    disabled={attachmentPending}
+                  >
+                    <X className="size-4" />
+                  </button>
+                )}
+              </div>
+              <input
+                id="task-attachments"
+                type="file"
+                multiple
+                accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,.doc,.docx,.xls,.xlsx"
+                className="sr-only"
+                onChange={(e) => {
+                  setAttachmentError(null);
+                  const files = Array.from(e.target.files ?? []);
+                  const err = validateAttachmentFiles(files, t);
+                  if (err) {
+                    setAttachmentError(err);
+                    e.target.value = '';
+                    setAttachments([]);
+                    return;
+                  }
+                  setAttachments(files);
+                }}
+              />
+              <p className="mt-1 text-xs text-neutral-500">{t('fields.attachmentsHint')}</p>
+            </FormField>
+          )}
+
+          {(genericError || attachmentPending) && (
             <div className="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
-              {genericError}
+              {attachmentPending ? t('fields.attachmentsUploading') : genericError}
             </div>
           )}
 
           <DialogFooter>
-            <SubmitButton mode={mode} />
+            <SubmitButton mode={mode} uploading={attachmentPending} disabled={attachmentCaseMissing} />
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleDialogOpenChange(false)}
             >
               {tc('cancel')}
             </Button>
@@ -242,12 +386,20 @@ export function TaskFormDialog({
   );
 }
 
-function SubmitButton({ mode }: { mode: 'create' | 'edit' }) {
+function SubmitButton({
+  mode,
+  uploading,
+  disabled,
+}: {
+  mode: 'create' | 'edit';
+  uploading: boolean;
+  disabled: boolean;
+}) {
   const { pending } = useFormStatus();
   const t = useTranslations('tasks.form.submit');
   return (
-    <Button type="submit" disabled={pending} className="bg-brand-gold hover:bg-brand-gold-hover text-brand-black font-semibold">
-      {pending ? <Loader2 className="size-4 animate-spin" /> : mode === 'create' ? t('create') : t('update')}
+    <Button type="submit" disabled={pending || uploading || disabled} className="bg-brand-gold hover:bg-brand-gold-hover text-brand-black font-semibold">
+      {pending || uploading ? <Loader2 className="size-4 animate-spin" /> : mode === 'create' ? t('create') : t('update')}
     </Button>
   );
 }
@@ -261,4 +413,31 @@ function getGenericError(
   if (state.error === 'unauthorized') return t('errors.unauthorized');
   if (state.error === 'not_found') return t('errors.notFound');
   return t('errors.generic');
+}
+
+function validateAttachmentFiles(
+  files: File[],
+  t: ReturnType<typeof useTranslations>,
+): string | null {
+  if (files.length === 0) return null;
+  if (files.length > 5) return t('fields.attachmentsTooMany');
+  for (const file of files) {
+    if (file.size === 0) return t('fields.attachmentsFileRequired');
+    if (file.size > MAX_FILE_SIZE_BYTES) return t('fields.attachmentsTooLarge');
+    if (!(ALLOWED_MIME_TYPES as readonly string[]).includes(file.type)) {
+      return t('fields.attachmentsTypeNotAllowed');
+    }
+  }
+  return null;
+}
+
+function mapAttachmentError(
+  err: unknown,
+  t: ReturnType<typeof useTranslations>,
+): string {
+  const message = err instanceof Error ? err.message : '';
+  if (message === 'fileRequired') return t('fields.attachmentsFileRequired');
+  if (message === 'fileTooLarge') return t('fields.attachmentsTooLarge');
+  if (message === 'fileTypeNotAllowed') return t('fields.attachmentsTypeNotAllowed');
+  return t('fields.attachmentsFailed');
 }

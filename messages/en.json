@@ -2038,7 +2038,19 @@
         "caseNone": "— No case —",
         "private": "Personal (private) reminder",
         "privateHint": "Only you can see it — not even a manager. Assigned to you automatically.",
-        "privateAssignee": "A personal reminder is assigned to you automatically."
+        "privateAssignee": "A personal reminder is assigned to you automatically.",
+        "attachments": "Attached documents",
+        "attachmentsPlaceholder": "Attach documents to this task",
+        "attachmentsSelected": "{count} files selected",
+        "attachmentsHint": "Documents are saved on the related case and will also appear on the documents page.",
+        "attachmentsNeedCase": "Choose a related case before attaching documents.",
+        "attachmentsUploading": "Task created. Uploading documents...",
+        "attachmentsClear": "Clear files",
+        "attachmentsTooMany": "You can attach up to 5 files to a task.",
+        "attachmentsFileRequired": "Choose a file to attach.",
+        "attachmentsTooLarge": "One of the files exceeds the 20MB limit.",
+        "attachmentsTypeNotAllowed": "One of the file types is not supported.",
+        "attachmentsFailed": "The task was created, but attaching documents failed. You can upload them from the documents page."
       },
       "submit": {
         "create": "Create task",
