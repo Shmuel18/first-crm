@@ -2057,7 +2057,9 @@
       "placeholder": "Write a message...",
       "send": "Send",
       "hint": "Ctrl+Enter to send",
-      "sendFailed": "Failed to send message. Try again."
+      "sendFailed": "Failed to send message. Try again.",
+      "systemAuthor": "System",
+      "unknownAuthor": "Advisor"
     }
   },
   "notifications": {

@@ -2057,7 +2057,9 @@
       "placeholder": "כתוב הודעה...",
       "send": "שלח",
       "hint": "Ctrl+Enter לשליחה",
-      "sendFailed": "שליחת ההודעה נכשלה. נסה שוב."
+      "sendFailed": "שליחת ההודעה נכשלה. נסה שוב.",
+      "systemAuthor": "מערכת",
+      "unknownAuthor": "יועץ"
     }
   },
   "notifications": {

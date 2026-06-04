@@ -4,11 +4,13 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
 
 import { Loader2, Send } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { formatRelativeTime } from '@/features/case-comments/domain/format-relative-time';
 import { findMentionQuery, insertMention, parseMentionBody } from '@/features/case-comments/domain/mentions';
+import type { Locale } from '@/lib/i18n/direction';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import { addTaskCommentAction } from '../actions/add-task-comment';
@@ -19,17 +21,6 @@ import {
 import type { TaskCommentWithAuthor } from '../types';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
-
-function relativeTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return 'עכשיו';
-  if (mins < 60) return `לפני ${mins} דק׳`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `לפני ${hrs} שע׳`;
-  const days = Math.floor(hrs / 24);
-  return `לפני ${days} ימים`;
-}
 
 const EVENT_ICON: Record<string, string> = {
   created: '✦',
@@ -47,8 +38,17 @@ const MAX_SUGGESTIONS = 6;
 
 // ── sub-components ────────────────────────────────────────────────────────────
 
-function SystemEventRow({ item }: { item: TaskCommentWithAuthor }) {
-  const authorName = formatPersonName(item.author?.first_name, item.author?.last_name) || 'מערכת';
+function SystemEventRow({
+  item,
+  locale,
+  systemLabel,
+}: {
+  item: TaskCommentWithAuthor;
+  locale: Locale;
+  systemLabel: string;
+}) {
+  const authorName =
+    formatPersonName(item.author?.first_name, item.author?.last_name) || systemLabel;
   const icon = EVENT_ICON[item.event_type] ?? '·';
   return (
     <div className="flex items-start gap-2 py-1.5 text-xs text-neutral-500">
@@ -58,14 +58,23 @@ function SystemEventRow({ item }: { item: TaskCommentWithAuthor }) {
         <span className="mx-1">·</span>
         <span>{authorName}</span>
         <span className="mx-1">·</span>
-        <time dateTime={item.created_at}>{relativeTime(item.created_at)}</time>
+        <time dateTime={item.created_at}>{formatRelativeTime(item.created_at, locale)}</time>
       </span>
     </div>
   );
 }
 
-function CommentRow({ item }: { item: TaskCommentWithAuthor }) {
-  const authorName = formatPersonName(item.author?.first_name, item.author?.last_name) || 'יועץ';
+function CommentRow({
+  item,
+  locale,
+  fallbackLabel,
+}: {
+  item: TaskCommentWithAuthor;
+  locale: Locale;
+  fallbackLabel: string;
+}) {
+  const authorName =
+    formatPersonName(item.author?.first_name, item.author?.last_name) || fallbackLabel;
   const initials = [item.author?.first_name?.[0], item.author?.last_name?.[0]]
     .filter(Boolean)
     .join('')
@@ -83,7 +92,7 @@ function CommentRow({ item }: { item: TaskCommentWithAuthor }) {
         <div className="flex items-baseline gap-2">
           <span className="text-xs font-semibold text-neutral-800">{authorName}</span>
           <time className="text-[10px] text-neutral-400" dateTime={item.created_at}>
-            {relativeTime(item.created_at)}
+            {formatRelativeTime(item.created_at, locale)}
           </time>
         </div>
         <p className="text-sm text-neutral-700 mt-0.5 whitespace-pre-wrap break-words leading-snug">
@@ -113,6 +122,10 @@ type Props = {
 
 export function TaskThread({ taskId }: Props) {
   const t = useTranslations('tasks.thread');
+  // next-intl resolves to one of the app's configured locales; narrow to our type.
+  const locale: Locale = useLocale() === 'en' ? 'en' : 'he';
+  const systemLabel = t('systemAuthor');
+  const unknownAuthorLabel = t('unknownAuthor');
   const [comments, setComments] = useState<TaskCommentWithAuthor[]>([]);
   const [loadPending, startLoad] = useTransition();
   const [sendPending, startSend] = useTransition();
@@ -151,6 +164,15 @@ export function TaskThread({ taskId }: Props) {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [comments.length]);
+
+  // Relative timestamps (relativeTime() above) are computed at render, so
+  // without a re-render they freeze. Tick every 30s so they stay current
+  // without a manual refresh — one timer for the whole thread.
+  const [, setNowTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setNowTick((tick) => tick + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   const handleSend = () => {
     const body = draft.trim();
@@ -234,9 +256,9 @@ export function TaskThread({ taskId }: Props) {
         ) : (
           comments.map((item) =>
             item.event_type === 'comment' ? (
-              <CommentRow key={item.id} item={item} />
+              <CommentRow key={item.id} item={item} locale={locale} fallbackLabel={unknownAuthorLabel} />
             ) : (
-              <SystemEventRow key={item.id} item={item} />
+              <SystemEventRow key={item.id} item={item} locale={locale} systemLabel={systemLabel} />
             ),
           )
         )}
