@@ -34,10 +34,11 @@ function refreshDocumentViews(caseId: string) {
  *   - Failures in the blob delete used to block the DB update, leaving the
  *     UI inconsistent with the actual store.
  *
- * Retention purge (cleanup_soft_deleted_records, migration 022) currently
- * only deletes the DB row. A storage-side purge job that drops the orphaned
- * blob from Supabase Storage + the Drive file lives on the deferred list
- * — until that lands, blobs accumulate at the bucket's own retention rate.
+ * Retention purge: the /api/cron/cleanup-orphaned-blobs job (retention-file-
+ * eraser) erases the Storage blob + Drive copy once past the retention window,
+ * and cleanup_soft_deleted_records (migration 139) hard-deletes the row only
+ * after BOTH pointers are gone (or past the backstop) — so soft-deleting here
+ * leaves the files recoverable until then, with no permanent orphan.
  */
 export async function deleteDocumentAction(
   documentId: string,

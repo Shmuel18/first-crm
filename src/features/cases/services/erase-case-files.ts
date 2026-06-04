@@ -36,6 +36,22 @@ export async function collectCaseFileRefs(caseId: string): Promise<CaseFileRefs>
     if (doc.drive_file_id) driveFileIds.push(doc.drive_file_id);
   }
 
+  // Expense receipts live in the same case-documents bucket + Drive case folder
+  // (migrations 101 / 139). Erase them alongside documents on a permanent
+  // delete — otherwise the cascade drops the rows and orphans the files.
+  const { data: expenses } = await admin
+    .from('case_expenses')
+    .select('receipt_path, receipt_drive_id')
+    .eq('case_id', caseId);
+  for (const exp of expenses ?? []) {
+    if (typeof exp.receipt_path === 'string' && exp.receipt_path.length > 0) {
+      storagePaths.push(exp.receipt_path);
+    }
+    if (typeof exp.receipt_drive_id === 'string' && exp.receipt_drive_id.length > 0) {
+      driveFileIds.push(exp.receipt_drive_id);
+    }
+  }
+
   const { data: caseRow } = await admin
     .from('cases')
     .select('metadata')

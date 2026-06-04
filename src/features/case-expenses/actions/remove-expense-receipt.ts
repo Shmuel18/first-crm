@@ -1,5 +1,6 @@
 'use server';
 
+import { eraseDriveTargets } from '@/features/integrations/services/drive-case-uploader';
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { safeDbError } from '@/lib/supabase/db-error-log';
@@ -13,10 +14,10 @@ export type RemoveReceiptResult =
 
 /**
  * Detaches the invoice from an expense (feature #8): clears the pointer columns
- * and removes the blob immediately (no grace window — the orphan-cleanup cron
- * only sweeps soft-deleted `documents`, never expense receipts, so nothing else
- * would ever reclaim the bytes). No revalidatePath — the cell clears its own
- * state optimistically.
+ * and erases the Storage blob + Drive copy immediately. This is an explicit
+ * user erase (not a soft-delete), so the retention cron won't pick it up — we
+ * erase the files here. No revalidatePath — the cell clears its own state
+ * optimistically.
  */
 export async function removeExpenseReceiptAction(
   expenseId: string,
@@ -29,7 +30,7 @@ export async function removeExpenseReceiptAction(
 
   const { data: existing, error: fetchErr } = await supabase
     .from('case_expenses')
-    .select('receipt_path')
+    .select('receipt_path, receipt_drive_id')
     .eq('id', expenseId)
     .eq('case_id', caseId)
     .is('deleted_at', null)
@@ -39,6 +40,7 @@ export async function removeExpenseReceiptAction(
     return { ok: false, error: 'unknown' };
   }
   const path = existing?.receipt_path ?? null;
+  const driveId = existing?.receipt_drive_id ?? null;
 
   const { error: updErr } = await supabase
     .from('case_expenses')
@@ -47,6 +49,7 @@ export async function removeExpenseReceiptAction(
       receipt_name: null,
       receipt_mime: null,
       receipt_drive_url: null,
+      receipt_drive_id: null,
       updated_by: userRes.user.id,
     })
     .eq('id', expenseId)
@@ -57,9 +60,14 @@ export async function removeExpenseReceiptAction(
     return { ok: false, error: 'unknown' };
   }
 
+  // Erase the blob + Drive copy (best-effort — pointers are already cleared, so
+  // a failure here just leaves a file for manual cleanup, never a dangling ref).
   if (path) {
     const admin = createAdminClient();
     await admin.storage.from(BUCKET).remove([path]).catch(() => undefined);
+  }
+  if (driveId) {
+    await eraseDriveTargets({ fileIds: [driveId] }).catch(() => undefined);
   }
 
   return { ok: true };

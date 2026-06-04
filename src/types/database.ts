@@ -1602,6 +1602,7 @@ export type Database = {
           description: string | null
           expense_date: string | null
           id: string
+          receipt_drive_id: string | null
           receipt_drive_url: string | null
           receipt_mime: string | null
           receipt_name: string | null
@@ -1619,6 +1620,7 @@ export type Database = {
           description?: string | null
           expense_date?: string | null
           id?: string
+          receipt_drive_id?: string | null
           receipt_drive_url?: string | null
           receipt_mime?: string | null
           receipt_name?: string | null
@@ -1636,6 +1638,7 @@ export type Database = {
           description?: string | null
           expense_date?: string | null
           id?: string
+          receipt_drive_id?: string | null
           receipt_drive_url?: string | null
           receipt_mime?: string | null
           receipt_name?: string | null

@@ -16,6 +16,7 @@ export function emptyExpenseRow(id: string, caseId: string): CaseExpenseRow {
     deleted_by: null,
     description: null,
     expense_date: null,
+    receipt_drive_id: null,
     receipt_drive_url: null,
     receipt_mime: null,
     receipt_name: null,

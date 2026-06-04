@@ -45,7 +45,9 @@ export async function mirrorReceiptToDrive(
 
     await supabase
       .from('case_expenses')
-      .update({ receipt_drive_url: out.webViewLink })
+      // receipt_drive_id (the erasable file id) + receipt_drive_url (web link).
+      // The id is what the retention cron deletes by (migration 139).
+      .update({ receipt_drive_url: out.webViewLink, receipt_drive_id: out.driveFileId })
       .eq('id', expenseId)
       .eq('case_id', caseId)
       .is('deleted_at', null);

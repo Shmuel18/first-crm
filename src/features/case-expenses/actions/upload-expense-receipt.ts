@@ -120,8 +120,9 @@ export async function uploadExpenseReceiptAction(
     return { ok: false, error: 'storage' };
   }
 
-  // Replace: drop the previous blob now. The orphan-cleanup cron only sweeps
-  // soft-deleted `documents`, never expense receipts — so they self-clean.
+  // Replace: drop the previous blob now (an in-place replacement isn't a
+  // soft-delete, so the retention cron — which now also sweeps soft-deleted
+  // expense receipts, migration 139 — won't pick the old blob up).
   if (oldPath && oldPath !== path) {
     await admin.storage.from(BUCKET).remove([oldPath]).catch(() => undefined);
   }
