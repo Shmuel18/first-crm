@@ -16,6 +16,21 @@ const HEADER_BG = 'FF0A0A0A';
 const HEADER_FG = 'FFFFFFFF';
 const HEADER_BORDER = 'FFC9A961';
 
+// CSV/XLSX formula-injection guard (OWASP). Borrower-controlled fields
+// (clientName, shortNote, …) reach Excel verbatim; a value beginning with
+// = + - @ or a leading tab/CR can be interpreted as a live formula
+// (=HYPERLINK / =cmd|…) on open. Prefix such values with a single quote so
+// Excel treats the whole cell as text. Numbers (rowNumber) are left untouched.
+const FORMULA_LEAD = /^[=+\-@\t\r]/;
+function neutralizeFormula<T>(value: T): T | string {
+  return typeof value === 'string' && FORMULA_LEAD.test(value) ? `'${value}` : value;
+}
+function sanitizeRow(row: ExportRow): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(row)) out[key] = neutralizeFormula(value);
+  return out;
+}
+
 export async function generateCasesXlsx(
   rows: ReadonlyArray<ExportRow>,
   headers: XlsxHeaders,
@@ -50,7 +65,7 @@ export async function generateCasesXlsx(
   headerRow.height = 28;
 
   rows.forEach((row) => {
-    const added = sheet.addRow(row);
+    const added = sheet.addRow(sanitizeRow(row));
     added.eachCell((cell) => {
       cell.alignment = { horizontal: 'right', vertical: 'middle', wrapText: true };
       cell.font = { size: 10 };

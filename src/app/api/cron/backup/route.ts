@@ -37,7 +37,8 @@ export async function GET(request: Request): Promise<Response> {
 
   const client = await getDriveClientIfConnected();
   if (!client) {
-    return NextResponse.json({ ok: false, skipped: 'drive_not_connected' });
+    console.warn('[cron/backup] skipped: Drive is not connected');
+    return NextResponse.json({ ok: false, error: 'drive_not_connected' }, { status: 503 });
   }
 
   try {

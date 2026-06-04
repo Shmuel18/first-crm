@@ -5,6 +5,10 @@
       "schedule": "0 2 * * *"
     },
     {
+      "path": "/api/cron/backup-watchdog",
+      "schedule": "0 6 * * *"
+    },
+    {
       "path": "/api/cron/cleanup-orphaned-blobs",
       "schedule": "30 3 * * *"
     },

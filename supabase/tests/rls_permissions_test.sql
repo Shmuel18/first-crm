@@ -18,7 +18,7 @@
 -- =============================================================================
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
-SELECT plan(23);
+SELECT plan(27);
 
 -- ---- fixed ids -------------------------------------------------------------
 -- users
@@ -225,6 +225,43 @@ SELECT is(
   (SELECT count(*)::int FROM public.notifications
     WHERE type = 'backup_stale' AND read_at IS NULL),
   0, 'record_backup_success auto-resolves the open backup-stale alert');
+
+-- ===========================================================================
+-- task_comments — thread visibility tracks PARENT-TASK visibility (migration 140)
+-- Regression guard: mig 120 shipped task_comments_select as USING (deleted_at
+-- IS NULL) — any authenticated user could read every task thread office-wide
+-- (cross-case IDOR). 140 scopes SELECT + INSERT to the visible parent task.
+-- ===========================================================================
+\set task_a 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+\set tcmt_a 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
+
+SELECT pg_temp.logout();
+-- Task on advisor A's case (assigned to A); manager authors a thread comment.
+INSERT INTO public.tasks (id, case_id, title, assigned_to, created_by, status)
+VALUES (:'task_a', :'case_a', 'Task on case A', :'advisor_a', :'manager', 'pending');
+INSERT INTO public.task_comments (id, task_id, author_id, body, event_type)
+VALUES (:'tcmt_a', :'task_a', :'manager', 'internal note on case A', 'comment');
+
+SELECT pg_temp.login_as(:'advisor_a');
+SELECT is((SELECT count(*)::int FROM public.task_comments WHERE id = :'tcmt_a'), 1,
+  'advisor A sees task_comments on their own task');
+
+SELECT pg_temp.login_as(:'advisor_b');
+SELECT is((SELECT count(*)::int FROM public.task_comments WHERE id = :'tcmt_a'), 0,
+  'advisor B canNOT see task_comments on advisor A''s task (cross-case IDOR closed, mig 140)');
+
+-- advisor B cannot inject a comment/@-mention into a task they cannot see.
+SELECT throws_ok(
+  $$ INSERT INTO public.task_comments (task_id, author_id, body)
+     VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+             '33333333-3333-3333-3333-333333333333', 'sneak') $$,
+  '42501', NULL,
+  'advisor B canNOT INSERT a comment into advisor A''s task (write IDOR closed)');
+
+SELECT pg_temp.login_as(:'manager');
+SELECT is((SELECT count(*)::int FROM public.task_comments WHERE id = :'tcmt_a'), 1,
+  'manager (view_all_cases) sees the task_comment');
+SELECT pg_temp.logout();
 
 SELECT * FROM finish();
 ROLLBACK;
