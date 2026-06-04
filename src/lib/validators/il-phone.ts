@@ -28,3 +28,31 @@ export function normalizeIsraeliPhone(input: string): string | null {
 export function isValidIsraeliPhone(input: string): boolean {
   return normalizeIsraeliPhone(input) !== null;
 }
+
+/**
+ * Validates a phone that may be Israeli OR foreign. Israeli numbers are checked
+ * via the canonical normalizer; foreign numbers pass a permissive sanity check
+ * (optional leading "+", then digits/spaces/hyphens/parens/dots, 7-15 digits —
+ * the E.164 range). Foreign-resident clients have overseas numbers, so the
+ * phone fields must not hard-require the Israeli format.
+ */
+export function isValidPhone(input: string): boolean {
+  if (isValidIsraeliPhone(input)) return true;
+  const trimmed = input.trim();
+  if (!/^\+?[\d\s().-]+$/.test(trimmed)) return false;
+  const digitCount = trimmed.replace(/\D/g, '').length;
+  return digitCount >= 7 && digitCount <= 15;
+}
+
+/**
+ * Canonical storage form for a phone. Israeli numbers normalize to "0XXXXXXXX"
+ * (so duplicate search + tel:/WhatsApp links stay consistent); foreign numbers
+ * are kept as typed (trimmed) — there is no single canonical local form.
+ * Returns null for empty input.
+ */
+export function normalizePhone(input: string): string | null {
+  const israeli = normalizeIsraeliPhone(input);
+  if (israeli) return israeli;
+  const trimmed = input.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
