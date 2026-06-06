@@ -36,10 +36,13 @@ export async function Topbar() {
             The logo is sized a touch larger than the rail; the image carries
             transparent side-padding, and `overflow-hidden` clips that padding
             where it spills past the column so the mark stays centered over the
-            rail (same position) and never nudges page width. */}
+            rail (same position) and never nudges page width. The full-height
+            `border-e` continues the icon rail's own end-border up through the
+            topbar, so the logo reads as the cap of one continuous right-edge
+            spine instead of a mark floating in the corner. */}
         <Link
           href="/cases"
-          className="shrink-0 -ms-4 flex w-16 justify-center overflow-hidden"
+          className="shrink-0 -ms-4 flex h-full w-16 items-center justify-center overflow-hidden border-e border-neutral-900"
           aria-label="Kaufman Finance Group"
         >
           <Image
