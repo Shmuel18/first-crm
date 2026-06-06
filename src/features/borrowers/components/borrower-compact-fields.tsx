@@ -97,7 +97,7 @@ export function CompactReadonly({
         readOnly
         title={warning ? warningLabel : undefined}
         className={[
-          'w-14 h-8 px-2 text-center rounded-md border text-sm font-mono cursor-default',
+          'w-16 h-8 px-2 text-center rounded-md border text-sm font-mono cursor-default',
           warning
             ? 'border-red-300 bg-red-50 text-red-700 font-semibold'
             : 'border-neutral-200 bg-neutral-50 text-neutral-700',
