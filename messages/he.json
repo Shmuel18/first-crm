@@ -1554,7 +1554,7 @@
       "blocks": {
         "borrowers": "לווים",
         "requestDetails": "פרטי הבקשה",
-        "comments": "תגובות",
+        "comments": "תיעוד",
         "incomes": "הכנסות",
         "obligations": "התחייבויות",
         "property": "נכס ועסקה",
@@ -1914,7 +1914,7 @@
     "blockquote": "ציטוט"
   },
   "caseComments": {
-    "blockTitle": "תגובות",
+    "blockTitle": "תיעוד",
     "you": "את/ה",
     "empty": "אין עדיין תגובות. כתוב עדכון לצוות.",
     "edited": "(נערך)",
