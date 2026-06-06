@@ -17,3 +17,21 @@ export function calculateAge(birthDate: string | null | undefined): string | nul
   const years = (now - dobMs) / (365.25 * 24 * 60 * 60 * 1000);
   return years.toFixed(2);
 }
+
+/**
+ * Age (in years) at and above which the UI flags a borrower. Mortgage term
+ * caps (≈ 75 − age) tighten sharply from here, so advisors want a heads-up.
+ * Inclusive: exactly 55.00 already counts.
+ */
+export const SENIOR_AGE_THRESHOLD = 55;
+
+/**
+ * True when the borrower is at the senior-age threshold or older. Accepts the
+ * decimal-year string produced by calculateAge (or null); returns false when
+ * the age is unknown or unparseable, so a missing birth date never warns.
+ */
+export function isSeniorAge(age: string | null): boolean {
+  if (age === null) return false;
+  const years = Number.parseFloat(age);
+  return Number.isFinite(years) && years >= SENIOR_AGE_THRESHOLD;
+}

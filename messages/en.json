@@ -1113,6 +1113,7 @@
       "city": "City",
       "address": "Address",
       "age": "Age",
+      "ageWarning": "Age 55 or older — mind the loan-term cap",
       "whatsapp": "Open in WhatsApp",
       "call": "Call",
       "sendEmail": "Send email",
