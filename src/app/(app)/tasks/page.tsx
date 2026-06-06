@@ -26,7 +26,7 @@ import {
   type TaskStatus,
   type TaskView,
 } from '@/features/tasks/types';
-import { createClient } from '@/lib/supabase/server';
+import { userHasPermission } from '@/lib/auth/permissions';
 import { asCaseId } from '@/lib/types/branded';
 import { parseLocale } from '@/lib/i18n/direction';
 
@@ -61,8 +61,12 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
   const t = await getTranslations('tasks');
   const locale = parseLocale(await getLocale());
 
-  const supabase = await createClient();
-  const { data: isAdmin } = await supabase.rpc('is_admin');
+  // "All office" tasks are visible to exactly whoever the tasks RLS lets see
+  // every task — i.e. holders of view_all_cases (managers included, since the
+  // manager role grants it). Gating the tab + count on the same permission
+  // keeps the UI in lockstep with the DB policy: an extended advisor with
+  // view_all_cases now sees the office-wide task list, not just their own.
+  const canViewAllTasks = await userHasPermission('view_all_cases');
 
   // The board groups by status into columns, so it needs every status; the
   // status filter only applies to the list view.
@@ -75,7 +79,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
       }),
       countPendingByView('mine'),
       countPendingByView('assigned-by-me'),
-      isAdmin === true ? countPendingByView('all') : Promise.resolve(0),
+      canViewAllTasks ? countPendingByView('all') : Promise.resolve(0),
       listAssignableProfiles(),
       listCaseOptions(locale),
       caseId ? getCaseNumberLabel(asCaseId(caseId)) : Promise.resolve(null),
@@ -104,7 +108,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <TasksViewTabs
           currentView={view}
-          isAdmin={isAdmin === true}
+          canViewAllTasks={canViewAllTasks}
           counts={{ mine: mineCount, 'assigned-by-me': assignedByMeCount, all: allCount }}
         />
         <div className="flex items-center gap-2 ms-auto">
