@@ -78,7 +78,7 @@ export function BorrowerMiscRow({
         }}
         options={[{ value: '', label: tc('select') }, ...languageOptions]}
       />
-      <div className="flex-1 min-w-[16rem]">
+      <div className="flex-1 min-w-[12rem] max-w-md">
         <EditableField
           label={tf('address')}
           value={borrower.address}
