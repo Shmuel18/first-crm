@@ -2,8 +2,6 @@
 
 import { useState } from 'react';
 
-import { AlertTriangle } from 'lucide-react';
-
 /**
  * Tiny inline-label field primitives used by the dense merged row on
  * CaseBorrowerCard (children / age / foreign / language). Each renders as
@@ -82,12 +80,13 @@ export function CompactReadonly({
   value: string | null;
   /** Tint the box amber and show a warning icon (e.g. a senior-age borrower). */
   warning?: boolean;
-  /** Accessible text + tooltip for the warning icon. */
+  /** Hover tooltip explaining the warning (no visible note). */
   warningLabel?: string;
 }) {
   // Disabled input so the age slot matches the visual shape of the editable
   // boxes around it — same border/radius/height, just non-interactive. When
-  // `warning` is set the box turns amber and an icon sits beside it.
+  // `warning` is set the box itself turns a subtle red; the explanation lives
+  // in the hover title so the dense row gains no extra width (no icon).
   return (
     <label className="inline-flex items-center gap-1.5 whitespace-nowrap">
       <span className="text-neutral-500">{label}:</span>
@@ -96,18 +95,14 @@ export function CompactReadonly({
         value={value ?? '—'}
         disabled
         readOnly
+        title={warning ? warningLabel : undefined}
         className={[
           'w-14 h-8 px-2 text-center rounded-md border text-sm font-mono cursor-default',
           warning
-            ? 'border-amber-300 bg-amber-50 text-amber-900 font-semibold'
+            ? 'border-red-300 bg-red-50 text-red-700 font-semibold'
             : 'border-neutral-200 bg-neutral-50 text-neutral-700',
         ].join(' ')}
       />
-      {warning && (
-        <span title={warningLabel} className="inline-flex shrink-0">
-          <AlertTriangle role="img" aria-label={warningLabel} className="size-4 text-amber-600" />
-        </span>
-      )}
     </label>
   );
 }
