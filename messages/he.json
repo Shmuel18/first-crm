@@ -1113,6 +1113,7 @@
       "city": "עיר",
       "address": "כתובת",
       "age": "גיל",
+      "ageWarning": "גיל 55 ומעלה — שים לב למגבלת תקופת ההלוואה",
       "whatsapp": "פתח בוואטסאפ",
       "call": "התקשר",
       "sendEmail": "שלח אימייל",
@@ -1554,7 +1555,7 @@
       "blocks": {
         "borrowers": "לווים",
         "requestDetails": "פרטי הבקשה",
-        "comments": "תגובות",
+        "comments": "תיעוד",
         "incomes": "הכנסות",
         "obligations": "התחייבויות",
         "property": "נכס ועסקה",
@@ -1914,7 +1915,7 @@
     "blockquote": "ציטוט"
   },
   "caseComments": {
-    "blockTitle": "תגובות",
+    "blockTitle": "תיעוד",
     "you": "את/ה",
     "empty": "אין עדיין תגובות. כתוב עדכון לצוות.",
     "edited": "(נערך)",

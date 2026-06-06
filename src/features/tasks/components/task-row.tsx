@@ -1,26 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useTransition } from 'react';
+import { useTransition } from 'react';
 
-import { AlertTriangle, Calendar, Clock, Lock, MessageSquare, MoreHorizontal, Pencil, Trash2, User, UserPlus } from 'lucide-react';
+import { AlertTriangle, Calendar, Clock, Lock, MessageSquare, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { Locale } from '@/lib/i18n/direction';
@@ -28,9 +19,7 @@ import { formatPersonName } from '@/lib/utils/person-name';
 
 import { changeTaskStatusAction } from '../actions/change-task-status';
 import { completeTaskAction } from '../actions/complete-task';
-import { deleteTaskAction } from '../actions/delete-task';
 import { reopenTaskAction } from '../actions/reopen-task';
-import { snoozeTaskAction } from '../actions/snooze-task';
 import {
   formatDueDate,
   formatSnoozeTime,
@@ -40,6 +29,8 @@ import {
   priorityEdgeColor,
   statusBadgeClass,
 } from '../domain/task-state';
+import { TaskActionsMenu } from './task-actions-menu';
+
 import type { TaskStatus, TaskWithRelations } from '../types';
 
 type Props = {
@@ -61,7 +52,6 @@ export function TaskRow({ task, locale, onEdit, onReassign, onThread, compact = 
   const ts = useTranslations('tasks.status');
   const tc = useTranslations('common');
   const [pending, startTransition] = useTransition();
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   const overdue = isOverdue(task);
   const immediate = isImmediateTask(task);
@@ -80,25 +70,6 @@ export function TaskRow({ task, locale, onEdit, onReassign, onThread, compact = 
       } else {
         toast.success(completed ? t('toast.reopened') : t('toast.completed'));
       }
-    });
-  };
-
-  const handleDelete = () => {
-    startTransition(async () => {
-      const res = await deleteTaskAction(task.id);
-      if (!res.ok) {
-        toast.error(t('toast.deleteFailed'));
-      } else {
-        toast.success(t('toast.deleted'));
-      }
-    });
-  };
-
-  const handleSnooze = (preset: 'hour' | 'threeHours' | 'day') => {
-    startTransition(async () => {
-      const res = await snoozeTaskAction(task.id, preset);
-      if (!res.ok) toast.error(t('toast.snoozeFailed'));
-      else toast.success(t('toast.snoozed'));
     });
   };
 
@@ -249,82 +220,19 @@ export function TaskRow({ task, locale, onEdit, onReassign, onThread, compact = 
         </button>
       )}
 
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={tc('more')}
-              className="opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 transition"
-            />
-          }
-        >
-          <MoreHorizontal className="size-4" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="min-w-36">
-          <DropdownMenuItem onClick={() => onEdit(task)}>
-            <Pencil className="size-3.5 me-2" />
-            {tc('edit')}
-          </DropdownMenuItem>
-          {onReassign && !task.is_private && (
-            <DropdownMenuItem onClick={() => onReassign(task)}>
-              <UserPlus className="size-3.5 me-2" />
-              {t('reassign')}
-            </DropdownMenuItem>
-          )}
-          {(task.status === 'pending' || task.status === 'in_progress') && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleSnooze('hour')}>
-                <Clock className="size-3.5 me-2" />
-                {t('snooze.hour')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSnooze('threeHours')}>
-                <Clock className="size-3.5 me-2" />
-                {t('snooze.threeHours')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSnooze('day')}>
-                <Clock className="size-3.5 me-2" />
-                {t('snooze.day')}
-              </DropdownMenuItem>
-            </>
-          )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => {
-              // The ⋯ menu is modal: while it closes (~100ms exit) it keeps the
-              // rest of the page inert/aria-hidden, so a confirm opened in the same
-              // tick puts focus inside an aria-hidden region (a11y warning). Open
-              // the confirm only after the menu has finished closing.
-              window.setTimeout(() => setConfirmDeleteOpen(true), 160);
-            }}
-            className="text-red-600 focus:text-red-700 focus:bg-red-50"
-          >
-            <Trash2 className="size-3.5 me-2" />
-            {tc('delete')}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogTitle>{t('deleteDialog.title')}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {t('deleteDialog.description', { title: task.title })}
-          </AlertDialogDescription>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              render={
-                <Button variant="destructive" onClick={handleDelete} disabled={pending}>
-                  {tc('delete')}
-                </Button>
-              }
-            />
-            <AlertDialogCancel render={<Button variant="outline">{tc('cancel')}</Button>} />
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <TaskActionsMenu
+        task={task}
+        onEdit={onEdit}
+        onReassign={onReassign}
+        trigger={
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={tc('more')}
+            className="opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 transition"
+          />
+        }
+      />
     </div>
   );
 }

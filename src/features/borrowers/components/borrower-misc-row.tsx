@@ -4,6 +4,8 @@ import { useMemo } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { isSeniorAge } from '../domain/age';
+
 import type { EditableBorrowerField } from '../actions/update-borrower-field';
 
 import {
@@ -62,7 +64,12 @@ export function BorrowerMiscRow({
         value={borrower.children_count}
         onSave={(v) => saveField('children_count', v === null ? null : String(v))}
       />
-      <CompactReadonly label={t('age')} value={ageLabel} />
+      <CompactReadonly
+        label={t('age')}
+        value={ageLabel}
+        warning={isSeniorAge(ageLabel)}
+        warningLabel={t('ageWarning')}
+      />
       <CompactSelect
         label={tf('preferredLanguage')}
         value={borrower.preferred_language ?? ''}

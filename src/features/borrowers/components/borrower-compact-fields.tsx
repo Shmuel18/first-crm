@@ -70,9 +70,23 @@ export function CompactNumber({
   );
 }
 
-export function CompactReadonly({ label, value }: { label: string; value: string | null }) {
+export function CompactReadonly({
+  label,
+  value,
+  warning = false,
+  warningLabel,
+}: {
+  label: string;
+  value: string | null;
+  /** Tint the box amber and show a warning icon (e.g. a senior-age borrower). */
+  warning?: boolean;
+  /** Hover tooltip explaining the warning (no visible note). */
+  warningLabel?: string;
+}) {
   // Disabled input so the age slot matches the visual shape of the editable
-  // boxes around it — same border/radius/height, just non-interactive.
+  // boxes around it — same border/radius/height, just non-interactive. When
+  // `warning` is set the box itself turns a subtle red; the explanation lives
+  // in the hover title so the dense row gains no extra width (no icon).
   return (
     <label className="inline-flex items-center gap-1.5 whitespace-nowrap">
       <span className="text-neutral-500">{label}:</span>
@@ -81,7 +95,13 @@ export function CompactReadonly({ label, value }: { label: string; value: string
         value={value ?? '—'}
         disabled
         readOnly
-        className="w-14 h-8 px-2 text-center rounded-md border border-neutral-200 bg-neutral-50 text-sm font-mono text-neutral-700 cursor-default"
+        title={warning ? warningLabel : undefined}
+        className={[
+          'w-14 h-8 px-2 text-center rounded-md border text-sm font-mono cursor-default',
+          warning
+            ? 'border-red-300 bg-red-50 text-red-700 font-semibold'
+            : 'border-neutral-200 bg-neutral-50 text-neutral-700',
+        ].join(' ')}
       />
     </label>
   );

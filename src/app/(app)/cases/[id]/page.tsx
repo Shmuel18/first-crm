@@ -198,12 +198,6 @@ export default async function CaseDetailPage({ params }: Props) {
           initialHtml={caseData.request_details}
         />
 
-        <Suspense
-          fallback={<CaseBlockSkeleton title={tComments('blockTitle')} icon={<MessagesSquare />} />}
-        >
-          <CaseCommentsBlock caseId={caseData.id} />
-        </Suspense>
-
         <Suspense fallback={<CaseBlockSkeleton title={t('blocks.incomes')} icon={<Wallet />} />}>
           <CaseIncomesBlock caseId={caseData.id} />
         </Suspense>
@@ -264,6 +258,15 @@ export default async function CaseDetailPage({ params }: Props) {
           advisors={advisorOptions}
           locale={locale}
         />
+
+        {/* Documentation (internal team thread) — intentionally last on the
+            page: it's a running log, not a data-entry block, so it sits below
+            the case fields. fullWidth, so it caps the grid as its own row. */}
+        <Suspense
+          fallback={<CaseBlockSkeleton title={tComments('blockTitle')} icon={<MessagesSquare />} />}
+        >
+          <CaseCommentsBlock caseId={caseData.id} />
+        </Suspense>
       </div>
       </CaseBlockPrefsProvider>
 

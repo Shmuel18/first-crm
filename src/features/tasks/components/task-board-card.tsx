@@ -1,35 +1,20 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import type { CSSProperties } from 'react';
 
 import Link from 'next/link';
 
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { AlertTriangle, GripVertical, Lock, MessageSquare, MoreHorizontal, Trash2, UserPlus } from 'lucide-react';
+import { AlertTriangle, GripVertical, Lock, MessageSquare } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { toast } from 'sonner';
 
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import type { Locale } from '@/lib/i18n/direction';
 import { formatPersonName } from '@/lib/utils/person-name';
 
-import { deleteTaskAction } from '../actions/delete-task';
 import { formatDueDate, isImmediateTask, isOverdue, priorityEdgeColor } from '../domain/task-state';
+import { TaskActionsMenu } from './task-actions-menu';
+
 import type { TaskWithRelations } from '../types';
 
 type Props = {
@@ -43,8 +28,6 @@ type Props = {
 export function TaskBoardCard({ task, locale, onOpen, onReassign, onThread }: Props) {
   const t = useTranslations('tasks');
   const tc = useTranslations('common');
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [pending, startTransition] = useTransition();
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task.id,
   });
@@ -58,24 +41,10 @@ export function TaskBoardCard({ task, locale, onOpen, onReassign, onThread }: Pr
   const initials =
     (task.assignee?.first_name?.[0] ?? '') + (task.assignee?.last_name?.[0] ?? '') || '?';
 
-  const style: React.CSSProperties = {
+  const style: CSSProperties = {
     transform: CSS.Translate.toString(transform),
     opacity: isDragging ? 0.4 : 1,
     borderInlineStartColor: priorityEdgeColor(task.priority),
-  };
-
-  // Self-contained delete: deleteTaskAction revalidates /tasks, so the board
-  // re-renders without this card (same path the list row uses).
-  const handleDelete = () => {
-    startTransition(async () => {
-      const res = await deleteTaskAction(task.id);
-      if (!res.ok) {
-        toast.error(t('toast.deleteFailed'));
-      } else {
-        toast.success(t('toast.deleted'));
-        setConfirmOpen(false);
-      }
-    });
   };
 
   return (
@@ -130,45 +99,24 @@ export function TaskBoardCard({ task, locale, onOpen, onReassign, onThread }: Pr
             <MessageSquare className="size-4" aria-hidden="true" />
           </button>
         )}
-        {/* ⋯ menu — reassign (non-private) + delete. Stops propagation so it
-            doesn't open the edit dialog or start a drag. */}
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <button
-                type="button"
-                aria-label={tc('more')}
-                onClick={(e) => e.stopPropagation()}
-                onPointerDown={(e) => e.stopPropagation()}
-                className="-mt-0.5 shrink-0 text-neutral-300 transition hover:text-neutral-600 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
-              />
-            }
-          >
-            <MoreHorizontal className="size-4" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-32">
-            {onReassign && !task.is_private && (
-              <DropdownMenuItem onClick={() => onReassign(task)}>
-                <UserPlus className="size-3.5 me-2" />
-                {t('reassign')}
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem
-              onClick={() => {
-                // The ⋯ menu is modal: while it closes (~100ms exit) it keeps the
-                // rest of the page — including a dialog opened in the same tick —
-                // inert/aria-hidden, so the confirm's focused button landed inside
-                // an aria-hidden region (a11y warning). Open the confirm only after
-                // the menu has finished closing.
-                window.setTimeout(() => setConfirmOpen(true), 160);
-              }}
-              className="text-red-600 focus:text-red-700 focus:bg-red-50"
-            >
-              <Trash2 className="size-3.5 me-2" />
-              {tc('delete')}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* Shared ⋯ menu — edit / reassign / snooze / delete, identical to the
+            list row (TaskActionsMenu owns the delete-confirm dialog too). The
+            trigger stops click + pointer propagation so opening the menu never
+            starts a drag or opens the card editor. */}
+        <TaskActionsMenu
+          task={task}
+          onEdit={onOpen}
+          onReassign={onReassign}
+          trigger={
+            <button
+              type="button"
+              aria-label={tc('more')}
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="-mt-0.5 shrink-0 text-neutral-300 transition hover:text-neutral-600 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
+            />
+          }
+        />
       </div>
 
       <div className="flex items-center justify-between gap-2 mt-2 ps-5">
@@ -204,21 +152,6 @@ export function TaskBoardCard({ task, locale, onOpen, onReassign, onThread }: Pr
           </span>
         )}
       </div>
-
-      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogTitle>{t('deleteDialog.title')}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {t('deleteDialog.description', { title: task.title })}
-          </AlertDialogDescription>
-          <AlertDialogFooter>
-            <Button variant="destructive" onClick={handleDelete} disabled={pending}>
-              {tc('delete')}
-            </Button>
-            <AlertDialogCancel render={<Button variant="outline">{tc('cancel')}</Button>} />
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

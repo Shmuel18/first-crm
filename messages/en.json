@@ -1113,6 +1113,7 @@
       "city": "City",
       "address": "Address",
       "age": "Age",
+      "ageWarning": "Age 55 or older — mind the loan-term cap",
       "whatsapp": "Open in WhatsApp",
       "call": "Call",
       "sendEmail": "Send email",
@@ -1554,7 +1555,7 @@
       "blocks": {
         "borrowers": "Borrowers",
         "requestDetails": "Request details",
-        "comments": "Comments",
+        "comments": "Documentation",
         "incomes": "Incomes",
         "obligations": "Obligations",
         "property": "Property & deal",
@@ -1914,7 +1915,7 @@
     "blockquote": "Quote"
   },
   "caseComments": {
-    "blockTitle": "Comments",
+    "blockTitle": "Documentation",
     "you": "You",
     "empty": "No comments yet. Post an update for the team.",
     "edited": "(edited)",

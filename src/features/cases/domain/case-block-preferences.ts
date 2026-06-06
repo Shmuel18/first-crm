@@ -11,11 +11,12 @@
 export const CASE_BLOCK_KEYS = [
   'borrowers',
   'requestDetails',
-  'comments',
   'incomes',
   'obligations',
   'property',
   'admin',
+  // Documentation thread — last, mirroring the case-page block order.
+  'comments',
 ] as const;
 
 export type CaseBlockKey = (typeof CASE_BLOCK_KEYS)[number];
@@ -26,11 +27,11 @@ export type CaseBlockPreferences = Record<CaseBlockKey, boolean>;
 export const DEFAULT_CASE_BLOCK_PREFERENCES: CaseBlockPreferences = {
   borrowers: false,
   requestDetails: false,
-  comments: false,
   incomes: false,
   obligations: false,
   property: false,
   admin: false,
+  comments: false,
 };
 
 /**

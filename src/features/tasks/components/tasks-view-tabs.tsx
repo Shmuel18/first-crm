@@ -6,14 +6,15 @@ import { TASK_VIEW_VALUES, type TaskView } from '../types';
 
 type Props = {
   currentView: TaskView;
-  isAdmin: boolean;
+  /** Show the office-wide "all" tab — true for view_all_cases holders. */
+  canViewAllTasks: boolean;
   counts?: Partial<Record<TaskView, number>>;
 };
 
-export async function TasksViewTabs({ currentView, isAdmin, counts }: Props) {
+export async function TasksViewTabs({ currentView, canViewAllTasks, counts }: Props) {
   const t = await getTranslations('tasks.views');
 
-  const views = TASK_VIEW_VALUES.filter((v) => (v === 'all' ? isAdmin : true));
+  const views = TASK_VIEW_VALUES.filter((v) => (v === 'all' ? canViewAllTasks : true));
 
   return (
     <div className="flex flex-wrap gap-1 border-b border-neutral-200">
