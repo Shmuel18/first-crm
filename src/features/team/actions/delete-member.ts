@@ -2,6 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { revokeUserSessions } from '@/lib/auth/session';
 import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
@@ -63,6 +65,20 @@ export async function deleteMemberAction(userId: string): Promise<Result> {
     .is('deleted_at', null);
   if (taskErr) {
     console.error('[deleteMember] task reassign failed', safeDbError(taskErr));
+    return { ok: false, error: 'unknown' };
+  }
+
+  // Drop their associated-advisor rows (migration 146) — they no longer work
+  // these cases. (Cases where they were RESPONSIBLE were reassigned above. The
+  // FK is ON DELETE CASCADE, but the profile is SOFT-deleted, so the cascade
+  // never fires — clean these up explicitly.) Untyped: case_associated_advisors
+  // isn't in the generated Database types yet.
+  const { error: assocErr } = await (supabase as unknown as SupabaseClient)
+    .from('case_associated_advisors')
+    .delete()
+    .eq('advisor_id', parsed.data.userId);
+  if (assocErr) {
+    console.error('[deleteMember] associated-advisor cleanup failed', safeDbError(assocErr));
     return { ok: false, error: 'unknown' };
   }
 

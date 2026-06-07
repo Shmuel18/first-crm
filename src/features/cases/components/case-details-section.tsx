@@ -28,6 +28,7 @@ import type {
 } from '../services/case-lookups.service';
 import type { CaseRow } from '../types';
 
+import { AssociatedAdvisorsField } from './associated-advisors-field';
 import { EditableStatusCell } from './editable-status-cell';
 
 /**
@@ -63,6 +64,9 @@ type Props = {
   statusColor: string | null;
   statuses: ReadonlyArray<StatusOption>;
   advisors: ReadonlyArray<AdvisorOption>;
+  /** Associated advisor ids (migration 146) + whether the user may edit them. */
+  associatedAdvisorIds: ReadonlyArray<string>;
+  canManageAdvisors: boolean;
   /** Manager-only: agreed fee shows + is editable only when this is true. */
   canSeeFinancials: boolean;
   initialFeeAmount: number | null;
@@ -77,6 +81,8 @@ export function CaseDetailsSection({
   statusColor,
   statuses,
   advisors,
+  associatedAdvisorIds,
+  canManageAdvisors,
   canSeeFinancials,
   initialFeeAmount,
   initialFeePaid,
@@ -277,6 +283,15 @@ export function CaseDetailsSection({
         />
       </div>
     </FieldGroup>
+    <div className="mt-3 border-t border-neutral-100 pt-3">
+      <AssociatedAdvisorsField
+        caseId={caseId}
+        associatedIds={associatedAdvisorIds}
+        responsibleId={localCase.assigned_advisor_id}
+        advisorOptions={advisors}
+        canManage={canManageAdvisors}
+      />
+    </div>
     </>
   );
 }

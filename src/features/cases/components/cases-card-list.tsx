@@ -65,6 +65,15 @@ export function CasesCardList({ cases, advisorOptions, canViewAll }: Props) {
         const advisorName =
           formatPersonName(c.assigned_advisor?.first_name, c.assigned_advisor?.last_name) ||
           resolveAdvisorName(c.assigned_advisor_id, advisorOptions);
+        // Associated advisors (mig 146): compact "+N" next to the responsible
+        // name (mobile has no hover, so we don't reveal names here).
+        const associatedCount = (c.case_associated_advisors ?? []).filter((a) =>
+          resolveAdvisorName(a.advisor_id, advisorOptions),
+        ).length;
+        const advisorDisplay =
+          advisorName && associatedCount > 0
+            ? `${advisorName} +${associatedCount}`
+            : advisorName;
 
         const cardClass = [
           'block px-4 py-3 transition-colors',
@@ -100,7 +109,7 @@ export function CasesCardList({ cases, advisorOptions, canViewAll }: Props) {
                   tone={getTargetDateState(c.target_date)}
                 />
                 <Field label={t('columns.bank')} value={bank?.name_he ?? null} />
-                {canViewAll && <Field label={t('columns.advisor')} value={advisorName} />}
+                {canViewAll && <Field label={t('columns.advisor')} value={advisorDisplay} />}
               </dl>
 
               {c.short_note && (

@@ -74,12 +74,18 @@ export default async function CaseDetailPage({ params }: Props) {
         'archive_case',
         'restore_archived_case',
         'delete_case',
+        'assign_case_to_user',
       ),
   );
   const canSeeFinancials = permissions.view_case_fee === true;
   const canArchive = permissions.archive_case === true;
   const canRestore = permissions.restore_archived_case === true;
   const canDelete = permissions.delete_case === true;
+  // assign_case_to_user gates managing the associated advisors (migration 146).
+  const canManageAdvisors = permissions.assign_case_to_user === true;
+  const associatedAdvisorIds = (caseData.case_associated_advisors ?? []).map(
+    (a) => a.advisor_id,
+  );
 
   const borrowerNames =
     borrowers
@@ -260,6 +266,8 @@ export default async function CaseDetailPage({ params }: Props) {
           }
           statuses={statusOptions}
           advisors={advisorOptions}
+          associatedAdvisorIds={associatedAdvisorIds}
+          canManageAdvisors={canManageAdvisors}
           locale={locale}
         />
 

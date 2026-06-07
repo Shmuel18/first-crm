@@ -49,9 +49,13 @@ export default async function CasesListPage({ searchParams }: Props) {
       : timeAsync(
           'cases.page.listCases',
           () =>
+            // NOTE: advisor is intentionally NOT filtered server-side. The
+            // dashboard filters by advisor client-side (filterCases) so it can
+            // match the RESPONSIBLE advisor OR an ASSOCIATED advisor (mig 146);
+            // a server-side eq on assigned_advisor_id would drop associated-only
+            // cases before that runs. The set is ~80 rows, already fully loaded.
             listCases({
               isArchived: isArchive,
-              advisorId: filters.advisor ?? undefined,
               statusId: filters.stage ?? undefined,
             }),
           { view },

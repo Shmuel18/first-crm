@@ -58,6 +58,10 @@ export type CaseWithRelations = CaseRow & {
     fee_paid: boolean;
     fee_paid_at: string | null;
   } | null;
+  /** Associated advisors (0..N) — migration 146. Only the id is loaded; names
+   *  resolve via the list_active_advisors() options (a profiles embed would be
+   *  RLS-gated to null for non-admins). */
+  case_associated_advisors?: Array<{ advisor_id: string }> | null;
 };
 
 /**
@@ -84,6 +88,9 @@ export type CaseTableRowData = {
   secondaryBanksCount: number;
   advisorId: string | null;
   advisorName: string | null;
+  /** Associated advisor ids (0..N). Names resolve from the options list in the
+   *  cell; the dashboard shows a hover marker, not inline names. */
+  associatedAdvisorIds: string[];
   shortNote: string | null;
   isStuck: boolean;
   isFrozen: boolean;

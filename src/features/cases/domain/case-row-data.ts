@@ -42,6 +42,7 @@ export function toRowData(c: CaseWithRelations, index: number): CaseTableRowData
     secondaryBanksCount: getSecondaryBanksCount(c),
     advisorId: c.assigned_advisor_id,
     advisorName,
+    associatedAdvisorIds: (c.case_associated_advisors ?? []).map((a) => a.advisor_id),
     shortNote: c.short_note ?? null,
     isStuck: isStuckCase(c),
     isFrozen: isFrozenCase(c),

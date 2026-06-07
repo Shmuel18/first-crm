@@ -63,7 +63,17 @@ export function filterCases(
   now = new Date(),
 ): CaseWithRelations[] {
   return cases.filter((c) => {
-    if (f.advisor && c.assigned_advisor?.id !== f.advisor) return false;
+    // Match the selected advisor as the RESPONSIBLE (scalar column — always
+    // readable, unlike the RLS-gated assigned_advisor embed) OR as an
+    // ASSOCIATED advisor (migration 146). "Filter by advisor" therefore returns
+    // every case that advisor works on, in either role.
+    if (
+      f.advisor &&
+      c.assigned_advisor_id !== f.advisor &&
+      !(c.case_associated_advisors ?? []).some((a) => a.advisor_id === f.advisor)
+    ) {
+      return false;
+    }
     if (f.stage && c.status?.id !== f.stage) return false;
     if (
       f.bank &&

@@ -130,6 +130,7 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions, 
             currentAdvisorId={row.advisorId}
             currentAdvisorName={row.advisorName}
             options={advisorOptions}
+            associatedAdvisorIds={row.associatedAdvisorIds}
           />
         </td>
       )}

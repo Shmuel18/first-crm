@@ -44,6 +44,9 @@ type Props = {
   /** Lookups passed down from the page. */
   statuses: ReadonlyArray<StatusOption>;
   advisors: ReadonlyArray<AdvisorOption>;
+  /** Associated advisors (migration 146) + whether the user may edit them. */
+  associatedAdvisorIds: ReadonlyArray<string>;
+  canManageAdvisors: boolean;
   locale: Locale;
 };
 
@@ -82,6 +85,8 @@ export async function CaseAdminBlock({
   feePaidAt,
   statuses,
   advisors,
+  associatedAdvisorIds,
+  canManageAdvisors,
   locale,
 }: Props) {
   const t = await getTranslations('case');
@@ -116,6 +121,8 @@ export async function CaseAdminBlock({
         statusColor={statusColor}
         statuses={statuses}
         advisors={advisors}
+        associatedAdvisorIds={associatedAdvisorIds}
+        canManageAdvisors={canManageAdvisors}
         canSeeFinancials={canSeeFinancials}
         initialFeeAmount={feeAmount}
         initialFeePaid={feePaid}

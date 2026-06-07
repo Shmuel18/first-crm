@@ -6,6 +6,7 @@ import { Check, ChevronDown, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { Tooltip } from '@/components/ui/tooltip';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import { quickUpdateCaseFieldAction } from '../actions/quick-update-case';
@@ -23,6 +24,9 @@ type EditableAdvisorCellProps = {
   currentAdvisorId: string | null;
   currentAdvisorName: string | null;
   options: ReadonlyArray<AdvisorOption>;
+  /** Associated advisor ids (migration 146). Shown as a compact "+N" marker
+   *  next to the responsible name; names appear in the hover tooltip only. */
+  associatedAdvisorIds?: ReadonlyArray<string>;
 };
 
 function fullName(a: AdvisorOption, noNameFallback: string): string {
@@ -34,6 +38,7 @@ export function EditableAdvisorCell({
   currentAdvisorId,
   currentAdvisorName,
   options,
+  associatedAdvisorIds = [],
 }: EditableAdvisorCellProps) {
   const tc = useTranslations('common');
   const unassignedLabel = `— ${tc('notAssigned')} —`;
@@ -92,6 +97,12 @@ export function EditableAdvisorCell({
   const displayName = advisorName ?? resolveAdvisorName(advisorId, options);
   const triggerLabel = displayName ?? tc('notAssigned');
 
+  // Associated advisors (mig 146): resolve names from the options for the hover
+  // tooltip; the column shows only a compact "+N" marker, never inline names.
+  const associatedNames = associatedAdvisorIds
+    .map((id) => resolveAdvisorName(id, options))
+    .filter((n): n is string => Boolean(n));
+
   return (
     <>
       <button
@@ -115,6 +126,17 @@ export function EditableAdvisorCell({
           <ChevronDown className="size-3 text-neutral-500" aria-hidden="true" />
         )}
       </button>
+
+      {associatedNames.length > 0 && (
+        <Tooltip content={`${tc('associatedAdvisors')}: ${associatedNames.join(', ')}`}>
+          <span
+            className="ms-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-gold-soft px-1 text-[10px] font-semibold text-brand-gold-text align-middle"
+            aria-label={`${tc('associatedAdvisors')}: ${associatedNames.join(', ')}`}
+          >
+            +{associatedNames.length}
+          </span>
+        </Tooltip>
+      )}
 
       {open && pos && (
         <>

@@ -16,6 +16,7 @@ const CASE_SELECT_WITH_RELATIONS = `
   case_type_primary:case_types!cases_case_type_primary_id_fkey(id, key, name_he, name_en),
   case_type_secondary:case_types!cases_case_type_secondary_id_fkey(id, key, name_he, name_en),
   assigned_advisor:profiles!cases_assigned_advisor_id_fkey(id, first_name, last_name, phone, email),
+  case_associated_advisors(advisor_id),
   case_borrowers(is_primary, borrower:borrowers(id, first_name, last_name, national_id)),
   case_banks(id, is_primary, deleted_at, banker_name, bank:banks(id, key, name_he, name_en, color, logo_url)),
   case_financials(fee_amount, expected_income, fee_paid, fee_paid_at)

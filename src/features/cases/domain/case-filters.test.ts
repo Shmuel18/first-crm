@@ -11,7 +11,8 @@ import type { CaseWithRelations } from '../types';
 
 type BankLink = { deleted_at: string | null; bank: { id: string } | null };
 type TestCase = {
-  assigned_advisor: { id: string } | null;
+  assigned_advisor_id: string | null;
+  case_associated_advisors: Array<{ advisor_id: string }>;
   status: { id: string; key: string } | null;
   case_banks: BankLink[];
   target_date: string | null;
@@ -21,7 +22,8 @@ type TestCase = {
 // unknown so the test doesn't have to satisfy the full CaseWithRelations shape.
 function makeCase(o: Partial<TestCase> = {}): CaseWithRelations {
   return {
-    assigned_advisor: o.assigned_advisor ?? null,
+    assigned_advisor_id: o.assigned_advisor_id ?? null,
+    case_associated_advisors: o.case_associated_advisors ?? [],
     status: o.status ?? { id: 'open', key: 'open' },
     case_banks: o.case_banks ?? [],
     target_date: o.target_date ?? null,
@@ -85,10 +87,15 @@ describe('filterCases', () => {
     expect(filterCases(cases, NO_FILTERS)).toHaveLength(2);
   });
 
-  it('filters by advisor', () => {
-    const a = makeCase({ assigned_advisor: { id: 'a1' } });
-    const b = makeCase({ assigned_advisor: { id: 'a2' } });
-    expect(filterCases([a, b], { ...NO_FILTERS, advisor: 'a1' })).toEqual([a]);
+  it('filters by advisor — responsible or associated', () => {
+    const a = makeCase({ assigned_advisor_id: 'a1' });
+    const b = makeCase({ assigned_advisor_id: 'a2' });
+    // c is responsible=a2 but associates a1 — selecting a1 must include it.
+    const c = makeCase({
+      assigned_advisor_id: 'a2',
+      case_associated_advisors: [{ advisor_id: 'a1' }],
+    });
+    expect(filterCases([a, b, c], { ...NO_FILTERS, advisor: 'a1' })).toEqual([a, c]);
   });
 
   it('filters by stage (status id)', () => {
