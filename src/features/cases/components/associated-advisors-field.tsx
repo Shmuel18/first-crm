@@ -1,21 +1,17 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 
-import { UserPlus, X } from 'lucide-react';
+import { Check, ChevronDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { baseInputClass } from '@/features/borrowers/components/editable-field-shared';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import { addAssociatedAdvisorAction } from '../actions/add-associated-advisor';
 import { removeAssociatedAdvisorAction } from '../actions/remove-associated-advisor';
+import { calcDropdownPos, type DropdownPosition } from './dropdown-position';
 
 type AdvisorOption = { id: string; first_name: string | null; last_name: string | null };
 
@@ -23,19 +19,21 @@ type Props = {
   caseId: string;
   /** Current associated advisor ids (migration 146). */
   associatedIds: ReadonlyArray<string>;
-  /** Responsible advisor — excluded from the "add" list (already full access). */
+  /** Responsible advisor — excluded from the picker (already full access). */
   responsibleId: string | null;
-  /** All active advisors, for name resolution + the add picker. */
+  /** All active advisors, for name resolution + the picker. */
   advisorOptions: ReadonlyArray<AdvisorOption>;
   /** Whether the current user may add/remove (assign_case_to_user). */
   canManage: boolean;
 };
 
 /**
- * "יועצים משוייכים" — manage the 0..N associated advisors on a case. Chips with
- * inline remove, plus an add picker. Optimistic: local state updates first, then
- * the server action; reverts + toasts on failure. Names resolve from the active-
- * advisors option list (a profiles embed would be RLS-gated for non-admins).
+ * "משוייכים" — manage the 0..N associated advisors on a case (migration 146).
+ * Styled to match the responsible-advisor field: same label|control row + a
+ * select-like trigger (border + chevron). The trigger opens a multi-select
+ * dropdown (checkmark per selected advisor) that stays open while toggling.
+ * Optimistic: local state first, then the server action; reverts + toasts on
+ * failure. Read-only (no assign_case_to_user) renders the names as plain text.
  */
 export function AssociatedAdvisorsField({
   caseId,
@@ -47,34 +45,55 @@ export function AssociatedAdvisorsField({
   const t = useTranslations('case.fields');
   const tc = useTranslations('common');
   const [ids, setIds] = useState<string[]>([...associatedIds]);
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<DropdownPosition | null>(null);
   const [, startTransition] = useTransition();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Re-sync to fresh server props (e.g. another tab edited the list).
+  const [syncedRef, setSyncedRef] = useState(associatedIds);
+  if (syncedRef !== associatedIds) {
+    setSyncedRef(associatedIds);
+    setIds([...associatedIds]);
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    const onScroll = (e: Event) => {
+      if (dropdownRef.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    };
+    const onResize = () => setOpen(false);
+    window.addEventListener('scroll', onScroll, true);
+    window.addEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', onResize);
+    };
+  }, [open]);
 
   const nameOf = (id: string): string => {
     const opt = advisorOptions.find((o) => o.id === id);
     return (opt && formatPersonName(opt.first_name, opt.last_name)) || tc('noName');
   };
 
-  const addable = advisorOptions.filter(
-    (o) => o.id !== responsibleId && !ids.includes(o.id),
-  );
+  const pickable = advisorOptions.filter((o) => o.id !== responsibleId);
+  const summary = ids.length > 0 ? ids.map(nameOf).join(', ') : t('associatedAdd');
 
-  const add = (advisorId: string) => {
-    if (ids.includes(advisorId)) return;
-    setIds((prev) => [...prev, advisorId]);
-    startTransition(async () => {
-      const res = await addAssociatedAdvisorAction(caseId, advisorId);
-      if (!res.ok) {
-        setIds((prev) => prev.filter((id) => id !== advisorId));
-        toast.error(tc('saveFailed'));
-      }
-    });
+  const handleOpen = () => {
+    setPos(calcDropdownPos(triggerRef.current));
+    setOpen(true);
   };
 
-  const remove = (advisorId: string) => {
+  const toggle = (advisorId: string) => {
+    const isOn = ids.includes(advisorId);
     const prev = ids;
-    setIds((cur) => cur.filter((id) => id !== advisorId));
+    setIds(isOn ? ids.filter((id) => id !== advisorId) : [...ids, advisorId]);
     startTransition(async () => {
-      const res = await removeAssociatedAdvisorAction(caseId, advisorId);
+      const res = isOn
+        ? await removeAssociatedAdvisorAction(caseId, advisorId)
+        : await addAssociatedAdvisorAction(caseId, advisorId);
       if (!res.ok) {
         setIds(prev);
         toast.error(tc('saveFailed'));
@@ -83,54 +102,63 @@ export function AssociatedAdvisorsField({
   };
 
   return (
-    <div className="grid grid-cols-[6rem_1fr] items-start gap-2 text-sm">
-      <span className="text-neutral-500 truncate pt-1">{t('associated')}</span>
-      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-        {ids.length === 0 && (
-          <span className="text-neutral-400">{canManage ? '' : '—'}</span>
-        )}
-        {ids.map((id) => (
-          <span
-            key={id}
-            className="inline-flex items-center gap-1 rounded-full bg-brand-gold-soft py-0.5 ps-2 pe-1 text-xs text-neutral-800"
+    <div className="grid grid-cols-[6rem_1fr] items-center gap-2 text-sm">
+      <span className="text-neutral-500 truncate">{t('associated')}</span>
+      {canManage ? (
+        <div className="flex items-center min-w-0">
+          <button
+            ref={triggerRef}
+            type="button"
+            onClick={() => (open ? setOpen(false) : handleOpen())}
+            aria-haspopup="listbox"
+            aria-expanded={open}
+            className={`${baseInputClass} flex items-center justify-between gap-1 text-start cursor-pointer`}
           >
-            {nameOf(id)}
-            {canManage && (
-              <button
-                type="button"
-                onClick={() => remove(id)}
-                aria-label={t('associatedRemove', { name: nameOf(id) })}
-                className="rounded-full p-0.5 text-neutral-500 transition hover:bg-brand-gold/30 hover:text-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+            <span className={`truncate ${ids.length === 0 ? 'text-neutral-400' : ''}`}>
+              {summary}
+            </span>
+            <ChevronDown className="size-3.5 shrink-0 text-neutral-500" aria-hidden="true" />
+          </button>
+
+          {open && pos && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden="true" />
+              <div
+                ref={dropdownRef}
+                role="listbox"
+                aria-multiselectable="true"
+                aria-label={t('associated')}
+                className="fixed z-50 bg-white border border-neutral-200 rounded-lg shadow-xl py-1 min-w-52 max-h-72 overflow-y-auto scrollbar-thin"
+                style={pos}
               >
-                <X className="size-3" aria-hidden="true" />
-              </button>
-            )}
-          </span>
-        ))}
-        {canManage && addable.length > 0 && (
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <button
-                  type="button"
-                  aria-label={t('associatedAdd')}
-                  className="inline-flex items-center gap-1 rounded-full border border-dashed border-neutral-300 px-2 py-0.5 text-xs text-neutral-600 transition hover:border-brand-gold-text hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
-                />
-              }
-            >
-              <UserPlus className="size-3" aria-hidden="true" />
-              {t('associatedAdd')}
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="max-h-64 w-52 overflow-y-auto">
-              {addable.map((opt) => (
-                <DropdownMenuItem key={opt.id} onClick={() => add(opt.id)}>
-                  {formatPersonName(opt.first_name, opt.last_name) || tc('noName')}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-      </div>
+                {pickable.length === 0 && (
+                  <span className="block px-3 py-1.5 text-sm text-neutral-400">{tc('noName')}</span>
+                )}
+                {pickable.map((opt) => {
+                  const isOn = ids.includes(opt.id);
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      role="option"
+                      aria-selected={isOn}
+                      onClick={() => toggle(opt.id)}
+                      className="w-full flex items-center justify-between gap-2 px-3 py-1.5 text-sm text-start hover:bg-neutral-50 focus-visible:outline-none focus-visible:bg-brand-gold-soft"
+                    >
+                      <span>{formatPersonName(opt.first_name, opt.last_name) || tc('noName')}</span>
+                      {isOn && <Check className="size-3.5 text-brand-gold-text" aria-hidden="true" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      ) : (
+        <span className="truncate text-neutral-700">
+          {ids.length > 0 ? ids.map(nameOf).join(', ') : '—'}
+        </span>
+      )}
     </div>
   );
 }

@@ -250,34 +250,40 @@ export function CaseDetailsSection({
         value={localCase.referrer_name}
         onSave={(v) => saveField('referrer_name', v)}
       />
-      {/* Manager-only agreed-fee + a "paid" checkbox (case_financials,
-          RLS-gated). The checkbox stamps fee_paid_at on check. */}
+      {/* Manager-only agreed-fee. The "שולם" checkbox rides inside the field as
+          a compact adornment (not its own column) so it stays small and frees a
+          column for the note to sit on this row (case_financials, RLS-gated). */}
       {canSeeFinancials && (
-        <>
-          <EditableField
-            type="number"
-            label={tFields('feeAmount')}
-            value={localFee == null ? null : String(localFee)}
-            onSave={(v) => saveFee(v)}
-            dir="ltr"
-            adornment={<CurrencySign />}
-            groupThousands
-          />
-          <label className="inline-flex items-center gap-2 self-center text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={localPaid}
-              onChange={(e) => savePaid(e.target.checked)}
-              className="size-4 rounded border-neutral-300 accent-brand-gold-text cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
-            />
-            <span className="text-neutral-700">{tFields('feePaid')}</span>
-            {localPaid && localPaidAt && (
-              <span className="text-xs text-neutral-400">
-                {new Date(localPaidAt).toLocaleDateString()}
-              </span>
-            )}
-          </label>
-        </>
+        <EditableField
+          type="number"
+          label={tFields('feeAmount')}
+          value={localFee == null ? null : String(localFee)}
+          onSave={(v) => saveFee(v)}
+          dir="ltr"
+          groupThousands
+          adornment={
+            <span className="flex items-center gap-1.5">
+              <CurrencySign />
+              <label
+                className="inline-flex items-center gap-1 cursor-pointer text-xs text-neutral-600"
+                title={
+                  localPaid && localPaidAt
+                    ? new Date(localPaidAt).toLocaleDateString()
+                    : tFields('feePaid')
+                }
+              >
+                <input
+                  type="checkbox"
+                  checked={localPaid}
+                  onChange={(e) => savePaid(e.target.checked)}
+                  aria-label={tFields('feePaid')}
+                  className="size-3.5 rounded border-neutral-300 accent-brand-gold-text cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+                />
+                {tFields('feePaid')}
+              </label>
+            </span>
+          }
+        />
       )}
       {/* Short note last + spans 2 columns so it gets the biggest visual
           slot in the row (the dashboard surfaces this same field — give
