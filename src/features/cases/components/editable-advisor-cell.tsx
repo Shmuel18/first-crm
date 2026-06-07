@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import { quickUpdateCaseFieldAction } from '../actions/quick-update-case';
+import { resolveAdvisorName } from '../domain/advisor-name';
 import { calcDropdownPos, type DropdownPosition } from './dropdown-position';
 
 type AdvisorOption = {
@@ -85,7 +86,11 @@ export function EditableAdvisorCell({
     });
   };
 
-  const triggerLabel = advisorName ?? tc('notAssigned');
+  // Fall back to the options list when the server-passed name is null — the
+  // case→advisor embed is RLS-gated to null for non-admins (secretary), so the
+  // name is resolved from advisorId against the identity-only options instead.
+  const displayName = advisorName ?? resolveAdvisorName(advisorId, options);
+  const triggerLabel = displayName ?? tc('notAssigned');
 
   return (
     <>
@@ -99,8 +104,8 @@ export function EditableAdvisorCell({
         aria-label={triggerLabel}
         className="inline-flex items-center gap-2 cursor-pointer rounded-md disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
       >
-        {advisorName ? (
-          <span className="text-sm text-neutral-700 whitespace-nowrap">{advisorName}</span>
+        {displayName ? (
+          <span className="text-sm text-neutral-700 whitespace-nowrap">{displayName}</span>
         ) : (
           <span className="text-sm text-neutral-600">{tc('notAssigned')}</span>
         )}

@@ -8,6 +8,7 @@ import { parseLocale } from '@/lib/i18n/direction';
 import { formatDateShort } from '@/lib/utils/format-date';
 import { formatPersonName } from '@/lib/utils/person-name';
 
+import { resolveAdvisorName } from '../domain/advisor-name';
 import {
   getCaseClientLabel,
   getPrimaryBank,
@@ -21,8 +22,13 @@ import type { CaseWithRelations } from '../types';
 import { CaseStatusBadge } from './case-status-badge';
 import { ClearFiltersButton } from './clear-filters-button';
 
+type AdvisorOption = { id: string; first_name: string | null; last_name: string | null };
+
 type Props = {
   cases: ReadonlyArray<CaseWithRelations>;
+  // Identity-only advisor list — used to resolve the assigned advisor's name
+  // from the id when the cases→profiles embed is RLS-gated to null (non-admins).
+  advisorOptions: ReadonlyArray<AdvisorOption>;
   // Advisor row hidden for users who only see their own cases (see CasesTable).
   canViewAll: boolean;
 };
@@ -32,7 +38,7 @@ type Props = {
  * so on small screens we render one card per case (read + tap to open) instead
  * of forcing a horizontal scroll. Inline editing stays on the desktop table.
  */
-export function CasesCardList({ cases, canViewAll }: Props) {
+export function CasesCardList({ cases, advisorOptions, canViewAll }: Props) {
   const t = useTranslations('dashboard');
   const locale = parseLocale(useLocale());
   const filtered = useCaseQueryFilter(cases);
@@ -58,7 +64,7 @@ export function CasesCardList({ cases, canViewAll }: Props) {
         const targetDate = c.target_date ? formatDateShort(c.target_date, locale) : null;
         const advisorName =
           formatPersonName(c.assigned_advisor?.first_name, c.assigned_advisor?.last_name) ||
-          null;
+          resolveAdvisorName(c.assigned_advisor_id, advisorOptions);
 
         const cardClass = [
           'block px-4 py-3 transition-colors',

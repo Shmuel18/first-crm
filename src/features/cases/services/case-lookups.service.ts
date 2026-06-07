@@ -29,11 +29,22 @@ export async function listCaseStatusOptions(): Promise<StatusOption[]> {
 
 export async function listAdvisorOptions(): Promise<AdvisorOption[]> {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from('profiles')
-    .select('id, first_name, last_name')
-    .eq('is_active', true)
-    .order('first_name');
+  // Identity-only RPC (migration 145), NOT a direct profiles read: the
+  // profiles RLS limits a non-admin to their own row, which would leave the
+  // case-page advisor field unable to resolve the assigned advisor's name for
+  // a secretary / senior advisor. The SECURITY DEFINER function exposes only
+  // id + name (no email / phone / calendar token).
+  const { data, error } = await (
+    supabase as unknown as {
+      rpc(
+        fn: 'list_active_advisors',
+      ): PromiseLike<{ data: AdvisorOption[] | null; error: { message: string } | null }>;
+    }
+  ).rpc('list_active_advisors');
+  if (error) {
+    console.error('[listAdvisorOptions] rpc failed', { message: error.message });
+    return [];
+  }
   return data ?? [];
 }
 

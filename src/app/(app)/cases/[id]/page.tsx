@@ -235,7 +235,11 @@ export default async function CaseDetailPage({ params }: Props) {
           statusId={caseData.status?.id ?? null}
           statusName={caseData.status?.name_he ?? null}
           statusColor={caseData.status?.color ?? null}
-          assignedAdvisorId={caseData.assigned_advisor?.id ?? null}
+          // Scalar column, not the assigned_advisor embed: the embed is
+          // RLS-gated to null for non-admins, which would blank the advisor
+          // field for a secretary even on an assigned case. The id resolves to
+          // a name via the advisorOptions list (list_active_advisors RPC).
+          assignedAdvisorId={caseData.assigned_advisor_id ?? null}
           blocker={caseData.case_blocker as CaseBlocker | null}
           insurance={caseData.insurance_status as InsuranceStatus | null}
           insuranceAgentName={caseData.insurance_agent_name}
