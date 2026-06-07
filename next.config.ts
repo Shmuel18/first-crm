@@ -1,8 +1,35 @@
+import { readdirSync } from 'node:fs';
+import { join } from 'node:path';
+
 import type { NextConfig } from 'next';
 
 import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
+
+/**
+ * Highest migration number under supabase/migrations/. /api/health compares the
+ * DB's applied_schema_version() against this and fails readiness (503) when the
+ * DB lags — so deploy.sh's pre-swap health check ABORTS a deploy whose migrations
+ * were not applied first (see docs/DEPLOYING.md + migration 143). Computed at
+ * BUILD time because the migrations dir isn't traced into the standalone runtime.
+ */
+function computeExpectedSchemaVersion(): string {
+  try {
+    const dir = join(process.cwd(), 'supabase', 'migrations');
+    let max = 0;
+    for (const name of readdirSync(dir)) {
+      if (!name.endsWith('.sql')) continue;
+      const match = name.match(/^(\d+)/);
+      if (!match) continue;
+      const n = Number(match[1]);
+      if (Number.isFinite(n)) max = Math.max(max, n);
+    }
+    return String(max);
+  } catch {
+    return '0';
+  }
+}
 
 const isProduction = process.env.NODE_ENV === 'production';
 const publicAppUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
@@ -62,6 +89,11 @@ const SECURITY_HEADERS = [
 
 const nextConfig: NextConfig = {
   deploymentId: process.env.NEXT_DEPLOYMENT_ID,
+  // Baked-in at build so /api/health can compare it to the DB's applied schema
+  // version and fail readiness when prod lags the code (migration 143).
+  env: {
+    EXPECTED_SCHEMA_VERSION: computeExpectedSchemaVersion(),
+  },
   // Hide Next's dev-only on-screen indicator (the bottom-start "N" overlay that
   // opens dev tools). It overlapped app UI and read as a stray logo; it never
   // ships in production, so this only cleans up the local dev view.

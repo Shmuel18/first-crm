@@ -195,6 +195,8 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
       }
       case 'backup_stale':
         return t('message.backup_stale');
+      case 'erasure_stale':
+        return t('message.erasure_stale');
       default: {
         // Exhaustiveness check — TS errors here when a new
         // NotificationType is added without a render branch.
@@ -224,7 +226,7 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
     // all roles and future task types.
     const isCaseNotification = n.type === 'case_status_overdue' || n.type === 'case_mention';
     const href =
-      n.type === 'backup_stale'
+      n.type === 'backup_stale' || n.type === 'erasure_stale'
         ? '/settings/integrations'
         : isCaseNotification && n.case_id
           ? `/cases/${n.case_id}`

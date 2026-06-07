@@ -10,6 +10,7 @@ export const NOTIFICATION_TYPE_VALUES = [
   'case_mention',
   'task_mention',
   'backup_stale',
+  'erasure_stale',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPE_VALUES)[number];
 
@@ -73,6 +74,11 @@ export type NotificationDataBackupStale = {
   lastBackupAt: string | null;
 };
 
+export type NotificationDataErasureStale = {
+  /** ISO of the last successful PII-file erasure run, or null if none ever ran. */
+  lastErasureAt: string | null;
+};
+
 /**
  * Discriminated union over `notification.type`. Index by type to get the
  * exact shape — `NotificationDataByType['case_status_overdue']` is the
@@ -86,6 +92,7 @@ export type NotificationDataByType = {
   case_mention: NotificationDataCaseMention;
   task_mention: NotificationDataTaskMention;
   backup_stale: NotificationDataBackupStale;
+  erasure_stale: NotificationDataErasureStale;
 };
 
 /**
@@ -100,6 +107,7 @@ export type NotificationData =
   | NotificationDataCaseMention
   | NotificationDataTaskMention
   | NotificationDataBackupStale
+  | NotificationDataErasureStale
   | Record<string, never>;
 
 export type Notification = Omit<NotificationRow, 'data' | 'type'> & {

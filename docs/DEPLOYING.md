@@ -39,6 +39,26 @@ reconcile the history once (`supabase migration repair --status applied ...`),
 install the Supabase CLI on the host, and deploy **without** `SKIP_MIGRATIONS`
 (step 6 derives a session connection from `DATABASE_URL` — no extra secret).
 
+### Schema-version gate (safety net — migration 143)
+
+Because migrations are manual + `SKIP_MIGRATIONS=1`, a forgotten migration would
+ship code that 500s on a missing column/RPC. A sentinel catches that **before**
+the swap:
+
+- Every migration ends with `INSERT INTO public.schema_version (version) VALUES (<N>) ON CONFLICT DO NOTHING;`
+  (`<N>` = its numeric prefix). `applied_schema_version()` returns `MAX(version)`.
+- `next.config.ts` bakes the build's **expected** version (the highest file under
+  `supabase/migrations/`) into `EXPECTED_SCHEMA_VERSION`.
+- `/api/health` returns **503 `schema_behind`** when applied < expected. `deploy.sh`
+  smoke-tests `/api/health` before the swap, so a lagging DB **aborts the deploy**
+  (production untouched). The authorized `?deep=1` view shows `{ applied, expected }`.
+
+**Consequence:** apply pending migrations **first** (as already documented). If a
+deploy aborts at the smoke test, check `curl -s localhost:3747/api/health` — a
+`schema_behind` means a migration wasn't applied yet. **When you add a migration,
+don't forget its `schema_version` self-insert line** — omitting it leaves the gate
+stuck "behind" after you apply the file (fail-safe: it blocks, never ships broken).
+
 ## Deploy safety (built into `scripts/deploy.sh`)
 
 - Fresh-clones `main`; **preserves** `.env.production` (never regenerates secrets).

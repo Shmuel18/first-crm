@@ -2095,6 +2095,7 @@
       "case_mention": "{actor} mentioned you: {preview}",
       "case_status_overdue": "Case {caseNumber} has been in \"{statusName}\" for {days} days (threshold: {threshold})",
       "backup_stale": "No recent backup — check the Google Drive connection (Settings → Integrations)",
+      "erasure_stale": "File erasure isn't running — check the cleanup job and the Google Drive connection (Settings → Integrations)",
       "unknown": "New notification"
     }
   },

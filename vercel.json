@@ -13,6 +13,10 @@
       "schedule": "30 3 * * *"
     },
     {
+      "path": "/api/cron/erasure-watchdog",
+      "schedule": "30 6 * * *"
+    },
+    {
       "path": "/api/cron/status-sla-check",
       "schedule": "0 5 * * *"
     },
