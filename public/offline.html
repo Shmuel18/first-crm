@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>אין חיבור · Kaufman Finance</title>
+    <style>
+      /* Fully self-contained: this page must render with no network (no external
+         CSS/JS/font chunks), so all styles are inline and fonts fall back to the
+         system stack. */
+      html, body { height: 100%; margin: 0; }
+      body {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 16px; padding: 24px; text-align: center; box-sizing: border-box;
+        background: #0A0A0A; color: #ffffff;
+        font-family: 'Heebo', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+      }
+      img { width: 88px; height: 88px; }
+      h1 { margin: 0; font-size: 20px; font-weight: 700; color: #E8C77B; }
+      p { margin: 0; max-width: 320px; line-height: 1.6; color: #bdbdbd; font-size: 15px; }
+      button {
+        margin-top: 8px; padding: 10px 22px; border: 0; border-radius: 8px;
+        background: #C9A961; color: #0A0A0A; font-size: 15px; font-weight: 600; cursor: pointer;
+      }
+      button:active { background: #B8945A; }
+    </style>
+  </head>
+  <body>
+    <img src="/icons/icon-192.png" alt="Kaufman Finance" />
+    <h1>אין חיבור לאינטרנט</h1>
+    <p>נראה שאינך מחובר כרגע. בדוק את החיבור ונסה שוב. הנתונים נטענים בזמן אמת ואינם נשמרים על המכשיר.</p>
+    <button type="button" onclick="location.reload()">נסה שוב</button>
+  </body>
+</html>

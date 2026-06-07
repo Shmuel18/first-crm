@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
+import { PwaRegister } from '@/features/pwa/components/pwa-register';
 import { getDirection, parseLocale } from '@/lib/i18n/direction';
 
 import './globals.css';
@@ -36,6 +37,13 @@ export const metadata: Metadata = {
     template: '%s · Kaufman Finance Group',
   },
   description: 'מערכת ניהול תיקי משכנתא',
+  // PWA: Next auto-links the manifest (src/app/manifest.ts). These add the
+  // iOS standalone behaviour (Add to Home Screen → full-screen app).
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'קופמן',
+  },
 };
 
 export const viewport: Viewport = {
@@ -75,6 +83,7 @@ export default async function RootLayout({
             {children}
           </NextIntlClientProvider>
         </NuqsAdapter>
+        <PwaRegister />
       </body>
     </html>
   );

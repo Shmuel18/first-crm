@@ -1,4 +1,13 @@
 {
+  "pwa": {
+    "install": "Install app",
+    "bannerText": "Install Kaufman to your home screen for quick, full-screen access",
+    "dismiss": "Dismiss",
+    "iosInstructions": "To install: tap the Share button, then \"Add to Home Screen\".",
+    "settingsTitle": "Install the app",
+    "settingsDesc": "Install Kaufman as an app on this device — quick full-screen launch from your home screen.",
+    "installed": "The app is installed on this device"
+  },
   "error": {
     "title": "Something went wrong",
     "description": "An unexpected error occurred. You can try again.",

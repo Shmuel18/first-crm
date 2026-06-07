@@ -29,8 +29,10 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization)
      * - favicon.ico, robots.txt, sitemap.xml
+     * - PWA assets (manifest.webmanifest, sw.js, offline.html) — public, must be
+     *   reachable without an auth round-trip for install/registration to work
      * - public files (.svg, .png, .jpg, .jpeg, .gif, .webp)
      */
-    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|sw\\.js|offline\\.html|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
