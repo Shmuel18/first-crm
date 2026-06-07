@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { z } from 'zod';
 
 import { userHasPermission } from '@/lib/auth/permissions';
@@ -36,6 +34,8 @@ export async function removeAssociatedAdvisorAction(
   const ok = await deleteAssociatedAdvisor(parsed.data.caseId, parsed.data.advisorId);
   if (!ok) return { ok: false, error: 'unauthorized' };
 
-  revalidatePath(`/cases/${parsed.data.caseId}`);
+  // NO revalidatePath — the field is optimistic; revalidating the heavy
+  // /cases/[id] page re-renders everything and collapses the admin block.
+  // (Same pattern as the inline case-banks list.)
   return { ok: true };
 }

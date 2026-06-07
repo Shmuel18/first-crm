@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { z } from 'zod';
 
 import { userHasPermission } from '@/lib/auth/permissions';
@@ -55,6 +53,10 @@ export async function addAssociatedAdvisorAction(
   );
   if (!result.ok) return { ok: false, error: 'unknown' };
 
-  revalidatePath(`/cases/${parsed.data.caseId}`);
+  // NO revalidatePath: the field updates optimistically client-side, and
+  // revalidating the heavy /cases/[id] Server Component re-renders the whole
+  // page — collapsing the admin block and causing a visible re-render flash.
+  // The next natural navigation reloads the canonical list. (Same pattern as
+  // the inline case-banks list — see feedback_optimistic_inline_mutations.)
   return { ok: true };
 }
