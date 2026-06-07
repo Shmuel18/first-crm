@@ -9,6 +9,7 @@ import { RouteFocus } from '@/components/layout/route-focus';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Topbar } from '@/components/layout/topbar';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { AppBadgeSync } from '@/features/pwa/components/app-badge-sync';
 import { InstallBanner } from '@/features/pwa/components/install-banner';
 import { getDirection, parseLocale } from '@/lib/i18n/direction';
 import { getLayoutBootstrap } from '@/lib/layout/bootstrap';
@@ -71,6 +72,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         richColors
       />
       <InstallBanner />
+      <AppBadgeSync count={bootstrap.pendingTasks} />
       </div>
     </TooltipProvider>
   );

@@ -12,7 +12,7 @@ export const dynamic = 'force-static';
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Kaufman Finance Group',
-    short_name: 'קופמן',
+    short_name: 'Kaufman',
     description: 'מערכת ניהול תיקי משכנתא',
     // Launching opens the cases dashboard. Unauthenticated → the middleware
     // bounces /cases to /login?next=/cases, so the app lands correctly post-login.
