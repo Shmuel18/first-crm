@@ -1558,6 +1558,17 @@
         "generic": "Save failed. Please try again."
       }
     },
+    "push": {
+      "title": "Mobile push notifications",
+      "desc": "Get notified about tasks and updates even when the app is closed. Best after installing the app to your home screen.",
+      "enable": "Enable notifications",
+      "disable": "Disable notifications",
+      "enabled": "Notifications enabled on this device",
+      "disabled": "Notifications disabled",
+      "denied": "Permission denied — allow notifications in your browser/device settings and try again",
+      "failed": "Couldn't enable. Try again.",
+      "unsupported": "This browser doesn't support notifications. On iPhone: install the app to your home screen first (iOS 16.4+)."
+    },
     "display": {
       "title": "Case page display",
       "subtitle": "Choose which blocks on the case page open automatically when you open a case",

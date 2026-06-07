@@ -81,6 +81,13 @@ export const env = createEnv({
     // rebuild cannot leave open browser tabs submitting action IDs the new
     // server rejects.
     NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: serverActionsEncryptionKeySchema,
+    // Web Push (VAPID) — OPTIONAL. When unset, push is disabled (the settings
+    // toggle hides and /api/push/dispatch no-ops). VAPID_PRIVATE_KEY pairs with
+    // NEXT_PUBLIC_VAPID_PUBLIC_KEY (client). VAPID_SUBJECT is a mailto: or https
+    // contact URL required by the push spec. Generate a fresh pair with
+    // `npx web-push generate-vapid-keys` — never reuse a key seen in chat/logs.
+    VAPID_PRIVATE_KEY: z.string().optional(),
+    VAPID_SUBJECT: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_SUPABASE_URL: z.string().url('NEXT_PUBLIC_SUPABASE_URL must be a valid URL'),
@@ -90,6 +97,9 @@ export const env = createEnv({
     // Same DSN as the server, but bundled into the client for browser-side
     // error reporting. Mirror NEXT_PUBLIC_SENTRY_DSN=$SENTRY_DSN in Vercel.
     NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
+    // VAPID public key for Web Push — OPTIONAL, safe to expose (it's public by
+    // design). Pairs with the server's VAPID_PRIVATE_KEY. Unset = push disabled.
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
   },
   runtimeEnv: {
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -111,6 +121,9 @@ export const env = createEnv({
     SENTRY_DSN: process.env.SENTRY_DSN,
     SENTRY_ENVIRONMENT: process.env.SENTRY_ENVIRONMENT,
     NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: process.env.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY,
+    VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY,
+    VAPID_SUBJECT: process.env.VAPID_SUBJECT,
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
@@ -138,6 +151,16 @@ export function isGoogleOAuthConfigured(): boolean {
  */
 export function isEmailConfigured(): boolean {
   return Boolean(env.RESEND_API_KEY && env.EMAIL_FROM);
+}
+
+/**
+ * Returns true if Web Push is wired up (VAPID key pair + subject). When false,
+ * the settings push-toggle hides and /api/push/dispatch no-ops.
+ */
+export function isPushConfigured(): boolean {
+  return Boolean(
+    env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY && env.VAPID_SUBJECT,
+  );
 }
 
 // Warn at first-import in production when env vars that are declared "optional"

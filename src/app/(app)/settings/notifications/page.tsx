@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import { getMyNotificationPreferences } from '@/features/notifications/services/preferences.service';
+import { PushToggle } from '@/features/notifications/components/push-toggle';
 import { NotificationsForm } from '@/features/settings/components/notifications-form';
 import { getSlaThresholds, listSlaStatuses } from '@/features/settings/services/sla.service';
 import { isCurrentUserAdmin } from '@/lib/auth/permissions';
@@ -45,6 +46,8 @@ export default async function NotificationSettingsPage() {
         <h2 className="font-display text-xl font-semibold text-neutral-900">{t('title')}</h2>
         <p className="text-sm text-neutral-500 mt-0.5">{t('subtitle')}</p>
       </header>
+
+      <PushToggle />
 
       <NotificationsForm
         preferences={preferences}
