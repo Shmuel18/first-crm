@@ -79,7 +79,7 @@ export function TaskFormDialog({
   const [attachments, setAttachments] = useState<File[]>([]);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [attachmentPending, setAttachmentPending] = useState(false);
-  const handledTaskIdRef = useRef<string | null>(null);
+  const handledSuccessRef = useRef<TaskActionState | null>(null);
 
   const genericError = getGenericError(state, t);
 
@@ -109,7 +109,6 @@ export function TaskFormDialog({
     setAttachments([]);
     setAttachmentError(null);
     setAttachmentPending(false);
-    handledTaskIdRef.current = null;
   }, [presetCaseId, task?.case_id]);
 
   const handleDialogOpenChange = useCallback((nextOpen: boolean): void => {
@@ -119,8 +118,8 @@ export function TaskFormDialog({
 
   useEffect(() => {
     if (state.ok !== true) return;
-    if (handledTaskIdRef.current === state.taskId) return;
-    handledTaskIdRef.current = state.taskId;
+    if (handledSuccessRef.current === state) return;
+    handledSuccessRef.current = state;
 
     if (mode !== 'create' || attachments.length === 0 || !selectedCaseId) {
       queueMicrotask(() => handleDialogOpenChange(false));
