@@ -211,13 +211,15 @@ export function CaseDetailsSection({
         options={advisorOptions}
         onSave={(v) => saveField('assigned_advisor_id', v)}
       />
-      {/* Row 1 closes with הופנה ע״י (moved up from row 2). Row 2 opens
-          with ביטוחים (moved down) so the most-used referrer is at first
-          glance alongside status/blocker/advisor. */}
-      <EditableField
-        label={tFields('referrer')}
-        value={localCase.referrer_name}
-        onSave={(v) => saveField('referrer_name', v)}
+      {/* Associated advisors sit directly beside the responsible advisor
+          (migration 146) — a cell in the same row, not a separate row.
+          Referrer moved down next to the agreed fee (office preference). */}
+      <AssociatedAdvisorsField
+        caseId={caseId}
+        associatedIds={associatedAdvisorIds}
+        responsibleId={localCase.assigned_advisor_id}
+        advisorOptions={advisors}
+        canManage={canManageAdvisors}
       />
       <EditableField
         type="select"
@@ -241,6 +243,12 @@ export function CaseDetailsSection({
         label={tFields('targetDate')}
         value={localCase.target_date}
         onSave={(v) => saveField('target_date', v)}
+      />
+      {/* הופנה ע״י — placed next to the agreed fee per the office layout. */}
+      <EditableField
+        label={tFields('referrer')}
+        value={localCase.referrer_name}
+        onSave={(v) => saveField('referrer_name', v)}
       />
       {/* Manager-only agreed-fee + a "paid" checkbox (case_financials,
           RLS-gated). The checkbox stamps fee_paid_at on check. */}
@@ -283,15 +291,6 @@ export function CaseDetailsSection({
         />
       </div>
     </FieldGroup>
-    <div className="mt-3 border-t border-neutral-100 pt-3">
-      <AssociatedAdvisorsField
-        caseId={caseId}
-        associatedIds={associatedAdvisorIds}
-        responsibleId={localCase.assigned_advisor_id}
-        advisorOptions={advisors}
-        canManage={canManageAdvisors}
-      />
-    </div>
     </>
   );
 }

@@ -1005,7 +1005,7 @@
       "referrer": "Referred by",
       "shortNote": "Short note",
       "advisor": "Assigned advisor",
-      "associated": "Associated advisors",
+      "associated": "Associated",
       "associatedAdd": "Add advisor",
       "associatedRemove": "Remove {name}",
       "createdAt": "Opened on",
