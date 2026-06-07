@@ -1,4 +1,120 @@
 {
+  "intake": {
+    "title": "בדיקת התיק שלי",
+    "subtitle": "ייעוץ משכנתאות מקצועי · נחזור אליך תוך 24 שעות",
+    "privacy": "הפרטים שלך מאובטחים ולא יועברו לאף גורם ללא הסכמתך.",
+    "language": "שפה",
+    "steps": {
+      "composition": "הרכב",
+      "personal": "פרטים אישיים",
+      "property": "נכס",
+      "income": "הכנסות",
+      "story": "סיפור"
+    },
+    "nav": {
+      "back": "חזרה",
+      "next": "המשך",
+      "submit": "שליחת הפנייה",
+      "submitting": "שולח..."
+    },
+    "composition": {
+      "title": "נתחיל מהבסיס",
+      "description": "כמה פרטים על העסקה והרכב הלווים.",
+      "purpose": "מטרת המשכנתא",
+      "borrowerCount": "מספר לווים",
+      "borrowerCountNote": "אפשר להוסיף עד 4 לווים",
+      "propertyCity": "עיר הנכס"
+    },
+    "purposeOptions": {
+      "placeholder": "בחר/י מטרה",
+      "purchase": "רכישת דירה",
+      "refinance": "מיחזור משכנתא",
+      "equity_release": "הלוואה כנגד נכס",
+      "construction": "בנייה עצמית",
+      "other": "אחר"
+    },
+    "personal": {
+      "title": "פרטים אישיים",
+      "description": "מלא/י את הפרטים של כל אחד מהלווים.",
+      "borrower": "לווה {index}",
+      "firstName": "שם פרטי",
+      "lastName": "שם משפחה",
+      "nationalId": "תעודת זהות / דרכון",
+      "birthDate": "תאריך לידה",
+      "gender": "מין",
+      "maritalStatus": "מצב משפחתי",
+      "childrenCount": "ילדים מתחת לגיל 18",
+      "phone": "טלפון נייד",
+      "email": "דוא\"ל",
+      "preferredLanguage": "שפת תקשורת מועדפת",
+      "address": "כתובת מגורים",
+      "city": "עיר",
+      "citizenship": "אזרחות",
+      "residencyType": "סוג תושבות",
+      "foreignResidenceCountry": "מדינת מגורים בחו\"ל",
+      "relatedToSellers": "קרוב/ת משפחה למוכרי הנכס?"
+    },
+    "property": {
+      "title": "פרטי הנכס",
+      "description": "מה ידוע לך על הנכס והמימון הרצוי.",
+      "propertyValue": "שווי הנכס (₪)",
+      "requestedMortgage": "סכום המשכנתא המבוקש (₪)",
+      "equity": "הון עצמי (₪)",
+      "ownsOtherProperty": "ברשותכם נכס נוסף?"
+    },
+    "income": {
+      "title": "הכנסות ותעסוקה",
+      "description": "פרטי התעסוקה וההכנסה של כל לווה.",
+      "borrower": "לווה {index}",
+      "employmentStatus": "מעמד תעסוקתי",
+      "employerName": "שם המעסיק / העסק",
+      "monthlyIncome": "הכנסה חודשית נטו (₪)",
+      "employmentStartDate": "תאריך תחילת עבודה"
+    },
+    "story": {
+      "title": "ספר/י לנו",
+      "description": "כל פרט שיעזור לנו להבין את הצורך שלך.",
+      "requestDetails": "פירוט הבקשה",
+      "requestDetailsPlaceholder": "למשל: אנחנו זוג צעיר שמעוניין לרכוש דירה ראשונה...",
+      "consent": "אני מאשר/ת שקופמן פייננס גרופ תיצור איתי קשר ותשמור את פרטיי בהתאם למדיניות הפרטיות."
+    },
+    "options": {
+      "select": "בחר/י",
+      "yes": "כן",
+      "no": "לא",
+      "gender": { "male": "זכר", "female": "נקבה", "other": "אחר" },
+      "maritalStatus": {
+        "single": "רווק/ה",
+        "married": "נשוי/אה",
+        "divorced": "גרוש/ה",
+        "widowed": "אלמן/ה",
+        "common_law": "ידוע/ה בציבור"
+      },
+      "residencyType": {
+        "resident": "תושב/ת ישראל",
+        "foreign_resident": "תושב/ת חוץ",
+        "returning_resident": "תושב/ת חוזר/ת"
+      },
+      "employmentStatus": {
+        "employee": "שכיר/ה",
+        "self_employed": "עצמאי/ת",
+        "unemployed": "לא מועסק/ת",
+        "pensioner": "פנסיונר/ית"
+      },
+      "language": { "he": "עברית", "en": "אנגלית" }
+    },
+    "success": {
+      "title": "תודה! קיבלנו את הפנייה",
+      "body": "נחזור אליך בהקדם, בדרך כלל תוך 24 שעות.",
+      "contact": "לשאלות דחופות אפשר להתקשר אלינו."
+    },
+    "errors": {
+      "consentRequired": "יש לאשר את מדיניות הפרטיות כדי להמשיך.",
+      "contactRequired": "יש להזין טלפון או דוא\"ל ליצירת קשר.",
+      "rateLimited": "נשלחו יותר מדי פניות מכתובת זו. נסה/י שוב בעוד שעה.",
+      "unknown": "אירעה שגיאה בשליחה. נסה/י שוב."
+    }
+  },
   "pwa": {
     "install": "התקן אפליקציה",
     "bannerText": "התקן את קופמן למסך הבית — גישה מהירה במסך מלא",

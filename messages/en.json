@@ -1,4 +1,120 @@
 {
+  "intake": {
+    "title": "Check my case",
+    "subtitle": "Professional mortgage advice · we'll get back to you within 24 hours",
+    "privacy": "Your details are secure and will not be shared without your consent.",
+    "language": "Language",
+    "steps": {
+      "composition": "Setup",
+      "personal": "Personal",
+      "property": "Property",
+      "income": "Income",
+      "story": "Story"
+    },
+    "nav": {
+      "back": "Back",
+      "next": "Continue",
+      "submit": "Send request",
+      "submitting": "Sending..."
+    },
+    "composition": {
+      "title": "Let's start with the basics",
+      "description": "A few details about the deal and who's borrowing.",
+      "purpose": "Mortgage purpose",
+      "borrowerCount": "Number of borrowers",
+      "borrowerCountNote": "Up to 4 borrowers",
+      "propertyCity": "Property city"
+    },
+    "purposeOptions": {
+      "placeholder": "Select a purpose",
+      "purchase": "Buying a home",
+      "refinance": "Refinancing a mortgage",
+      "equity_release": "Loan against property",
+      "construction": "Self-build",
+      "other": "Other"
+    },
+    "personal": {
+      "title": "Personal details",
+      "description": "Fill in the details for each borrower.",
+      "borrower": "Borrower {index}",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "nationalId": "ID / passport number",
+      "birthDate": "Date of birth",
+      "gender": "Gender",
+      "maritalStatus": "Marital status",
+      "childrenCount": "Children under 18",
+      "phone": "Mobile phone",
+      "email": "Email",
+      "preferredLanguage": "Preferred language",
+      "address": "Home address",
+      "city": "City",
+      "citizenship": "Citizenship",
+      "residencyType": "Residency type",
+      "foreignResidenceCountry": "Country of residence abroad",
+      "relatedToSellers": "Related to the property sellers?"
+    },
+    "property": {
+      "title": "Property details",
+      "description": "What you know about the property and the financing you want.",
+      "propertyValue": "Property value (₪)",
+      "requestedMortgage": "Requested mortgage amount (₪)",
+      "equity": "Equity (₪)",
+      "ownsOtherProperty": "Do you own another property?"
+    },
+    "income": {
+      "title": "Income & employment",
+      "description": "Employment and income details for each borrower.",
+      "borrower": "Borrower {index}",
+      "employmentStatus": "Employment status",
+      "employerName": "Employer / business name",
+      "monthlyIncome": "Net monthly income (₪)",
+      "employmentStartDate": "Employment start date"
+    },
+    "story": {
+      "title": "Tell us",
+      "description": "Anything that helps us understand what you need.",
+      "requestDetails": "Request details",
+      "requestDetailsPlaceholder": "e.g. We're a young couple looking to buy our first home...",
+      "consent": "I agree that Kaufman Finance Group may contact me and store my details per the privacy policy."
+    },
+    "options": {
+      "select": "Select",
+      "yes": "Yes",
+      "no": "No",
+      "gender": { "male": "Male", "female": "Female", "other": "Other" },
+      "maritalStatus": {
+        "single": "Single",
+        "married": "Married",
+        "divorced": "Divorced",
+        "widowed": "Widowed",
+        "common_law": "Common-law"
+      },
+      "residencyType": {
+        "resident": "Israeli resident",
+        "foreign_resident": "Foreign resident",
+        "returning_resident": "Returning resident"
+      },
+      "employmentStatus": {
+        "employee": "Employee",
+        "self_employed": "Self-employed",
+        "unemployed": "Unemployed",
+        "pensioner": "Pensioner"
+      },
+      "language": { "he": "Hebrew", "en": "English" }
+    },
+    "success": {
+      "title": "Thank you! We got your request",
+      "body": "We'll get back to you shortly, usually within 24 hours.",
+      "contact": "For urgent questions you can call us."
+    },
+    "errors": {
+      "consentRequired": "Please accept the privacy policy to continue.",
+      "contactRequired": "Please provide a phone or email so we can reach you.",
+      "rateLimited": "Too many requests from this address. Please try again in an hour.",
+      "unknown": "Something went wrong. Please try again."
+    }
+  },
   "pwa": {
     "install": "Install app",
     "bannerText": "Install Kaufman to your home screen for quick, full-screen access",

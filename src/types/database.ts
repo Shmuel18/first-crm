@@ -3676,6 +3676,7 @@ export type Database = {
         Args: { p_scenario_id: string }
         Returns: boolean
       }
+      submit_public_intake: { Args: { p_payload: Json }; Returns: string }
       update_borrower_in_case: {
         Args: { p_borrower_id: string; p_case_id: string; p_patch: Json }
         Returns: boolean
