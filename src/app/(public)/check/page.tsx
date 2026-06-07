@@ -17,7 +17,9 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default function CheckPage() {
   return (
-    <main className="min-h-screen bg-brand-surface">
+    // The document itself is locked (globals.css: html,body overflow-hidden).
+    // Public pages opt back in by making their own root the scroll viewport.
+    <main className="h-dvh overflow-y-auto bg-brand-surface">
       <IntakeHeader />
       {/* nuqs reads the URL via useSearchParams → needs a Suspense boundary. */}
       <Suspense fallback={null}>
