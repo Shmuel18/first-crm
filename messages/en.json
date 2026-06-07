@@ -539,7 +539,8 @@
       "submitButton": "Send reset link",
       "submitting": "Sending...",
       "successTitle": "If the account exists, a link was sent",
-      "successBody": "Check your inbox (and the spam folder). The link expires shortly.",
+      "successBody": "Check your inbox (and the spam folder). The link expires shortly. If no email arrives within a few minutes, contact your administrator.",
+      "emailUnconfigured": "Email delivery isn't configured, so a reset link can't be sent. Contact your administrator to reset your password.",
       "backToLogin": "Back to sign in"
     },
     "setPassword": {
@@ -2122,6 +2123,13 @@
       "intro": "An account was created for you. Click the button to activate it and choose your password.",
       "linkNote": "This link is single-use and expires after a short time.",
       "cta": "Activate account"
+    },
+    "passwordReset": {
+      "subject": "Reset your password — Kaufman Finance Group",
+      "heading": "Reset password",
+      "intro": "We received a request to reset your account password. Click the button to choose a new one.",
+      "linkNote": "This link is single-use and expires after a short time. If you didn't request a reset, ignore this email.",
+      "cta": "Choose a new password"
     }
   },
   "team": {

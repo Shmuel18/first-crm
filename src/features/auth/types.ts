@@ -27,13 +27,15 @@ export type SetPasswordState = { error: SetPasswordErrorCode | null };
 export const SET_PASSWORD_INITIAL_STATE: SetPasswordState = { error: null };
 
 /**
- * Password reset request. Always reports `sent: true` to the UI when the form
- * is submitted (with or without a real account behind the address) — revealing
+ * Password reset request. Reports `sent: true` to the UI when the form is
+ * submitted (with or without a real account behind the address) — revealing
  * whether an email is registered is its own email-enumeration leak. Errors are
- * only surfaced on truly bad input (malformed email).
+ * only surfaced for non-account-revealing reasons: malformed input, or the
+ * system-level `email_unconfigured` (no mail provider wired at all) so the user
+ * is told to contact their admin instead of waiting for mail that can't send.
  */
 export type RequestPasswordResetState =
-  | { sent: false; error: 'invalid_input' | null }
+  | { sent: false; error: 'invalid_input' | 'email_unconfigured' | null }
   | { sent: true };
 
 export const REQUEST_PASSWORD_RESET_INITIAL_STATE: RequestPasswordResetState = {

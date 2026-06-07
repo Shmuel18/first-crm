@@ -65,7 +65,8 @@ export function ForgotPasswordForm() {
     );
   }
 
-  const hasError = state.error === 'invalid_input';
+  const inputError = state.error === 'invalid_input';
+  const systemError = state.error === 'email_unconfigured';
 
   return (
     <form action={formAction} className="space-y-5" noValidate>
@@ -85,21 +86,21 @@ export function ForgotPasswordForm() {
             required
             autoComplete="email"
             dir="ltr"
-            aria-invalid={hasError || undefined}
-            aria-describedby={hasError ? 'forgot-error' : undefined}
+            aria-invalid={inputError || undefined}
+            aria-describedby={inputError || systemError ? 'forgot-error' : undefined}
             className="ps-10 h-12 text-base bg-neutral-50 border-neutral-200 focus:border-brand-gold-text focus-visible:border-brand-gold-text focus-visible:ring-brand-gold-text/40"
             placeholder="moshe@kaufman.co.il"
           />
         </div>
       </div>
 
-      {!state.sent && state.error === 'invalid_input' && (
+      {(inputError || systemError) && (
         <div
           id="forgot-error"
           role="alert"
           className="rounded-lg bg-red-50 border border-red-200 px-3 py-2.5 text-sm text-red-700"
         >
-          {tc('errors.invalidEmail')}
+          {inputError ? tc('errors.invalidEmail') : t('emailUnconfigured')}
         </div>
       )}
 

@@ -1,24 +1,30 @@
 'use server';
 
-import { env } from '@/lib/env';
+import { getLocale } from 'next-intl/server';
+
+import { env, isEmailConfigured } from '@/lib/env';
 import { getRequestIp } from '@/lib/http/request-ip';
 import { checkRateLimit } from '@/lib/rate-limit';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 import { RequestPasswordResetSchema } from '../schemas/request-password-reset.schema';
+import { sendPasswordResetEmail } from '../services/auth-email';
 import type { RequestPasswordResetState } from '../types';
 
 /**
- * Sends a Supabase password-reset email. Returns `sent: true` regardless of
- * whether the address exists (and regardless of whether the rate-limiter
- * blocked the call) so the response is uniform — an attacker can't probe for
- * registered accounts by submitting candidate emails. The /auth/callback
- * route exchanges the recovery link's code for a session; the user lands on
- * /auth/set-password and re-uses the existing setPasswordAction.
+ * Sends a password-reset email via Resend — NOT Supabase's built-in SMTP, which
+ * is unconfigured on this project and failed silently (a locked-out manager had
+ * no recovery path). We mint a `recovery` link with the admin API and mail it
+ * ourselves, exactly like the team-invite flow; /auth/confirm verifies the
+ * token (token_hash flow) and forwards to /auth/set-password.
  *
- * Layered throttle: per-IP (5/hour) catches spammers; per-email (3/hour)
- * caps the mailbox abuse for a single victim. Both fail-closed so a DB blip
- * doesn't disable the gate.
+ * Enumeration-safe: returns `sent: true` whether or not the address has an
+ * account (and whether or not the rate-limiter blocked the call). The one
+ * non-uniform signal — `email_unconfigured` — is system-level, not per-account,
+ * so it leaks nothing about who is registered.
+ *
+ * Layered throttle: per-IP (5/hour) catches spammers; per-email (3/hour) caps
+ * mailbox abuse for a single victim. Both fail-closed.
  */
 export async function requestPasswordResetAction(
   _prev: RequestPasswordResetState,
@@ -29,6 +35,12 @@ export async function requestPasswordResetAction(
   });
   if (!parsed.success) {
     return { sent: false, error: 'invalid_input' };
+  }
+
+  // System-level (not per-account) → safe to surface. Without it the request
+  // would "succeed" while sending nothing — the silent dead-end we're fixing.
+  if (!isEmailConfigured()) {
+    return { sent: false, error: 'email_unconfigured' };
   }
 
   const ip = await getRequestIp();
@@ -50,20 +62,29 @@ export async function requestPasswordResetAction(
   });
 
   if (!ipOk || !emailOk) {
-    // Same "looks like success" response — surfacing rate-limited would
-    // turn this into an enumeration oracle just as cleanly as "user not
-    // found".
+    // Same "looks like success" response — surfacing rate-limited would turn
+    // this into an enumeration oracle just as cleanly as "user not found".
     console.warn('[requestPasswordReset] throttled', { emailKey: emailMask(email) });
     return { sent: true };
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/auth/set-password`,
+  const admin = createAdminClient();
+  const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+    type: 'recovery',
+    email,
   });
-  if (error) {
-    console.error('[requestPasswordReset] supabase error', { code: error.code });
+  const tokenHash = linkData?.properties?.hashed_token ?? null;
+  if (linkErr || !tokenHash) {
+    // No such account (or a transient API hiccup). Stay enumeration-safe: log
+    // server-side and return the SAME success state as a real send.
+    console.warn('[requestPasswordReset] no link', { emailKey: emailMask(email) });
+    return { sent: true };
   }
+
+  const resetLink = `${env.NEXT_PUBLIC_APP_URL}/auth/confirm?token_hash=${tokenHash}&type=recovery&next=/auth/set-password`;
+  const locale = (await getLocale()) === 'en' ? 'en' : 'he';
+  await sendPasswordResetEmail({ to: email, resetLink, locale });
+
   return { sent: true };
 }
 
