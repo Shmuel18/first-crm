@@ -32,6 +32,37 @@ const CATEGORY_ORDER: PermissionCategory[] = [
   'system',
 ];
 
+/**
+ * Permission keys hidden from the editor because NO code path enforces them —
+ * showing a toggle that silently does nothing is misleading, and on the
+ * financial ones it's an active "false sense of restriction" (e.g. turning off
+ * `export_financial_data` for the secretary looks like it blocks her, but the
+ * export is actually gated by `view_all_cases`, which she has). Audited
+ * 2026-06-07: each key below is checked in ZERO RLS policies and ZERO app gates.
+ * Re-expose a key here only once a real has_permission() check for it exists.
+ *
+ *   view_dashboard          — the app is reachable without it; never checked
+ *   view_expected_income    — already covered by view_case_fee (same case_financials row)
+ *   view_financial_dashboard— /statistics is admin-only (is_admin), not this key
+ *   view_financial_reports  — no financial-reports feature exists
+ *   export_financial_data   — the case export carries no financial columns
+ *   convert_lead_to_case    — lead conversion is gated by create_case
+ *   manage_roles            — this very editor is admin-only (isCurrentUserAdmin)
+ *   manage_settings         — settings pages are admin-only by design
+ *   manage_lookups          — no lookups-management UI; admin-only
+ */
+const HIDDEN_PERMISSION_KEYS = new Set<string>([
+  'view_dashboard',
+  'view_expected_income',
+  'view_financial_dashboard',
+  'view_financial_reports',
+  'export_financial_data',
+  'convert_lead_to_case',
+  'manage_roles',
+  'manage_settings',
+  'manage_lookups',
+]);
+
 export function RolesPermissionsEditor({ roles, permissions, granted, locale }: Props) {
   const t = useTranslations('settings.roles');
   const tLevel = useTranslations('settings.roles.levels');
@@ -49,7 +80,10 @@ export function RolesPermissionsEditor({ roles, permissions, granted, locale }: 
     setGrantedMap(buildMap(granted));
   }
 
-  const grouped = useMemo(() => groupByCategory(permissions), [permissions]);
+  const grouped = useMemo(
+    () => groupByCategory(permissions.filter((p) => !HIDDEN_PERMISSION_KEYS.has(p.key))),
+    [permissions],
+  );
   const selectedRole = roles.find((r) => r.id === selectedRoleId) ?? null;
   const isAdminRole = selectedRole?.key === 'admin';
   const roleName = (r: RoleRow) => roleManagementLabel(r, locale, tLevel);
