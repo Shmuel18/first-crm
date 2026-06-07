@@ -177,7 +177,7 @@ export default async function CasesListPage({ searchParams }: Props) {
   // bits (the table header) anchor to the layout's scroll container.
   return (
     <div className="-m-4 sm:-m-6 bg-white">
-      <CasesRealtimeRefresh />
+      <CasesRealtimeRefresh initialActiveCount={counts.active} />
       <DashboardWelcomeBanner firstName={profile?.first_name ?? ''} />
       <DashboardViewSelector
         activeCount={counts.active}
