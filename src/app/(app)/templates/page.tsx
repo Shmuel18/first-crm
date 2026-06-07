@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation';
 
 /**
- * Page moved to /settings/templates to keep admin-only management together
- * under Settings. This redirect preserves any existing bookmarks /
- * deep-links from before the move.
+ * Legacy /templates deep-link. Templates management is hidden (deferred to
+ * Phase 2 — see ../settings/templates/page.tsx for the full rationale), so old
+ * bookmarks land on the profile page instead of a now-redirecting tab.
  */
 export default function TemplatesPage(): never {
-  redirect('/settings/templates');
+  redirect('/settings/profile');
 }
