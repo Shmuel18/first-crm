@@ -168,7 +168,14 @@ export function isPushConfigured(): boolean {
 // Functions logs on every cold start, which is annoying enough to fix and
 // quiet enough not to spam after the fix lands. Dev / test deploys skip the
 // warning so localhost stays quiet.
-if (env.NODE_ENV === 'production') {
+// `typeof window` guard — REQUIRED: this block reads server-only env vars
+// (NODE_ENV, CRON_SECRET, RESEND_*, GOOGLE_OAUTH_*), which @t3-oss makes THROW
+// when accessed in the browser. A 'use client' module imports `env` for
+// NEXT_PUBLIC_VAPID_PUBLIC_KEY (use-push-subscription), which pulls this file
+// into the client bundle; without the guard, module evaluation crashes the
+// page. `window` is undefined on the server, so the warnings still print on
+// cold start as before. Do not remove.
+if (typeof window === 'undefined' && env.NODE_ENV === 'production') {
   const warnings: string[] = [];
   if (!env.CRON_SECRET) {
     warnings.push('CRON_SECRET is unset — /api/cron/backup will refuse every call (nightly backup disabled).');
