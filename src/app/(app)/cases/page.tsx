@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 
 import { CasesCardList } from '@/features/cases/components/cases-card-list';
 import { CasesEmptyState } from '@/features/cases/components/cases-empty-state';
+import { CasesRealtimeRefresh } from '@/features/cases/components/cases-realtime-refresh';
 import { CasesTable } from '@/features/cases/components/cases-table';
 import { ClearFiltersButton } from '@/features/cases/components/clear-filters-button';
 import { DashboardFiltersBar } from '@/features/cases/components/dashboard-filters-bar';
@@ -176,6 +177,7 @@ export default async function CasesListPage({ searchParams }: Props) {
   // bits (the table header) anchor to the layout's scroll container.
   return (
     <div className="-m-4 sm:-m-6 bg-white">
+      <CasesRealtimeRefresh />
       <DashboardWelcomeBanner firstName={profile?.first_name ?? ''} />
       <DashboardViewSelector
         activeCount={counts.active}
