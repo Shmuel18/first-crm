@@ -804,6 +804,14 @@
       "contact": "Quick contact",
       "questionnaire": "Questionnaire"
     },
+    "share": {
+      "button": "Send questionnaire",
+      "whatsapp": "Share via WhatsApp",
+      "copy": "Copy link",
+      "copied": "Link copied",
+      "copyFailed": "Couldn't copy — copy it manually",
+      "waMessage": "Hi! To get started on your request, please fill out our short questionnaire (~3 min):"
+    },
     "new": "New lead",
     "convert": "Convert to case",
     "delete": "Delete",

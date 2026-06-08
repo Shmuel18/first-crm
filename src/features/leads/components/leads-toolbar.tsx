@@ -6,6 +6,7 @@ import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { LeadFormDialog } from './lead-form-dialog';
+import { ShareQuestionnaireButton } from './share-questionnaire-button';
 
 type Assignee = { id: string; first_name: string | null; last_name: string | null };
 
@@ -16,7 +17,8 @@ export function LeadsToolbar({ assignees }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="flex items-center justify-end px-6 py-3 border-b border-neutral-200">
+    <div className="flex items-center justify-end gap-2 px-6 py-3 border-b border-neutral-200">
+      <ShareQuestionnaireButton />
       <button
         type="button"
         onClick={() => setOpen(true)}
