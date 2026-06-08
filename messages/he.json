@@ -1121,6 +1121,14 @@
       "documentsHint": "לחץ על 'פתח מסמכים' לעמוד הניהול - העלאה, צ׳ק-ליסט, אימות וסטטוסים.",
       "openDocuments": "פתח מסמכים"
     },
+    "property": {
+      "add": "הוסף נכס",
+      "addFailed": "הוספת הנכס נכשלה",
+      "remove": "הסר נכס",
+      "removeFailed": "הסרת הנכס נכשלה",
+      "saveFailed": "השמירה נכשלה",
+      "additionalLabel": "נכס {n}"
+    },
     "fields": {
       "transactionPurpose": "מטרת העסקה",
       "transactionPurposeOther": "פירוט המטרה",

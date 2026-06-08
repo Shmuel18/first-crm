@@ -1121,6 +1121,14 @@
       "documentsHint": "Click 'Open documents' for the management page — upload, checklist, verify and statuses.",
       "openDocuments": "Open documents"
     },
+    "property": {
+      "add": "Add property",
+      "addFailed": "Couldn't add the property",
+      "remove": "Remove",
+      "removeFailed": "Couldn't remove the property",
+      "saveFailed": "Save failed",
+      "additionalLabel": "Property {n}"
+    },
     "fields": {
       "transactionPurpose": "Transaction purpose",
       "transactionPurposeOther": "Purpose detail",

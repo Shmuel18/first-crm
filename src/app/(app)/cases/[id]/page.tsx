@@ -23,6 +23,7 @@ import {
   listCaseTypeOptions,
 } from '@/features/cases/services/case-lookups.service';
 import { getMyCaseBlockPreferences } from '@/features/cases/services/case-block-preferences.service';
+import { listCaseProperties } from '@/features/cases/services/case-properties.service';
 import { getCaseById } from '@/features/cases/services/cases.service';
 import { CaseIncomesBlock } from '@/features/incomes/components/case-incomes-block';
 import { CaseObligationsBlock } from '@/features/obligations/components/case-obligations-block';
@@ -128,6 +129,9 @@ export default async function CaseDetailPage({ params }: Props) {
 
   const locale = parseLocale(await getLocale());
 
+  // Additional properties (beyond the primary on cases.*) for the property block.
+  const additionalProperties = await listCaseProperties(caseData.id);
+
   return (
     <div className="space-y-5 -mt-6">
       <CaseActionBar
@@ -224,6 +228,7 @@ export default async function CaseDetailPage({ params }: Props) {
             requested_mortgage_amount: caseData.requested_mortgage_amount,
           }}
           caseTypes={caseTypeOptions}
+          additionalProperties={additionalProperties}
         />
 
         {/* Equity + LTV intentionally removed from this block — they aren't
