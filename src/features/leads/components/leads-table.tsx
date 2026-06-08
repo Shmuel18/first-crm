@@ -6,6 +6,7 @@ import type { LeadRow } from '../types';
 
 import { ConvertLeadButton } from './convert-lead-button';
 import { DeleteLeadButton } from './delete-lead-button';
+import { LeadSourceBadge } from './lead-source-badge';
 
 type Props = { leads: ReadonlyArray<LeadRow> };
 
@@ -41,7 +42,12 @@ export function LeadsTable({ leads }: Props) {
             return (
               <tr key={lead.id} className="border-b border-neutral-100 hover:bg-neutral-50/60">
                 <Td className="text-neutral-400 tabular-nums">{i + 1}</Td>
-                <Td className="font-medium text-neutral-800">{name || '—'}</Td>
+                <Td className="font-medium text-neutral-800">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate">{name || '—'}</span>
+                    <LeadSourceBadge metadata={lead.metadata} />
+                  </div>
+                </Td>
                 <Td className="tabular-nums" dir="ltr">{lead.phone ?? '—'}</Td>
                 <Td className="text-neutral-600 truncate" dir="ltr">{lead.email ?? '—'}</Td>
                 <Td className="tabular-nums" dir="ltr">{lead.national_id ?? '—'}</Td>

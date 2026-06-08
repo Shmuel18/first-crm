@@ -6,6 +6,7 @@ import type { LeadRow } from '../types';
 
 import { ConvertLeadButton } from './convert-lead-button';
 import { DeleteLeadButton } from './delete-lead-button';
+import { LeadSourceBadge } from './lead-source-badge';
 
 type Props = { leads: ReadonlyArray<LeadRow> };
 
@@ -30,6 +31,7 @@ export function LeadsCardList({ leads }: Props) {
                 <span className="truncate text-sm font-medium text-neutral-900">
                   {name || '—'}
                 </span>
+                <LeadSourceBadge metadata={lead.metadata} />
               </div>
               <span
                 className={[

@@ -800,6 +800,10 @@
       "active": "Active",
       "converted": "Converted"
     },
+    "source": {
+      "contact": "Quick contact",
+      "questionnaire": "Questionnaire"
+    },
     "new": "New lead",
     "convert": "Convert to case",
     "delete": "Delete",

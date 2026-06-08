@@ -800,6 +800,10 @@
       "active": "פעיל",
       "converted": "הומר לתיק"
     },
+    "source": {
+      "contact": "פנייה מהירה",
+      "questionnaire": "שאלון מלא"
+    },
     "new": "ליד חדש",
     "convert": "המר לתיק",
     "delete": "מחק",
