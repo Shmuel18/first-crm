@@ -4,6 +4,7 @@
  * single listCases fetch rather than as extra SQL predicates.
  */
 
+import { getCaseClientLabel, getPrimaryBorrowerNationalId } from './case-derivations';
 import { isFrozenCase } from './case-state';
 import {
   matchesTargetDateFilter,
@@ -86,4 +87,23 @@ export function filterCases(
     if (f.hideClosedFrozen && isFrozenCase(c)) return false;
     return true;
   });
+}
+
+/**
+ * Free-text search shared by the dashboard search box and the export endpoint
+ * (so a filtered export matches the on-screen list exactly). Matches client
+ * name, national ID, or case number. Empty term → everything. Pure.
+ */
+export function filterCasesByQuery(
+  cases: ReadonlyArray<CaseWithRelations>,
+  term: string,
+): CaseWithRelations[] {
+  const t = term.trim().toLowerCase();
+  if (!t) return [...cases];
+  return cases.filter((c) =>
+    [getCaseClientLabel(c), getPrimaryBorrowerNationalId(c) ?? '', c.case_number ?? '']
+      .join(' ')
+      .toLowerCase()
+      .includes(t),
+  );
 }

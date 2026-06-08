@@ -3,6 +3,12 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import { logCasesExport } from '@/features/audit/services/audit-writer';
+import {
+  filterCases,
+  filterCasesByQuery,
+  parseDashboardFilters,
+} from '@/features/cases/domain/case-filters';
+import { applySort, parseCaseSort } from '@/features/cases/domain/case-sort';
 import { buildExportRows } from '@/features/cases/services/export/build-export-rows';
 import { listCases } from '@/features/cases/services/cases.service';
 import { generateCasesPdf } from '@/features/cases/services/export/pdf-generator';
@@ -80,7 +86,25 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
   });
   if (!allowed) return errorJson('rate_limited', 429);
 
-  const cases = await listCases({ isArchived: false });
+  // Respect the dashboard's current filters / search / sort (forwarded as query
+  // params) so the export matches exactly what the user sees, not the whole book.
+  const sp = Object.fromEntries(request.nextUrl.searchParams);
+  const isArchived = sp.view === 'archive';
+  const filters = parseDashboardFilters(sp);
+  const sort = parseCaseSort(sp);
+  const query = typeof sp.q === 'string' ? sp.q : '';
+
+  const allCases = await listCases({ isArchived });
+  let cases = filterCases(
+    // The archive intentionally shows closed/frozen, so don't hide them there.
+    allCases,
+    isArchived ? { ...filters, hideClosedFrozen: false } : filters,
+  );
+  cases = filterCasesByQuery(cases, query);
+  if (sort) {
+    const { data: statuses } = await supabase.from('case_statuses').select('id, sort_order');
+    cases = applySort(cases, sort, statuses ?? []);
+  }
   if (cases.length === 0) return errorJson('empty', 404);
 
   const locale = parseLocale(await getLocale());

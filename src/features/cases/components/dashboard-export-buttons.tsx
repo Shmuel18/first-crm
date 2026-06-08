@@ -36,7 +36,11 @@ export function DashboardExportButtons() {
     setError(null);
     startTransition(async () => {
       try {
-        const res = await fetch(`/api/exports/cases?format=${format}`, {
+        // Forward the dashboard's current filters / search / sort so the export
+        // matches what's on screen, not the whole book.
+        const params = new URLSearchParams(window.location.search);
+        params.set('format', format);
+        const res = await fetch(`/api/exports/cases?${params.toString()}`, {
           method: 'GET',
         });
         if (!res.ok) {
