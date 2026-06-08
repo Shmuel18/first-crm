@@ -6,5 +6,9 @@
  */
 export const PRIVACY_POLICY_VERSION = '2026-06';
 
-/** Canonical public URL of the privacy policy the consent checkbox links to. */
-export const PRIVACY_POLICY_URL = 'https://kaufman-finance.com/privacy.html';
+/**
+ * Public URL of the privacy policy the /check consent checkbox links to.
+ * Currently the live landing deployment (temporary); point this at the real
+ * domain (e.g. https://kaufman-finance.com/privacy.html) once it's hosted there.
+ */
+export const PRIVACY_POLICY_URL = 'https://landing-olive-one-87.vercel.app/privacy.html';
