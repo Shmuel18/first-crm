@@ -23,15 +23,21 @@ export function IntakeNav({ step, totalSteps, pending, onBack, onNext, onSubmit 
 
   return (
     <div className="mt-8 flex items-center justify-between gap-4 border-t border-neutral-100 pt-6">
-      <Button
-        type="button"
-        variant="outline"
-        className="h-11 px-5"
-        disabled={isFirst || pending}
-        onClick={onBack}
-      >
-        {t('back')}
-      </Button>
+      {isFirst ? (
+        // No "Back" on the first step — there's nowhere to go. Keep an empty
+        // placeholder so the Next/Submit button stays on its side.
+        <span aria-hidden="true" />
+      ) : (
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11 px-5"
+          disabled={pending}
+          onClick={onBack}
+        >
+          {t('back')}
+        </Button>
+      )}
       {isLast ? (
         <Button type="button" className={GOLD_CTA} disabled={pending} onClick={onSubmit}>
           {pending ? t('submitting') : t('submit')}
