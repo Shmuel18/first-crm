@@ -55,7 +55,11 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(title, {
       body: data.body || '',
       icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
+      // Monochrome silhouette (transparent PNG) — Android masks the badge to a
+      // white shape via its alpha channel. The full-colour icon-192 is opaque,
+      // so it rendered as a solid white square in the status bar; badge-96 is a
+      // transparent building glyph that masks to a clean white building.
+      badge: '/icons/badge-96.png',
       lang: 'he',
       dir: 'rtl',
       tag: 'kfg-notification',
