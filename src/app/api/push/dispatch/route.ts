@@ -38,7 +38,7 @@ const TITLES: Record<NotificationType, { he: string; en: string }> = {
 };
 
 function urlForType(type: NotificationType, caseId: string | null): string {
-  if (type === 'web_lead') return '/leads';
+  if (type === 'web_lead') return '/cases?view=leads';
   if (type === 'backup_stale' || type === 'erasure_stale') return '/settings/integrations';
   if (type === 'case_mention' || type === 'case_status_overdue') {
     return caseId ? `/cases/${caseId}` : '/cases';

@@ -232,7 +232,7 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
     const isCaseNotification = n.type === 'case_status_overdue' || n.type === 'case_mention';
     const href =
       n.type === 'web_lead'
-        ? '/leads'
+        ? '/cases?view=leads'
         : n.type === 'backup_stale' || n.type === 'erasure_stale'
           ? '/settings/integrations'
           : isCaseNotification && n.case_id
