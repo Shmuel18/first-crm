@@ -1,8 +1,11 @@
 'use client';
 
+import { useMemo } from 'react';
+
 import Link from 'next/link';
 
 import { useLocale, useTranslations } from 'next-intl';
+import { parseAsStringEnum, useQueryState } from 'nuqs';
 
 import { parseLocale } from '@/lib/i18n/direction';
 import { formatDateShort } from '@/lib/utils/format-date';
@@ -14,6 +17,12 @@ import {
   getPrimaryBank,
   getPrimaryBorrowerNationalId,
 } from '../domain/case-derivations';
+import {
+  applySort,
+  SORT_COLUMNS,
+  type CaseSort,
+  type SortDir,
+} from '../domain/case-sort';
 import { isFrozenCase, isStuckCase } from '../domain/case-state';
 import { getTargetDateState, type TargetDateState } from '../domain/target-date';
 import { useCaseQueryFilter } from '../hooks/use-case-query-filter';
@@ -24,8 +33,12 @@ import { ClearFiltersButton } from './clear-filters-button';
 
 type AdvisorOption = { id: string; first_name: string | null; last_name: string | null };
 
+const SORT_DIRS: SortDir[] = ['asc', 'desc'];
+
 type Props = {
   cases: ReadonlyArray<CaseWithRelations>;
+  // Status id → pipeline position, for the 'stage' sort (mirrors CasesTable).
+  statusOptions: ReadonlyArray<{ id: string; sort_order: number }>;
   // Identity-only advisor list — used to resolve the assigned advisor's name
   // from the id when the cases→profiles embed is RLS-gated to null (non-admins).
   advisorOptions: ReadonlyArray<AdvisorOption>;
@@ -38,10 +51,25 @@ type Props = {
  * so on small screens we render one card per case (read + tap to open) instead
  * of forcing a horizontal scroll. Inline editing stays on the desktop table.
  */
-export function CasesCardList({ cases, advisorOptions, canViewAll }: Props) {
+export function CasesCardList({ cases, statusOptions, advisorOptions, canViewAll }: Props) {
   const t = useTranslations('dashboard');
   const locale = parseLocale(useLocale());
   const filtered = useCaseQueryFilter(cases);
+
+  // Mobile sort: read the same sort/dir URL params the desktop headers write
+  // (shallow) and re-sort client-side so the cards reorder instantly.
+  const [sortCol] = useQueryState(
+    'sort',
+    parseAsStringEnum([...SORT_COLUMNS]).withOptions({ shallow: true }),
+  );
+  const [sortDir] = useQueryState(
+    'dir',
+    parseAsStringEnum(SORT_DIRS).withOptions({ shallow: true }),
+  );
+  const ordered = useMemo(() => {
+    const sort: CaseSort | null = sortCol ? { column: sortCol, dir: sortDir ?? 'asc' } : null;
+    return applySort(filtered, sort, statusOptions);
+  }, [filtered, sortCol, sortDir, statusOptions]);
 
   if (filtered.length === 0) {
     return (
@@ -56,7 +84,7 @@ export function CasesCardList({ cases, advisorOptions, canViewAll }: Props) {
 
   return (
     <ul className="divide-y divide-neutral-200">
-      {filtered.map((c, index) => {
+      {ordered.map((c, index) => {
         const stuck = isStuckCase(c);
         const frozen = isFrozenCase(c);
         const client = getCaseClientLabel(c);

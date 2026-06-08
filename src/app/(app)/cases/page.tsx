@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { CasesCardList } from '@/features/cases/components/cases-card-list';
 import { CasesEmptyState } from '@/features/cases/components/cases-empty-state';
 import { CasesRealtimeRefresh } from '@/features/cases/components/cases-realtime-refresh';
+import { CasesSortControl } from '@/features/cases/components/cases-sort-control';
 import { CasesTable } from '@/features/cases/components/cases-table';
 import { ClearFiltersButton } from '@/features/cases/components/clear-filters-button';
 import { DashboardFiltersBar } from '@/features/cases/components/dashboard-filters-bar';
@@ -153,8 +154,10 @@ export default async function CasesListPage({ searchParams }: Props) {
               xl the table used to horizontally-scroll without indication,
               clipping the bank + advisor columns out of sight. */}
           <div className="xl:hidden">
+            <CasesSortControl />
             <CasesCardList
               cases={visible}
+              statusOptions={statusOptions}
               advisorOptions={advisorOptions}
               canViewAll={canViewAll}
             />
