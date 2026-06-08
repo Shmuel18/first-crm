@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { isValidIdOrPassport, isValidIsraeliId } from './israeli-id';
 import { isValidPhone, normalizePhone } from './il-phone';
+import { stripInvisible } from './sanitize-text';
 
 /**
  * Shared Zod primitives for form schemas.
@@ -49,7 +50,7 @@ export const optionalShortString = (max: number = NAME_MAX) =>
  */
 export const requiredShortString = (max: number = NAME_MAX) =>
   z.preprocess(
-    (v) => (typeof v === 'string' ? v.trim() : v),
+    (v) => (typeof v === 'string' ? stripInvisible(v).trim() : v),
     z
       .string({ error: 'common.errors.required' })
       .min(1, { error: 'common.errors.required' })
@@ -150,14 +151,14 @@ export const optionalEnum = <T extends readonly [string, ...string[]]>(values: T
 export const optionalEmail = z.preprocess(
   (v) => {
     if (v === '' || v === null || v === undefined) return null;
-    return typeof v === 'string' ? v.trim().toLowerCase() : v;
+    return typeof v === 'string' ? stripInvisible(v).trim().toLowerCase() : v;
   },
   z.email({ error: 'common.errors.invalidEmail' }).nullable().optional(),
 );
 
 /** Required email — for login etc. */
 export const requiredEmail = z.preprocess(
-  (v) => (typeof v === 'string' ? v.trim().toLowerCase() : v),
+  (v) => (typeof v === 'string' ? stripInvisible(v).trim().toLowerCase() : v),
   z.email({ error: 'common.errors.invalidEmail' }),
 );
 

@@ -10,6 +10,8 @@
  * Accepts inputs with leading zeros omitted (e.g. "12345678" pads to "012345678")
  * because some systems strip leading zeros when storing as numeric.
  */
+import { stripInvisible } from './sanitize-text';
+
 export function isValidIsraeliId(input: string): boolean {
   const digitsOnly = input.replace(/\D/g, '');
   if (digitsOnly.length === 0 || digitsOnly.length > 9) return false;
@@ -37,5 +39,5 @@ export function isValidIsraeliId(input: string): boolean {
  * directly where a value is known to be an Israeli ID and must checksum.
  */
 export function isValidIdOrPassport(input: string): boolean {
-  return /^[A-Za-z0-9]{4,20}$/.test(input.trim());
+  return /^[A-Za-z0-9]{4,20}$/.test(stripInvisible(input).trim());
 }

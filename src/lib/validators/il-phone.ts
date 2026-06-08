@@ -8,6 +8,8 @@
  *
  * Returns the canonical 0-prefixed digits-only form, or null if invalid.
  */
+import { stripInvisible } from './sanitize-text';
+
 export function normalizeIsraeliPhone(input: string): string | null {
   if (typeof input !== 'string') return null;
   const digits = input.replace(/\D/g, '');
@@ -37,8 +39,9 @@ export function isValidIsraeliPhone(input: string): boolean {
  * phone fields must not hard-require the Israeli format.
  */
 export function isValidPhone(input: string): boolean {
-  if (isValidIsraeliPhone(input)) return true;
-  const trimmed = input.trim();
+  const cleaned = stripInvisible(input);
+  if (isValidIsraeliPhone(cleaned)) return true;
+  const trimmed = cleaned.trim();
   if (!/^\+?[\d\s().-]+$/.test(trimmed)) return false;
   const digitCount = trimmed.replace(/\D/g, '').length;
   return digitCount >= 7 && digitCount <= 15;
@@ -51,8 +54,9 @@ export function isValidPhone(input: string): boolean {
  * Returns null for empty input.
  */
 export function normalizePhone(input: string): string | null {
-  const israeli = normalizeIsraeliPhone(input);
+  const cleaned = stripInvisible(input);
+  const israeli = normalizeIsraeliPhone(cleaned);
   if (israeli) return israeli;
-  const trimmed = input.trim();
+  const trimmed = cleaned.trim();
   return trimmed.length > 0 ? trimmed : null;
 }
