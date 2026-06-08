@@ -7,6 +7,8 @@ import { FormField, NativeSelect } from '@/components/shared/form-fields';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
+import { PURPOSE_OTHER } from '../../form-state';
+
 import type { IntakeFormState, SetTop } from '../../form-state';
 import type { IntakeFieldErrors } from '../../types';
 
@@ -29,12 +31,22 @@ export function StepComposition({ state, errors, setTop, setBorrowerCount }: Pro
         <NativeSelect value={state.purpose} onChange={(e) => setTop('purpose', e.target.value)}>
           <option value="">{t('purposeOptions.placeholder')}</option>
           {PURPOSES.map((p) => (
-            <option key={p} value={t(`purposeOptions.${p}`)}>
+            <option key={p} value={p === 'other' ? PURPOSE_OTHER : t(`purposeOptions.${p}`)}>
               {t(`purposeOptions.${p}`)}
             </option>
           ))}
         </NativeSelect>
       </FormField>
+
+      {state.purpose === PURPOSE_OTHER && (
+        <FormField label={t('composition.purposeOther')} error={errors['purpose']}>
+          <Input
+            value={state.purpose_other}
+            placeholder={t('composition.purposeOtherPlaceholder')}
+            onChange={(e) => setTop('purpose_other', e.target.value)}
+          />
+        </FormField>
+      )}
 
       <FormField label={t('composition.propertyCity')} error={errors['property_city']}>
         <Input

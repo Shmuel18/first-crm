@@ -35,8 +35,13 @@ export type SetTop = <K extends keyof IntakeFormState>(
 export type SetBorrower = (index: number, key: keyof BorrowerDraft, value: string) => void;
 export type SetBorrowerPatch = (index: number, partial: Partial<BorrowerDraft>) => void;
 
+/** Sentinel select value for the free-text "Other" mortgage purpose. */
+export const PURPOSE_OTHER = '__other__';
+
 export type IntakeFormState = {
   purpose: string;
+  /** Free-text purpose, used only when `purpose === PURPOSE_OTHER`. */
+  purpose_other: string;
   property_city: string;
   property_value: string;
   requested_mortgage_amount: string;
@@ -79,6 +84,7 @@ export function emptyIntakeState(locale: string): IntakeFormState {
   borrower.preferred_language = locale;
   return {
     purpose: '',
+    purpose_other: '',
     property_city: '',
     property_value: '',
     requested_mortgage_amount: '',
@@ -149,7 +155,7 @@ const triToBool = (v: string): boolean | null =>
 /** Serialize the draft into the object the server action validates. */
 export function toIntakePayload(state: IntakeFormState, locale: string): Record<string, unknown> {
   return {
-    purpose: state.purpose,
+    purpose: state.purpose === PURPOSE_OTHER ? state.purpose_other.trim() : state.purpose,
     property_city: state.property_city,
     property_value: state.property_value,
     requested_mortgage_amount: state.requested_mortgage_amount,

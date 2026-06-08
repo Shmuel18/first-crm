@@ -19,7 +19,7 @@ export default function CheckPage() {
   return (
     // The document itself is locked (globals.css: html,body overflow-hidden).
     // Public pages opt back in by making their own root the scroll viewport.
-    <main className="h-dvh overflow-y-auto bg-brand-surface">
+    <main className="intake-scroll h-dvh overflow-y-auto bg-brand-gold-soft">
       <IntakeHeader />
       {/* nuqs reads the URL via useSearchParams → needs a Suspense boundary. */}
       <Suspense fallback={null}>

@@ -22,6 +22,8 @@
       "title": "נתחיל מהבסיס",
       "description": "כמה פרטים על העסקה והרכב הלווים.",
       "purpose": "מטרת המשכנתא",
+      "purposeOther": "פירוט המטרה",
+      "purposeOtherPlaceholder": "לדוגמה: רכישה בחו״ל, עזרה לבן משפחה",
       "borrowerCount": "מספר לווים",
       "borrowerCountNote": "אפשר להוסיף עד 4 לווים",
       "propertyCity": "עיר הנכס"

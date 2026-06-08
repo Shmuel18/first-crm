@@ -36,7 +36,7 @@ export function IntakeWizard() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6 pb-24">
-      <div className="rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm sm:p-6">
+      <div className="rounded-2xl border border-brand-gold/20 bg-white p-4 shadow-sm sm:p-6">
         <IntakeProgress step={form.step} />
       </div>
 
@@ -47,7 +47,7 @@ export function IntakeWizard() {
         </div>
       )}
 
-      <div className="mt-5 rounded-2xl border border-neutral-100 bg-white p-5 shadow-sm sm:p-7">
+      <div className="mt-5 rounded-2xl border border-brand-gold/20 bg-white p-5 shadow-sm sm:p-7">
         <h2 className="font-display text-2xl font-bold text-neutral-900">
           {t(`${stepKey}.title`)}
         </h2>

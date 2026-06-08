@@ -22,6 +22,8 @@
       "title": "Let's start with the basics",
       "description": "A few details about the deal and who's borrowing.",
       "purpose": "Mortgage purpose",
+      "purposeOther": "Please specify",
+      "purposeOtherPlaceholder": "e.g. buying abroad, helping a family member",
       "borrowerCount": "Number of borrowers",
       "borrowerCountNote": "Up to 4 borrowers",
       "propertyCity": "Property city"
