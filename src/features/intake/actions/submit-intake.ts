@@ -5,6 +5,7 @@ import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
+import { PRIVACY_POLICY_VERSION } from '../constants';
 import { IntakeSchema } from '../schemas/intake.schema';
 import type { IntakeActionState } from '../types';
 
@@ -57,9 +58,13 @@ export async function submitIntakeAction(input: unknown): Promise<IntakeActionSt
   });
   if (!allowed) return { ok: false, error: 'rate_limited' };
 
+  // Record consent as a first-class, provable fact: which policy version the
+  // prospect agreed to, and from which IP. The RPC stamps recorded_at server-side.
   const supabase = await createClient();
   const { data, error } = await supabase.rpc('submit_public_intake', {
     p_payload: parsed.data,
+    p_policy_version: PRIVACY_POLICY_VERSION,
+    p_ip: ip,
   });
 
   if (error || !data) {

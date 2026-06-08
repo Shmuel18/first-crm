@@ -79,7 +79,7 @@
       "description": "Anything that helps us understand what you need.",
       "requestDetails": "Request details",
       "requestDetailsPlaceholder": "e.g. We're a young couple looking to buy our first home...",
-      "consent": "I agree that Kaufman Finance Group may contact me and store my details per the privacy policy."
+      "consent": "I agree that Kaufman Finance Group may contact me and store my details per the <policy>privacy policy</policy>."
     },
     "options": {
       "select": "Select",
