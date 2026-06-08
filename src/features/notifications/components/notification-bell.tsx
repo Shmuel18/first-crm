@@ -28,6 +28,7 @@ import type {
   NotificationDataCaseStatusOverdue,
   NotificationDataTask,
   NotificationDataTaskMention,
+  NotificationDataWebLead,
   NotificationType,
 } from '../types';
 
@@ -197,6 +198,10 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
         return t('message.backup_stale');
       case 'erasure_stale':
         return t('message.erasure_stale');
+      case 'web_lead': {
+        const d = n.data as Partial<NotificationDataWebLead>;
+        return t('message.web_lead', { name: d.leadName?.trim() || t('aLead') });
+      }
       default: {
         // Exhaustiveness check — TS errors here when a new
         // NotificationType is added without a render branch.
@@ -226,11 +231,13 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
     // all roles and future task types.
     const isCaseNotification = n.type === 'case_status_overdue' || n.type === 'case_mention';
     const href =
-      n.type === 'backup_stale' || n.type === 'erasure_stale'
-        ? '/settings/integrations'
-        : isCaseNotification && n.case_id
-          ? `/cases/${n.case_id}`
-          : '/tasks';
+      n.type === 'web_lead'
+        ? '/leads'
+        : n.type === 'backup_stale' || n.type === 'erasure_stale'
+          ? '/settings/integrations'
+          : isCaseNotification && n.case_id
+            ? `/cases/${n.case_id}`
+            : '/tasks';
     router.push(href);
   };
 

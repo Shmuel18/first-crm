@@ -1,12 +1,14 @@
 'use client';
 
 import { parseAsInteger, useQueryState } from 'nuqs';
-import { useCallback, useState, useTransition } from 'react';
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 
 import { submitIntakeAction } from './actions/submit-intake';
+import { clearIntakeDraft, loadIntakeDraft, saveIntakeDraft } from './draft-storage';
 import {
   emptyBorrower,
   emptyIntakeState,
+  hasIntakeContent,
   stepForErrorKey,
   toIntakePayload,
   type BorrowerDraft,
@@ -25,9 +27,30 @@ export function useIntakeForm(locale: string, texts: Texts) {
   const [errors, setErrors] = useState<IntakeFieldErrors>({});
   const [submitError, setSubmitError] = useState<'rate_limited' | 'unknown' | null>(null);
   const [done, setDone] = useState(false);
+  const [draftRestored, setDraftRestored] = useState(false);
   const [pending, startTransition] = useTransition();
+  const startedAt = useRef(0);
+  const hydrated = useRef(false);
 
   const step = Math.min(TOTAL_STEPS, Math.max(1, rawStep));
+
+  // One-time, AFTER mount: stamp the open-time (bot timing trap) and restore a
+  // meaningful saved draft. Done in an effect (not a lazy initializer) so SSR and
+  // the first client render both start empty — no hydration mismatch.
+  useEffect(() => {
+    startedAt.current = Date.now();
+    const draft = loadIntakeDraft();
+    hydrated.current = true;
+    if (!draft || !hasIntakeContent(draft)) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time localStorage hydrate, an extra mount render is intentional
+    setState(draft);
+    setDraftRestored(true);
+  }, []);
+
+  // Persist as the prospect types (only once there's something worth keeping).
+  useEffect(() => {
+    if (hydrated.current && !done && hasIntakeContent(state)) saveIntakeDraft(state);
+  }, [state, done]);
 
   const goTo = useCallback(
     (n: number) => {
@@ -50,6 +73,15 @@ export function useIntakeForm(locale: string, texts: Texts) {
       setState((s) => ({
         ...s,
         borrowers: s.borrowers.map((b, i) => (i === index ? { ...b, [key]: value } : b)),
+      })),
+    [],
+  );
+
+  const patchBorrower = useCallback(
+    (index: number, partial: Partial<BorrowerDraft>) =>
+      setState((s) => ({
+        ...s,
+        borrowers: s.borrowers.map((b, i) => (i === index ? { ...b, ...partial } : b)),
       })),
     [],
   );
@@ -77,8 +109,6 @@ export function useIntakeForm(locale: string, texts: Texts) {
 
   const submit = useCallback(() => {
     setSubmitError(null);
-    // Cheap client guards for the two cross-field rules, so the user isn't sent
-    // to the server just to learn the consent box is unchecked.
     const pre: IntakeFieldErrors = {};
     if (!state.consent) pre['consent'] = texts.consentRequired;
     const primary = state.borrowers[0];
@@ -91,8 +121,12 @@ export function useIntakeForm(locale: string, texts: Texts) {
     }
     setErrors({});
     startTransition(async () => {
-      const result = await submitIntakeAction(toIntakePayload(state, locale));
+      const result = await submitIntakeAction({
+        ...toIntakePayload(state, locale),
+        elapsed_ms: Date.now() - startedAt.current,
+      });
       if (result.ok) {
+        clearIntakeDraft();
         setDone(true);
         if (typeof window !== 'undefined') window.scrollTo({ top: 0 });
         return;
@@ -113,11 +147,13 @@ export function useIntakeForm(locale: string, texts: Texts) {
     submitError,
     done,
     pending,
+    draftRestored,
     goTo,
     next,
     back,
     setTop,
     setBorrower,
+    patchBorrower,
     setBorrowerCount,
     submit,
   };

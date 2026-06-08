@@ -27,6 +27,18 @@ export async function submitIntakeAction(input: unknown): Promise<IntakeActionSt
     return { ok: true };
   }
 
+  // Timing trap: a real person fills a 5-step form in far more than a few
+  // seconds. A sub-3s submission is a script — ack but drop it, like the honeypot.
+  if (
+    input !== null &&
+    typeof input === 'object' &&
+    'elapsed_ms' in input &&
+    typeof (input as { elapsed_ms: unknown }).elapsed_ms === 'number' &&
+    (input as { elapsed_ms: number }).elapsed_ms < 3000
+  ) {
+    return { ok: true };
+  }
+
   const parsed = IntakeSchema.safeParse(input);
   if (!parsed.success) {
     const fieldErrors = await resolveSchemaErrors(parsed.error);

@@ -11,6 +11,7 @@ export const NOTIFICATION_TYPE_VALUES = [
   'task_mention',
   'backup_stale',
   'erasure_stale',
+  'web_lead',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPE_VALUES)[number];
 
@@ -79,6 +80,11 @@ export type NotificationDataErasureStale = {
   lastErasureAt: string | null;
 };
 
+export type NotificationDataWebLead = {
+  /** Prospect's name from the public questionnaire (may be partial/empty). */
+  leadName: string | null;
+};
+
 /**
  * Discriminated union over `notification.type`. Index by type to get the
  * exact shape — `NotificationDataByType['case_status_overdue']` is the
@@ -93,6 +99,7 @@ export type NotificationDataByType = {
   task_mention: NotificationDataTaskMention;
   backup_stale: NotificationDataBackupStale;
   erasure_stale: NotificationDataErasureStale;
+  web_lead: NotificationDataWebLead;
 };
 
 /**
@@ -108,6 +115,7 @@ export type NotificationData =
   | NotificationDataTaskMention
   | NotificationDataBackupStale
   | NotificationDataErasureStale
+  | NotificationDataWebLead
   | Record<string, never>;
 
 export type Notification = Omit<NotificationRow, 'data' | 'type'> & {

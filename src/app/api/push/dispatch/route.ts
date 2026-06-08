@@ -34,9 +34,11 @@ const TITLES: Record<NotificationType, { he: string; en: string }> = {
   case_status_overdue: { he: 'תיק ממתין מעבר לזמן', en: 'A case is overdue' },
   backup_stale: { he: 'התראת מערכת', en: 'System alert' },
   erasure_stale: { he: 'התראת מערכת', en: 'System alert' },
+  web_lead: { he: 'ליד חדש מהאתר', en: 'New website lead' },
 };
 
 function urlForType(type: NotificationType, caseId: string | null): string {
+  if (type === 'web_lead') return '/leads';
   if (type === 'backup_stale' || type === 'erasure_stale') return '/settings/integrations';
   if (type === 'case_mention' || type === 'case_status_overdue') {
     return caseId ? `/cases/${caseId}` : '/cases';

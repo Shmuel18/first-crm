@@ -1,8 +1,10 @@
 'use client';
 
+import { Copy } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { FormField, FormSection, NativeSelect } from '@/components/shared/form-fields';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   GENDER_VALUES,
@@ -11,7 +13,7 @@ import {
   RESIDENCY_TYPE_VALUES,
 } from '@/features/borrowers/schemas/borrower.schema';
 
-import type { BorrowerDraft, SetBorrower } from '../form-state';
+import type { BorrowerDraft, SetBorrower, SetBorrowerPatch } from '../form-state';
 import type { IntakeFieldErrors } from '../types';
 
 type Props = {
@@ -19,15 +21,48 @@ type Props = {
   borrower: BorrowerDraft;
   errors: IntakeFieldErrors;
   onChange: SetBorrower;
+  primary: BorrowerDraft;
+  onPatch: SetBorrowerPatch;
 };
 
-export function BorrowerPersonalFields({ index, borrower, errors, onChange }: Props) {
+export function BorrowerPersonalFields({
+  index,
+  borrower,
+  errors,
+  onChange,
+  primary,
+  onPatch,
+}: Props) {
   const t = useTranslations('intake');
   const err = (f: keyof BorrowerDraft): string | undefined => errors[`borrowers.${index}.${f}`];
   const isForeign = borrower.residency_type === 'foreign_resident';
 
   return (
     <FormSection title={t('personal.borrower', { index: index + 1 })}>
+      {index > 0 && (
+        <div className="flex flex-wrap gap-2 md:col-span-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5"
+            onClick={() => onPatch(index, { address: primary.address, city: primary.city })}
+          >
+            <Copy className="size-3.5" />
+            {t('personal.copyAddress')}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5"
+            onClick={() => onPatch(index, { preferred_language: primary.preferred_language })}
+          >
+            <Copy className="size-3.5" />
+            {t('personal.sameLanguage')}
+          </Button>
+        </div>
+      )}
       <FormField label={t('personal.firstName')} required error={err('first_name')}>
         <Input
           value={borrower.first_name}

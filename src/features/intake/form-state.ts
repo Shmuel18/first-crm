@@ -33,6 +33,7 @@ export type SetTop = <K extends keyof IntakeFormState>(
   value: IntakeFormState[K],
 ) => void;
 export type SetBorrower = (index: number, key: keyof BorrowerDraft, value: string) => void;
+export type SetBorrowerPatch = (index: number, partial: Partial<BorrowerDraft>) => void;
 
 export type IntakeFormState = {
   purpose: string;
@@ -113,6 +114,33 @@ export function stepForErrorKey(key: string): number {
     return 3;
   }
   return 5; // request_details, consent, anything else
+}
+
+/** True once the prospect has typed anything worth saving/restoring as a draft. */
+export function hasIntakeContent(s: IntakeFormState): boolean {
+  if (
+    s.purpose ||
+    s.property_city ||
+    s.property_value ||
+    s.requested_mortgage_amount ||
+    s.equity ||
+    s.request_details
+  ) {
+    return true;
+  }
+  return s.borrowers.some(
+    (b) =>
+      b.first_name ||
+      b.last_name ||
+      b.national_id ||
+      b.phone ||
+      b.email ||
+      b.birth_date ||
+      b.address ||
+      b.city ||
+      b.employer_name ||
+      b.monthly_income,
+  );
 }
 
 const triToBool = (v: string): boolean | null =>

@@ -1,5 +1,6 @@
 'use client';
 
+import { Save } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { useIntakeForm } from '../use-intake-form';
@@ -39,6 +40,13 @@ export function IntakeWizard() {
         <IntakeProgress step={form.step} />
       </div>
 
+      {form.draftRestored && (
+        <div className="mt-3 flex items-center gap-2 rounded-xl border border-brand-gold-dark/40 bg-brand-gold-soft px-4 py-2.5 text-sm text-neutral-700">
+          <Save className="size-4 shrink-0 text-brand-gold-text" />
+          {t('draftRestored')}
+        </div>
+      )}
+
       <div className="mt-5 rounded-2xl border border-neutral-100 bg-white p-5 shadow-sm sm:p-7">
         <h2 className="font-display text-2xl font-bold text-neutral-900">
           {t(`${stepKey}.title`)}
@@ -70,6 +78,7 @@ export function IntakeWizard() {
             borrowers={form.state.borrowers}
             errors={form.errors}
             onChange={form.setBorrower}
+            onPatch={form.patchBorrower}
           />
         )}
         {form.step === 3 && (

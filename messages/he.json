@@ -3,6 +3,7 @@
     "title": "בדיקת התיק שלי",
     "subtitle": "ייעוץ משכנתאות מקצועי · נחזור אליך תוך 24 שעות",
     "privacy": "הפרטים שלך מאובטחים ולא יועברו לאף גורם ללא הסכמתך.",
+    "draftRestored": "שמרנו לך את הפרטים — המשכת מהמקום שעצרת.",
     "language": "שפה",
     "steps": {
       "composition": "הרכב",
@@ -52,7 +53,9 @@
       "citizenship": "אזרחות",
       "residencyType": "סוג תושבות",
       "foreignResidenceCountry": "מדינת מגורים בחו\"ל",
-      "relatedToSellers": "קרוב/ת משפחה למוכרי הנכס?"
+      "relatedToSellers": "קרוב/ת משפחה למוכרי הנכס?",
+      "copyAddress": "העתק כתובת מלווה 1",
+      "sameLanguage": "שפה זהה ללווה 1"
     },
     "property": {
       "title": "פרטי הנכס",
@@ -2225,6 +2228,7 @@
     "someone": "מישהו",
     "aTask": "משימה",
     "aCase": "תיק",
+    "aLead": "לקוח חדש",
     "unknownStatus": "סטטוס לא ידוע",
     "message": {
       "task_assigned_critical": "{actor} הקצה לך משימה מיידית: {task}",
@@ -2237,6 +2241,7 @@
       "case_status_overdue": "תיק {caseNumber} בסטטוס \"{statusName}\" כבר {days} ימים (סף: {threshold})",
       "backup_stale": "אין גיבוי תקין — בדוק את החיבור ל-Google Drive (הגדרות → אינטגרציות)",
       "erasure_stale": "מחיקת קבצים אינה רצה — בדוק את משימת הניקוי ואת החיבור ל-Google Drive (הגדרות → אינטגרציות)",
+      "web_lead": "ליד חדש מהאתר: {name}",
       "unknown": "התראה חדשה"
     }
   },
