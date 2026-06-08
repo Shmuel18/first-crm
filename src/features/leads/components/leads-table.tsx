@@ -5,6 +5,7 @@ import { formatPersonName } from '@/lib/utils/person-name';
 import type { LeadRow } from '../types';
 
 import { ConvertLeadButton } from './convert-lead-button';
+import { DeleteLeadButton } from './delete-lead-button';
 
 type Props = { leads: ReadonlyArray<LeadRow> };
 
@@ -21,7 +22,7 @@ export function LeadsTable({ leads }: Props) {
           <col className="w-56" />
           <col className="w-32" />
           <col className="w-28" />
-          <col className="w-28" />
+          <col className="w-44" />
         </colgroup>
         <thead>
           <tr className="bg-neutral-100 border-b-2 border-neutral-300">
@@ -57,11 +58,13 @@ export function LeadsTable({ leads }: Props) {
                   </span>
                 </Td>
                 <Td>
-                  {lead.status === 'converted' ? (
-                    <span className="text-xs text-neutral-400">—</span>
-                  ) : (
-                    <ConvertLeadButton leadId={lead.id} />
-                  )}
+                  <div className="flex items-center gap-3">
+                    {lead.status !== 'converted' && <ConvertLeadButton leadId={lead.id} />}
+                    <DeleteLeadButton
+                      leadId={lead.id}
+                      leadName={name || lead.phone || lead.email || '—'}
+                    />
+                  </div>
                 </Td>
               </tr>
             );

@@ -794,6 +794,9 @@
     },
     "new": "ליד חדש",
     "convert": "המר לתיק",
+    "delete": "מחק",
+    "deleteTitle": "מחיקת ליד",
+    "deleteBody": "למחוק את הליד {name}? הוא יוסר מרשימת הלידים.",
     "convertTitle": "המרת ליד לתיק",
     "convertBody": "ליצור תיק חדש מהליד הזה? פרטי הליד יועתקו ללווה הראשי בתיק, והליד יסומן כ\"הומר\".",
     "form": {
@@ -818,7 +821,9 @@
     "toast": {
       "created": "הליד נוצר",
       "convertFailed": "המרת הליד נכשלה",
-      "alreadyConverted": "הליד כבר הומר לתיק"
+      "alreadyConverted": "הליד כבר הומר לתיק",
+      "deleted": "הליד נמחק",
+      "deleteFailed": "מחיקת הליד נכשלה"
     }
   },
   "templates": {

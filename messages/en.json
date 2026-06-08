@@ -794,6 +794,9 @@
     },
     "new": "New lead",
     "convert": "Convert to case",
+    "delete": "Delete",
+    "deleteTitle": "Delete lead",
+    "deleteBody": "Delete the lead {name}? It will be removed from the leads list.",
     "convertTitle": "Convert lead to case",
     "convertBody": "Create a new case from this lead? The lead's details will be copied to the case's primary borrower, and the lead will be marked as converted.",
     "form": {
@@ -818,7 +821,9 @@
     "toast": {
       "created": "Lead created",
       "convertFailed": "Lead conversion failed",
-      "alreadyConverted": "Lead is already converted"
+      "alreadyConverted": "Lead is already converted",
+      "deleted": "Lead deleted",
+      "deleteFailed": "Couldn't delete the lead"
     }
   },
   "templates": {

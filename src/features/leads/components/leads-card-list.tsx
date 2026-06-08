@@ -5,6 +5,7 @@ import { formatPersonName } from '@/lib/utils/person-name';
 import type { LeadRow } from '../types';
 
 import { ConvertLeadButton } from './convert-lead-button';
+import { DeleteLeadButton } from './delete-lead-button';
 
 type Props = { leads: ReadonlyArray<LeadRow> };
 
@@ -48,11 +49,13 @@ export function LeadsCardList({ leads }: Props) {
               <Field label={t('columns.email')} value={lead.email} dir="ltr" />
             </dl>
 
-            {lead.status !== 'converted' && (
-              <div className="mt-3 flex justify-end">
-                <ConvertLeadButton leadId={lead.id} />
-              </div>
-            )}
+            <div className="mt-3 flex justify-end gap-3">
+              {lead.status !== 'converted' && <ConvertLeadButton leadId={lead.id} />}
+              <DeleteLeadButton
+                leadId={lead.id}
+                leadName={name || lead.phone || lead.email || '—'}
+              />
+            </div>
           </li>
         );
       })}
