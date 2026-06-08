@@ -189,6 +189,10 @@ export default async function CasesListPage({ searchParams }: Props) {
       />
       {chrome}
       {scrollContent}
+      {/* Mobile-only tail spacer. The page goes full-bleed via the -m-* above,
+          which also cancels the layout's bottom padding that clears the fixed
+          bottom-nav — without this the last row hides behind the tab bar. */}
+      <div aria-hidden="true" className="h-[calc(4rem+env(safe-area-inset-bottom))] md:hidden" />
     </div>
   );
 }
