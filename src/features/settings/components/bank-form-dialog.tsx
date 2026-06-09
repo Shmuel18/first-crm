@@ -22,8 +22,8 @@ import { createClient } from '@/lib/supabase/client';
 
 import { createBankAction } from '../actions/create-bank';
 import { updateBankAction } from '../actions/update-bank';
+import { BANK_LOGOS_BUCKET, type Bank } from '../banks.constants';
 import { BANK_ACTION_INITIAL, LENDER_TYPES, type BankActionState } from '../schemas/bank.schema';
-import { BANK_LOGOS_BUCKET, type Bank } from '../services/banks.service';
 
 const LOGO_MIME = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'];
 const LOGO_MAX_BYTES = 1_048_576; // 1 MB

@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 
 import { BankFormDialog } from './bank-form-dialog';
 import { BankRow } from './bank-row';
-import type { Bank } from '../services/banks.service';
+import type { Bank } from '../banks.constants';
 
 type Props = { banks: ReadonlyArray<Bank> };
 

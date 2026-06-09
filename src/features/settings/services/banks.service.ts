@@ -1,10 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
-import type { Database } from '@/types/database';
 
-/** Public bucket for admin-uploaded lender logos (migration 158). */
-export const BANK_LOGOS_BUCKET = 'bank-logos';
-
-export type Bank = Database['public']['Tables']['banks']['Row'];
+import type { Bank } from '../banks.constants';
 
 const BANK_FULL_COLUMNS =
   'id, key, name_he, name_en, color, logo_url, lender_type, sort_order, is_active, is_system, created_at, updated_at' as const;

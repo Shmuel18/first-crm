@@ -9,7 +9,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { deleteBankAction } from '../actions/delete-bank';
-import type { Bank } from '../services/banks.service';
+import type { Bank } from '../banks.constants';
 
 type Props = { bank: Bank; onEdit: (bank: Bank) => void };
 
