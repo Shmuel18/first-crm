@@ -182,6 +182,7 @@
       "tooLarge": "Value too large",
       "tooLong": "Text too long",
       "invalidEnum": "Invalid value",
+      "invalidColor": "Invalid color",
       "invalidBoolean": "Invalid yes/no value",
       "invalidIsraeliId": "Invalid Israeli ID (9 digits + checksum)",
       "invalidNationalId": "Invalid ID or passport number",
@@ -1549,6 +1550,7 @@
       "display": "Display",
       "office": "Office details",
       "people": "Team & permissions",
+      "banks": "Banks & lenders",
       "templates": "Message templates",
       "simulators": "Simulator thresholds",
       "integrations": "Integrations",
@@ -1603,6 +1605,46 @@
       "errors": {
         "generic": "Save failed. Please try again."
       }
+    },
+    "banks": {
+      "title": "Banks & lenders",
+      "subtitle": "Manage the banks and non-bank lenders — add, edit, logo and color",
+      "new": "Add lender",
+      "empty": "No lenders defined yet",
+      "fields": {
+        "nameHe": "Hebrew name",
+        "nameEn": "English name",
+        "lenderType": "Type",
+        "color": "Color",
+        "logo": "Logo",
+        "active": "Active (selectable on cases)"
+      },
+      "lenderTypes": {
+        "bank": "Bank",
+        "non_bank_lender": "Non-bank lender"
+      },
+      "form": {
+        "create": "New lender",
+        "edit": "Edit lender"
+      },
+      "submit": {
+        "create": "Add",
+        "update": "Save"
+      },
+      "row": {
+        "deleteConfirm": "Delete \"{name}\"?",
+        "inactive": "Inactive",
+        "system": "System"
+      },
+      "toast": {
+        "deleted": "Lender deleted",
+        "failed": "Action failed",
+        "inUse": "Can't delete — this lender is used by cases. Deactivate it instead",
+        "system": "Can't delete a built-in system lender"
+      },
+      "logoTypeError": "Unsupported file type (PNG/JPG/WEBP/SVG)",
+      "logoSizeError": "Logo is too large (max 1MB)",
+      "logoUploadError": "Logo upload failed"
     },
     "office": {
       "title": "Office details",

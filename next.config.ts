@@ -109,12 +109,19 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '2mb',
     },
   },
-  // Bank logos used to come from upload.wikimedia.org via remotePatterns;
-  // migration 062 mirrored them locally, and migration 069 swapped to the
-  // operator's branded PNG/JPG/WEBP files in /public/banks/. The dashboard
-  // doesn't depend on a third-party CDN per bank cell. No remote image
-  // hosts needed by the app today — if one is added later, declare it
-  // here under `images.remotePatterns`.
+  // Seeded bank logos are local in /public/banks/ (migrations 062/069). Admin-
+  // uploaded lender logos (migration 158) live in the public `bank-logos`
+  // Supabase Storage bucket, so allow optimizing images from that host. Scoped
+  // to the public object path; matches the existing img-src CSP (*.supabase.co).
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+    ],
+  },
   async headers() {
     return [{ source: '/:path*', headers: SECURITY_HEADERS }];
   },

@@ -3,6 +3,7 @@ import {
   Building2,
   Calculator,
   HardDrive,
+  Landmark,
   LayoutGrid,
   Plug,
   ScrollText,
@@ -55,6 +56,7 @@ const NAV_SECTIONS: SettingsNavSection[] = [
     items: [
       { href: '/settings/office', labelKey: 'office', icon: Building2, adminOnly: true },
       { href: '/settings/people', labelKey: 'people', icon: Users, adminOnly: true },
+      { href: '/settings/banks', labelKey: 'banks', icon: Landmark, adminOnly: true },
     ],
   },
   {
