@@ -17,6 +17,10 @@ type EditableTextCellProps = {
 };
 
 const POPOVER_WIDTH = 320;
+// Approx editor height (4-row textarea + buttons). Only used to decide WHETHER
+// to flip above the cell; the exact height isn't needed because when flipping
+// up we anchor the popover's bottom to the cell's top edge.
+const POPOVER_HEIGHT_EST = 170;
 
 export function EditableTextCell({
   caseId,
@@ -34,7 +38,11 @@ export function EditableTextCell({
   const [savedValue, setSavedValue] = useState(initialValue ?? '');
   const [isPending, startTransition] = useTransition();
   const [showSaved, setShowSaved] = useState(false);
-  const [popoverPos, setPopoverPos] = useState<{ top: number; left: number } | null>(null);
+  const [popoverPos, setPopoverPos] = useState<{
+    top?: number;
+    bottom?: number;
+    left: number;
+  } | null>(null);
   const anchorRef = useRef<HTMLButtonElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -56,10 +64,16 @@ export function EditableTextCell({
   const openEditor = () => {
     const r = anchorRef.current?.getBoundingClientRect();
     if (r) {
-      // Anchor below the cell, right-aligned to cell's end (so it doesn't overflow the table)
+      // Right-align the popover to the cell's end so it doesn't overflow the table.
       const left = Math.max(8, Math.min(r.right - POPOVER_WIDTH, window.innerWidth - POPOVER_WIDTH - 8));
-      const top = r.bottom + 4;
-      setPopoverPos({ top, left });
+      // Flip above the cell when there isn't room below — otherwise the editor
+      // for the bottom rows opens past the viewport edge and gets clipped.
+      const spaceBelow = window.innerHeight - r.bottom;
+      if (spaceBelow < POPOVER_HEIGHT_EST + 16 && r.top > spaceBelow) {
+        setPopoverPos({ bottom: window.innerHeight - r.top + 4, left });
+      } else {
+        setPopoverPos({ top: r.bottom + 4, left });
+      }
     }
     setValue(savedValue);
     setEditing(true);
@@ -144,7 +158,12 @@ export function EditableTextCell({
             role="dialog"
             aria-label={fieldLabel}
             className="fixed z-50 bg-white shadow-2xl border border-neutral-200 rounded-lg p-2"
-            style={{ top: popoverPos.top, left: popoverPos.left, width: POPOVER_WIDTH }}
+            style={{
+              top: popoverPos.top,
+              bottom: popoverPos.bottom,
+              left: popoverPos.left,
+              width: POPOVER_WIDTH,
+            }}
           >
             <textarea
               ref={textareaRef}
