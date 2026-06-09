@@ -23,10 +23,6 @@ import { fieldDefault } from '@/lib/utils/form-defaults';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import { createTaskAction } from '../actions/create-task';
-import {
-  finalizeTaskAttachmentUploadAction,
-  prepareTaskAttachmentUploadAction,
-} from '../actions/task-attachment-upload';
 import { updateTaskAction } from '../actions/update-task';
 import {
   TASK_ACTION_INITIAL,
@@ -34,6 +30,8 @@ import {
   type TaskActionState,
   type TaskWithRelations,
 } from '../types';
+import { TaskAttachmentsList } from './task-attachments-list';
+import { runTaskAttachmentUploads } from './upload-task-attachments';
 
 type Profile = { id: string; first_name: string | null; last_name: string | null };
 type CaseOption = { id: string; case_number: string; label: string };
@@ -121,7 +119,7 @@ export function TaskFormDialog({
     if (handledSuccessRef.current === state) return;
     handledSuccessRef.current = state;
 
-    if (mode !== 'create' || attachments.length === 0 || !selectedCaseId) {
+    if (mode !== 'create' || attachments.length === 0) {
       queueMicrotask(() => handleDialogOpenChange(false));
       return;
     }
@@ -135,37 +133,7 @@ export function TaskFormDialog({
     });
 
     void (async () => {
-      for (const file of attachments) {
-        const prep = await prepareTaskAttachmentUploadAction({
-          taskId: state.taskId,
-          caseId: selectedCaseId,
-          fileName: file.name,
-          fileSize: file.size,
-          mimeType: file.type,
-        });
-        if (!prep.ok) throw new Error(prep.message ?? prep.error);
-
-        const putRes = await fetch(prep.signedUrl, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': file.type,
-            'x-upsert': 'false',
-          },
-          body: file,
-        });
-        if (!putRes.ok) throw new Error('uploadFailed');
-
-        const final = await finalizeTaskAttachmentUploadAction({
-          taskId: state.taskId,
-          caseId: selectedCaseId,
-          documentId: prep.documentId,
-          storagePath: prep.path,
-          fileName: prep.safeFileName,
-          fileSize: file.size,
-        });
-        if (!final.ok) throw new Error(final.message ?? final.error);
-      }
-
+      await runTaskAttachmentUploads(state.taskId, selectedCaseId || null, attachments);
       if (!cancelled) handleDialogOpenChange(false);
     })().catch((err) => {
       if (!cancelled) setAttachmentError(mapAttachmentError(err, t));
@@ -190,8 +158,6 @@ export function TaskFormDialog({
     selectedCase && !matchingCases.some((c) => c.id === selectedCase.id)
       ? [selectedCase, ...matchingCases]
       : matchingCases;
-
-  const attachmentCaseMissing = mode === 'create' && attachments.length > 0 && !selectedCaseId;
 
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
@@ -301,22 +267,17 @@ export function TaskFormDialog({
             )}
           </FormField>
 
+          {mode === 'edit' && task && <TaskAttachmentsList taskId={task.id} />}
+
           {mode === 'create' && (
             <FormField
               label={t('fields.attachments')}
-              error={
-                attachmentError ??
-                (attachmentCaseMissing ? t('fields.attachmentsNeedCase') : undefined)
-              }
+              error={attachmentError ?? undefined}
             >
               <div className="flex items-center gap-2">
                 <label
                   htmlFor="task-attachments"
-                  className={`flex h-10 flex-1 cursor-pointer items-center gap-2 rounded-md border border-dashed px-3 text-sm transition focus-within:border-brand-gold-text focus-within:ring-2 focus-within:ring-brand-gold-text/30 ${
-                    attachmentCaseMissing
-                      ? 'border-amber-300 bg-amber-50 text-amber-800'
-                      : 'border-neutral-300 bg-neutral-50 text-neutral-700 hover:border-brand-gold-text hover:bg-brand-gold/8'
-                  }`}
+                  className="flex h-10 flex-1 cursor-pointer items-center gap-2 rounded-md border border-dashed border-neutral-300 bg-neutral-50 px-3 text-sm text-neutral-700 transition hover:border-brand-gold-text hover:bg-brand-gold/8 focus-within:border-brand-gold-text focus-within:ring-2 focus-within:ring-brand-gold-text/30"
                 >
                   <UploadIcon className="size-4 shrink-0" />
                   <span className="truncate">
@@ -359,7 +320,11 @@ export function TaskFormDialog({
                   setAttachments(files);
                 }}
               />
-              <p className="mt-1 text-xs text-neutral-500">{t('fields.attachmentsHint')}</p>
+              <p className="mt-1 text-xs text-neutral-500">
+                {selectedCaseId
+                  ? t('fields.attachmentsHint')
+                  : t('fields.attachmentsHintGeneral')}
+              </p>
             </FormField>
           )}
 
@@ -370,7 +335,7 @@ export function TaskFormDialog({
           )}
 
           <DialogFooter>
-            <SubmitButton mode={mode} uploading={attachmentPending} disabled={attachmentCaseMissing} />
+            <SubmitButton mode={mode} uploading={attachmentPending} />
             <Button
               type="button"
               variant="outline"
@@ -388,16 +353,14 @@ export function TaskFormDialog({
 function SubmitButton({
   mode,
   uploading,
-  disabled,
 }: {
   mode: 'create' | 'edit';
   uploading: boolean;
-  disabled: boolean;
 }) {
   const { pending } = useFormStatus();
   const t = useTranslations('tasks.form.submit');
   return (
-    <Button type="submit" disabled={pending || uploading || disabled} className="bg-brand-gold hover:bg-brand-gold-hover text-brand-black font-semibold">
+    <Button type="submit" disabled={pending || uploading} className="bg-brand-gold hover:bg-brand-gold-hover text-brand-black font-semibold">
       {pending || uploading ? <Loader2 className="size-4 animate-spin" /> : mode === 'create' ? t('create') : t('update')}
     </Button>
   );
