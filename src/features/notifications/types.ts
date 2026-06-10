@@ -19,11 +19,18 @@ export type NotificationType = (typeof NOTIFICATION_TYPE_VALUES)[number];
 export type NotificationPreferences = {
   email_task_assigned: boolean;
   email_task_completed: boolean;
+  /** Covers case_mention AND task_mention — one toggle for both. */
+  email_mentions: boolean;
+  email_task_reminder: boolean;
+  email_case_status_overdue: boolean;
 };
 
 export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   email_task_assigned: true,
   email_task_completed: true,
+  email_mentions: true,
+  email_task_reminder: true,
+  email_case_status_overdue: true,
 };
 
 /**

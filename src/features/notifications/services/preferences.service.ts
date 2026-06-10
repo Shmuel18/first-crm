@@ -22,7 +22,9 @@ export async function getMyNotificationPreferences(): Promise<NotificationPrefer
   if (!userRes.user) return DEFAULT_NOTIFICATION_PREFERENCES;
 
   const { data } = await prefsTable(supabase)
-    .select('email_task_assigned, email_task_completed')
+    .select(
+      'email_task_assigned, email_task_completed, email_mentions, email_task_reminder, email_case_status_overdue',
+    )
     .eq('user_id', userRes.user.id)
     .maybeSingle();
   if (!data) return DEFAULT_NOTIFICATION_PREFERENCES;
@@ -30,6 +32,9 @@ export async function getMyNotificationPreferences(): Promise<NotificationPrefer
   return {
     email_task_assigned: data.email_task_assigned !== false,
     email_task_completed: data.email_task_completed !== false,
+    email_mentions: data.email_mentions !== false,
+    email_task_reminder: data.email_task_reminder !== false,
+    email_case_status_overdue: data.email_case_status_overdue !== false,
   };
 }
 
@@ -51,11 +56,22 @@ export async function updateMyNotificationPreferences(
  * service-role client (reads another user's row) and defaults to true when no
  * preferences row exists. Called from the best-effort email sender.
  */
+/** Preference column per notification type (types without a toggle never email via this path). */
+const PREF_COLUMN: Partial<Record<NotificationType, keyof NotificationPreferences>> = {
+  task_assigned: 'email_task_assigned',
+  task_completed: 'email_task_completed',
+  case_mention: 'email_mentions',
+  task_mention: 'email_mentions',
+  task_reminder: 'email_task_reminder',
+  case_status_overdue: 'email_case_status_overdue',
+};
+
 export async function shouldEmailUser(
   userId: string,
   kind: NotificationType,
 ): Promise<boolean> {
-  const column = kind === 'task_assigned' ? 'email_task_assigned' : 'email_task_completed';
+  const column = PREF_COLUMN[kind];
+  if (!column) return false;
   const { data } = await prefsTable(createAdminClient())
     .select(column)
     .eq('user_id', userId)

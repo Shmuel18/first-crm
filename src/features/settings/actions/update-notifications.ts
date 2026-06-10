@@ -81,6 +81,9 @@ export async function updateNotificationsAction(
   const { error } = await supabase.rpc('save_notification_settings', {
     p_email_task_assigned: formData.has('email_task_assigned'),
     p_email_task_completed: formData.has('email_task_completed'),
+    p_email_mentions: formData.has('email_mentions'),
+    p_email_task_reminder: formData.has('email_task_reminder'),
+    p_email_case_status_overdue: formData.has('email_case_status_overdue'),
     // Conditional: admin who skipped SLA entirely (e.g., no `sla_*` fields)
     // sends null → RPC skips the SLA block. Admin who included SLA sends
     // the merge-patch object.

@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 
 import { NextResponse } from 'next/server';
 
+import { sendMirroredNotificationEmail } from '@/features/notifications/services/notification-mirror-email';
 import { sendPushToUser, type PushPayload } from '@/features/notifications/services/push-sender';
 import type { NotificationType } from '@/features/notifications/types';
 import { env } from '@/lib/env';
@@ -72,6 +73,7 @@ export async function POST(request: Request): Promise<Response> {
       user_id?: string;
       type?: NotificationType;
       case_id?: string | null;
+      data?: Record<string, unknown> | null;
     } | null;
   };
   const record = payload?.record;
@@ -97,6 +99,17 @@ export async function POST(request: Request): Promise<Response> {
     url: urlForType(record.type, record.case_id ?? null),
   };
 
-  const { sent } = await sendPushToUser(record.user_id, push);
-  return NextResponse.json({ ok: true, sent });
+  // Email mirror for the kinds that have no other email path (mentions,
+  // task reminders, SLA overdue). Runs alongside the push; each leg is
+  // independently best-effort and respects the per-user email preference.
+  const [{ sent }, emailed] = await Promise.all([
+    sendPushToUser(record.user_id, push),
+    sendMirroredNotificationEmail({
+      recipientId: record.user_id,
+      kind: record.type,
+      caseId: record.case_id ?? null,
+      data: record.data ?? {},
+    }),
+  ]);
+  return NextResponse.json({ ok: true, sent, emailed });
 }

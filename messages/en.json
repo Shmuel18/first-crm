@@ -1749,6 +1749,9 @@
       "emailHint": "In-app notifications (the bell) are always on. These control email notifications only.",
       "emailTaskAssigned": "Email when a task is assigned to me",
       "emailTaskCompleted": "Email when a task I created is completed",
+      "emailMentions": "Email when someone mentions me in a comment",
+      "emailTaskReminder": "Email on task reminders",
+      "emailCaseStatusOverdue": "Email when one of my cases is overdue in a stage",
       "saved": "Preferences saved",
       "errors": {
         "generic": "Save failed. Please try again."
@@ -2383,6 +2386,26 @@
       "step3": "Together we build the most cost-effective path for you",
       "note": "Have a question already? Reply to this email or call +972-2-568-1681.",
       "cta": "Chat with us on WhatsApp"
+    },
+    "case_mention": {
+      "subject": "You were mentioned in a case comment",
+      "heading": "You were mentioned",
+      "body": "{actor} mentioned you in a case comment: \"{preview}\""
+    },
+    "task_mention": {
+      "subject": "You were mentioned in a task comment",
+      "heading": "You were mentioned in a task",
+      "body": "{actor} mentioned you on \"{task}\": \"{preview}\""
+    },
+    "task_reminder": {
+      "subject": "Task reminder — {task}",
+      "heading": "Task reminder",
+      "body": "The task \"{task}\" is waiting for you."
+    },
+    "case_status_overdue": {
+      "subject": "Case {caseNumber} is overdue in its stage",
+      "heading": "A case is stuck in a stage",
+      "body": "Case {caseNumber} has been in \"{status}\" for {days} days — past the configured threshold."
     },
     "intakeOffice": {
       "subject": "New questionnaire from the website — {name}",

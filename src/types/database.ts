@@ -3750,6 +3750,9 @@ export type Database = {
           p_email_task_assigned: boolean
           p_email_task_completed: boolean
           p_sla?: Json
+          p_email_mentions?: boolean
+          p_email_task_reminder?: boolean
+          p_email_case_status_overdue?: boolean
         }
         Returns: undefined
       }
