@@ -18,6 +18,8 @@ type Props = {
   caseId: string;
   initialValue: string | null;
   locale: Locale;
+  /** Extra trigger-button classes — mobile cards pass a 44px min tap height. */
+  triggerClassName?: string;
 };
 
 function stateClass(value: string | null): string {
@@ -27,7 +29,12 @@ function stateClass(value: string | null): string {
   return 'border-neutral-200 bg-white text-neutral-700';
 }
 
-export function EditableTargetDateCell({ caseId, initialValue, locale }: Props) {
+export function EditableTargetDateCell({
+  caseId,
+  initialValue,
+  locale,
+  triggerClassName = '',
+}: Props) {
   const tc = useTranslations('common');
   const td = useTranslations('dashboard.targetDate');
   const [open, setOpen] = useState(false);
@@ -87,7 +94,7 @@ export function EditableTargetDateCell({ caseId, initialValue, locale }: Props) 
         }}
         disabled={isPending}
         aria-label={td('edit')}
-        className={`inline-flex min-w-24 items-center justify-between gap-1 rounded-md border px-2 py-1 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 disabled:opacity-60 ${stateClass(savedValue)}`}
+        className={`inline-flex min-w-24 items-center justify-between gap-1 rounded-md border px-2 py-1 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 disabled:opacity-60 ${stateClass(savedValue)} ${triggerClassName}`}
       >
         <span className="truncate">{label}</span>
         {isPending ? (

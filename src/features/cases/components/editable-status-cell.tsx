@@ -23,6 +23,8 @@ type EditableStatusCellProps = {
   currentStatusName: string | null;
   currentStatusColor: string | null;
   options: ReadonlyArray<StatusOption>;
+  /** Extra trigger-button classes — mobile cards pass a 44px min tap height. */
+  triggerClassName?: string;
 };
 
 export function EditableStatusCell({
@@ -31,6 +33,7 @@ export function EditableStatusCell({
   currentStatusName,
   currentStatusColor,
   options,
+  triggerClassName = '',
 }: EditableStatusCellProps) {
   const tc = useTranslations('common');
   const [open, setOpen] = useState(false);
@@ -113,7 +116,7 @@ export function EditableStatusCell({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={triggerLabel}
-        className={`inline-flex items-center gap-1 cursor-pointer rounded-md px-1 -mx-1 transition-colors duration-500 ease-emphasized motion-reduce:transition-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50 ${justSaved ? 'bg-brand-gold/20' : 'bg-transparent'}`}
+        className={`inline-flex items-center gap-1 cursor-pointer rounded-md px-1 -mx-1 transition-colors duration-500 ease-emphasized motion-reduce:transition-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50 ${justSaved ? 'bg-brand-gold/20' : 'bg-transparent'} ${triggerClassName}`}
       >
         <CaseStatusBadge name={statusName} color={statusColor} />
         {isPending ? (

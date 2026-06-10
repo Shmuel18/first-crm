@@ -27,6 +27,8 @@ type EditableAdvisorCellProps = {
   /** Associated advisor ids (migration 146). Shown as a compact "+N" marker
    *  next to the responsible name; names appear in the hover tooltip only. */
   associatedAdvisorIds?: ReadonlyArray<string>;
+  /** Extra trigger-button classes — mobile cards pass a 44px min tap height. */
+  triggerClassName?: string;
 };
 
 function fullName(a: AdvisorOption, noNameFallback: string): string {
@@ -39,6 +41,7 @@ export function EditableAdvisorCell({
   currentAdvisorName,
   options,
   associatedAdvisorIds = [],
+  triggerClassName = '',
 }: EditableAdvisorCellProps) {
   const tc = useTranslations('common');
   const unassignedLabel = `— ${tc('notAssigned')} —`;
@@ -113,7 +116,7 @@ export function EditableAdvisorCell({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={triggerLabel}
-        className="inline-flex items-center gap-2 cursor-pointer rounded-md disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
+        className={`inline-flex items-center gap-2 cursor-pointer rounded-md disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50 ${triggerClassName}`}
       >
         {displayName ? (
           <span className="text-sm text-neutral-700 whitespace-nowrap">{displayName}</span>

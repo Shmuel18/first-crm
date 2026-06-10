@@ -7,6 +7,10 @@
  */
 
 const DROPDOWN_MAX_HEIGHT_PX = 288; // matches Tailwind max-h-72
+// Widest panel anchored by this helper (the date editor's w-64 = 256px) plus
+// breathing room. Used to keep the panel's far edge on-screen on narrow
+// (mobile-card) viewports; on desktop the viewport dwarfs it, so it's a no-op.
+const DROPDOWN_EST_WIDTH_PX = 272;
 const GAP_PX = 4;
 const SAFETY_MARGIN_PX = 16;
 
@@ -20,7 +24,12 @@ export function calcDropdownPos(trigger: HTMLElement | null): DropdownPosition |
 
   const spaceBelow = window.innerHeight - rect.bottom;
   const spaceAbove = rect.top;
-  const right = window.innerWidth - rect.right;
+  // Anchor to the trigger's right edge, but never so far right that the
+  // panel's left edge would leave the viewport (clamps only on narrow screens).
+  const right = Math.max(
+    GAP_PX,
+    Math.min(window.innerWidth - rect.right, window.innerWidth - DROPDOWN_EST_WIDTH_PX),
+  );
 
   // If there's not enough room below AND there's more room above, open upward.
   if (
