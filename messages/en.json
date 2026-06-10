@@ -111,7 +111,8 @@
     "success": {
       "title": "Thank you! We got your request",
       "body": "We'll get back to you shortly, usually within 24 hours.",
-      "contact": "For urgent questions you can call us."
+      "contact": "For urgent questions you can call us.",
+      "backToWebsite": "Back to website"
     },
     "errors": {
       "consentRequired": "Please accept the privacy policy to continue.",
