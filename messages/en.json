@@ -2380,6 +2380,23 @@
       "step3": "Together we build the most cost-effective path for you",
       "note": "Have a question already? Reply to this email or call +972-2-568-1681.",
       "cta": "Chat with us on WhatsApp"
+    },
+    "intakeOffice": {
+      "subject": "New questionnaire from the website — {name}",
+      "heading": "A new questionnaire arrived from the website",
+      "cta": "Open the leads list",
+      "labels": {
+        "name": "Name",
+        "phone": "Phone",
+        "email": "Email",
+        "city": "Property city",
+        "purpose": "Mortgage purpose",
+        "propertyValue": "Property value",
+        "amount": "Requested amount",
+        "equity": "Equity",
+        "borrowers": "Borrowers",
+        "details": "Request details"
+      }
     }
   },
   "team": {

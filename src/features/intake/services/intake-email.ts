@@ -4,6 +4,9 @@ import { renderBrandedEmail, escapeHtml } from '@/lib/email/render';
 import { sendEmail } from '@/lib/email/send';
 import { isEmailConfigured } from '@/lib/env';
 
+import { sendIntakeOfficeEmail } from './intake-office-email';
+import type { IntakeInput } from '../schemas/intake.schema';
+
 const OFFICE_EMAIL = 'office@kaufman-finance.com';
 const WHATSAPP_URL = 'https://wa.me/97225681681';
 const GOLD = '#C9A961';
@@ -14,6 +17,21 @@ type IntakeConfirmationInput = {
   firstName: string;
   locale: 'he' | 'en';
 };
+
+/**
+ * Everything a successful /check submission mails out, in parallel:
+ * a summary to the office inbox (always) and a branded confirmation to the
+ * prospect (only when they left an email). Both legs are best-effort.
+ */
+export async function sendIntakeEmails(data: IntakeInput, locale: 'he' | 'en'): Promise<void> {
+  const primary = data.borrowers[0];
+  await Promise.all([
+    sendIntakeOfficeEmail(data),
+    primary?.email
+      ? sendIntakeConfirmationEmail({ to: primary.email, firstName: primary.first_name, locale })
+      : Promise.resolve(false),
+  ]);
+}
 
 /**
  * Confirmation email to a prospect right after they submit the /check

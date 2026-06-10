@@ -9,7 +9,7 @@ import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
 import { PRIVACY_POLICY_VERSION } from '../constants';
 import { IntakeSchema } from '../schemas/intake.schema';
-import { sendIntakeConfirmationEmail } from '../services/intake-email';
+import { sendIntakeEmails } from '../services/intake-email';
 import type { IntakeActionState } from '../types';
 
 /**
@@ -75,17 +75,10 @@ export async function submitIntakeAction(input: unknown): Promise<IntakeActionSt
     return { ok: false, error: 'unknown' };
   }
 
-  // Branded confirmation to the prospect (only when they left an email).
+  // Summary to the office + branded confirmation to the prospect.
   // Best-effort: a mail hiccup must never fail a successfully-stored lead.
-  const primary = parsed.data.borrowers[0];
-  if (primary?.email) {
-    const locale = (await getLocale()) === 'en' ? 'en' : 'he';
-    await sendIntakeConfirmationEmail({
-      to: primary.email,
-      firstName: primary.first_name,
-      locale,
-    });
-  }
+  const locale = (await getLocale()) === 'en' ? 'en' : 'he';
+  await sendIntakeEmails(parsed.data, locale);
 
   return { ok: true };
 }
