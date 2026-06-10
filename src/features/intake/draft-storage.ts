@@ -30,8 +30,13 @@ export function loadIntakeDraft(): IntakeFormState | null {
 export function saveIntakeDraft(state: IntakeFormState): void {
   if (typeof window === 'undefined') return;
   try {
-    // Never persist the honeypot value.
-    const payload: Stored = { savedAt: Date.now(), state: { ...state, website: '' } };
+    // Never persist the honeypot value. Consent is deliberately not persisted
+    // either: agreeing to the privacy policy must be a fresh act on every
+    // submission, not a checkbox that comes back pre-ticked from a stale draft.
+    const payload: Stored = {
+      savedAt: Date.now(),
+      state: { ...state, website: '', consent: false },
+    };
     window.localStorage.setItem(KEY, JSON.stringify(payload));
   } catch {
     // Storage full/disabled (private mode) — non-fatal; the form still works.
