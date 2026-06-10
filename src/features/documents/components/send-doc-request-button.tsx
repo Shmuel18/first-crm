@@ -20,8 +20,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Tooltip } from '@/components/ui/tooltip';
 import { buildWhatsAppLink } from '@/features/borrowers/domain/contact-links';
+import { env } from '@/lib/env';
 import { parseLocale } from '@/lib/i18n/direction';
 
 import { sendDocumentRequestAction } from '../actions/send-document-request';
@@ -63,6 +66,8 @@ export function SendDocRequestButton({ caseId, title, borrower, checklist }: Pro
   const tc = useTranslations('common');
   const locale = parseLocale(useLocale());
   const [emailOpen, setEmailOpen] = useState(false);
+  const [subject, setSubject] = useState('');
+  const [body, setBody] = useState('');
   const [isPending, startTransition] = useTransition();
 
   const fullName =
@@ -74,9 +79,17 @@ export function SendDocRequestButton({ caseId, title, borrower, checklist }: Pro
   );
   const hasEmail = Boolean(borrower?.email?.trim());
 
+  // Prefill on open (not on mount) so the draft always reflects the current
+  // checklist, and a reopened dialog starts fresh rather than half-edited.
+  const openEmailDialog = (): void => {
+    setSubject(t('emailSubject'));
+    setBody(buildEmailText({ name: fullName, checklist, locale, t }));
+    setEmailOpen(true);
+  };
+
   const sendEmail = (): void => {
     startTransition(async () => {
-      const res = await sendDocumentRequestAction(caseId);
+      const res = await sendDocumentRequestAction({ caseId, subject, body });
       if (res.ok) {
         toast.success(t('sent'));
         setEmailOpen(false);
@@ -114,7 +127,7 @@ export function SendDocRequestButton({ caseId, title, borrower, checklist }: Pro
         <DropdownMenuContent align="end" className="w-60">
           <DropdownMenuItem
             disabled={!hasEmail}
-            onClick={() => hasEmail && setEmailOpen(true)}
+            onClick={() => hasEmail && openEmailDialog()}
             className="gap-2"
           >
             <Mail className="size-4 text-neutral-500" aria-hidden="true" />
@@ -138,15 +151,41 @@ export function SendDocRequestButton({ caseId, title, borrower, checklist }: Pro
       </DropdownMenu>
 
       <Dialog open={emailOpen} onOpenChange={setEmailOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-neutral-600">{t('confirm')}</p>
+          <p className="text-sm text-neutral-600">{t('editHint')}</p>
+          <div className="space-y-3">
+            <div>
+              <label htmlFor="doc-req-subject" className="mb-1 block text-xs font-medium text-neutral-600">
+                {t('subjectLabel')}
+              </label>
+              <Input
+                id="doc-req-subject"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                maxLength={200}
+              />
+            </div>
+            <div>
+              <label htmlFor="doc-req-body" className="mb-1 block text-xs font-medium text-neutral-600">
+                {t('bodyLabel')}
+              </label>
+              <Textarea
+                id="doc-req-body"
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                rows={10}
+                maxLength={5000}
+                className="text-sm leading-relaxed"
+              />
+            </div>
+          </div>
           <DialogFooter>
             <Button
               type="button"
-              disabled={isPending}
+              disabled={isPending || !subject.trim() || !body.trim()}
               onClick={sendEmail}
               className="bg-brand-gold font-semibold text-brand-black hover:bg-brand-gold-hover"
             >
@@ -163,6 +202,32 @@ export function SendDocRequestButton({ caseId, title, borrower, checklist }: Pro
 }
 
 type MenuT = ReturnType<typeof useTranslations>;
+
+/**
+ * Prefill for the editable email draft — greeting, ask, missing-required-docs
+ * bullets and a signoff, in the advisor's UI language. Mirrors the WhatsApp
+ * builder below so both channels start from the same message.
+ */
+function buildEmailText({
+  name,
+  checklist,
+  locale,
+  t,
+}: {
+  name: string;
+  checklist: ReadonlyArray<DocumentChecklistItem> | null;
+  locale: 'he' | 'en';
+  t: MenuT;
+}): string {
+  const missing = (checklist ?? []).filter((i) => i.isRequired && i.status === 'missing');
+  const lines = [t('emailGreeting', { name }), '', t('emailBody')];
+  if (missing.length > 0) {
+    lines.push('', t('emailDocsIntro'));
+    for (const item of missing) lines.push(`• ${locale === 'he' ? item.nameHe : item.nameEn}`);
+  }
+  lines.push('', t('emailSignoff', { office: env.NEXT_PUBLIC_APP_NAME }));
+  return lines.join('\n');
+}
 
 /**
  * Build the prefilled WhatsApp message. Pulls the missing-required docs

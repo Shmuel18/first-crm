@@ -2013,7 +2013,10 @@
       "emailGreeting": "שלום {name},",
       "emailBody": "נשמח אם תוכל/י לשלוח לנו את המסמכים הנותרים כדי שנמשיך בטיפול בתיק.",
       "emailDocsIntro": "המסמכים שעדיין חסרים לנו:",
-      "emailSignoff": "תודה, {office}"
+      "emailSignoff": "תודה, {office}",
+      "editHint": "אפשר לערוך את ההודעה לפני השליחה. היא תישלח בעיצוב הממותג של המשרד.",
+      "subjectLabel": "נושא",
+      "bodyLabel": "תוכן ההודעה"
     },
     "actions": {
       "upload": "העלאת מסמך",

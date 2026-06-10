@@ -2013,7 +2013,10 @@
       "emailGreeting": "Hello {name},",
       "emailBody": "We'd be glad if you could send us the remaining documents so we can continue handling your case.",
       "emailDocsIntro": "Documents we are still missing:",
-      "emailSignoff": "Thank you, {office}"
+      "emailSignoff": "Thank you, {office}",
+      "editHint": "You can edit the message before sending. It will be sent in the office's branded layout.",
+      "subjectLabel": "Subject",
+      "bodyLabel": "Message body"
     },
     "actions": {
       "upload": "Upload document",
