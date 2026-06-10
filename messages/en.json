@@ -2369,6 +2369,17 @@
       "intro": "We received a request to reset your account password. Click the button to choose a new one.",
       "linkNote": "This link is single-use and expires after a short time. If you didn't request a reset, ignore this email.",
       "cta": "Choose a new password"
+    },
+    "intakeConfirm": {
+      "subject": "We received your inquiry — Kaufman Finance Group",
+      "heading": "Thank you, {name} — we got your inquiry",
+      "intro": "Your questionnaire has reached our office. A mortgage advisor will review the details and contact you by the next business day.",
+      "stepsTitle": "What happens next?",
+      "step1": "We carefully review the details you provided",
+      "step2": "We call you for a short introductory conversation",
+      "step3": "Together we build the most cost-effective path for you",
+      "note": "Have a question already? Reply to this email or call +972-2-568-1681.",
+      "cta": "Chat with us on WhatsApp"
     }
   },
   "team": {

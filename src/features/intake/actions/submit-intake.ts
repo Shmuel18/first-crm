@@ -1,5 +1,7 @@
 'use server';
 
+import { getLocale } from 'next-intl/server';
+
 import { getRequestIp } from '@/lib/http/request-ip';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
@@ -7,6 +9,7 @@ import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
 import { PRIVACY_POLICY_VERSION } from '../constants';
 import { IntakeSchema } from '../schemas/intake.schema';
+import { sendIntakeConfirmationEmail } from '../services/intake-email';
 import type { IntakeActionState } from '../types';
 
 /**
@@ -70,6 +73,18 @@ export async function submitIntakeAction(input: unknown): Promise<IntakeActionSt
   if (error || !data) {
     console.error('[submitIntake] rpc failed', { code: error?.code });
     return { ok: false, error: 'unknown' };
+  }
+
+  // Branded confirmation to the prospect (only when they left an email).
+  // Best-effort: a mail hiccup must never fail a successfully-stored lead.
+  const primary = parsed.data.borrowers[0];
+  if (primary?.email) {
+    const locale = (await getLocale()) === 'en' ? 'en' : 'he';
+    await sendIntakeConfirmationEmail({
+      to: primary.email,
+      firstName: primary.first_name,
+      locale,
+    });
   }
 
   return { ok: true };

@@ -12,6 +12,8 @@ type SendEmailInput = {
   to: string;
   subject: string;
   html: string;
+  /** Lets the recipient hit Reply and reach a real inbox (e.g. the office). */
+  replyTo?: string;
 };
 
 /**
@@ -22,7 +24,12 @@ type SendEmailInput = {
  * Never throws: email is always best-effort and must not break the action
  * that triggered it.
  */
-export async function sendEmail({ to, subject, html }: SendEmailInput): Promise<SendEmailResult> {
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  replyTo,
+}: SendEmailInput): Promise<SendEmailResult> {
   const apiKey = env.RESEND_API_KEY;
   const from = env.EMAIL_FROM;
   // Narrowing both here (rather than trusting isEmailConfigured) removes the
@@ -36,7 +43,7 @@ export async function sendEmail({ to, subject, html }: SendEmailInput): Promise<
     // Resend's SDK doesn't expose AbortSignal — wrap with a hard deadline
     // so a slow Resend call can't hold a Vercel function indefinitely.
     const { error } = await withTimeout(
-      resend.emails.send({ from, to, subject, html }),
+      resend.emails.send({ from, to, subject, html, replyTo }),
       10_000,
       'resend_timeout',
     );
