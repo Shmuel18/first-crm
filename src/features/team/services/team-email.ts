@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 
+import { renderSystemEmail } from '@/features/templates/services/system-email-templates.service';
 import { isEmailConfigured } from '@/lib/env';
-import { escapeHtml, renderBrandedEmail } from '@/lib/email/render';
 import { sendEmail } from '@/lib/email/send';
 
 type InviteEmailInput = {
@@ -30,23 +30,15 @@ export async function sendInviteEmail({
   if (!isEmailConfigured()) return false;
 
   try {
-    const t = await getTranslations({ locale, namespace: 'email.invite' });
-
-    const bodyHtml = [
-      `<p style="margin:0 0 12px;">${t('greeting', { name: escapeHtml(firstName) })}</p>`,
-      `<p style="margin:0 0 12px;">${t('intro')}</p>`,
-      `<p style="margin:0 0 8px;color:#767676;font-size:13px;">${t('linkNote')}</p>`,
-    ].join('');
-
-    const html = renderBrandedEmail({
+    const email = await renderSystemEmail({
+      key: 'invite',
       locale,
-      heading: t('heading'),
-      bodyHtml,
-      cta: { label: t('cta'), url: inviteLink },
+      variables: { name: firstName },
+      ctaUrl: inviteLink,
       footer: await footer(locale),
     });
 
-    const res = await sendEmail({ to, subject: t('subject'), html });
+    const res = await sendEmail({ to, subject: email.subject, html: email.html });
     return res.ok && !('skipped' in res && res.skipped);
   } catch {
     return false;

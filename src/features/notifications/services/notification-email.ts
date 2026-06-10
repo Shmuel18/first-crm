@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 
+import { renderSystemEmail } from '@/features/templates/services/system-email-templates.service';
 import { env, isEmailConfigured } from '@/lib/env';
-import { escapeHtml, renderBrandedEmail } from '@/lib/email/render';
 import { sendEmail } from '@/lib/email/send';
 import { createAdminClient } from '@/lib/supabase/admin';
 
@@ -25,6 +25,7 @@ type TaskEmailInput = {
 export async function sendTaskNotificationEmail(input: TaskEmailInput): Promise<void> {
   if (!isEmailConfigured()) return;
   if (input.recipientId === input.actorId) return;
+  if (input.kind !== 'task_assigned' && input.kind !== 'task_completed') return;
   // Respect the recipient's email preference for this notification type.
   if (!(await shouldEmailUser(input.recipientId, input.kind))) return;
 
@@ -43,21 +44,21 @@ export async function sendTaskNotificationEmail(input: TaskEmailInput): Promise<
     const locale = recipient.language === 'en' ? 'en' : 'he';
     const t = await getTranslations({ locale, namespace: 'email' });
 
-    const actor = escapeHtml(actorName || (input.actorId ? t('someone') : t('system')));
-    const task = escapeHtml(input.taskTitle);
+    const actor = actorName || (input.actorId ? t('someone') : t('system'));
     const url = input.caseId
       ? `${env.NEXT_PUBLIC_APP_URL}/cases/${input.caseId}`
       : `${env.NEXT_PUBLIC_APP_URL}/tasks`;
 
-    const html = renderBrandedEmail({
+    const email = await renderSystemEmail({
+      key: input.kind,
       locale,
-      heading: t(`${input.kind}.heading`),
-      bodyHtml: `<p style="margin:0;">${t(`${input.kind}.body`, { actor, task })}</p>`,
-      cta: { label: t('cta.openTask'), url },
+      variables: { actor, task: input.taskTitle },
+      ctaUrl: url,
       footer: t('footer'),
     });
+    if (!email.enabled) return;
 
-    await sendEmail({ to: recipient.email, subject: t(`${input.kind}.subject`), html });
+    await sendEmail({ to: recipient.email, subject: email.subject, html: email.html });
   } catch {
     // Swallow — email is best-effort.
   }

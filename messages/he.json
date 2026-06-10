@@ -857,9 +857,63 @@
   },
   "templates": {
     "title": "תבניות הודעות",
-    "subtitle": "תבניות לוואטסאפ ולמייל ללקוחות. הוסף משתנים שיוחלפו אוטומטית בעת השליחה.",
+    "subtitle": "שליטה בהודעות האוטומטיות של המערכת ובתבניות לשליחה ידנית.",
     "new": "תבנית חדשה",
     "empty": "עדיין אין תבניות. צור את הראשונה.",
+    "tabs": {
+      "automatic": "הודעות אוטומטיות",
+      "manual": "תבניות לשליחה ידנית"
+    },
+    "automatic": {
+      "names": {
+        "invite": "הזמנה לעובד חדש",
+        "password_reset": "איפוס סיסמה",
+        "intake_confirmation": "אישור קבלת פנייה ללקוח",
+        "intake_office": "פנייה חדשה למשרד",
+        "task_assigned": "הקצאת משימה",
+        "task_completed": "השלמת משימה",
+        "case_mention": "אזכור בתיק",
+        "task_mention": "אזכור במשימה",
+        "task_reminder": "תזכורת למשימה",
+        "case_status_overdue": "תיק מתעכב בשלב",
+        "backup_stale": "התראת גיבוי",
+        "erasure_stale": "התראת מחיקת קבצים"
+      },
+      "categories": {
+        "security": "אבטחה",
+        "clients": "לקוחות",
+        "staff": "צוות",
+        "operations": "תפעול"
+      },
+      "locales": {
+        "he": "עברית",
+        "en": "English"
+      },
+      "fields": {
+        "subject": "נושא המייל",
+        "heading": "כותרת ראשית",
+        "body": "תוכן ההודעה",
+        "cta": "כיתוב הכפתור"
+      },
+      "critical": "הודעה חיונית",
+      "enabled": "פעילה",
+      "disabled": "כבויה",
+      "customized": "הותאמה",
+      "editName": "עריכת {name}",
+      "editTitle": "עריכת {name}",
+      "variablesHint": "משתנים זמינים להוספה לתוכן:",
+      "sendEnabled": "שליחת ההודעה פעילה",
+      "sendEnabledHint": "כיבוי ימנע את שליחת המייל האוטומטי הזה.",
+      "criticalHint": "הודעת אבטחה חיונית ולכן לא ניתן לכבות אותה.",
+      "preview": "תצוגה מקדימה",
+      "subjectPreview": "נושא",
+      "save": "שמור שינויים",
+      "saved": "התבנית עודכנה",
+      "reset": "שחזור ברירת מחדל",
+      "resetConfirm": "לשחזר את הנוסח וההגדרות המקוריים בשפה הזו?",
+      "resetDone": "ברירת המחדל שוחזרה",
+      "failed": "הפעולה נכשלה. נסה שוב."
+    },
     "channels": {
       "whatsapp": "וואטסאפ",
       "email": "אימייל",

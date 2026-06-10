@@ -21,6 +21,6 @@ export async function deleteTemplateAction(templateId: string): Promise<Result> 
   const ok = await deleteMessageTemplate(templateId, userRes.user.id);
   if (!ok) return { ok: false, error: 'unknown' };
 
-  revalidatePath('/templates');
+  revalidatePath('/settings/templates');
   return { ok: true };
 }

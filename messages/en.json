@@ -857,9 +857,63 @@
   },
   "templates": {
     "title": "Message templates",
-    "subtitle": "WhatsApp and email templates for clients. Add variables that get filled in automatically when sending.",
+    "subtitle": "Control automatic system emails and templates for manual sending.",
     "new": "New template",
     "empty": "No templates yet. Create your first one.",
+    "tabs": {
+      "automatic": "Automatic messages",
+      "manual": "Manual send templates"
+    },
+    "automatic": {
+      "names": {
+        "invite": "New team member invite",
+        "password_reset": "Password reset",
+        "intake_confirmation": "Client inquiry confirmation",
+        "intake_office": "New inquiry to office",
+        "task_assigned": "Task assigned",
+        "task_completed": "Task completed",
+        "case_mention": "Case mention",
+        "task_mention": "Task mention",
+        "task_reminder": "Task reminder",
+        "case_status_overdue": "Case overdue in stage",
+        "backup_stale": "Backup alert",
+        "erasure_stale": "File erasure alert"
+      },
+      "categories": {
+        "security": "Security",
+        "clients": "Clients",
+        "staff": "Team",
+        "operations": "Operations"
+      },
+      "locales": {
+        "he": "עברית",
+        "en": "English"
+      },
+      "fields": {
+        "subject": "Email subject",
+        "heading": "Main heading",
+        "body": "Message body",
+        "cta": "Button label"
+      },
+      "critical": "Essential message",
+      "enabled": "Active",
+      "disabled": "Disabled",
+      "customized": "Customized",
+      "editName": "Edit {name}",
+      "editTitle": "Edit {name}",
+      "variablesHint": "Variables available for the message body:",
+      "sendEnabled": "Automatic sending is active",
+      "sendEnabledHint": "Turning this off prevents this automatic email from being sent.",
+      "criticalHint": "This essential security message cannot be disabled.",
+      "preview": "Preview",
+      "subjectPreview": "Subject",
+      "save": "Save changes",
+      "saved": "Template updated",
+      "reset": "Restore default",
+      "resetConfirm": "Restore the original copy and settings for this language?",
+      "resetDone": "Default restored",
+      "failed": "Action failed. Please try again."
+    },
     "channels": {
       "whatsapp": "WhatsApp",
       "email": "Email",

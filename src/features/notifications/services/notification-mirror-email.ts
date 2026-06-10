@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 
+import { renderSystemEmail } from '@/features/templates/services/system-email-templates.service';
 import { env, isEmailConfigured } from '@/lib/env';
-import { escapeHtml, renderBrandedEmail } from '@/lib/email/render';
 import { sendEmail } from '@/lib/email/send';
 import { createAdminClient } from '@/lib/supabase/admin';
 
@@ -10,7 +10,9 @@ import type { NotificationType } from '../types';
 
 /** The kinds this mirror handles. Task assigned/completed email from their
  *  actions; backup/erasure from their watchdog crons; web_lead → office inbox. */
-const MIRRORED_KINDS = new Set<NotificationType>([
+type MirroredKind = 'case_mention' | 'task_mention' | 'task_reminder' | 'case_status_overdue';
+
+const MIRRORED_KINDS = new Set<MirroredKind>([
   'case_mention',
   'task_mention',
   'task_reminder',
@@ -33,7 +35,7 @@ type MirrorInput = {
  * never throws, returns whether a mail went out.
  */
 export async function sendMirroredNotificationEmail(input: MirrorInput): Promise<boolean> {
-  if (!MIRRORED_KINDS.has(input.kind)) return false;
+  if (!isMirroredKind(input.kind)) return false;
   if (!isEmailConfigured()) return false;
   if (!(await shouldEmailUser(input.recipientId, input.kind))) return false;
 
@@ -47,7 +49,6 @@ export async function sendMirroredNotificationEmail(input: MirrorInput): Promise
     if (!recipient?.email || recipient.is_active === false) return false;
 
     const locale = recipient.language === 'en' ? 'en' : 'he';
-    const t = await getTranslations({ locale, namespace: `email.${input.kind}` });
     const tEmail = await getTranslations({ locale, namespace: 'email' });
 
     const params = bodyParams(input.kind, input.data, locale, tEmail('someone'));
@@ -56,19 +57,24 @@ export async function sendMirroredNotificationEmail(input: MirrorInput): Promise
         ? `${env.NEXT_PUBLIC_APP_URL}/cases/${input.caseId}`
         : `${env.NEXT_PUBLIC_APP_URL}/tasks`;
 
-    const html = renderBrandedEmail({
+    const email = await renderSystemEmail({
+      key: input.kind,
       locale,
-      heading: t('heading', params),
-      bodyHtml: `<p style="margin:0;">${escapeHtml(t('body', params))}</p>`,
-      cta: { label: tEmail('cta.openTask'), url },
+      variables: params,
+      ctaUrl: url,
       footer: tEmail('footer'),
     });
+    if (!email.enabled) return false;
 
-    const res = await sendEmail({ to: recipient.email, subject: t('subject', params), html });
+    const res = await sendEmail({ to: recipient.email, subject: email.subject, html: email.html });
     return res.ok && !('skipped' in res && res.skipped);
   } catch {
     return false; // email is best-effort, never break the webhook
   }
+}
+
+function isMirroredKind(kind: NotificationType): kind is MirroredKind {
+  return MIRRORED_KINDS.has(kind as MirroredKind);
 }
 
 /** Flatten the per-kind data snapshot into the i18n params each template needs. */

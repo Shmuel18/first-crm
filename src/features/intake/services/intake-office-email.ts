@@ -1,7 +1,8 @@
 import { getTranslations } from 'next-intl/server';
 
+import { renderSystemEmail } from '@/features/templates/services/system-email-templates.service';
 import { env, isEmailConfigured } from '@/lib/env';
-import { escapeHtml, renderBrandedEmail } from '@/lib/email/render';
+import { escapeHtml } from '@/lib/email/render';
 import { sendEmail } from '@/lib/email/send';
 
 import type { IntakeInput } from '../schemas/intake.schema';
@@ -10,16 +11,13 @@ const OFFICE_EMAIL = 'office@kaufman-finance.com';
 const BLACK = '#0A0A0A';
 
 /**
- * Office-side mirror of a new /check questionnaire: a Hebrew summary of the
- * submission to the office inbox, so a new lead reaches Kaufman even when
- * nobody is watching the in-app bell. Reply-to is the prospect (when they left
- * an email) so answering the mail answers the client. Best-effort, never throws.
+ * Office-side mirror of a new /check questionnaire. The summary fields stay
+ * structured while Settings controls the surrounding automatic email copy.
  */
 export async function sendIntakeOfficeEmail(data: IntakeInput): Promise<boolean> {
   if (!isEmailConfigured()) return false;
 
   try {
-    // The office works in Hebrew; the office copy is intentionally not bilingual.
     const t = await getTranslations({ locale: 'he', namespace: 'email.intakeOffice' });
     const primary = data.borrowers[0];
     const name = [primary?.first_name, primary?.last_name].filter(Boolean).join(' ');
@@ -37,18 +35,20 @@ export async function sendIntakeOfficeEmail(data: IntakeInput): Promise<boolean>
       [t('labels.details'), data.request_details],
     ];
 
-    const html = renderBrandedEmail({
+    const email = await renderSystemEmail({
+      key: 'intake_office',
       locale: 'he',
-      heading: t('heading'),
-      bodyHtml: summaryTable(rows),
-      cta: { label: t('cta'), url: `${env.NEXT_PUBLIC_APP_URL}/leads` },
+      variables: { name: name || '—' },
+      ctaUrl: `${env.NEXT_PUBLIC_APP_URL}/leads`,
+      afterBodyHtml: summaryTable(rows),
       footer: (await getTranslations({ locale: 'he', namespace: 'email' }))('footer'),
     });
+    if (!email.enabled) return false;
 
     const res = await sendEmail({
       to: OFFICE_EMAIL,
-      subject: t('subject', { name: name || '—' }),
-      html,
+      subject: email.subject,
+      html: email.html,
       replyTo: primary?.email ?? undefined,
     });
     return res.ok && !('skipped' in res && res.skipped);
@@ -57,10 +57,9 @@ export async function sendIntakeOfficeEmail(data: IntakeInput): Promise<boolean>
   }
 }
 
-/** Label/value rows on a warm-tint card; empty values are skipped. */
 function summaryTable(rows: Array<[string, string | null | undefined]>): string {
   const cells = rows
-    .filter((r): r is [string, string] => Boolean(r[1] && r[1].trim()))
+    .filter((row): row is [string, string] => Boolean(row[1] && row[1].trim()))
     .map(
       ([label, value]) =>
         `<tr>
@@ -69,7 +68,7 @@ function summaryTable(rows: Array<[string, string | null | undefined]>): string 
          </tr>`,
     )
     .join('');
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="background:#FAF8F3;border-radius:10px;border-collapse:separate;">${cells}</table>`;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:16px;background:#FAF8F3;border-radius:10px;border-collapse:separate;">${cells}</table>`;
 }
 
 function formatIls(value: number | null | undefined): string | null {

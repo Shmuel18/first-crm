@@ -44,6 +44,6 @@ export async function updateTemplateAction(
   );
   if (!ok) return { ok: false, error: 'unauthorized', values };
 
-  revalidatePath('/templates');
+  revalidatePath('/settings/templates');
   return { ok: true, templateId: idParsed.data };
 }

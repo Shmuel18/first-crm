@@ -39,6 +39,6 @@ export async function createTemplateAction(
   );
   if (!id) return { ok: false, error: 'unknown', values };
 
-  revalidatePath('/templates');
+  revalidatePath('/settings/templates');
   return { ok: true, templateId: id };
 }
