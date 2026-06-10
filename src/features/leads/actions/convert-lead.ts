@@ -51,5 +51,5 @@ export async function convertLeadAction(leadId: string): Promise<ConvertLeadResu
   }
 
   revalidatePath('/cases');
-  redirect(`/cases/${caseId}/edit`);
+  redirect(`/cases/${caseId}`);
 }
