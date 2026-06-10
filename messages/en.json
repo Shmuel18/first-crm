@@ -138,6 +138,13 @@
     "notFoundDescription": "The page you're looking for doesn't exist or was removed.",
     "backHome": "Back to cases"
   },
+  "composeEmail": {
+    "hint": "You can edit the message before sending. It will be sent in the office's branded layout.",
+    "subjectLabel": "Subject",
+    "bodyLabel": "Message body",
+    "send": "Send",
+    "cancel": "Cancel"
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -1090,7 +1097,13 @@
         "whatsappGreeting": "Hello {name},",
         "whatsappGreetingNoName": "Hello,",
         "templatesLabel": "Templates",
-        "noContact": "No contact info"
+        "noContact": "No contact info",
+        "emailDefaultSubject": "A message from Kaufman Finance Group",
+        "emailSent": "Email sent to the client",
+        "emailNoAddress": "No client email on file",
+        "emailNotConfigured": "Email sending isn't configured",
+        "emailUnauthorized": "You don't have permission for this action",
+        "emailFailed": "Sending failed. Please try again."
       }
     },
     "scheduleMeeting": {

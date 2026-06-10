@@ -2,26 +2,17 @@
 
 import { useState, useTransition } from 'react';
 
-import { Loader2, Mail, MessageCircle, MessageSquare } from 'lucide-react';
+import { Mail, MessageCircle, MessageSquare } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { ComposeEmailDialog } from '@/components/shared/compose-email-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Tooltip } from '@/components/ui/tooltip';
 import { buildWhatsAppLink } from '@/features/borrowers/domain/contact-links';
 import { env } from '@/lib/env';
@@ -65,9 +56,7 @@ export function SendDocRequestButton({ caseId, title, borrower, checklist }: Pro
   const tMenu = useTranslations('documents.requestMenu');
   const tc = useTranslations('common');
   const locale = parseLocale(useLocale());
-  const [emailOpen, setEmailOpen] = useState(false);
-  const [subject, setSubject] = useState('');
-  const [body, setBody] = useState('');
+  const [draft, setDraft] = useState<{ subject: string; body: string } | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const fullName =
@@ -82,17 +71,18 @@ export function SendDocRequestButton({ caseId, title, borrower, checklist }: Pro
   // Prefill on open (not on mount) so the draft always reflects the current
   // checklist, and a reopened dialog starts fresh rather than half-edited.
   const openEmailDialog = (): void => {
-    setSubject(t('emailSubject'));
-    setBody(buildEmailText({ name: fullName, checklist, locale, t }));
-    setEmailOpen(true);
+    setDraft({
+      subject: t('emailSubject'),
+      body: buildEmailText({ name: fullName, checklist, locale, t }),
+    });
   };
 
-  const sendEmail = (): void => {
+  const sendEmail = (subject: string, body: string): void => {
     startTransition(async () => {
       const res = await sendDocumentRequestAction({ caseId, subject, body });
       if (res.ok) {
         toast.success(t('sent'));
-        setEmailOpen(false);
+        setDraft(null);
         return;
       }
       const key =
@@ -104,7 +94,7 @@ export function SendDocRequestButton({ caseId, title, borrower, checklist }: Pro
               ? 'unauthorized'
               : 'failed';
       toast.error(t(key));
-      if (res.error !== 'unknown') setEmailOpen(false);
+      if (res.error !== 'unknown') setDraft(null);
     });
   };
 
@@ -150,53 +140,15 @@ export function SendDocRequestButton({ caseId, title, borrower, checklist }: Pro
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Dialog open={emailOpen} onOpenChange={setEmailOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-neutral-600">{t('editHint')}</p>
-          <div className="space-y-3">
-            <div>
-              <label htmlFor="doc-req-subject" className="mb-1 block text-xs font-medium text-neutral-600">
-                {t('subjectLabel')}
-              </label>
-              <Input
-                id="doc-req-subject"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                maxLength={200}
-              />
-            </div>
-            <div>
-              <label htmlFor="doc-req-body" className="mb-1 block text-xs font-medium text-neutral-600">
-                {t('bodyLabel')}
-              </label>
-              <Textarea
-                id="doc-req-body"
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                rows={10}
-                maxLength={5000}
-                className="text-sm leading-relaxed"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              disabled={isPending || !subject.trim() || !body.trim()}
-              onClick={sendEmail}
-              className="bg-brand-gold font-semibold text-brand-black hover:bg-brand-gold-hover"
-            >
-              {isPending ? <Loader2 className="size-4 animate-spin" /> : t('send')}
-            </Button>
-            <Button type="button" variant="outline" onClick={() => setEmailOpen(false)}>
-              {tc('cancel')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ComposeEmailDialog
+        open={draft !== null}
+        onOpenChange={(open) => !open && setDraft(null)}
+        title={title}
+        initialSubject={draft?.subject ?? ''}
+        initialBody={draft?.body ?? ''}
+        pending={isPending}
+        onSend={sendEmail}
+      />
     </>
   );
 }

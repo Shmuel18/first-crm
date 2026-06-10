@@ -138,6 +138,13 @@
     "notFoundDescription": "הדף שחיפשת לא קיים או שהוסר.",
     "backHome": "חזרה לתיקים"
   },
+  "composeEmail": {
+    "hint": "אפשר לערוך את ההודעה לפני השליחה. היא תישלח בעיצוב הממותג של המשרד.",
+    "subjectLabel": "נושא",
+    "bodyLabel": "תוכן ההודעה",
+    "send": "שלח",
+    "cancel": "ביטול"
+  },
   "common": {
     "save": "שמור",
     "cancel": "ביטול",
@@ -1090,7 +1097,13 @@
         "whatsappGreeting": "שלום {name},",
         "whatsappGreetingNoName": "שלום,",
         "templatesLabel": "תבניות",
-        "noContact": "אין פרטי קשר"
+        "noContact": "אין פרטי קשר",
+        "emailDefaultSubject": "הודעה מ-Kaufman Finance Group",
+        "emailSent": "המייל נשלח ללקוח",
+        "emailNoAddress": "אין אימייל ללקוח",
+        "emailNotConfigured": "שליחת אימייל לא מוגדרת במערכת",
+        "emailUnauthorized": "אין לך הרשאה לפעולה זו",
+        "emailFailed": "השליחה נכשלה. נסה שוב."
       }
     },
     "scheduleMeeting": {

@@ -146,6 +146,7 @@ export async function CaseActionBar({
             href={`/cases/${caseId}/documents`}
           />
           <SendClientMessageButton
+            caseId={caseId}
             title={t('actions.sendMessage')}
             borrower={primaryBorrower}
             templates={templates}
