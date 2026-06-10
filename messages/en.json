@@ -1087,7 +1087,9 @@
         "noEmail": "No client email",
         "noPhone": "No client phone",
         "whatsappGreeting": "Hello {name},",
-        "whatsappGreetingNoName": "Hello,"
+        "whatsappGreetingNoName": "Hello,",
+        "templatesLabel": "Templates",
+        "noContact": "No contact info"
       }
     },
     "scheduleMeeting": {

@@ -11,6 +11,7 @@ import {
   listAssignableProfiles,
   listTasksForCase,
 } from '@/features/tasks/services/tasks.service';
+import { listRenderedTemplatesForCase } from '@/features/templates/services/templates.service';
 import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
 
@@ -73,10 +74,17 @@ export async function CaseActionBar({
   // popover trigger needs the list of open tasks, the assignee picker, and
   // the case-option label for the create form. One Promise.all keeps the
   // action bar's render path cheap.
-  const [assignees, tasks, caseOption] = await Promise.all([
+  const [assignees, tasks, caseOption, templates] = await Promise.all([
     listAssignableProfiles(),
     listTasksForCase(brandedCaseId),
     getCaseOption(brandedCaseId, locale),
+    listRenderedTemplatesForCase({
+      clientName:
+        [primaryBorrower?.firstName, primaryBorrower?.lastName].filter(Boolean).join(' ') ||
+        borrowerNames,
+      caseNumber,
+      locale,
+    }),
   ]);
 
   return (
@@ -137,7 +145,11 @@ export async function CaseActionBar({
             hasAlert={hasDocumentAlerts}
             href={`/cases/${caseId}/documents`}
           />
-          <SendClientMessageButton title={t('actions.sendMessage')} borrower={primaryBorrower} />
+          <SendClientMessageButton
+            title={t('actions.sendMessage')}
+            borrower={primaryBorrower}
+            templates={templates}
+          />
           <CaseActionTaskPopover
             caseId={caseId}
             caseNumber={caseNumber}

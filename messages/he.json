@@ -1087,7 +1087,9 @@
         "noEmail": "אין אימייל ללקוח",
         "noPhone": "אין טלפון ללקוח",
         "whatsappGreeting": "שלום {name},",
-        "whatsappGreetingNoName": "שלום,"
+        "whatsappGreetingNoName": "שלום,",
+        "templatesLabel": "תבניות",
+        "noContact": "אין פרטי קשר"
       }
     },
     "scheduleMeeting": {

@@ -30,6 +30,15 @@ export type MessageTemplate = {
   deleted_by: string | null;
 };
 
+/** A template with its merge fields already substituted, ready to send. */
+export type RenderedTemplate = {
+  id: string;
+  name: string;
+  channel: TemplateChannel;
+  subject: string | null;
+  body: string;
+};
+
 export type TemplateActionState =
   | { ok: true; templateId: string }
   | {

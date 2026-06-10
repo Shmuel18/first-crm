@@ -2,6 +2,7 @@ import {
   Bell,
   Building2,
   Calculator,
+  FileText,
   HardDrive,
   Landmark,
   LayoutGrid,
@@ -63,12 +64,7 @@ const NAV_SECTIONS: SettingsNavSection[] = [
   {
     titleKey: 'system',
     items: [
-      // Templates (message_templates / /settings/templates) is hidden until a
-      // consumer exists: the feature is fully built (admin CRUD) but no send
-      // path reads a template, so exposing it promised behavior that isn't
-      // wired. Deferred to Phase 2 ("Communications" in CLAUDE.md). The route,
-      // actions and table are kept dormant; re-add this nav item + restore the
-      // page render when a template-picker lands in the message composers.
+      { href: '/settings/templates', labelKey: 'templates', icon: FileText, adminOnly: true },
       { href: '/settings/simulators', labelKey: 'simulators', icon: Calculator, permission: 'manage_simulator_settings' },
       { href: '/settings/integrations', labelKey: 'integrations', icon: Plug, adminOnly: true },
     ],

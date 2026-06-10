@@ -35,9 +35,22 @@ export function buildTelLink(phone: string | null | undefined): string | null {
   return `tel:${normalized}`;
 }
 
-/** mailto: link. Returns null for empty input — does not validate format. */
-export function buildMailLink(email: string | null | undefined): string | null {
+/**
+ * mailto: link, optionally prefilled with a subject/body (URL-encoded — the
+ * mail client opens a ready-to-edit draft). Returns null for empty input —
+ * does not validate format.
+ */
+export function buildMailLink(
+  email: string | null | undefined,
+  prefill?: { subject?: string | null; body?: string | null },
+): string | null {
   if (!email) return null;
   const trimmed = email.trim();
-  return trimmed ? `mailto:${trimmed}` : null;
+  if (!trimmed) return null;
+  // encodeURIComponent (NOT URLSearchParams): mailto requires percent-encoded
+  // spaces (%20); the form-encoded "+" shows up literally in mail clients.
+  const parts: string[] = [];
+  if (prefill?.subject?.trim()) parts.push(`subject=${encodeURIComponent(prefill.subject.trim())}`);
+  if (prefill?.body?.trim()) parts.push(`body=${encodeURIComponent(prefill.body.trim())}`);
+  return parts.length > 0 ? `mailto:${trimmed}?${parts.join('&')}` : `mailto:${trimmed}`;
 }
