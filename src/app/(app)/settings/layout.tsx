@@ -19,6 +19,7 @@ import { userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
 import { SettingsNavLink } from './settings-nav-link';
+import { SettingsShell } from './settings-shell';
 
 type SettingsNavItem = {
   href: string;
@@ -113,8 +114,8 @@ export default async function SettingsLayout({
         <p className="text-[11px] text-neutral-500 mt-0.5">{t('pageSubtitle')}</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6 mt-6">
-        <aside>
+      <SettingsShell
+        nav={
           <nav aria-label={t('sectionsLandmark')} className="space-y-6">
           {sections.map((section) => (
             <div key={section.titleKey} className="space-y-1">
@@ -131,7 +132,7 @@ export default async function SettingsLayout({
                   return (
                     <div
                       key={item.href}
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-neutral-300 cursor-not-allowed pointer-events-none"
+                      className="flex items-center gap-3 px-3 py-3 md:py-2 rounded-lg text-sm text-neutral-300 cursor-not-allowed pointer-events-none"
                       title={t('comingSoon')}
                       role="link"
                       aria-disabled="true"
@@ -156,10 +157,10 @@ export default async function SettingsLayout({
             </div>
           ))}
           </nav>
-        </aside>
-
-        <main>{children}</main>
-      </div>
+        }
+      >
+        {children}
+      </SettingsShell>
     </div>
   );
 }

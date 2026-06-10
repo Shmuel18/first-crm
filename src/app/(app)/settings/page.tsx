@@ -1,6 +1,7 @@
-import { redirect } from 'next/navigation';
+import { SettingsIndexRedirect } from './settings-index-redirect';
 
-export default async function SettingsPage() {
-  // Profile is available to everyone — land there by default.
-  redirect('/settings/profile');
+export default function SettingsPage() {
+  // Mobile: this route is the drill-in menu — the layout's nav is the whole
+  // screen. Desktop: redirect to profile (client-side, viewport-gated).
+  return <SettingsIndexRedirect />;
 }
