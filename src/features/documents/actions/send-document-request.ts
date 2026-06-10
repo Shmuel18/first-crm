@@ -1,26 +1,16 @@
 'use server';
 
-import { getTranslations } from 'next-intl/server';
-
 import { userCanEditCase } from '@/lib/auth/permissions';
-import { sendEmail } from '@/lib/email/send';
-import { env } from '@/lib/env';
 import { createClient } from '@/lib/supabase/server';
+import { asCaseId } from '@/lib/types/branded';
+
+import { getCaseDocumentChecklist } from '../services/document-checklist.service';
+import { sendDocumentRequestEmail } from '../services/document-request-email';
+import { listDocumentsForCase } from '../services/documents.service';
 
 type Result =
   | { ok: true }
   | { ok: false; error: 'unauthorized' | 'no_email' | 'not_configured' | 'unknown' };
-
-const HTML_ESCAPES: Record<string, string> = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-};
-
-function escapeHtml(s: string): string {
-  return s.replace(/[&<>"]/g, (c) => HTML_ESCAPES[c] ?? c);
-}
 
 export async function sendDocumentRequestAction(caseId: string): Promise<Result> {
   if (typeof caseId !== 'string' || !caseId) return { ok: false, error: 'unauthorized' };
@@ -38,21 +28,27 @@ export async function sendDocumentRequestAction(caseId: string): Promise<Result>
 
   const { data: borrower } = await supabase
     .from('borrowers')
-    .select('first_name, last_name, email')
+    .select('first_name, last_name, email, preferred_language')
     .eq('id', borrowerId)
     .maybeSingle();
   const email = borrower?.email?.trim();
   if (!email) return { ok: false, error: 'no_email' };
 
-  const t = await getTranslations('documents.request');
-  const name = [borrower?.first_name, borrower?.last_name].filter(Boolean).join(' ').trim();
-  const html =
-    `<p>${escapeHtml(t('emailGreeting', { name }))}</p>` +
-    `<p>${escapeHtml(t('emailBody'))}</p>` +
-    `<p>${escapeHtml(t('emailSignoff', { office: env.NEXT_PUBLIC_APP_NAME }))}</p>`;
+  // Mirror the WhatsApp variant: list the still-missing required documents so
+  // the client knows exactly what to send back. Checklist failures degrade to
+  // the generic "send us the remaining documents" body, never block the email.
+  const id = asCaseId(caseId);
+  const documents = await listDocumentsForCase(id);
+  const checklist = await getCaseDocumentChecklist(id, documents);
+  const locale = borrower?.preferred_language === 'en' ? 'en' : 'he';
+  const missingDocs = checklist
+    .filter((item) => item.isRequired && item.status === 'missing')
+    .map((item) => (locale === 'he' ? item.nameHe : item.nameEn))
+    .filter(Boolean);
 
-  const res = await sendEmail({ to: email, subject: t('emailSubject'), html });
-  if (res.ok && 'skipped' in res && res.skipped) return { ok: false, error: 'not_configured' };
-  if (!res.ok) return { ok: false, error: 'unknown' };
+  const name = [borrower?.first_name, borrower?.last_name].filter(Boolean).join(' ').trim();
+  const sent = await sendDocumentRequestEmail({ to: email, name, locale, missingDocs });
+  if (sent === 'skipped') return { ok: false, error: 'not_configured' };
+  if (sent === 'failed') return { ok: false, error: 'unknown' };
   return { ok: true };
 }

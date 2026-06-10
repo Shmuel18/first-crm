@@ -2007,6 +2007,7 @@
       "emailSubject": "בקשה להשלמת מסמכים",
       "emailGreeting": "שלום {name},",
       "emailBody": "נשמח אם תוכל/י לשלוח לנו את המסמכים הנותרים כדי שנמשיך בטיפול בתיק.",
+      "emailDocsIntro": "המסמכים שעדיין חסרים לנו:",
       "emailSignoff": "תודה, {office}"
     },
     "actions": {
