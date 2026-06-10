@@ -27,6 +27,7 @@ const BACKUP_TABLES = [
   'borrower_obligations',
   'income_types',
   'tasks',
+  'task_assignment_history',
   'leads',
   'reminder_rules',
   'holidays',

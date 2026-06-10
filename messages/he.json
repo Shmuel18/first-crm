@@ -2168,6 +2168,20 @@
     "showAll": "הצג עוד {count} →",
     "openFull": "הצג הכל",
     "immediateCount": "{count, plural, =1 {מיידית אחת} other {# מיידיות}}",
+    "assignment": {
+      "createdBy": "נוצרה על ידי {name}",
+      "assignedBy": "הוקצתה על ידי {name}",
+      "currentlyUnassigned": "לא מוקצית כרגע",
+      "system": "המערכת",
+      "unknownPerson": "עובד לא ידוע",
+      "historyTitle": "היסטוריית הקצאות",
+      "historyAssigned": "הוקצתה אל {to}",
+      "historyTransferred": "הועברה מ-{from} אל {to}",
+      "historyUnassigned": "הוסרה ההקצאה מ-{from}",
+      "historyMeta": "על ידי {name} · {date}",
+      "loading": "טוען היסטוריה...",
+      "noHistory": "אין עדיין היסטוריית הקצאות"
+    },
     "stats": {
       "immediate": "מיידיות",
       "open": "פתוחות",
@@ -2304,6 +2318,7 @@
     "unreadCount": "{count, plural, =1 {התראה אחת לא נקראה} other {# התראות לא נקראו}}",
     "unreadIndicator": "לא נקראה",
     "someone": "מישהו",
+    "system": "המערכת",
     "aTask": "משימה",
     "aCase": "תיק",
     "aLead": "לקוח חדש",
@@ -2325,6 +2340,7 @@
   },
   "email": {
     "someone": "מישהו",
+    "system": "המערכת",
     "footer": "Kaufman Finance Group · הודעה אוטומטית מהמערכת",
     "cta": {
       "openTask": "פתח במערכת"

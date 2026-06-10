@@ -3,7 +3,15 @@
 import Link from 'next/link';
 import { useTransition } from 'react';
 
-import { AlertTriangle, Calendar, Clock, Lock, MessageSquare, User } from 'lucide-react';
+import {
+  AlertTriangle,
+  Calendar,
+  Clock,
+  Lock,
+  MessageSquare,
+  User,
+  UserRoundCheck,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
@@ -59,6 +67,9 @@ export function TaskRow({ task, locale, onEdit, onReassign, onThread, compact = 
   const assigneeName =
     formatPersonName(task.assignee?.first_name, task.assignee?.last_name) ||
     t('unassigned');
+  const assignerName =
+    formatPersonName(task.assigner?.first_name, task.assigner?.last_name) ||
+    (task.assigned_by ? t('assignment.unknownPerson') : t('assignment.system'));
 
   const handleToggleComplete = () => {
     startTransition(async () => {
@@ -179,6 +190,12 @@ export function TaskRow({ task, locale, onEdit, onReassign, onThread, compact = 
             <User className="size-3" />
             {assigneeName}
           </span>
+          {task.assigned_to && (
+            <span className="inline-flex items-center gap-1" title={t('assignment.assignedBy', { name: assignerName })}>
+              <UserRoundCheck className="size-3" />
+              {t('assignment.assignedBy', { name: assignerName })}
+            </span>
+          )}
           {task.due_date && (
             <span
               className={[

@@ -2168,6 +2168,20 @@
     "showAll": "Show {count} more →",
     "openFull": "Show all",
     "immediateCount": "{count, plural, =1 {1 immediate} other {# immediate}}",
+    "assignment": {
+      "createdBy": "Created by {name}",
+      "assignedBy": "Assigned by {name}",
+      "currentlyUnassigned": "Currently unassigned",
+      "system": "System",
+      "unknownPerson": "Unknown teammate",
+      "historyTitle": "Assignment history",
+      "historyAssigned": "Assigned to {to}",
+      "historyTransferred": "Transferred from {from} to {to}",
+      "historyUnassigned": "Unassigned from {from}",
+      "historyMeta": "By {name} · {date}",
+      "loading": "Loading history...",
+      "noHistory": "No assignment history yet"
+    },
     "stats": {
       "immediate": "Immediate",
       "open": "Open",
@@ -2304,6 +2318,7 @@
     "unreadCount": "{count, plural, =1 {1 unread notification} other {# unread notifications}}",
     "unreadIndicator": "Unread",
     "someone": "Someone",
+    "system": "System",
     "aTask": "a task",
     "aCase": "a case",
     "aLead": "a new prospect",
@@ -2325,6 +2340,7 @@
   },
   "email": {
     "someone": "Someone",
+    "system": "System",
     "footer": "Kaufman Finance Group · Automatic system message",
     "cta": {
       "openTask": "Open in app"

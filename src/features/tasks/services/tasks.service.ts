@@ -20,12 +20,10 @@ import type {
 // additions are gated by an intentional update here rather than auto-
 // propagating to clients via `*`.
 const TASK_FULL_COLUMNS =
-  'id, title, description, status, priority, is_private, due_date, snoozed_until, completed_at, completed_by, case_id, lead_id, assigned_to, automation_rule_id, is_automated, google_calendar_event_id, metadata, deleted_at, created_at, created_by, updated_at, updated_by' as const;
+  'id, title, description, status, priority, is_private, due_date, snoozed_until, completed_at, completed_by, case_id, lead_id, assigned_to, assigned_by, assigned_at, automation_rule_id, is_automated, google_calendar_event_id, metadata, deleted_at, created_at, created_by, updated_at, updated_by' as const;
 
 const TASK_SELECT = `
   ${TASK_FULL_COLUMNS},
-  assignee:profiles!tasks_assigned_to_fkey(id, first_name, last_name),
-  creator:profiles!tasks_created_by_fkey(id, first_name, last_name),
   case:cases!tasks_case_id_fkey(id, case_number, case_borrowers(is_primary, borrower:borrowers(first_name, last_name)))
 ` as const;
 
@@ -53,6 +51,10 @@ const PRIORITY_ORDER: Record<TaskPriority, number> = {
   low: 3,
 };
 
+function assignedByMeFilter(userId: string): string {
+  return `assigned_by.eq.${userId},and(assigned_to.is.null,created_by.eq.${userId})`;
+}
+
 export async function listTasks(filters: TaskListFilters): Promise<TaskWithRelations[]> {
   const supabase = await createClient();
 
@@ -68,7 +70,10 @@ export async function listTasks(filters: TaskListFilters): Promise<TaskWithRelat
   if (filters.view === 'mine') {
     query = query.eq('assigned_to', userId);
   } else if (filters.view === 'assigned-by-me') {
-    query = query.eq('created_by', userId);
+    // Keep creator-owned unassigned tasks visible here too. Without this
+    // fallback, clearing an assignment makes the task disappear from both
+    // "mine" and "assigned by me".
+    query = query.or(assignedByMeFilter(userId));
   }
   // 'all' = no extra filter; RLS will narrow to what the user is allowed to see.
 
@@ -87,18 +92,55 @@ export async function listTasks(filters: TaskListFilters): Promise<TaskWithRelat
   // PostgREST can't infer the embedded-relation shape; the select string above
   // is the contract, and DB CHECKs guarantee the narrowed priority/status.
   const rows = (data ?? []) as unknown as Array<
-    Omit<TaskWithRelations, 'case'> & {
+    Omit<TaskWithRelations, 'case' | 'assignee' | 'creator' | 'assigner'> & {
       case: { id: string; case_number: string; case_borrowers?: CaseBorrowerLink[] | null } | null;
     }
   >;
+  const peopleById = await resolveTaskPeople(rows);
+
   // Resolve each task's case ref to show the client's name (not the raw number).
   return rows
-    .map((row) => ({ ...row, case: toCaseRef(row.case) }))
+    .map((row) => ({
+      ...row,
+      assignee: personFor(row.assigned_to, peopleById),
+      creator: personFor(row.created_by, peopleById),
+      assigner: personFor(row.assigned_by, peopleById),
+      case: toCaseRef(row.case),
+    }))
     .sort(
       (a, b) =>
         (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9) ||
         (PRIORITY_ORDER[a.priority] ?? 9) - (PRIORITY_ORDER[b.priority] ?? 9),
     );
+}
+
+async function resolveTaskPeople(
+  rows: ReadonlyArray<{ assigned_to: string | null; created_by: string | null; assigned_by: string | null }>,
+): Promise<Map<string, TaskAssignee>> {
+  const ids = [
+    ...new Set(
+      rows.flatMap((row) => [row.assigned_to, row.created_by, row.assigned_by]).filter(isString),
+    ),
+  ];
+  if (ids.length === 0) return new Map();
+
+  // Profile RLS is self-or-admin, but every task viewer needs the display names
+  // attached to assignment context. Resolve names only through the admin client.
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from('profiles')
+    .select('id, first_name, last_name')
+    .in('id', ids);
+
+  return new Map((data ?? []).map((person) => [person.id, person]));
+}
+
+function personFor(id: string | null, peopleById: ReadonlyMap<string, TaskAssignee>): TaskAssignee | null {
+  return id ? peopleById.get(id) ?? null : null;
+}
+
+function isString(value: string | null): value is string {
+  return typeof value === 'string';
 }
 
 function toCaseRef(
@@ -131,7 +173,7 @@ export async function countPendingByView(view: TaskView): Promise<number> {
     .is('deleted_at', null);
 
   if (view === 'mine') query = query.eq('assigned_to', userRes.user.id);
-  else if (view === 'assigned-by-me') query = query.eq('created_by', userRes.user.id);
+  else if (view === 'assigned-by-me') query = query.or(assignedByMeFilter(userRes.user.id));
 
   const { count, error } = await query;
   if (error) return 0;

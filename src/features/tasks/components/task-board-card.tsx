@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { AlertTriangle, GripVertical, Lock, MessageSquare } from 'lucide-react';
+import { AlertTriangle, GripVertical, Lock, MessageSquare, UserRoundCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import type { Locale } from '@/lib/i18n/direction';
@@ -38,6 +38,9 @@ export function TaskBoardCard({ task, locale, onOpen, onReassign, onThread }: Pr
   const assignee = task.assignee
     ? formatPersonName(task.assignee.first_name, task.assignee.last_name)
     : null;
+  const assigner =
+    formatPersonName(task.assigner?.first_name, task.assigner?.last_name) ||
+    (task.assigned_by ? t('assignment.unknownPerson') : t('assignment.system'));
   const initials =
     (task.assignee?.first_name?.[0] ?? '') + (task.assignee?.last_name?.[0] ?? '') || '?';
 
@@ -118,6 +121,16 @@ export function TaskBoardCard({ task, locale, onOpen, onReassign, onThread }: Pr
           }
         />
       </div>
+
+      {task.assigned_to && (
+        <div
+          className="mt-2 flex items-center gap-1 ps-5 text-[10px] text-neutral-500"
+          title={t('assignment.assignedBy', { name: assigner })}
+        >
+          <UserRoundCheck className="size-3 shrink-0" aria-hidden="true" />
+          <span className="truncate">{t('assignment.assignedBy', { name: assigner })}</span>
+        </div>
+      )}
 
       <div className="flex items-center justify-between gap-2 mt-2 ps-5">
         <div className="flex items-center gap-2 min-w-0">

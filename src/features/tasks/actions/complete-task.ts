@@ -25,7 +25,7 @@ export async function completeTaskAction(taskId: string): Promise<Result> {
 
   const { data: existing } = await supabase
     .from('tasks')
-    .select('id, case_id, status, title, created_by')
+    .select('id, case_id, status, title, assigned_by, created_by')
     .eq('id', idParsed.data)
     .is('deleted_at', null)
     .maybeSingle();
@@ -51,15 +51,16 @@ export async function completeTaskAction(taskId: string): Promise<Result> {
   }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
 
-  // Notify the creator when someone else completes their task (skip if it was
-  // already completed, to avoid re-sending on a redundant click).
+  // Notify the latest assigner when someone else completes their task. Fall
+  // back to the creator for legacy/unassigned rows.
+  const completionRecipient = existing.assigned_by ?? existing.created_by;
   if (
     existing.status !== 'completed' &&
-    existing.created_by &&
-    existing.created_by !== userRes.user.id
+    completionRecipient &&
+    completionRecipient !== userRes.user.id
   ) {
     await sendTaskNotificationEmail({
-      recipientId: existing.created_by,
+      recipientId: completionRecipient,
       actorId: userRes.user.id,
       kind: 'task_completed',
       taskTitle: existing.title,

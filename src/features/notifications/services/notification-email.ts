@@ -43,7 +43,7 @@ export async function sendTaskNotificationEmail(input: TaskEmailInput): Promise<
     const locale = recipient.language === 'en' ? 'en' : 'he';
     const t = await getTranslations({ locale, namespace: 'email' });
 
-    const actor = escapeHtml(actorName || t('someone'));
+    const actor = escapeHtml(actorName || (input.actorId ? t('someone') : t('system')));
     const task = escapeHtml(input.taskTitle);
     const url = input.caseId
       ? `${env.NEXT_PUBLIC_APP_URL}/cases/${input.caseId}`

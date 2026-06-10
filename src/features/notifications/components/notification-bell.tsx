@@ -166,7 +166,7 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
       case 'task_completed':
       case 'task_reminder': {
         const d = n.data as Partial<NotificationDataTask>;
-        const actor = d.actorName || t('someone');
+        const actor = d.actorName || (n.actor_id ? t('someone') : t('system'));
         const task = d.taskTitle || t('aTask');
         if (n.type === 'task_reminder') {
           return t('message.task_reminder', { task });
@@ -184,12 +184,12 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
       }
       case 'case_mention': {
         const d = n.data as Partial<NotificationDataCaseMention>;
-        const actor = d.actorName || t('someone');
+        const actor = d.actorName || (n.actor_id ? t('someone') : t('system'));
         return t('message.case_mention', { actor, preview: d.preview ?? '' });
       }
       case 'task_mention': {
         const d = n.data as Partial<NotificationDataTaskMention>;
-        const actor = d.actorName || t('someone');
+        const actor = d.actorName || (n.actor_id ? t('someone') : t('system'));
         const task = d.taskTitle || t('aTask');
         const preview = [task, d.preview].filter(Boolean).join(': ');
         return t('message.case_mention', { actor, preview });

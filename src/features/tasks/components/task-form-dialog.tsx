@@ -30,6 +30,7 @@ import {
   type TaskActionState,
   type TaskWithRelations,
 } from '../types';
+import { TaskAssignmentHistory } from './task-assignment-history';
 import { TaskAttachmentsList } from './task-attachments-list';
 import { runTaskAttachmentUploads } from './upload-task-attachments';
 
@@ -235,6 +236,8 @@ export function TaskFormDialog({
             </NativeSelect>
             {isPrivate && <p className="mt-1 text-xs text-neutral-500">{t('fields.privateAssignee')}</p>}
           </FormField>
+
+          {mode === 'edit' && task && <TaskAssignmentHistory task={task} />}
 
           <FormField label={t('fields.case')} error={fieldErrors.case_id}>
             {/* A disabled <select> is omitted from FormData, so when the case is

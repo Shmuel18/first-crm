@@ -45,6 +45,14 @@ export type TaskAssignee = {
   last_name: string | null;
 };
 
+export type TaskAssignmentHistoryEntry = {
+  id: string;
+  assignedAt: string;
+  from: TaskAssignee | null;
+  to: TaskAssignee | null;
+  by: TaskAssignee | null;
+};
+
 export type TaskCaseRef = {
   id: string;
   case_number: string;
@@ -69,6 +77,7 @@ export type TaskWithRelations = Omit<TaskRow, 'priority' | 'status'> & {
   is_private: boolean;
   assignee: TaskAssignee | null;
   creator: TaskAssignee | null;
+  assigner: TaskAssignee | null;
   case: TaskCaseRef | null;
 };
 

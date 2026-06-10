@@ -3351,6 +3351,62 @@ export type Database = {
           },
         ]
       }
+      task_assignment_history: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          assigned_from: string | null
+          assigned_to: string | null
+          id: string
+          task_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          assigned_from?: string | null
+          assigned_to?: string | null
+          id?: string
+          task_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          assigned_from?: string | null
+          assigned_to?: string | null
+          id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_assignment_history_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_assignment_history_assigned_from_fkey"
+            columns: ["assigned_from"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_assignment_history_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_assignment_history_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_comments: {
         Row: {
           id: string
@@ -3404,6 +3460,8 @@ export type Database = {
       }
       tasks: {
         Row: {
+          assigned_at: string | null
+          assigned_by: string | null
           assigned_to: string | null
           automation_rule_id: string | null
           case_id: string | null
@@ -3428,6 +3486,8 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
           assigned_to?: string | null
           automation_rule_id?: string | null
           case_id?: string | null
@@ -3452,6 +3512,8 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
           assigned_to?: string | null
           automation_rule_id?: string | null
           case_id?: string | null
@@ -3476,6 +3538,13 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "tasks_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tasks_assigned_to_fkey"
             columns: ["assigned_to"]

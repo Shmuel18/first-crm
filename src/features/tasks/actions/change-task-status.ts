@@ -39,7 +39,7 @@ export async function changeTaskStatusAction(taskId: string, status: string): Pr
 
   const { data: existing } = await supabase
     .from('tasks')
-    .select('id, case_id, status, title, created_by')
+    .select('id, case_id, status, title, assigned_by, created_by')
     .eq('id', parsed.data.taskId)
     .is('deleted_at', null)
     .maybeSingle();
@@ -69,17 +69,18 @@ export async function changeTaskStatusAction(taskId: string, status: string): Pr
   }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
 
+  const completionRecipient = existing.assigned_by ?? existing.created_by;
   if (
     newStatus === 'completed' &&
     existing.status !== 'completed' &&
-    existing.created_by &&
-    existing.created_by !== userId
+    completionRecipient &&
+    completionRecipient !== userId
   ) {
     // Best-effort: the status change already committed, so a notification
     // failure must not surface as a failed action (which would prompt a retry).
     try {
       await sendTaskNotificationEmail({
-        recipientId: existing.created_by,
+        recipientId: completionRecipient,
         actorId: userId,
         kind: 'task_completed',
         taskTitle: existing.title,
