@@ -1,10 +1,21 @@
 type RenderInput = {
   locale: 'he' | 'en';
   heading: string;
+  /**
+   * PRE-ESCAPED HTML ONLY. This string is interpolated RAW into the email
+   * body — the escape contract lives with the caller. Build it exclusively
+   * from escapeHtml()-based helpers (plainTextBodyHtml / textToHtml /
+   * escaped table cells); never pass user-controlled text directly.
+   */
   bodyHtml: string;
   cta?: { label: string; url: string };
   footer: string;
 };
+
+// CTA links must be real navigable URLs. Anything else (javascript:, data:,
+// protocol-relative) drops the button entirely — better a missing CTA than a
+// dangerous href if a future caller ever forwards user-controlled input.
+const SAFE_CTA_URL = /^(https?:\/\/|mailto:|tel:)/i;
 
 const BLACK = '#0A0A0A';
 const GOLD = '#C9A961';
@@ -24,9 +35,13 @@ export function renderBrandedEmail({ locale, heading, bodyHtml, cta, footer }: R
   const dir = locale === 'he' ? 'rtl' : 'ltr';
   const align = locale === 'he' ? 'right' : 'left';
 
-  const ctaHtml = cta
+  const ctaSafe = cta && SAFE_CTA_URL.test(cta.url) ? cta : undefined;
+  if (cta && !ctaSafe) {
+    console.error('[renderBrandedEmail] dropped CTA with unsafe URL scheme');
+  }
+  const ctaHtml = ctaSafe
     ? `<tr><td style="padding:24px 0 4px;">
-         <a href="${escapeAttr(cta.url)}" style="display:inline-block;background:${GOLD};color:${BLACK};text-decoration:none;font-weight:700;font-size:14px;letter-spacing:.3px;padding:13px 32px;border-radius:999px;">${escapeHtml(cta.label)}</a>
+         <a href="${escapeAttr(ctaSafe.url)}" style="display:inline-block;background:${GOLD};color:${BLACK};text-decoration:none;font-weight:700;font-size:14px;letter-spacing:.3px;padding:13px 32px;border-radius:999px;">${escapeHtml(ctaSafe.label)}</a>
        </td></tr>`
     : '';
 
