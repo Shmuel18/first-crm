@@ -16,6 +16,7 @@ import type { IntakeInput } from '@/features/intake/schemas/intake.schema';
  */
 
 const ALLOWED_ORIGIN = 'https://kaufman-finance.com';
+const MAX_BODY_CHARS = 16_384;
 
 function corsHeaders(): Record<string, string> {
   return {
@@ -27,18 +28,38 @@ function corsHeaders(): Record<string, string> {
   };
 }
 
+function isAllowedOrigin(request: Request): boolean {
+  return request.headers.get('origin') === ALLOWED_ORIGIN;
+}
+
 function json(body: unknown, status: number): Response {
   return NextResponse.json(body, { status, headers: corsHeaders() });
 }
 
-export async function OPTIONS(): Promise<Response> {
+export async function OPTIONS(request: Request): Promise<Response> {
+  if (!isAllowedOrigin(request)) return new NextResponse(null, { status: 403 });
   return new NextResponse(null, { status: 204, headers: corsHeaders() });
 }
 
 export async function POST(request: Request): Promise<Response> {
+  // CORS controls browser response access, not whether the server processes the
+  // request. Refuse other/missing origins too. A non-browser client can spoof
+  // Origin, so the rate-limit remains the load-bearing abuse defense.
+  if (!isAllowedOrigin(request)) return json({ ok: false }, 403);
+
+  const contentType = request.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase();
+  if (contentType !== 'application/json') return json({ ok: false }, 415);
+
+  const declaredLength = Number(request.headers.get('content-length'));
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_CHARS) {
+    return json({ ok: false }, 413);
+  }
+
   let body: Record<string, unknown>;
   try {
-    const raw: unknown = await request.json();
+    const text = await request.text();
+    if (text.length > MAX_BODY_CHARS) return json({ ok: false }, 413);
+    const raw: unknown = JSON.parse(text);
     body = raw !== null && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
   } catch {
     return json({ ok: false }, 400);
