@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import {
@@ -111,13 +112,20 @@ export async function listAuditEntriesForCase(
   // for fee_amount / expected_income changes land with record_id=caseId.
   // Querying by record_id=caseId here surfaces them in the case timeline
   // without an extra join.
+  // Tasks are the only audited child table with row-level privacy
+  // (is_private — see tasks_select, migration 159), so their id lookup goes
+  // through the VIEWER's client: RLS decides which tasks' audit rows the
+  // current user may see on the timeline, and stays in sync with policy
+  // changes without duplicating the rule here.
+  const viewer = await createClient();
+
   const [caseBorrowers, banksRes, docsRes, tasksRes] = await Promise.all([
     admin.from('case_borrowers').select('borrower_id').eq('case_id', caseId),
     admin.from('case_banks').select('id').eq('case_id', caseId),
     admin.from('documents').select('id').eq('case_id', caseId),
     // Tasks linked to this case — their audit rows (create / status / assignee /
     // complete / delete) belong on the case timeline too.
-    admin.from('tasks').select('id').eq('case_id', caseId),
+    viewer.from('tasks').select('id').eq('case_id', caseId),
   ]);
 
   const borrowerIds =

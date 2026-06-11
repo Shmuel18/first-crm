@@ -1,6 +1,7 @@
 import { listAuditEntriesForCase, type AuditEntry } from '@/features/audit/services/audit.service';
 import { listCaseComments } from '@/features/case-comments/services/case-comments.service';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
 import type { CaseId } from '@/lib/types/branded';
 import { formatPersonName } from '@/lib/utils/person-name';
 
@@ -56,6 +57,10 @@ export async function listCaseActivity(
  */
 async function fetchActivityContext(caseId: string): Promise<ActivityContext> {
   const admin = createAdminClient();
+  // Task titles go through the VIEWER's client — private tasks (is_private,
+  // tasks_select RLS) must not leak their title into the feed. Mirrors the
+  // task-id filtering in listAuditEntriesForCase.
+  const viewer = await createClient();
 
   const [cbRes, docsRes, tasksRes, banksRes] = await Promise.all([
     admin
@@ -63,7 +68,7 @@ async function fetchActivityContext(caseId: string): Promise<ActivityContext> {
       .select('borrower_id, borrower:borrowers(first_name, last_name)')
       .eq('case_id', caseId),
     admin.from('documents').select('id, file_name').eq('case_id', caseId),
-    admin.from('tasks').select('id, title').eq('case_id', caseId),
+    viewer.from('tasks').select('id, title').eq('case_id', caseId),
     admin.from('case_banks').select('id, bank:banks(name_he)').eq('case_id', caseId),
   ]);
 
