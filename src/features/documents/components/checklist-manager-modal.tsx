@@ -37,6 +37,7 @@ import { reorderChecklistItemsAction } from '../actions/reorder-checklist-items'
 import { toggleChecklistItemAction } from '../actions/toggle-checklist-item';
 import type { DocumentChecklistItem } from '../services/document-checklist.service';
 import { ChecklistManagerRow } from './checklist-manager-row';
+import { ChecklistTemplatePicker } from './checklist-template-picker';
 
 type Props = {
   open: boolean;
@@ -178,12 +179,16 @@ export function ChecklistManagerModal({
           </DndContext>
         )}
 
+        <div className="flex items-center justify-between gap-2 pt-1">
+          <ChecklistTemplatePicker caseId={caseId} locale={locale} />
+        </div>
+
         <form
           onSubmit={(e) => {
             e.preventDefault();
             handleAdd();
           }}
-          className="flex items-center gap-2 pt-1"
+          className="flex items-center gap-2"
         >
           <input
             value={label}
