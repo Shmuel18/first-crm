@@ -65,6 +65,14 @@ export async function setPasswordAction(
   // holds my account" action — kill every OTHER session so a stolen or stale
   // session does not survive the reset. Keeps the current session alive.
   // Best-effort: a revoke hiccup must not fail the change that just succeeded.
+  //
+  // RESIDUAL WINDOW: revocation deletes the other sessions + refresh tokens,
+  // so app access dies at the next request (middleware getUser() validates
+  // the session server-side). But the stolen ACCESS JWT itself stays
+  // cryptographically valid against the Supabase REST API until it expires —
+  // up to jwt_expiry (1h). Shrinking that needs a shorter jwt_expiry and/or
+  // secure_password_change=true in the PRODUCTION Supabase auth settings
+  // (dashboard-managed; pending operator action, see Round-1 review).
   const { error: revokeErr } = await supabase.auth.signOut({ scope: 'others' });
   if (revokeErr) {
     console.error('[setPassword] revoking other sessions failed', {
