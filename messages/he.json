@@ -1037,6 +1037,11 @@
       "case_blocker": "גורם מעכב",
       "insurance_status": "סטטוס ביטוח",
       "version": "גרסה",
+      "borrower_id": "לווה",
+      "primary_borrower_id": "לווה ראשי",
+      "role_in_case": "תפקיד בתיק",
+      "submission_date": "תאריך הגשה",
+      "response_date": "תאריך תשובה",
       "category_id": "קטגוריה",
       "status": "סטטוס",
       "expiry_date": "תוקף",
@@ -1105,6 +1110,53 @@
       "yes": "כן",
       "no": "לא",
       "nFields": "{count, plural, =1 {שדה אחד} other {# שדות}}"
+    }
+  },
+  "caseActivity": {
+    "tabs": {
+      "groupLabel": "תצוגת היסטוריה",
+      "activity": "פעילות",
+      "log": "יומן מלא"
+    },
+    "empty": "אין עדיין פעילות בתיק",
+    "today": "היום",
+    "yesterday": "אתמול",
+    "events": {
+      "case_created": "התיק נוצר",
+      "status_changed": "שלב בתהליך עודכן",
+      "advisor_changed": "היועץ האחראי הוחלף",
+      "borrower_added": "לווה נוסף לתיק",
+      "borrower_removed": "לווה הוסר מהתיק",
+      "bank_submitted": "התיק הוגש לבנק",
+      "bank_response": "התקבלה תשובה מהבנק",
+      "task_completed": "משימה הושלמה",
+      "document_status": "סטטוס מסמך עודכן",
+      "comment_added": "תגובת צוות",
+      "email_advisor_message": "נשלח אימייל ללקוח",
+      "email_document_request": "נשלחה בקשת מסמכים ללקוח",
+      "fields_updated": "עדכון פרטים"
+    },
+    "added": {
+      "cases": "התיק נוצר",
+      "borrowers": "לווה נוסף",
+      "borrower_incomes": "נוספה הכנסה",
+      "borrower_obligations": "נוספה התחייבות",
+      "case_banks": "בנק נוסף לתיק",
+      "case_borrowers": "לווה נוסף לתיק",
+      "documents": "מסמך הועלה",
+      "tasks": "משימה נוצרה",
+      "case_financials": "נתונים פיננסיים נוספו"
+    },
+    "removed": {
+      "cases": "התיק נמחק",
+      "borrowers": "לווה הוסר",
+      "borrower_incomes": "הכנסה נמחקה",
+      "borrower_obligations": "התחייבות נמחקה",
+      "case_banks": "בנק הוסר מהתיק",
+      "case_borrowers": "לווה הוסר מהתיק",
+      "documents": "מסמך נמחק",
+      "tasks": "משימה נמחקה",
+      "case_financials": "נתונים פיננסיים נמחקו"
     }
   },
   "case": {

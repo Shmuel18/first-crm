@@ -73,6 +73,38 @@ export async function resolveFkDisplayNames(
     if (lookup.size > 0) lookups.set(field, lookup);
   }
 
+  // Columns that hold a borrower id — resolved to the borrower's name so
+  // "primary borrower changed" diffs and income/obligation rows read as
+  // people, not raw UUIDs. Like profiles, borrowers need first+last
+  // concatenation, so they can't ride the static single-column lookups.
+  const BORROWER_FIELDS = ['borrower_id', 'primary_borrower_id'] as const;
+  const allBorrowerIds = new Set<string>();
+  for (const field of BORROWER_FIELDS) {
+    const ids = idsByField.get(field);
+    if (ids) for (const id of ids) allBorrowerIds.add(id);
+  }
+  if (allBorrowerIds.size > 0) {
+    const { data: borrowerRows } = await admin
+      .from('borrowers')
+      .select('id, first_name, last_name')
+      .in('id', [...allBorrowerIds]);
+    const borrowerNameById = new Map<string, string>();
+    for (const b of borrowerRows ?? []) {
+      const name = formatPersonName(b.first_name, b.last_name);
+      if (name) borrowerNameById.set(b.id, name);
+    }
+    for (const field of BORROWER_FIELDS) {
+      const ids = idsByField.get(field);
+      if (!ids || ids.size === 0) continue;
+      const lookup = new Map<string, string>();
+      for (const id of ids) {
+        const name = borrowerNameById.get(id);
+        if (name) lookup.set(id, name);
+      }
+      if (lookup.size > 0) lookups.set(field, lookup);
+    }
+  }
+
   // Static-FK lookups run in parallel — each is one IN-clause query.
   await Promise.all(
     FK_NAME_LOOKUPS.map(async ({ field, table, nameColumn }) => {

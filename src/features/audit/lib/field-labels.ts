@@ -33,6 +33,11 @@ const DATE_FIELDS = new Set([
   'updated_at',
   'deleted_at',
   'archived_at',
+  'submission_date',
+  'response_date',
+  'due_date',
+  'snoozed_until',
+  'completed_at',
 ]);
 
 // Numeric currency fields — formatted with locale-aware thousands separator

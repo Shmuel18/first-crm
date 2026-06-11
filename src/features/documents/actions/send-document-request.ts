@@ -2,6 +2,7 @@
 
 import { getLocale } from 'next-intl/server';
 
+import { logClientEmail } from '@/features/case-activity/services/client-email-log.service';
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
@@ -48,5 +49,7 @@ export async function sendDocumentRequestAction(input: unknown): Promise<Result>
   const sent = await sendDocumentRequestEmail({ to: email, locale, subject, bodyText: body });
   if (sent === 'skipped') return { ok: false, error: 'not_configured' };
   if (sent === 'failed') return { ok: false, error: 'unknown' };
+  // Best-effort log — powers the case activity feed; never fails the send.
+  await logClientEmail({ caseId, kind: 'document_request', recipient: email, subject, body });
   return { ok: true };
 }

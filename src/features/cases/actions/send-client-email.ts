@@ -3,6 +3,7 @@
 import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
 
+import { logClientEmail } from '@/features/case-activity/services/client-email-log.service';
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
@@ -52,5 +53,7 @@ export async function sendClientEmailAction(input: unknown): Promise<Result> {
   const sent = await sendBrandedClientEmail({ to: email, locale, subject, bodyText: body });
   if (sent === 'skipped') return { ok: false, error: 'not_configured' };
   if (sent === 'failed') return { ok: false, error: 'unknown' };
+  // Best-effort log — powers the case activity feed; never fails the send.
+  await logClientEmail({ caseId, kind: 'advisor_message', recipient: email, subject, body });
   return { ok: true };
 }

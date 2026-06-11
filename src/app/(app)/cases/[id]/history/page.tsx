@@ -5,7 +5,10 @@ import { getLocale, getTranslations } from 'next-intl/server';
 
 import { BackArrow } from '@/components/shared/back-arrow';
 import { AuditLogTable } from '@/features/audit/components/audit-log-table';
-import { listAuditEntriesForCase, listDocumentAuditForCase } from '@/features/audit/services/audit.service';
+import { listDocumentAuditForCase } from '@/features/audit/services/audit.service';
+import { CaseActivityFeed } from '@/features/case-activity/components/case-activity-feed';
+import { CaseHistoryTabs } from '@/features/case-activity/components/case-history-tabs';
+import { listCaseActivity } from '@/features/case-activity/services/case-activity.service';
 import { getCaseById } from '@/features/cases/services/cases.service';
 import { userHasPermission } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
@@ -28,13 +31,16 @@ export default async function CaseHistoryPage({ params, searchParams }: Props) {
   const t = await getTranslations('case');
   const tc = await getTranslations('common');
   const locale = parseLocale(await getLocale());
-  // Documents view: just this case's document audit. Full view: the whole-case
-  // timeline, with manager-only financials gated behind view_case_fee.
-  const entries = documentsOnly
-    ? await listDocumentAuditForCase(caseId)
-    : await listAuditEntriesForCase(caseId, undefined, {
+
+  // Documents view: just this case's document audit (unchanged single table).
+  // Full view: activity feed + raw audit log, both derived from ONE fetch —
+  // manager-only financials gated behind view_case_fee.
+  const activity = documentsOnly
+    ? null
+    : await listCaseActivity(caseId, {
         includeFinancials: await userHasPermission('view_case_fee'),
       });
+  const documentEntries = documentsOnly ? await listDocumentAuditForCase(caseId) : null;
 
   // Show the primary borrower's name in the header (more useful at a glance
   // than the internal case number, which the user can't memorise anyway).
@@ -61,9 +67,17 @@ export default async function CaseHistoryPage({ params, searchParams }: Props) {
           </div>
         </div>
       </div>
-      <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-        <AuditLogTable entries={entries} />
-      </div>
+
+      {documentsOnly ? (
+        <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+          <AuditLogTable entries={documentEntries ?? []} />
+        </div>
+      ) : (
+        <CaseHistoryTabs
+          activitySlot={<CaseActivityFeed events={activity?.events ?? []} />}
+          logSlot={<AuditLogTable entries={activity?.auditEntries ?? []} />}
+        />
+      )}
     </div>
   );
 }

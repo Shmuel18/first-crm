@@ -1037,6 +1037,11 @@
       "case_blocker": "Blocker",
       "insurance_status": "Insurance status",
       "version": "Version",
+      "borrower_id": "Borrower",
+      "primary_borrower_id": "Primary borrower",
+      "role_in_case": "Role in case",
+      "submission_date": "Submission date",
+      "response_date": "Response date",
       "category_id": "Category",
       "status": "Status",
       "expiry_date": "Expiry date",
@@ -1105,6 +1110,53 @@
       "yes": "Yes",
       "no": "No",
       "nFields": "{count, plural, =1 {1 field} other {# fields}}"
+    }
+  },
+  "caseActivity": {
+    "tabs": {
+      "groupLabel": "History view",
+      "activity": "Activity",
+      "log": "Full log"
+    },
+    "empty": "No activity on this case yet",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "events": {
+      "case_created": "Case created",
+      "status_changed": "Stage updated",
+      "advisor_changed": "Responsible advisor changed",
+      "borrower_added": "Borrower added to case",
+      "borrower_removed": "Borrower removed from case",
+      "bank_submitted": "Submitted to bank",
+      "bank_response": "Bank response received",
+      "task_completed": "Task completed",
+      "document_status": "Document status updated",
+      "comment_added": "Team comment",
+      "email_advisor_message": "Email sent to client",
+      "email_document_request": "Document request emailed to client",
+      "fields_updated": "Details updated"
+    },
+    "added": {
+      "cases": "Case created",
+      "borrowers": "Borrower added",
+      "borrower_incomes": "Income added",
+      "borrower_obligations": "Obligation added",
+      "case_banks": "Bank added to case",
+      "case_borrowers": "Borrower added to case",
+      "documents": "Document uploaded",
+      "tasks": "Task created",
+      "case_financials": "Financials added"
+    },
+    "removed": {
+      "cases": "Case deleted",
+      "borrowers": "Borrower removed",
+      "borrower_incomes": "Income deleted",
+      "borrower_obligations": "Obligation deleted",
+      "case_banks": "Bank removed from case",
+      "case_borrowers": "Borrower removed from case",
+      "documents": "Document deleted",
+      "tasks": "Task deleted",
+      "case_financials": "Financials deleted"
     }
   },
   "case": {

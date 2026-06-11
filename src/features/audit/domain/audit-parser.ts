@@ -43,9 +43,11 @@ export type AuditRow = {
 /**
  * Internal/technical columns hidden from the audit display so the history
  * stays readable: the `metadata` JSONB (which holds storage_path / source /
- * etc.), the Drive sync ids, file size/mime, and the who/when verification
- * stamps (already conveyed by the entry's actor + timestamp). Applies to every
- * table — none are user-meaningful as a diff.
+ * etc.), the Drive sync ids, file size/mime, the who/when verification
+ * stamps (already conveyed by the entry's actor + timestamp), and the
+ * optimistic-locking `version` counter (bumped by trigger on every write —
+ * pure bookkeeping, meaningless to the office). Applies to every table —
+ * none are user-meaningful as a diff.
  */
 const HIDDEN_FIELDS = new Set([
   'metadata',
@@ -56,6 +58,7 @@ const HIDDEN_FIELDS = new Set([
   'uploaded_by',
   'verified_by',
   'verified_at',
+  'version',
 ]);
 
 export function extractChanges(action: string, changed: Json | null): AuditChangeMap | null {
