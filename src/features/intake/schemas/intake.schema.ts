@@ -23,6 +23,7 @@ import {
   optionalPastDate,
   optionalShortString,
   REQUEST_DETAILS_MAX,
+  requiredEmail,
   requiredShortString,
 } from '@/lib/validators/form-primitives';
 
@@ -111,3 +112,21 @@ export const IntakeSchema = z
   });
 
 export type IntakeInput = z.infer<typeof IntakeSchema>;
+
+/**
+ * Landing-page contact form (kaufman-finance.com) → web lead. A far lighter
+ * shape than the full questionnaire — just who they are and what they want. The
+ * /api/web-lead route maps this onto an IntakeInput (one borrower) and writes it
+ * through the same createIntakeLead path. Reuses the shared primitives so the
+ * email is validated + normalized and free text is sanitized + length-capped;
+ * the RPC re-validates server-side as the authoritative backstop.
+ */
+export const WebContactSchema = z.object({
+  name: requiredShortString(NAME_MAX),
+  email: requiredEmail,
+  subject: optionalShortString(200),
+  message: optionalLongText(4000),
+  locale: z.enum(['he', 'en']).default('en'),
+});
+
+export type WebContactInput = z.infer<typeof WebContactSchema>;

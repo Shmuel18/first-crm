@@ -964,10 +964,12 @@
       revealEls.forEach(function(el){ el.classList.add("is-visible"); });
     }
 
-    /* -------- contact form → /api/contact (serverless) --------
-       The endpoint emails the office inbox via Resend AND creates a CRM lead
-       via the anon Supabase RPC (same pipeline as the /check questionnaire).
-       Anti-spam: a hidden honeypot, a sub-2.5s timing trap, and a 20s client throttle. */
+    /* -------- contact form → CRM /api/web-lead --------
+       Posts to the CRM's protected endpoint (crm.kaufman-finance.com), which
+       emails the office + creates a lead through the service-role intake path.
+       The landing holds NO Supabase key — the RPC is service_role-only (mig 166).
+       Anti-spam here is a courtesy (honeypot, sub-2.5s timing trap, 20s throttle);
+       the load-bearing brakes are server-side on the CRM endpoint. */
     var form = document.getElementById("contactForm"),
         ok = document.getElementById("formSuccess"),
         errEl = document.getElementById("formError");
@@ -990,10 +992,10 @@
       var btn = form.querySelector(".submit");
       if (btn) btn.disabled = true;
       errEl.classList.remove("show");
-      fetch("/api/contact", {
+      fetch("https://crm.kaufman-finance.com/api/web-lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name, email: email, subject: subject, message: message, locale: he ? "he" : "en", elapsed_ms: Date.now() - formArmed }),
+        body: JSON.stringify({ name: name, email: email, subject: subject, message: message, locale: he ? "he" : "en", company: hp ? hp.value : "", elapsed_ms: Date.now() - formArmed }),
       }).then(function (r) {
         if (btn) btn.disabled = false;
         if (r.ok) {
