@@ -17,9 +17,12 @@
  *
  * NOTE on PII: never put raw `err` objects in fields if they may contain
  * Supabase row data. Prefer `{ code: err.code, message: err.message }`.
- * When Sentry is wired (Phase 2), forward error-level logs to it and let
- * the scrubber strip PII at the SDK boundary.
+ * As defense-in-depth, every field value is additionally run through the
+ * same scrubber Sentry uses (emails, IL national IDs, phones, tokens,
+ * password-bearing keys) before the line is emitted — caller discipline is
+ * the first line, the scrubber is the backstop.
  */
+import { scrubDeep } from '@/lib/sentry/pii-scrub';
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
@@ -47,7 +50,7 @@ function emit(level: LogLevel, message: string, fields?: LogFields): void {
   if (fields) {
     for (const [k, v] of Object.entries(fields)) {
       if (v === undefined) continue;
-      entry[k] = v;
+      entry[k] = scrubDeep(v);
     }
   }
 

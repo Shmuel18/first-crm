@@ -65,8 +65,9 @@ export function scrubString(input: unknown): string | undefined {
 }
 
 /** Walk an object tree replacing strings via scrubString. Bounded depth
- *  to defend against pathological cycles in error.cause chains. */
-function scrubDeep(value: unknown, depth = 0): unknown {
+ *  to defend against pathological cycles in error.cause chains. Exported
+ *  for reuse by the structured logger (same egress-redaction policy). */
+export function scrubDeep(value: unknown, depth = 0): unknown {
   if (depth > 6) return '[redacted: depth]';
   if (typeof value === 'string') return scrubString(value) ?? value;
   if (value === null || typeof value !== 'object') return value;
@@ -92,6 +93,17 @@ export function sentryBeforeSend(event: ErrorEvent, _hint?: EventHint): ErrorEve
     event.exception.values = event.exception.values.map((v) => ({
       ...v,
       value: scrubString(v.value) ?? v.value,
+      // localVariablesIntegration (default-on in the Node SDK) attaches the
+      // local variables at the throw site to each frame — decrypted tokens,
+      // national IDs, or passwords sitting in a local would ship raw.
+      stacktrace: v.stacktrace?.frames
+        ? {
+            ...v.stacktrace,
+            frames: v.stacktrace.frames.map((f) =>
+              f.vars ? { ...f, vars: scrubDeep(f.vars) as Record<string, unknown> } : f,
+            ),
+          }
+        : v.stacktrace,
     }));
   }
   if (event.message) {
@@ -106,8 +118,22 @@ export function sentryBeforeSend(event: ErrorEvent, _hint?: EventHint): ErrorEve
       event.request.cookies = '[redacted-cookies]' as unknown as typeof event.request.cookies;
     }
     if (event.request.query_string) {
+      // QueryParams can be a string OR Record/Array of pairs — scrubString
+      // returns undefined for non-strings, so route those through scrubDeep.
+      const qs = event.request.query_string;
       event.request.query_string =
-        scrubString(event.request.query_string as string) ?? event.request.query_string;
+        typeof qs === 'string'
+          ? (scrubString(qs) ?? qs)
+          : (scrubDeep(qs) as typeof event.request.query_string);
+    }
+    if (event.request.data !== undefined) {
+      // The default RequestData integration attaches the request BODY
+      // (include.data:true regardless of sendDefaultPii) — login/set-password
+      // POSTs would otherwise ship plaintext passwords and borrower PII.
+      event.request.data = scrubDeep(event.request.data);
+    }
+    if (event.request.env) {
+      event.request.env = scrubDeep(event.request.env) as Record<string, string>;
     }
   }
   if (event.breadcrumbs) {
