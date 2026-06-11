@@ -43,6 +43,7 @@ export function SetPasswordForm() {
 
   const errorKeyMap: Record<SetPasswordErrorCode, string> = {
     invalid_input: 'errors.minLength',
+    weak_password: 'errors.weakPassword',
     mismatch: 'errors.mismatch',
     unauthorized: 'errors.unauthorized',
     rate_limited: 'errors.rateLimited',

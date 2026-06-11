@@ -692,6 +692,7 @@
       "submitting": "Saving...",
       "errors": {
         "minLength": "Password must be at least 8 characters.",
+        "weakPassword": "Password must include at least one letter and one digit.",
         "mismatch": "Password confirmation does not match.",
         "unauthorized": "Your invite has expired. Ask the admin for a new link.",
         "rateLimited": "Too many attempts. Please try again in an hour.",

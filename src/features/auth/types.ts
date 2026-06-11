@@ -17,6 +17,7 @@ export const LOGIN_INITIAL_STATE: LoginState = { error: null };
 
 export type SetPasswordErrorCode =
   | 'invalid_input'
+  | 'weak_password'
   | 'mismatch'
   | 'unauthorized'
   | 'rate_limited'

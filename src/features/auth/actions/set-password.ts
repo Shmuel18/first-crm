@@ -29,9 +29,13 @@ export async function setPasswordAction(
 
   const parsed = SetPasswordSchema.safeParse(raw);
   if (!parsed.success) {
-    // The schema's refine sets message='mismatch' on confirm. Anything else
-    // (too short, missing) is a generic invalid_input that the form maps to
-    // the minLength translation.
+    // The schema refines set message='weak' on password (missing letter/digit)
+    // and 'mismatch' on confirm. Anything else (too short, missing) is a
+    // generic invalid_input the form maps to the minLength translation.
+    const weak = parsed.error.issues.some(
+      (i) => i.path[0] === 'password' && i.message === 'weak',
+    );
+    if (weak) return { error: 'weak_password' };
     const mismatch = parsed.error.issues.some(
       (i) => i.path[0] === 'confirm' && i.message === 'mismatch',
     );
@@ -56,6 +60,17 @@ export async function setPasswordAction(
 
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
   if (error) return { error: 'unknown' };
+
+  // SEC (R1-auth-2): a password change is the canonical "evict whoever else
+  // holds my account" action — kill every OTHER session so a stolen or stale
+  // session does not survive the reset. Keeps the current session alive.
+  // Best-effort: a revoke hiccup must not fail the change that just succeeded.
+  const { error: revokeErr } = await supabase.auth.signOut({ scope: 'others' });
+  if (revokeErr) {
+    console.error('[setPassword] revoking other sessions failed', {
+      code: revokeErr.code ?? null,
+    });
+  }
 
   redirect('/cases');
 }
