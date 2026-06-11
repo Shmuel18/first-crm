@@ -1,4 +1,7 @@
 import type { ErrorEvent, EventHint } from '@sentry/nextjs';
+// SpanJSON/TransactionEvent are not re-exported by @sentry/nextjs; @sentry/core
+// is its direct dependency and the canonical home of these types.
+import type { SpanJSON, TransactionEvent } from '@sentry/core';
 
 /**
  * Strip personally identifiable information from Sentry events before they
@@ -75,13 +78,58 @@ export function scrubDeep(value: unknown, depth = 0): unknown {
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(value)) {
     // Drop obvious secret-bearing keys outright rather than scrubbing their value.
-    if (/^(authorization|cookie|set-cookie|x-supabase-auth|password)$/i.test(k)) {
+    if (/^(authorization|cookie|cookies|set-cookie|x-supabase-auth|password)$/i.test(k)) {
       out[k] = '[redacted-header]';
       continue;
     }
     out[k] = scrubDeep(v, depth + 1);
   }
   return out;
+}
+
+/**
+ * Sentry beforeSendSpan hook: tracing spans carry attribute bags
+ * (`span.data`, e.g. `http.request.body.data` from the http instrumentation)
+ * and free-text descriptions that can both hold request payloads/URLs with
+ * PII. Runs for every span; v10 contract is mutate-and-return.
+ */
+export function sentryBeforeSendSpan(span: SpanJSON): SpanJSON {
+  if (span.data) {
+    span.data = scrubDeep(span.data) as SpanJSON['data'];
+  }
+  if (span.description) {
+    span.description = scrubString(span.description) ?? span.description;
+  }
+  return span;
+}
+
+/**
+ * Sentry beforeSendTransaction hook: transaction events duplicate the
+ * request envelope (url/headers/cookies/body) and embed child spans — none
+ * of which pass through beforeSend (error events only). Scrub everything
+ * outbound (completes R1-obs-1 for the tracing path; tracesSampleRate 0.1).
+ */
+export function sentryBeforeSendTransaction(event: TransactionEvent): TransactionEvent {
+  if (event.request) {
+    event.request = scrubDeep(event.request) as typeof event.request;
+  }
+  if (event.spans) {
+    event.spans = event.spans.map((s) => sentryBeforeSendSpan(s));
+  }
+  if (event.breadcrumbs) {
+    event.breadcrumbs = event.breadcrumbs.map((b) => ({
+      ...b,
+      message: scrubString(b.message) ?? b.message,
+      data: b.data ? (scrubDeep(b.data) as Record<string, unknown>) : b.data,
+    }));
+  }
+  if (event.tags) event.tags = scrubDeep(event.tags) as typeof event.tags;
+  if (event.extra) event.extra = scrubDeep(event.extra) as typeof event.extra;
+  if (event.contexts) event.contexts = scrubDeep(event.contexts) as typeof event.contexts;
+  if (event.user) {
+    event.user = { id: typeof event.user.id === 'string' ? event.user.id : undefined };
+  }
+  return event;
 }
 
 /** Sentry beforeSend hook: scrub the whole event tree. `hint` is intentionally

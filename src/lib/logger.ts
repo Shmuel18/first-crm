@@ -48,9 +48,14 @@ function emit(level: LogLevel, message: string, fields?: LogFields): void {
     message,
   };
   if (fields) {
-    for (const [k, v] of Object.entries(fields)) {
+    // Scrub the WHOLE fields object (not per-value): the key-name redaction
+    // (password/cookie/authorization/...) only fires on object entries, so
+    // top-level secret keys like { password: '...' } must pass through as
+    // part of an object to be dropped.
+    const scrubbed = scrubDeep(fields) as Record<string, unknown>;
+    for (const [k, v] of Object.entries(scrubbed)) {
       if (v === undefined) continue;
-      entry[k] = scrubDeep(v);
+      entry[k] = v;
     }
   }
 

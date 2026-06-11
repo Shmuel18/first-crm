@@ -1,8 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import { scrubDeep, scrubString, sentryBeforeSend } from './pii-scrub';
+import {
+  scrubDeep,
+  scrubString,
+  sentryBeforeSend,
+  sentryBeforeSendSpan,
+  sentryBeforeSendTransaction,
+} from './pii-scrub';
 
 import type { ErrorEvent } from '@sentry/nextjs';
+import type { SpanJSON, TransactionEvent } from '@sentry/core';
 
 const JWT = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjMifQ.sig-part-here';
 
@@ -100,5 +107,45 @@ describe('sentryBeforeSend', () => {
     expect(out?.request?.query_string).toBe('email=[redacted]@b.com');
     expect(out?.request?.cookies).toBe('[redacted-cookies]');
     expect(out?.user).toEqual({ id: 'uid-1' });
+  });
+});
+
+describe('sentryBeforeSendSpan', () => {
+  it('scrubs span attribute bags (http.request.body.data) and descriptions', () => {
+    const span = {
+      data: {
+        'http.request.body.data': '{"id_number":"123456789","email":"a@b.com"}',
+        'http.url': 'https://app/x?email=a@b.com',
+      },
+      description: 'POST /login email=a@b.com',
+    } as unknown as SpanJSON;
+
+    const out = sentryBeforeSendSpan(span);
+    const flat = JSON.stringify(out.data);
+    expect(flat).not.toContain('123456789');
+    expect(flat).not.toContain('a@b.com');
+    expect(out.description).not.toContain('a@b.com');
+  });
+});
+
+describe('sentryBeforeSendTransaction', () => {
+  it('scrubs the duplicated request envelope and embedded child spans', () => {
+    const event = {
+      request: {
+        data: { national_id: '123456789' },
+        cookies: { 'sb-auth-token': JWT },
+      },
+      spans: [{ data: { 'http.request.body.data': 'phone 0501234567' } }],
+      user: { id: 'uid-1', email: 'a@b.com' },
+    } as unknown as TransactionEvent;
+
+    const out = sentryBeforeSendTransaction(event);
+    const flat = JSON.stringify(out);
+    expect(flat).not.toContain('123456789');
+    expect(flat).not.toContain('0501234567');
+    expect(flat).not.toContain(JWT);
+    // The cookies key inside request is dropped wholesale by the key rule.
+    expect(JSON.stringify(out.request)).toContain('[redacted-header]');
+    expect(out.user).toEqual({ id: 'uid-1' });
   });
 });

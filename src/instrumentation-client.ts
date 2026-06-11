@@ -19,7 +19,11 @@
 import * as Sentry from '@sentry/nextjs';
 
 import { publicEnv } from '@/lib/public-env';
-import { sentryBeforeSend } from '@/lib/sentry/pii-scrub';
+import {
+  sentryBeforeSend,
+  sentryBeforeSendSpan,
+  sentryBeforeSendTransaction,
+} from '@/lib/sentry/pii-scrub';
 
 if (publicEnv.NEXT_PUBLIC_SENTRY_DSN) {
   Sentry.init({
@@ -30,6 +34,8 @@ if (publicEnv.NEXT_PUBLIC_SENTRY_DSN) {
     integrations: [Sentry.browserTracingIntegration()],
     sendDefaultPii: false,
     beforeSend: sentryBeforeSend,
+    beforeSendTransaction: sentryBeforeSendTransaction,
+    beforeSendSpan: sentryBeforeSendSpan,
   });
 }
 

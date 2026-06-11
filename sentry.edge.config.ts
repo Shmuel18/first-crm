@@ -6,7 +6,11 @@
 import * as Sentry from '@sentry/nextjs';
 
 import { env } from '@/lib/env';
-import { sentryBeforeSend } from '@/lib/sentry/pii-scrub';
+import {
+  sentryBeforeSend,
+  sentryBeforeSendSpan,
+  sentryBeforeSendTransaction,
+} from '@/lib/sentry/pii-scrub';
 
 if (env.SENTRY_DSN) {
   Sentry.init({
@@ -15,5 +19,7 @@ if (env.SENTRY_DSN) {
     tracesSampleRate: 0.1,
     sendDefaultPii: false,
     beforeSend: sentryBeforeSend,
+    beforeSendTransaction: sentryBeforeSendTransaction,
+    beforeSendSpan: sentryBeforeSendSpan,
   });
 }

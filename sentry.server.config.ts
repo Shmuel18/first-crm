@@ -8,7 +8,11 @@
 import * as Sentry from '@sentry/nextjs';
 
 import { env } from '@/lib/env';
-import { sentryBeforeSend } from '@/lib/sentry/pii-scrub';
+import {
+  sentryBeforeSend,
+  sentryBeforeSendSpan,
+  sentryBeforeSendTransaction,
+} from '@/lib/sentry/pii-scrub';
 
 if (env.SENTRY_DSN) {
   Sentry.init({
@@ -20,6 +24,15 @@ if (env.SENTRY_DSN) {
     // Profile every traced transaction — cheap once tracing is sampled.
     profilesSampleRate: 1.0,
     sendDefaultPii: false,
+    // Never COLLECT request bodies in the first place (login/set-password
+    // POSTs carry passwords; case forms carry borrower PII). The default
+    // RequestData integration ships include.data:true even with
+    // sendDefaultPii:false — overriding it by name kills bodies at the
+    // source; the beforeSend* scrubbers below remain as the backstop for
+    // every other surface (URLs, headers, spans, breadcrumbs).
+    integrations: [Sentry.requestDataIntegration({ include: { data: false } })],
     beforeSend: sentryBeforeSend,
+    beforeSendTransaction: sentryBeforeSendTransaction,
+    beforeSendSpan: sentryBeforeSendSpan,
   });
 }
