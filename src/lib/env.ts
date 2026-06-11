@@ -2,9 +2,11 @@ import { createEnv } from '@t3-oss/env-nextjs';
 import { z } from 'zod';
 
 const isProductionRuntime = process.env.NODE_ENV === 'production';
+// 32-char floor aligns with the sibling AES keys; the documented recipe
+// (`openssl rand -base64 32`) produces 44 chars, so real keys clear it.
 const serverActionsEncryptionKeySchema = isProductionRuntime
-  ? z.string().min(24, 'Missing NEXT_SERVER_ACTIONS_ENCRYPTION_KEY')
-  : z.string().min(24).optional();
+  ? z.string().min(32, 'Missing NEXT_SERVER_ACTIONS_ENCRYPTION_KEY')
+  : z.string().min(32).optional();
 
 /**
  * Type-safe environment variables.
@@ -175,6 +177,27 @@ export function isPushConfigured(): boolean {
 // into the client bundle; without the guard, module evaluation crashes the
 // page. `window` is undefined on the server, so the warnings still print on
 // cold start as before. Do not remove.
+// Enforce the cryptographic domain separation the comments above describe:
+// reusing one value for both the integration and backup keys (or salts) means
+// a single leaked key decrypts BOTH OAuth tokens and full PII backups. Server
+// only — touching these vars in the browser would throw via @t3-oss.
+if (typeof window === 'undefined') {
+  if (env.INTEGRATION_ENCRYPTION_KEY === env.BACKUP_ENCRYPTION_KEY) {
+    throw new Error(
+      '[env] INTEGRATION_ENCRYPTION_KEY and BACKUP_ENCRYPTION_KEY must be different values — generate each with `openssl rand -base64 48`.',
+    );
+  }
+  if (
+    env.INTEGRATION_ENCRYPTION_SALT_V2 &&
+    env.BACKUP_ENCRYPTION_SALT_V2 &&
+    env.INTEGRATION_ENCRYPTION_SALT_V2 === env.BACKUP_ENCRYPTION_SALT_V2
+  ) {
+    throw new Error(
+      '[env] INTEGRATION_ENCRYPTION_SALT_V2 and BACKUP_ENCRYPTION_SALT_V2 must be different values.',
+    );
+  }
+}
+
 if (typeof window === 'undefined' && env.NODE_ENV === 'production') {
   const warnings: string[] = [];
   if (!env.CRON_SECRET) {
