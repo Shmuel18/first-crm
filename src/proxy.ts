@@ -32,6 +32,13 @@ export const config = {
      * - PWA assets (manifest.webmanifest, sw.js, offline.html) — public, must be
      *   reachable without an auth round-trip for install/registration to work
      * - public files (.svg, .png, .jpg, .jpeg, .gif, .webp)
+     *
+     * SECURITY NOTE (R1-edge-2): Server Functions are POSTs to the page that
+     * renders them, so a matcher-excluded path also skips this proxy for those
+     * calls — including the SEC-AUTH-1 deactivation gate in updateSession.
+     * No current app route matches an exclusion, but never colocate a page or
+     * Server Action on an excluded path; every server action must check
+     * auth/authz itself (CLAUDE.md rule) and not rely on this proxy.
      */
     '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|sw\\.js|offline\\.html|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],

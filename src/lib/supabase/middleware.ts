@@ -8,6 +8,20 @@ import { env } from '@/lib/env';
 import type { Database } from '@/types/database';
 
 /**
+ * Build a redirect that carries the (possibly rotated) auth cookies from the
+ * working response. getUser() above may have refreshed the session — the new
+ * refresh token lives ONLY on `response`'s Set-Cookie headers. A bare
+ * NextResponse.redirect would drop them, leaving the browser holding an
+ * already-consumed refresh token → spurious logout / login redirect loop.
+ * EVERY redirect returned from updateSession must go through this helper.
+ */
+function redirectCarryingCookies(url: URL, response: NextResponse): NextResponse {
+  const redirect = NextResponse.redirect(url);
+  response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+  return redirect;
+}
+
+/**
  * Updates the session cookie on every request.
  * Must run in middleware to keep auth fresh.
  */
@@ -86,13 +100,13 @@ export async function updateSession(request: NextRequest) {
     const next = request.nextUrl.pathname + request.nextUrl.search;
     url.search = '';
     url.searchParams.set('next', next);
-    return NextResponse.redirect(url);
+    return redirectCarryingCookies(url, response);
   }
 
   if (user && isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = '/cases';
-    return NextResponse.redirect(url);
+    return redirectCarryingCookies(url, response);
   }
 
   // SEC-AUTH-1: a member deactivated/deleted mid-session keeps a valid cookie
@@ -124,11 +138,9 @@ export async function updateSession(request: NextRequest) {
       url.pathname = '/login';
       url.search = '';
       url.searchParams.set('reason', 'deactivated');
-      const redirect = NextResponse.redirect(url);
-      // Carry the just-cleared auth cookies onto the redirect, otherwise the
+      // Carries the just-cleared auth cookies onto the redirect, otherwise the
       // browser keeps the session and the isAuthRoute rule ping-pongs it back.
-      response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
-      return redirect;
+      return redirectCarryingCookies(url, response);
     }
   }
 
