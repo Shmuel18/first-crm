@@ -71,7 +71,12 @@ export default async function RootLayout({
             only exposes crypto.randomUUID over HTTPS/localhost; the demo runs on
             plain HTTP, so any call (ours or a library's) would otherwise throw
             "crypto.randomUUID is not a function" and crash the view. Runs before
-            hydration. (Proper long-term fix: serve over HTTPS.) */}
+            hydration. (Proper long-term fix: serve over HTTPS.)
+            TODO(R1-shell-1 / review Round 20): this inline script is one of the
+            blockers for dropping `script-src 'unsafe-inline'` from the CSP in
+            next.config.ts. When the nonce-per-request CSP ships, give this
+            script the request nonce or remove it (HTTPS-only serving makes the
+            polyfill unnecessary). */}
         <script
           dangerouslySetInnerHTML={{
             __html:

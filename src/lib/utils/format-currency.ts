@@ -17,6 +17,8 @@ export function formatCurrency(
   amount: number | string | null | undefined,
   locale: Locale,
 ): string {
+  // Number('') and Number('  ') are 0, not NaN — treat blank as "no value".
+  if (typeof amount === 'string' && amount.trim() === '') return '—';
   const n = typeof amount === 'string' ? Number(amount) : amount;
   if (n === null || n === undefined || !Number.isFinite(n)) return '—';
   return FORMATTERS[locale].format(n);
