@@ -123,7 +123,7 @@ async function createLead(d) {
           locale: d.locale,
         },
         p_policy_version: "2026-06",
-        p_ip: null,
+        p_ip: d.ip || null,
       }),
     });
     if (!r.ok) console.error("[contact] lead RPC failed", r.status, await r.text());
@@ -131,17 +131,55 @@ async function createLead(d) {
   } catch (e) { console.error("[contact] lead RPC error", e); return false; }
 }
 
+// Best-effort client IP from the trusted Vercel edge. The first x-forwarded-for
+// hop is the originating client. NOT authoritative (a request reaching the
+// function off-edge can spoof it), but it throttles the common case — a bot
+// reusing one address — and stamps the consent record's IP. Mirrors
+// src/lib/http/request-ip.ts in the CRM.
+function clientIp(req) {
+  var xff = req.headers["x-forwarded-for"];
+  if (xff) {
+    var first = String(xff).split(",")[0].trim();
+    if (first) return first;
+  }
+  return req.headers["x-real-ip"] || "unknown";
+}
+
+// Server-side per-IP rate limit (5/hour) via the anon-callable RPC from
+// migration 165. This is the load-bearing brake: without it /api/contact is an
+// open relay (emailProspect mails an attacker-supplied address from our verified
+// domain) and a lead-flood door. FAIL-CLOSED — a public relay must not lose its
+// brake on a DB blip; the page still shows phone / WhatsApp / office-email.
+async function underRateLimit(subject) {
+  try {
+    var r = await fetch(SB_URL + "/rest/v1/rpc/consume_public_contact_rate_limit", {
+      method: "POST",
+      headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON, "Content-Type": "application/json" },
+      body: JSON.stringify({ p_subject: subject }),
+    });
+    if (!r.ok) { console.error("[contact] rate-limit RPC failed", r.status); return false; }
+    return (await r.json()) === true;
+  } catch (e) { console.error("[contact] rate-limit error", e); return false; }
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") { res.status(405).json({ ok: false }); return; }
   var b = req.body || {};
+  // honeypot: real users never fill this — pretend success for bots
+  if (String(b.company || "").trim() !== "") { res.status(200).json({ ok: true }); return; }
+  // timing trap (mirrors /check): a sub-2.5s fill is a script. The client also
+  // drops these, but the server must not trust the client. Ack-and-drop like a bot.
+  var elapsed = Number(b.elapsed_ms);
+  if (Number.isFinite(elapsed) && elapsed >= 0 && elapsed < 2500) { res.status(200).json({ ok: true }); return; }
   var name = String(b.name || "").trim().slice(0, 120);
   var email = String(b.email || "").trim().slice(0, 200);
   var subject = String(b.subject || "").trim().slice(0, 200);
   var message = String(b.message || "").trim().slice(0, 4000);
-  // honeypot: real users never fill this — pretend success for bots
-  if (String(b.company || "").trim() !== "") { res.status(200).json({ ok: true }); return; }
   if (!name || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { res.status(400).json({ ok: false }); return; }
-  var d = { name: name, email: email, subject: subject, message: message, locale: b.locale === "he" ? "he" : "en" };
+  // Throttle BEFORE any email or lead so abuse never triggers a single send.
+  var ip = clientIp(req);
+  if (!(await underRateLimit("ip:" + ip))) { res.status(429).json({ ok: false }); return; }
+  var d = { name: name, email: email, subject: subject, message: message, ip: ip, locale: b.locale === "he" ? "he" : "en" };
   var results = await Promise.all([emailOffice(d), createLead(d), emailProspect(d)]);
   res.status(results[0] || results[1] ? 200 : 502).json({ ok: results[0] || results[1] });
 };

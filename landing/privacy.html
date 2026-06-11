@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<!--
+  Kaufman Finance Group — Privacy Policy  ·  standalone, self-contained, bilingual.
+  Host alongside the landing page (e.g. kaufman-finance.com/privacy).
+  • English (default) + Hebrew (toggle). The HEBREW version is the binding/authoritative one.
+  • The consent box acknowledges client-side. To create a LEGALLY RECORDED consent
+    (timestamp + IP in the DB), wire the checkbox into the CRM intake (/check) and the
+    document-upload portal — see note marked  RECORDED CONSENT  in the script.
+  • Shares the language choice with the landing page via localStorage key "kfg_lang".
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Privacy Policy — Kaufman Finance Group</title>
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <link rel="apple-touch-icon" href="assets/favicon.png" />
+  <!-- Set language/direction before first paint: default English (LTR); only a saved HE choice opens RTL. -->
+  <script>
+    (function () {
+      var d = document.documentElement, l = 'en';
+      try { if (localStorage.getItem('kfg_lang') === 'he') l = 'he'; } catch (e) {}
+      d.lang = l; d.dir = l === 'he' ? 'rtl' : 'ltr';
+    })();
+  </script>
+  <meta name="description" content="How Kaufman Finance Group collects, stores, processes and protects your personal and financial information." />
+  <meta name="robots" content="index,follow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&family=Frank+Ruhl+Libre:wght@400;500;600;700&family=Heebo:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+  :root{
+    --ivory:#FAF8F3;--white:#FFFFFF;--black:#0A0A0A;--gold-tint:#FFF8E7;
+    --gold:#C9A961;--gold-text:#8A6E2D;--gold-light:#E8C77B;--gold-dark:#B8945A;
+    --shadow-card:0 18px 40px -22px rgba(138,110,45,.28),0 6px 14px -10px rgba(10,10,10,.10);
+    --ink-90:rgba(10,10,10,.90);--ink-78:rgba(10,10,10,.78);--ink-60:rgba(10,10,10,.60);--ink-40:rgba(10,10,10,.40);
+    --maxw:1180px;--docw:760px;--gutter:clamp(1.25rem,5vw,2.5rem);
+    --font-display:"Playfair Display",Georgia,serif;--font-body:"Inter",system-ui,-apple-system,sans-serif;
+  }
+  html[lang="he"]{--font-display:"Frank Ruhl Libre",Georgia,serif;--font-body:"Heebo",system-ui,-apple-system,sans-serif}
+  *,*::before,*::after{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{margin:0;font-family:var(--font-body);color:var(--ink-90);background:var(--ivory);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  a{color:var(--gold-text);text-decoration:none}
+  a:hover{text-decoration:underline}
+  button{font-family:inherit;cursor:pointer}
+  :focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:4px}
+
+  /* language switching: both languages live in the DOM, CSS shows the active one */
+  .lang{display:none}
+  html[lang="en"] .lang.en{display:revert}
+  html[lang="he"] .lang.he{display:revert}
+
+  .wrap{width:100%;max-width:var(--maxw);margin-inline:auto;padding-inline:var(--gutter)}
+  .doc{max-width:var(--docw);margin-inline:auto}
+
+  /* top bar */
+  .bar{position:sticky;inset-block-start:0;z-index:100;background:rgba(250,248,243,.92);border-bottom:1px solid transparent;transition:border-color .3s,box-shadow .3s}
+  .bar.scrolled{border-bottom-color:color-mix(in srgb,var(--gold) 36%,transparent);box-shadow:0 10px 30px -24px rgba(10,10,10,.4)}
+  .bar-inner{display:flex;align-items:center;justify-content:space-between;gap:1rem;max-width:var(--maxw);margin-inline:auto;padding:.85rem var(--gutter)}
+  .brand{display:flex;align-items:center;gap:.55rem;line-height:1}
+  .brand .dot{width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 22%,transparent)}
+  .brand .logo-mark{height:50px;width:auto;display:block;flex:none}
+  .footer .brand .logo-mark{height:48px}
+  .brand .wm{font-family:var(--font-display);font-weight:600;font-variant:small-caps;letter-spacing:.06em;font-size:1.3rem;color:var(--black)}
+  .brand .sub{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-60);margin-top:2px}
+  html[lang="he"] .brand .sub{letter-spacing:.06em}
+  .bar-actions{display:flex;align-items:center;gap:1.1rem}
+  .back{display:inline-flex;align-items:center;gap:.45rem;font-size:.9rem;font-weight:500;color:var(--ink-78)}
+  .back:hover{color:var(--black);text-decoration:none}
+  html[dir="rtl"] .back .arr{transform:scaleX(-1)}
+  .toggle{display:inline-flex;align-items:center;border:1px solid color-mix(in srgb,var(--gold) 50%,transparent);border-radius:999px;overflow:hidden}
+  .toggle button{background:transparent;border:0;padding:.34rem .7rem;font-size:.78rem;font-weight:600;letter-spacing:.04em;color:var(--ink-60);transition:color .25s}
+  .toggle button.active{color:var(--black);background:color-mix(in srgb,var(--gold) 16%,transparent)}
+
+  /* header */
+  .head{padding:clamp(3rem,7vw,5.5rem) 0 clamp(1.5rem,4vw,2.5rem)}
+  .eyebrow{display:inline-flex;align-items:center;gap:.7rem;font-family:var(--font-body);font-weight:600;font-size:.72rem;text-transform:uppercase;color:var(--gold-text);margin:0 0 1.1rem}
+  html[lang="en"] .eyebrow{letter-spacing:.18em}
+  html[lang="he"] .eyebrow{letter-spacing:0;font-size:.82rem}
+  .eyebrow::before{content:"";width:30px;height:1px;background:var(--gold);display:inline-block}
+  .title{font-family:var(--font-display);font-weight:600;line-height:1.1;letter-spacing:-.01em;font-size:clamp(2.2rem,5vw,3.4rem);color:var(--black);margin:0}
+  .updated{margin-top:1rem;font-size:.85rem;color:var(--ink-60)}
+  .preamble{margin-top:1.8rem}
+  .preamble p{font-size:clamp(1.02rem,1.4vw,1.12rem);line-height:1.7;color:var(--ink-78);margin:0 0 1rem}
+  .preamble .url{font-size:.95rem}
+
+  /* arch divider */
+  .divider{line-height:0}
+  .divider svg{display:block;width:100%;height:46px}
+  .divider path{fill:none;stroke:var(--gold);stroke-width:1.5}
+
+  /* document body */
+  .doc-section{padding-block:clamp(1.6rem,3.5vw,2.4rem);border-bottom:1px solid color-mix(in srgb,var(--gold) 18%,transparent)}
+  .snum{display:block;font-family:var(--font-display);font-size:1.4rem;color:color-mix(in srgb,var(--gold-text) 85%,transparent);line-height:1;margin-bottom:.5rem}
+  .doc-section h2{font-family:var(--font-display);font-weight:500;font-size:clamp(1.25rem,2.4vw,1.6rem);color:var(--black);margin:0 0 .8rem;line-height:1.25}
+  .doc-section p{font-size:1.02rem;line-height:1.7;color:var(--ink-78);margin:0 0 .9rem}
+  .doc-section p:last-child{margin-bottom:0}
+  .doc-list{margin:.3rem 0 .9rem;padding:0;list-style:none}
+  .doc-list li{position:relative;padding-inline-start:1.4rem;margin-bottom:.55rem;font-size:1rem;line-height:1.55;color:var(--ink-78)}
+  .doc-list li::before{content:"";position:absolute;inset-inline-start:0;inset-block-start:.62em;width:6px;height:6px;border-radius:1px;background:var(--gold);transform:rotate(45deg)}
+  .contact-line{display:flex;flex-wrap:wrap;gap:.35rem 1.2rem;margin-top:.4rem;font-size:1.02rem;color:var(--ink-90)}
+  .contact-line b{color:var(--gold-text);font-weight:600}
+  bdi{font-variant-numeric:tabular-nums}
+
+  /* consent box */
+  .consent-wrap{padding-block:clamp(2.5rem,5vw,3.5rem)}
+  .consent{background:var(--white);border:1px solid color-mix(in srgb,var(--gold) 45%,transparent);border-radius:18px;
+    padding:clamp(1.6rem,4vw,2.4rem);box-shadow:var(--shadow-card);position:relative;overflow:hidden}
+  .consent::before{content:"";position:absolute;inset-block-start:0;inset-inline:0;height:3px;background:linear-gradient(90deg,var(--gold-dark),var(--gold-light),var(--gold-dark))}
+  .consent .eyebrow{margin-bottom:.9rem}
+  .consent blockquote{margin:0 0 1.4rem;padding-inline-start:1.1rem;border-inline-start:2px solid var(--gold);
+    font-family:var(--font-display);font-style:italic;font-size:clamp(1.05rem,1.8vw,1.22rem);line-height:1.55;color:var(--black)}
+  html[lang="he"] .consent blockquote{font-style:normal}
+  .consent-check{display:flex;align-items:flex-start;gap:.7rem;cursor:pointer;font-size:1rem;color:var(--ink-90);line-height:1.45}
+  .consent-check input{margin-top:.2rem;width:20px;height:20px;accent-color:var(--gold-dark);flex:none}
+  .approve{margin-top:1.4rem;display:inline-flex;align-items:center;gap:.55rem;background:var(--black);color:var(--gold-light);
+    font-weight:600;font-size:1rem;padding:.85rem 1.7rem;border:0;border-radius:999px;
+    box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--gold) 45%,transparent);transition:transform .2s,opacity .2s,box-shadow .2s}
+  .approve:disabled{opacity:.45;cursor:not-allowed}
+  .approve:not(:disabled):hover{transform:translateY(-2px);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--gold) 75%,transparent),0 14px 30px -16px rgba(10,10,10,.5)}
+  .approved{display:none;align-items:center;gap:.6rem;margin-top:1.3rem;padding:.9rem 1.1rem;border-radius:12px;
+    background:color-mix(in srgb,var(--gold) 12%,var(--white));border:1px solid color-mix(in srgb,var(--gold) 40%,transparent);color:var(--gold-text);font-weight:500}
+  .approved.show{display:flex}
+  .approved svg{width:20px;height:20px;stroke:var(--gold-text);fill:none;stroke-width:1.6;flex:none}
+  .binding{margin-top:1.3rem;font-size:.84rem;color:var(--ink-60);line-height:1.5}
+
+  /* footer */
+  .footer{background:linear-gradient(180deg,var(--black),#141210);color:#fff;margin-top:clamp(2rem,5vw,3.5rem);padding-block:clamp(2.5rem,5vw,3.5rem);border-top:1px solid color-mix(in srgb,var(--gold) 45%,transparent)}
+  .footer-inner{display:flex;align-items:center;justify-content:space-between;gap:1.4rem;flex-wrap:wrap}
+  .footer .brand .wm{color:#fff}.footer .brand .sub{color:rgba(255,255,255,.5)}
+  .footer .links{display:flex;gap:1.3rem;font-size:.86rem}
+  .footer .links a{color:rgba(255,255,255,.75)}
+  .footer .rights{color:rgba(255,255,255,.5);font-size:.8rem;width:100%}
+  @media (max-width:560px){.footer-inner{flex-direction:column;align-items:flex-start}}
+  </style>
+</head>
+<body>
+  <header class="bar" id="bar">
+    <div class="bar-inner">
+      <a class="brand" href="index.html" aria-label="Kaufman Finance Group">
+        <img class="logo-mark" src="assets/logo-coin-square.png" alt="" />
+        <span><span class="wm">KAUFMAN</span><span class="sub">Finance Group</span></span>
+      </a>
+      <div class="bar-actions">
+        <a class="back" href="index.html"><span class="arr">&larr;</span><span class="lang en">Back to site</span><span class="lang he">חזרה לאתר</span></a>
+        <div class="toggle" role="group" aria-label="Language">
+          <button type="button" data-lang="en" class="active">EN</button>
+          <button type="button" data-lang="he">עב</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="head">
+      <div class="wrap doc">
+        <span class="eyebrow"><span class="lang en">Legal · Privacy</span><span class="lang he">משפטי · פרטיות</span></span>
+        <h1 class="title"><span class="lang en">Privacy Policy</span><span class="lang he">מדיניות פרטיות</span></h1>
+        <div class="updated"><span class="lang en">Last updated: June 2026</span><span class="lang he">עודכן לאחרונה: יוני 2026</span></div>
+        <div class="preamble">
+          <p class="lang en">Welcome to the website and systems of Kaufman Finance Group (the "Company").</p>
+          <p class="lang he">ברוכים הבאים לאתר ולמערכות של קויפמן פייננס גרופ (להלן: "החברה").</p>
+          <p class="lang en">The Company provides mortgage advisory, guidance and brokerage services and assists its clients in obtaining financing for property purchases, refinancing mortgages and additional financing solutions.</p>
+          <p class="lang he">החברה מעניקה שירותי ייעוץ, ליווי ותיווך משכנתאות ומסייעת ללקוחותיה בקבלת מימון לרכישת נכסים, מחזור משכנתאות ופתרונות מימון נוספים.</p>
+          <p class="lang en">The Company attaches great importance to protecting its clients' privacy and acts to safeguard the information provided to it in accordance with the provisions of the law.</p>
+          <p class="lang he">החברה מייחסת חשיבות רבה להגנה על פרטיות לקוחותיה ופועלת לשמירה על המידע הנמסר לה בהתאם להוראות הדין.</p>
+          <p class="url"><span class="lang en">Website: </span><span class="lang he">כתובת האתר: </span><a href="https://kaufman-finance.com">https://kaufman-finance.com</a></p>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider wrap doc" aria-hidden="true"><svg viewBox="0 0 760 46" preserveAspectRatio="none"><path d="M0 36 Q380 4 760 36"/></svg></div>
+
+    <section class="wrap doc">
+      <!-- 1 -->
+      <div class="doc-section">
+        <span class="snum">01</span>
+        <h2 class="lang en">Purpose and legal framework</h2><h2 class="lang he">מטרה ומסגרת חוקית</h2>
+        <p class="lang en">This policy is intended to explain how the Company collects, stores, processes and uses personal and financial information provided to it by its clients and website users.</p>
+        <p class="lang he">מדיניות זו נועדה להסביר כיצד החברה אוספת, שומרת, מעבדת ומשתמשת במידע אישי ופיננסי הנמסר לה על ידי לקוחותיה ומשתמשי האתר.</p>
+        <p class="lang en">The Company operates in accordance with the Protection of Privacy Law, 5741-1981, and the regulations and directives issued thereunder.</p>
+        <p class="lang he">החברה פועלת בהתאם להוראות חוק הגנת הפרטיות, התשמ"א-1981, התקנות וההנחיות מכוחו.</p>
+      </div>
+      <!-- 2 -->
+      <div class="doc-section">
+        <span class="snum">02</span>
+        <h2 class="lang en">Consent</h2><h2 class="lang he">הסכמה</h2>
+        <p class="lang en">Use of the website, the client management system (CRM), the document upload portal, or the Company's services constitutes consent to this Privacy Policy.</p>
+        <p class="lang he">השימוש באתר, במערכת ניהול הלקוחות (CRM), בפורטל העלאת המסמכים או בשירותי החברה מהווה הסכמה למדיניות פרטיות זו.</p>
+        <p class="lang en">Providing information to the Company is not required by law; however, without providing the necessary information we may be unable to provide the requested service or handle your request.</p>
+        <p class="lang he">מסירת מידע לחברה אינה חובה על פי דין, אולם ללא מסירת המידע הנדרש ייתכן שלא נוכל להעניק את השירות המבוקש או לטפל בבקשתך.</p>
+      </div>
+      <!-- 3 -->
+      <div class="doc-section">
+        <span class="snum">03</span>
+        <h2 class="lang en">Types of information collected</h2><h2 class="lang he">סוגי המידע הנאסף</h2>
+        <p class="lang en">The Company may collect personal, financial and commercial information, including:</p>
+        <p class="lang he">החברה עשויה לאסוף מידע אישי, פיננסי ומסחרי, לרבות:</p>
+        <ul class="doc-list lang en">
+          <li>Full name and identifying details</li><li>ID (Teudat Zehut) number</li><li>Copy of ID card and passport</li><li>Residential address</li><li>Phone numbers and email addresses</li><li>Bank account statements</li><li>Pay slips</li><li>Tax returns in Israel and abroad</li><li>US 1040 forms</li><li>Income confirmations</li><li>Accountant's reports</li><li>Property documents</li><li>Purchase contracts</li><li>Appraisals</li><li>Documents of existing mortgages and loans</li><li>Insurance documents</li><li>Information regarding assets, liabilities and sources of income</li><li>Additional documents required to assess financing eligibility</li>
+        </ul>
+        <ul class="doc-list lang he">
+          <li>שם מלא ופרטי זיהוי</li><li>מספר תעודת זהות</li><li>צילום תעודת זהות ודרכון</li><li>כתובת מגורים</li><li>מספרי טלפון וכתובות דוא"ל</li><li>דפי חשבון בנק</li><li>תלושי שכר</li><li>דוחות מס בישראל ובחו"ל</li><li>טפסי 1040 אמריקאיים</li><li>אישורי הכנסות</li><li>דוחות רואה חשבון</li><li>מסמכי נכסים</li><li>חוזי רכישה</li><li>שמאויות</li><li>מסמכי משכנתאות והלוואות קיימות</li><li>מסמכי ביטוח</li><li>מידע אודות נכסים, התחייבויות ומקורות הכנסה</li><li>מסמכים נוספים הנדרשים לצורך בחינת זכאות למימון</li>
+        </ul>
+        <p class="lang en">In addition, the Company collects technical information relating to use of the website and its systems, including IP address, browser type, browsing data and additional statistical data.</p>
+        <p class="lang he">בנוסף, החברה אוספת מידע טכני הנוגע לשימוש באתר ובמערכותיה, לרבות כתובת IP, סוג דפדפן, נתוני גלישה ונתונים סטטיסטיים נוספים.</p>
+      </div>
+      <!-- 4 -->
+      <div class="doc-section">
+        <span class="snum">04</span>
+        <h2 class="lang en">CRM system and document storage</h2><h2 class="lang he">מערכת CRM ואחסון מסמכים</h2>
+        <p class="lang en">The Company uses a client management system (CRM) operated at <a href="https://crm.kaufman-finance.com">crm.kaufman-finance.com</a> for the purpose of managing clients, handling requests, documenting actions, storing documents and providing the services.</p>
+        <p class="lang he">החברה עושה שימוש במערכת ניהול לקוחות (CRM) המופעלת בכתובת <a href="https://crm.kaufman-finance.com">crm.kaufman-finance.com</a> לצורך ניהול לקוחות, טיפול בבקשות, תיעוד פעולות, שמירת מסמכים ומתן השירותים.</p>
+        <p class="lang en">Information and documents may be stored and processed via Google Workspace and Google Drive services, which the Company uses for storage, backup, information security and document management.</p>
+        <p class="lang he">מידע ומסמכים עשויים להישמר ולעבור עיבוד באמצעות שירותי Google Workspace ו-Google Drive, המשמשים את החברה לצורך אחסון, גיבוי, אבטחת מידע וניהול מסמכים.</p>
+      </div>
+      <!-- 5 -->
+      <div class="doc-section">
+        <span class="snum">05</span>
+        <h2 class="lang en">Purposes of using the information</h2><h2 class="lang he">מטרות השימוש במידע</h2>
+        <p class="lang en">The Company uses the information for:</p>
+        <p class="lang he">החברה משתמשת במידע לצורך:</p>
+        <ul class="doc-list lang en">
+          <li>Providing mortgage advisory and guidance services</li><li>Assessing eligibility for financing</li><li>Building mortgage structures (tamhil)</li><li>Submitting applications to banks and lenders</li><li>Negotiating with banks and financial institutions</li><li>Handling the insurance required to obtain the mortgage</li><li>Managing the relationship with the client</li><li>Providing service and support</li><li>Improving the Company's services and products</li><li>Complying with legal requirements</li><li>Protecting the Company's rights</li><li>Information security and fraud prevention</li>
+        </ul>
+        <ul class="doc-list lang he">
+          <li>מתן שירותי ייעוץ וליווי משכנתאות</li><li>בחינת זכאות לקבלת מימון</li><li>בניית תמהילי משכנתא</li><li>הגשת בקשות לבנקים ולגופים מממנים</li><li>ניהול משא ומתן מול בנקים וגופים פיננסיים</li><li>טיפול בביטוחים הנדרשים לצורך קבלת המשכנתא</li><li>ניהול הקשר עם הלקוח</li><li>מתן שירות ותמיכה</li><li>שיפור השירותים והמוצרים של החברה</li><li>עמידה בדרישות החוק</li><li>הגנה על זכויות החברה</li><li>אבטחת מידע ומניעת הונאות</li>
+        </ul>
+      </div>
+      <!-- 6 -->
+      <div class="doc-section">
+        <span class="snum">06</span>
+        <h2 class="lang en">Transfer of information to third parties</h2><h2 class="lang he">העברת מידע לצדדים שלישיים</h2>
+        <p class="lang en">For the purpose of providing the services, the Company may transfer information and documents to the following parties:</p>
+        <p class="lang he">לצורך מתן השירותים, החברה עשויה להעביר מידע ומסמכים לגורמים הבאים:</p>
+        <ul class="doc-list lang en">
+          <li>Banks</li><li>Financial institutions</li><li>Insurance companies</li><li>Appraisers</li><li>Lawyers</li><li>Accountants</li><li>Tax advisors</li><li>Cloud service providers</li><li>Technology service providers</li><li>Additional professional service providers required to handle the client's request</li>
+        </ul>
+        <ul class="doc-list lang he">
+          <li>בנקים</li><li>גופים פיננסיים</li><li>חברות ביטוח</li><li>שמאים</li><li>עורכי דין</li><li>רואי חשבון</li><li>יועצי מס</li><li>ספקי שירותי ענן</li><li>ספקי שירותים טכנולוגיים</li><li>נותני שירות מקצועיים נוספים הנדרשים לצורך הטיפול בבקשת הלקוח</li>
+        </ul>
+        <p class="lang en">In addition, the Company may transfer information where required by law, judicial order or the demand of a competent authority.</p>
+        <p class="lang he">בנוסף, החברה רשאית להעביר מידע כאשר הדבר נדרש על פי דין, צו שיפוטי או דרישת רשות מוסמכת.</p>
+      </div>
+      <!-- 7 -->
+      <div class="doc-section">
+        <span class="snum">07</span>
+        <h2 class="lang en">Cookies</h2><h2 class="lang he">עוגיות (Cookies)</h2>
+        <p class="lang en">The Company may use cookies and similar technologies for operating the website, improving the user experience, information security and analyzing website use.</p>
+        <p class="lang he">החברה עשויה להשתמש בקבצי Cookies ובטכנולוגיות דומות לצורך תפעול האתר, שיפור חוויית המשתמש, אבטחת מידע וניתוח השימוש באתר.</p>
+        <p class="lang en">The user may block or delete cookies through their browser settings.</p>
+        <p class="lang he">המשתמש רשאי לחסום או למחוק Cookies באמצעות הגדרות הדפדפן שלו.</p>
+      </div>
+      <!-- 8 -->
+      <div class="doc-section">
+        <span class="snum">08</span>
+        <h2 class="lang en">Information security</h2><h2 class="lang he">אבטחת מידע</h2>
+        <p class="lang en">The Company takes reasonable and customary measures to secure the information in its possession.</p>
+        <p class="lang he">החברה נוקטת באמצעים סבירים ומקובלים לאבטחת המידע שברשותה.</p>
+        <p class="lang en">However, no security system can guarantee absolute protection against unauthorized intrusions or cyber risks.</p>
+        <p class="lang he">עם זאת, אין מערכת אבטחה המסוגלת להבטיח הגנה מוחלטת מפני חדירות בלתי מורשות או סיכוני סייבר.</p>
+      </div>
+      <!-- 9 -->
+      <div class="doc-section">
+        <span class="snum">09</span>
+        <h2 class="lang en">Communications and contact</h2><h2 class="lang he">דיוור ויצירת קשר</h2>
+        <p class="lang en">The Company may contact its clients for the purpose of providing the service, updates regarding their requests, requests to complete documents, status updates and relevant professional information.</p>
+        <p class="lang he">החברה רשאית ליצור קשר עם לקוחותיה לצורך מתן השירות, עדכונים הנוגעים לבקשותיהם, בקשות להשלמת מסמכים, עדכוני סטטוס ומידע מקצועי רלוונטי.</p>
+        <p class="lang en">In addition, subject to the provisions of the law, the Company may send advertising or marketing material. The client may request to be removed from mailing lists at any time.</p>
+        <p class="lang he">בנוסף, בכפוף להוראות הדין, החברה עשויה לשלוח דברי פרסומת או מידע שיווקי. הלקוח רשאי לבקש בכל עת להסיר את עצמו מרשימות הדיוור.</p>
+      </div>
+      <!-- 10 -->
+      <div class="doc-section">
+        <span class="snum">10</span>
+        <h2 class="lang en">Access and correction of information</h2><h2 class="lang he">עיון ותיקון מידע</h2>
+        <p class="lang en">In accordance with the provisions of the Protection of Privacy Law, every person is entitled to review the information held about them in the Company's databases and to request its correction or update where the information is incorrect, incomplete, unclear or not up to date.</p>
+        <p class="lang he">בהתאם להוראות חוק הגנת הפרטיות, כל אדם זכאי לעיין במידע המוחזק עליו במאגרי החברה ולבקש את תיקונו או עדכונו ככל שהמידע אינו נכון, שלם, ברור או מעודכן.</p>
+      </div>
+      <!-- 11 -->
+      <div class="doc-section">
+        <span class="snum">11</span>
+        <h2 class="lang en">Contact</h2><h2 class="lang he">יצירת קשר</h2>
+        <p class="lang en">For questions, requests or inquiries regarding privacy, you may contact the Company:</p>
+        <p class="lang he">לשאלות, בקשות או פניות בנושא פרטיות ניתן לפנות אל החברה:</p>
+        <div class="contact-line"><span><b><span class="lang en">Email:</span><span class="lang he">דוא"ל:</span></b> <a href="mailto:office@kaufman-finance.com">office@kaufman-finance.com</a></span></div>
+        <div class="contact-line"><span><b><span class="lang en">Phone:</span><span class="lang he">טלפון:</span></b> <bdi dir="ltr"><a href="tel:+97225681681">(+972) 2-568-1681</a></bdi></span></div>
+        <div class="contact-line"><span><b><span class="lang en">Website:</span><span class="lang he">אתר:</span></b> <a href="https://kaufman-finance.com">https://kaufman-finance.com</a></span></div>
+      </div>
+      <!-- 12 -->
+      <div class="doc-section">
+        <span class="snum">12</span>
+        <h2 class="lang en">Changes to this policy</h2><h2 class="lang he">שינויים במדיניות</h2>
+        <p class="lang en">The Company may update this policy from time to time. The updated version published on the Company's website shall be the binding version.</p>
+        <p class="lang he">החברה רשאית לעדכן מדיניות זו מעת לעת. הגרסה המעודכנת שתפורסם באתר החברה תהיה הגרסה המחייבת.</p>
+      </div>
+    </section>
+
+    <!-- consent -->
+    <section class="wrap doc consent-wrap">
+      <div class="consent">
+        <span class="eyebrow"><span class="lang en">Your consent</span><span class="lang he">אישור והסכמה</span></span>
+        <blockquote class="lang en">I confirm that I have read the Privacy Policy of Kaufman Finance Group and that I agree to the storage of the information and documents I upload to the Company's systems for the purpose of providing mortgage advisory and guidance services. I am aware that this information may be transferred to banks, insurance companies, appraisers and additional professional parties required to handle my request.</blockquote>
+        <blockquote class="lang he">אני מאשר/ת כי קראתי את מדיניות הפרטיות של קויפמן פייננס גרופ וכי אני מסכים/ה לשמירת המידע והמסמכים שאעלה במערכות החברה לצורך מתן שירותי ייעוץ וליווי משכנתאות. ידוע לי כי מידע זה עשוי להיות מועבר לבנקים, חברות ביטוח, שמאים וגורמים מקצועיים נוספים הנדרשים לצורך הטיפול בבקשתי.</blockquote>
+
+        <label class="consent-check">
+          <input type="checkbox" id="agree" />
+          <span><span class="lang en">I have read and agree to the Privacy Policy and the statement above.</span><span class="lang he">קראתי ואני מסכים/ה למדיניות הפרטיות ולהצהרה שלמעלה.</span></span>
+        </label>
+
+        <button class="approve" id="approveBtn" disabled>
+          <span class="lang en">I approve</span><span class="lang he">אני מאשר/ת</span>
+        </button>
+
+        <div class="approved" id="approved">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>
+          <span><span class="lang en">Thank you — your acknowledgement was recorded on </span><span class="lang he">תודה — אישורך נרשם בתאריך </span><span id="approvedDate"></span>.</span>
+        </div>
+
+        <p class="binding">
+          <span class="lang en">This English translation is provided for convenience only. The Hebrew version is the binding and authoritative version.</span>
+          <span class="lang he">תרגום זה לאנגלית ניתן לנוחות בלבד. הגרסה העברית היא הגרסה המחייבת.</span>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <span class="brand"><img class="logo-mark" src="assets/logo-coin-square.png" alt="" /><span><span class="wm">KAUFMAN</span><span class="sub">Finance Group</span></span></span>
+      <span class="links">
+        <a href="index.html"><span class="lang en">Home</span><span class="lang he">דף הבית</span></a>
+        <a href="accessibility.html"><span class="lang en">Accessibility</span><span class="lang he">נגישות</span></a>
+        <a href="index.html#contact"><span class="lang en">Contact</span><span class="lang he">צור קשר</span></a>
+      </span>
+      <span class="rights"><span class="lang en">© 2026 Kaufman Finance Group. All rights reserved.</span><span class="lang he">© 2026 קבוצת המימון קאופמן. כל הזכויות שמורות.</span></span>
+    </div>
+  </footer>
+
+  <script>
+  (function(){
+    "use strict";
+    var html = document.documentElement;
+    function setLang(lang, persist){
+      html.setAttribute("lang", lang);
+      html.setAttribute("dir", lang === "he" ? "rtl" : "ltr");
+      document.querySelectorAll(".toggle button").forEach(function(b){
+        b.classList.toggle("active", b.getAttribute("data-lang") === lang);
+      });
+      if (persist !== false) { try{ localStorage.setItem("kfg_lang", lang); }catch(e){} }
+    }
+    document.querySelectorAll(".toggle button").forEach(function(b){
+      b.addEventListener("click", function(){ setLang(b.getAttribute("data-lang")); });
+    });
+    var saved = null; try{ saved = localStorage.getItem("kfg_lang"); }catch(e){}
+    // Default to English; only an explicit (persisted) HE choice opens in Hebrew.
+    setLang(saved === "he" ? "he" : "en", false);
+
+    // sticky-bar hairline on scroll
+    var bar = document.getElementById("bar");
+    window.addEventListener("scroll", function(){
+      bar.classList.toggle("scrolled", (window.scrollY||window.pageYOffset) > 8);
+    }, { passive:true });
+
+    // consent: enable approve when checked; confirm on click
+    var agree = document.getElementById("agree");
+    var btn = document.getElementById("approveBtn");
+    var ok = document.getElementById("approved");
+    agree.addEventListener("change", function(){ btn.disabled = !agree.checked; if(!agree.checked) ok.classList.remove("show"); });
+    btn.addEventListener("click", function(){
+      if (!agree.checked) return;
+      var d = new Date();
+      var locale = html.getAttribute("lang") === "he" ? "he-IL" : "en-GB";
+      document.getElementById("approvedDate").textContent =
+        d.toLocaleDateString(locale, { year:"numeric", month:"long", day:"numeric" });
+      ok.classList.add("show");
+      btn.disabled = true;
+      // RECORDED CONSENT: this only confirms in the browser. To keep a legally meaningful
+      // record (who/when/IP), POST { agreed:true, policyVersion:"2026-06", ts } to the CRM
+      // and store it against the client — and/or surface this same checkbox inside the
+      // /check intake and the document-upload portal.
+    });
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,2 @@
+# Dev-only static server — not part of the deployed static site.
+serve.mjs

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<!--
+  Kaufman Finance Group — Accessibility Statement (הצהרת נגישות).
+  Standalone, self-contained, bilingual (Hebrew default + English). Host alongside index.html.
+  The on-site accessibility widget lives in index.html; this page is the legal declaration.
+  TODO before final publish: confirm the named accessibility coordinator + the statement date.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Accessibility Statement — Kaufman Finance Group</title>
+  <meta name="description" content="Kaufman Finance Group's commitment to making its website accessible to people with disabilities." />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <link rel="apple-touch-icon" href="assets/favicon.png" />
+  <script>
+    (function () { var d = document.documentElement, l = 'en';
+      try { if (localStorage.getItem('kfg_lang') === 'he') l = 'he'; } catch (e) {}
+      d.lang = l; d.dir = l === 'he' ? 'rtl' : 'ltr'; })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&family=Frank+Ruhl+Libre:wght@400;500;600;700&family=Heebo:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+  :root{
+    --ivory:#FAF8F3;--white:#FFFFFF;--black:#0A0A0A;--gold-tint:#FFF8E7;
+    --gold:#C9A961;--gold-text:#8A6E2D;--gold-light:#E8C77B;--gold-dark:#B8945A;
+    --shadow-card:0 18px 40px -22px rgba(138,110,45,.28),0 6px 14px -10px rgba(10,10,10,.10);
+    --ink-90:rgba(10,10,10,.90);--ink-78:rgba(10,10,10,.78);--ink-60:rgba(10,10,10,.60);
+    --maxw:1180px;--docw:760px;--gutter:clamp(1.25rem,5vw,2.5rem);
+    --font-display:"Playfair Display",Georgia,serif;--font-body:"Inter",system-ui,-apple-system,sans-serif;
+  }
+  html[lang="he"]{--font-display:"Frank Ruhl Libre",Georgia,serif;--font-body:"Heebo",system-ui,-apple-system,sans-serif}
+  *,*::before,*::after{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:var(--font-body);color:var(--ink-90);background:var(--ivory);-webkit-font-smoothing:antialiased}
+  a{color:var(--gold-text)} a:hover{text-decoration:underline}
+  :focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:4px}
+  .lang{display:none}
+  html[lang="en"] .lang.en{display:revert}
+  html[lang="he"] .lang.he{display:revert}
+  .wrap{width:100%;max-width:var(--maxw);margin-inline:auto;padding-inline:var(--gutter)}
+  .doc{max-width:var(--docw);margin-inline:auto}
+  .bar{position:sticky;inset-block-start:0;z-index:100;background:rgba(250,248,243,.94);border-bottom:1px solid color-mix(in srgb,var(--gold) 28%,transparent)}
+  .bar-inner{display:flex;align-items:center;justify-content:space-between;gap:1rem;max-width:var(--maxw);margin-inline:auto;padding:.85rem var(--gutter)}
+  .brand{display:flex;align-items:center;gap:.55rem;line-height:1}
+  .brand .logo-mark{height:40px;width:auto;display:block;flex:none}
+  .brand .wm{font-family:var(--font-display);font-weight:600;font-variant:small-caps;letter-spacing:.06em;font-size:1.3rem;color:var(--black)}
+  .brand .sub{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-60);margin-top:2px}
+  html[lang="he"] .brand .sub{letter-spacing:.06em}
+  .bar-actions{display:flex;align-items:center;gap:1.1rem}
+  .back{display:inline-flex;align-items:center;gap:.45rem;font-size:.9rem;font-weight:500;color:var(--ink-78)}
+  html[dir="rtl"] .back .arr{transform:scaleX(-1)}
+  .toggle{display:inline-flex;align-items:center;border:1px solid color-mix(in srgb,var(--gold) 50%,transparent);border-radius:999px;overflow:hidden}
+  .toggle button{background:transparent;border:0;padding:.34rem .7rem;font-size:.78rem;font-weight:600;color:var(--ink-60);cursor:pointer}
+  .toggle button.active{color:var(--black);background:color-mix(in srgb,var(--gold) 16%,transparent)}
+  .head{padding:clamp(3rem,7vw,5.5rem) 0 clamp(1.5rem,4vw,2.5rem)}
+  .eyebrow{display:inline-flex;align-items:center;gap:.7rem;font-weight:600;font-size:.72rem;text-transform:uppercase;color:var(--gold-text);margin:0 0 1.1rem}
+  html[lang="en"] .eyebrow{letter-spacing:.18em}
+  .eyebrow::before{content:"";width:30px;height:1px;background:var(--gold)}
+  .title{font-family:var(--font-display);font-weight:600;line-height:1.1;font-size:clamp(2.2rem,5vw,3.4rem);color:var(--black);margin:0}
+  .updated{margin-top:1rem;font-size:.85rem;color:var(--ink-60)}
+  .lead{margin-top:1.8rem;font-size:clamp(1.02rem,1.4vw,1.12rem);line-height:1.7;color:var(--ink-78)}
+  .doc-section{padding-block:clamp(1.6rem,3.5vw,2.4rem);border-bottom:1px solid color-mix(in srgb,var(--gold) 18%,transparent)}
+  .snum{display:block;font-family:var(--font-display);font-size:1.4rem;color:color-mix(in srgb,var(--gold-text) 85%,transparent);line-height:1;margin-bottom:.5rem}
+  .doc-section h2{font-family:var(--font-display);font-weight:500;font-size:clamp(1.25rem,2.4vw,1.6rem);color:var(--black);margin:0 0 .8rem;line-height:1.25}
+  .doc-section p{font-size:1.02rem;line-height:1.7;color:var(--ink-78);margin:0 0 .9rem}
+  .doc-section p:last-child{margin-bottom:0}
+  .doc-list{margin:.3rem 0 .9rem;padding:0;list-style:none}
+  .doc-list li{position:relative;padding-inline-start:1.4rem;margin-bottom:.55rem;font-size:1rem;line-height:1.55;color:var(--ink-78)}
+  .doc-list li::before{content:"";position:absolute;inset-inline-start:0;inset-block-start:.62em;width:6px;height:6px;border-radius:1px;background:var(--gold);transform:rotate(45deg)}
+  .contact-line{display:flex;flex-wrap:wrap;gap:.35rem 1.2rem;margin-top:.4rem;font-size:1.02rem;color:var(--ink-90)}
+  .contact-line b{color:var(--gold-text);font-weight:600}
+  bdi{font-variant-numeric:tabular-nums}
+  .footer{background:linear-gradient(180deg,var(--black),#141210);color:#fff;margin-top:clamp(2rem,5vw,3.5rem);padding-block:clamp(2.5rem,5vw,3.5rem);border-top:1px solid color-mix(in srgb,var(--gold) 45%,transparent)}
+  .footer-inner{display:flex;align-items:center;justify-content:space-between;gap:1.4rem;flex-wrap:wrap}
+  .footer .brand .wm{color:#fff}.footer .brand .sub{color:rgba(255,255,255,.5)}
+  .footer .links{display:flex;gap:1.3rem;font-size:.86rem}
+  .footer .links a{color:rgba(255,255,255,.75)}
+  .footer .rights{color:rgba(255,255,255,.5);font-size:.8rem;width:100%}
+  @media (max-width:560px){.footer-inner{flex-direction:column;align-items:flex-start}}
+  </style>
+</head>
+<body>
+  <header class="bar">
+    <div class="bar-inner">
+      <a class="brand" href="index.html" aria-label="Kaufman Finance Group">
+        <img class="logo-mark" src="assets/logo-coin-square.png" alt="" />
+        <span><span class="wm">KAUFMAN</span><span class="sub">Finance Group</span></span>
+      </a>
+      <div class="bar-actions">
+        <a class="back" href="index.html"><span class="arr">&larr;</span><span class="lang en">Back to site</span><span class="lang he">חזרה לאתר</span></a>
+        <div class="toggle" role="group" aria-label="Language">
+          <button type="button" data-lang="en" class="active">EN</button>
+          <button type="button" data-lang="he">עב</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="head">
+      <div class="wrap doc">
+        <span class="eyebrow"><span class="lang en">Legal · Accessibility</span><span class="lang he">משפטי · נגישות</span></span>
+        <h1 class="title"><span class="lang en">Accessibility Statement</span><span class="lang he">הצהרת נגישות</span></h1>
+        <div class="updated"><span class="lang en">Last updated: June 2026</span><span class="lang he">עודכן לאחרונה: יוני 2026</span></div>
+        <p class="lead lang en">Kaufman Finance Group sees great importance in making its website accessible to all, including people with disabilities, out of a belief that everyone is entitled to equal, respectful and independent service. We invest ongoing effort to make this site as accessible as possible.</p>
+        <p class="lead lang he">קבוצת המימון קאופמן רואה חשיבות רבה בהנגשת האתר לכלל הציבור, לרבות אנשים עם מוגבלות, מתוך אמונה שלכל אדם מגיע שירות שוויוני, מכבד ועצמאי. אנו משקיעים מאמץ מתמשך כדי שהאתר יהיה נגיש ככל האפשר.</p>
+      </div>
+    </section>
+
+    <section class="wrap doc">
+      <!-- 1 -->
+      <div class="doc-section">
+        <span class="snum">01</span>
+        <h2 class="lang en">Accessibility standard</h2><h2 class="lang he">תקן הנגישות</h2>
+        <p class="lang en">This site strives to comply with the Equal Rights for Persons with Disabilities Regulations (Service Accessibility), 5773-2013, and with Israeli Standard IS 5568, which is based on the international WCAG 2.1 guidelines at Level AA.</p>
+        <p class="lang he">אתר זה שואף לעמוד בהוראות תקנות שוויון זכויות לאנשים עם מוגבלות (התאמות נגישות לשירות), התשע״ג-2013, ובתקן הישראלי ת״י 5568, המבוסס על הנחיות WCAG 2.1 הבינלאומיות ברמת AA.</p>
+      </div>
+      <!-- 2 -->
+      <div class="doc-section">
+        <span class="snum">02</span>
+        <h2 class="lang en">What we have done</h2><h2 class="lang he">מה נעשה באתר</h2>
+        <p class="lang en">Among the accessibility measures applied to this site:</p>
+        <p class="lang he">בין אמצעי הנגישות שיושמו באתר:</p>
+        <ul class="doc-list lang en">
+          <li>A clear, semantic page structure with proper headings</li>
+          <li>Full keyboard navigation and a visible focus indicator</li>
+          <li>Readable colour contrast and legible text sizes</li>
+          <li>Descriptive text alternatives for meaningful images</li>
+          <li>Respect for the operating-system "reduce motion" setting</li>
+          <li>A fully bilingual interface (Hebrew RTL and English LTR)</li>
+          <li>A responsive layout that adapts to mobile, tablet and desktop</li>
+        </ul>
+        <ul class="doc-list lang he">
+          <li>מבנה עמוד ברור וסמנטי עם כותרות תקינות</li>
+          <li>ניווט מלא במקלדת וסימון מיקוד (focus) גלוי</li>
+          <li>ניגודיות צבעים קריאה וגדלי טקסט נוחים</li>
+          <li>טקסט חלופי לתמונות בעלות משמעות</li>
+          <li>כיבוד הגדרת "הפחתת תנועה" של מערכת ההפעלה</li>
+          <li>ממשק דו‑לשוני מלא (עברית RTL ואנגלית LTR)</li>
+          <li>עיצוב מותאם לנייד, טאבלט ומחשב</li>
+        </ul>
+      </div>
+      <!-- 3 -->
+      <div class="doc-section">
+        <span class="snum">03</span>
+        <h2 class="lang en">The accessibility tool</h2><h2 class="lang he">כלי הנגישות באתר</h2>
+        <p class="lang en">A floating accessibility button appears at the bottom corner of every page. Opening it reveals a menu that lets you enlarge the text, switch on higher contrast, highlight links, switch to a more readable font, stop animations (including the background video), and apply a grayscale view. Your choices are remembered on your device, and an "Accessibility reset" option restores the default state.</p>
+        <p class="lang he">בפינת כל עמוד מופיע כפתור נגישות צף. בפתיחתו נחשף תפריט המאפשר להגדיל את הטקסט, להפעיל ניגודיות גבוהה, להדגיש קישורים, לעבור לגופן קריא יותר, לעצור אנימציות (כולל סרטון הרקע) ולהציג את האתר בגווני אפור. הבחירות נשמרות במכשיר שלך, וקיים כפתור "איפוס נגישות" לשחזור מצב ברירת המחדל.</p>
+      </div>
+      <!-- 4 -->
+      <div class="doc-section">
+        <span class="snum">04</span>
+        <h2 class="lang en">Limitations</h2><h2 class="lang he">מגבלות והחרגות</h2>
+        <p class="lang en">Despite our efforts to make every page fully accessible, parts of the site may not yet be fully adapted, or may rely on third-party content whose accessibility is outside our control. We continue to improve the site's accessibility on an ongoing basis. If you encounter an accessibility issue, we would be grateful if you let us know.</p>
+        <p class="lang he">על אף מאמצינו להנגיש כל עמוד באופן מלא, ייתכן שחלקים מסוימים באתר טרם הונגשו במלואם, או נשענים על תכנים של צד שלישי שנגישותם אינה בשליטתנו. אנו ממשיכים לשפר את נגישות האתר באופן שוטף. אם נתקלת בבעיית נגישות, נשמח שתעדכן/י אותנו.</p>
+      </div>
+      <!-- 5 -->
+      <div class="doc-section">
+        <span class="snum">05</span>
+        <h2 class="lang en">Accessibility requests &amp; contact</h2><h2 class="lang he">פניות נגישות ויצירת קשר</h2>
+        <p class="lang en">If you found an accessibility barrier, or need a particular accommodation, please contact our accessibility coordinator. We will do our best to respond and provide a suitable solution as soon as possible. Please describe the problem, the page on which it occurred, and the browser/device you used.</p>
+        <p class="lang he">אם מצאת מכשול נגישות, או שאת/ה זקוק/ה להתאמה מסוימת, נא לפנות אל רכז/ת הנגישות שלנו. נעשה כמיטב יכולתנו להיענות ולספק פתרון מתאים בהקדם. נא לפרט את התקלה, את העמוד שבו אירעה, ואת הדפדפן/המכשיר שבו השתמשת.</p>
+        <div class="contact-line"><span><b><span class="lang en">Coordinator:</span><span class="lang he">רכז/ת נגישות:</span></b> <span class="lang en">Kaufman Finance Group office</span><span class="lang he">משרד קבוצת המימון קאופמן</span></span></div>
+        <div class="contact-line"><span><b><span class="lang en">Email:</span><span class="lang he">דוא"ל:</span></b> <a href="mailto:office@kaufman-finance.com">office@kaufman-finance.com</a></span></div>
+        <div class="contact-line"><span><b><span class="lang en">Phone:</span><span class="lang he">טלפון:</span></b> <bdi dir="ltr"><a href="tel:+97225681681">(+972) 2-568-1681</a></bdi></span></div>
+        <div class="contact-line"><span><b><span class="lang en">Address:</span><span class="lang he">כתובת:</span></b> <span class="lang en">Ahaliav 17, Jerusalem, Israel</span><span class="lang he">אהליאב 17, ירושלים</span></span></div>
+      </div>
+      <!-- 6 -->
+      <div class="doc-section">
+        <span class="snum">06</span>
+        <h2 class="lang en">Date of this statement</h2><h2 class="lang he">תאריך ההצהרה</h2>
+        <p class="lang en">This accessibility statement was last updated in June 2026 and is reviewed and updated from time to time as the site evolves.</p>
+        <p class="lang he">הצהרת נגישות זו עודכנה לאחרונה ביוני 2026, ונבדקת ומתעדכנת מעת לעת בהתאם להתפתחות האתר.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <span class="brand"><img class="logo-mark" src="assets/logo-coin-square.png" alt="" /><span><span class="wm">KAUFMAN</span><span class="sub">Finance Group</span></span></span>
+      <span class="links">
+        <a href="index.html"><span class="lang en">Home</span><span class="lang he">דף הבית</span></a>
+        <a href="privacy.html"><span class="lang en">Privacy</span><span class="lang he">פרטיות</span></a>
+        <a href="index.html#contact"><span class="lang en">Contact</span><span class="lang he">צור קשר</span></a>
+      </span>
+      <span class="rights"><span class="lang en">© 2026 Kaufman Finance Group. All rights reserved.</span><span class="lang he">© 2026 קבוצת המימון קאופמן. כל הזכויות שמורות.</span></span>
+    </div>
+  </footer>
+
+  <script>
+  (function () {
+    "use strict";
+    var html = document.documentElement;
+    function setLang(lang, persist) {
+      html.setAttribute("lang", lang);
+      html.setAttribute("dir", lang === "he" ? "rtl" : "ltr");
+      document.querySelectorAll(".toggle button").forEach(function (b) {
+        b.classList.toggle("active", b.getAttribute("data-lang") === lang);
+      });
+      if (persist !== false) { try { localStorage.setItem("kfg_lang", lang); } catch (e) {} }
+    }
+    document.querySelectorAll(".toggle button").forEach(function (b) {
+      b.addEventListener("click", function () { setLang(b.getAttribute("data-lang")); });
+    });
+    var saved = null; try { saved = localStorage.getItem("kfg_lang"); } catch (e) {}
+    setLang(saved === "he" ? "he" : "en", false);
+  })();
+  </script>
+</body>
+</html>
