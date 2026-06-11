@@ -15,6 +15,18 @@ import { createClient } from '@/lib/supabase/server';
  * path. Any value that doesn't start with a single `/` is rejected and we
  * fall back to the default.
  */
+/**
+ * Redirect that explicitly refuses caching. These responses can carry the
+ * freshly-written auth cookies (Set-Cookie on a 3xx); the framework/host
+ * defaults already avoid caching them, but an explicit no-store removes the
+ * dependency on that behavior (e.g. behind a non-Vercel proxy).
+ */
+function redirectNoStore(url: string): NextResponse {
+  const res = NextResponse.redirect(url);
+  res.headers.set('Cache-Control', 'no-store, max-age=0');
+  return res;
+}
+
 export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
@@ -26,7 +38,7 @@ export async function GET(request: Request): Promise<Response> {
       : '/cases';
 
   if (!code) {
-    return NextResponse.redirect(`${env.NEXT_PUBLIC_APP_URL}/login?error=missing_code`);
+    return redirectNoStore(`${env.NEXT_PUBLIC_APP_URL}/login?error=missing_code`);
   }
 
   const supabase = await createClient();
@@ -34,10 +46,8 @@ export async function GET(request: Request): Promise<Response> {
   if (error) {
     // Invalid / expired / already-used token. The login page surfaces the
     // error code as a translated message.
-    return NextResponse.redirect(
-      `${env.NEXT_PUBLIC_APP_URL}/login?error=invalid_invite`,
-    );
+    return redirectNoStore(`${env.NEXT_PUBLIC_APP_URL}/login?error=invalid_invite`);
   }
 
-  return NextResponse.redirect(`${env.NEXT_PUBLIC_APP_URL}${next}`);
+  return redirectNoStore(`${env.NEXT_PUBLIC_APP_URL}${next}`);
 }
