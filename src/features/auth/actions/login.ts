@@ -36,11 +36,19 @@ export async function loginAction(
     return { error: 'invalid_input' };
   }
 
-  // Layered brute-force defense. The IP gate catches credential-stuffing
-  // from a single host; the per-email gate catches the same attacker
-  // rotating IPs against one account. Both use failMode='closed' so a
-  // transient DB outage can't silently disable the limiter — better to
-  // refuse a few legitimate logins for ~minute than open the door.
+  // Layered brute-force defense, all failMode='closed' so a transient DB
+  // outage can't silently disable the limiter — better to refuse a few
+  // legitimate logins for ~a minute than open the door.
+  //   1. Per-IP: catches credential-stuffing from a single host.
+  //   2. Per (email, IP): the account-lockout gate. Keyed on BOTH so an
+  //      attacker burning wrong passwords from their own IP can't lock the
+  //      real user out from theirs (R1-auth-4 targeted-lockout DoS).
+  //   3. Per email across ALL IPs: a wider backstop that bounds a
+  //      distributed (IP-rotating) attack against one account. Trade-off:
+  //      ~20 distributed failures still deny that account for the window —
+  //      fully eliminating that needs CAPTCHA, accepted for now.
+  // Gates run sequentially so an IP-blocked flood never consumes the
+  // victim account's cross-IP budget.
   const ip = await getRequestIp();
   const ipOk = await checkRateLimit({
     action: 'login_attempt',
@@ -52,10 +60,19 @@ export async function loginAction(
   if (!ipOk) return { error: 'rate_limited' };
 
   const emailKey = parsed.data.email.toLowerCase().trim();
-  const emailOk = await checkRateLimit({
+  const emailIpOk = await checkRateLimit({
     action: 'login_attempt',
-    subject: `email:${emailKey}`,
+    subject: `email:${emailKey}:ip:${ip}`,
     max: 5,
+    windowSeconds: 900,
+    failMode: 'closed',
+  });
+  if (!emailIpOk) return { error: 'rate_limited' };
+
+  const emailOk = await checkRateLimit({
+    action: 'login_attempt_global',
+    subject: `email:${emailKey}`,
+    max: 20,
     windowSeconds: 900,
     failMode: 'closed',
   });
@@ -65,7 +82,12 @@ export async function loginAction(
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
 
   if (error) {
-    if (error.message.toLowerCase().includes('invalid')) {
+    // Classify on the structured error code (stable API), with the legacy
+    // message sniff only as a fallback for SDK versions that omit `code`.
+    if (
+      error.code === 'invalid_credentials' ||
+      error.message.toLowerCase().includes('invalid')
+    ) {
       return { error: 'invalid_credentials' };
     }
     return { error: 'unknown' };
