@@ -2,11 +2,21 @@ import { createEnv } from '@t3-oss/env-nextjs';
 import { z } from 'zod';
 
 const isProductionRuntime = process.env.NODE_ENV === 'production';
-// 32-char floor aligns with the sibling AES keys; the documented recipe
-// (`openssl rand -base64 32`) produces 44 chars, so real keys clear it.
+
+// Next.js requires this key to be VALID BASE64 that decodes to an AES key of
+// 16/24/32 bytes — a length check alone admits values Next itself would
+// reject. The documented recipe (`openssl rand -base64 32`) yields 44 chars
+// decoding to 32 bytes. Validation only runs server-side (t3-env skips
+// server vars in the browser), so Buffer is safe here.
+const SERVER_ACTIONS_KEY_ERROR =
+  'NEXT_SERVER_ACTIONS_ENCRYPTION_KEY must be base64 decoding to a 16/24/32-byte AES key (generate with: openssl rand -base64 32)';
+const isBase64AesKey = (v: string): boolean => {
+  if (v.length % 4 !== 0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(v)) return false;
+  return [16, 24, 32].includes(Buffer.from(v, 'base64').length);
+};
 const serverActionsEncryptionKeySchema = isProductionRuntime
-  ? z.string().min(32, 'Missing NEXT_SERVER_ACTIONS_ENCRYPTION_KEY')
-  : z.string().min(32).optional();
+  ? z.string().refine(isBase64AesKey, SERVER_ACTIONS_KEY_ERROR)
+  : z.string().refine(isBase64AesKey, SERVER_ACTIONS_KEY_ERROR).optional();
 
 /**
  * Type-safe environment variables.
