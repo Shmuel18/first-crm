@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 
 import { getRequestIp } from '@/lib/http/request-ip';
-import { checkRateLimit } from '@/lib/rate-limit';
+import { checkRateLimit, peekRateLimit, type RateLimitConfig } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 
 import { LoginSchema } from '../schemas/login.schema';
@@ -36,19 +36,16 @@ export async function loginAction(
     return { error: 'invalid_input' };
   }
 
-  // Layered brute-force defense, all failMode='closed' so a transient DB
-  // outage can't silently disable the limiter — better to refuse a few
-  // legitimate logins for ~a minute than open the door.
-  //   1. Per-IP: catches credential-stuffing from a single host.
-  //   2. Per (email, IP): the account-lockout gate. Keyed on BOTH so an
-  //      attacker burning wrong passwords from their own IP can't lock the
-  //      real user out from theirs (R1-auth-4 targeted-lockout DoS).
-  //   3. Per email across ALL IPs: a wider backstop that bounds a
-  //      distributed (IP-rotating) attack against one account. Trade-off:
-  //      ~20 distributed failures still deny that account for the window —
-  //      fully eliminating that needs CAPTCHA, accepted for now.
-  // Gates run sequentially so an IP-blocked flood never consumes the
-  // victim account's cross-IP budget.
+  // Layered brute-force defense (failMode 'closed': a DB blip refuses a few
+  // logins rather than silently disabling the limiter):
+  //   1. per-IP attempts 10/min — credential-stuffing from a single host.
+  //   2. per (email, IP) failures 5/15min — keyed on BOTH so an attacker's
+  //      wrong passwords can't lock the victim out from their own IP.
+  //   3. per email failures 20/15min across ALL IPs — bounds IP-rotation
+  //      attacks (a distributed attacker can still deny the account for the
+  //      window; the full fix is CAPTCHA, accepted for now).
+  // Failure budgets are PEEKED here and CONSUMED only after a failed
+  // password check below, so successful logins never burn lockout budget.
   const ip = await getRequestIp();
   const ipOk = await checkRateLimit({
     action: 'login_attempt',
@@ -60,37 +57,43 @@ export async function loginAction(
   if (!ipOk) return { error: 'rate_limited' };
 
   const emailKey = parsed.data.email.toLowerCase().trim();
-  const emailIpOk = await checkRateLimit({
-    action: 'login_attempt',
-    subject: `email:${emailKey}:ip:${ip}`,
-    max: 5,
-    windowSeconds: 900,
-    failMode: 'closed',
-  });
-  if (!emailIpOk) return { error: 'rate_limited' };
-
-  const emailOk = await checkRateLimit({
-    action: 'login_attempt_global',
-    subject: `email:${emailKey}`,
-    max: 20,
-    windowSeconds: 900,
-    failMode: 'closed',
-  });
-  if (!emailOk) return { error: 'rate_limited' };
+  const failGates: RateLimitConfig[] = [
+    {
+      action: 'login_fail',
+      subject: `email:${emailKey}:ip:${ip}`,
+      max: 5,
+      windowSeconds: 900,
+      failMode: 'closed',
+    },
+    {
+      action: 'login_fail_global',
+      subject: `email:${emailKey}`,
+      max: 20,
+      windowSeconds: 900,
+      failMode: 'closed',
+    },
+  ];
+  for (const gate of failGates) {
+    if (!(await peekRateLimit(gate))) return { error: 'rate_limited' };
+  }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
 
   if (error) {
-    // Classify on the structured error code (stable API), with the legacy
-    // message sniff only as a fallback for SDK versions that omit `code`.
-    if (
+    // Structured code first; legacy message sniff as fallback only.
+    const badCredentials =
       error.code === 'invalid_credentials' ||
-      error.message.toLowerCase().includes('invalid')
-    ) {
-      return { error: 'invalid_credentials' };
+      error.message.toLowerCase().includes('invalid');
+    if (!badCredentials) return { error: 'unknown' };
+
+    // Only confirmed credential failures consume lockout budget — infra
+    // errors ('unknown' above) must not lock users out during an outage.
+    let overLimit = false;
+    for (const gate of failGates) {
+      if (!(await checkRateLimit(gate))) overLimit = true;
     }
-    return { error: 'unknown' };
+    return { error: overLimit ? 'rate_limited' : 'invalid_credentials' };
   }
 
   redirect(next);

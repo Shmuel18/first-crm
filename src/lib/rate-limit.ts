@@ -54,3 +54,42 @@ export async function checkRateLimit({
   }
   return data === true;
 }
+
+/**
+ * Read-only twin of checkRateLimit: true while the subject still has budget
+ * in the current window, WITHOUT consuming any. Use when only failures
+ * should count (peek before the attempt, checkRateLimit after a failure).
+ *
+ * Requires migration 164. A missing function (PGRST202 — code deployed
+ * before the migration was applied) is tolerated as allow-with-loud-log so
+ * that window can't lock every user out; any other error honors failMode.
+ */
+export async function peekRateLimit({
+  action,
+  subject,
+  max,
+  windowSeconds,
+  failMode = 'open',
+}: RateLimitConfig): Promise<boolean> {
+  const supabase = await createClient();
+  // database.ts predates migration 164; minimal cast like lib/auth/session.ts.
+  // Regenerate the Supabase types to drop it.
+  const peekClient = supabase as unknown as {
+    rpc(
+      fn: 'peek_rate_limit',
+      args: { p_action: string; p_subject: string; p_max: number; p_window_seconds: number },
+    ): PromiseLike<{ data: boolean | null; error: { code?: string; message: string } | null }>;
+  };
+  const { data, error } = await peekClient.rpc('peek_rate_limit', {
+    p_action: action,
+    p_subject: subject,
+    p_max: max,
+    p_window_seconds: windowSeconds,
+  });
+  if (error) {
+    console.error('[peekRateLimit] RPC failed', { action, failMode, code: error.code });
+    if (error.code === 'PGRST202') return true; // migration 164 not applied yet
+    return failMode === 'closed' ? false : true;
+  }
+  return data === true;
+}
