@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 
 import { getRequestIp } from '@/lib/http/request-ip';
-import { checkRateLimit, peekRateLimit, type RateLimitConfig } from '@/lib/rate-limit';
+import { checkRateLimit, refundRateLimit, type RateLimitConfig } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 
 import { LoginSchema } from '../schemas/login.schema';
@@ -39,13 +39,15 @@ export async function loginAction(
   // Layered brute-force defense (failMode 'closed': a DB blip refuses a few
   // logins rather than silently disabling the limiter):
   //   1. per-IP attempts 10/min — credential-stuffing from a single host.
-  //   2. per (email, IP) failures 5/15min — keyed on BOTH so an attacker's
+  //   2. per (email, IP) 5/15min — lockout keyed on BOTH so an attacker's
   //      wrong passwords can't lock the victim out from their own IP.
-  //   3. per email failures 20/15min across ALL IPs — bounds IP-rotation
-  //      attacks (a distributed attacker can still deny the account for the
-  //      window; the full fix is CAPTCHA, accepted for now).
-  // Failure budgets are PEEKED here and CONSUMED only after a failed
-  // password check below, so successful logins never burn lockout budget.
+  //   3. per email 20/15min across ALL IPs — bounds IP-rotation attacks.
+  // The failure budgets (2+3) are consumed ATOMICALLY before the password
+  // check — parallel attempts cannot race past the limit, the DB increment
+  // IS the gate — and refunded below when the attempt turns out not to be a
+  // failed guess (success / infra error), so legitimate logins never
+  // accumulate lockout budget. Missing migration 164 only disables the
+  // refund: strictly MORE blocking, never a silently disabled defense.
   const ip = await getRequestIp();
   const ipOk = await checkRateLimit({
     action: 'login_attempt',
@@ -74,27 +76,25 @@ export async function loginAction(
     },
   ];
   for (const gate of failGates) {
-    if (!(await peekRateLimit(gate))) return { error: 'rate_limited' };
+    if (!(await checkRateLimit(gate))) return { error: 'rate_limited' };
   }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
 
   if (error) {
-    // Structured code first; legacy message sniff as fallback only.
+    // Structured code first; legacy message sniff as fallback only. A failed
+    // GUESS keeps the consumed budget; anything else (infra/unexpected) is
+    // refunded so an outage can't lock users out.
     const badCredentials =
       error.code === 'invalid_credentials' ||
       error.message.toLowerCase().includes('invalid');
-    if (!badCredentials) return { error: 'unknown' };
+    if (badCredentials) return { error: 'invalid_credentials' };
 
-    // Only confirmed credential failures consume lockout budget — infra
-    // errors ('unknown' above) must not lock users out during an outage.
-    let overLimit = false;
-    for (const gate of failGates) {
-      if (!(await checkRateLimit(gate))) overLimit = true;
-    }
-    return { error: overLimit ? 'rate_limited' : 'invalid_credentials' };
+    await Promise.all(failGates.map((gate) => refundRateLimit(gate)));
+    return { error: 'unknown' };
   }
 
+  await Promise.all(failGates.map((gate) => refundRateLimit(gate)));
   redirect(next);
 }

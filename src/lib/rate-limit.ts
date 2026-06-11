@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export type RateLimitConfig = {
   /** Stable identifier for the action. Lowercase snake_case, e.g. `lookup_borrower`. */
@@ -24,6 +24,8 @@ export type RateLimitConfig = {
   failMode?: 'open' | 'closed';
 };
 
+export type RateLimitRefund = Pick<RateLimitConfig, 'action' | 'subject' | 'windowSeconds'>;
+
 /**
  * Atomic, DB-backed rate-limit gate. Increments the counter for
  * (action, subject, current-time-bucket) and returns true while still under
@@ -31,8 +33,14 @@ export type RateLimitConfig = {
  *
  * Why DB and not in-memory: serverless invocations are short-lived and
  * scale out — an in-memory Map per Lambda would give each box its own
- * counter, defeating the purpose. The RPC is SECURITY DEFINER so the
- * counter table itself stays behind RLS.
+ * counter, defeating the purpose.
+ *
+ * Why the SERVICE-ROLE client: migration 164 locks the rate-limit RPCs to
+ * service_role. With the previous anon/authenticated EXECUTE, anyone holding
+ * the public anon key could call consume_rate_limit directly via PostgREST
+ * and burn a victim's login/reset budgets (targeted lockout DoS) — or, for
+ * refunds, reset their own lockout counters. These wrappers only ever run
+ * server-side, so the privileged client is contained here.
  */
 export async function checkRateLimit({
   action,
@@ -41,7 +49,7 @@ export async function checkRateLimit({
   windowSeconds,
   failMode = 'open',
 }: RateLimitConfig): Promise<boolean> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase.rpc('consume_rate_limit', {
     p_action: action,
     p_subject: subject,
@@ -56,40 +64,32 @@ export async function checkRateLimit({
 }
 
 /**
- * Read-only twin of checkRateLimit: true while the subject still has budget
- * in the current window, WITHOUT consuming any. Use when only failures
- * should count (peek before the attempt, checkRateLimit after a failure).
- *
- * Requires migration 164. A missing function (PGRST202 — code deployed
- * before the migration was applied) is tolerated as allow-with-loud-log so
- * that window can't lock every user out; any other error honors failMode.
+ * Best-effort atomic undo of ONE checkRateLimit consume — for attempts that
+ * turned out not to count toward the budget (successful login, infra error).
+ * Never throws: errors are logged and swallowed. While migration 164 is not
+ * yet applied the RPC is missing (PGRST202) and the refund no-ops, which only
+ * restores the stricter consume-everything behavior — a fail-safe direction.
  */
-export async function peekRateLimit({
+export async function refundRateLimit({
   action,
   subject,
-  max,
   windowSeconds,
-  failMode = 'open',
-}: RateLimitConfig): Promise<boolean> {
-  const supabase = await createClient();
+}: RateLimitRefund): Promise<void> {
+  const supabase = createAdminClient();
   // database.ts predates migration 164; minimal cast like lib/auth/session.ts.
   // Regenerate the Supabase types to drop it.
-  const peekClient = supabase as unknown as {
+  const refundClient = supabase as unknown as {
     rpc(
-      fn: 'peek_rate_limit',
-      args: { p_action: string; p_subject: string; p_max: number; p_window_seconds: number },
-    ): PromiseLike<{ data: boolean | null; error: { code?: string; message: string } | null }>;
+      fn: 'refund_rate_limit',
+      args: { p_action: string; p_subject: string; p_window_seconds: number },
+    ): PromiseLike<{ error: { code?: string; message: string } | null }>;
   };
-  const { data, error } = await peekClient.rpc('peek_rate_limit', {
+  const { error } = await refundClient.rpc('refund_rate_limit', {
     p_action: action,
     p_subject: subject,
-    p_max: max,
     p_window_seconds: windowSeconds,
   });
   if (error) {
-    console.error('[peekRateLimit] RPC failed', { action, failMode, code: error.code });
-    if (error.code === 'PGRST202') return true; // migration 164 not applied yet
-    return failMode === 'closed' ? false : true;
+    console.error('[refundRateLimit] RPC failed', { action, code: error.code });
   }
-  return data === true;
 }
