@@ -37,6 +37,16 @@ const SCRUB_RULES: Array<{ pattern: RegExp; replace: (m: string) => string }> = 
     pattern: /(access_token|refresh_token|api_key|password|secret)=([^&\s"']+)/gi,
     replace: () => 'redacted=[redacted]',
   },
+  // JSON-SERIALIZED secret pairs ("password":"..."): request bodies and span
+  // attribute bags (http.request.body.data) often carry JSON as a STRING,
+  // which the key=value rule above misses. Keeps the key, redacts the value;
+  // handles escaped quotes inside the value.
+  {
+    pattern:
+      /"(password|secret|api[_-]?key|apikey|access_token|refresh_token|token|authorization)"\s*:\s*"(?:[^"\\]|\\.)*"/gi,
+    replace: ((_m: string, key: string) =>
+      `"${key}":"[redacted]"`) as unknown as (m: string) => string,
+  },
   // Email: keep the domain for incident routing, redact the local part.
   // The replacer signature takes `(_m, ...args)` so we cast at the use site
   // — the SCRUB_RULES entry signature stays uniform across rules.

@@ -21,6 +21,19 @@ describe('scrubString', () => {
     expect(scrubString(`tok ${JWT}`)).toBe('tok TOKEN:[redacted]');
     expect(scrubString('password=hunter2&x=1')).toBe('redacted=[redacted]&x=1');
   });
+
+  it('redacts secret values inside JSON-serialized strings', () => {
+    expect(scrubString('{"password":"Secret123","x":1}')).toBe(
+      '{"password":"[redacted]","x":1}',
+    );
+    expect(scrubString('{"access_token":"abc.def","note":"ok"}')).toBe(
+      '{"access_token":"[redacted]","note":"ok"}',
+    );
+    // Escaped quotes inside the value don't break out of the redaction.
+    expect(scrubString('{"secret":"a\\"b","y":2}')).toBe('{"secret":"[redacted]","y":2}');
+    // Key casing is preserved; matching is case-insensitive.
+    expect(scrubString('{"Password":"Xyz12345"}')).toBe('{"Password":"[redacted]"}');
+  });
 });
 
 describe('scrubDeep', () => {
@@ -125,6 +138,19 @@ describe('sentryBeforeSendSpan', () => {
     expect(flat).not.toContain('123456789');
     expect(flat).not.toContain('a@b.com');
     expect(out.description).not.toContain('a@b.com');
+  });
+
+  it('redacts passwords inside a JSON-string request body attribute', () => {
+    const span = {
+      data: {
+        'http.request.body.data': '{"email":"a@b.com","password":"hunter2-secret"}',
+      },
+    } as unknown as SpanJSON;
+
+    const out = sentryBeforeSendSpan(span);
+    const flat = JSON.stringify(out.data);
+    expect(flat).not.toContain('hunter2-secret');
+    expect(flat).not.toContain('a@b.com');
   });
 });
 
