@@ -91,27 +91,32 @@ export const getCurrentUser = cache(async () => {
   return data.user;
 });
 
+/**
+ * Whether the current user may edit this case. Delegates to the DB's own
+ * authority — the can_edit_case RPC (migration 147, SECURITY DEFINER):
+ * edit_any_case, OR edit_own_case AND (assigned advisor OR associated
+ * advisor), always requiring deleted_at IS NULL. Delegation (rather than an
+ * inline re-implementation) keeps this helper from drifting out of sync with
+ * the RLS policies, which previously over-denied associated advisors.
+ */
 export const userCanEditCase = cache(async (caseId: string): Promise<boolean> => {
   const supabase = await createClient();
 
-  const permissions = await userHasPermissions('edit_any_case', 'edit_own_case');
-  if (permissions.edit_any_case === true) return true;
-  if (permissions.edit_own_case !== true) return false;
-
-  const user = await getCurrentUser();
-  if (!user) return false;
-
-  const { data, error } = await supabase
-    .from('cases')
-    .select('assigned_advisor_id')
-    .eq('id', caseId)
-    .is('deleted_at', null)
-    .maybeSingle();
+  // database.ts predates migration 147's can_edit_case; cast to a minimal
+  // local shape (same justified pattern as src/lib/auth/session.ts).
+  // Regenerate the Supabase types to drop this cast.
+  const editClient = supabase as unknown as {
+    rpc(
+      fn: 'can_edit_case',
+      args: { p_case_id: string },
+    ): PromiseLike<{ data: boolean | null; error: { message: string } | null }>;
+  };
+  const { data, error } = await editClient.rpc('can_edit_case', { p_case_id: caseId });
 
   if (error) {
     console.error('case edit permission check failed', { caseId, err: error.message });
     return false;
   }
 
-  return data?.assigned_advisor_id === user.id;
+  return data === true;
 });
