@@ -2102,7 +2102,15 @@
         "markDone": "Mark as received",
         "markUndone": "Mark as not received",
         "removeConfirmTitle": "Remove this item?",
-        "removeConfirmBody": "{count, plural, =1 {This item has 1 uploaded document} other {This item has # uploaded documents}}. The document(s) will stay in the case — only the checklist row is removed."
+        "removeConfirmBody": "{count, plural, =1 {This item has 1 uploaded document} other {This item has # uploaded documents}}. The document(s) will stay in the case — only the checklist row is removed.",
+        "addTemplate": "Preset list",
+        "templateAdded": "{count, plural, =1 {1 item added} other {# items added}}",
+        "templateAllExist": "All items of this list already exist in the checklist",
+        "templateGroups": {
+          "identity": "Identity & case opening",
+          "income": "Income",
+          "process": "Process"
+        }
       }
     },
     "syncIndicator": {

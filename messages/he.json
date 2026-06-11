@@ -2102,7 +2102,15 @@
         "markDone": "סמן כהתקבל",
         "markUndone": "סמן כלא התקבל",
         "removeConfirmTitle": "להסיר את הפריט?",
-        "removeConfirmBody": "{count, plural, =1 {לפריט זה מצורף מסמך אחד} other {לפריט זה מצורפים # מסמכים}}. המסמך יישאר בתיק — רק שורת הצ׳ק-ליסט תוסר."
+        "removeConfirmBody": "{count, plural, =1 {לפריט זה מצורף מסמך אחד} other {לפריט זה מצורפים # מסמכים}}. המסמך יישאר בתיק — רק שורת הצ׳ק-ליסט תוסר.",
+        "addTemplate": "רשימה מוכנה",
+        "templateAdded": "{count, plural, =1 {נוסף פריט אחד} other {נוספו # פריטים}}",
+        "templateAllExist": "כל פריטי הרשימה כבר קיימים בצ׳ק-ליסט",
+        "templateGroups": {
+          "identity": "זהות ופתיחת תיק",
+          "income": "הכנסות",
+          "process": "תהליך"
+        }
       }
     },
     "syncIndicator": {
