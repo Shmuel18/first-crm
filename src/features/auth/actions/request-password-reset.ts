@@ -1,5 +1,7 @@
 'use server';
 
+import { after } from 'next/server';
+
 import { getLocale } from 'next-intl/server';
 
 import { env, isEmailConfigured } from '@/lib/env';
@@ -68,6 +70,10 @@ export async function requestPasswordResetAction(
     return { sent: true };
   }
 
+  // Resolve the locale BEFORE the existence check so both branches do the
+  // same request-context work up front.
+  const locale = (await getLocale()) === 'en' ? 'en' : 'he';
+
   const admin = createAdminClient();
   const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
     type: 'recovery',
@@ -82,8 +88,17 @@ export async function requestPasswordResetAction(
   }
 
   const resetLink = `${env.NEXT_PUBLIC_APP_URL}/auth/confirm?token_hash=${tokenHash}&type=recovery&next=/auth/set-password`;
-  const locale = (await getLocale()) === 'en' ? 'en' : 'he';
-  await sendPasswordResetEmail({ to: email, resetLink, locale });
+
+  // TIMING (R1-auth-1): the email render + Resend round-trip must NOT run on
+  // the response's critical path — awaiting it only for real accounts made
+  // response latency an account-enumeration oracle. after() pushes the send
+  // past the response, so both branches return at the same point.
+  after(async () => {
+    const ok = await sendPasswordResetEmail({ to: email, resetLink, locale });
+    if (!ok) {
+      console.warn('[requestPasswordReset] send failed', { emailKey: emailMask(email) });
+    }
+  });
 
   return { sent: true };
 }
