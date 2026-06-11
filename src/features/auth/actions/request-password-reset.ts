@@ -5,73 +5,66 @@ import { after } from 'next/server';
 import { getLocale } from 'next-intl/server';
 
 import { env, isEmailConfigured } from '@/lib/env';
+import { padToMinDuration } from '@/lib/http/min-duration';
 import { getRequestIp } from '@/lib/http/request-ip';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { createAdminClient } from '@/lib/supabase/admin';
 
+import { emailMask } from '../domain/email-mask';
 import { RequestPasswordResetSchema } from '../schemas/request-password-reset.schema';
 import { sendPasswordResetEmail } from '../services/auth-email';
 import type { RequestPasswordResetState } from '../types';
 
 /**
- * Sends a password-reset email via Resend — NOT Supabase's built-in SMTP, which
- * is unconfigured on this project and failed silently (a locked-out manager had
- * no recovery path). We mint a `recovery` link with the admin API and mail it
- * ourselves, exactly like the team-invite flow; /auth/confirm verifies the
- * token (token_hash flow) and forwards to /auth/set-password.
- *
- * Enumeration-safe: returns `sent: true` whether or not the address has an
- * account (and whether or not the rate-limiter blocked the call). The one
- * non-uniform signal — `email_unconfigured` — is system-level, not per-account,
- * so it leaks nothing about who is registered.
- *
- * Layered throttle: per-IP (5/hour) catches spammers; per-email (3/hour) caps
- * mailbox abuse for a single victim. Both fail-closed.
+ * Resend-based password reset (Supabase SMTP is unconfigured): mints a
+ * `recovery` link via the admin API; /auth/confirm verifies the token_hash
+ * and forwards to /auth/set-password. Enumeration-safe on BOTH channels —
+ * content (`{ sent: true }` for real, missing, and throttled accounts alike)
+ * AND timing (the Resend send runs via after(), and every account-dependent
+ * exit is padded to RESET_FLOOR_MS so generateLink latency variance can't
+ * distinguish real accounts). Throttle: IP 5/h + email 3/h, fail-closed.
  */
+const RESET_FLOOR_MS = 600;
+
 export async function requestPasswordResetAction(
   _prev: RequestPasswordResetState,
   formData: FormData,
 ): Promise<RequestPasswordResetState> {
-  const parsed = RequestPasswordResetSchema.safeParse({
-    email: formData.get('email'),
-  });
-  if (!parsed.success) {
-    return { sent: false, error: 'invalid_input' };
-  }
+  const startedAt = Date.now();
 
-  // System-level (not per-account) → safe to surface. Without it the request
-  // would "succeed" while sending nothing — the silent dead-end we're fixing.
-  if (!isEmailConfigured()) {
-    return { sent: false, error: 'email_unconfigured' };
-  }
+  const parsed = RequestPasswordResetSchema.safeParse({ email: formData.get('email') });
+  if (!parsed.success) return { sent: false, error: 'invalid_input' };
+
+  // System-level (not per-account) → safe to surface immediately.
+  if (!isEmailConfigured()) return { sent: false, error: 'email_unconfigured' };
 
   const ip = await getRequestIp();
   const email = parsed.data.email.toLowerCase().trim();
 
-  const ipOk = await checkRateLimit({
-    action: 'password_reset',
-    subject: `ip:${ip}`,
-    max: 5,
-    windowSeconds: 3600,
-    failMode: 'closed',
-  });
-  const emailOk = await checkRateLimit({
-    action: 'password_reset',
-    subject: `email:${email}`,
-    max: 3,
-    windowSeconds: 3600,
-    failMode: 'closed',
-  });
+  const [ipOk, emailOk] = await Promise.all([
+    checkRateLimit({
+      action: 'password_reset',
+      subject: `ip:${ip}`,
+      max: 5,
+      windowSeconds: 3600,
+      failMode: 'closed',
+    }),
+    checkRateLimit({
+      action: 'password_reset',
+      subject: `email:${email}`,
+      max: 3,
+      windowSeconds: 3600,
+      failMode: 'closed',
+    }),
+  ]);
 
   if (!ipOk || !emailOk) {
-    // Same "looks like success" response — surfacing rate-limited would turn
-    // this into an enumeration oracle just as cleanly as "user not found".
+    // Surfacing rate-limited would be an enumeration oracle of its own.
     console.warn('[requestPasswordReset] throttled', { emailKey: emailMask(email) });
-    return { sent: true };
+    return sentUniformly(startedAt);
   }
 
-  // Resolve the locale BEFORE the existence check so both branches do the
-  // same request-context work up front.
+  // Locale BEFORE the existence check — same request-context work up front.
   const locale = (await getLocale()) === 'en' ? 'en' : 'he';
 
   const admin = createAdminClient();
@@ -81,18 +74,14 @@ export async function requestPasswordResetAction(
   });
   const tokenHash = linkData?.properties?.hashed_token ?? null;
   if (linkErr || !tokenHash) {
-    // No such account (or a transient API hiccup). Stay enumeration-safe: log
-    // server-side and return the SAME success state as a real send.
+    // No such account (or transient hiccup) — same response as a real send.
     console.warn('[requestPasswordReset] no link', { emailKey: emailMask(email) });
-    return { sent: true };
+    return sentUniformly(startedAt);
   }
 
   const resetLink = `${env.NEXT_PUBLIC_APP_URL}/auth/confirm?token_hash=${tokenHash}&type=recovery&next=/auth/set-password`;
 
-  // TIMING (R1-auth-1): the email render + Resend round-trip must NOT run on
-  // the response's critical path — awaiting it only for real accounts made
-  // response latency an account-enumeration oracle. after() pushes the send
-  // past the response, so both branches return at the same point.
+  // Off the response path (R1-auth-1) — see timing note in the header.
   after(async () => {
     const ok = await sendPasswordResetEmail({ to: email, resetLink, locale });
     if (!ok) {
@@ -100,11 +89,10 @@ export async function requestPasswordResetAction(
     }
   });
 
-  return { sent: true };
+  return sentUniformly(startedAt);
 }
 
-function emailMask(email: string): string {
-  const [user, domain] = email.split('@');
-  if (!user || !domain) return 'unparseable';
-  return `${user.slice(0, 2)}***@${domain}`;
+async function sentUniformly(startedAt: number): Promise<RequestPasswordResetState> {
+  await padToMinDuration(startedAt, RESET_FLOOR_MS);
+  return { sent: true };
 }
