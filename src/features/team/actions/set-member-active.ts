@@ -53,9 +53,9 @@ export async function setMemberActiveAction(userId: string, isActive: boolean): 
   if (!parsed.data.isActive) {
     const revoke = await revokeUserSessions(supabase, parsed.data.userId);
     if (!revoke.ok) {
+      // Details already logged inside revokeUserSessions.
       console.error('[setMemberActive] session revoke failed', {
         userId: parsed.data.userId,
-        error: revoke.error,
       });
     }
   }

@@ -40,16 +40,21 @@ export async function isCurrentUserActive(
 
 /**
  * Hard-revoke all of a user's auth sessions (admin-only, enforced in the RPC).
- * Best-effort by contract: callers should log a failure but not fail the
- * surrounding operation, since the per-request gate also blocks the user.
+ * Best-effort by contract: callers should treat a failure as non-fatal, since
+ * the per-request gate also blocks the user. The raw Supabase error is logged
+ * HERE and never returned — surfacing error.message past a helper boundary is
+ * the leak pattern CLAUDE.md forbids.
  */
 export async function revokeUserSessions(
   supabase: SupabaseClient<Database>,
   userId: string,
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean }> {
   const { error } = await (supabase as unknown as RevokeRpc).rpc('revoke_user_sessions', {
     p_user_id: userId,
   });
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    console.error('[revokeUserSessions] RPC failed', { userId, message: error.message });
+    return { ok: false };
+  }
   return { ok: true };
 }

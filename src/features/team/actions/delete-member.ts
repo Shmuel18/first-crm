@@ -100,9 +100,9 @@ export async function deleteMemberAction(userId: string): Promise<Result> {
   // already succeeded); the middleware gate is the hard guarantee.
   const revoke = await revokeUserSessions(supabase, parsed.data.userId);
   if (!revoke.ok) {
+    // Details already logged inside revokeUserSessions.
     console.error('[deleteMember] session revoke failed', {
       userId: parsed.data.userId,
-      error: revoke.error,
     });
   }
 
