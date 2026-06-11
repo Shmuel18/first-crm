@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { isValidIdOrPassport, isValidIsraeliId } from './israeli-id';
 import { isValidPhone, normalizePhone } from './il-phone';
-import { stripInvisible } from './sanitize-text';
+import { sanitizeMultiLine, sanitizeSingleLine, stripInvisible } from './sanitize-text';
 
 /**
  * Shared Zod primitives for form schemas.
@@ -34,36 +34,45 @@ export const CHILDREN_MAX = 30;
 
 const emptyToNull = (v: unknown): unknown => (v === '' || v === null ? null : v);
 
+// Optional-string preprocessors: normalize like the required variants do
+// (invisible bidi chars survive RTL paste and used to persist on optional
+// fields only — display-spoofing + duplicate-detection mismatches), then map
+// the now-possibly-empty result to null.
+const singleLineToNull = (v: unknown): unknown =>
+  typeof v === 'string' ? emptyToNull(sanitizeSingleLine(v)) : emptyToNull(v);
+const multiLineToNull = (v: unknown): unknown =>
+  typeof v === 'string' ? emptyToNull(sanitizeMultiLine(v)) : emptyToNull(v);
+
 // =============================================================================
 // String primitives
 // =============================================================================
 
-/** Optional name-shaped string (capped). */
+/** Optional name-shaped string (capped) — single-line normalized. */
 export const optionalShortString = (max: number = NAME_MAX) =>
-  z.preprocess(emptyToNull, z.string().max(max).nullable().optional());
+  z.preprocess(singleLineToNull, z.string().max(max).nullable().optional());
 
 /**
- * Required name-shaped string — trims whitespace, rejects empty.
- * Unlike the optional variants this does NOT use `emptyToNull` (the whole
- * point is to reject empty); non-string inputs fall through to z.string()
- * which rejects them with the same 'required' message.
+ * Required name-shaped string — strips invisible/control chars, trims,
+ * rejects empty. Unlike the optional variants this does NOT use `emptyToNull`
+ * (the whole point is to reject empty); non-string inputs fall through to
+ * z.string() which rejects them with the same 'required' message.
  */
 export const requiredShortString = (max: number = NAME_MAX) =>
   z.preprocess(
-    (v) => (typeof v === 'string' ? stripInvisible(v).trim() : v),
+    (v) => (typeof v === 'string' ? sanitizeSingleLine(v) : v),
     z
       .string({ error: 'common.errors.required' })
       .min(1, { error: 'common.errors.required' })
       .max(max, { error: 'common.errors.tooLong' }),
   );
 
-/** Optional notes/description (longer cap). */
+/** Optional notes/description (longer cap) — keeps line breaks. */
 export const optionalNotes = (max: number = NOTES_MAX) =>
-  z.preprocess(emptyToNull, z.string().max(max).nullable().optional());
+  z.preprocess(multiLineToNull, z.string().max(max).nullable().optional());
 
 /** Optional rich-text HTML (Tiptap output, capped to prevent DOS). */
 export const optionalLongText = (max: number = REQUEST_DETAILS_MAX) =>
-  z.preprocess(emptyToNull, z.string().max(max).nullable().optional());
+  z.preprocess(multiLineToNull, z.string().max(max).nullable().optional());
 
 // =============================================================================
 // UUID / date / number / enum

@@ -10,6 +10,13 @@
  */
 import { stripInvisible } from './sanitize-text';
 
+// Real Israeli numbering ranges (kept deliberately broad within each class):
+//   - 9-digit landline: area codes 02/03/04/08/09
+//   - 10-digit mobile (05X) and VoIP/non-geographic (07X)
+// Rejects e.g. 00..., 01..., 06... which the old "starts with 0" rule passed.
+const IL_LANDLINE = /^0[23489]\d{7}$/;
+const IL_MOBILE_OR_VOIP = /^0[57]\d{8}$/;
+
 export function normalizeIsraeliPhone(input: string): string | null {
   if (typeof input !== 'string') return null;
   const digits = input.replace(/\D/g, '');
@@ -20,11 +27,10 @@ export function normalizeIsraeliPhone(input: string): string | null {
     normalized = '0' + normalized.slice(3);
   }
 
-  // Final form: starts with 0, 9 or 10 digits total
-  if (!normalized.startsWith('0')) return null;
-  if (normalized.length !== 9 && normalized.length !== 10) return null;
-
-  return normalized;
+  if (IL_LANDLINE.test(normalized) || IL_MOBILE_OR_VOIP.test(normalized)) {
+    return normalized;
+  }
+  return null;
 }
 
 export function isValidIsraeliPhone(input: string): boolean {
@@ -43,8 +49,10 @@ export function isValidPhone(input: string): boolean {
   if (isValidIsraeliPhone(cleaned)) return true;
   const trimmed = cleaned.trim();
   if (!/^\+?[\d\s().-]+$/.test(trimmed)) return false;
-  const digitCount = trimmed.replace(/\D/g, '').length;
-  return digitCount >= 7 && digitCount <= 15;
+  const digits = trimmed.replace(/\D/g, '');
+  // A run of one repeated digit (0000000000 etc.) is never a real number.
+  if (/^(\d)\1*$/.test(digits)) return false;
+  return digits.length >= 7 && digits.length <= 15;
 }
 
 /**

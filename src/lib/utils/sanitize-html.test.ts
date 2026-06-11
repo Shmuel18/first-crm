@@ -23,4 +23,54 @@ describe('sanitizeRichTextHtml', () => {
     expect(html).not.toContain('onclick');
     expect(html).not.toContain('target="_self"');
   });
+
+  it('strips data: URI hrefs', () => {
+    const html = sanitizeRichTextHtml(
+      '<a href="data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==">x</a>',
+    );
+    expect(html).not.toContain('data:');
+    expect(html).not.toContain('href=');
+  });
+
+  it('strips protocol-relative hrefs (allowProtocolRelative: false)', () => {
+    const html = sanitizeRichTextHtml('<a href="//evil.example.com/p">x</a>');
+    expect(html).not.toContain('//evil.example.com');
+    expect(html).not.toContain('href=');
+  });
+
+  it('strips entity-encoded javascript: scheme tricks', () => {
+    const html = sanitizeRichTextHtml('<a href="&#106;avascript:alert(1)">x</a>');
+    expect(html).not.toContain('javascript:');
+    expect(html.toLowerCase()).not.toContain('avascript:');
+  });
+
+  it('drops style attributes (CSS injection)', () => {
+    const html = sanitizeRichTextHtml(
+      '<p style="background:url(javascript:alert(1));position:fixed">text</p>',
+    );
+    expect(html).not.toContain('style=');
+    expect(html).toContain('text');
+  });
+
+  it('neutralizes nested/broken tag smuggling', () => {
+    const html = sanitizeRichTextHtml('<scr<script>ipt>alert(1)</script>');
+    expect(html).not.toContain('<script');
+    expect(html).not.toContain('</script>');
+  });
+
+  it('strips mailto with embedded markup but keeps plain mailto', () => {
+    const html = sanitizeRichTextHtml('<a href="mailto:office@example.com">mail</a>');
+    expect(html).toContain('href="mailto:office@example.com"');
+  });
+
+  it('is idempotent on already-sanitized output', () => {
+    const once = sanitizeRichTextHtml('<p>שלום <strong>עולם</strong></p>');
+    expect(sanitizeRichTextHtml(once)).toBe(once);
+  });
+
+  it('returns empty string for null/undefined/empty', () => {
+    expect(sanitizeRichTextHtml(null)).toBe('');
+    expect(sanitizeRichTextHtml(undefined)).toBe('');
+    expect(sanitizeRichTextHtml('')).toBe('');
+  });
 });

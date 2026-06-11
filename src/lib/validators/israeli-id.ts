@@ -8,13 +8,19 @@
  *   sum(d_i) % 10 === 0
  *
  * Accepts inputs with leading zeros omitted (e.g. "12345678" pads to "012345678")
- * because some systems strip leading zeros when storing as numeric.
+ * because some systems strip leading zeros when storing as numeric. Requires at
+ * least 5 meaningful digits — shorter values (and all-zeros) pad to a
+ * trivially-zero checksum and are not real IDs.
  */
 import { stripInvisible } from './sanitize-text';
 
+const MIN_ID_DIGITS = 5;
+
 export function isValidIsraeliId(input: string): boolean {
   const digitsOnly = input.replace(/\D/g, '');
-  if (digitsOnly.length === 0 || digitsOnly.length > 9) return false;
+  if (digitsOnly.length < MIN_ID_DIGITS || digitsOnly.length > 9) return false;
+  // All-zeros passes the mod-10 checksum but is not a real ID.
+  if (/^0+$/.test(digitsOnly)) return false;
 
   const padded = digitsOnly.padStart(9, '0');
 
