@@ -54,6 +54,15 @@ describe('isValidPhone (Israeli OR foreign)', () => {
     expect(isValidPhone('1111111')).toBe(false);
   });
 
+  it('rejects pseudo-Israeli numbers instead of passing them as foreign', () => {
+    // 0-prefixed 10 digits with a non-existent 06 range — a typo, not foreign.
+    expect(isValidPhone('0612345678')).toBe(false);
+    // +972 with an invalid local number must not slip through either.
+    expect(isValidPhone('+972 61 234 5678')).toBe(false);
+    // BUT a US Dallas-area local number (area code 972, 10 digits) is real.
+    expect(isValidPhone('(972) 555-0123')).toBe(true);
+  });
+
   it('rejects values with letters', () => {
     expect(isValidPhone('050-CALL-NOW')).toBe(false);
   });

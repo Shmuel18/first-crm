@@ -50,7 +50,7 @@ describe('sanitizeMultiLine', () => {
       `xy${String.fromCharCode(10)}z`,
     );
     expect(sanitizeMultiLine('line1\nline2\tend')).toBe('line1\nline2\tend');
-    expect(sanitizeMultiLine('ab\nc')).toBe('ab\nc');
+    expect(sanitizeMultiLine('ab\nc')).toBe('ab\nc');
   });
 
   it('strips invisible bidi chars and trims outer whitespace', () => {
@@ -72,7 +72,7 @@ describe('optional string primitives normalize like required ones', () => {
   });
 
   it('optionalNotes keeps newlines but strips bidi/control chars', () => {
-    const res = optionalNotes().safeParse(`first${RLM}\nsecond`);
+    const res = optionalNotes().safeParse(`first${RLM}\nsecond`);
     expect(res.success).toBe(true);
     if (res.success) expect(res.data).toBe('first\nsecond');
   });

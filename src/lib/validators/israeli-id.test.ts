@@ -12,6 +12,9 @@ describe('isValidIsraeliId', () => {
   it('pads shorter inputs with leading zeros before checksumming', () => {
     // '12345674' → '012345674', which checksums to 30 (valid).
     expect(isValidIsraeliId('12345674')).toBe(true);
+    // Early sequential IDs are VERY short once leading zeros are stripped:
+    // '18' → '000000018' checksums to 10 (valid). No minimum length.
+    expect(isValidIsraeliId('18')).toBe(true);
   });
 
   it('rejects checksum failures', () => {
@@ -25,8 +28,8 @@ describe('isValidIsraeliId', () => {
     expect(isValidIsraeliId('000000000')).toBe(false);
   });
 
-  it('rejects too-short, too-long, and empty inputs', () => {
-    expect(isValidIsraeliId('1234')).toBe(false); // below the 5-digit floor
+  it('rejects too-long, empty, and checksum-failing short inputs', () => {
+    expect(isValidIsraeliId('1234')).toBe(false); // pads to checksum 14 — invalid
     expect(isValidIsraeliId('1234567890')).toBe(false); // 10 digits
     expect(isValidIsraeliId('')).toBe(false);
     expect(isValidIsraeliId('abc')).toBe(false);

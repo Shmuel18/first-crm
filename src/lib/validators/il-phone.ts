@@ -50,6 +50,13 @@ export function isValidPhone(input: string): boolean {
   const trimmed = cleaned.trim();
   if (!/^\+?[\d\s().-]+$/.test(trimmed)) return false;
   const digits = trimmed.replace(/\D/g, '');
+  // A number CLAIMING the Israeli format that failed the Israeli validation
+  // above is a typo, not a foreign number — don't let it slip through the
+  // permissive path (e.g. 0612345678 used to pass here as "foreign").
+  // Shapes treated as an Israeli claim: 0-prefixed 9/10 digits, or the 972
+  // country code followed by a full local number (8-9 digits; a bare
+  // 10-digit 972xxxxxxx can be a US Dallas-area local number, so it isn't).
+  if (/^0\d{8,9}$/.test(digits) || /^972\d{8,9}$/.test(digits)) return false;
   // A run of one repeated digit (0000000000 etc.) is never a real number.
   if (/^(\d)\1*$/.test(digits)) return false;
   return digits.length >= 7 && digits.length <= 15;
