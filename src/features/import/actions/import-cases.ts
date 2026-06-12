@@ -7,6 +7,7 @@ import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 
 import { mapRows } from '../domain/parse-table';
+import { validateAndNormalizeRows } from '../domain/validate-rows';
 import { logImportJob, parseFileToGrid, runCasesImport } from '../services/import.service';
 import type { ImportResult } from '../types';
 
@@ -35,16 +36,33 @@ export async function importCasesAction(formData: FormData): Promise<ImportResul
   if (!(file instanceof File) || file.size === 0) return { ok: false, error: 'no_file' };
   if (file.size > MAX_BYTES) return { ok: false, error: 'too_large' };
 
-  let rows;
+  let mapped;
   try {
     const grid = await parseFileToGrid(file);
-    rows = mapRows(grid).filter((r) => Object.keys(r).length > 0);
+    mapped = mapRows(grid).filter((r) => Object.keys(r).length > 0);
   } catch {
     return { ok: false, error: 'parse' };
   }
 
-  if (rows.length === 0) return { ok: false, error: 'empty' };
-  if (rows.length > MAX_ROWS) return { ok: false, error: 'too_large' };
+  if (mapped.length === 0) return { ok: false, error: 'empty' };
+  if (mapped.length > MAX_ROWS) return { ok: false, error: 'too_large' };
+
+  // Validate + NORMALIZE through the shared form primitives (canonical phone,
+  // lowercase email, ID shape, length caps) — the RPC persists raw values, so
+  // this is where the forms' data invariants are enforced for bulk import.
+  // All-or-nothing, mirroring the RPC's own PASS 1.
+  const { rows, errors: rowErrors } = validateAndNormalizeRows(mapped);
+  if (rowErrors.length > 0) {
+    await logImportJob({
+      userId: userRes.user.id,
+      fileName: file.name,
+      fileSize: file.size,
+      total: mapped.length,
+      created: 0,
+      errors: rowErrors,
+    });
+    return { ok: true, created: 0, total: mapped.length, errors: rowErrors };
+  }
 
   const outcome = await runCasesImport(rows);
   if (!outcome) return { ok: false, error: 'unknown' };

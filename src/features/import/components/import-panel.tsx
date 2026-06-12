@@ -11,7 +11,17 @@ import type { ImportResult } from '../types';
 
 // Map a server row-error code to a known i18n key (defends against an unknown
 // future code so next-intl never renders a missing key).
-const KNOWN_ROW_CODES = new Set(['missing_name', 'duplicate_in_file', 'national_id_exists']);
+const KNOWN_ROW_CODES = new Set([
+  'missing_name',
+  'duplicate_in_file',
+  'national_id_exists',
+  'invalid_id',
+  'invalid_phone',
+  'invalid_email',
+  'invalid_row',
+  'unknown_status',
+  'unknown_advisor',
+]);
 const rowErrorKey = (code: string): string => (KNOWN_ROW_CODES.has(code) ? code : 'unknown');
 
 export function ImportPanel() {

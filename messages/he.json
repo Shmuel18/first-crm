@@ -2012,6 +2012,12 @@
         "missing_name": "שורה {row}: חסר שם",
         "duplicate_in_file": "שורה {row}: ת\"ז כפולה בתוך הקובץ",
         "national_id_exists": "שורה {row}: ת\"ז כבר קיימת במערכת",
+        "invalid_id": "שורה {row}: ת\"ז / מספר דרכון לא תקין",
+        "invalid_phone": "שורה {row}: מספר טלפון לא תקין",
+        "invalid_email": "שורה {row}: כתובת אימייל לא תקינה",
+        "invalid_row": "שורה {row}: ערך לא תקין",
+        "unknown_status": "שורה {row}: סטטוס לא מזוהה",
+        "unknown_advisor": "שורה {row}: יועץ לא נמצא או לא פעיל",
         "unknown": "שורה {row}: שגיאה"
       },
       "errors": {
@@ -2596,7 +2602,8 @@
       "deleted": "חבר הצוות נמחק",
       "selfDelete": "אי אפשר למחוק את עצמך",
       "actionFailed": "הפעולה נכשלה. נסה שוב.",
-      "resentEmail": "ההזמנה נשלחה שוב במייל"
+      "resentEmail": "ההזמנה נשלחה שוב במייל",
+      "resendNotAllowed": "אפשר לשלוח קישור הזמנה רק לחבר צוות פעיל שטרם נכנס למערכת"
     },
     "resend": {
       "title": "קישור הזמנה חדש"

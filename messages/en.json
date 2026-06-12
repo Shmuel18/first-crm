@@ -2012,6 +2012,12 @@
         "missing_name": "Row {row}: missing name",
         "duplicate_in_file": "Row {row}: duplicate ID within the file",
         "national_id_exists": "Row {row}: ID already exists in the system",
+        "invalid_id": "Row {row}: invalid ID / passport number",
+        "invalid_phone": "Row {row}: invalid phone number",
+        "invalid_email": "Row {row}: invalid email address",
+        "invalid_row": "Row {row}: invalid value",
+        "unknown_status": "Row {row}: unrecognized status",
+        "unknown_advisor": "Row {row}: advisor not found or inactive",
         "unknown": "Row {row}: error"
       },
       "errors": {
@@ -2596,7 +2602,8 @@
       "deleted": "Member deleted",
       "selfDelete": "You can't delete yourself",
       "actionFailed": "Action failed. Please try again.",
-      "resentEmail": "Invite re-sent by email"
+      "resentEmail": "Invite re-sent by email",
+      "resendNotAllowed": "An invite link can only be sent to an active member who has never signed in"
     },
     "resend": {
       "title": "New invite link"
