@@ -1,5 +1,7 @@
 'use client';
 
+import type { ReactElement } from 'react';
+
 import { CheckCircle2, Download, Share } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -11,7 +13,7 @@ import { usePwaInstall } from '../hooks/use-pwa-install';
  * Share → Add-to-Home-Screen instructions; an already-installed device shows a
  * confirmation. Rendered inside the Display settings page.
  */
-export function InstallAppControl() {
+export function InstallAppControl(): ReactElement {
   const t = useTranslations('pwa');
   const { canPrompt, promptInstall, isStandalone, ready } = usePwaInstall();
 

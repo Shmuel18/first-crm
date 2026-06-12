@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactElement } from 'react';
 
 import { Download, Share, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -24,7 +24,7 @@ function initialDismissed(): boolean {
  * instructions), unless already installed or previously dismissed. Desktop is
  * served by the Settings entry instead, so this is hidden at md+.
  */
-export function InstallBanner() {
+export function InstallBanner(): ReactElement | null {
   const t = useTranslations('pwa');
   const { canPrompt, promptInstall, isIOS, isStandalone, ready } = usePwaInstall();
   const [dismissed, setDismissed] = useState<boolean>(initialDismissed);
@@ -43,7 +43,7 @@ export function InstallBanner() {
 
   return (
     <div
-      role="dialog"
+      role="status"
       aria-label={t('install')}
       className="md:hidden fixed inset-x-2 z-40 bottom-[calc(4rem+env(safe-area-inset-bottom)+0.5rem)] rounded-xl border border-brand-gold/30 bg-brand-black text-white shadow-xl"
     >
@@ -69,7 +69,7 @@ export function InstallBanner() {
           type="button"
           onClick={dismiss}
           aria-label={t('dismiss')}
-          className="shrink-0 rounded-md p-1 text-neutral-400 transition hover:text-white"
+          className="-me-1 inline-flex size-11 shrink-0 items-center justify-center rounded-md text-neutral-400 transition hover:text-white"
         >
           <X className="size-4" aria-hidden="true" />
         </button>

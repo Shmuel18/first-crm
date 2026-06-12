@@ -18,17 +18,22 @@
       img { width: 88px; height: 88px; }
       h1 { margin: 0; font-size: 20px; font-weight: 700; color: #E8C77B; }
       p { margin: 0; max-width: 320px; line-height: 1.6; color: #bdbdbd; font-size: 15px; }
-      button {
-        margin-top: 8px; padding: 10px 22px; border: 0; border-radius: 8px;
-        background: #C9A961; color: #0A0A0A; font-size: 15px; font-weight: 600; cursor: pointer;
+      .en { font-size: 13px; color: #8f8f8f; }
+      a.retry {
+        display: inline-block; margin-top: 8px; padding: 10px 22px; border-radius: 8px;
+        background: #C9A961; color: #0A0A0A; font-size: 15px; font-weight: 600;
+        text-decoration: none;
       }
-      button:active { background: #B8945A; }
+      a.retry:active { background: #B8945A; }
     </style>
   </head>
   <body>
     <img src="/icons/icon-192.png" alt="Kaufman Finance" />
     <h1>אין חיבור לאינטרנט</h1>
     <p>נראה שאינך מחובר כרגע. בדוק את החיבור ונסה שוב. הנתונים נטענים בזמן אמת ואינם נשמרים על המכשיר.</p>
-    <button type="button" onclick="location.reload()">נסה שוב</button>
+    <p class="en" lang="en" dir="ltr">No internet connection. Check your connection and try again — data loads live and is not stored on the device.</p>
+    <!-- A same-origin link, not JS: a navigation retry needs no inline handler,
+         so this works even under a strict CSP (no 'unsafe-inline' script). -->
+    <a class="retry" href="/" lang="he">נסה שוב · <span lang="en" dir="ltr">Retry</span></a>
   </body>
 </html>

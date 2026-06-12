@@ -10,8 +10,16 @@ import {
 } from './push-subscriptions.service';
 
 /** Generic, NO-PII push payload. Title/body are category-level only; the user
- *  opens the app (RLS-protected) for the specifics. `url` is where a tap lands. */
-export type PushPayload = { title: string; body: string; url: string };
+ *  opens the app (RLS-protected) for the specifics. `url` is where a tap lands.
+ *  `lang`/`dir` let the service worker declare the notification's direction so
+ *  English text isn't rendered RTL on the recipient's lock screen. */
+export type PushPayload = {
+  title: string;
+  body: string;
+  url: string;
+  lang?: 'he' | 'en';
+  dir?: 'rtl' | 'ltr';
+};
 
 let vapidReady = false;
 

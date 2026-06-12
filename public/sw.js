@@ -7,7 +7,7 @@
  * request (data, assets, /api) goes straight to the network, uncached.
  *
  * Bump CACHE when PRECACHE changes so old shells are evicted on activate. */
-const CACHE = 'kfg-shell-v1';
+const CACHE = 'kfg-shell-v2';
 const OFFLINE_URL = '/offline.html';
 const PRECACHE = [OFFLINE_URL, '/icons/icon-192.png'];
 
@@ -36,7 +36,26 @@ self.addEventListener('fetch', (event) => {
   // network is unavailable. Everything else is pure network (no caching), so no
   // sensitive data is ever persisted on the device.
   if (req.mode === 'navigate') {
-    event.respondWith(fetch(req).catch(() => caches.match(OFFLINE_URL)));
+    event.respondWith(
+      fetch(req).catch(() =>
+        // caches.match RESOLVES (not rejects) to undefined if the precache was
+        // evicted under storage pressure — guard so we never respond with
+        // undefined (which surfaces the browser's generic error page).
+        caches
+          .match(OFFLINE_URL)
+          .then(
+            (cached) =>
+              cached ||
+              fetch(OFFLINE_URL).catch(
+                () =>
+                  new Response('Offline', {
+                    status: 503,
+                    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+                  }),
+              ),
+          ),
+      ),
+    );
   }
 });
 
@@ -60,8 +79,10 @@ self.addEventListener('push', (event) => {
       // so it rendered as a solid white square in the status bar; badge-96 is a
       // transparent building glyph that masks to a clean white building.
       badge: '/icons/badge-96.png',
-      lang: 'he',
-      dir: 'rtl',
+      // Direction follows the recipient's locale (dispatch route sets lang/dir);
+      // Hebrew defaults keep older payloads rendering correctly.
+      lang: data.lang || 'he',
+      dir: data.dir || 'rtl',
       tag: 'kfg-notification',
       renotify: true,
       data: { url: data.url || '/' },

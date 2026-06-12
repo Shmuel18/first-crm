@@ -97,6 +97,8 @@ export async function POST(request: Request): Promise<Response> {
     title: title[locale],
     body: locale === 'en' ? 'Open the app for details' : 'פתח את האפליקציה לפרטים',
     url: urlForType(record.type, record.case_id ?? null),
+    lang: locale,
+    dir: locale === 'en' ? 'ltr' : 'rtl',
   };
 
   // Email mirror for the kinds that have no other email path (mentions,
