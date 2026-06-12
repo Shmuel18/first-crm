@@ -76,7 +76,9 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
     startTransition(async () => {
       const res = await resendInviteAction(member.id);
       if (!res.ok) {
-        toast.error(t('toast.actionFailed'));
+        toast.error(
+          res.error === 'not_allowed' ? t('toast.resendNotAllowed') : t('toast.actionFailed'),
+        );
         return;
       }
       if (res.emailed) {

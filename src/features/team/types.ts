@@ -36,4 +36,7 @@ export const INVITE_ACTION_INITIAL: InviteActionState = { ok: false, error: 'idl
  *  imperatively from a member row, not via a form). */
 export type ResendInviteResult =
   | { ok: true; emailed: boolean; inviteLink: string | null }
-  | { ok: false; error: 'unauthorized' | 'not_found' | 'rate_limited' | 'unknown' };
+  | {
+      ok: false;
+      error: 'unauthorized' | 'not_found' | 'not_allowed' | 'rate_limited' | 'unknown';
+    };

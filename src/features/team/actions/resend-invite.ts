@@ -48,11 +48,21 @@ export async function resendInviteAction(userId: string): Promise<ResendInviteRe
   // profiles is the source of truth for the member's email + name.
   const { data: profile, error: profErr } = await admin
     .from('profiles')
-    .select('email, first_name')
+    .select('email, first_name, is_active')
     .eq('id', userId)
     .is('deleted_at', null)
     .single();
   if (profErr || !profile?.email) return { ok: false, error: 'not_found' };
+
+  // SCOPE GUARD (R3-team-1): a magiclink is a full passwordless sign-in, so it
+  // may only be minted for a member who has NEVER completed onboarding. For a
+  // member who already signed in it would hand the admin a link that logs in
+  // AS that user (impersonation + audit rows attributed to the victim).
+  // Inactive members are refused too — reactivate first, then resend.
+  const { data: authUser } = await admin.auth.admin.getUserById(userId);
+  if (!profile.is_active || authUser?.user?.last_sign_in_at) {
+    return { ok: false, error: 'not_allowed' };
+  }
 
   const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
     type: 'magiclink',
