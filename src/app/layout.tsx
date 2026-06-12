@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Frank_Ruhl_Libre, Heebo, Inter } from 'next/font/google';
+import { Frank_Ruhl_Libre, Heebo } from 'next/font/google';
 
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
@@ -14,13 +14,6 @@ const heebo = Heebo({
   variable: '--font-heebo',
   subsets: ['hebrew', 'latin'],
   display: 'swap',
-});
-
-const inter = Inter({
-  variable: '--font-inter',
-  subsets: ['latin'],
-  display: 'swap',
-  preload: false,
 });
 
 const frankRuhl = Frank_Ruhl_Libre({
@@ -64,7 +57,7 @@ export default async function RootLayout({
     <html
       lang={locale}
       dir={dir}
-      className={`${heebo.variable} ${inter.variable} ${frankRuhl.variable} h-full antialiased`}
+      className={`${heebo.variable} ${frankRuhl.variable} h-full antialiased`}
     >
       <body className="min-h-full font-sans">
         {/* Polyfill crypto.randomUUID for INSECURE (HTTP) contexts. The browser

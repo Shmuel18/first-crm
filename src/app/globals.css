@@ -2,12 +2,20 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* The app is LIGHT-ONLY by design. This makes `dark:` a class-based variant
+   (scoped to a `.dark` ancestor that is never applied) instead of Tailwind's
+   default media-based one — so OS dark mode does NOT activate the leftover
+   `dark:` utilities in the shadcn primitives. Keep this line even though the
+   `.dark` palette block was removed. */
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-heebo), var(--font-inter), system-ui, sans-serif;
+  /* English text renders in Heebo's Latin glyphs (a unified He/En stack keeps
+     metrics consistent across mixed-language strings); headings use Frank Ruhl
+     Libre. Inter/Playfair from the brand spec are intentionally not wired. */
+  --font-sans: var(--font-heebo), system-ui, sans-serif;
   --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace;
   --font-heading: var(--font-frank-ruhl), var(--font-heebo), serif;
   --font-display: var(--font-frank-ruhl), serif;
@@ -151,43 +159,18 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+  /* Visible keyboard-focus fallback for interactive elements that don't carry
+     their own focus-visible:ring (e.g. plain links in translated rich text).
+     brand-gold-text is 4.8:1 on white — the AA-safe token (NOT brand-gold at
+     2.2:1). Components that set focus-visible:outline-none + a ring override it,
+     so there's no double indicator. */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-gold-text);
+    outline-offset: 2px;
   }
   body {
     @apply bg-background text-foreground;
@@ -497,10 +480,34 @@
   will-change: transform, opacity;
 }
 
+/* Global reduced-motion clamp. Covers the local keyframes AND every tw-animate-css
+   overlay enter/exit (dialogs, dropdowns, tooltips, toasts), which ship no
+   reduced-motion handling of their own. 0.01ms (not `none`) keeps animationend /
+   transitionend firing so Base-UI exit-on-animation-end unmounting still completes. */
 @media (prefers-reduced-motion: reduce) {
-  .task-critical-surface,
-  .task-critical-dot,
-  .logo-loading {
-    animation: none;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Browser print: the app pins html/body to 100dvh + overflow:hidden (the inner
+   .app-scroll-viewport owns scrolling), which truncates Ctrl+P to one viewport.
+   Restore document flow for printing so a case page prints in full. The
+   dedicated PDF/Excel export remains the supported path for formatted output. */
+@media print {
+  html,
+  body {
+    height: auto;
+    overflow: visible;
+  }
+  .app-scroll-viewport,
+  main#main-content {
+    height: auto !important;
+    overflow: visible !important;
   }
 }

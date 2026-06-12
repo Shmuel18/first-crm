@@ -47,10 +47,8 @@ A SaaS for **Kaufman Finance Group** - an Israeli mortgage advisor office. Repla
 | White | `#FFFFFF` | `white` |
 | Surface gray | `#FAFAFA` | `brand-surface` |
 | Border | `#E5E5E5` | `border-neutral-200` |
-| Body font (Hebrew) | Heebo / Assistant | `font-sans` |
-| Body font (English) | Inter | `font-sans` |
-| Heading font (Hebrew) | Frank Ruhl Libre | `font-display` |
-| Heading font (English) | Playfair Display | `font-display` |
+| Body font (He + En) | Heebo (its Latin glyphs cover English — unified stack) | `font-sans` |
+| Heading font (He + En) | Frank Ruhl Libre | `font-display` |
 
 **Use the Tailwind tokens — never bracketed hex (`text-[#A88840]`).** The
 tokens are declared in `src/app/globals.css` `@theme` and generate every
