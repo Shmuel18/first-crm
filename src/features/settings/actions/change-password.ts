@@ -25,5 +25,16 @@ export async function changePasswordAction(
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
   if (error) return { ok: false, error: 'unknown' };
 
+  // SEC (R3-settings-1, mirrors set-password.ts / R1-auth-2): a password
+  // change is the canonical "evict whoever else holds my account" action —
+  // kill every OTHER session so a stolen or stale session does not survive.
+  // Best-effort: a revoke hiccup must not fail the change that succeeded.
+  const { error: revokeErr } = await supabase.auth.signOut({ scope: 'others' });
+  if (revokeErr) {
+    console.error('[changePassword] revoking other sessions failed', {
+      code: revokeErr.code ?? null,
+    });
+  }
+
   return { ok: true };
 }
