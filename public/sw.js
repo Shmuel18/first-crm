@@ -7,7 +7,7 @@
  * request (data, assets, /api) goes straight to the network, uncached.
  *
  * Bump CACHE when PRECACHE changes so old shells are evicted on activate. */
-const CACHE = 'kfg-shell-v2';
+const CACHE = 'kfg-shell-v3';
 const OFFLINE_URL = '/offline.html';
 const PRECACHE = [OFFLINE_URL, '/icons/icon-192.png'];
 

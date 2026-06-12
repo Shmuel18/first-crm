@@ -32,8 +32,10 @@
     <h1>אין חיבור לאינטרנט</h1>
     <p>נראה שאינך מחובר כרגע. בדוק את החיבור ונסה שוב. הנתונים נטענים בזמן אמת ואינם נשמרים על המכשיר.</p>
     <p class="en" lang="en" dir="ltr">No internet connection. Check your connection and try again — data loads live and is not stored on the device.</p>
-    <!-- A same-origin link, not JS: a navigation retry needs no inline handler,
-         so this works even under a strict CSP (no 'unsafe-inline' script). -->
-    <a class="retry" href="/" lang="he">נסה שוב · <span lang="en" dir="ltr">Retry</span></a>
+    <!-- A link, not JS: a navigation retry needs no inline handler, so it works
+         under a strict CSP. href="" resolves to the CURRENT url — and the SW
+         serves this page in place at the original destination (e.g. /cases/123),
+         so clicking re-requests THAT url, not the home page. -->
+    <a class="retry" href="" lang="he">נסה שוב · <span lang="en" dir="ltr">Retry</span></a>
   </body>
 </html>
