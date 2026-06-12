@@ -48,14 +48,19 @@ export function FormField({
   htmlFor?: string;
 }) {
   const generatedId = useId();
-  const id = htmlFor ?? generatedId;
+  // Honor a child's OWN id when it has one, so the Label's htmlFor always
+  // points at the actual input (an explicit `htmlFor` prop wins over both).
+  const childArray = Children.toArray(children);
+  const firstValidIndex = childArray.findIndex((c) => isValidElement<InputLikeProps>(c));
+  const firstChild = firstValidIndex >= 0 ? childArray[firstValidIndex] : undefined;
+  const childOwnId =
+    isValidElement<InputLikeProps>(firstChild) ? firstChild.props.id : undefined;
+  const id = htmlFor ?? childOwnId ?? generatedId;
   const errorId = error ? `${id}-error` : undefined;
 
   // Inject id + a11y attrs onto the first React element child so screen readers
   // hear "<label>, invalid, <error>" when focused. Consumers that wrap the
   // input in a div should pass `htmlFor` explicitly.
-  const childArray = Children.toArray(children);
-  const firstValidIndex = childArray.findIndex((c) => isValidElement<InputLikeProps>(c));
   const enhancedChildren = childArray.map((child, idx) => {
     if (idx === firstValidIndex && isValidElement<InputLikeProps>(child)) {
       const existing = child.props['aria-describedby'];

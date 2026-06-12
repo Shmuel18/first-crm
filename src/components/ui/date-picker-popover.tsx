@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import { Popover as PopoverPrimitive } from '@base-ui/react/popover';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { DayPicker } from 'react-day-picker';
 import { he } from 'date-fns/locale/he';
 import { enUS } from 'date-fns/locale/en-US';
@@ -45,6 +45,7 @@ const END_MONTH = new Date(CURRENT_YEAR + 5, 11);
 export function DatePickerPopover({ value, onSelect, label, disabled }: Props) {
   const [open, setOpen] = useState(false);
   const locale = useLocale();
+  const t = useTranslations('common');
   const dateLocale = locale === 'he' ? he : enUS;
   const isHebrew = locale === 'he';
   const selected = parseIso(value);
@@ -162,14 +163,14 @@ export function DatePickerPopover({ value, onSelect, label, disabled }: Props) {
                 onClick={handleClear}
                 className="text-xs font-medium text-neutral-600 hover:text-red-600 px-2 py-1 rounded transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
               >
-                {isHebrew ? 'נקה' : 'Clear'}
+                {t('clear')}
               </button>
               <button
                 type="button"
                 onClick={handleToday}
                 className="text-xs font-medium text-brand-gold-text hover:text-brand-black px-2 py-1 rounded transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
               >
-                {isHebrew ? 'היום' : 'Today'}
+                {t('today')}
               </button>
             </div>
           </PopoverPrimitive.Popup>
