@@ -23,6 +23,7 @@ export async function unsubscribePushAction(endpoint: string): Promise<Result> {
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
 
-  await deletePushSubscriptionByEndpoint(parsed.data.endpoint);
+  // Scope the delete to the caller — endpoint alone is not an ownership proof.
+  await deletePushSubscriptionByEndpoint(parsed.data.endpoint, userRes.user.id);
   return { ok: true };
 }

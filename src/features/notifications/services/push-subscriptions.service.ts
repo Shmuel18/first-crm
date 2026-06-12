@@ -42,8 +42,18 @@ export async function upsertPushSubscription(
   return true;
 }
 
-export async function deletePushSubscriptionByEndpoint(endpoint: string): Promise<void> {
-  const { error } = await table().delete().eq('endpoint', endpoint);
+/**
+ * Delete ONE device subscription, scoped to its owner. The admin client
+ * bypasses RLS, so the user_id filter is the authorization boundary: without
+ * it any authenticated caller could unsubscribe another user's device by
+ * passing its endpoint (cross-user notification DoS). Callers pass the
+ * authenticated user's id.
+ */
+export async function deletePushSubscriptionByEndpoint(
+  endpoint: string,
+  userId: string,
+): Promise<void> {
+  const { error } = await table().delete().eq('endpoint', endpoint).eq('user_id', userId);
   if (error) console.error('[push-subscriptions] delete failed', { code: error.code });
 }
 

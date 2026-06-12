@@ -8,6 +8,7 @@ import { useLocale, useTranslations } from 'next-intl';
 
 import { logoutAction } from '@/features/auth/actions/logout';
 import { switchLocaleAction } from '@/features/auth/actions/switch-locale';
+import { cleanupPwaSession } from '@/features/pwa/lib/cleanup-pwa-session';
 
 import { parseLocale, type Locale } from '@/lib/i18n/direction';
 
@@ -22,9 +23,20 @@ export function UserMenu({ fullName, initials, roleName }: UserMenuProps) {
   const currentLocale = parseLocale(useLocale());
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [loggingOut, startLogout] = useTransition();
   const [pendingLocale, setPendingLocale] = useState<Locale | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+
+  // Tear down device-side PWA state (badge + this device's push subscription)
+  // BEFORE signing out, so a shared device doesn't keep broadcasting the
+  // previous user's activity (R2-pwa-1). Best-effort — never blocks logout.
+  const handleLogout = (): void => {
+    startLogout(async () => {
+      await cleanupPwaSession();
+      await logoutAction();
+    });
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -81,7 +93,7 @@ export function UserMenu({ fullName, initials, roleName }: UserMenuProps) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={t('open')}
-        aria-haspopup="menu"
+        aria-haspopup="true"
         aria-expanded={open}
         className="flex items-center gap-2.5 px-3 py-1.5 border border-brand-black-border rounded-lg hover:border-brand-gold hover:bg-brand-black-soft transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-light focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black"
       >
@@ -98,9 +110,11 @@ export function UserMenu({ fullName, initials, roleName }: UserMenuProps) {
       </button>
 
       {open && (
+        // Disclosure popup (NOT an ARIA menu): its controls are native links/
+        // buttons reachable by Tab. role="menu" would promise an arrow-key
+        // model this doesn't implement (R2-shell-1).
         <div
           ref={menuRef}
-          role="menu"
           aria-label={t('open')}
           className="absolute end-0 top-full mt-2 w-64 bg-white text-neutral-900 rounded-lg shadow-2xl border border-neutral-200 z-50 overflow-hidden"
         >
@@ -134,7 +148,6 @@ export function UserMenu({ fullName, initials, roleName }: UserMenuProps) {
 
           <Link
             href="/settings"
-            role="menuitem"
             onClick={() => setOpen(false)}
             className="w-full px-4 py-2.5 text-sm text-start hover:bg-neutral-50 focus-visible:outline-none focus-visible:bg-neutral-50 inline-flex items-center gap-2 text-neutral-700"
           >
@@ -142,16 +155,19 @@ export function UserMenu({ fullName, initials, roleName }: UserMenuProps) {
             {t('settings')}
           </Link>
 
-          <form action={logoutAction} className="border-t border-neutral-100">
-            <button
-              type="submit"
-              role="menuitem"
-              className="w-full px-4 py-2.5 text-sm text-start hover:bg-red-50 focus-visible:outline-none focus-visible:bg-red-50 inline-flex items-center gap-2 text-red-700"
-            >
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="w-full px-4 py-2.5 text-sm text-start border-t border-neutral-100 hover:bg-red-50 focus-visible:outline-none focus-visible:bg-red-50 inline-flex items-center gap-2 text-red-700 disabled:opacity-60"
+          >
+            {loggingOut ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
               <LogOut className="size-4" aria-hidden="true" />
-              {t('logout')}
-            </button>
-          </form>
+            )}
+            {t('logout')}
+          </button>
         </div>
       )}
     </div>
