@@ -53,6 +53,8 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
         toast.success(t('toast.roleUpdated'));
       } else if (res.error === 'self_role_change') {
         toast.error(t('toast.selfRoleChange'));
+      } else if (res.error === 'protected') {
+        toast.error(t('toast.protected'));
       } else {
         toast.error(t('toast.actionFailed'));
       }
@@ -66,6 +68,8 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
         toast.success(isActive ? t('toast.reactivated') : t('toast.deactivated'));
       } else if (res.error === 'self_deactivate') {
         toast.error(t('toast.selfDeactivate'));
+      } else if (res.error === 'protected') {
+        toast.error(t('toast.protected'));
       } else {
         toast.error(t('toast.actionFailed'));
       }
@@ -97,6 +101,8 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
         toast.success(t('toast.deleted'));
       } else if (res.error === 'self_delete') {
         toast.error(t('toast.selfDelete'));
+      } else if (res.error === 'protected') {
+        toast.error(t('toast.protected'));
       } else {
         toast.error(t('toast.actionFailed'));
       }

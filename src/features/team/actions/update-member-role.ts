@@ -2,6 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
@@ -11,7 +13,7 @@ type Result =
   | { ok: true }
   | {
       ok: false;
-      error: 'unauthorized' | 'validation' | 'self_role_change' | 'unknown';
+      error: 'unauthorized' | 'validation' | 'self_role_change' | 'protected' | 'unknown';
       message?: string;
     };
 
@@ -30,6 +32,18 @@ export async function updateMemberRoleAction(userId: string, roleId: string): Pr
   // Role changes to your own account must go through another admin.
   if (parsed.data.userId === userRes.user.id) {
     return { ok: false, error: 'self_role_change' };
+  }
+
+  // The protected owner's role is fixed (mig 170 trigger is the hard
+  // guarantee; this pre-check returns a clean typed error instead).
+  // Untyped client: is_protected (mig 170) predates the generated types.
+  const { data: target } = await (supabase as unknown as SupabaseClient)
+    .from('profiles')
+    .select('is_protected')
+    .eq('id', parsed.data.userId)
+    .maybeSingle();
+  if (target?.is_protected === true) {
+    return { ok: false, error: 'protected' };
   }
 
   // .select() lets us confirm a row actually changed. If RLS (manage_users)

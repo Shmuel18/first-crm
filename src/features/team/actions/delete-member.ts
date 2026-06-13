@@ -12,20 +12,22 @@ import { DeleteMemberSchema } from '../schemas/team.schema';
 
 type Result =
   | { ok: true }
-  | { ok: false; error: 'unauthorized' | 'validation' | 'self_delete' | 'unknown' };
+  | {
+      ok: false;
+      error: 'unauthorized' | 'validation' | 'self_delete' | 'protected' | 'unknown';
+    };
 
 /**
  * "Delete" a team member = soft delete. The profiles row is KEPT so every
- * historical reference stays attributed to them — audit_log.user_id (which has
- * no name snapshot), closed/archived cases, authored notes. A hard delete would
- * be refused by those FKs or blank out the name.
+ * historical reference stays attributed to them — audit_log.user_id, closed/
+ * archived cases, authored notes.
  *
- * Instead we:
- *   1. Reassign their still-open work (active cases + pending tasks) to the
- *      acting manager, so it keeps a responsible owner going forward. Closed /
- *      archived cases and completed tasks keep the original advisor for history.
- *   2. Stamp deleted_at + is_active=false: removed from the team list (filtered
- *      on deleted_at) and blocked from signing in (same gate as deactivation).
+ * The whole sequence (open-case reassign → pending-task reassign →
+ * associated-advisor cleanup → profile soft-delete) runs in ONE transaction
+ * via the admin_delete_member RPC (mig 170) — previously four independent
+ * writes, where a mid-sequence failure left cases reassigned but the member
+ * still active (R3-team-2). The RPC re-verifies admin, blocks self-delete and
+ * refuses protected (owner) targets.
  */
 export async function deleteMemberAction(userId: string): Promise<Result> {
   const parsed = DeleteMemberSchema.safeParse({ userId });
@@ -34,70 +36,37 @@ export async function deleteMemberAction(userId: string): Promise<Result> {
   const supabase = await createClient();
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
-  const managerId = userRes.user.id;
 
   const { data: isAdmin } = await supabase.rpc('is_admin');
   if (isAdmin !== true) return { ok: false, error: 'unauthorized' };
 
   // Guard against an admin deleting their own account out from under them.
-  if (parsed.data.userId === managerId) {
+  if (parsed.data.userId === userRes.user.id) {
     return { ok: false, error: 'self_delete' };
   }
 
-  // 1) Move still-open work to the acting manager. Bail before the soft-delete
-  //    if either reassignment errors, so we never leave a half-applied state.
-  const { error: caseErr } = await supabase
-    .from('cases')
-    .update({ assigned_advisor_id: managerId })
-    .eq('assigned_advisor_id', parsed.data.userId)
-    .is('deleted_at', null)
-    .eq('is_archived', false);
-  if (caseErr) {
-    console.error('[deleteMember] case reassign failed', safeDbError(caseErr));
-    return { ok: false, error: 'unknown' };
-  }
-
-  const { error: taskErr } = await supabase
-    .from('tasks')
-    .update({ assigned_to: managerId })
-    .eq('assigned_to', parsed.data.userId)
-    .eq('status', 'pending')
-    .is('deleted_at', null);
-  if (taskErr) {
-    console.error('[deleteMember] task reassign failed', safeDbError(taskErr));
-    return { ok: false, error: 'unknown' };
-  }
-
-  // Drop their associated-advisor rows (migration 146) — they no longer work
-  // these cases. (Cases where they were RESPONSIBLE were reassigned above. The
-  // FK is ON DELETE CASCADE, but the profile is SOFT-deleted, so the cascade
-  // never fires — clean these up explicitly.) Untyped: case_associated_advisors
-  // isn't in the generated Database types yet.
-  const { error: assocErr } = await (supabase as unknown as SupabaseClient)
-    .from('case_associated_advisors')
-    .delete()
-    .eq('advisor_id', parsed.data.userId);
-  if (assocErr) {
-    console.error('[deleteMember] associated-advisor cleanup failed', safeDbError(assocErr));
-    return { ok: false, error: 'unknown' };
-  }
-
-  // 2) Soft-delete the profile. .select() confirms RLS (manage_users) allowed
-  //    the write; 0 rows means it was blocked, surfaced rather than faked.
-  const { data: updated, error: profErr } = await supabase
+  // Clean typed error for the protected owner (the RPC re-checks as the hard
+  // guarantee). Untyped client: is_protected (mig 170) predates the types.
+  const { data: target } = await (supabase as unknown as SupabaseClient)
     .from('profiles')
-    .update({ deleted_at: new Date().toISOString(), is_active: false })
+    .select('is_protected')
     .eq('id', parsed.data.userId)
-    .select('id');
-  if (profErr) {
-    console.error('[deleteMember] soft-delete failed', safeDbError(profErr));
-    return { ok: false, error: 'unknown' };
+    .maybeSingle();
+  if (target?.is_protected === true) return { ok: false, error: 'protected' };
+
+  // Atomic reassign + cleanup + soft-delete (mig 170). Untyped client: the
+  // RPC predates the generated types — regenerate to drop the cast.
+  const { error } = await (supabase as unknown as SupabaseClient).rpc('admin_delete_member', {
+    p_user_id: parsed.data.userId,
+  });
+  if (error) {
+    console.error('[deleteMember] rpc failed', safeDbError(error));
+    return { ok: false, error: error.code === '42501' ? 'unauthorized' : 'unknown' };
   }
-  if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
 
   // SEC-AUTH-1: revoke the deleted member's sessions so they're signed out now,
   // not whenever their token happens to expire. Best-effort (the soft-delete
-  // already succeeded); the middleware gate is the hard guarantee.
+  // already committed); the middleware gate is the hard guarantee.
   const revoke = await revokeUserSessions(supabase, parsed.data.userId);
   if (!revoke.ok) {
     // Details already logged inside revokeUserSessions.

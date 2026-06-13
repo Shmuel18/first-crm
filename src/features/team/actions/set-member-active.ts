@@ -2,6 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { revokeUserSessions } from '@/lib/auth/session';
 import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
@@ -12,7 +14,7 @@ type Result =
   | { ok: true }
   | {
       ok: false;
-      error: 'unauthorized' | 'validation' | 'self_deactivate' | 'unknown';
+      error: 'unauthorized' | 'validation' | 'self_deactivate' | 'protected' | 'unknown';
       message?: string;
     };
 
@@ -30,6 +32,20 @@ export async function setMemberActiveAction(userId: string, isActive: boolean): 
   // Guard against an admin locking themselves out.
   if (!parsed.data.isActive && parsed.data.userId === userRes.user.id) {
     return { ok: false, error: 'self_deactivate' };
+  }
+
+  // The protected owner account can't be deactivated (mig 170 trigger is the
+  // hard guarantee; this pre-check returns a clean typed error instead).
+  // Untyped client: is_protected (mig 170) predates the generated types.
+  if (!parsed.data.isActive) {
+    const { data: target } = await (supabase as unknown as SupabaseClient)
+      .from('profiles')
+      .select('is_protected')
+      .eq('id', parsed.data.userId)
+      .maybeSingle();
+    if (target?.is_protected === true) {
+      return { ok: false, error: 'protected' };
+    }
   }
 
   // .select() confirms a row changed; 0 rows means RLS (manage_users) blocked

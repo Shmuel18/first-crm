@@ -86,8 +86,12 @@ export async function inviteMemberAction(
   }
   const inviteLink = `${env.NEXT_PUBLIC_APP_URL}/auth/confirm?token_hash=${tokenHash}&type=invite&next=/auth/set-password`;
 
-  // The handle_new_user trigger created a default profile; fill in chosen values.
-  const { error: updateErr } = await admin
+  // The handle_new_user trigger created a default profile; fill in chosen
+  // values. Uses the REQUEST-scoped client (RLS profiles_admin_all permits
+  // admins) so the audit trigger attributes this security-sensitive write —
+  // initial role assignment — to the inviting admin instead of user_id=NULL
+  // (the admin client has no auth.uid()).
+  const { error: updateErr } = await supabase
     .from('profiles')
     .update({ first_name, last_name, phone: phone ?? null, role_id })
     .eq('id', linkData.user.id);
