@@ -11,9 +11,10 @@ is the **data controller**; the Service provider is a **processor**.
 |---|---|---|---|
 | **Supabase** (PostgreSQL DB, Auth, Storage) | Primary data store, authentication, uploaded-document/file storage | All case, borrower and lead PII (incl. national IDs, financial data); uploaded documents; authentication data | EU — `eu-central-1` (Frankfurt) |
 | **Google Drive** (the office's own Google account) | Document sync + encrypted database-backup storage | Copies of uploaded documents; encrypted backup files | [[FILL: the office's Google Workspace data region]] |
-| **Resend** | Transactional email (team invites, password resets) | Recipient email address + name | [[FILL: confirm Resend processing region]] |
+| **Resend** | Transactional email — team invites, password resets, prospect intake confirmations, client/notification emails | Recipient email address + name; email body content (may include the prospect-provided message / intake summary) | [[FILL: confirm Resend processing region]] |
 | **Sentry** | Application error / crash telemetry | Diagnostic data only; national IDs, phones and emails are **masked/scrubbed** before transmission (`sendDefaultPii` disabled) | **United States — cross-border transfer** (see notes) |
-| **Vultr** (application host) | Runs the application server (Docker) | Personal data **in transit / in processing** (no separate at-rest store beyond Supabase) | EU — Frankfurt |
+| **Vercel** (application host — **client production**) | Runs the live client production app (Next.js serverless functions + scheduled cron) at `crm.kaufman-finance.com`, against the production Supabase | Real client personal data **in transit / in processing** (no separate at-rest store beyond Supabase) | EU — Frankfurt (`fra1`) |
+| **Vultr** (application host — **staging / secondary**) | Runs the staging/secondary Docker deployment used for pre-release testing, against the **dev/staging** Supabase (not the production database) | Personal data **in transit / in processing** only to the extent test/staging data is used (real client production data is on the Vercel + production-Supabase path above) | EU — Frankfurt |
 
 ### Notes (factual, from the codebase)
 
@@ -42,9 +43,10 @@ is the **data controller**; the Service provider is a **processor**.
 |---|---|---|---|
 | **Supabase** (בסיס נתונים, אימות, אחסון) | אחסון נתונים ראשי, אימות, אחסון מסמכים שהועלו | כל ה-PII של תיקים/לווים/לידים (כולל ת"ז ונתונים פיננסיים); מסמכים; נתוני אימות | האיחוד האירופי — `eu-central-1` (פרנקפורט) |
 | **Google Drive** (חשבון Google של המשרד) | סנכרון מסמכים + אחסון גיבויים מוצפנים | עותקי מסמכים; קובצי גיבוי מוצפנים | [[FILL: אזור ה-Google Workspace של המשרד]] |
-| **Resend** | דוא"ל תפעולי (הזמנות צוות, איפוס סיסמה) | כתובת דוא"ל + שם הנמען | [[FILL: לאמת אזור]] |
+| **Resend** | דוא"ל תפעולי — הזמנות צוות, איפוס סיסמה, אישורי פנייה ללקוחות פוטנציאליים, דוא"ל ללקוחות/התראות | כתובת דוא"ל + שם הנמען; תוכן גוף ההודעה (עשוי לכלול את הודעת הפונה / סיכום הפנייה) | [[FILL: לאמת אזור]] |
 | **Sentry** | טלמטריית שגיאות/קריסות | מידע אבחוני בלבד; ת"ז/טלפונים/אימיילים **ממוסכים** לפני שליחה | **ארה"ב — העברה חוצת-גבולות** (ראו הערות) |
-| **Vultr** (שרת האפליקציה) | הרצת שרת האפליקציה | מידע אישי **במעבר / בעיבוד** (ללא אחסון-במנוחה נפרד מעבר ל-Supabase) | האיחוד האירופי — פרנקפורט |
+| **Vercel** (שרת האפליקציה — **פרודקשן לקוח**) | הרצת אפליקציית הפרודקשן החיה ב-`crm.kaufman-finance.com` (פונקציות serverless + cron מתוזמן) מול Supabase של הפרודקשן | מידע אישי אמיתי של הלקוח **במעבר / בעיבוד** (ללא אחסון-במנוחה נפרד מעבר ל-Supabase) | האיחוד האירופי — פרנקפורט (fra1) |
+| **Vultr** (שרת האפליקציה — **staging / משני**) | הרצת פריסת Docker ל-staging/בדיקות טרום-שחרור, מול Supabase של dev/staging (לא מסד הפרודקשן) | מידע אישי **במעבר / בעיבוד** רק בהיקף נתוני הבדיקה (נתוני הפרודקשן האמיתיים במסלול Vercel + Supabase-פרודקשן שלמעלה) | האיחוד האירופי — פרנקפורט |
 
 הערות: גיבויים ל-Drive מוצפנים (AES-256-GCM) לפני העלאה; המידע במנוחה מאוחסן
 באיחוד האירופי (פרנקפורט), לא בישראל [[FILL: לאישור עו"ד]]; Sentry כרוך בהעברה

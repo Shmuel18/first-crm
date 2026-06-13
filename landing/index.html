@@ -7,9 +7,11 @@
   • Bilingual EN (default, LTR) + Hebrew (toggle, full RTL). Choice persists in localStorage.
   • Search the markup for "IMAGE SLOT" to find every placeholder to swap for real
     photography / headshots / bank logos.
-  • Contact form: currently composes a pre-filled email via the visitor's mail client (mailto).
-    To deliver server-side instead, point the form at Formspree / a Resend endpoint
-    where marked  FORM ENDPOINT  in the script below.
+  • Contact form: POSTs JSON server-side to the CRM endpoint
+    https://crm.kaufman-finance.com/api/web-lead (service_role-only RPC; no
+    Supabase key on this page). Client-side anti-bot: honeypot field + a timing
+    trap + a 20s localStorage throttle. The server re-checks origin, honeypot,
+    timing, size and rate-limit. There is NO mailto/Formspree path.
 -->
 <html lang="en" dir="ltr">
 <head>

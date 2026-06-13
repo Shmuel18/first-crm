@@ -45,8 +45,12 @@ Pick what fits the incident — all of these exist today:
 - **A leaked secret / key** → rotate it (see §5 checklist) and redeploy.
 - **A compromised integration** (Google Drive) → Settings → Integrations →
   **Disconnect**; revoke the app's access from the Google account too.
-- **App-level compromise / bad deploy** → roll back to the previous image
-  (`first-crm:prev`) — see `DEPLOYING.md` / `FRANKFURT_MIGRATION_HANDOFF.md`.
+- **App-level compromise / bad deploy** → roll back the affected target:
+  - **Vercel (client production, `crm.kaufman-finance.com`)**: Project →
+    **Deployments** → last-known-good deployment → **Promote to Production**
+    (instant; no rebuild).
+  - **Vultr (staging / secondary, Docker)**: redeploy the previous image
+    (`first-crm:prev`) on the host — see `DEPLOYING.md`.
 - **Suspected mass data exfiltration** → check exports (§3) and consider
   disabling the affected accounts until assessed.
 
@@ -112,7 +116,8 @@ If personal data was breached, Israeli law imposes notification duties on the
 | Sign out my own sessions | Settings → Security → Sign out everywhere |
 | Who exported / changed what | `audit_log` where `action IN ('EXPORT','UPDATE','DELETE')` |
 | Restore data | `RESTORE_RUNBOOK.md` |
-| Roll back the app | `first-crm:prev` — `DEPLOYING.md` |
+| Roll back the app (client prod) | Vercel → Deployments → Promote previous deployment to Production |
+| Roll back the app (staging) | Vultr: redeploy `first-crm:prev` — `DEPLOYING.md` |
 | First-admin after clean restore | `BOOTSTRAP.md` |
 
 ### Secret-rotation checklist (when a key may have leaked)

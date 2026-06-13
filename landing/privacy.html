@@ -376,10 +376,12 @@
         d.toLocaleDateString(locale, { year:"numeric", month:"long", day:"numeric" });
       ok.classList.add("show");
       btn.disabled = true;
-      // RECORDED CONSENT: this only confirms in the browser. To keep a legally meaningful
-      // record (who/when/IP), POST { agreed:true, policyVersion:"2026-06", ts } to the CRM
-      // and store it against the client — and/or surface this same checkbox inside the
-      // /check intake and the document-upload portal.
+      // RECORDED CONSENT: this checkbox on the standalone privacy page only confirms
+      // in the browser. The CRM /check intake ALREADY records a legally meaningful
+      // affirmative consent (agreed, policy_version, recorded_at, ip, locale) in the
+      // DB via migration 154. The landing contact form is recorded as a privacy_notice
+      // (not an affirmative consent) via migration 175. A document-upload portal, if
+      // added later, would still need its own recorded consent.
     });
   })();
   </script>
