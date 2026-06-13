@@ -1922,6 +1922,7 @@
       "title": "Roles & permissions",
       "subtitle": "Manage which permissions each role has in the system",
       "adminLocked": "The manager role includes all permissions and cannot be edited.",
+      "overridesNote": "Per-member permission overrides (when set) take precedence over the role settings here.",
       "levels": {
         "base": "Mortgage Advisor",
         "extended": "Mortgage Advisor (Extended)"
@@ -2007,6 +2008,7 @@
       "done": "Import complete — {count} cases created",
       "summary": "Created {created} of {total} rows",
       "blockedTitle": "Import blocked — fix {count} rows and re-upload. Nothing was imported (all-or-nothing).",
+      "unmappedHeaders": "Unrecognized columns that were not imported: {headers}",
       "blockedToast": "Import blocked — {count} rows need fixing.",
       "rowErrors": {
         "missing_name": "Row {row}: missing name",
@@ -2018,6 +2020,7 @@
         "invalid_row": "Row {row}: invalid value",
         "unknown_status": "Row {row}: unrecognized status",
         "unknown_advisor": "Row {row}: advisor not found or inactive",
+        "possible_duplicate": "Row {row}: a client with the same name and phone already exists (without an ID) — add an ID or remove the row",
         "unknown": "Row {row}: error"
       },
       "errors": {
@@ -2603,7 +2606,8 @@
       "selfDelete": "You can't delete yourself",
       "actionFailed": "Action failed. Please try again.",
       "resentEmail": "Invite re-sent by email",
-      "resendNotAllowed": "An invite link can only be sent to an active member who has never signed in"
+      "resendNotAllowed": "An invite link can only be sent to an active member who has never signed in",
+      "protected": "The office owner's account is protected — its role, status and existence can't be changed"
     },
     "resend": {
       "title": "New invite link"
