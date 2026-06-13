@@ -1,4 +1,5 @@
 import { DOCUMENTS_BUCKET } from '@/features/documents/services/documents.service';
+import { isRetentionPurgeEnabled } from '@/features/documents/services/erasure-freshness.service';
 import { eraseDriveTargets } from '@/features/integrations/services/drive-case-uploader';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { Json } from '@/types/database';
@@ -46,9 +47,17 @@ export type EraseSection = {
 
 export type EraseRetiredResult =
   | { ok: true; cutoff: string; documents: EraseSection; expenses: EraseSection }
+  | { ok: true; paused: true }
   | { ok: false; error: string };
 
 export async function eraseRetiredFiles(): Promise<EraseRetiredResult> {
+  // R4-legal-5: the master retention switch (mig 173) gates ALL destructive
+  // paths. While paused, erase NOTHING — no Storage/Drive deletes, no pointer
+  // nulls — and report it so the route skips the freshness stamp.
+  if (!(await isRetentionPurgeEnabled())) {
+    return { ok: true, paused: true };
+  }
+
   const admin = createAdminClient();
 
   const { data: settings } = await admin

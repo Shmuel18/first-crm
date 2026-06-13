@@ -16,6 +16,27 @@ import { createAdminClient } from '@/lib/supabase/admin';
  *  daily, so this leaves comfortable margin (matches the backup watchdog). */
 export const ERASURE_STALE_AFTER_MS = 26 * 60 * 60 * 1000;
 
+/**
+ * Master retention-purge switch (mig 173). FALSE = all destructive retention
+ * paths are paused (default, pending a lawful retention period). The file eraser
+ * skips deletion when false; the watchdog stays quiet so a deliberate pause
+ * raises no false "erasure stale" alert. Fail-safe: any RPC error → treated as
+ * disabled (don't delete files / don't alert).
+ */
+export async function isRetentionPurgeEnabled(): Promise<boolean> {
+  const admin = createAdminClient();
+  const { data, error } = await (
+    admin as unknown as {
+      rpc: (fn: 'retention_purge_enabled') => Promise<{ data: boolean | null; error: unknown }>;
+    }
+  ).rpc('retention_purge_enabled');
+  if (error) {
+    console.error('[erasure-freshness] retention_purge_enabled check failed; treating as paused');
+    return false;
+  }
+  return data === true;
+}
+
 export function isErasureStale(lastErasureAt: string | null): boolean {
   if (!lastErasureAt) return true;
   return Date.now() - new Date(lastErasureAt).getTime() > ERASURE_STALE_AFTER_MS;

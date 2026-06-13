@@ -7,6 +7,7 @@ import {
   getActiveAdminEmails,
   getLastErasureAt,
   isErasureStale,
+  isRetentionPurgeEnabled,
   notifyAdminsErasureStale,
 } from '@/features/documents/services/erasure-freshness.service';
 import { renderSystemEmail } from '@/features/templates/services/system-email-templates.service';
@@ -24,6 +25,13 @@ export async function GET(request: Request): Promise<Response> {
   const expected = Buffer.from(`Bearer ${env.CRON_SECRET}`);
   if (provided.length !== expected.length || !timingSafeEqual(provided, expected)) {
     return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
+  }
+
+  // R4-legal-5: while the retention purge is deliberately paused (mig 173), the
+  // eraser legitimately does not run, so staleness is expected — do NOT raise a
+  // false "erasure stale" alert.
+  if (!(await isRetentionPurgeEnabled())) {
+    return NextResponse.json({ ok: true, paused: true });
   }
 
   const lastErasureAt = await getLastErasureAt();

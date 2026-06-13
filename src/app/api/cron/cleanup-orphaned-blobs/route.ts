@@ -39,6 +39,11 @@ export async function GET(request: Request): Promise<Response> {
     console.error('[cron/cleanup-blobs] erase failed', { error: result.error });
     return NextResponse.json({ ok: false, error: result.error }, { status: 500 });
   }
+  // Retention purge paused (mig 173): nothing was erased, so do NOT stamp a
+  // success — the watchdog is independently switch-aware and stays quiet.
+  if ('paused' in result) {
+    return NextResponse.json({ ok: true, paused: true });
+  }
   // Stamp success so erasure-watchdog can detect a silently-dead eraser. A 0-file
   // run still counts — it proves the cron fired and the eraser did not error.
   // Best-effort: a stamp failure must not fail an otherwise-successful erasure.
