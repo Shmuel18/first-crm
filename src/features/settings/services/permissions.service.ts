@@ -48,6 +48,12 @@ export async function getRolesPermissions(): Promise<RolesPermissionsData> {
     supabase.from('role_permissions').select('role_id, permission_id').eq('is_granted', true),
   ]);
 
+  // A silently-empty editor reads as "all roles deleted" — log each failed
+  // leg so production issues are diagnosable (R3-roles-5).
+  if (rolesRes.error) console.error('[permissions.service] roles query failed', { code: rolesRes.error.code });
+  if (permsRes.error) console.error('[permissions.service] permissions query failed', { code: permsRes.error.code });
+  if (rpRes.error) console.error('[permissions.service] grants query failed', { code: rpRes.error.code });
+
   const granted: Record<string, string[]> = {};
   for (const row of rpRes.data ?? []) {
     if (!row.role_id || !row.permission_id) continue;

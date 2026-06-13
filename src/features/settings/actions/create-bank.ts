@@ -27,21 +27,30 @@ export async function createBankAction(
   const key = await generateBankKey(parsed.data.name_en);
   const sortOrder = await nextBankSortOrder();
 
-  const { data, error } = await supabase
-    .from('banks')
-    .insert({
-      key,
-      name_he: parsed.data.name_he,
-      name_en: parsed.data.name_en,
-      lender_type: parsed.data.lender_type,
-      color: parsed.data.color,
-      logo_url: parsed.data.logo_url ?? null,
-      is_active: parsed.data.is_active,
-      sort_order: sortOrder,
-      is_system: false,
-    })
-    .select('id')
-    .single();
+  const insertBank = (bankKey: string) =>
+    supabase
+      .from('banks')
+      .insert({
+        key: bankKey,
+        name_he: parsed.data.name_he,
+        name_en: parsed.data.name_en,
+        lender_type: parsed.data.lender_type,
+        color: parsed.data.color,
+        logo_url: parsed.data.logo_url ?? null,
+        is_active: parsed.data.is_active,
+        sort_order: sortOrder,
+        is_system: false,
+      })
+      .select('id')
+      .single();
+
+  let { data, error } = await insertBank(key);
+  // 23505 = unique key collision (two admins creating similarly-named lenders
+  // concurrently — generateBankKey's read/insert isn't atomic). Retry once
+  // with a timestamped key instead of failing the whole create.
+  if (error?.code === '23505') {
+    ({ data, error } = await insertBank(`${key}_${Date.now()}`));
+  }
 
   if (error || !data) {
     console.error('[createBank] insert failed', error?.code);

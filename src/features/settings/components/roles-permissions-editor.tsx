@@ -10,6 +10,7 @@ import { roleManagementLabel } from '@/lib/auth/role-label';
 import type { Locale } from '@/lib/i18n/direction';
 
 import { toggleRolePermissionAction } from '../actions/toggle-role-permission';
+import { HIDDEN_PERMISSION_KEYS } from '../permissions.constants';
 import type {
   PermissionCategory,
   PermissionRow,
@@ -32,36 +33,9 @@ const CATEGORY_ORDER: PermissionCategory[] = [
   'system',
 ];
 
-/**
- * Permission keys hidden from the editor because NO code path enforces them —
- * showing a toggle that silently does nothing is misleading, and on the
- * financial ones it's an active "false sense of restriction" (e.g. turning off
- * `export_financial_data` for the secretary looks like it blocks her, but the
- * export is actually gated by `view_all_cases`, which she has). Audited
- * 2026-06-07: each key below is checked in ZERO RLS policies and ZERO app gates.
- * Re-expose a key here only once a real has_permission() check for it exists.
- *
- *   view_dashboard          — the app is reachable without it; never checked
- *   view_expected_income    — already covered by view_case_fee (same case_financials row)
- *   view_financial_dashboard— /statistics is admin-only (is_admin), not this key
- *   view_financial_reports  — no financial-reports feature exists
- *   export_financial_data   — the case export carries no financial columns
- *   convert_lead_to_case    — lead conversion is gated by create_case
- *   manage_roles            — this very editor is admin-only (isCurrentUserAdmin)
- *   manage_settings         — settings pages are admin-only by design
- *   manage_lookups          — no lookups-management UI; admin-only
- */
-const HIDDEN_PERMISSION_KEYS = new Set<string>([
-  'view_dashboard',
-  'view_expected_income',
-  'view_financial_dashboard',
-  'view_financial_reports',
-  'export_financial_data',
-  'convert_lead_to_case',
-  'manage_roles',
-  'manage_settings',
-  'manage_lookups',
-]);
+// Hidden (unenforced) permission keys + rationale live in
+// ../permissions.constants.ts — shared with the server action so the hide is
+// enforced on WRITE too (R3-roles-4), not only in this render filter.
 
 export function RolesPermissionsEditor({ roles, permissions, granted, locale }: Props) {
   const t = useTranslations('settings.roles');
@@ -145,6 +119,15 @@ export function RolesPermissionsEditor({ roles, permissions, granted, locale }: 
         >
           {t('adminLocked')}
         </div>
+      )}
+
+      {/* Per-user overrides take FIRST precedence over these role switches
+          (has_permission resolves user_permission_overrides before role
+          grants). No UI writes them yet (Phase 2), but a restored backup can
+          carry them — surface the precedence so this screen never silently
+          misrepresents a member's effective permissions (R3-roles-6). */}
+      {!isAdminRole && (
+        <p className="text-xs text-neutral-500">{t('overridesNote')}</p>
       )}
 
       <div className="rounded-xl border border-neutral-200 bg-white divide-y divide-neutral-100 overflow-hidden">

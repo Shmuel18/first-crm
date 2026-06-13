@@ -17,7 +17,14 @@ export const BankFormSchema = z.object({
     .regex(HEX_COLOR, { error: 'common.errors.invalidColor' }),
   logo_url: z.preprocess(
     (v) => (v === '' || v === null ? null : v),
-    z.string().max(2048).nullable().optional(),
+    z
+      .string()
+      .max(2048)
+      // Logos come from the public bank-logos bucket (https). Refuse other
+      // schemes so a pasted javascript:/data: URL can never reach an img src.
+      .regex(/^https:\/\//, { error: 'common.errors.invalidUrl' })
+      .nullable()
+      .optional(),
   ),
   is_active: z.preprocess((v) => v === 'true' || v === true || v === 'on', z.boolean()),
 });

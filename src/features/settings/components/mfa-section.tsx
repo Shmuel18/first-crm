@@ -19,12 +19,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 
-import {
-  disableMfaAction,
-  enrollMfaAction,
-  getMfaStatusAction,
-  verifyMfaEnrollmentAction,
-} from '../actions/mfa';
+import { enrollMfaAction, verifyMfaEnrollmentAction } from '../actions/mfa';
+import { disableMfaAction, getMfaStatusAction } from '../actions/mfa-manage';
 
 type EnrollState = {
   factorId: string;

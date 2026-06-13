@@ -31,6 +31,11 @@ export async function deleteBankAction(id: string): Promise<DeleteBankResult> {
 
   const { error } = await supabase.from('banks').delete().eq('id', id);
   if (error) {
+    // 23503 = FK violation: referenced by a table bankInUse doesn't cover
+    // (e.g. the mig-106 simulator market-data tables) or a case added between
+    // the check and the delete. Surface the accurate "in use" message instead
+    // of a generic failure — the DB's NO ACTION FK is the real guard.
+    if (error.code === '23503') return { ok: false, error: 'in_use' };
     console.error('[deleteBank] delete failed', error.code);
     return { ok: false, error: 'unknown' };
   }
