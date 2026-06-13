@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 
 import { sendTaskNotificationEmail } from '@/features/notifications/services/notification-email';
 import { safeDbError } from '@/lib/supabase/db-error-log';
@@ -65,14 +66,20 @@ export async function reassignTaskAction(
   if (!result.ok) return { ok: false, error: result.error ?? 'unknown' };
 
   if (!result.no_change && result.title) {
-    // Best-effort email mirror (never throws), matching create/update-task.
-    await sendTaskNotificationEmail({
-      recipientId: parsed.data.assigneeId,
-      actorId: userId,
-      kind: 'task_assigned',
-      taskTitle: result.title,
-      caseId: result.case_id ?? null,
-    });
+    // Best-effort email mirror, sent AFTER the response so the action returns
+    // immediately (matching create/complete/update-task). Bell is DB-driven.
+    // Capture the narrowed values before the closure (TS won't narrow props in it).
+    const title = result.title;
+    const caseId = result.case_id ?? null;
+    after(() =>
+      sendTaskNotificationEmail({
+        recipientId: parsed.data.assigneeId,
+        actorId: userId,
+        kind: 'task_assigned',
+        taskTitle: title,
+        caseId,
+      }),
+    );
   }
 
   // Keep the action POST light; the recipient's realtime bell refreshes their

@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 import { z } from 'zod';
 
 import { sendTaskNotificationEmail } from '@/features/notifications/services/notification-email';
@@ -76,19 +77,18 @@ export async function changeTaskStatusAction(taskId: string, status: string): Pr
     completionRecipient &&
     completionRecipient !== userId
   ) {
-    // Best-effort: the status change already committed, so a notification
-    // failure must not surface as a failed action (which would prompt a retry).
-    try {
-      await sendTaskNotificationEmail({
+    // Best-effort email mirror, sent AFTER the response so it never holds the
+    // button (Resend HTTP + DB hops). It already swallows its own errors; the
+    // status change is committed and the bell is DB-trigger-driven.
+    after(() =>
+      sendTaskNotificationEmail({
         recipientId: completionRecipient,
         actorId: userId,
         kind: 'task_completed',
         taskTitle: existing.title,
         caseId: existing.case_id,
-      });
-    } catch (err) {
-      console.error('task-completed notification failed', err);
-    }
+      }),
+    );
   }
 
   await emitTaskEvent(supabase, {

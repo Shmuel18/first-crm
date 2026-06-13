@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 import { z } from 'zod';
 
 import { sendTaskNotificationEmail } from '@/features/notifications/services/notification-email';
@@ -59,13 +60,17 @@ export async function completeTaskAction(taskId: string): Promise<Result> {
     completionRecipient &&
     completionRecipient !== userRes.user.id
   ) {
-    await sendTaskNotificationEmail({
-      recipientId: completionRecipient,
-      actorId: userRes.user.id,
-      kind: 'task_completed',
-      taskTitle: existing.title,
-      caseId: existing.case_id,
-    });
+    // Best-effort email mirror, sent AFTER the response (Resend HTTP + DB hops
+    // must not hold the button — see create-task). Bell is DB-trigger-driven.
+    after(() =>
+      sendTaskNotificationEmail({
+        recipientId: completionRecipient,
+        actorId: userRes.user.id,
+        kind: 'task_completed',
+        taskTitle: existing.title,
+        caseId: existing.case_id,
+      }),
+    );
   }
 
   await emitTaskEvent(supabase, {

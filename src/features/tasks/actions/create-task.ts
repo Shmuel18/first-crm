@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 
 import { sendTaskNotificationEmail } from '@/features/notifications/services/notification-email';
 import { createClient } from '@/lib/supabase/server';
@@ -74,13 +75,20 @@ export async function createTaskAction(
   });
 
   if (assignee && assignee !== userId) {
-    await sendTaskNotificationEmail({
-      recipientId: assignee,
-      actorId: userId,
-      kind: 'task_assigned',
-      taskTitle: parsed.data.title,
-      caseId: parsed.data.case_id ?? null,
-    });
+    // Best-effort email mirror — run AFTER the response so the submit button
+    // releases the moment the task is saved (the in-app bell is created by a DB
+    // trigger on insert, so the recipient is still notified instantly). The
+    // email itself does ~4 DB hops + a Resend HTTP call (10s timeout); blocking
+    // the action on it made the button spin for seconds (R4 perf).
+    after(() =>
+      sendTaskNotificationEmail({
+        recipientId: assignee,
+        actorId: userId,
+        kind: 'task_assigned',
+        taskTitle: parsed.data.title,
+        caseId: parsed.data.case_id ?? null,
+      }),
+    );
   }
 
   // NOTE: intentionally NOT revalidating the ('/(app)','layout') shell here.

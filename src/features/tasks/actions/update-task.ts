@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 import { z } from 'zod';
 
 import { sendTaskNotificationEmail } from '@/features/notifications/services/notification-email';
@@ -79,13 +80,17 @@ export async function updateTaskAction(
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized', values };
 
   if (assignee && assignee !== existing.assigned_to && assignee !== userRes.user.id) {
-    await sendTaskNotificationEmail({
-      recipientId: assignee,
-      actorId: userRes.user.id,
-      kind: 'task_assigned',
-      taskTitle: parsed.data.title,
-      caseId: parsed.data.case_id ?? existing.case_id,
-    });
+    // Best-effort email mirror, sent AFTER the response so the button releases
+    // immediately (Resend HTTP + DB hops). Bell is DB-trigger-driven.
+    after(() =>
+      sendTaskNotificationEmail({
+        recipientId: assignee,
+        actorId: userRes.user.id,
+        kind: 'task_assigned',
+        taskTitle: parsed.data.title,
+        caseId: parsed.data.case_id ?? existing.case_id,
+      }),
+    );
   }
 
   revalidatePath('/tasks');
