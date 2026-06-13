@@ -10,6 +10,23 @@ import type { IntakeInput } from '../schemas/intake.schema';
 const OFFICE_EMAIL = 'office@kaufman-finance.com';
 const BLACK = '#0A0A0A';
 
+/** Standard purpose options stored as stable keys (mig 175 / step-composition). */
+const PURPOSE_KEYS = new Set(['purchase', 'refinance', 'equity_release', 'construction']);
+
+/**
+ * `purpose` is now stored as a stable enum key (not a translation). Render the
+ * human label for the office summary; a free-text "other" purpose passes through.
+ */
+async function resolvePurposeLabel(
+  purpose: string | null | undefined,
+  locale: 'he' | 'en',
+): Promise<string | null> {
+  if (!purpose) return null;
+  if (!PURPOSE_KEYS.has(purpose)) return purpose;
+  const t = await getTranslations({ locale, namespace: 'intake.purposeOptions' });
+  return t(purpose);
+}
+
 /**
  * Office-side mirror of a new /check questionnaire. The summary fields stay
  * structured while Settings controls the surrounding automatic email copy.
@@ -21,13 +38,14 @@ export async function sendIntakeOfficeEmail(data: IntakeInput): Promise<boolean>
     const t = await getTranslations({ locale: 'he', namespace: 'email.intakeOffice' });
     const primary = data.borrowers[0];
     const name = [primary?.first_name, primary?.last_name].filter(Boolean).join(' ');
+    const purpose = await resolvePurposeLabel(data.purpose, 'he');
 
     const rows: Array<[string, string | null | undefined]> = [
       [t('labels.name'), name],
       [t('labels.phone'), primary?.phone],
       [t('labels.email'), primary?.email],
       [t('labels.city'), data.property_city],
-      [t('labels.purpose'), data.purpose],
+      [t('labels.purpose'), purpose],
       [t('labels.propertyValue'), formatIls(data.property_value)],
       [t('labels.amount'), formatIls(data.requested_mortgage_amount)],
       [t('labels.equity'), formatIls(data.equity)],

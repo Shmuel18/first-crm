@@ -31,7 +31,9 @@ export function StepComposition({ state, errors, setTop, setBorrowerCount }: Pro
         <NativeSelect value={state.purpose} onChange={(e) => setTop('purpose', e.target.value)}>
           <option value="">{t('purposeOptions.placeholder')}</option>
           {PURPOSES.map((p) => (
-            <option key={p} value={p === 'other' ? PURPOSE_OTHER : t(`purposeOptions.${p}`)}>
+            // value is the STABLE enum key (not the translation), so switching
+            // language keeps the selection and stores a language-neutral purpose.
+            <option key={p} value={p === 'other' ? PURPOSE_OTHER : p}>
               {t(`purposeOptions.${p}`)}
             </option>
           ))}

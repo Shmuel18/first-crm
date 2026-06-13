@@ -69,10 +69,21 @@ export async function createIntakeLead(
   }
 
   const supabase = createAdminClient();
-  const { data: leadId, error } = await supabase.rpc('submit_public_intake', {
+  // p_source tells the RPC the legal basis to record: 'public_intake' (/check,
+  // affirmative consent) vs 'web_contact' (landing, privacy-notice only) — see
+  // migration 175. database.ts predates the p_source param; minimal cast like
+  // lib/rate-limit.ts. Regenerate the Supabase types to drop it.
+  const intakeClient = supabase as unknown as {
+    rpc(
+      fn: 'submit_public_intake',
+      args: { p_payload: IntakeInput; p_policy_version: string; p_ip: string; p_source: string },
+    ): PromiseLike<{ data: string | null; error: { code?: string } | null }>;
+  };
+  const { data: leadId, error } = await intakeClient.rpc('submit_public_intake', {
     p_payload: data,
     p_policy_version: PRIVACY_POLICY_VERSION,
     p_ip: ip,
+    p_source: action,
   });
   if (error || !leadId) {
     console.error('[createIntakeLead] rpc failed', { action, code: error?.code });

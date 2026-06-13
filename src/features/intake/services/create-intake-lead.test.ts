@@ -83,6 +83,7 @@ describe('createIntakeLead', () => {
       p_payload: intake,
       p_policy_version: PRIVACY_POLICY_VERSION,
       p_ip: '1.2.3.4',
+      p_source: 'web_contact',
     });
     // 3rd gate: the global anti-amplification ceiling on prospect confirmations.
     expect(checkRateLimit).toHaveBeenNthCalledWith(3, {
@@ -110,7 +111,7 @@ describe('createIntakeLead', () => {
 
   it('supports phone-only intake without creating an email rate-limit bucket', async () => {
     vi.mocked(checkRateLimit).mockResolvedValue(true);
-    mockRpc({ data: 'lead-id', error: null });
+    const rpc = mockRpc({ data: 'lead-id', error: null });
     const phoneOnly: IntakeInput = {
       borrowers: [{ first_name: 'Ada', last_name: 'Lovelace', phone: '0501234567' }],
       consent: true,
@@ -118,7 +119,15 @@ describe('createIntakeLead', () => {
 
     await expect(createIntakeLead(phoneOnly, 'he', 'public_intake')).resolves.toEqual({ ok: true });
 
+    // No email → no email gate and no confirmation ceiling: only the IP gate.
     expect(checkRateLimit).toHaveBeenCalledTimes(1);
+    // The /check basis is threaded to the RPC as p_source.
+    expect(rpc).toHaveBeenCalledWith('submit_public_intake', {
+      p_payload: phoneOnly,
+      p_policy_version: PRIVACY_POLICY_VERSION,
+      p_ip: '1.2.3.4',
+      p_source: 'public_intake',
+    });
   });
 
   it('does not send email when the lead RPC fails', async () => {
