@@ -21,6 +21,7 @@ const KNOWN_ROW_CODES = new Set([
   'invalid_row',
   'unknown_status',
   'unknown_advisor',
+  'possible_duplicate',
 ]);
 const rowErrorKey = (code: string): string => (KNOWN_ROW_CODES.has(code) ? code : 'unknown');
 
@@ -68,7 +69,7 @@ export function ImportPanel() {
             id="import-file"
             ref={inputRef}
             type="file"
-            accept=".csv,.xlsx,.xls"
+            accept=".csv,.xlsx"
             aria-label={t('choose')}
             onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
             className="sr-only"
@@ -105,6 +106,12 @@ export function ImportPanel() {
         <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
           <CheckCircle2 className="size-4 shrink-0" />
           {t('summary', { created: result.created, total: result.total })}
+        </div>
+      )}
+
+      {result?.ok && (result.unmappedHeaders?.length ?? 0) > 0 && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          {t('unmappedHeaders', { headers: result.unmappedHeaders!.join(', ') })}
         </div>
       )}
 

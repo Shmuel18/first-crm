@@ -16,7 +16,14 @@ export type ImportRow = Partial<Record<ImportField, string>>;
 export type ImportRowError = { row: number; code: string };
 
 export type ImportResult =
-  | { ok: true; created: number; total: number; errors: ImportRowError[] }
+  | {
+      ok: true;
+      created: number;
+      total: number;
+      errors: ImportRowError[];
+      /** Header cells whose columns were dropped (unrecognized aliases). */
+      unmappedHeaders?: string[];
+    }
   | {
       ok: false;
       error:
