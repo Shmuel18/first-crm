@@ -18,13 +18,23 @@ type IntakeConfirmationInput = {
 /**
  * Everything a successful /check submission mails out, in parallel:
  * a summary to the office inbox (always) and a branded confirmation to the
- * prospect (only when they left an email). Both legs are best-effort.
+ * prospect (only when they left an email AND sendConfirmation isn't suppressed).
+ * Both legs are best-effort.
+ *
+ * `sendConfirmation` (default true) lets the caller suppress the prospect-facing
+ * confirmation when the global anti-amplification ceiling is hit (R4-public-api-1)
+ * — the office mirror still goes out so no lead is missed.
  */
-export async function sendIntakeEmails(data: IntakeInput, locale: 'he' | 'en'): Promise<void> {
+export async function sendIntakeEmails(
+  data: IntakeInput,
+  locale: 'he' | 'en',
+  opts: { sendConfirmation?: boolean } = {},
+): Promise<void> {
   const primary = data.borrowers[0];
+  const confirmationAllowed = opts.sendConfirmation !== false;
   await Promise.all([
     sendIntakeOfficeEmail(data),
-    primary?.email
+    confirmationAllowed && primary?.email
       ? sendIntakeConfirmationEmail({ to: primary.email, firstName: primary.first_name, locale })
       : Promise.resolve(false),
   ]);

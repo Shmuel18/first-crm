@@ -84,7 +84,28 @@ describe('createIntakeLead', () => {
       p_policy_version: PRIVACY_POLICY_VERSION,
       p_ip: '1.2.3.4',
     });
-    expect(sendIntakeEmails).toHaveBeenCalledWith(intake, 'en');
+    // 3rd gate: the global anti-amplification ceiling on prospect confirmations.
+    expect(checkRateLimit).toHaveBeenNthCalledWith(3, {
+      action: 'intake_confirm',
+      subject: 'global',
+      max: 30,
+      windowSeconds: 3600,
+      failMode: 'closed',
+    });
+    expect(sendIntakeEmails).toHaveBeenCalledWith(intake, 'en', { sendConfirmation: true });
+  });
+
+  it('skips the prospect confirmation when the global ceiling is exceeded, but still stores the lead + office mirror', async () => {
+    vi.mocked(checkRateLimit)
+      .mockResolvedValueOnce(true) // ip
+      .mockResolvedValueOnce(true) // email
+      .mockResolvedValueOnce(false); // global confirmation ceiling
+    mockRpc({ data: 'lead-id', error: null });
+
+    await expect(createIntakeLead(intake, 'en', 'web_contact')).resolves.toEqual({ ok: true });
+
+    // Lead is still created; only the prospect confirmation is suppressed.
+    expect(sendIntakeEmails).toHaveBeenCalledWith(intake, 'en', { sendConfirmation: false });
   });
 
   it('supports phone-only intake without creating an email rate-limit bucket', async () => {

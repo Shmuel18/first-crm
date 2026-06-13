@@ -12,6 +12,20 @@ export type CreateIntakeLeadResult = { ok: true } | { ok: false; error: 'rate_li
 /** Generous for a real prospect, hostile for a script. */
 const IP_MAX_PER_HOUR = 5;
 const EMAIL_MAX_PER_HOUR = 3;
+/**
+ * System-wide ceiling on branded prospect CONFIRMATION emails per hour
+ * (R4-public-api-1). The confirmation is sent to a CALLER-SUPPLIED address, so
+ * it is an email-amplification surface: the per-email cap bounds repeats to ONE
+ * victim, but on its own nothing bounds the number of DISTINCT victims a script
+ * could mail by rotating addresses (and IPs). This global counter caps total
+ * branded confirmations regardless of IP/email, so a flood can reach at most
+ * this many distinct people per hour. Real office volume is a handful/day — far
+ * below the ceiling — so genuine prospects always get their confirmation; once
+ * the ceiling is hit the lead + office mirror still go through and ONLY the
+ * prospect-facing confirmation is skipped. Fail-closed: if the limiter is down
+ * we don't emit branded mail to arbitrary addresses.
+ */
+const CONFIRM_GLOBAL_MAX_PER_HOUR = 30;
 
 /**
  * The single server-side write path for a public-intake lead, shared by the
@@ -65,6 +79,20 @@ export async function createIntakeLead(
     return { ok: false, error: 'unknown' };
   }
 
-  await sendIntakeEmails(data, locale);
+  // R4-public-api-1: gate the branded prospect confirmation behind a global
+  // hourly ceiling so a caller-supplied recipient can't amplify mail to
+  // arbitrary distinct addresses. The lead is already stored and the office
+  // mirror always sends; only the prospect-facing confirmation is gated.
+  const sendConfirmation = email
+    ? await checkRateLimit({
+        action: 'intake_confirm',
+        subject: 'global',
+        max: CONFIRM_GLOBAL_MAX_PER_HOUR,
+        windowSeconds: 3600,
+        failMode: 'closed',
+      })
+    : false;
+
+  await sendIntakeEmails(data, locale, { sendConfirmation });
   return { ok: true };
 }
