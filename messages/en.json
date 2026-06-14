@@ -2435,6 +2435,7 @@
         "caseSearchPlaceholder": "Type client name or case number",
         "caseNoMatches": "No matching cases",
         "caseNone": "— No case —",
+        "openCase": "Open case",
         "private": "Personal (private) reminder",
         "privateHint": "Only you can see it — not even a manager. Assigned to you automatically.",
         "privateAssignee": "A personal reminder is assigned to you automatically.",

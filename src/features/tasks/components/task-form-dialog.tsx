@@ -3,7 +3,9 @@
 import { useActionState, useCallback, useEffect, useRef, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 
-import { Loader2, Upload as UploadIcon, X } from 'lucide-react';
+import Link from 'next/link';
+
+import { ExternalLink, Loader2, Upload as UploadIcon, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -177,6 +179,13 @@ export function TaskFormDialog({
       )
     : effectiveCases;
   const selectedCase = effectiveCases.find((c) => c.id === selectedCaseId);
+  // Label for the "open case" link: prefer the task's own client name, else the
+  // option label (case number). Lets the user jump to the client from inside the
+  // task, mirroring the row + thread dialog.
+  const caseLinkLabel =
+    task?.case && task.case.id === selectedCaseId
+      ? (task.case.clientName ?? `#${task.case.case_number}`)
+      : (selectedCase?.label ?? null);
   const filteredCases =
     selectedCase && !matchingCases.some((c) => c.id === selectedCase.id)
       ? [selectedCase, ...matchingCases]
@@ -289,6 +298,16 @@ export function TaskFormDialog({
             </NativeSelect>
             {!presetCaseId && filteredCases.length === 0 && (
               <p className="mt-1 text-xs text-neutral-500">{t('fields.caseNoMatches')}</p>
+            )}
+            {selectedCaseId && caseLinkLabel && (
+              <Link
+                href={`/cases/${selectedCaseId}`}
+                aria-label={`${t('fields.openCase')}: ${caseLinkLabel}`}
+                className="mt-1.5 inline-flex w-fit items-center gap-1 text-xs text-neutral-600 transition hover:text-brand-gold-text hover:underline decoration-brand-gold underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 rounded"
+              >
+                <ExternalLink className="size-3 shrink-0" aria-hidden="true" />
+                {caseLinkLabel}
+              </Link>
             )}
           </FormField>
 
