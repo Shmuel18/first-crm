@@ -29,6 +29,8 @@ type EditableBankCellProps = {
   currentBank: BankOption | null;
   secondaryCount: number;
   options: ReadonlyArray<BankOption>;
+  /** When false, render the primary bank read-only (no dropdown). */
+  canEdit?: boolean;
 };
 
 export function EditableBankCell({
@@ -36,6 +38,7 @@ export function EditableBankCell({
   currentBank,
   secondaryCount,
   options,
+  canEdit = true,
 }: EditableBankCellProps) {
   const tc = useTranslations('common');
   const noBankLabel = `— ${tc('none')} —`;
@@ -93,6 +96,35 @@ export function EditableBankCell({
   };
 
   const triggerLabel = bank?.name_he ?? noBankLabel;
+
+  // Read-only: viewer can't edit this case — show the bank (avatar + name + the
+  // "+N secondary" marker) with no dropdown trigger.
+  if (!canEdit) {
+    return (
+      <span className="grid h-8 w-full max-w-full min-w-0 grid-cols-[1.75rem_minmax(0,1fr)] items-center gap-2 overflow-hidden px-1 leading-none">
+        {bank ? (
+          <>
+            <BankAvatar key={bank.id} bank={bank} size="md" />
+            <span className="flex h-5 min-w-0 flex-1 items-center text-start text-sm font-medium leading-none text-neutral-800">
+              <span className="min-w-0 truncate leading-none">{bank.name_he}</span>
+              {secondaryCount > 0 && (
+                <span className="ms-1 shrink-0 text-[11px] font-normal leading-none text-neutral-600">
+                  +{secondaryCount}
+                </span>
+              )}
+            </span>
+          </>
+        ) : (
+          <>
+            <EmptyBankAvatar />
+            <span className="flex h-5 min-w-0 items-center truncate text-start text-sm leading-none text-neutral-600">
+              {noBankLabel}
+            </span>
+          </>
+        )}
+      </span>
+    );
+  }
 
   return (
     <>

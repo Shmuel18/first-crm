@@ -1,15 +1,13 @@
 'use client';
 
-import { ChevronDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 type CaseStatusBadgeProps = {
   name: string | null | undefined;
   color: string | null | undefined;
-  interactive?: boolean;
 };
 
-export function CaseStatusBadge({ name, color, interactive }: CaseStatusBadgeProps) {
+export function CaseStatusBadge({ name, color }: CaseStatusBadgeProps) {
   const tc = useTranslations('common');
 
   if (!name) {
@@ -38,7 +36,6 @@ export function CaseStatusBadge({ name, color, interactive }: CaseStatusBadgePro
         style={{ backgroundColor: dot }}
       />
       {name}
-      {interactive && <ChevronDown className="size-3 opacity-60" />}
     </span>
   );
 }

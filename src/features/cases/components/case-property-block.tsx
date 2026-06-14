@@ -41,9 +41,17 @@ type Props = {
   initial: LocalCase;
   caseTypes: ReadonlyArray<CaseTypeOption>;
   additionalProperties: ReadonlyArray<CaseProperty>;
+  /** When false, render the property block read-only. */
+  canEdit?: boolean;
 };
 
-export function CasePropertyBlock({ caseId, initial, caseTypes, additionalProperties }: Props) {
+export function CasePropertyBlock({
+  caseId,
+  initial,
+  caseTypes,
+  additionalProperties,
+  canEdit = true,
+}: Props) {
   const t = useTranslations('case');
 
   const [localCase, setLocalCase] = useState<LocalCase>(initial);
@@ -118,12 +126,14 @@ export function CasePropertyBlock({ caseId, initial, caseTypes, additionalProper
         otherCaseTypeId={otherCaseTypeId}
         onSaveField={saveField}
         onSavePurpose={savePurpose}
+        canEdit={canEdit}
       />
       <CaseAdditionalProperties
         caseId={caseId}
         initial={additionalProperties}
         caseTypes={caseTypes}
         otherCaseTypeId={otherCaseTypeId}
+        canEdit={canEdit}
       />
     </CaseBlock>
   );

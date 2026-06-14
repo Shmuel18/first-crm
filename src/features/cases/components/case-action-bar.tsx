@@ -46,6 +46,8 @@ type ActionBarProps = {
   canArchive: boolean;
   canRestore: boolean;
   canDelete: boolean;
+  /** can_edit_case AND change_case_status — gates the inline status cell. */
+  canChangeStatus: boolean;
 };
 
 export async function CaseActionBar({
@@ -65,6 +67,7 @@ export async function CaseActionBar({
   canArchive,
   canRestore,
   canDelete,
+  canChangeStatus,
 }: ActionBarProps) {
   const t = await getTranslations('case.actionBar');
   const tc = await getTranslations('common');
@@ -111,6 +114,7 @@ export async function CaseActionBar({
               currentStatusName={statusName}
               currentStatusColor={statusColor}
               options={statusOptions}
+              canEdit={canChangeStatus}
             />
             {(caseTypePrimary || caseTypeSecondary) && (
               // Brand-aligned pills (soft gold + gold text, rounded-full) —

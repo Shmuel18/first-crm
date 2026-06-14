@@ -20,6 +20,8 @@ type Props = {
   locale: Locale;
   /** Extra trigger-button classes — mobile cards pass a 44px min tap height. */
   triggerClassName?: string;
+  /** When false, render the date read-only (no picker popover). */
+  canEdit?: boolean;
 };
 
 function stateClass(value: string | null): string {
@@ -34,6 +36,7 @@ export function EditableTargetDateCell({
   initialValue,
   locale,
   triggerClassName = '',
+  canEdit = true,
 }: Props) {
   const tc = useTranslations('common');
   const td = useTranslations('dashboard.targetDate');
@@ -58,8 +61,16 @@ export function EditableTargetDateCell({
       if (dropdownRef.current?.contains(e.target as Node)) return;
       setOpen(false);
     };
+    // Close on resize too (mirrors the status/advisor cells): the popover is
+    // position:fixed with a one-time anchor calc, so a resize/rotate would
+    // otherwise strand it at a stale position (R6-inline-actions-4).
+    const onResize = () => setOpen(false);
     window.addEventListener('scroll', onScroll, true);
-    return () => window.removeEventListener('scroll', onScroll, true);
+    window.addEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', onResize);
+    };
   }, [open]);
 
   const save = (nextValue: string) => {
@@ -81,6 +92,19 @@ export function EditableTargetDateCell({
   };
 
   const label = savedValue ? formatDateShort(savedValue, locale) : td('empty');
+
+  // Read-only: viewer can't edit this case — show the dated chip (keeping the
+  // overdue/soon coloring) with no picker affordance.
+  if (!canEdit) {
+    return (
+      <span
+        className={`inline-flex min-w-24 items-center gap-1 rounded-md border px-2 py-1 text-xs ${stateClass(savedValue)} ${triggerClassName}`}
+      >
+        <span className="truncate">{label}</span>
+        <CalendarDays className="size-3" aria-hidden="true" />
+      </span>
+    );
+  }
 
   return (
     <>

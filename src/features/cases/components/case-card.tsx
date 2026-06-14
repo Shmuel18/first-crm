@@ -7,6 +7,8 @@ import { useLocale, useTranslations } from 'next-intl';
 import { startNavProgress } from '@/components/layout/nav-progress';
 import { parseLocale } from '@/lib/i18n/direction';
 
+import { canEditCaseRow, type CaseEditGate } from '../domain/case-edit-gate';
+
 import { EditableAdvisorCell } from './editable-advisor-cell';
 import { EditableStatusCell } from './editable-status-cell';
 import { EditableTargetDateCell } from './editable-target-date-cell';
@@ -21,6 +23,8 @@ type Props = {
   advisorOptions: ReadonlyArray<AdvisorOption>;
   // Advisor row hidden for users who only see their own cases (see CasesTable).
   canViewAll: boolean;
+  // Inline-edit authority (NOT canViewAll — that's a visibility scope).
+  editGate: CaseEditGate;
 };
 
 /**
@@ -31,10 +35,14 @@ type Props = {
  * cannot nest the editors' buttons — and each editor wrapper stops
  * propagation so taps edit instead of navigating.
  */
-export function CaseCard({ row, statusOptions, advisorOptions, canViewAll }: Props) {
+export function CaseCard({ row, statusOptions, advisorOptions, canViewAll, editGate }: Props) {
   const t = useTranslations('dashboard');
   const router = useRouter();
   const locale = parseLocale(useLocale());
+
+  const canEdit = canEditCaseRow(editGate, row);
+  const canEditStatus = canEdit && editGate.canChangeStatus;
+  const canEditAdvisor = canEdit && editGate.canAssignAdvisor;
 
   const navigateToCase = () => {
     startNavProgress();
@@ -89,6 +97,7 @@ export function CaseCard({ row, statusOptions, advisorOptions, canViewAll }: Pro
             currentStatusColor={row.statusColor}
             options={statusOptions}
             triggerClassName="min-h-11"
+            canEdit={canEditStatus}
           />
         </span>
       </div>
@@ -109,6 +118,7 @@ export function CaseCard({ row, statusOptions, advisorOptions, canViewAll }: Pro
             initialValue={row.targetDate}
             locale={locale}
             triggerClassName="min-h-11"
+            canEdit={canEdit}
           />
         </div>
         {canViewAll && (
@@ -121,6 +131,7 @@ export function CaseCard({ row, statusOptions, advisorOptions, canViewAll }: Pro
               options={advisorOptions}
               associatedAdvisorIds={row.associatedAdvisorIds}
               triggerClassName="min-h-11"
+              canEdit={canEditAdvisor}
             />
           </div>
         )}

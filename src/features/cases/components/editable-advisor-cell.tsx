@@ -29,6 +29,9 @@ type EditableAdvisorCellProps = {
   associatedAdvisorIds?: ReadonlyArray<string>;
   /** Extra trigger-button classes — mobile cards pass a 44px min tap height. */
   triggerClassName?: string;
+  /** When false, render the advisor name read-only (no dropdown). Requires
+   *  both case-edit authority AND assign_case_to_user; composed by the caller. */
+  canEdit?: boolean;
 };
 
 function fullName(a: AdvisorOption, noNameFallback: string): string {
@@ -42,6 +45,7 @@ export function EditableAdvisorCell({
   options,
   associatedAdvisorIds = [],
   triggerClassName = '',
+  canEdit = true,
 }: EditableAdvisorCellProps) {
   const tc = useTranslations('common');
   const unassignedLabel = `— ${tc('notAssigned')} —`;
@@ -105,6 +109,28 @@ export function EditableAdvisorCell({
   const associatedNames = associatedAdvisorIds
     .map((id) => resolveAdvisorName(id, options))
     .filter((n): n is string => Boolean(n));
+
+  // Read-only: viewer lacks edit/assign_case_to_user — show the name (+N marker)
+  // with no trigger so the assignment can't be attempted and rejected.
+  if (!canEdit) {
+    return (
+      <span className="inline-flex items-center gap-2">
+        <span className={displayName ? 'text-sm text-neutral-700 whitespace-nowrap' : 'text-sm text-neutral-600'}>
+          {displayName ?? tc('notAssigned')}
+        </span>
+        {associatedNames.length > 0 && (
+          <Tooltip content={`${tc('associatedAdvisors')}: ${associatedNames.join(', ')}`}>
+            <span
+              className="ms-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-gold-soft px-1 text-[10px] font-semibold text-brand-gold-text align-middle"
+              aria-label={`${tc('associatedAdvisors')}: ${associatedNames.join(', ')}`}
+            >
+              +{associatedNames.length}
+            </span>
+          </Tooltip>
+        )}
+      </span>
+    );
+  }
 
   return (
     <>

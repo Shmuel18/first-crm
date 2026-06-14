@@ -27,7 +27,7 @@ import { listCaseProperties } from '@/features/cases/services/case-properties.se
 import { getCaseById } from '@/features/cases/services/cases.service';
 import { CaseIncomesBlock } from '@/features/incomes/components/case-incomes-block';
 import { CaseObligationsBlock } from '@/features/obligations/components/case-obligations-block';
-import { userHasPermissions } from '@/lib/auth/permissions';
+import { userCanEditCase, userHasPermissions } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { timeAsync } from '@/lib/perf/timing';
 import { asCaseId } from '@/lib/types/branded';
@@ -67,23 +67,34 @@ export default async function CaseDetailPage({ params }: Props) {
   // canSeeFinancials gates the manager-only agreed-fee row in the admin
   // block. The DB enforces the same gate via case_financials RLS — this
   // app-side check is for clean UX (hide the row) + defense-in-depth.
-  const permissions = await timeAsync(
-    'cases.detail.permissions',
-    () =>
+  const [permissions, canEditCase] = await Promise.all([
+    timeAsync('cases.detail.permissions', () =>
       userHasPermissions(
         'view_case_fee',
         'archive_case',
         'restore_archived_case',
         'delete_case',
         'assign_case_to_user',
+        'change_case_status',
       ),
-  );
+    ),
+    // Authority to edit THIS case (can_edit_case RPC, migration 147): gates
+    // every inline-edit affordance on the page. A user who can VIEW the case
+    // (e.g. a secretary with view_all_cases, on a case not assigned to her)
+    // but cannot edit it must see read-only fields — not controls that fail
+    // at the server boundary. The DB still enforces; this keeps the UI honest.
+    timeAsync('cases.detail.canEditCase', () => userCanEditCase(caseId)),
+  ]);
   const canSeeFinancials = permissions.view_case_fee === true;
   const canArchive = permissions.archive_case === true;
   const canRestore = permissions.restore_archived_case === true;
   const canDelete = permissions.delete_case === true;
-  // assign_case_to_user gates managing the associated advisors (migration 146).
-  const canManageAdvisors = permissions.assign_case_to_user === true;
+  // Status / advisor changes need their granular permission ON TOP of edit
+  // authority (DB triggers enforce both — migration 178).
+  const canChangeStatus = canEditCase && permissions.change_case_status === true;
+  const canAssignAdvisor = canEditCase && permissions.assign_case_to_user === true;
+  // assign_case_to_user (+ edit authority) gates managing associated advisors.
+  const canManageAdvisors = canAssignAdvisor;
   const associatedAdvisorIds = (caseData.case_associated_advisors ?? []).map(
     (a) => a.advisor_id,
   );
@@ -149,6 +160,7 @@ export default async function CaseDetailPage({ params }: Props) {
         canArchive={canArchive}
         canRestore={canRestore}
         canDelete={canDelete}
+        canChangeStatus={canChangeStatus}
       />
 
       <CaseBlockPrefsProvider prefs={blockPrefs}>
@@ -171,7 +183,7 @@ export default async function CaseDetailPage({ params }: Props) {
           {borrowers.length === 0 ? (
             <div className="text-center py-6 space-y-3">
               <p className="text-sm text-neutral-500">{t('blocks.noBorrowers')}</p>
-              <AddBorrowerButton caseId={caseData.id} variant="cta" />
+              {canEditCase && <AddBorrowerButton caseId={caseData.id} variant="cta" />}
             </div>
           ) : (
             // Borrowers stacked vertically (not side-by-side) so each card
@@ -179,26 +191,34 @@ export default async function CaseDetailPage({ params }: Props) {
             // cramping. Was md:grid-cols-2 — at ~400px per card the dates
             // + adornments didn't fit cleanly.
             <div className="space-y-4">
-              <div className="flex justify-end">
-                <AddBorrowerButton caseId={caseData.id} variant="header" />
-              </div>
-              {borrowers.map(({ borrower, role_in_case, is_primary }, index) => (
-                <CaseBorrowerCard
-                  key={borrower.id}
-                  caseId={caseData.id}
-                  borrower={borrower}
-                  roleInCase={role_in_case}
-                  isPrimary={is_primary}
-                  // Lock removal on (a) the primary (by data flag) or (b) the
-                  // first row in the rendered list. The list is ordered
-                  // is_primary DESC, so "first" is the de-facto anchor even
-                  // if the data has no row flagged primary (legacy / partial
-                  // migrations). Combined with isOnly to never let the user
-                  // empty a case.
-                  isFirst={index === 0}
-                  isOnly={borrowers.length === 1}
-                />
-              ))}
+              {canEditCase && (
+                <div className="flex justify-end">
+                  <AddBorrowerButton caseId={caseData.id} variant="header" />
+                </div>
+              )}
+              {/* A disabled <fieldset> natively disables every inline-edit
+                  control inside the borrower cards (inputs / selects / remove)
+                  for a view-only user, without threading canEdit through the
+                  whole borrowers feature. Contact links (anchors) stay usable. */}
+              <fieldset disabled={!canEditCase} className="space-y-4 border-0 p-0 m-0 min-w-0">
+                {borrowers.map(({ borrower, role_in_case, is_primary }, index) => (
+                  <CaseBorrowerCard
+                    key={borrower.id}
+                    caseId={caseData.id}
+                    borrower={borrower}
+                    roleInCase={role_in_case}
+                    isPrimary={is_primary}
+                    // Lock removal on (a) the primary (by data flag) or (b) the
+                    // first row in the rendered list. The list is ordered
+                    // is_primary DESC, so "first" is the de-facto anchor even
+                    // if the data has no row flagged primary (legacy / partial
+                    // migrations). Combined with isOnly to never let the user
+                    // empty a case.
+                    isFirst={index === 0}
+                    isOnly={borrowers.length === 1}
+                  />
+                ))}
+              </fieldset>
             </div>
           )}
         </CaseBlock>
@@ -206,6 +226,7 @@ export default async function CaseDetailPage({ params }: Props) {
         <CaseRequestDetailsBlock
           caseId={caseData.id}
           initialHtml={caseData.request_details}
+          canEdit={canEditCase}
         />
 
         <Suspense fallback={<CaseBlockSkeleton title={t('blocks.incomes')} icon={<Wallet />} />}>
@@ -229,6 +250,7 @@ export default async function CaseDetailPage({ params }: Props) {
           }}
           caseTypes={caseTypeOptions}
           additionalProperties={additionalProperties}
+          canEdit={canEditCase}
         />
 
         {/* Equity + LTV intentionally removed from this block — they aren't
@@ -273,6 +295,9 @@ export default async function CaseDetailPage({ params }: Props) {
           advisors={advisorOptions}
           associatedAdvisorIds={associatedAdvisorIds}
           canManageAdvisors={canManageAdvisors}
+          canEdit={canEditCase}
+          canChangeStatus={canChangeStatus}
+          canAssignAdvisor={canAssignAdvisor}
           locale={locale}
         />
 

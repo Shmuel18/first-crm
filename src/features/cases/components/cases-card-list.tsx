@@ -12,6 +12,7 @@ import {
   type CaseSort,
   type SortDir,
 } from '../domain/case-sort';
+import type { CaseEditGate } from '../domain/case-edit-gate';
 import { useCaseQueryFilter } from '../hooks/use-case-query-filter';
 import type { CaseWithRelations } from '../types';
 
@@ -33,6 +34,8 @@ type Props = {
   advisorOptions: ReadonlyArray<AdvisorOption>;
   // Advisor row hidden for users who only see their own cases (see CasesTable).
   canViewAll: boolean;
+  // Inline-edit authority for the card cells (separate from canViewAll).
+  editGate: CaseEditGate;
 };
 
 /**
@@ -40,7 +43,7 @@ type Props = {
  * so on small screens we render one card per case. Status, target date and
  * advisor are editable inline on each card (see CaseCard).
  */
-export function CasesCardList({ cases, statusOptions, advisorOptions, canViewAll }: Props) {
+export function CasesCardList({ cases, statusOptions, advisorOptions, canViewAll, editGate }: Props) {
   const t = useTranslations('dashboard');
   const filtered = useCaseQueryFilter(cases);
 
@@ -79,6 +82,7 @@ export function CasesCardList({ cases, statusOptions, advisorOptions, canViewAll
             statusOptions={statusOptions}
             advisorOptions={advisorOptions}
             canViewAll={canViewAll}
+            editGate={editGate}
           />
         </li>
       ))}

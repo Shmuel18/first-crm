@@ -13,7 +13,7 @@ import type { FieldProps } from './editable-field-shared';
 export type { FieldProps, SaveResult, SelectOption } from './editable-field-shared';
 
 export function EditableField(props: FieldProps) {
-  const { label, value, onSave, adornment, type = 'text', dir } = props;
+  const { label, value, onSave, adornment, type = 'text', dir, canEdit = true } = props;
   const id = useId();
   const tc = useTranslations('common');
   // Ref forwarded to the underlying input so the date-picker button can call
@@ -59,6 +59,32 @@ export function EditableField(props: FieldProps) {
     (type === 'number' || type === 'date' || type === 'email' || type === 'tel'
       ? 'ltr'
       : undefined);
+
+  // Read-only mode: the viewer can see the case but not edit it. Render the
+  // resolved value as plain text (select → option label, grouped number →
+  // separators) instead of an interactive control — keeps the affordance
+  // honest rather than letting an edit fail at the server boundary.
+  if (!canEdit) {
+    const display =
+      props.type === 'select' || props.type === 'tristate'
+        ? props.options.find((o) => o.value === (value ?? ''))?.label ?? '—'
+        : (value ?? '').toString().trim() === ''
+          ? '—'
+          : type === 'number' && props.groupThousands && !Number.isNaN(Number(value))
+            ? Number(value).toLocaleString()
+            : String(value);
+    return (
+      <div className="grid grid-cols-[6rem_1fr] items-center gap-2 text-sm">
+        <span className="text-neutral-500 truncate">{label}</span>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span dir={resolvedDir} className="min-w-0 flex-1 truncate py-1.5 text-neutral-900">
+            {display}
+          </span>
+          {adornment ? <div className="shrink-0">{adornment}</div> : null}
+        </div>
+      </div>
+    );
+  }
 
   // When the calendar popover picks a date, push it into local state +
   // run the save bridge in one step — same path the input would take on

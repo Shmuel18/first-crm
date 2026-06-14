@@ -34,12 +34,15 @@ export function PropertyFields({
   otherCaseTypeId,
   onSaveField,
   onSavePurpose,
+  canEdit = true,
 }: {
   values: PropertyFieldValues;
   caseTypes: ReadonlyArray<CaseTypeOption>;
   otherCaseTypeId: string | null;
   onSaveField: (field: PropertyField, value: string | null) => Promise<SaveResult>;
   onSavePurpose: (primary: string | null, other: string | null) => Promise<void>;
+  /** When false, render all property fields read-only. */
+  canEdit?: boolean;
 }) {
   const tf = useTranslations('case.fields');
 
@@ -55,8 +58,14 @@ export function PropertyFields({
         options={caseTypes}
         otherId={otherCaseTypeId}
         onChange={onSavePurpose}
+        canEdit={canEdit}
       />
-      <EditableField label={tf('city')} value={values.city} onSave={(v) => onSaveField('city', v)} />
+      <EditableField
+        label={tf('city')}
+        value={values.city}
+        onSave={(v) => onSaveField('city', v)}
+        canEdit={canEdit}
+      />
       <EditableField
         type="number"
         label={tf('propertyValue')}
@@ -65,6 +74,7 @@ export function PropertyFields({
         dir="ltr"
         adornment={<CurrencySign />}
         groupThousands
+        canEdit={canEdit}
       />
       <EditableField
         type="number"
@@ -78,6 +88,7 @@ export function PropertyFields({
         dir="ltr"
         adornment={<CurrencySign />}
         groupThousands
+        canEdit={canEdit}
       />
     </FieldGroup>
   );

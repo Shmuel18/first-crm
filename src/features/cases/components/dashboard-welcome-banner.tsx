@@ -26,6 +26,10 @@ export function DashboardWelcomeBanner({ firstName }: Props) {
         </h1>
         <div className="text-xs text-neutral-600">
           {new Date().toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-GB', {
+            // Pin to Israel wall-clock so the date matches the greeting (which
+            // uses israelCivil) — SSR runs in UTC on Vercel, which would
+            // otherwise show yesterday's date for the ~1h after Israel midnight.
+            timeZone: 'Asia/Jerusalem',
             weekday: 'long',
             day: 'numeric',
             month: 'long',

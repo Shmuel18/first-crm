@@ -21,7 +21,8 @@ import { LeadsCardList } from '@/features/leads/components/leads-card-list';
 import { LeadsTable } from '@/features/leads/components/leads-table';
 import { LeadsToolbar } from '@/features/leads/components/leads-toolbar';
 import { listLeads } from '@/features/leads/services/leads.service';
-import { isCurrentUserAdmin } from '@/lib/auth/permissions';
+import type { CaseEditGate } from '@/features/cases/domain/case-edit-gate';
+import { getCurrentUser, isCurrentUserAdmin, userHasPermissions } from '@/lib/auth/permissions';
 import { timeAsync } from '@/lib/perf/timing';
 
 type Props = {
@@ -65,11 +66,13 @@ export default async function CasesListPage({ searchParams }: Props) {
   const leadsPromise =
     view === 'leads' ? timeAsync('cases.page.listLeads', () => listLeads(), { view }) : null;
 
-  const [bootstrap, t, leads, isManager] = await Promise.all([
+  const [bootstrap, t, leads, isManager, editPerms, currentUser] = await Promise.all([
     timeAsync('cases.page.bootstrap', () => getCasesDashboardBootstrap(), { view }),
     getTranslations('dashboard'),
     leadsPromise,
     isCurrentUserAdmin(),
+    userHasPermissions('edit_any_case', 'edit_own_case', 'change_case_status', 'assign_case_to_user'),
+    getCurrentUser(),
   ]);
 
   const {
@@ -81,6 +84,17 @@ export default async function CasesListPage({ searchParams }: Props) {
     leadsCount,
     canViewAll,
   } = bootstrap;
+
+  // Inline-edit authority for the dashboard cells. Computed per-row from this
+  // gate (NOT canViewAll — that's only the visibility scope). The DB enforces
+  // the same rules; this keeps the inline controls honest for view-only roles.
+  const editGate: CaseEditGate = {
+    canChangeStatus: editPerms.change_case_status === true,
+    canAssignAdvisor: editPerms.assign_case_to_user === true,
+    editAny: editPerms.edit_any_case === true,
+    editOwn: editPerms.edit_own_case === true,
+    userId: currentUser?.id ?? null,
+  };
 
   let chrome: React.ReactNode = null;
   let scrollContent: React.ReactNode;
@@ -160,6 +174,7 @@ export default async function CasesListPage({ searchParams }: Props) {
               statusOptions={statusOptions}
               advisorOptions={advisorOptions}
               canViewAll={canViewAll}
+              editGate={editGate}
             />
           </div>
           <div className="hidden xl:block">
@@ -169,6 +184,7 @@ export default async function CasesListPage({ searchParams }: Props) {
               bankOptions={bankOptions}
               advisorOptions={advisorOptions}
               canViewAll={canViewAll}
+              editGate={editGate}
             />
           </div>
         </>

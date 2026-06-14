@@ -30,7 +30,8 @@ export function GenerateBankPdfButton({ caseId, title }: Props) {
     startTransition(async () => {
       const result = await generateBankPdfAction(caseId);
       if (!result.ok) {
-        toast.error(result.message || tc('saveFailed'));
+        // Generic translated message — the action never returns a raw error.
+        toast.error(tc('saveFailed'));
         return;
       }
 

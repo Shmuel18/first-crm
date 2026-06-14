@@ -10,6 +10,8 @@ import { EditableBankCell } from '@/features/case-banks/components/editable-bank
 import { parseLocale } from '@/lib/i18n/direction';
 import { formatDateShort } from '@/lib/utils/format-date';
 
+import { canEditCaseRow, type CaseEditGate } from '../domain/case-edit-gate';
+
 import { EditableAdvisorCell } from './editable-advisor-cell';
 import { EditableStatusCell } from './editable-status-cell';
 import { EditableTargetDateCell } from './editable-target-date-cell';
@@ -27,12 +29,20 @@ type Props = {
   advisorOptions: ReadonlyArray<AdvisorOption>;
   // Advisor column hidden for users who only see their own cases (see CasesTable).
   canViewAll: boolean;
+  // Inline-edit authority (NOT canViewAll — that's a visibility scope).
+  editGate: CaseEditGate;
 };
 
-export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions, canViewAll }: Props) {
+export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions, canViewAll, editGate }: Props) {
   const router = useRouter();
   const t = useTranslations('dashboard.rowState');
   const locale = parseLocale(useLocale());
+
+  // Per-row edit authority (mirrors can_edit_case). Status/advisor additionally
+  // require their granular permission. The DB enforces all of this too.
+  const canEdit = canEditCaseRow(editGate, row);
+  const canEditStatus = canEdit && editGate.canChangeStatus;
+  const canEditAdvisor = canEdit && editGate.canAssignAdvisor;
 
   // Excel-style: subtle divider + zebra + breathing room
   const rowClasses = [
@@ -103,6 +113,7 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions, 
           currentStatusName={row.statusName}
           currentStatusColor={row.statusColor}
           options={statusOptions}
+          canEdit={canEditStatus}
         />
       </td>
 
@@ -111,6 +122,7 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions, 
           caseId={row.id}
           initialValue={row.targetDate}
           locale={locale}
+          canEdit={canEdit}
         />
       </td>
 
@@ -120,6 +132,7 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions, 
           currentBank={row.primaryBank}
           secondaryCount={row.secondaryBanksCount}
           options={bankOptions}
+          canEdit={canEdit}
         />
       </td>
 
@@ -131,6 +144,7 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions, 
             currentAdvisorName={row.advisorName}
             options={advisorOptions}
             associatedAdvisorIds={row.associatedAdvisorIds}
+            canEdit={canEditAdvisor}
           />
         </td>
       )}
@@ -140,6 +154,7 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions, 
           caseId={row.id}
           field="short_note"
           initialValue={row.shortNote}
+          canEdit={canEdit}
         />
       </td>
     </tr>

@@ -14,6 +14,8 @@ type EditableTextCellProps = {
   initialValue: string | null;
   placeholder?: string;
   emptyLabel?: string;
+  /** When false, render the note read-only (no editor popover). */
+  canEdit?: boolean;
 };
 
 const POPOVER_WIDTH = 320;
@@ -28,6 +30,7 @@ export function EditableTextCell({
   initialValue,
   placeholder,
   emptyLabel = '—',
+  canEdit = true,
 }: EditableTextCellProps) {
   const tc = useTranslations('common');
   const tFields = useTranslations('case.fields');
@@ -117,6 +120,21 @@ export function EditableTextCell({
   const isEmpty = !savedValue;
 
   const triggerLabel = savedValue ? `${fieldLabel}: ${savedValue}` : fieldLabel;
+
+  // Read-only: viewer can't edit this case — show the note text, no editor.
+  if (!canEdit) {
+    return (
+      <span
+        className={[
+          'truncate text-sm min-w-0 block',
+          isEmpty ? 'text-neutral-500 italic' : 'text-neutral-700',
+        ].join(' ')}
+        title={savedValue || undefined}
+      >
+        {displayValue}
+      </span>
+    );
+  }
 
   return (
     <>

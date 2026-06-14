@@ -32,6 +32,11 @@ type CommonProps = {
    *  type='number'. Use for money / large counts — NOT for years or IDs,
    *  where grouping (2,024) would be wrong. */
   groupThousands?: boolean;
+  /** When false, render the value read-only (plain text, no input/select) —
+   *  e.g. for a user who can VIEW but not EDIT this case. Defaults to true.
+   *  The interactive control is the affordance; gating it here keeps the UI
+   *  honest instead of letting the user edit and then hit a server reject. */
+  canEdit?: boolean;
 };
 
 export type FieldProps = CommonProps &

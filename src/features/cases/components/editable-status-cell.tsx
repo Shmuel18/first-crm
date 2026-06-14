@@ -25,6 +25,9 @@ type EditableStatusCellProps = {
   options: ReadonlyArray<StatusOption>;
   /** Extra trigger-button classes — mobile cards pass a 44px min tap height. */
   triggerClassName?: string;
+  /** When false, render the badge read-only (no dropdown). Requires both
+   *  case-edit authority AND change_case_status; the caller composes them. */
+  canEdit?: boolean;
 };
 
 export function EditableStatusCell({
@@ -34,6 +37,7 @@ export function EditableStatusCell({
   currentStatusColor,
   options,
   triggerClassName = '',
+  canEdit = true,
 }: EditableStatusCellProps) {
   const tc = useTranslations('common');
   const [open, setOpen] = useState(false);
@@ -105,6 +109,12 @@ export function EditableStatusCell({
   };
 
   const triggerLabel = statusName ?? tc('noStatus');
+
+  // Read-only: viewer can see the case but lacks edit/change_case_status — show
+  // the badge with no trigger affordance so it can't fail at the server.
+  if (!canEdit) {
+    return <CaseStatusBadge name={statusName} color={statusColor} />;
+  }
 
   return (
     <>

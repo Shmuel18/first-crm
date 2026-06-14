@@ -29,6 +29,7 @@ export function TransactionPurposePicker({
   options,
   otherId,
   onChange,
+  canEdit = true,
 }: {
   label: string;
   placeholderSelect: string;
@@ -39,6 +40,8 @@ export function TransactionPurposePicker({
   options: ReadonlyArray<CaseTypeOption>;
   otherId: string | null;
   onChange: (nextPrimary: string | null, nextOther: string | null) => Promise<void>;
+  /** When false, render the purpose read-only (no select/input). */
+  canEdit?: boolean;
 }) {
   const id = useId();
   const isTextMode = otherId != null && primaryId === otherId;
@@ -49,6 +52,20 @@ export function TransactionPurposePicker({
   if ((otherText ?? '') !== propRefText) {
     setPropRefText(otherText ?? '');
     setLocalText(otherText ?? '');
+  }
+
+  // Read-only: viewer can't edit — show the selected purpose (or the free-text
+  // "other" value) as plain text, no select/input.
+  if (!canEdit) {
+    const display = isTextMode
+      ? otherText || '—'
+      : options.find((o) => o.id === primaryId)?.name_he ?? '—';
+    return (
+      <div className="grid grid-cols-[6rem_1fr] items-center gap-2 text-sm">
+        <span className="text-neutral-500 truncate">{label}</span>
+        <span className="min-w-0 flex-1 truncate py-1.5 text-neutral-900">{display}</span>
+      </div>
+    );
   }
 
   return (

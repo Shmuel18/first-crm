@@ -67,6 +67,13 @@ type Props = {
   /** Associated advisor ids (migration 146) + whether the user may edit them. */
   associatedAdvisorIds: ReadonlyArray<string>;
   canManageAdvisors: boolean;
+  /** General case-edit authority (can_edit_case). Gates the plain fields
+   *  (blocker / insurance / appraiser / target-date / referrer / note / fee). */
+  canEdit: boolean;
+  /** can_edit_case AND change_case_status — gates the inline status cell. */
+  canChangeStatus: boolean;
+  /** can_edit_case AND assign_case_to_user — gates the responsible-advisor cell. */
+  canAssignAdvisor: boolean;
   /** Manager-only: agreed fee shows + is editable only when this is true. */
   canSeeFinancials: boolean;
   initialFeeAmount: number | null;
@@ -83,6 +90,9 @@ export function CaseDetailsSection({
   advisors,
   associatedAdvisorIds,
   canManageAdvisors,
+  canEdit,
+  canChangeStatus,
+  canAssignAdvisor,
   canSeeFinancials,
   initialFeeAmount,
   initialFeePaid,
@@ -190,6 +200,7 @@ export function CaseDetailsSection({
           currentStatusId={localCase.status_id}
           currentStatusName={statusName}
           currentStatusColor={statusColor}
+          canEdit={canChangeStatus}
           options={statuses.map((s) => ({
             id: s.id,
             name_he: s.name_he,
@@ -203,6 +214,7 @@ export function CaseDetailsSection({
         value={localCase.case_blocker}
         options={blockerOptions}
         onSave={(v) => saveField('case_blocker', v)}
+        canEdit={canEdit}
       />
       <EditableField
         type="select"
@@ -210,6 +222,7 @@ export function CaseDetailsSection({
         value={localCase.assigned_advisor_id}
         options={advisorOptions}
         onSave={(v) => saveField('assigned_advisor_id', v)}
+        canEdit={canAssignAdvisor}
       />
       {/* Associated advisors sit directly beside the responsible advisor
           (migration 146) — a cell in the same row, not a separate row.
@@ -227,28 +240,33 @@ export function CaseDetailsSection({
         value={localCase.insurance_status}
         options={insuranceOptions}
         onSave={(v) => saveField('insurance_status', v)}
+        canEdit={canEdit}
       />
       <EditableField
         label={tFields('insuranceAgent')}
         value={localCase.insurance_agent_name}
         onSave={(v) => saveField('insurance_agent_name', v)}
+        canEdit={canEdit}
       />
       <EditableField
         label={tFields('appraiser')}
         value={localCase.appraiser_name}
         onSave={(v) => saveField('appraiser_name', v)}
+        canEdit={canEdit}
       />
       <EditableField
         type="date"
         label={tFields('targetDate')}
         value={localCase.target_date}
         onSave={(v) => saveField('target_date', v)}
+        canEdit={canEdit}
       />
       {/* הופנה ע״י — placed next to the agreed fee per the office layout. */}
       <EditableField
         label={tFields('referrer')}
         value={localCase.referrer_name}
         onSave={(v) => saveField('referrer_name', v)}
+        canEdit={canEdit}
       />
       {/* Manager-only agreed-fee. The "שולם" checkbox rides inside the field as
           a compact adornment (not its own column) so it stays small and frees a
@@ -261,6 +279,7 @@ export function CaseDetailsSection({
           onSave={(v) => saveFee(v)}
           dir="ltr"
           groupThousands
+          canEdit={canEdit}
           adornment={
             <span className="flex items-center gap-1.5">
               <CurrencySign />
@@ -276,8 +295,9 @@ export function CaseDetailsSection({
                   type="checkbox"
                   checked={localPaid}
                   onChange={(e) => savePaid(e.target.checked)}
+                  disabled={!canEdit}
                   aria-label={tFields('feePaid')}
-                  className="size-3.5 rounded border-neutral-300 accent-brand-gold-text cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+                  className="size-3.5 rounded border-neutral-300 accent-brand-gold-text cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
                 />
                 {tFields('feePaid')}
               </label>
@@ -294,6 +314,7 @@ export function CaseDetailsSection({
           value={localCase.short_note}
           onSave={(v) => saveField('short_note', v)}
           placeholder={tFields('shortNotePlaceholder')}
+          canEdit={canEdit}
         />
       </div>
     </FieldGroup>

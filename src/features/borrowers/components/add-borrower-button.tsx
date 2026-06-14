@@ -17,8 +17,8 @@ import { addEmptyBorrowerAction } from '../actions/add-empty-borrower';
  *
  * Two variants:
  *   - "header" (default): tiny gold link, sits in the CaseBlock rightSlot.
- *   - "cta": full-width dashed block, replaces the EmptyBorrowers stub when
- *     the case has no borrowers yet.
+ *   - "cta": full-width dashed block, shown as the empty state when the case
+ *     has no borrowers yet.
  *
  * Falling back to the full-form path (/cases/[id]/borrowers/new) is no
  * longer offered from this entry point — power users can reach it via

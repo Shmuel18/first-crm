@@ -77,8 +77,7 @@ type Action =
   | { type: 'addBorrower'; borrower: CaseDraftBorrowerInput }
   | { type: 'updateBorrower'; tempId: string; borrower: CaseDraftBorrowerInput }
   | { type: 'removeBorrower'; tempId: string }
-  | { type: 'setRequestDetails'; html: string }
-  | { type: 'clearDirty' };
+  | { type: 'setRequestDetails'; html: string };
 
 const initialState: DraftState = {
   requestDetailsHtml: '',
@@ -138,11 +137,6 @@ function reducer(state: DraftState, action: Action): DraftState {
       };
     case 'setRequestDetails':
       return { ...state, isDirty: true, requestDetailsHtml: action.html };
-    case 'clearDirty':
-      // Called by the save flow right before triggering the server action,
-      // so the redirect (App Router nav, but doubly-safe) doesn't show
-      // the "unsaved changes" prompt mid-success.
-      return { ...state, isDirty: false };
   }
 }
 
@@ -184,16 +178,11 @@ export function useCaseDraftState() {
     dispatch({ type: 'setRequestDetails', html });
   }, []);
 
-  const clearDirty = useCallback(() => {
-    dispatch({ type: 'clearDirty' });
-  }, []);
-
   return {
     state,
     addBorrower,
     updateBorrower,
     removeBorrower,
     setRequestDetails,
-    clearDirty,
   };
 }

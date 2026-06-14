@@ -17,25 +17,8 @@ import {
 export const CASE_BLOCKER_VALUES = ['none', 'client', 'bank', 'office', 'appraiser', 'lawyer'] as const;
 export type CaseBlocker = (typeof CASE_BLOCKER_VALUES)[number];
 
-// Color per blocker - display labels come from i18n (case.blocker.<value>)
-export const CASE_BLOCKER_COLORS: Record<CaseBlocker, string> = {
-  none: '#10B981',
-  client: '#EC4899',
-  bank: '#DC2626',
-  office: '#F97316',
-  appraiser: '#EAB308',
-  lawyer: '#A855F7',
-};
-
 export const INSURANCE_STATUS_VALUES = ['exists', 'in_progress', 'missing'] as const;
 export type InsuranceStatus = (typeof INSURANCE_STATUS_VALUES)[number];
-
-// Color per insurance status - display labels come from i18n (case.insurance.<value>)
-export const INSURANCE_STATUS_COLORS: Record<InsuranceStatus, string> = {
-  exists: '#10B981',
-  in_progress: '#EAB308',
-  missing: '#DC2626',
-};
 
 /**
  * Exposed separately so inline-edit actions can pick a single-field

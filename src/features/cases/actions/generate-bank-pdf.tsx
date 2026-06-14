@@ -12,7 +12,7 @@ import { BankPdfDocument } from '../pdf/bank-pdf-document';
 
 type Result =
   | { ok: true; base64: string; filename: string }
-  | { ok: false; error: 'not_found' | 'render_failed'; message?: string };
+  | { ok: false; error: 'not_found' | 'render_failed' };
 
 /**
  * Render the case as a bank-submission PDF on the server and ship it back to
@@ -45,10 +45,9 @@ export async function generateBankPdfAction(caseId: string): Promise<Result> {
       filename: `kaufman_${safeCaseNumber}.pdf`,
     };
   } catch (err) {
-    return {
-      ok: false,
-      error: 'render_failed',
-      message: err instanceof Error ? err.message : 'unknown render error',
-    };
+    // Never ship the raw renderer error to the client — log it server-side and
+    // return a generic code the UI maps to a translated string.
+    console.error('[generateBankPdf] render failed', err);
+    return { ok: false, error: 'render_failed' };
   }
 }

@@ -37,11 +37,14 @@ export function CaseAdditionalProperties({
   initial,
   caseTypes,
   otherCaseTypeId,
+  canEdit = true,
 }: {
   caseId: string;
   initial: ReadonlyArray<CaseProperty>;
   caseTypes: ReadonlyArray<CaseTypeOption>;
   otherCaseTypeId: string | null;
+  /** When false, render the additional properties read-only (no add/remove). */
+  canEdit?: boolean;
 }) {
   const t = useTranslations('case.property');
   const [rows, setRows] = useState<CaseProperty[]>([...initial]);
@@ -109,15 +112,17 @@ export function CaseAdditionalProperties({
             <span className="text-xs font-medium text-neutral-500">
               {t('additionalLabel', { n: i + 2 })}
             </span>
-            <button
-              type="button"
-              onClick={() => void onRemove(p.id)}
-              aria-label={t('remove')}
-              className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-red-600 transition hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
-            >
-              <Trash2 className="size-3.5" aria-hidden="true" />
-              {t('remove')}
-            </button>
+            {canEdit && (
+              <button
+                type="button"
+                onClick={() => void onRemove(p.id)}
+                aria-label={t('remove')}
+                className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-red-600 transition hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
+              >
+                <Trash2 className="size-3.5" aria-hidden="true" />
+                {t('remove')}
+              </button>
+            )}
           </div>
           <PropertyFields
             values={p}
@@ -125,19 +130,22 @@ export function CaseAdditionalProperties({
             otherCaseTypeId={otherCaseTypeId}
             onSaveField={saveField(p.id)}
             onSavePurpose={savePurpose(p.id)}
+            canEdit={canEdit}
           />
         </div>
       ))}
 
-      <button
-        type="button"
-        onClick={onAdd}
-        disabled={adding}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-neutral-300 px-3 py-2 text-sm text-neutral-600 transition hover:border-brand-gold-text hover:text-brand-gold-text disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
-      >
-        <Plus className="size-4" aria-hidden="true" />
-        {t('add')}
-      </button>
+      {canEdit && (
+        <button
+          type="button"
+          onClick={onAdd}
+          disabled={adding}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-neutral-300 px-3 py-2 text-sm text-neutral-600 transition hover:border-brand-gold-text hover:text-brand-gold-text disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+        >
+          <Plus className="size-4" aria-hidden="true" />
+          {t('add')}
+        </button>
+      )}
     </div>
   );
 }

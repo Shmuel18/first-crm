@@ -13,6 +13,7 @@ import {
   type SortColumn,
   type SortDir,
 } from '../domain/case-sort';
+import type { CaseEditGate } from '../domain/case-edit-gate';
 import { useCaseQueryFilter } from '../hooks/use-case-query-filter';
 import { useRowDensity } from '../hooks/use-row-density';
 import type { CaseWithRelations } from '../types';
@@ -35,6 +36,8 @@ type Props = {
   // the column would always be "themselves" — pure noise. Mirrors the
   // advisor filter, which is already gated the same way.
   canViewAll: boolean;
+  // Inline-edit authority for the row cells (separate from canViewAll).
+  editGate: CaseEditGate;
 };
 
 const SORT_DIRS: SortDir[] = ['asc', 'desc'];
@@ -63,7 +66,7 @@ function readSavedSort(): { col: SortColumn; dir: SortDir } | null {
   }
 }
 
-export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions, canViewAll }: Props) {
+export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions, canViewAll, editGate }: Props) {
   const t = useTranslations('dashboard.columns');
   const tf = useTranslations('dashboard.filters');
   const filtered = useCaseQueryFilter(cases);
@@ -218,6 +221,7 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions, 
               bankOptions={bankOptions}
               advisorOptions={advisorOptions}
               canViewAll={canViewAll}
+              editGate={editGate}
             />
           ))}
         </tbody>

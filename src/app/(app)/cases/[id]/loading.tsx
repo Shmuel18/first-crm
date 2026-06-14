@@ -25,15 +25,14 @@ export default function CaseDetailLoading() {
           </div>
         </div>
 
-        {/* 2-col grid of block placeholders */}
+        {/* Block placeholders — the real page stacks 7 full-width blocks
+            (borrowers, request details, incomes, obligations, property, admin,
+            comments), so mirror that exactly to avoid a reflow flash on load. */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 7 }).map((_, i) => (
             <section
               key={i}
-              className={[
-                'bg-white border border-neutral-200 rounded-xl overflow-hidden',
-                i === 0 || i === 5 ? 'md:col-span-2' : '',
-              ].join(' ')}
+              className="bg-white border border-neutral-200 rounded-xl overflow-hidden md:col-span-2"
             >
               <header className="px-5 py-3.5 bg-neutral-50/60 border-b border-neutral-100">
                 <div className="h-5 w-40 rounded bg-neutral-200" />

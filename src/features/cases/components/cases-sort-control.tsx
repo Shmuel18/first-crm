@@ -57,9 +57,11 @@ export function CasesSortControl() {
     }
   };
 
-  const triggerLabel = sortCol
-    ? `${labelFor(sortCol)} ${sortDir === 'desc' ? '↓' : '↑'}`
-    : t('sort.default');
+  // Label text only — the direction is shown as a Lucide icon (not a Unicode
+  // glyph) for icon-consistency, and announced as words in the aria-label.
+  const triggerText = sortCol ? labelFor(sortCol) : t('sort.default');
+  const dirWord = sortCol ? (sortDir === 'desc' ? t('sort.desc') : t('sort.asc')) : '';
+  const ariaLabel = `${t('sort.label')}: ${triggerText}${dirWord ? ` ${dirWord}` : ''}`;
 
   return (
     <div className="flex items-center gap-2 bg-white px-4 py-2 border-b border-neutral-200">
@@ -69,11 +71,17 @@ export function CasesSortControl() {
           render={
             <button
               type="button"
-              aria-label={`${t('sort.label')}: ${triggerLabel}`}
+              aria-label={ariaLabel}
               className="inline-flex items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-xs text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
             >
               <ArrowDownUp className="size-3.5 text-neutral-500" aria-hidden="true" />
-              <span>{triggerLabel}</span>
+              <span>{triggerText}</span>
+              {sortCol &&
+                (sortDir === 'desc' ? (
+                  <ArrowDown className="size-3 text-neutral-500" aria-hidden="true" />
+                ) : (
+                  <ArrowUp className="size-3 text-neutral-500" aria-hidden="true" />
+                ))}
               <ChevronDown className="size-3 text-neutral-500" aria-hidden="true" />
             </button>
           }

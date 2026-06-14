@@ -30,6 +30,8 @@ const RichTextEditor = dynamic(
 type Props = {
   caseId: string;
   initialHtml: string | null;
+  /** When false, render the request details read-only (no editor toolbar). */
+  canEdit?: boolean;
 };
 
 /**
@@ -37,7 +39,7 @@ type Props = {
  * detail page. Save-on-blur, mirroring the short-note pattern — no
  * explicit save button.
  */
-export function CaseRequestDetailsBlock({ caseId, initialHtml }: Props) {
+export function CaseRequestDetailsBlock({ caseId, initialHtml, canEdit = true }: Props) {
   const t = useTranslations('case');
   const tForm = useTranslations('case.form.fields');
   const tc = useTranslations('common');
@@ -106,6 +108,7 @@ export function CaseRequestDetailsBlock({ caseId, initialHtml }: Props) {
         onBlur={handleBlur}
         placeholder={tForm('requestDetailsPlaceholder')}
         minRows={8}
+        editable={canEdit}
       />
     </CaseBlock>
   );

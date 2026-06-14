@@ -47,6 +47,12 @@ type Props = {
   /** Associated advisors (migration 146) + whether the user may edit them. */
   associatedAdvisorIds: ReadonlyArray<string>;
   canManageAdvisors: boolean;
+  /** General case-edit authority (can_edit_case). Gates the case-details
+   *  fields, the banks list, and the office-expenses table. */
+  canEdit: boolean;
+  /** can_edit_case AND change_case_status / assign_case_to_user. */
+  canChangeStatus: boolean;
+  canAssignAdvisor: boolean;
   locale: Locale;
 };
 
@@ -87,6 +93,9 @@ export async function CaseAdminBlock({
   advisors,
   associatedAdvisorIds,
   canManageAdvisors,
+  canEdit,
+  canChangeStatus,
+  canAssignAdvisor,
   locale,
 }: Props) {
   const t = await getTranslations('case');
@@ -123,6 +132,9 @@ export async function CaseAdminBlock({
         advisors={advisors}
         associatedAdvisorIds={associatedAdvisorIds}
         canManageAdvisors={canManageAdvisors}
+        canEdit={canEdit}
+        canChangeStatus={canChangeStatus}
+        canAssignAdvisor={canAssignAdvisor}
         canSeeFinancials={canSeeFinancials}
         initialFeeAmount={feeAmount}
         initialFeePaid={feePaid}
@@ -139,12 +151,12 @@ export async function CaseAdminBlock({
             caseId={caseId}
             rows={bankRows}
             banks={banks}
-            canEdit
+            canEdit={canEdit}
           />
         </div>
         <div>
           <SectionHeader title={tAdmin('sections.officeExpenses')} icon={<Receipt />} />
-          <CaseExpensesList caseId={caseId} expenses={expenses} canEdit />
+          <CaseExpensesList caseId={caseId} expenses={expenses} canEdit={canEdit} />
         </div>
       </div>
     </CaseBlock>

@@ -25,11 +25,23 @@ type Props = {
   onBlur?: (html: string) => void;
   placeholder?: string;
   minRows?: number;
+  /** When false, render the content read-only (no toolbar, no editing) —
+   *  e.g. for a viewer who lacks edit permission. TipTap still parses the
+   *  HTML to its safe node schema, so this stays XSS-safe. Defaults to true. */
+  editable?: boolean;
 };
 
-export function RichTextEditor({ value, onChange, onBlur, placeholder, minRows = 8 }: Props) {
+export function RichTextEditor({
+  value,
+  onChange,
+  onBlur,
+  placeholder,
+  minRows = 8,
+  editable = true,
+}: Props) {
   const editor = useEditor({
     immediatelyRender: false,
+    editable,
     extensions: [
       // StarterKit v3 already includes Underline - no need to add separately
       StarterKit.configure({ heading: { levels: [2, 3] } }),
@@ -51,6 +63,11 @@ export function RichTextEditor({ value, onChange, onBlur, placeholder, minRows =
     editor.commands.setContent(value || '', { emitUpdate: false });
   }, [editor, value]);
 
+  // Keep editable in sync if the prop flips after mount.
+  useEffect(() => {
+    editor?.setEditable(editable);
+  }, [editor, editable]);
+
   if (!editor) {
     return (
       <div
@@ -70,10 +87,10 @@ export function RichTextEditor({ value, onChange, onBlur, placeholder, minRows =
 
   return (
     <div
-      onBlur={handleContainerBlur}
+      onBlur={editable ? handleContainerBlur : undefined}
       className="border border-neutral-200 rounded-md overflow-hidden bg-white focus-within:border-brand-gold focus-within:ring-2 focus-within:ring-brand-gold/20 transition"
     >
-      <Toolbar editor={editor} />
+      {editable && <Toolbar editor={editor} />}
       <EditorContent editor={editor} />
     </div>
   );
