@@ -75,9 +75,9 @@ function Field({
   dir?: 'ltr';
 }) {
   return (
-    <div className="flex gap-1.5">
+    <div className="flex gap-1.5 min-w-0">
       <dt className="text-neutral-400 shrink-0">{label}:</dt>
-      <dd className="truncate text-neutral-700" dir={dir}>
+      <dd className="truncate text-neutral-700 min-w-0" dir={dir}>
         {value ?? '—'}
       </dd>
     </div>

@@ -76,7 +76,7 @@ export function TaskBoardCard({ task, locale, onOpen, onReassign, onThread }: Pr
     >
       <div className="flex items-start gap-1.5">
         <GripVertical className="size-3.5 text-neutral-300 mt-0.5 shrink-0 group-hover:text-neutral-400" />
-        <p className="text-sm font-medium text-neutral-800 leading-snug flex-1">{task.title}</p>
+        <p className="text-sm font-medium text-neutral-800 leading-snug flex-1 min-w-0 break-words">{task.title}</p>
         {task.is_private && (
           <Lock className="size-3 text-brand-gold-text shrink-0 mt-1" aria-label={t('privateLabel')} />
         )}

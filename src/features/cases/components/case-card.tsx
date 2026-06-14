@@ -146,9 +146,9 @@ export function CaseCard({ row, statusOptions, advisorOptions, canViewAll, editG
 
 function Field({ label, value }: { label: string; value: string | null }) {
   return (
-    <div className="flex gap-1.5">
+    <div className="flex gap-1.5 min-w-0">
       <dt className="text-neutral-400">{label}:</dt>
-      <dd className="truncate text-neutral-700">{value ?? '—'}</dd>
+      <dd className="truncate text-neutral-700 min-w-0">{value ?? '—'}</dd>
     </div>
   );
 }

@@ -124,8 +124,8 @@ export function CaseActionTaskPopover({
           aria-label={t('title')}
           className="absolute end-0 top-full mt-2 w-[min(28rem,calc(100vw-2rem))] bg-white rounded-xl shadow-2xl border border-neutral-200 z-50 overflow-hidden"
         >
-          <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-100 bg-neutral-50/60">
-            <h3 className="text-sm font-semibold text-neutral-900">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-neutral-100 bg-neutral-50/60">
+            <h3 className="text-sm font-semibold text-neutral-900 min-w-0">
               {t('openTitle')}{' '}
               <span className="text-neutral-500 font-normal">({tasks.length})</span>
             </h3>

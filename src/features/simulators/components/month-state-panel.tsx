@@ -59,7 +59,7 @@ export function MonthStatePanel({ result, mortgageAmount }: Props) {
         {stats.map(({ key, label, value, accent }) => (
           <div
             key={key}
-            className={`rounded-lg border p-3 ${accent ? 'border-brand-gold/30 bg-brand-gold-soft' : 'border-neutral-100 bg-neutral-50'}`}
+            className={`min-w-0 rounded-lg border p-3 ${accent ? 'border-brand-gold/30 bg-brand-gold-soft' : 'border-neutral-100 bg-neutral-50'}`}
           >
             <dt className="truncate text-xs text-neutral-500">{label}</dt>
             <dd className={`mt-1 truncate text-sm font-semibold tabular-nums ${accent ? 'text-brand-gold-text' : 'text-neutral-900'}`}>
