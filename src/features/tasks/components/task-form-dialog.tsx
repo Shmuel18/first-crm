@@ -148,6 +148,28 @@ export function TaskFormDialog({
   }, [attachments, handleDialogOpenChange, mode, selectedCaseId, state, t]);
 
   const [caseSearch, setCaseSearch] = useState('');
+
+  // tasks-list / tasks-board render ONE shared TaskFormDialog and swap the `task`
+  // prop; the create button reuses one instance across clicks. These controlled
+  // fields live in this always-mounted component, so — unlike the uncontrolled
+  // defaultValue fields, which re-seed when the Base UI popup remounts on open —
+  // they would otherwise keep the PREVIOUS task's value, e.g. the linked-case
+  // field showing a case from a task opened earlier (reported bug). Re-seed from
+  // the current task whenever the dialog opens or the target task changes. React
+  // "adjust state during render when a prop changes" pattern (cf. compose-email-dialog).
+  const seedKey = open ? `${task?.id ?? 'new'}:${presetCaseId ?? ''}` : null;
+  const [seededKey, setSeededKey] = useState(seedKey);
+  if (seedKey !== seededKey) {
+    setSeededKey(seedKey);
+    if (open) {
+      setSelectedCaseId(presetCaseId ?? task?.case_id ?? '');
+      setIsPrivate(Boolean(task?.is_private));
+      setCaseSearch('');
+      setAttachments([]);
+      setAttachmentError(null);
+    }
+  }
+
   const normalizedCaseSearch = caseSearch.trim().toLowerCase();
   const matchingCases = normalizedCaseSearch
     ? effectiveCases.filter((c) =>
