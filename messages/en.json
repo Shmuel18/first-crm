@@ -1948,6 +1948,7 @@
       "deletedAt": "Deleted on {date}",
       "deletedBy": "by {name}",
       "purgeIn": "{days, plural, =0 {will be purged today} =1 {will be purged tomorrow} other {will be purged in # days}}",
+      "paused": "Case purging is currently paused for records-retention reasons — no cases are auto-deleted and permanent delete is unavailable. All deleted cases are shown.",
       "actions": {
         "restore": "Restore",
         "more": "More actions",
@@ -1966,6 +1967,7 @@
         "unauthorized": "You don't have permission for this action",
         "not_found": "Case not found or already restored",
         "mismatch": "Case number doesn't match — try again",
+        "retention_paused": "Permanent delete is currently paused for records-retention reasons.",
         "unknown": "Action failed. Please try again."
       }
     },

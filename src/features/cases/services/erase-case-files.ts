@@ -2,62 +2,106 @@ import { DOCUMENTS_BUCKET } from '@/features/documents/services/documents.servic
 import { eraseDriveTargets } from '@/features/integrations/services/drive-case-uploader';
 import { createAdminClient } from '@/lib/supabase/admin';
 
+type Admin = ReturnType<typeof createAdminClient>;
+type OrphanEntity = 'document' | 'expense' | 'case';
+
+/** One Storage/Drive pointer tied to its owning row, so a failed erasure can be
+ *  recorded durably in erasure_orphan_log (mig 144/177) for manual cleanup. */
+export type CaseFilePointer = {
+  entity: 'document' | 'expense';
+  rowId: string;
+  storagePath: string | null;
+  driveFileId: string | null;
+};
+
 export type CaseFileRefs = {
-  storagePaths: string[];
-  driveFileIds: string[];
+  pointers: CaseFilePointer[];
+  /** The case's Drive folder (case-level, entity 'case' in the orphan log). */
   caseFolderId: string | null;
 };
 
 /**
  * Gather every Storage object path + Drive file/folder id for a case BEFORE it
- * is permanently deleted. The hard-delete cascade removes the `documents` rows,
- * after which these references are unrecoverable. Uses the service-role client
- * so it sees ALL documents (including already-soft-deleted ones) regardless of
- * RLS — a permanent case delete erases everything for that case.
+ * is permanently deleted, KEEPING each pointer tied to its owning row + entity.
+ * The hard-delete cascade removes the `documents` / `case_expenses` rows, after
+ * which these references are unrecoverable. Uses the service-role client so it
+ * sees ALL rows (incl. already-soft-deleted) regardless of RLS.
  */
-export async function collectCaseFileRefs(caseId: string): Promise<CaseFileRefs> {
+export type CollectCaseFileRefsResult = { ok: true; refs: CaseFileRefs } | { ok: false };
+
+export async function collectCaseFileRefs(caseId: string): Promise<CollectCaseFileRefsResult> {
   const admin = createAdminClient();
+  const pointers: CaseFilePointer[] = [];
 
-  const { data: docs } = await admin
+  const docsRes = await admin
     .from('documents')
-    .select('drive_file_id, metadata')
+    .select('id, drive_file_id, metadata')
     .eq('case_id', caseId);
-
-  const storagePaths: string[] = [];
-  const driveFileIds: string[] = [];
-  for (const doc of docs ?? []) {
+  // FAIL-CLOSED: a read error must ABORT the permanent delete — proceeding with an
+  // empty ref list would let the cascade drop the rows and orphan the files
+  // forever (R5-lifecycle-2 follow-up). The caller must not delete on { ok:false }.
+  if (docsRes.error) {
+    console.error('[collectCaseFileRefs] documents read failed — aborting', {
+      caseId,
+      message: docsRes.error.message,
+    });
+    return { ok: false };
+  }
+  for (const doc of docsRes.data ?? []) {
     const meta = doc.metadata;
-    // metadata is loose Json; after the object guard, narrow to read storage_path.
     const path =
       meta && typeof meta === 'object' && !Array.isArray(meta)
         ? (meta as Record<string, unknown>).storage_path
         : undefined;
-    if (typeof path === 'string' && path.length > 0) storagePaths.push(path);
-    if (doc.drive_file_id) driveFileIds.push(doc.drive_file_id);
+    const storagePath = typeof path === 'string' && path.length > 0 ? path : null;
+    const driveFileId =
+      typeof doc.drive_file_id === 'string' && doc.drive_file_id.length > 0
+        ? doc.drive_file_id
+        : null;
+    if (storagePath || driveFileId) {
+      pointers.push({ entity: 'document', rowId: doc.id, storagePath, driveFileId });
+    }
   }
 
-  // Expense receipts live in the same case-documents bucket + Drive case folder
-  // (migrations 101 / 139). Erase them alongside documents on a permanent
-  // delete — otherwise the cascade drops the rows and orphans the files.
-  const { data: expenses } = await admin
+  // Expense receipts live in the same case-documents bucket + Drive case folder.
+  const expRes = await admin
     .from('case_expenses')
-    .select('receipt_path, receipt_drive_id')
+    .select('id, receipt_path, receipt_drive_id')
     .eq('case_id', caseId);
-  for (const exp of expenses ?? []) {
-    if (typeof exp.receipt_path === 'string' && exp.receipt_path.length > 0) {
-      storagePaths.push(exp.receipt_path);
-    }
-    if (typeof exp.receipt_drive_id === 'string' && exp.receipt_drive_id.length > 0) {
-      driveFileIds.push(exp.receipt_drive_id);
+  if (expRes.error) {
+    console.error('[collectCaseFileRefs] expenses read failed — aborting', {
+      caseId,
+      message: expRes.error.message,
+    });
+    return { ok: false };
+  }
+  for (const exp of expRes.data ?? []) {
+    const storagePath =
+      typeof exp.receipt_path === 'string' && exp.receipt_path.length > 0
+        ? exp.receipt_path
+        : null;
+    const driveFileId =
+      typeof exp.receipt_drive_id === 'string' && exp.receipt_drive_id.length > 0
+        ? exp.receipt_drive_id
+        : null;
+    if (storagePath || driveFileId) {
+      pointers.push({ entity: 'expense', rowId: exp.id, storagePath, driveFileId });
     }
   }
 
-  const { data: caseRow } = await admin
+  const caseRes = await admin
     .from('cases')
     .select('metadata')
     .eq('id', caseId)
     .maybeSingle();
-  // metadata.drive is an untyped JSON subtree; cast to read case_folder_id.
+  if (caseRes.error) {
+    console.error('[collectCaseFileRefs] case read failed — aborting', {
+      caseId,
+      message: caseRes.error.message,
+    });
+    return { ok: false };
+  }
+  const caseRow = caseRes.data;
   const drive =
     caseRow?.metadata && typeof caseRow.metadata === 'object' && 'drive' in caseRow.metadata
       ? (caseRow.metadata as { drive?: { case_folder_id?: unknown } }).drive
@@ -65,45 +109,128 @@ export async function collectCaseFileRefs(caseId: string): Promise<CaseFileRefs>
   const folderId = drive?.case_folder_id;
   const caseFolderId = typeof folderId === 'string' && folderId.length > 0 ? folderId : null;
 
-  return { storagePaths, driveFileIds, caseFolderId };
+  return { ok: true, refs: { pointers, caseFolderId } };
+}
+
+type OrphanRow = {
+  entity: OrphanEntity;
+  row_id: string;
+  storage_path: string | null;
+  drive_file_id: string | null;
+};
+
+/**
+ * Durable record of pointers that could NOT be erased (Storage error, Drive
+ * disconnected, partial Drive failure). The owning DB rows are already gone, so
+ * a console line is unrecoverable — erasure_orphan_log preserves the path/id for
+ * manual cleanup, matching the cron purge path's contract (mig 144/177). The
+ * orphan-log table predates the generated types; minimal cast on the insert.
+ */
+async function logOrphans(admin: Admin, rows: OrphanRow[], caseId: string): Promise<void> {
+  if (rows.length === 0) return;
+  const recordedAt = new Date().toISOString();
+  const { error } = await (
+    admin as unknown as {
+      from: (t: 'erasure_orphan_log') => {
+        insert: (r: Array<OrphanRow & { deleted_at: string }>) => PromiseLike<{
+          error: { message: string } | null;
+        }>;
+      };
+    }
+  )
+    .from('erasure_orphan_log')
+    .insert(rows.map((r) => ({ ...r, deleted_at: recordedAt })));
+  if (error) {
+    console.error('[eraseCaseFiles] orphan-log insert failed', { caseId, message: error.message });
+  }
 }
 
 /**
  * Best-effort erase of a case's Storage blobs + Drive copies AFTER the row has
- * been permanently deleted. The DB delete is authoritative; a cleanup failure
- * here is logged (with counts) for manual follow-up rather than thrown, so a
- * completed erasure never surfaces as an error to the admin. LEGAL-3.
+ * been permanently deleted. The DB delete is authoritative; a cleanup failure is
+ * logged AND recorded in erasure_orphan_log (so a leaked file is recoverable for
+ * manual cleanup) rather than thrown. LEGAL-3 (R5-lifecycle-2).
  */
 export async function eraseCaseFiles(caseId: string, refs: CaseFileRefs): Promise<void> {
-  if (refs.storagePaths.length > 0) {
-    const admin = createAdminClient();
-    const { error } = await admin.storage.from(DOCUMENTS_BUCKET).remove(refs.storagePaths);
+  const admin = createAdminClient();
+  const storagePointers = refs.pointers.filter((p) => p.storagePath);
+  const drivePointers = refs.pointers.filter((p) => p.driveFileId);
+
+  // --- Storage blobs ---
+  if (storagePointers.length > 0) {
+    const { error } = await admin.storage
+      .from(DOCUMENTS_BUCKET)
+      .remove(storagePointers.map((p) => p.storagePath as string));
     if (error) {
       console.error('[eraseCaseFiles] storage remove failed', {
         caseId,
-        count: refs.storagePaths.length,
+        count: storagePointers.length,
         message: error.message,
       });
+      await logOrphans(
+        admin,
+        storagePointers.map((p) => ({
+          entity: p.entity,
+          row_id: p.rowId,
+          storage_path: p.storagePath,
+          drive_file_id: null,
+        })),
+        caseId,
+      );
     }
   }
 
-  if (refs.caseFolderId || refs.driveFileIds.length > 0) {
+  // --- Drive copies + the case folder ---
+  if (refs.caseFolderId || drivePointers.length > 0) {
     const res = await eraseDriveTargets({
       folderId: refs.caseFolderId,
-      fileIds: refs.driveFileIds,
+      fileIds: drivePointers.map((p) => p.driveFileId as string),
     });
     if (!res.connected) {
       console.warn('[eraseCaseFiles] Drive not connected — Drive copies NOT erased', {
         caseId,
         caseFolderId: refs.caseFolderId,
-        driveFileCount: refs.driveFileIds.length,
+        driveFileCount: drivePointers.length,
       });
+      const orphans: OrphanRow[] = drivePointers.map((p) => ({
+        entity: p.entity,
+        row_id: p.rowId,
+        storage_path: null,
+        drive_file_id: p.driveFileId,
+      }));
+      if (refs.caseFolderId) {
+        orphans.push({
+          entity: 'case',
+          row_id: caseId,
+          storage_path: null,
+          drive_file_id: refs.caseFolderId,
+        });
+      }
+      await logOrphans(admin, orphans, caseId);
     } else if (res.failed.length > 0) {
       console.error('[eraseCaseFiles] some Drive deletions failed', {
         caseId,
         deleted: res.deleted.length,
         failed: res.failed.length,
       });
+      const failed = new Set(res.failed);
+      const orphans: OrphanRow[] = drivePointers
+        .filter((p) => failed.has(p.driveFileId as string))
+        .map((p) => ({
+          entity: p.entity,
+          row_id: p.rowId,
+          storage_path: null,
+          drive_file_id: p.driveFileId,
+        }));
+      if (refs.caseFolderId && failed.has(refs.caseFolderId)) {
+        orphans.push({
+          entity: 'case',
+          row_id: caseId,
+          storage_path: null,
+          drive_file_id: refs.caseFolderId,
+        });
+      }
+      await logOrphans(admin, orphans, caseId);
     }
   }
 }

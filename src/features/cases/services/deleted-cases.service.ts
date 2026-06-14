@@ -35,11 +35,20 @@ type DeletedCaseRpcRow = {
   deleted_by_last_name: string | null;
 };
 
+export type DeletedCasesResult = {
+  rows: DeletedCaseRow[];
+  /** When the retention purge is paused (mig 173), NOTHING is auto-deleted, so
+   *  the UI shows every soft-deleted case and hides the misleading countdown. */
+  retentionPaused: boolean;
+};
+
 /**
- * Lists soft-deleted cases still inside the office's retention window.
- * The DB RPC is admin-scoped and avoids app-side service-role access.
+ * Lists soft-deleted cases. While the retention purge is paused (mig 173) every
+ * soft-deleted case is shown (no auto-purge is happening); otherwise only those
+ * still inside the office's retention window. The DB RPC is admin-scoped and
+ * avoids app-side service-role access.
  */
-export async function listDeletedCases(): Promise<DeletedCaseRow[]> {
+export async function listDeletedCases(): Promise<DeletedCasesResult> {
   const supabase = await createClient();
 
   const { data: settings } = await supabase
@@ -49,18 +58,41 @@ export async function listDeletedCases(): Promise<DeletedCaseRow[]> {
     .maybeSingle();
   const retentionDays =
     settings?.deleted_records_retention_days ?? DEFAULT_RETENTION_DAYS;
-  const cutoffIso = new Date(Date.now() - retentionDays * MS_PER_DAY).toISOString();
+
+  // retention_purge_enabled (mig 173) predates the generated types; minimal cast.
+  const { data: flagRow } = await (
+    supabase as unknown as {
+      from: (t: 'office_settings') => {
+        select: (c: 'retention_purge_enabled') => {
+          eq: (col: 'id', v: number) => {
+            maybeSingle: () => PromiseLike<{ data: { retention_purge_enabled: boolean | null } | null }>;
+          };
+        };
+      };
+    }
+  )
+    .from('office_settings')
+    .select('retention_purge_enabled')
+    .eq('id', 1)
+    .maybeSingle();
+  // Fail safe: treat unknown as paused (don't imply an active countdown).
+  const retentionPaused = flagRow?.retention_purge_enabled !== true;
+
+  // Paused → show ALL soft-deleted cases (epoch cutoff); else the active window.
+  const cutoffIso = retentionPaused
+    ? new Date(0).toISOString()
+    : new Date(Date.now() - retentionDays * MS_PER_DAY).toISOString();
 
   const { data, error } = await supabase.rpc('list_deleted_cases', {
     p_cutoff: cutoffIso,
   });
   if (error) {
     console.error('[listDeletedCases] query failed', { message: error.message });
-    return [];
+    return { rows: [], retentionPaused };
   }
 
   const now = Date.now();
-  return ((data ?? []) as DeletedCaseRpcRow[]).map((c) => {
+  const rows = ((data ?? []) as DeletedCaseRpcRow[]).map((c) => {
     const deletedMs = new Date(c.deleted_at).getTime();
     const ageDays = Math.floor((now - deletedMs) / MS_PER_DAY);
     const remaining = Math.max(0, retentionDays - ageDays);
@@ -80,4 +112,5 @@ export async function listDeletedCases(): Promise<DeletedCaseRow[]> {
       daysUntilPurge: remaining,
     };
   });
+  return { rows, retentionPaused };
 }

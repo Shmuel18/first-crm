@@ -12,7 +12,7 @@ export default async function RecycleBinSettingsPage() {
 
   const t = await getTranslations('settings.recycleBin');
   const locale = parseLocale(await getLocale());
-  const rows = await listDeletedCases();
+  const { rows, retentionPaused } = await listDeletedCases();
 
   return (
     <div className="max-w-3xl">
@@ -21,7 +21,7 @@ export default async function RecycleBinSettingsPage() {
         <p className="text-sm text-neutral-500 mt-0.5">{t('subtitle')}</p>
       </header>
 
-      <RecycleBinList rows={rows} locale={locale} />
+      <RecycleBinList rows={rows} locale={locale} retentionPaused={retentionPaused} />
     </div>
   );
 }

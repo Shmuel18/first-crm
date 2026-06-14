@@ -33,11 +33,14 @@ import type { DeletedCaseRow } from '../services/deleted-cases.service';
 type Props = {
   rows: ReadonlyArray<DeletedCaseRow>;
   locale: Locale;
+  /** Retention purge paused (mig 173): hide the misleading countdown and disable
+   *  permanent delete, which the DB now refuses anyway (R5-lifecycle-1/3). */
+  retentionPaused: boolean;
 };
 
 const NEAR_PURGE_DAYS = 3;
 
-export function RecycleBinList({ rows, locale }: Props) {
+export function RecycleBinList({ rows, locale, retentionPaused }: Props) {
   const t = useTranslations('settings.recycleBin');
   const [isPending, startTransition] = useTransition();
   const [confirmTarget, setConfirmTarget] = useState<DeletedCaseRow | null>(null);
@@ -86,6 +89,14 @@ export function RecycleBinList({ rows, locale }: Props) {
 
   return (
     <>
+      {retentionPaused && (
+        <div
+          role="status"
+          className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800"
+        >
+          {t('paused')}
+        </div>
+      )}
       <ul className="rounded-xl border border-neutral-200 bg-white divide-y divide-neutral-100 overflow-hidden">
         {rows.map((row) => {
           const fullName = formatPersonName(
@@ -116,17 +127,19 @@ export function RecycleBinList({ rows, locale }: Props) {
                   {deletedByName && (
                     <span>· {t('deletedBy', { name: deletedByName })}</span>
                   )}
-                  <span
-                    className={
-                      isNearPurge
-                        ? 'inline-flex items-center gap-1 text-red-700 font-medium'
-                        : 'text-neutral-500'
-                    }
-                  >
-                    ·{' '}
-                    {isNearPurge && <AlertTriangle aria-hidden="true" className="size-3" />}
-                    {t('purgeIn', { days: row.daysUntilPurge })}
-                  </span>
+                  {!retentionPaused && (
+                    <span
+                      className={
+                        isNearPurge
+                          ? 'inline-flex items-center gap-1 text-red-700 font-medium'
+                          : 'text-neutral-500'
+                      }
+                    >
+                      ·{' '}
+                      {isNearPurge && <AlertTriangle aria-hidden="true" className="size-3" />}
+                      {t('purgeIn', { days: row.daysUntilPurge })}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -156,10 +169,13 @@ export function RecycleBinList({ rows, locale }: Props) {
                 />
                 <DropdownMenuContent align="end" className="min-w-44">
                   <DropdownMenuItem
+                    disabled={retentionPaused}
                     onClick={() => {
+                      if (retentionPaused) return;
                       setConfirmTarget(row);
                       setTypedConfirm('');
                     }}
+                    title={retentionPaused ? t('paused') : undefined}
                     className="text-xs py-1 px-2.5 justify-center text-red-600 focus:text-red-700 focus:bg-red-50"
                   >
                     <Trash2 className="size-3.5" aria-hidden="true" />

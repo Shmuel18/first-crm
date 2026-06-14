@@ -9,7 +9,10 @@ import { collectCaseFileRefs, eraseCaseFiles } from '../services/erase-case-file
 
 type Result =
   | { ok: true }
-  | { ok: false; error: 'unauthorized' | 'not_found' | 'mismatch' | 'unknown' };
+  | {
+      ok: false;
+      error: 'unauthorized' | 'not_found' | 'mismatch' | 'retention_paused' | 'unknown';
+    };
 
 type Input = {
   caseId: string;
@@ -29,7 +32,15 @@ export async function permanentDeleteCaseAction(input: Input): Promise<Result> {
 
   // Gather file references BEFORE the hard delete: the cascade removes the
   // documents rows, after which the Storage paths + Drive ids are unrecoverable.
-  const fileRefs = await collectCaseFileRefs(input.caseId);
+  // FAIL-CLOSED: if collection fails, do NOT delete — otherwise we'd orphan the
+  // files with no way to recover their pointers (R5-lifecycle-2 follow-up).
+  const collected = await collectCaseFileRefs(input.caseId);
+  if (!collected.ok) {
+    console.error('[permanentDeleteCase] aborting — file-ref collection failed', {
+      caseId: input.caseId,
+    });
+    return { ok: false, error: 'unknown' };
+  }
 
   const { data: deleted, error } = await supabase.rpc('permanently_delete_case', {
     p_case_id: input.caseId,
@@ -38,6 +49,8 @@ export async function permanentDeleteCaseAction(input: Input): Promise<Result> {
 
   if (error) {
     if (error.code === '22023') return { ok: false, error: 'mismatch' };
+    // Retention hold active (mig 177): permanent delete is paused.
+    if (error.code === 'PT001') return { ok: false, error: 'retention_paused' };
     console.error('[permanentDeleteCase] delete failed', { code: error.code });
     return { ok: false, error: 'unknown' };
   }
@@ -46,7 +59,7 @@ export async function permanentDeleteCaseAction(input: Input): Promise<Result> {
   // Row erased — now erase the actual files (LEGAL-3 right-to-erasure). Best-
   // effort + logged: the DB delete already succeeded, so a file-cleanup hiccup
   // must not turn a completed erasure into an error.
-  await eraseCaseFiles(input.caseId, fileRefs);
+  await eraseCaseFiles(input.caseId, collected.refs);
 
   revalidatePath('/settings/recycle-bin');
   return { ok: true };
