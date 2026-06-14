@@ -39,7 +39,7 @@ export function KpiStrip({ result }: Props) {
     <section className="rounded-xl bg-brand-black p-3 shadow-sm sm:p-4">
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 lg:grid-cols-4">
         {items.map(({ key, label, value, sub, icon: Icon, hero }) => (
-          <div key={key} className={`rounded-lg bg-brand-black-soft p-3 ${hero ? 'ring-1 ring-brand-gold/30' : ''}`}>
+          <div key={key} className={`min-w-0 rounded-lg bg-brand-black-soft p-3 ${hero ? 'ring-1 ring-brand-gold/30' : ''}`}>
             <div className="flex items-center gap-1.5 text-xs text-neutral-400">
               <Icon className={`size-3.5 ${hero ? 'text-brand-gold' : 'text-brand-gold-light'}`} aria-hidden="true" />
               <span className="truncate">{label}</span>

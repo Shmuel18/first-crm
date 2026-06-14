@@ -112,58 +112,110 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
   return (
     <div
       className={[
-        'flex items-center gap-3 px-4 py-3.5 hover:bg-neutral-50/60 transition-colors',
+        'flex flex-col gap-3 px-4 py-3.5 hover:bg-neutral-50/60 transition-colors sm:flex-row sm:items-center',
         member.is_active ? '' : 'opacity-60 bg-neutral-50/60',
       ].join(' ')}
     >
-      <div className="size-10 rounded-full bg-brand-black text-brand-gold flex items-center justify-center text-sm font-semibold shrink-0 ring-2 ring-brand-gold/30">
-        {initials}
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <div className="size-10 rounded-full bg-brand-black text-brand-gold flex items-center justify-center text-sm font-semibold shrink-0 ring-2 ring-brand-gold/30">
+          {initials}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-semibold text-neutral-900 truncate">{fullName}</p>
+            {isSelf && (
+              <span className="text-[10px] font-medium text-brand-gold-text shrink-0">({t('you')})</span>
+            )}
+            {!member.is_active && (
+              <span className="inline-flex items-center px-1.5 h-5 rounded-full text-[10px] font-medium bg-neutral-200 text-neutral-800 shrink-0">
+                {t('status.inactive')}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1 text-xs text-neutral-500 mt-0.5">
+            <Mail className="size-3 shrink-0" aria-hidden="true" />
+            <span className="truncate" dir="ltr">{member.email}</span>
+          </div>
+        </div>
       </div>
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="text-sm font-semibold text-neutral-900 truncate">{fullName}</p>
-          {isSelf && <span className="text-[10px] font-medium text-brand-gold-text">({t('you')})</span>}
-          {!member.is_active && (
-            <span className="inline-flex items-center px-1.5 h-5 rounded-full text-[10px] font-medium bg-neutral-200 text-neutral-800">
-              {t('status.inactive')}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-1 text-xs text-neutral-500 mt-0.5">
-          <Mail className="size-3 shrink-0" aria-hidden="true" />
-          <span className="truncate" dir="ltr">{member.email}</span>
-        </div>
-      </div>
-
-      <NativeSelect
-        value={member.role?.id ?? ''}
-        onChange={(e) => handleRoleChange(e.target.value)}
-        disabled={pending || !member.is_active || isSelf}
-        aria-label={`${t('invite.role')} — ${fullName}`}
-        title={isSelf ? t('toast.selfRoleChange') : undefined}
-        className="w-36 h-8 text-xs"
-      >
-        {!member.role && <option value="">—</option>}
-        {roles.map((r) => (
-          <option key={r.id} value={r.id}>{roleName(r)}</option>
-        ))}
-      </NativeSelect>
-
-      {!isSelf && (
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          disabled={pending}
-          onClick={handleResend}
-          aria-label={t('action.resend')}
-          title={t('action.resend')}
+      <div className="flex items-center gap-1 shrink-0 sm:gap-2">
+        <NativeSelect
+          value={member.role?.id ?? ''}
+          onChange={(e) => handleRoleChange(e.target.value)}
+          disabled={pending || !member.is_active || isSelf}
+          aria-label={`${t('invite.role')} — ${fullName}`}
+          title={isSelf ? t('toast.selfRoleChange') : undefined}
+          className="h-8 min-w-0 flex-1 text-xs sm:w-36 sm:flex-none"
         >
-          <Send className="size-4 text-brand-gold-text" />
-        </Button>
-      )}
+          {!member.role && <option value="">—</option>}
+          {roles.map((r) => (
+            <option key={r.id} value={r.id}>{roleName(r)}</option>
+          ))}
+        </NativeSelect>
 
-      {member.is_active ? (
+        {!isSelf && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            disabled={pending}
+            onClick={handleResend}
+            aria-label={t('action.resend')}
+            title={t('action.resend')}
+          >
+            <Send className="size-4 text-brand-gold-text" />
+          </Button>
+        )}
+
+        {member.is_active ? (
+          <AlertDialog>
+            <AlertDialogTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  disabled={pending || isSelf}
+                  aria-label={t('action.deactivate')}
+                  title={isSelf ? t('toast.selfDeactivate') : t('action.deactivate')}
+                />
+              }
+            >
+              <PowerOff className="size-4 text-red-500" />
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogTitle>{t('deactivateConfirm.title')}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t('deactivateConfirm.body', { name: fullName })}
+              </AlertDialogDescription>
+              <AlertDialogFooter>
+                <AlertDialogCancel
+                  render={
+                    <Button
+                      variant="destructive"
+                      onClick={() => handleSetActive(false)}
+                    >
+                      {t('action.deactivate')}
+                    </Button>
+                  }
+                />
+                <AlertDialogCancel render={<Button variant="outline">{tc('cancel')}</Button>} />
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            disabled={pending}
+            onClick={() => handleSetActive(true)}
+            aria-label={t('action.reactivate')}
+            title={t('action.reactivate')}
+          >
+            <Power className="size-4 text-green-600" />
+          </Button>
+        )}
+
         <AlertDialog>
           <AlertDialogTrigger
             render={
@@ -171,26 +223,23 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
                 variant="ghost"
                 size="icon-sm"
                 disabled={pending || isSelf}
-                aria-label={t('action.deactivate')}
-                title={isSelf ? t('toast.selfDeactivate') : t('action.deactivate')}
+                aria-label={t('action.delete')}
+                title={isSelf ? t('toast.selfDelete') : t('action.delete')}
               />
             }
           >
-            <PowerOff className="size-4 text-red-500" />
+            <Trash2 className="size-4 text-red-600" />
           </AlertDialogTrigger>
           <AlertDialogContent>
-            <AlertDialogTitle>{t('deactivateConfirm.title')}</AlertDialogTitle>
+            <AlertDialogTitle>{t('deleteConfirm.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('deactivateConfirm.body', { name: fullName })}
+              {t('deleteConfirm.body', { name: fullName })}
             </AlertDialogDescription>
             <AlertDialogFooter>
               <AlertDialogCancel
                 render={
-                  <Button
-                    variant="destructive"
-                    onClick={() => handleSetActive(false)}
-                  >
-                    {t('action.deactivate')}
+                  <Button variant="destructive" onClick={handleDelete}>
+                    {t('action.delete')}
                   </Button>
                 }
               />
@@ -198,50 +247,7 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      ) : (
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          disabled={pending}
-          onClick={() => handleSetActive(true)}
-          aria-label={t('action.reactivate')}
-          title={t('action.reactivate')}
-        >
-          <Power className="size-4 text-green-600" />
-        </Button>
-      )}
-
-      <AlertDialog>
-        <AlertDialogTrigger
-          render={
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              disabled={pending || isSelf}
-              aria-label={t('action.delete')}
-              title={isSelf ? t('toast.selfDelete') : t('action.delete')}
-            />
-          }
-        >
-          <Trash2 className="size-4 text-red-600" />
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogTitle>{t('deleteConfirm.title')}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {t('deleteConfirm.body', { name: fullName })}
-          </AlertDialogDescription>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              render={
-                <Button variant="destructive" onClick={handleDelete}>
-                  {t('action.delete')}
-                </Button>
-              }
-            />
-            <AlertDialogCancel render={<Button variant="outline">{tc('cancel')}</Button>} />
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      </div>
 
       <ResendLinkDialog link={resendLink} onClose={() => setResendLink(null)} />
     </div>
