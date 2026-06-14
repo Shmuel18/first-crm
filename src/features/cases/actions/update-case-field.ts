@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
-import { userCanEditCase } from '@/lib/auth/permissions';
+import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 import { sanitizeRichTextHtml } from '@/lib/utils/sanitize-html';
@@ -50,6 +50,16 @@ export async function updateCaseFieldAction(
   }
 
   if (!(await userCanEditCase(caseId))) {
+    return { ok: false, error: 'unauthorized' };
+  }
+
+  // Granular gates (mirror quickUpdateCaseFieldAction): the dedicated keys are
+  // NOT implied by generic edit. The DB trigger (mig 178) is the hard guarantee
+  // on every path; this fails fast with a clean error (R5-update-fee-1).
+  if (safeField === 'status_id' && !(await userHasPermission('change_case_status'))) {
+    return { ok: false, error: 'unauthorized' };
+  }
+  if (safeField === 'assigned_advisor_id' && !(await userHasPermission('assign_case_to_user'))) {
     return { ok: false, error: 'unauthorized' };
   }
 

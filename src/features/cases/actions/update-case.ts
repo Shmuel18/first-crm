@@ -68,7 +68,10 @@ export async function updateCaseAction(
     .select('id');
 
   if (error) {
-    return { ok: false, error: 'unknown', values };
+    // The trusted-column guard (mig 178) raises 42501 when status_id/
+    // assigned_advisor_id changed without the granular permission — surface it
+    // as unauthorized, not a generic error (R5-update-fee-1).
+    return { ok: false, error: error.code === '42501' ? 'unauthorized' : 'unknown', values };
   }
   // 0 rows (after the edit check passed) = a concurrent writer bumped version first.
   if (!updatedRows || updatedRows.length === 0) {
