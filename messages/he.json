@@ -643,14 +643,22 @@
       "conclusionLabel": "מסקנת היועץ",
       "conclusionPlaceholder": "כתבו כאן את חוות הדעת והמסקנה עבור הלקוח…",
       "download": "הורדת דוח PDF",
-      "generating": "מפיק דוח…",
+      "sendToClient": "שלח ללקוח",
+      "emailDialogTitle": "שליחת דוח הסימולציה ללקוח",
+      "emailDefaultSubject": "סימולציית משכנתא — Kaufman Finance Group",
+      "emailDefaultBody": "שלום, מצורף דוח סימולציית המשכנתא שהכנו עבורך. נשמח לעמוד לרשותך לכל שאלה. בברכה, צוות Kaufman Finance Group",
+      "emailAttachNote": "דוח הסימולציה (PDF) יצורף אוטומטית למייל.",
+      "emailSent": "הדוח נשלח ללקוח במייל.",
       "backToScenario": "חזרה לסימולציה",
       "backToSimulator": "חזרה לסימולטור",
       "errors": {
         "unauthorized": "אין לך הרשאה להפיק דוח זה.",
         "rate_limited": "הופקו יותר מדי דוחות. נסו שוב בעוד שעה.",
         "not_found": "הסימולציה לא נמצאה.",
-        "render_failed": "הפקת הדוח נכשלה. נסו שוב."
+        "render_failed": "הפקת הדוח נכשלה. נסו שוב.",
+        "no_email": "ללקוח אין כתובת מייל. הוסיפו אותה בכרטיס הלקוח.",
+        "not_configured": "שליחת מייל אינה מוגדרת במערכת.",
+        "unknown": "השליחה נכשלה. נסו שוב."
       }
     }
   },

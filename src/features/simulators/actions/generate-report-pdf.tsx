@@ -1,16 +1,13 @@
 'use server';
 
-import { renderToBuffer } from '@react-pdf/renderer';
 import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
 
 import { getCurrentUser, userHasPermission } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { checkRateLimit } from '@/lib/rate-limit';
-import { asMortgageScenarioId } from '@/lib/types/branded';
 
-import { loadScenarioReport } from '../pdf/report-data.service';
-import { ReportDocument } from '../pdf/report-document';
+import { renderScenarioReportPdf } from '../pdf/render-report';
 
 type Result =
   | { ok: true; base64: string; filename: string }
@@ -47,23 +44,17 @@ export async function generateReportPdfAction(input: GenerateReportInput): Promi
   });
   if (!allowed) return { ok: false, error: 'rate_limited' };
 
-  const data = await loadScenarioReport(asMortgageScenarioId(parsed.data.scenarioId));
-  if (!data) return { ok: false, error: 'not_found' };
-
   // The advisor may tweak the conclusion in the editor before exporting; the
-  // edited text wins over whatever was persisted at save time.
-  if (parsed.data.advisorConclusion !== undefined) {
-    data.meta.advisorConclusion = parsed.data.advisorConclusion;
-  }
-
+  // edited text wins over whatever was persisted (undefined keeps the saved one).
   const locale = parseLocale(await getLocale());
   try {
-    const buffer = await renderToBuffer(<ReportDocument data={data} locale={locale} />);
-    return {
-      ok: true,
-      base64: buffer.toString('base64'),
-      filename: `kaufman-simulation-${parsed.data.scenarioId.slice(0, 8)}.pdf`,
-    };
+    const rendered = await renderScenarioReportPdf(
+      parsed.data.scenarioId,
+      parsed.data.advisorConclusion,
+      locale,
+    );
+    if (!rendered) return { ok: false, error: 'not_found' };
+    return { ok: true, base64: rendered.buffer.toString('base64'), filename: rendered.filename };
   } catch (err) {
     console.error('[generate-report-pdf] render failed', { code: (err as { code?: string })?.code });
     return { ok: false, error: 'render_failed' };

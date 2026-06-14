@@ -643,14 +643,22 @@
       "conclusionLabel": "Advisor conclusion",
       "conclusionPlaceholder": "Write your assessment and conclusion for the client here…",
       "download": "Download PDF report",
-      "generating": "Generating…",
+      "sendToClient": "Send to client",
+      "emailDialogTitle": "Email the simulation report to the client",
+      "emailDefaultSubject": "Mortgage simulation — Kaufman Finance Group",
+      "emailDefaultBody": "Hello, attached is the mortgage simulation report we prepared for you. We are happy to help with any questions. Best regards, Kaufman Finance Group",
+      "emailAttachNote": "The simulation report (PDF) is attached automatically.",
+      "emailSent": "The report was emailed to the client.",
       "backToScenario": "Back to simulation",
       "backToSimulator": "Back to simulator",
       "errors": {
         "unauthorized": "You don't have permission to generate this report.",
         "rate_limited": "Too many reports generated. Try again in an hour.",
         "not_found": "Simulation not found.",
-        "render_failed": "Report generation failed. Please try again."
+        "render_failed": "Report generation failed. Please try again.",
+        "no_email": "The client has no email address. Add one on the client card.",
+        "not_configured": "Email sending is not configured.",
+        "unknown": "Sending failed. Please try again."
       }
     }
   },
