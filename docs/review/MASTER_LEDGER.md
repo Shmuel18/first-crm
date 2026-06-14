@@ -357,6 +357,7 @@ Authorized coordinator: persist proposed resource rows after reviewing evidence.
 | D-015 | User→Prod | R5 fixes (migs 176-180, build fb76e0b) deployed to both deployment targets: Kaufman/Vercel production (uknsayoyvffkxamofczy) AND Vultr staging (eyujzasggzjocsxakkoi) | Both authorized + applied apply-before-push (zero-downtime); Vultr connected demo-account smoke PASSED 2026-06-14 | 2026-06-14 | Closed (DB + code + smoke) |
 | D-016 | User | R6 edit-affordance gate (R6-inline-actions-1) shipped for the case-DETAIL page + dashboard, but NOT the incomes/obligations blocks (full-width grid items where a page-level fieldset breaks col-span) | The DB/RLS still blocks the writes (server-enforced); the UI-honesty gate for those two blocks belongs to their owning rounds (R8 incomes, R9 obligations) where it can be wired at the block level | R8 / R9 | Accepted (deferred) |
 | D-017 | User→Prod | R6 fix deployed to BOTH targets via the `main` push (Vercel auto) + Vultr deploy.sh; landed as build bc1cfa5 (a parallel agent's task-dialog fix rode on top of aceb724) | No migration (schema 180); the gate is defense-in-depth so even a UI bug can't cause unauthorized writes | 2026-06-14 | Closed (DB n/a + code) |
+| D-018 | User | R6 read-only/view-only edit-gate verified by unit test only (case-edit-gate.test.ts); live secretary-persona smoke WAIVED | Positive/regression path verified live (authorized editing unchanged); no demo secretary account, and flipping a demo role = access-control change; user accepted unit-test coverage (option c) | If a secretary demo account is ever provisioned | Accepted (waived) |
 
 ## Areas Not Yet Verified
 
@@ -366,9 +367,9 @@ Authorized coordinator: persist proposed resource rows after reviewing evidence.
   AT/visual verification still pending across rounds.
 - R5 authenticated functional smoke PASSED live on Vultr staging (6/6 areas);
   intentionally skipped on Kaufman prod (D-014).
-- R6 edit-affordance gate: incomes/obligations blocks NOT yet gated (D-016, R8/R9);
-  live read-only smoke for a view-only/secretary persona pending (no demo secretary
-  account; logic is unit-tested via case-edit-gate.test.ts).
+- R6 edit-affordance gate: incomes/obligations blocks NOT yet gated (D-016, R8/R9).
+  Live read-only/view-only smoke WAIVED per user (D-018) — positive path verified
+  live; read-only covered by case-edit-gate.test.ts.
 - Dev DB is MISSING parallel-session migrations 166-167 (schema_version: 165 then
   168-170). Not Round 3's domain — flagged for the migration rounds (17-19).
 - Existing review documents (`RELEASE_REVIEW.md`, `docs/UI_UX_REVIEW.md`) contain
