@@ -2507,6 +2507,10 @@
     "someone": "מישהו",
     "system": "המערכת",
     "footer": "Kaufman Finance Group · הודעה אוטומטית מהמערכת",
+    "taskContext": {
+      "case": "תיק",
+      "description": "תיאור"
+    },
     "cta": {
       "openTask": "פתח במערכת"
     },

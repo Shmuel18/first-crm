@@ -212,6 +212,19 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
     }
   };
 
+  // Secondary line for task notifications: the linked client/case and a snippet
+  // of the description, so the assigner recognizes a completed task (or short
+  // generic title) without opening it. Populated for task_completed (mig 181);
+  // absent fields just collapse the line.
+  const contextLine = (n: Notification): string | null => {
+    if (n.type !== 'task_completed' && n.type !== 'task_assigned') return null;
+    const d = n.data as Partial<NotificationDataTask>;
+    const parts = [d.caseLabel, d.description].filter(
+      (x): x is string => typeof x === 'string' && x.trim().length > 0,
+    );
+    return parts.length > 0 ? parts.join(' — ') : null;
+  };
+
   const handleClick = (n: Notification) => {
     // Reading removes the notification from the bell entirely (not just the
     // highlight). Drop it locally for instant feedback; the server mark-read +
@@ -346,6 +359,11 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
                     <span className="block text-sm text-neutral-800 leading-snug">
                       {message(n)}
                     </span>
+                    {contextLine(n) && (
+                      <span className="mt-0.5 block text-xs text-neutral-600 leading-snug line-clamp-2">
+                        {contextLine(n)}
+                      </span>
+                    )}
                     <span className="block text-[11px] text-neutral-600 mt-0.5">
                       {formatRelativeTime(n.created_at, locale)}
                     </span>

@@ -2507,6 +2507,10 @@
     "someone": "Someone",
     "system": "System",
     "footer": "Kaufman Finance Group · Automatic system message",
+    "taskContext": {
+      "case": "Case",
+      "description": "Details"
+    },
     "cta": {
       "openTask": "Open in app"
     },

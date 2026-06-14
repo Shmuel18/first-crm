@@ -26,7 +26,7 @@ export async function completeTaskAction(taskId: string): Promise<Result> {
 
   const { data: existing } = await supabase
     .from('tasks')
-    .select('id, case_id, status, title, assigned_by, created_by')
+    .select('id, case_id, status, title, description, assigned_by, created_by')
     .eq('id', idParsed.data)
     .is('deleted_at', null)
     .maybeSingle();
@@ -69,6 +69,7 @@ export async function completeTaskAction(taskId: string): Promise<Result> {
         kind: 'task_completed',
         taskTitle: existing.title,
         caseId: existing.case_id,
+        description: existing.description,
       }),
     );
   }

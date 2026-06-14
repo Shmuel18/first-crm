@@ -53,6 +53,11 @@ export type NotificationDataTask = {
   actorName: string | null;
   priority?: string | null;
   assignmentKind?: 'assigned' | 'reassigned' | 'returned_to_creator' | null;
+  /** "#<case_number> · <client>" — context on task_completed so the assigner
+   *  recognizes the task without opening it (migration 181). */
+  caseLabel?: string | null;
+  /** Task description, capped server-side at 200 chars (migration 181). */
+  description?: string | null;
 };
 
 export type NotificationDataCaseStatusOverdue = {
