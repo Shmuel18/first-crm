@@ -34,7 +34,12 @@ type UpdateClient = {
     update: (patch: Record<string, unknown>) => {
       eq: (col: 'id', val: string) => {
         eq: (col: 'case_id', val: string) => {
-          is: (col: 'deleted_at', val: null) => PromiseLike<{ error: { message: string } | null }>;
+          is: (col: 'deleted_at', val: null) => {
+            select: (cols: 'id') => PromiseLike<{
+              data: Array<{ id: string }> | null;
+              error: { message: string } | null;
+            }>;
+          };
         };
       };
     };
@@ -59,16 +64,22 @@ export async function updateCasePropertyFieldAction(
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
 
-  const { error } = await (supabase as unknown as UpdateClient)
+  const { data, error } = await (supabase as unknown as UpdateClient)
     .from('case_properties')
     .update({ [field]: coerce(field, value), updated_by: userRes.user.id })
     .eq('id', propertyId)
     .eq('case_id', caseId)
-    .is('deleted_at', null);
+    .is('deleted_at', null)
+    .select('id');
 
   if (error) {
     console.error('[update-case-property] error', error.message);
     return { ok: false, error: 'unknown' };
+  }
+  // An RLS-denied UPDATE matches 0 rows with NO error — surface it so the client
+  // reverts the optimistic value instead of silently keeping it (R5-advisors-1).
+  if (!data || data.length === 0) {
+    return { ok: false, error: 'unauthorized' };
   }
   return { ok: true };
 }
