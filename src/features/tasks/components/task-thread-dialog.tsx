@@ -1,6 +1,8 @@
 'use client';
 
-import { MessageSquare } from 'lucide-react';
+import Link from 'next/link';
+
+import { ExternalLink, MessageSquare } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -30,6 +32,16 @@ export function TaskThreadDialog({ open, onOpenChange, task }: Props) {
             <MessageSquare className="size-4 text-brand-gold-text" aria-hidden="true" />
             {task?.title ?? t('title')}
           </DialogTitle>
+          {task?.case && (
+            <Link
+              href={`/cases/${task.case.id}`}
+              onClick={() => onOpenChange(false)}
+              className="mt-1 inline-flex w-fit items-center gap-1 text-xs text-neutral-600 transition hover:text-brand-gold-text hover:underline decoration-brand-gold underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 rounded"
+            >
+              <ExternalLink className="size-3 shrink-0" aria-hidden="true" />
+              {task.case.clientName ?? `#${task.case.case_number}`}
+            </Link>
+          )}
         </DialogHeader>
 
         <div className="flex-1 min-h-0">
