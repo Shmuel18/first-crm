@@ -143,7 +143,20 @@
     "subjectLabel": "נושא",
     "bodyLabel": "תוכן ההודעה",
     "send": "שלח",
-    "cancel": "ביטול"
+    "cancel": "ביטול",
+    "attachments": {
+      "label": "קבצים מצורפים",
+      "add": "צרף קובץ",
+      "fromComputer": "העלאה מהמחשב",
+      "fromCase": "ממסמכי התיק",
+      "loading": "טוען…",
+      "noDocuments": "אין מסמכים לצירוף",
+      "tooMany": "אפשר לצרף עד 5 קבצים",
+      "tooLarge": "הקבצים גדולים מדי (עד 15MB סה״כ)",
+      "fileTypeNotAllowed": "סוג קובץ לא נתמך",
+      "uploadFailed": "העלאת הקובץ נכשלה",
+      "remove": "הסר"
+    }
   },
   "common": {
     "save": "שמור",
@@ -1212,7 +1225,8 @@
         "emailNoAddress": "אין אימייל ללקוח",
         "emailNotConfigured": "שליחת אימייל לא מוגדרת במערכת",
         "emailUnauthorized": "אין לך הרשאה לפעולה זו",
-        "emailFailed": "השליחה נכשלה. נסה שוב."
+        "emailFailed": "השליחה נכשלה. נסה שוב.",
+        "emailAttachmentFailed": "צירוף הקבצים נכשל. נסה שוב."
       }
     },
     "scheduleMeeting": {

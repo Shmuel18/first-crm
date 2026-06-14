@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 
 import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -25,6 +25,9 @@ type Props = {
   initialBody: string;
   pending: boolean;
   onSend: (subject: string, body: string) => void;
+  /** Optional extra fields rendered below the body (e.g. an attachments picker).
+   *  Attachment state lives in the parent, which reads it in its own onSend. */
+  extraFields?: ReactNode;
 };
 
 /**
@@ -42,6 +45,7 @@ export function ComposeEmailDialog({
   initialBody,
   pending,
   onSend,
+  extraFields,
 }: Props) {
   const t = useTranslations('composeEmail');
   const [subject, setSubject] = useState(initialSubject);
@@ -94,6 +98,7 @@ export function ComposeEmailDialog({
               className="text-sm leading-relaxed"
             />
           </div>
+          {extraFields}
         </div>
         <DialogFooter>
           <Button

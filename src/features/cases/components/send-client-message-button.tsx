@@ -18,6 +18,9 @@ import { buildWhatsAppLink } from '@/features/borrowers/domain/contact-links';
 import type { RenderedTemplate } from '@/features/templates/types';
 
 import { sendClientEmailAction } from '../actions/send-client-email';
+import { EmailAttachmentsField } from './email-attachments-field';
+
+import type { ClientEmailAttachmentItem } from './email-attachments-field';
 
 type Props = {
   /** Case id — needed to send a branded email server-side. */
@@ -49,7 +52,14 @@ type Draft = { subject: string; body: string };
 export function SendClientMessageButton({ caseId, title, borrower, templates }: Props) {
   const t = useTranslations('case.actionBar.sendMessageMenu');
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [attachments, setAttachments] = useState<ClientEmailAttachmentItem[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  const closeDialog = (): void => {
+    setDraft(null);
+    setAttachments([]);
+  };
 
   const firstName = borrower?.firstName?.trim() ?? '';
   const greeting = firstName
@@ -76,10 +86,14 @@ export function SendClientMessageButton({ caseId, title, borrower, templates }: 
 
   const send = (subject: string, body: string): void => {
     startTransition(async () => {
-      const res = await sendClientEmailAction({ caseId, subject, body });
+      const documentIds = attachments.flatMap((a) => (a.kind === 'document' ? [a.id] : []));
+      const uploads = attachments.flatMap((a) =>
+        a.kind === 'upload' ? [{ path: a.path, fileName: a.fileName }] : [],
+      );
+      const res = await sendClientEmailAction({ caseId, subject, body, documentIds, uploads });
       if (res.ok) {
         toast.success(t('emailSent'));
-        setDraft(null);
+        closeDialog();
         return;
       }
       const key =
@@ -89,9 +103,13 @@ export function SendClientMessageButton({ caseId, title, borrower, templates }: 
             ? 'emailNotConfigured'
             : res.error === 'unauthorized'
               ? 'emailUnauthorized'
-              : 'emailFailed';
+              : res.error === 'attachment'
+                ? 'emailAttachmentFailed'
+                : 'emailFailed';
       toast.error(t(key));
-      if (res.error !== 'unknown') setDraft(null);
+      // Keep the dialog (and attachments) open on a transient/attachment error
+      // so the advisor can retry without re-attaching.
+      if (res.error !== 'unknown' && res.error !== 'attachment') closeDialog();
     });
   };
 
@@ -162,12 +180,21 @@ export function SendClientMessageButton({ caseId, title, borrower, templates }: 
 
       <ComposeEmailDialog
         open={draft !== null}
-        onOpenChange={(open) => !open && setDraft(null)}
+        onOpenChange={(open) => !open && closeDialog()}
         title={title}
         initialSubject={draft?.subject ?? ''}
         initialBody={draft?.body ?? ''}
-        pending={isPending}
+        pending={isPending || isUploading}
         onSend={send}
+        extraFields={
+          <EmailAttachmentsField
+            caseId={caseId}
+            items={attachments}
+            onChange={setAttachments}
+            onUploadingChange={setIsUploading}
+            disabled={isPending}
+          />
+        }
       />
     </>
   );

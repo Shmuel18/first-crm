@@ -8,12 +8,17 @@ export type SendEmailResult =
   | { ok: true; skipped: true } // not configured — intentional no-op
   | { ok: false; error: string };
 
+/** A file to attach. `content` is the raw bytes; Resend base64-encodes them. */
+export type EmailAttachment = { filename: string; content: Buffer };
+
 type SendEmailInput = {
   to: string;
   subject: string;
   html: string;
   /** Lets the recipient hit Reply and reach a real inbox (e.g. the office). */
   replyTo?: string;
+  /** Optional file attachments (advisor→client emails). */
+  attachments?: EmailAttachment[];
 };
 
 /**
@@ -29,6 +34,7 @@ export async function sendEmail({
   subject,
   html,
   replyTo,
+  attachments,
 }: SendEmailInput): Promise<SendEmailResult> {
   const apiKey = env.RESEND_API_KEY;
   const from = env.EMAIL_FROM;
@@ -43,7 +49,14 @@ export async function sendEmail({
     // Resend's SDK doesn't expose AbortSignal — wrap with a hard deadline
     // so a slow Resend call can't hold a Vercel function indefinitely.
     const { error } = await withTimeout(
-      resend.emails.send({ from, to, subject, html, replyTo }),
+      resend.emails.send({
+        from,
+        to,
+        subject,
+        html,
+        replyTo,
+        ...(attachments && attachments.length > 0 ? { attachments } : {}),
+      }),
       10_000,
       'resend_timeout',
     );

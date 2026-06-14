@@ -3,6 +3,8 @@ import { getTranslations } from 'next-intl/server';
 import { escapeHtml, renderBrandedEmail } from '@/lib/email/render';
 import { sendEmail } from '@/lib/email/send';
 
+import type { EmailAttachment } from '@/lib/email/send';
+
 const OFFICE_EMAIL = 'office@kaufman-finance.com';
 
 type BrandedClientEmailInput = {
@@ -12,6 +14,8 @@ type BrandedClientEmailInput = {
   subject: string;
   /** Advisor-reviewed plain text (newlines preserved). */
   bodyText: string;
+  /** Optional file attachments resolved server-side. */
+  attachments?: EmailAttachment[];
 };
 
 /**
@@ -25,6 +29,7 @@ export async function sendBrandedClientEmail({
   locale,
   subject,
   bodyText,
+  attachments,
 }: BrandedClientEmailInput): Promise<'sent' | 'skipped' | 'failed'> {
   const html = renderBrandedEmail({
     locale,
@@ -33,7 +38,7 @@ export async function sendBrandedClientEmail({
     footer: (await getTranslations({ locale, namespace: 'email' }))('footer'),
   });
 
-  const res = await sendEmail({ to, subject, html, replyTo: OFFICE_EMAIL });
+  const res = await sendEmail({ to, subject, html, replyTo: OFFICE_EMAIL, attachments });
   if (res.ok && 'skipped' in res && res.skipped) return 'skipped';
   return res.ok ? 'sent' : 'failed';
 }
