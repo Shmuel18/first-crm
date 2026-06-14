@@ -14,7 +14,7 @@
 | 3 | Administration, team, settings, audit, import | **Complete — 21 review findings (1 High, 6 Medium, 14 Low) + R3-team-4b (deploy-caught guard bug) + R3-team-4c (user-found High: is_protected self-escalation, verified in prod) all fixed + DEPLOYED; migs 168-172 in prod; pgTAP guard test added; prod owner = Kaufman (D-011); /api/health 200, schema 172 (2026-06-13)** | ROUND-03-HANDOFF.md |
 | 4 | Leads, public intake, landing, consent, legal | **Complete — 20 findings (5 Medium, 15 Low; 2 claimed-High refuted); 11 fixed + DEPLOYED, 8 deferred, 1 note-only; migs 173-175 in prod; build dff8f24** | ROUND-04-HANDOFF.md |
 | 5 | Case lifecycle core, dashboard, lists, services | **Complete — 26 findings (2 High, 5 Medium, 19 Low) + 7-entry xcut layer; 2H+5M+2L fixed + DEPLOYED to both deployment targets (Kaufman/Vercel production + Vultr staging), rest deferred; migs 176-180; build fb76e0b; schema 180; 368 tests; 4 pgTAP + 8 erase unit tests; live functional smoke PASSED on Vultr staging (2026-06-14)** | ROUND-05-HANDOFF.md |
-| 6 | Case workspace UI and orchestration | Not started | Pending |
+| 6 | Case workspace UI and orchestration | **Complete — 22 findings → 19 confirmed (0 High, 1 Medium, 18 Low) + 3 refuted (multi-agent workflow); 10 fixed + DEPLOYED (build aceb724→bc1cfa5, no migration, schema 180), 8 deferred; 375 tests + edit-gate unit tests (2026-06-14)** | ROUND-06-HANDOFF.md |
 | 7 | Case PDFs, reports, and exports | Not started | Pending |
 | 8 | Borrowers, identity, and income | Not started | Pending |
 | 9 | Obligations, case banks, and expenses | Not started | Pending |
@@ -200,6 +200,29 @@ Never delete closed findings.
 | R5-xcut-5 | Low | Deferred | High | 5 | 14 | (cross-ref of dashboard-list-1) manager-only fee over-fetched + serialized to clients that never render it | — | src/features/cases/services/cases.service.ts |
 | R5-xcut-6 | Low | Deferred | High | 5 | 12 | NEW: sendClientEmailAction (advisor-initiated client email) has no checkRateLimit unlike other outbound actions | — | src/features/cases/actions/send-client-email.ts |
 | R5-xcut-7 | Low | Note only | High | 5 | — | Meta-note: re-classified advisors-properties-email-3 Suspected→Verified (Low), explicitly NOT an IDOR | — | (note on R5-advisors-properties-email-3) |
+| R6-inline-actions-1 | Medium | Fixed | High | 6 | 19 | Case-detail page had NO userCanEditCase gate → view-only users (secretary w/ view_all on an unassigned case) saw ALL edit affordances (borrowers/request-details/property/case-details/banks+expenses/status+advisor) that fail at the server. Expanded from status/advisor-only on user review | aceb724: page computes canEditCase + threads read-only gate everywhere; status needs change_case_status, advisor needs assign_case_to_user; dashboard per-row CaseEditGate (NOT canViewAll); unit tests | src/app/(app)/cases/[id]/page.tsx, cases/page.tsx, case-details-section, case-admin-block, case-property-block, editable-* cells, src/features/cases/domain/case-edit-gate.ts(.test.ts) |
+| R6-detail-compose-1 | Low | Fixed | High | 6 | — | Dead case-info-rows.tsx (DataRow/BlockerRow/InsuranceRow) + now-dead schema color consts | deleted; consts removed | src/features/cases/components/case-info-rows.tsx (del), case.schema.ts |
+| R6-detail-compose-2 | Low | Fixed | High | 6 | — | Dead case-detail-helpers.tsx (bandToAccent/EmptyBorrowers) + stale comment | deleted; comment fixed | src/features/cases/components/case-detail-helpers.tsx (del), add-borrower-button.tsx |
+| R6-detail-compose-3 | Low | Fixed | High | 6 | — | [id]/loading.tsx skeleton (6 blocks, 2-col) didn't match the real page (7 full-width) → reflow flash | skeleton now 7 full-width | src/app/(app)/cases/[id]/loading.tsx |
+| R6-detail-compose-4 | Low | Refuted | High | 6 | — | CaseBlock captures saved open/closed pref only on mount — claimed stale | NotABug: prefs are page-stable server data; re-sync would yank sections open under the user (intentional) | (none) |
+| R6-inline-actions-1-orig | High→Medium | (see R6-inline-actions-1) | — | 6 | — | Original narrow scoping (status/advisor cells only); downgraded High→Medium (server boundary enforced) then expanded | — | — |
+| R6-inline-actions-2 | Medium | Refuted | High | 6 | — | Delete confirm in AlertDialogCancel claimed to defeat pending guard | NotABug: Cancel/Action both alias Close; auto-dismiss-on-confirm is the codebase pattern; idempotent soft-delete + isPending guard | (none) |
+| R6-inline-actions-3 | Low | Fixed | High | 6 | 12 | generate-bank-pdf returned + toasted raw error.message (un-i18n'd) | log server-side, return generic code, translated toast | src/features/cases/actions/generate-bank-pdf.tsx, generate-bank-pdf-button.tsx |
+| R6-inline-actions-4 | Low | Fixed | High | 6 | — | Target-date popover lacked the resize→close listener the status/advisor cells have | added resize listener | src/features/cases/components/editable-target-date-cell.tsx |
+| R6-inline-actions-5 | Low | Fixed | High | 6 | — | CaseStatusBadge.interactive prop + ChevronDown branch dead | removed | src/features/cases/components/case-status-badge.tsx |
+| R6-inline-actions-6 | Low | Deferred | High | 6 | 2 | Hardcoded Ctrl+Enter/Esc literals in the note hint (not i18n) | deferred — its home messages/*.json was co-mingled w/ parallel email-attachments commit | src/features/cases/components/editable-text-cell.tsx |
+| R6-inline-actions-7 | Low | Deferred | High | 6 | 2 | Status label hardcoded name_he (Hebrew labels in EN) | duplicate of tracked DSGN-i18n-status-labels | editable-status-cell.tsx, case-status-badge.tsx |
+| R6-dashboard-list-1 | Low | Fixed | High | 6 | — | Welcome-banner date used UTC not Israel TZ (greeting already Israel-anchored) | pinned to Asia/Jerusalem | src/features/cases/components/dashboard-welcome-banner.tsx |
+| R6-dashboard-list-2 | Low | Deferred | High | 6 | 14 | Manager-only case_financials over-fetched into the dashboard list payload (manager's own browser, not cross-user leak) | duplicate of deferred R5-dashboard-list-1 | src/features/cases/services/cases.service.ts |
+| R6-dashboard-list-3 | Low | Refuted | High | 6 | — | National-id on mobile card lacks <bdi> LTR isolation | unreachable: isValidIdOrPassport rejects all separators, so a neutral-free run can't bidi-reorder | (none) |
+| R6-dashboard-list-4 | Low | Fixed | High | 6 | — | Sort-control trigger used ↑/↓ glyphs (= R6-crosscut-1) | Lucide ArrowUp/ArrowDown + worded aria-label | src/features/cases/components/cases-sort-control.tsx |
+| R6-draft-flow-1 | Low | Deferred | High | 6 | — | draft-borrower-card.tsx 283 lines (>250) | file-split (defer) | src/features/cases/components/draft-borrower-card.tsx |
+| R6-draft-flow-2 | Low | Deferred | High | 6 | — | case-form.tsx 259 lines (>250) | file-split (defer) | src/features/cases/components/case-form.tsx |
+| R6-draft-flow-3 | Low | Deferred | High | 6 | — | CaseForm create-mode branch + createCaseAction unreachable | duplicate of deferred R5-create-draft-6 | src/features/cases/components/case-form.tsx |
+| R6-draft-flow-4 | Low | Fixed | High | 6 | — | Dead clearDirty action/callback after R5-create-draft-2 fix + stale comment | removed | src/features/cases/hooks/use-case-draft-state.ts |
+| R6-draft-flow-5 | Low | Deferred | High | 6 | 8 | Returning-client amber overwrite-flag only on 7 of the fillable fields (4 visible misc/citizenship unflagged) | needs R8 borrower compact-field threading | src/features/cases/components/draft-borrower-card.tsx, borrower-misc-row.tsx |
+| R6-draft-flow-6 | Low | Deferred | High | 6 | — | "setup" error shows a developer "run migration 074" message to advisors | duplicate of deferred R5-create-draft-4; practically unreachable | src/features/cases/components/new-case-page-client.tsx, messages/*.json |
+| R6-crosscut-1 | Low | Fixed | High | 6 | — | Sort indicator uses Unicode arrow glyphs as visible UI (= R6-dashboard-list-4) | fixed with dashboard-list-4 | src/features/cases/components/cases-sort-control.tsx |
 
 ## Cross-Round Contracts
 
@@ -213,7 +236,7 @@ evidence.
 | C-003 | 3 | 17-20 | Admin, team, audit, and import permissions match database controls | R3 hardened: import is_admin-gated (mig 168), admin-role perms trigger-protected (mig 169), member-delete atomic + protected-owner-aware (mig 170); audit now covers composite-PK permission tables | Partially verified — R19 re-verifies final grants |
 | C-004 | 4 | 5,19,20 | Public intake preserves consent and converts safely | R4: consent genuinely captured + DB-enforced for /check (z.literal(true), mig 154); landing web-contact basis made honest per source (mig 175). GAP: consent/provenance NOT propagated to the case on conversion (R4-xcut-2) — survives only via the retained lead | Partially verified — R5 confirmed convert no longer orphans (mig 176); rich consent/metadata import still open (R5 convert rich-path not field-diffed) |
 | C-005 | 5 | 6,8-10,14,19,20 | Case lifecycle and visibility rules are consistent | R5 found 4 app↔DB consistency breaks (orphan-on-create/convert, case_properties RLS narrower than can_edit_case, status/assign enforced in only 1 of 3 actions, permanent-delete bypassing the retention switch) — all closed by migs 176-180 + DB triggers on both deployment targets (Kaufman/Vercel production + Vultr staging) | Closed for fixed paths — partially open: deferred Lows (inline cross-field rule, fee lost-update, manager-only over-fetch) + R19 final-grant re-verification |
-| C-006 | 6 | 8-14,20 | Case workspace composes child domains without leaks or stale state | Pending | Open |
+| C-006 | 6 | 8-14,20 | Case workspace composes child domains without leaks or stale state | R6: composition sound — no cross-case leak (bidi candidate refuted), no stale-state defect (prefs candidate intentional). Closed the edit-affordance gap: case-detail UI now gates every edit surface on can_edit_case + the granular status/assign perms (aceb724), and the dashboard gates per-row (not canViewAll) | Partially verified — incomes/obligations edit gate NOT yet wired (full-width grid, R8/R9); manager-only over-fetch (R6-dashboard-list-2) deferred; R19 re-verifies final state |
 | C-007 | 7 | 8-9,20 | Exports match authorized source data | Pending | Open |
 | C-008 | 8 | 15,19,20 | Borrower identity and income rules persist correctly | Pending | Open |
 | C-009 | 9 | 10,15,19,20 | Financial, bank, expense, and receipt rules remain consistent | Pending | Open |
@@ -244,6 +267,7 @@ evidence.
 | C-033 | 5 | 6,8-10,14,19 | A new case (manual create AND lead conversion) is auto-assigned to its creator unless the creator holds view_all_cases (mig 176 BEFORE INSERT trigger). Case visibility/edit RLS depends on assigned_advisor_id never being left NULL by an end-user create | mig 176; pgTAP case_create_advisor_test.sql; applied + structs PASS on both deployment targets (Kaufman/Vercel production + Vultr staging); live UI smoke on Vultr | Open — R19 verifies final trigger + RLS |
 | C-034 | 5 | 10,11,19 | permanently_delete_case raises PT001 for authenticated/anon while retention is paused (service_role/SQL recovery open); collectCaseFileRefs is FAIL-CLOSED (any read error aborts the delete, never deletes with empty refs); every leaked Storage/Drive pointer incl. the case folder is durably written to erasure_orphan_log (entity IN document/expense/case) | mig 177; pgTAP + 8 erase-case-files unit tests + permanent-delete-case action tests | Open — R10/R11 verify erasure/orphan reconciliation, R19 final state |
 | C-035 | 5 | 6,8,19 | End-user case writes are DB-enforced: status_id requires change_case_status, assigned_advisor_id requires assign_case_to_user (mig 178 trigger, only-when-the-value-changes); case_properties INSERT/UPDATE/soft-delete authority = can_edit_case (associated advisors included), created_by un-forgeable AND write-once (migs 179-180). App-layer action gates are defense-in-depth, not the boundary | migs 178-180; pgTAP (case_trusted_columns_test, case_properties_authority_test plan 5); applied + structs PASS on both deployment targets (Kaufman/Vercel production + Vultr staging) | Open — R19 verifies final triggers/RLS |
+| C-036 | 6 | 8,9,19 | Case-detail edit affordances MUST gate on can_edit_case (RPC) — status additionally on change_case_status, advisor on assign_case_to_user. The dashboard mirrors this per-row via domain/case-edit-gate.ts (edit_any_case OR edit_own_case AND assigned/associated). view_all_cases (canViewAll) is a VISIBILITY scope and must NEVER be used as an edit gate. This is UX-honesty (defense-in-depth); the DB (C-035 + RLS) is the real boundary. Incomes/obligations blocks still need this gate wired (R8/R9) | aceb724; case-edit-gate.test.ts (incl. view-only secretary); live regression smoke on Vultr | Open — R8/R9 extend to incomes/obligations; R19 re-verifies |
 
 ## Critical Workflow Gate
 
@@ -254,7 +278,7 @@ evidence.
 | Roles, settings, team administration | 3 | 19-20 | Complete; 21 findings + 1 deploy-caught guard bug (R3-team-4b) all fixed + DEPLOYED; migs 168-171 in prod; 338 tests + 4 migration behavioral checks green; prod owner = Kaufman | ROUND-03-HANDOFF.md |
 | Landing, intake, consent, lead conversion | 4 | 5,19-20 | Static review complete; 11 findings fixed + DEPLOYED (migs 173-175); consent honest per source; retention master switch; deferred Lows + convert-consent-propagation (R4-xcut-2) open | ROUND-04-HANDOFF.md |
 | Case create/edit/status/delete/restore | 5 | 19-20 | Static review complete; 2H+5M+2L fixed + DEPLOYED to both deployment targets (Kaufman/Vercel production + Vultr staging, migs 176-180); 4 consistency breaks closed; 368 tests + 4 pgTAP + 8 erase unit tests; **live functional smoke PASSED on Vultr staging** (6/6 areas); Kaufman-prod smoke intentionally skipped | ROUND-05-HANDOFF.md |
-| Case workspace orchestration | 6 | 8-14,20 | Not tested | Pending |
+| Case workspace orchestration | 6 | 8-14,20 | Static review complete; 19 confirmed/3 refuted; edit-affordance gate (R6-inline-actions-1) + dead-code + polish fixed + DEPLOYED (aceb724→bc1cfa5, no migration); 375 tests + edit-gate unit tests; incomes/obligations gate + file-splits deferred | ROUND-06-HANDOFF.md |
 | PDF/XLSX export | 7 | 20 | Not tested | Pending |
 | Borrower identity and income editing | 8 | 19-20 | Not tested | Pending |
 | Obligations, banks, expenses, receipts | 9 | 19-20 | Not tested | Pending |
@@ -306,6 +330,11 @@ Authorized coordinator: persist proposed resource rows after reviewing evidence.
 | 2026-06-14 | 5 | Migs 176-180 applied to **eyujzasggzjocsxakkoi** (Vultr staging, node+pg); 7 struct checks | Pass | schema 175→180; all structures present; retention FALSE |
 | 2026-06-14 | 5 | Vultr deploy build fb76e0b via deploy.sh `SKIP_MIGRATIONS=1` (smoke :3798 → swap :3747 → health → rotate) | Pass | live + healthy; /api/health 200 {ok:true,db}; deep-health build fb76e0b, schema 180/180, db/cronSecret/keys ok; Drive degraded = expected staging baseline |
 | 2026-06-14 | 5 | Live authenticated functional smoke on Vultr staging (Chrome, demo.advisor junior + demo.admin manager) | Pass (6/6) | create-as-non-view_all → case 2026-065 visible+editable, assigned+created_by=demo.advisor (DB-confirmed); status edit→document_collection persisted; manager-only fee/income hidden from junior + recycle-bin admin-only; case_properties write authority (updated_by=demo.advisor); recycle bin paused-banner + no countdown + permanent-delete disabled (no-op). QA case purged after |
+| 2026-06-14 | 6 | Round-6 review (multi-agent Workflow: 5 dimension reviewers + adversarial verify, 27 agents) | Pass | 22 raw → 19 confirmed / 3 refuted (0 High, 1 Medium, 18 Low) |
+| 2026-06-14 | 6 | `vitest` / `tsc --noEmit` / `eslint` (post-fix) + `check-review-coverage.mjs` | Pass | 375 tests; 0 type errors; 0 lint warnings; zero unassigned |
+| 2026-06-14 | 6 | R6 fix commit `aceb724` (35 files; parallel email-attachments `8962f4b` + pre-existing `task-form-dialog.tsx` EXCLUDED) → push `main` → Vercel deploy | Pass | build aceb724 live (then bc1cfa5 after a parallel push); /api/health 200; schema 180/180; no migration |
+| 2026-06-14 | 6 | Vultr staging deploy (`bc1cfa5` incl. aceb724, deploy.sh `SKIP_MIGRATIONS=1`) | Pass | live + healthy; deep-health build bc1cfa5, schema 180/180, db ok; Drive degraded = expected staging baseline |
+| 2026-06-14 | 6 | Live edit-gate smoke on Vultr — POSITIVE/regression (demo.admin manager, Chrome) | Pass | case-detail status cell renders as an interactive button (chevron) + property block renders editable select/inputs → canEdit=true path unchanged for authorized users (gate didn't break editing). READ-ONLY/negative direction NOT live-checked: no demo secretary account, and flipping a demo role = access-control change (not done unilaterally); read-only logic covered by case-edit-gate.test.ts (view-only secretary persona) |
 
 ## Open Decisions and Accepted Risks
 
@@ -326,16 +355,20 @@ Authorized coordinator: persist proposed resource rows after reviewing evidence.
 | D-013 | User | R5 deferred ALL Low findings except R5-lifecycle-3 + R5-domain-logic-2; only 2 High + 5 Medium + those 2 Low were fixed this batch | Lows are correctness/quality, not security/data-loss blockers; routed to owning later rounds (R9/R10/R12/R13/R14) | Per owning round | Accepted |
 | D-014 | User | R5 authenticated functional smoke run LIVE on Vultr staging (PASSED 6/6); intentionally SKIPPED on Kaufman prod | Staging runs the identical build+schema; a Kaufman-prod test case can't be permanent-deleted while retention is paused, so it would linger | If prod-specific coverage is wanted, manual click-through | Accepted (Vultr done; Kaufman-prod skip accepted) |
 | D-015 | User→Prod | R5 fixes (migs 176-180, build fb76e0b) deployed to both deployment targets: Kaufman/Vercel production (uknsayoyvffkxamofczy) AND Vultr staging (eyujzasggzjocsxakkoi) | Both authorized + applied apply-before-push (zero-downtime); Vultr connected demo-account smoke PASSED 2026-06-14 | 2026-06-14 | Closed (DB + code + smoke) |
+| D-016 | User | R6 edit-affordance gate (R6-inline-actions-1) shipped for the case-DETAIL page + dashboard, but NOT the incomes/obligations blocks (full-width grid items where a page-level fieldset breaks col-span) | The DB/RLS still blocks the writes (server-enforced); the UI-honesty gate for those two blocks belongs to their owning rounds (R8 incomes, R9 obligations) where it can be wired at the block level | R8 / R9 | Accepted (deferred) |
+| D-017 | User→Prod | R6 fix deployed to BOTH targets via the `main` push (Vercel auto) + Vultr deploy.sh; landed as build bc1cfa5 (a parallel agent's task-dialog fix rode on top of aceb724) | No migration (schema 180); the gate is defense-in-depth so even a UI bug can't cause unauthorized writes | 2026-06-14 | Closed (DB n/a + code) |
 
 ## Areas Not Yet Verified
 
-- Rounds 1-5 reviewed + approved fixes deployed; Rounds 6-20 unstarted. Round 5
-  fixes (migs 176-180, build fb76e0b, schema 180) are live on both deployment
-  targets (Kaufman/Vercel production + Vultr staging); dynamic AT/visual
-  verification still pending across rounds.
-- R5 authenticated functional smoke PASSED live on Vultr staging (6/6 areas:
-  login / create-as-non-view_all / edit / permissions / case-property / recycle
-  bin); intentionally skipped on Kaufman prod (D-014).
+- Rounds 1-6 reviewed + approved fixes deployed; Rounds 7-20 unstarted. R5
+  (migs 176-180) and R6 (build aceb724→bc1cfa5, no migration) fixes are live on
+  both deployment targets (Kaufman/Vercel production + Vultr staging); dynamic
+  AT/visual verification still pending across rounds.
+- R5 authenticated functional smoke PASSED live on Vultr staging (6/6 areas);
+  intentionally skipped on Kaufman prod (D-014).
+- R6 edit-affordance gate: incomes/obligations blocks NOT yet gated (D-016, R8/R9);
+  live read-only smoke for a view-only/secretary persona pending (no demo secretary
+  account; logic is unit-tested via case-edit-gate.test.ts).
 - Dev DB is MISSING parallel-session migrations 166-167 (schema_version: 165 then
   168-170). Not Round 3's domain — flagged for the migration rounds (17-19).
 - Existing review documents (`RELEASE_REVIEW.md`, `docs/UI_UX_REVIEW.md`) contain
