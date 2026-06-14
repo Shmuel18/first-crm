@@ -31,6 +31,23 @@ describe('getTargetDateState', () => {
   });
 });
 
+describe('getTargetDateState — Israel anchor + DST safety (R5-domain-logic-1/2)', () => {
+  it('anchors "today" to the Israel civil date even when the UTC instant is a different day', () => {
+    // 2026-01-15 23:30 Israel (winter, UTC+2) = 21:30 UTC the SAME day → today = 01-15.
+    const now = new Date(Date.UTC(2026, 0, 15, 21, 30, 0));
+    expect(getTargetDateState('2026-01-15', now)).toBe('soon'); // today
+    expect(getTargetDateState('2026-01-14', now)).toBe('overdue');
+  });
+
+  it('treats a target exactly 7 calendar days out as soon across the autumn DST fall-back', () => {
+    // Israel DST ends Sun 2026-10-25 (a 25h day). now ≈ 2026-10-18 Israel civil; +7 = 10-25.
+    // The old fixed-7×DAY_MS window mis-classified the 7th day as future here.
+    const now = new Date(Date.UTC(2026, 9, 18, 12, 0, 0));
+    expect(getTargetDateState('2026-10-25', now)).toBe('soon');
+    expect(getTargetDateState('2026-10-26', now)).toBe('future');
+  });
+});
+
 describe('matchesTargetDateFilter', () => {
   it('passes everything when there is no filter', () => {
     expect(matchesTargetDateFilter('2026-06-14', null, NOW)).toBe(true);

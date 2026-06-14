@@ -1,10 +1,10 @@
+import { israelCivil } from '@/lib/utils/israel-time';
+
 export const TARGET_DATE_FILTER_VALUES = ['overdue', 'week', 'none'] as const;
 
 export type TargetDateFilter = (typeof TARGET_DATE_FILTER_VALUES)[number];
 
 export type TargetDateState = 'none' | 'overdue' | 'soon' | 'future';
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 function dateOnlyTime(value: string | Date): number {
   if (value instanceof Date) {
@@ -15,17 +15,19 @@ function dateOnlyTime(value: string | Date): number {
   return new Date(year, month - 1, day).getTime();
 }
 
-function todayTime(now: Date): number {
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-}
-
 export function getTargetDateState(value: string | null | undefined, now = new Date()): TargetDateState {
   if (!value) return 'none';
   const target = dateOnlyTime(value);
   if (Number.isNaN(target)) return 'none';
-  const today = todayTime(now);
+  // "Today" anchored to Israel's civil date, not the ambient runtime clock, so a
+  // server (UTC) render agrees with the client (Israel) badge (R5-domain-logic-1).
+  const { year, month, day } = israelCivil(now);
+  const today = new Date(year, month - 1, day).getTime();
+  // +7 in CALENDAR days (built via the Date constructor), so a DST transition
+  // inside the window can't shift the 7th-day boundary (R5-domain-logic-2).
+  const soonCutoff = new Date(year, month - 1, day + 7).getTime();
   if (target < today) return 'overdue';
-  if (target <= today + 7 * DAY_MS) return 'soon';
+  if (target <= soonCutoff) return 'soon';
   return 'future';
 }
 

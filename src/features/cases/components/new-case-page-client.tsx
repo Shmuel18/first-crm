@@ -38,7 +38,6 @@ export function NewCasePageClient({ locale }: Props) {
     updateBorrower,
     removeBorrower,
     setRequestDetails,
-    clearDirty,
   } = useCaseDraftState();
 
   // Warn before an in-app link click discards a half-filled draft (the App
@@ -74,8 +73,10 @@ export function NewCasePageClient({ locale }: Props) {
       }),
     };
 
-    clearDirty();
-
+    // R5-create-draft-2: do NOT clear the dirty flag before the save resolves.
+    // On success the action redirects (App-Router nav doesn't fire beforeunload,
+    // and the page unmounts), so no stale prompt; on FAILURE isDirty stays true
+    // and the unsaved-changes guard keeps protecting the entered data.
     startTransition(async () => {
       const result = await saveCaseDraftAction(payload);
       if (result.ok === false) {
