@@ -7,6 +7,7 @@ import { MixComparison } from '@/features/simulators/components/mix-comparison';
 import { SimulatorToolsNav } from '@/features/simulators/components/simulator-tools-nav';
 import { getRegulatoryThresholds } from '@/features/simulators/services/settings.service';
 import { seedBaseFromCase } from '@/features/simulators/utils/seed-mix';
+import { getCaseClientLabel } from '@/features/cases/domain/case-derivations';
 import { getCaseById } from '@/features/cases/services/cases.service';
 import { userHasPermission } from '@/lib/auth/permissions';
 import { asCaseId } from '@/lib/types/branded';
@@ -31,7 +32,7 @@ export default async function CaseComparePage({ params }: { params: Promise<{ id
             {t('eyebrow')}
           </div>
           <h1 className="font-display text-3xl font-semibold text-neutral-950">{t('compare.caseTitle')}</h1>
-          <p className="mt-1 text-sm text-neutral-500">{caseData.case_number}</p>
+          <p className="mt-1 text-sm text-neutral-500">{getCaseClientLabel(caseData) || caseData.case_number}</p>
         </div>
         <Link href={`/cases/${id}`} className="inline-flex h-9 items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
           <ArrowRight className="size-4 rtl:rotate-180" aria-hidden="true" />
