@@ -5,7 +5,7 @@ import { useFormStatus } from 'react-dom';
 
 import Link from 'next/link';
 
-import { ExternalLink, Loader2, Upload as UploadIcon, X } from 'lucide-react';
+import { ExternalLink, Loader2, Pencil, Upload as UploadIcon, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ import { DateInputWithPicker } from '@/components/ui/date-input-with-picker';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { FormField, NativeSelect } from '@/components/shared/form-fields';
+import { Linkify } from '@/components/shared/linkify';
 import { fieldDefault } from '@/lib/utils/form-defaults';
 import { formatPersonName } from '@/lib/utils/person-name';
 
@@ -80,6 +81,11 @@ export function TaskFormDialog({
   const [attachments, setAttachments] = useState<File[]>([]);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [attachmentPending, setAttachmentPending] = useState(false);
+  // Description is controlled so it can render as clickable links (view) or an
+  // editable textarea (edit) while always submitting via a hidden input. Start
+  // in view mode when there's text to read, edit mode when empty.
+  const [description, setDescription] = useState<string>(value('description'));
+  const [editingDesc, setEditingDesc] = useState<boolean>(!value('description'));
   const handledSuccessRef = useRef<TaskActionState | null>(null);
 
   const genericError = getGenericError(state, t);
@@ -169,6 +175,9 @@ export function TaskFormDialog({
       setCaseSearch('');
       setAttachments([]);
       setAttachmentError(null);
+      const seededDesc = value('description');
+      setDescription(seededDesc);
+      setEditingDesc(!seededDesc);
     }
   }
 
@@ -216,13 +225,36 @@ export function TaskFormDialog({
           </FormField>
 
           <FormField label={t('fields.description')} error={fieldErrors.description}>
-            <Textarea
-              name="description"
-              defaultValue={value('description')}
-              placeholder={t('fields.descriptionPlaceholder')}
-              rows={3}
-              maxLength={2000}
-            />
+            {/* Hidden input always carries the value, so it submits whether the
+                field is in view (clickable links) or edit (textarea) mode. */}
+            <input type="hidden" name="description" value={description} />
+            {editingDesc ? (
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder={t('fields.descriptionPlaceholder')}
+                rows={3}
+                maxLength={2000}
+              />
+            ) : (
+              <div
+                onClick={() => setEditingDesc(true)}
+                className="min-h-10 cursor-text rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800"
+              >
+                <Linkify text={description} />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditingDesc(true);
+                  }}
+                  className="mt-1.5 flex items-center gap-1 text-xs text-brand-gold-text hover:underline"
+                >
+                  <Pencil className="size-3" aria-hidden="true" />
+                  {t('fields.descriptionEdit')}
+                </button>
+              </div>
+            )}
           </FormField>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
