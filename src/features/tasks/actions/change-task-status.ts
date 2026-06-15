@@ -114,8 +114,8 @@ export async function changeTaskStatusAction(taskId: string, status: string): Pr
 
   revalidatePath('/tasks');
   if (existing.case_id) revalidatePath(`/cases/${existing.case_id}`);
-  // Refresh the shell too so the sidebar task badge / critical dot reflects the
-  // new status now (not only on the next navigation).
-  revalidatePath('/(app)', 'layout');
+  // NOTE: no revalidatePath('/(app)','layout') — it blocks the action on a
+  // layout_bootstrap RPC (0.5-2s spinner, client-reported). The badge / critical
+  // dot refresh via the bell's shell refresh + next navigation.
   return { ok: true };
 }

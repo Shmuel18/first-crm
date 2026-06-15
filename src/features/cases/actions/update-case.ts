@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { after } from 'next/server';
 
 import { z } from 'zod';
 
@@ -96,7 +97,9 @@ export async function updateCaseAction(
     }
   }
 
-  revalidatePath('/cases');
+  // Defer the heavy dashboard rebuild to after the response (we redirect to the
+  // detail page, which we DO revalidate synchronously so it's fresh on arrival).
+  after(() => revalidatePath('/cases'));
   revalidatePath(`/cases/${caseId}`);
   redirect(`/cases/${caseId}`);
 }

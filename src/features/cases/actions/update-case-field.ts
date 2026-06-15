@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 
 import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { safeDbError } from '@/lib/supabase/db-error-log';
@@ -127,7 +128,11 @@ export async function updateCaseFieldAction(
     return { ok: false, error: 'conflict' };
   }
 
-  revalidatePath(`/cases/${caseId}`);
+  // Inline admin/request-details fields update optimistically client-side, so the
+  // detail-page revalidation only needs to keep the server cache fresh for the
+  // next visit — defer it past the response so each field save returns instantly
+  // instead of blocking on a full /cases/[id] rebuild.
+  after(() => revalidatePath(`/cases/${caseId}`));
   return { ok: true };
 }
 

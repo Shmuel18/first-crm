@@ -100,7 +100,9 @@ export async function updateTaskAction(
   if (existing.case_id && existing.case_id !== newCaseId) {
     revalidatePath(`/cases/${existing.case_id}`);
   }
-  revalidatePath('/(app)', 'layout');
+  // No revalidatePath('/(app)','layout') — it forces a layout_bootstrap RPC into
+  // the response and made task edit/reassign spin 0.5-2s (client-reported). The
+  // shell badge refreshes via the bell + next navigation, like create/reassign.
 
   return { ok: true, taskId };
 }

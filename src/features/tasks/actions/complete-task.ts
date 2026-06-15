@@ -94,7 +94,9 @@ export async function completeTaskAction(taskId: string): Promise<Result> {
 
   revalidatePath('/tasks');
   if (existing.case_id) revalidatePath(`/cases/${existing.case_id}`);
-  // Refresh the shell too so the sidebar task badge / critical dot clears now.
-  revalidatePath('/(app)', 'layout');
+  // NOTE: do NOT revalidatePath('/(app)','layout') here — it forces a synchronous
+  // layout_bootstrap RPC (4+ queries) into the action response and adds 0.5-2s to
+  // the spinner (client-reported). The sidebar task badge / critical dot refresh
+  // via the bell's follow-up shell refresh + next navigation, like create/reassign.
   return { ok: true };
 }

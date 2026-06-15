@@ -48,6 +48,7 @@ export async function deleteTaskAction(taskId: string): Promise<Result> {
 
   revalidatePath('/tasks');
   if (existing.case_id) revalidatePath(`/cases/${existing.case_id}`);
-  revalidatePath('/(app)', 'layout');
+  // No revalidatePath('/(app)','layout') — avoids the blocking layout_bootstrap
+  // RPC; the shell badge refreshes via the bell + next navigation.
   return { ok: true };
 }

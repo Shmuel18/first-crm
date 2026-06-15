@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 
 import { userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
@@ -84,6 +85,8 @@ export async function updateCaseFeeAmountAction(
     return { ok: false, error: 'unknown' };
   }
 
-  revalidatePath(`/cases/${caseId}`);
+  // The fee field updates optimistically client-side; defer the detail-page
+  // revalidation past the response so the save returns instantly.
+  after(() => revalidatePath(`/cases/${caseId}`));
   return { ok: true };
 }

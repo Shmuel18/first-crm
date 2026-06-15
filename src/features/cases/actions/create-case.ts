@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { after } from 'next/server';
 
 import { userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
@@ -92,6 +93,10 @@ export async function createCaseAction(
     }
   }
 
-  revalidatePath('/cases');
+  // Defer the heavy dashboard rebuild (listCases + bootstrap RPC over the whole
+  // portfolio) to after the response — we redirect to the detail page, so the
+  // dashboard only needs to be fresh on the user's NEXT visit. Keeps the save
+  // spinner from blocking 0.5-2s on the full-portfolio revalidation.
+  after(() => revalidatePath('/cases'));
   redirect(`/cases/${data.id}`);
 }

@@ -1,5 +1,7 @@
 'use server';
 
+import { after } from 'next/server';
+
 import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
 
@@ -68,19 +70,35 @@ export async function sendClientEmailAction(input: unknown): Promise<Result> {
   if (!resolved.ok) return { ok: false, error: 'attachment' };
 
   const locale = (await getLocale()) === 'en' ? 'en' : 'he';
-  const sent = await sendBrandedClientEmail({
-    to: email,
-    locale,
-    subject,
-    bodyText: body,
-    attachments: resolved.attachments,
-  });
-  // Temp upload blobs are transient — remove them whether or not the send worked.
-  await cleanupEmailTempFiles(supabase, caseId, resolved.tempPaths);
 
-  if (sent === 'skipped') return { ok: false, error: 'not_configured' };
-  if (sent === 'failed') return { ok: false, error: 'unknown' };
-  // Best-effort log — powers the case activity feed; never fails the send.
-  await logClientEmail({ caseId, kind: 'advisor_message', recipient: email, subject, body });
+  // The actual Resend HTTP call (plus attachment upload) is the slow part and
+  // was previously awaited, spinning the compose dialog. Validation, auth and
+  // attachment resolution already passed above, so hand the send off to after()
+  // and return immediately. Delivery failures are logged server-side (Resend is
+  // configured in prod); the temp blobs are always cleaned up.
+  after(async () => {
+    try {
+      const sent = await sendBrandedClientEmail({
+        to: email,
+        locale,
+        subject,
+        bodyText: body,
+        attachments: resolved.attachments,
+      });
+      if (sent === 'sent') {
+        await logClientEmail({ caseId, kind: 'advisor_message', recipient: email, subject, body });
+      } else {
+        console.error('[sendClientEmail] not delivered', { caseId, sent });
+      }
+    } catch (err) {
+      console.error(
+        '[sendClientEmail] background send failed',
+        err instanceof Error ? err.message : 'unknown',
+      );
+    } finally {
+      await cleanupEmailTempFiles(supabase, caseId, resolved.tempPaths).catch(() => undefined);
+    }
+  });
+
   return { ok: true };
 }

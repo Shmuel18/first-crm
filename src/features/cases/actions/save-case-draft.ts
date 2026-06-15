@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { after } from 'next/server';
 
 import { userHasPermission } from '@/lib/auth/permissions';
 import { safeDbError } from '@/lib/supabase/db-error-log';
@@ -75,6 +76,8 @@ export async function saveCaseDraftAction(
     return { ok: false, error: 'unknown' };
   }
 
-  revalidatePath('/cases');
+  // Defer the heavy dashboard rebuild to after the response — we redirect to the
+  // detail page, so the dashboard only needs to be fresh on the next visit.
+  after(() => revalidatePath('/cases'));
   redirect(`/cases/${caseId}`);
 }

@@ -19,11 +19,16 @@ export function FieldGroup({
   children: React.ReactNode;
   cols?: 2 | 3 | 4;
 }) {
-  // Borrower cards are stacked full-width now, so denser column counts are
-  // viable. 3-col for identity (name | last | id), 4-col for the misc row
-  // (children | age | foreign | language), 2-col stays default.
+  // Step the columns up gradually: 1 (mobile) → 2 (tablet, sm–lg) → final
+  // count (desktop, lg+). Jumping straight to 4 columns at sm (640px) crams
+  // the wider label+input fields on tablets, so labels, status pills and the
+  // fee adornment overlap ("מתחרבש"). The 2-col middle step keeps them legible.
   const colsClass =
-    cols === 4 ? 'sm:grid-cols-4' : cols === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2';
+    cols === 4
+      ? 'sm:grid-cols-2 lg:grid-cols-4'
+      : cols === 3
+        ? 'sm:grid-cols-2 lg:grid-cols-3'
+        : 'sm:grid-cols-2';
   return (
     <div
       className={`grid grid-cols-1 ${colsClass} gap-x-6 gap-y-2 pb-3 border-b border-neutral-100 last:border-0 last:pb-0`}
