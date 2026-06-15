@@ -2453,6 +2453,7 @@
         "attachmentsHint": "המסמכים יישמרו בתיק הקשור ויופיעו גם בעמוד המסמכים.",
         "attachmentsHintGeneral": "ללא תיק קשור — הקובץ יישמר במסמכים הכלליים של המשרד (תיקייה נפרדת ב‑Drive).",
         "attachmentsExisting": "קבצים מצורפים",
+        "attachmentsInCase": "בתיק",
         "attachmentsDownload": "הורדה",
         "attachmentsNeedCase": "כדי לצרף מסמכים צריך לבחור תיק קשור.",
         "attachmentsUploading": "המשימה נוצרה. מעלה את המסמכים...",

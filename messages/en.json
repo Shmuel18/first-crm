@@ -2453,6 +2453,7 @@
         "attachmentsHint": "Documents are saved on the related case and will also appear on the documents page.",
         "attachmentsHintGeneral": "No related case — the file is saved to general office documents (a separate Drive folder).",
         "attachmentsExisting": "Attached files",
+        "attachmentsInCase": "In case",
         "attachmentsDownload": "Download",
         "attachmentsNeedCase": "Choose a related case before attaching documents.",
         "attachmentsUploading": "Task created. Uploading documents...",

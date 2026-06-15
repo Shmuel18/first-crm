@@ -24,6 +24,33 @@ export async function listTaskAttachmentsAction(taskId: string): Promise<TaskAtt
   }
 }
 
+export type TaskCaseDocument = { id: string; file_name: string };
+
+/**
+ * Files attached to a case-LINKED task land in the case's documents (not the
+ * task_attachments store), tagged metadata.task_id. They never showed in the
+ * task — confusing ("I uploaded a doc but can't see it"). List them so the task
+ * dialog can surface them. RLS (documents_select → can_view_case) scopes the
+ * read; mig 182 means the assignee can see the linked case's documents.
+ */
+export async function listTaskCaseDocumentsAction(taskId: string): Promise<TaskCaseDocument[]> {
+  const supabase = await createClient();
+  const { data: userRes } = await supabase.auth.getUser();
+  if (!userRes.user) return [];
+  const { data, error } = await supabase
+    .from('documents')
+    .select('id, file_name')
+    .eq('metadata->>task_id', taskId)
+    .eq('metadata->>source', 'task_attachment')
+    .is('deleted_at', null)
+    .order('upload_date', { ascending: false });
+  if (error) {
+    console.error('[listTaskCaseDocuments] failed', error.message);
+    return [];
+  }
+  return data ?? [];
+}
+
 export type TaskAttachmentUrlResult = { ok: true; url: string } | { ok: false };
 
 /** Short-lived signed URL to download one attachment. RLS gates the row read. */
