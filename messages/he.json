@@ -1145,6 +1145,8 @@
     "empty": "אין עדיין פעילות בתיק",
     "today": "היום",
     "yesterday": "אתמול",
+    "showContent": "הצג תוכן",
+    "hideContent": "הסתר תוכן",
     "events": {
       "case_created": "התיק נוצר",
       "status_changed": "שלב בתהליך עודכן",

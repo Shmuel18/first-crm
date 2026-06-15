@@ -1145,6 +1145,8 @@
     "empty": "No activity on this case yet",
     "today": "Today",
     "yesterday": "Yesterday",
+    "showContent": "Show content",
+    "hideContent": "Hide content",
     "events": {
       "case_created": "Case created",
       "status_changed": "Stage updated",

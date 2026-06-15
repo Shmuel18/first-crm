@@ -1,8 +1,11 @@
 'use client';
 
+import { useState } from 'react';
+
 import {
   ArrowRightLeft,
   CheckCircle2,
+  ChevronDown,
   ClipboardList,
   Coins,
   FileText,
@@ -27,6 +30,8 @@ import {
   type AuditTranslator,
 } from '@/features/audit/lib/field-labels';
 import { formatRelativeTime } from '@/features/case-comments/domain/format-relative-time';
+
+import { cn } from '@/lib/utils';
 
 import type { Locale } from '@/lib/i18n/direction';
 
@@ -157,6 +162,42 @@ function FromToPills({ from, to, gold }: { from: string | null; to: string | nul
   );
 }
 
+function EmailSentDetail({
+  subject,
+  recipient,
+  body,
+}: {
+  subject: string;
+  recipient: string;
+  body: string;
+}) {
+  const t = useTranslations('caseActivity');
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="space-y-1">
+      <p className="text-xs text-neutral-600">
+        <span className="font-medium text-neutral-900">{subject}</span>
+        <span className="text-neutral-400"> · </span>
+        <span dir="ltr">{recipient}</span>
+      </p>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="inline-flex items-center gap-1 rounded text-[11px] font-medium text-brand-gold-text transition hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+      >
+        <ChevronDown className={cn('size-3 transition', open && 'rotate-180')} aria-hidden="true" />
+        {open ? t('hideContent') : t('showContent')}
+      </button>
+      {open && (
+        <p className="rounded-md border-s-2 border-brand-gold/40 bg-brand-gold-soft/60 px-2.5 py-1.5 text-xs text-neutral-700 whitespace-pre-wrap break-words">
+          {body}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function FieldDiffs({
   changes,
   ta,
@@ -213,11 +254,7 @@ function EventDetail({
       );
     case 'email_sent':
       return (
-        <p className="text-xs text-neutral-600">
-          <span className="font-medium text-neutral-900">{event.subject}</span>
-          <span className="text-neutral-400"> · </span>
-          <span dir="ltr">{event.recipient}</span>
-        </p>
+        <EmailSentDetail subject={event.subject} recipient={event.recipient} body={event.body} />
       );
     case 'fields_updated':
       return <FieldDiffs changes={event.changes} ta={ta} locale={locale} />;

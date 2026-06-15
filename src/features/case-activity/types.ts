@@ -56,7 +56,14 @@ type ActivityEventBody =
       changes: ActivityFieldChange[];
     }
   | { kind: 'comment_added'; excerpt: string }
-  | { kind: 'email_sent'; emailKind: ClientEmailKind; recipient: string; subject: string };
+  | {
+      kind: 'email_sent';
+      emailKind: ClientEmailKind;
+      recipient: string;
+      subject: string;
+      /** Full message body as sent (plain text) — surfaced expandably in the feed. */
+      body: string;
+    };
 
 /** Per-case lookup maps the audit→event derivation needs to label events
  *  whose audit row doesn't carry the human name (UPDATEs store diffs only). */

@@ -33,6 +33,7 @@ export function emailToEvent(row: ClientEmailLogRow, senderName: string | null):
     emailKind: row.kind,
     recipient: row.recipient_email,
     subject: row.subject,
+    body: row.body,
   };
 }
 
