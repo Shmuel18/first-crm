@@ -2456,6 +2456,7 @@
         "attachmentsExisting": "Attached files",
         "attachmentsInCase": "In case",
         "attachmentsDownload": "Download",
+        "attachmentsView": "View",
         "attachmentsNeedCase": "Choose a related case before attaching documents.",
         "attachmentsUploading": "Task created. Uploading documents...",
         "attachmentsClear": "Clear files",
