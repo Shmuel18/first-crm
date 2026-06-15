@@ -2344,6 +2344,7 @@
     "immediateCount": "{count, plural, =1 {מיידית אחת} other {# מיידיות}}",
     "assignment": {
       "createdBy": "נוצרה על ידי {name}",
+      "createdAndAssignedBy": "נוצרה והוקצתה על ידי {name}",
       "assignedBy": "הוקצתה על ידי {name}",
       "currentlyUnassigned": "לא מוקצית כרגע",
       "system": "המערכת",
@@ -2430,6 +2431,12 @@
         "create": "משימה חדשה",
         "edit": "ערוך משימה"
       },
+      "subtitle": "פרטי המשימה, התזמון והשיוך",
+      "sections": {
+        "details": "פרטי המשימה",
+        "schedule": "תזמון ושיוך",
+        "case": "תיק קשור"
+      },
       "fields": {
         "title": "כותרת",
         "titlePlaceholder": "מה צריך לעשות?",
@@ -2446,6 +2453,9 @@
         "caseNoMatches": "לא נמצאו תיקים תואמים",
         "caseNone": "— ללא תיק —",
         "openCase": "פתח את התיק",
+        "caseOpen": "פתח",
+        "caseChange": "שנה",
+        "caseCancelChange": "ביטול",
         "private": "תזכורת אישית (פרטית)",
         "privateHint": "רק את/ה תראה אותה — גם מנהל לא. משויכת אליך אוטומטית.",
         "privateAssignee": "תזכורת אישית משויכת אליך אוטומטית.",

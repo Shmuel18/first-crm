@@ -2344,6 +2344,7 @@
     "immediateCount": "{count, plural, =1 {1 immediate} other {# immediate}}",
     "assignment": {
       "createdBy": "Created by {name}",
+      "createdAndAssignedBy": "Created & assigned by {name}",
       "assignedBy": "Assigned by {name}",
       "currentlyUnassigned": "Currently unassigned",
       "system": "System",
@@ -2430,6 +2431,12 @@
         "create": "New task",
         "edit": "Edit task"
       },
+      "subtitle": "Task details, timing and assignment",
+      "sections": {
+        "details": "Task details",
+        "schedule": "Timing & assignment",
+        "case": "Linked case"
+      },
       "fields": {
         "title": "Title",
         "titlePlaceholder": "What needs to be done?",
@@ -2446,6 +2453,9 @@
         "caseNoMatches": "No matching cases",
         "caseNone": "— No case —",
         "openCase": "Open case",
+        "caseOpen": "Open",
+        "caseChange": "Change",
+        "caseCancelChange": "Cancel",
         "private": "Personal (private) reminder",
         "privateHint": "Only you can see it — not even a manager. Assigned to you automatically.",
         "privateAssignee": "A personal reminder is assigned to you automatically.",
