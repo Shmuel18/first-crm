@@ -18,8 +18,14 @@ import {
 import { TaskDocPreviewDialog } from './task-doc-preview-dialog';
 
 type Props = { taskId: string };
-type Item = { id: string; fileName: string; kind: 'general' | 'case'; mimeType: string | null };
-type Preview = { url: string; fileName: string; mimeType: string | null };
+type Item = {
+  id: string;
+  fileName: string;
+  kind: 'general' | 'case';
+  mimeType: string | null;
+  driveUrl: string | null;
+};
+type Preview = { url: string; fileName: string; mimeType: string | null; driveUrl: string | null };
 
 /**
  * Every file attached to a task: the general (case-less) attachments from the
@@ -48,12 +54,14 @@ export function TaskAttachmentsList({ taskId }: Props) {
           fileName: g.file_name,
           kind: 'general' as const,
           mimeType: g.mime_type,
+          driveUrl: g.drive_file_url,
         })),
         ...caseDocs.map((d) => ({
           id: d.id,
           fileName: d.file_name,
           kind: 'case' as const,
           mimeType: d.mime_type,
+          driveUrl: d.drive_file_url,
         })),
       ]);
     });
@@ -71,7 +79,13 @@ export function TaskAttachmentsList({ taskId }: Props) {
         ? await getTaskAttachmentUrlAction(item.id)
         : await getDocumentPreviewUrlAction(item.id);
     setBusyId(null);
-    if (res.ok) setPreview({ url: res.url, fileName: item.fileName, mimeType: item.mimeType });
+    if (res.ok)
+      setPreview({
+        url: res.url,
+        fileName: item.fileName,
+        mimeType: item.mimeType,
+        driveUrl: item.driveUrl,
+      });
     else toast.error(t('attachmentsFailed'));
   };
 
@@ -90,6 +104,7 @@ export function TaskAttachmentsList({ taskId }: Props) {
           url={preview.url}
           fileName={preview.fileName}
           mimeType={preview.mimeType}
+          driveUrl={preview.driveUrl}
           onClose={() => setPreview(null)}
         />
       )}

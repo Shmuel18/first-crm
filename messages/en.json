@@ -2264,6 +2264,7 @@
       "borrower": "Borrower",
       "expiry": "Expires on",
       "openNewTab": "Open in new tab",
+      "openInDrive": "Open in Drive",
       "downloadOriginal": "Download original",
       "noPreview": "No preview available for this file type",
       "close": "Close",

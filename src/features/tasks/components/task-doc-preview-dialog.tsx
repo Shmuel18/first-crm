@@ -1,6 +1,6 @@
 'use client';
 
-import { Download } from 'lucide-react';
+import { Download, ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -16,6 +16,8 @@ type Props = {
   url: string;
   fileName: string;
   mimeType: string | null;
+  /** Drive webViewLink, when the file is mirrored to the office Drive. */
+  driveUrl: string | null;
   onClose: () => void;
 };
 
@@ -26,7 +28,7 @@ type Props = {
  * any task viewer sees it without an office Google session. Types the browser
  * can't render fall back to the download link.
  */
-export function TaskDocPreviewDialog({ url, fileName, mimeType, onClose }: Props) {
+export function TaskDocPreviewDialog({ url, fileName, mimeType, driveUrl, onClose }: Props) {
   const t = useTranslations('documents.previewModal');
   const isImage = mimeType?.startsWith('image/') ?? false;
   const isPdf = mimeType === 'application/pdf';
@@ -50,7 +52,18 @@ export function TaskDocPreviewDialog({ url, fileName, mimeType, onClose }: Props
           onRetry={() => undefined}
         />
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-4">
+          {driveUrl && (
+            <a
+              href={driveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded text-xs text-neutral-700 transition hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+            >
+              <ExternalLink className="size-3" />
+              {t('openInDrive')}
+            </a>
+          )}
           <a
             href={url}
             download={fileName}

@@ -24,7 +24,12 @@ export async function listTaskAttachmentsAction(taskId: string): Promise<TaskAtt
   }
 }
 
-export type TaskCaseDocument = { id: string; file_name: string; mime_type: string | null };
+export type TaskCaseDocument = {
+  id: string;
+  file_name: string;
+  mime_type: string | null;
+  drive_file_url: string | null;
+};
 
 /**
  * Files attached to a case-LINKED task land in the case's documents (not the
@@ -39,7 +44,7 @@ export async function listTaskCaseDocumentsAction(taskId: string): Promise<TaskC
   if (!userRes.user) return [];
   const { data, error } = await supabase
     .from('documents')
-    .select('id, file_name, mime_type')
+    .select('id, file_name, mime_type, drive_file_url')
     .eq('metadata->>task_id', taskId)
     .eq('metadata->>source', 'task_attachment')
     .is('deleted_at', null)
