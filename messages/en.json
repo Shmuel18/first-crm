@@ -343,6 +343,10 @@
       "saveSuccess": "Simulation saved",
       "update": "Update simulation",
       "updateSuccess": "Simulation updated",
+      "saveDisabled": {
+        "noTitle": "Enter a simulation name to save",
+        "violations": "Resolve the regulatory violations to save"
+      },
       "errors": {
         "unauthorized": "You are not allowed to save simulations.",
         "validation": "Some simulation fields are invalid.",
@@ -1254,6 +1258,7 @@
       "open": "Open in Google Calendar"
     },
     "admin": {
+      "openedAt": "Case opened",
       "sections": {
         "caseDetails": "Case details",
         "banks": "Banks",

@@ -47,6 +47,17 @@ export function MixCalculator({
   const calc = useMixCalculator({ thresholds, initialInput, initialPropertyKind, initialTitle, initialConclusion });
   const isEdit = Boolean(scenarioId);
   const saveDisabled = calc.violations.length > 0 || isSaving || calc.title.trim().length === 0;
+  // Why the button is disabled — surfaced so the user isn't left guessing at a
+  // greyed-out "save" (the #1 "save doesn't work" report). Title gate first
+  // (the common case), then regulatory violations (which also show a banner).
+  const disabledReason =
+    isSaving
+      ? null
+      : calc.title.trim().length === 0
+        ? t('saveDisabled.noTitle')
+        : calc.violations.length > 0
+          ? t('saveDisabled.violations')
+          : null;
 
   const handleSave = () => {
     startSaving(async () => {
@@ -90,11 +101,16 @@ export function MixCalculator({
         onUpdate={calc.updateTrack}
       />
       <div className="flex flex-wrap items-center justify-end gap-3">
-        <span className="text-xs text-neutral-500">{t('results.snapshotNote')}</span>
+        {disabledReason ? (
+          <span className="text-xs font-medium text-brand-gold-text">{disabledReason}</span>
+        ) : (
+          <span className="text-xs text-neutral-500">{t('results.snapshotNote')}</span>
+        )}
         <button
           type="button"
           onClick={handleSave}
           disabled={saveDisabled}
+          title={disabledReason ?? undefined}
           className="btn-gold flex h-11 items-center justify-center gap-2 rounded-lg px-6 disabled:pointer-events-none disabled:opacity-50"
         >
           {isSaving ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Save className="size-4" aria-hidden="true" />}

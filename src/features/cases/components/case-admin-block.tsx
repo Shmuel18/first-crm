@@ -7,6 +7,7 @@ import { CaseExpensesList } from '@/features/case-expenses/components/case-expen
 import { listCaseExpenses } from '@/features/case-expenses/services/case-expenses.service';
 import type { Locale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
+import { formatDateShort } from '@/lib/utils/format-date';
 
 import type { CaseBlocker, InsuranceStatus } from '../schemas/case.schema';
 import type {
@@ -32,6 +33,8 @@ type Props = {
   targetDate: string | null;
   referrerName: string | null;
   shortNote: string | null;
+  /** Case opening date (cases.created_at) — shown read-only for the record. */
+  createdAt: string;
   /** All active case_banks rows (with bank + banker_name) for the inline
    *  banks list inside the admin block. */
   bankRows: ReadonlyArray<CaseBankRowData>;
@@ -84,6 +87,7 @@ export async function CaseAdminBlock({
   targetDate,
   referrerName,
   shortNote,
+  createdAt,
   bankRows,
   canSeeFinancials,
   feeAmount,
@@ -100,7 +104,6 @@ export async function CaseAdminBlock({
 }: Props) {
   const t = await getTranslations('case');
   const tAdmin = await getTranslations('case.admin');
-  void locale; // reserved for future locale-aware formatting
 
   // Server-side fetches: bank lookup + this case's expenses. Both are
   // cheap and tightly scoped, so we don't pull them up to the page.
@@ -113,6 +116,12 @@ export async function CaseAdminBlock({
     <CaseBlock title={t('blocks.admin')} icon={<Wallet />} fullWidth blockKey="admin">
       {/* Section 1 — Case details (8 inline fields). */}
       <SectionHeader title={tAdmin('sections.caseDetails')} />
+      <p className="pb-2 pt-2 text-xs text-neutral-500">
+        {tAdmin('openedAt')}:{' '}
+        <span className="font-medium text-neutral-700 tabular-nums">
+          {formatDateShort(createdAt, locale)}
+        </span>
+      </p>
       <CaseDetailsSection
         caseId={caseId}
         initial={{

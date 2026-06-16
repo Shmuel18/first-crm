@@ -41,6 +41,15 @@ function ltvViolation(
   return actual !== null && actual > limit ? { code: 'ltv_exceeded', actual, limit } : null;
 }
 
+// Tolerance (in percentage points) for share comparisons. A track that is
+// exactly a third / two-thirds of the loan computes to 33.3333…% / 66.6666…%,
+// which can land a hair on the wrong side of a stored threshold — e.g. the DB
+// seeds minFixedPct as 33.3334 (migration 094), fractionally ABOVE a true
+// third, so an exact-third fixed split was flagged as "fixed share too low".
+// 0.01pp forgives that floating/rounding boundary without loosening any real
+// regulatory margin (shares are displayed to 0.1%).
+const SHARE_TOLERANCE = 0.01;
+
 function shareViolation(
   code: RegulatoryViolation['code'],
   amount: number,
@@ -49,8 +58,8 @@ function shareViolation(
   mode: 'min' | 'max',
 ): RegulatoryViolation | null {
   const actual = total > 0 ? (amount / total) * 100 : 0;
-  if (mode === 'min' && actual < limit) return { code, actual, limit };
-  if (mode === 'max' && actual > limit) return { code, actual, limit };
+  if (mode === 'min' && actual < limit - SHARE_TOLERANCE) return { code, actual, limit };
+  if (mode === 'max' && actual > limit + SHARE_TOLERANCE) return { code, actual, limit };
   return null;
 }
 

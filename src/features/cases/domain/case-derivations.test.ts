@@ -37,11 +37,22 @@ describe('getCaseClientLabel', () => {
     );
   });
 
-  it('surfaces additional borrowers as +N with the primary first', () => {
+  it('shows both names (primary first) for two borrowers — no "+1"', () => {
     const label = getCaseClientLabel({
       case_borrowers: [cb(false, 'דנה', 'כהן'), cb(true, 'ישראל', 'ישראלי')],
     });
-    expect(label).toBe('ישראלי ישראל +1');
+    expect(label).toBe('ישראלי ישראל · כהן דנה');
+  });
+
+  it('shows the first two names + "+N" for three or more borrowers', () => {
+    const label = getCaseClientLabel({
+      case_borrowers: [
+        cb(false, 'דנה', 'כהן'),
+        cb(true, 'ישראל', 'ישראלי'),
+        cb(false, 'אבי', 'לוי'),
+      ],
+    });
+    expect(label).toBe('ישראלי ישראל · כהן דנה +1');
   });
 
   it('ignores null borrowers and blank names', () => {
