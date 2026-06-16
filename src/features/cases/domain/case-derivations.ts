@@ -32,34 +32,49 @@ type CaseBankJoin = {
   } | null;
 };
 
-/** Up to this many borrower names are shown in full; beyond it the rest
- *  collapse to a "+N" suffix so the header label can't run away. */
-const MAX_NAMES_SHOWN = 2;
-const NAME_SEPARATOR = ' · ';
-
-/**
- * Client label for a case header. Primary borrower first, then:
- *   - 1 borrower  → "ישראלי ישראל"
- *   - 2 borrowers → "ישראלי ישראל · כהן דנה"  (both names — an advisor wants
- *     to see who the co-borrower is, not a faceless "+1")
- *   - 3+          → first two names + " +N" for the remainder.
- */
-export function getCaseClientLabel(caseItem: {
+/** Borrower display names for a case, primary first, blanks/nulls dropped. */
+function sortedBorrowerNames(caseItem: {
   case_borrowers?: ReadonlyArray<CaseBorrowerJoin> | null;
-}): string {
-  const borrowers = (caseItem.case_borrowers ?? [])
+}): string[] {
+  return (caseItem.case_borrowers ?? [])
     .filter((cb) => cb.borrower !== null)
     .map((cb) => ({
       isPrimary: cb.is_primary,
       name: formatPersonName(cb.borrower!.first_name, cb.borrower!.last_name),
     }))
-    .filter((b) => b.name);
+    .filter((b) => b.name)
+    .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary))
+    .map((b) => b.name);
+}
 
-  if (borrowers.length === 0) return '';
+/**
+ * Compact client label for the DASHBOARD table (one line per case, many rows):
+ * primary borrower name, additional borrowers collapsed to "+N".
+ *   - "ישראלי ישראל"  /  "ישראלי ישראל +1"
+ */
+export function getCaseClientLabel(caseItem: {
+  case_borrowers?: ReadonlyArray<CaseBorrowerJoin> | null;
+}): string {
+  const names = sortedBorrowerNames(caseItem);
+  if (names.length === 0) return '';
+  const extra = names.length - 1;
+  return extra > 0 ? `${names[0]} +${extra}` : names[0]!;
+}
 
-  borrowers.sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary));
-  const names = borrowers.map((b) => b.name);
+/** Up to this many borrower names are shown in full in the expanded label. */
+const MAX_NAMES_SHOWN = 2;
+const NAME_SEPARATOR = ' · ';
 
+/**
+ * Expanded client label for PAGE HEADERS (one case, room to breathe): up to two
+ * full names so the advisor sees the co-borrower, then "+N" for the rest.
+ *   - "ישראלי ישראל"  /  "ישראלי ישראל · כהן דנה"  /  "… · … +1"
+ */
+export function getCaseClientLabelFull(caseItem: {
+  case_borrowers?: ReadonlyArray<CaseBorrowerJoin> | null;
+}): string {
+  const names = sortedBorrowerNames(caseItem);
+  if (names.length === 0) return '';
   const shown = names.slice(0, MAX_NAMES_SHOWN).join(NAME_SEPARATOR);
   const extra = names.length - MAX_NAMES_SHOWN;
   return extra > 0 ? `${shown} +${extra}` : shown;

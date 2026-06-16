@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   getCaseClientLabel,
+  getCaseClientLabelFull,
   getPrimaryBank,
   getPrimaryBorrowerNationalId,
   getSecondaryBanksCount,
@@ -37,22 +38,11 @@ describe('getCaseClientLabel', () => {
     );
   });
 
-  it('shows both names (primary first) for two borrowers — no "+1"', () => {
+  it('surfaces additional borrowers as +N with the primary first (compact)', () => {
     const label = getCaseClientLabel({
       case_borrowers: [cb(false, 'דנה', 'כהן'), cb(true, 'ישראל', 'ישראלי')],
     });
-    expect(label).toBe('ישראלי ישראל · כהן דנה');
-  });
-
-  it('shows the first two names + "+N" for three or more borrowers', () => {
-    const label = getCaseClientLabel({
-      case_borrowers: [
-        cb(false, 'דנה', 'כהן'),
-        cb(true, 'ישראל', 'ישראלי'),
-        cb(false, 'אבי', 'לוי'),
-      ],
-    });
-    expect(label).toBe('ישראלי ישראל · כהן דנה +1');
+    expect(label).toBe('ישראלי ישראל +1');
   });
 
   it('ignores null borrowers and blank names', () => {
@@ -65,6 +55,36 @@ describe('getCaseClientLabel', () => {
         ],
       }),
     ).toBe('כהן דנה');
+  });
+});
+
+describe('getCaseClientLabelFull', () => {
+  it('returns the single borrower name', () => {
+    expect(getCaseClientLabelFull({ case_borrowers: [cb(true, 'ישראל', 'ישראלי')] })).toBe(
+      'ישראלי ישראל',
+    );
+  });
+
+  it('shows both names (primary first) for two borrowers — no "+1"', () => {
+    const label = getCaseClientLabelFull({
+      case_borrowers: [cb(false, 'דנה', 'כהן'), cb(true, 'ישראל', 'ישראלי')],
+    });
+    expect(label).toBe('ישראלי ישראל · כהן דנה');
+  });
+
+  it('shows the first two names + "+N" for three or more borrowers', () => {
+    const label = getCaseClientLabelFull({
+      case_borrowers: [
+        cb(false, 'דנה', 'כהן'),
+        cb(true, 'ישראל', 'ישראלי'),
+        cb(false, 'אבי', 'לוי'),
+      ],
+    });
+    expect(label).toBe('ישראלי ישראל · כהן דנה +1');
+  });
+
+  it('returns empty string when there are no borrowers', () => {
+    expect(getCaseClientLabelFull({ case_borrowers: [] })).toBe('');
   });
 });
 
