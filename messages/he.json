@@ -2376,6 +2376,10 @@
       "assigned-by-me": "שהקציתי",
       "all": "כל המשרד"
     },
+    "assigneeFilter": {
+      "label": "סינון לפי יועץ",
+      "all": "כל היועצים"
+    },
     "priority": {
       "critical": "מיידית",
       "high": "דחופה",

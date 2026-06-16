@@ -79,6 +79,7 @@ export async function listTasks(filters: TaskListFilters): Promise<TaskWithRelat
 
   if (filters.status) query = query.eq('status', filters.status);
   if (filters.caseId) query = query.eq('case_id', filters.caseId);
+  if (filters.assignedTo) query = query.eq('assigned_to', filters.assignedTo);
 
   // DB orders the secondary keys; status priority is applied in JS below
   // (stable sort preserves these within each status group).

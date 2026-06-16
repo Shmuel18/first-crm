@@ -2376,6 +2376,10 @@
       "assigned-by-me": "Assigned by me",
       "all": "Whole office"
     },
+    "assigneeFilter": {
+      "label": "Filter by advisor",
+      "all": "All advisors"
+    },
     "priority": {
       "critical": "Immediate",
       "high": "Urgent",

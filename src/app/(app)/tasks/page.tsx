@@ -10,6 +10,7 @@ import { TasksBoard } from '@/features/tasks/components/tasks-board';
 import { TasksLayoutToggle } from '@/features/tasks/components/tasks-layout-toggle';
 import { TasksList } from '@/features/tasks/components/tasks-list';
 import { TaskCreateButton } from '@/features/tasks/components/task-create-button';
+import { TasksAssigneeFilter } from '@/features/tasks/components/tasks-assignee-filter';
 import { TasksStatStrip } from '@/features/tasks/components/tasks-stat-strip';
 import { TasksViewTabs } from '@/features/tasks/components/tasks-view-tabs';
 import { capCompletedTasks, isImmediateTask, isOverdue } from '@/features/tasks/domain/task-state';
@@ -36,6 +37,7 @@ type SearchParams = Promise<{
   case?: string;
   display?: string;
   focus?: string;
+  assignee?: string;
 }>;
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -54,6 +56,10 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
     ? (sp.status as TaskStatus)
     : undefined;
   const caseId = z.uuid().safeParse(sp.case).success ? sp.case : undefined;
+  // Assignee filter only applies outside "mine" (where every task is already
+  // the caller's). Ignored for that view so the param can't linger misleadingly.
+  const assignedTo =
+    view !== 'mine' && z.uuid().safeParse(sp.assignee).success ? sp.assignee : undefined;
   const display: 'board' | 'list' = sp.display === 'list' ? 'list' : 'board';
   const focus: 'immediate' | 'overdue' | null =
     sp.focus === 'immediate' || sp.focus === 'overdue' ? sp.focus : null;
@@ -76,6 +82,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
         view,
         status: display === 'board' ? undefined : status,
         caseId: caseId ? asCaseId(caseId) : undefined,
+        assignedTo,
       }),
       countPendingByView('mine'),
       countPendingByView('assigned-by-me'),
@@ -112,6 +119,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
           counts={{ mine: mineCount, 'assigned-by-me': assignedByMeCount, all: allCount }}
         />
         <div className="flex items-center gap-2 ms-auto">
+          {view !== 'mine' && <TasksAssigneeFilter assignees={assignees} />}
           <TaskCreateButton
             assignees={assignees}
             cases={cases}
