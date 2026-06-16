@@ -56,7 +56,17 @@ export async function generateReportPdfAction(input: GenerateReportInput): Promi
     if (!rendered) return { ok: false, error: 'not_found' };
     return { ok: true, base64: rendered.buffer.toString('base64'), filename: rendered.filename };
   } catch (err) {
-    console.error('[generate-report-pdf] render failed', { code: (err as { code?: string })?.code });
+    // Log the real cause server-side (NOT returned to the client): the report
+    // PDF renders fine in dev but has failed in production — capturing the
+    // message + stack here is what lets us tell a font-loading ENOENT (the
+    // /public asset not shipped into the serverless function) apart from a
+    // react-pdf render error. The client still gets the generic code.
+    console.error('[generate-report-pdf] render failed', {
+      name: (err as { name?: string })?.name,
+      code: (err as { code?: string })?.code,
+      message: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
+    });
     return { ok: false, error: 'render_failed' };
   }
 }

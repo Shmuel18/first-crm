@@ -86,7 +86,14 @@ export async function emailScenarioReportAction(input: unknown): Promise<Result>
       parseLocale(rawLocale),
     );
   } catch (err) {
-    console.error('[email-scenario-report] render failed', { code: (err as { code?: string })?.code });
+    // Full cause server-side only — see generate-report-pdf for why (same
+    // render path; prod-only failures need the message + stack to diagnose).
+    console.error('[email-scenario-report] render failed', {
+      name: (err as { name?: string })?.name,
+      code: (err as { code?: string })?.code,
+      message: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
+    });
     return { ok: false, error: 'unknown' };
   }
   if (!rendered) return { ok: false, error: 'not_found' };
