@@ -2,7 +2,9 @@
 
 > READ-ONLY REVIEW OUTPUT, persisted with user approval (2026-06-14).
 > Review 2026-06-14 (multi-agent workflow). Authorization-layer fixes
-> implemented + behaviorally proven; awaiting push/deploy approval (NOT pushed).
+> implemented + behaviorally proven. **SHIPPED 2026-06-17**: commit `024c59d0`,
+> migration 190 applied to both DBs, deployed to Kaufman/Vercel (`fd572b6`) +
+> Vultr staging (`fd572b6`); live committed add-borrower smoke PASSED (§5).
 
 ## 1. Scope Promised
 
@@ -80,6 +82,10 @@ Tally (post-verification + synthesis): **1 High, 1 Medium, ~13 Low.**
 | `vitest run` | 388 passed |
 | `next build` | (see ledger Authorized Test Runs) |
 | Behavioral proof of mig 190 (node+pg, rolled-back tx on dev/Vultr, 4 personas) | **8/8 PASS**: junior-assigned CAN add; associated advisor CAN add + insert income; view-only secretary BLOCKED from add (42501) + income (RLS); no orphan borrowers / atomic; schema registers 190 |
+| Mig 190 applied to both DBs (node+pg, single tx, apply-before-push) | Vultr 189→190; Kaufman already 190 → idempotent re-assert; both canonical, psql-verified |
+| Vercel deploy | `fd572b6` live (incl. `024c59d0`); commit-status success; Kaufman /api/health `ok:true`, schema 190 (psql) |
+| Vultr deploy (`fd572b6`, deploy.sh `SKIP_MIGRATIONS=1`) | live + healthy; deep-health build `fd572b6`, schema **190/190**; Drive degraded = expected staging |
+| Live **committed** add-borrower smoke (demo.advisor `junior_advisor`, Vultr) | **PASS**: old direct-INSERT RLS-denied (42501); `can_edit_case`=true; new RPC committed a real borrower+junction; cleaned up. UI-click variant needs an extension domain-permission grant — not done unilaterally |
 
 ## 6. Deferred (cheap Lows — next commit, per plan)
 i18n hardcoded strings (ui-2/ui-3), save-failure toasts on compact fields (ui-5),
@@ -98,7 +104,7 @@ consumption; R17-19 verify final DB controls.
 ## 8. Instructions for the Next Round / Notes
 - Round 9 (obligations, case banks, expenses): obligations write policies were
   proactively canonicalized here (mig 190) — R9 should verify + cover the rest.
-- **Migration 190 must be applied to BOTH DBs (Kaufman prod + Vultr, both at 189)
-  before/with the code deploy** (apply-before-push, zero-downtime).
+- ~~Migration 190 must be applied to BOTH DBs before/with the code deploy~~
+  **DONE 2026-06-17** (apply-before-push held: Kaufman was already at 190, Vultr 189→190).
 - Parallel-agent note: main moved heavily (simulators/statistics/payouts);
   next migration number was 190 (prod schema already at 189).
