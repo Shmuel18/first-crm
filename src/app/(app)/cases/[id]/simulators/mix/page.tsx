@@ -19,15 +19,17 @@ export default async function CaseMixPage({ params }: { params: Promise<{ id: st
   if (!(await userHasPermission('view_simulators'))) redirect('/cases');
   const { id } = await params;
   const caseId = asCaseId(id);
-  const [caseData, thresholds, scenarios, incomeGroups, obligations, canEdit, t] = await Promise.all([
-    getCaseById(caseId),
-    getRegulatoryThresholds(),
-    listScenariosForCase(caseId),
-    listIncomesForCase(caseId),
-    listObligationsFlatForCase(caseId),
-    userCanEditCase(caseId),
-    getTranslations('simulators'),
-  ]);
+  const [caseData, thresholds, scenarios, incomeGroups, obligations, canEdit, canUseSimulators, t] =
+    await Promise.all([
+      getCaseById(caseId),
+      getRegulatoryThresholds(),
+      listScenariosForCase(caseId),
+      listIncomesForCase(caseId),
+      listObligationsFlatForCase(caseId),
+      userCanEditCase(caseId),
+      userHasPermission('use_simulators'),
+      getTranslations('simulators'),
+    ]);
   if (!caseData) notFound();
 
   const monthlyNetIncome = nisToAgorot(incomeGroups.reduce((sum, group) => sum + group.monthlyTotal, 0));
@@ -58,7 +60,7 @@ export default async function CaseMixPage({ params }: { params: Promise<{ id: st
         primaryBorrowerId={caseData.primary_borrower_id}
         monthlyNetIncome={monthlyNetIncome}
         monthlyObligations={monthlyObligations}
-        readOnly={!canEdit}
+        readOnly={!canEdit || !canUseSimulators}
       />
     </div>
   );
