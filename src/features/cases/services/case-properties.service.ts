@@ -6,6 +6,7 @@ export type CaseProperty = {
   case_type_primary_id: string | null;
   case_type_other_text: string | null;
   city: string | null;
+  gush_helka: string | null;
   property_value: number | null;
   requested_mortgage_amount: number | null;
 };
@@ -14,7 +15,7 @@ export type CaseProperty = {
 // isn't in the generated Database types yet, so the read goes through a narrow
 // cast rather than the typed client (database.ts carries parallel-agent WIP).
 const CASE_PROPERTY_COLUMNS =
-  'id, case_type_primary_id, case_type_other_text, city, property_value, requested_mortgage_amount' as const;
+  'id, case_type_primary_id, case_type_other_text, city, gush_helka, property_value, requested_mortgage_amount' as const;
 
 type CasePropertyListClient = {
   from: (table: 'case_properties') => {

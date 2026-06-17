@@ -1894,6 +1894,7 @@ export type Database = {
           target_date: string | null
           updated_at: string
           updated_by: string | null
+          gush_helka: string | null
           version: number
         }
         Insert: {
@@ -1924,6 +1925,7 @@ export type Database = {
           target_date?: string | null
           updated_at?: string
           updated_by?: string | null
+          gush_helka?: string | null
           version?: number
         }
         Update: {
@@ -1954,6 +1956,7 @@ export type Database = {
           target_date?: string | null
           updated_at?: string
           updated_by?: string | null
+          gush_helka?: string | null
           version?: number
         }
         Relationships: [

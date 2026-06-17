@@ -41,6 +41,7 @@ export const CaseFormShape = z.object({
   fee_amount: optionalCurrency(MONTHLY_AMOUNT_MAX_ILS),
   expected_income: optionalCurrency(MONTHLY_AMOUNT_MAX_ILS),
   city: optionalShortString(NAME_MAX),
+  gush_helka: optionalShortString(NAME_MAX),
   case_type_other_text: optionalShortString(NAME_MAX),
   short_note: optionalShortString(SHORT_NOTE_MAX),
   target_date: optionalDate,

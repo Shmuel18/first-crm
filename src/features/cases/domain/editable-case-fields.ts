@@ -22,6 +22,7 @@ export const EDITABLE_CASE_FIELDS = [
   'case_type_primary_id',
   'case_type_other_text',
   'city',
+  'gush_helka',
   'property_value',
   'requested_mortgage_amount',
   // Admin block (case details sub-section) — fee_amount lives on

@@ -245,6 +245,7 @@ export default async function CaseDetailPage({ params }: Props) {
             case_type_primary_id: caseData.case_type_primary?.id ?? null,
             case_type_other_text: caseData.case_type_other_text ?? null,
             city: caseData.city ?? null,
+            gush_helka: caseData.gush_helka ?? null,
             property_value: caseData.property_value,
             requested_mortgage_amount: caseData.requested_mortgage_amount,
           }}

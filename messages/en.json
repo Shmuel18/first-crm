@@ -1306,6 +1306,7 @@
       "bank": "Bank",
       "shortNotePlaceholder": "e.g. Client returns Monday, missing recent payslip",
       "city": "City",
+      "gushHelka": "Block/Parcel",
       "propertyValue": "Property value",
       "requestedMortgageAmount": "Loan amount",
       "equity": "Down payment",

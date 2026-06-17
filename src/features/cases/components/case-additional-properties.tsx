@@ -15,13 +15,17 @@ import { PropertyFields } from './property-fields';
 import type { CaseProperty } from '../services/case-properties.service';
 
 type CaseTypeOption = { id: string; key: string; name_he: string };
-type PropertyField = 'city' | 'property_value' | 'requested_mortgage_amount';
+type PropertyField = 'city' | 'gush_helka' | 'property_value' | 'requested_mortgage_amount';
 type SaveResult = { ok: true } | { ok: false; message?: string };
+
+// Text fields pass through as-is; the rest are numeric and get coerced.
+const TEXT_PROPERTY_FIELDS: ReadonlyArray<PropertyField> = ['city', 'gush_helka'];
 
 const BLANK: Omit<CaseProperty, 'id'> = {
   case_type_primary_id: null,
   case_type_other_text: null,
   city: null,
+  gush_helka: null,
   property_value: null,
   requested_mortgage_amount: null,
 };
@@ -74,8 +78,11 @@ export function CaseAdditionalProperties({
     (id: string) =>
     async (field: PropertyField, value: string | null): Promise<SaveResult> => {
       const prev = rows;
-      const coerced =
-        field === 'city' ? value : value === null || value === '' ? null : Number(value);
+      const coerced = TEXT_PROPERTY_FIELDS.includes(field)
+        ? value
+        : value === null || value === ''
+          ? null
+          : Number(value);
       setRows((r) => r.map((p) => (p.id === id ? { ...p, [field]: coerced as never } : p)));
       const res = await updateCasePropertyFieldAction(caseId, id, field, value);
       if (!res.ok) {

@@ -15,12 +15,13 @@ export type PropertyFieldValues = {
   case_type_primary_id: string | null;
   case_type_other_text: string | null;
   city: string | null;
+  gush_helka: string | null;
   property_value: number | null;
   requested_mortgage_amount: number | null;
 };
 
 type SaveResult = { ok: true } | { ok: false; message?: string };
-type PropertyField = 'city' | 'property_value' | 'requested_mortgage_amount';
+type PropertyField = 'city' | 'gush_helka' | 'property_value' | 'requested_mortgage_amount';
 
 /**
  * The four property/transaction fields (purpose · city · value · loan) shared
@@ -64,6 +65,12 @@ export function PropertyFields({
         label={tf('city')}
         value={values.city}
         onSave={(v) => onSaveField('city', v)}
+        canEdit={canEdit}
+      />
+      <EditableField
+        label={tf('gushHelka')}
+        value={values.gush_helka}
+        onSave={(v) => onSaveField('gush_helka', v)}
         canEdit={canEdit}
       />
       <EditableField

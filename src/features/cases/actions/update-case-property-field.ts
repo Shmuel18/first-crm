@@ -7,6 +7,7 @@ const EDITABLE_PROPERTY_FIELDS = [
   'case_type_primary_id',
   'case_type_other_text',
   'city',
+  'gush_helka',
   'property_value',
   'requested_mortgage_amount',
 ] as const;
