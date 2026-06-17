@@ -42,7 +42,6 @@ export async function runTaskAttachmentUploads(
         taskId,
         caseId,
         documentId: prep.documentId,
-        storagePath: prep.path,
         fileName: prep.safeFileName,
         fileSize: file.size,
       });
@@ -59,7 +58,6 @@ export async function runTaskAttachmentUploads(
       const final = await finalizeGeneralTaskAttachmentAction({
         taskId,
         attachmentId: prep.attachmentId,
-        storagePath: prep.path,
         fileName: prep.safeFileName,
         fileSize: file.size,
       });

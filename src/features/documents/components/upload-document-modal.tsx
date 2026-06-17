@@ -155,7 +155,6 @@ export function UploadDocumentModal({
       const final = await finalizeUploadAction({
         documentId: prep.documentId,
         caseId,
-        storagePath: prep.path,
         fileName: prep.safeFileName,
         fileSize: file.size,
         mimeType: file.type,

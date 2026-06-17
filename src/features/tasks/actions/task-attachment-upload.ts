@@ -39,7 +39,6 @@ export type FinalizeTaskAttachmentInput = {
   taskId: string;
   caseId: string;
   documentId: string;
-  storagePath: string;
   fileName: string;
   fileSize: number;
 };
@@ -100,35 +99,38 @@ export async function finalizeTaskAttachmentUploadAction(
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
 
+  // Recompute the storage path server-side from the authz'd caseId + documentId
+  // + sanitized filename — never trust the client path (cross-case binding;
+  // R13 TASK-ATT-1).
+  const safeFileName = sanitizeFilename(input.fileName);
+  if (!safeFileName) {
+    return { ok: false, error: 'validation', message: 'fileRequired' };
+  }
+  const storagePath = storagePathFor(input.caseId, input.documentId, safeFileName);
+
   if (!(await userHasPermission('upload_document')) || !(await userCanEditCase(input.caseId))) {
-    await cleanupBlob(input.storagePath);
+    await cleanupBlob(storagePath);
     return { ok: false, error: 'unauthorized' };
   }
 
   const taskOk = await taskBelongsToVisibleCase(input.taskId, input.caseId);
   if (!taskOk) {
-    await cleanupBlob(input.storagePath);
+    await cleanupBlob(storagePath);
     return { ok: false, error: 'unauthorized' };
-  }
-
-  const safeFileName = sanitizeFilename(input.fileName);
-  if (!safeFileName) {
-    await cleanupBlob(input.storagePath);
-    return { ok: false, error: 'validation', message: 'fileRequired' };
   }
 
   const ctx = await resolveAttachmentContext(input.caseId);
   if (!ctx) {
-    await cleanupBlob(input.storagePath);
+    await cleanupBlob(storagePath);
     return { ok: false, error: 'unauthorized' };
   }
 
   const { data: signed, error: signErr } = await supabase.storage
     .from(DOCUMENTS_BUCKET)
-    .createSignedUrl(input.storagePath, 60);
+    .createSignedUrl(storagePath, 60);
   if (signErr || !signed?.signedUrl) {
     console.error('[finalizeTaskAttachmentUpload] failed to sign read URL', signErr);
-    await cleanupBlob(input.storagePath);
+    await cleanupBlob(storagePath);
     return { ok: false, error: 'storage' };
   }
 
@@ -137,13 +139,13 @@ export async function finalizeTaskAttachmentUploadAction(
   });
   if (!sniffRes.ok) {
     console.error('[finalizeTaskAttachmentUpload] sniff fetch failed', sniffRes.status);
-    await cleanupBlob(input.storagePath);
+    await cleanupBlob(storagePath);
     return { ok: false, error: 'storage' };
   }
 
   const sniffed = await fileTypeFromBuffer(Buffer.from(await sniffRes.arrayBuffer()));
   if (!sniffed || !(ALLOWED_MIME_TYPES as readonly string[]).includes(sniffed.mime)) {
-    await cleanupBlob(input.storagePath);
+    await cleanupBlob(storagePath);
     return { ok: false, error: 'validation', message: 'fileTypeNotAllowed' };
   }
 
@@ -151,7 +153,7 @@ export async function finalizeTaskAttachmentUploadAction(
   let driveFileUrl: string | null = null;
   const { data: blob, error: dlErr } = await supabase.storage
     .from(DOCUMENTS_BUCKET)
-    .download(input.storagePath);
+    .download(storagePath);
   if (!dlErr && blob) {
     const out = await uploadCaseDocumentToDrive({
       caseId: input.caseId,
@@ -178,7 +180,7 @@ export async function finalizeTaskAttachmentUploadAction(
     uploaded_by: userRes.user.id,
     status: 'new',
     metadata: {
-      storage_path: input.storagePath,
+      storage_path: storagePath,
       source: 'task_attachment',
       task_id: input.taskId,
     },
@@ -188,7 +190,7 @@ export async function finalizeTaskAttachmentUploadAction(
 
   if (insertErr) {
     console.error('[finalizeTaskAttachmentUpload] insert failed', safeDbError(insertErr));
-    await cleanupBlob(input.storagePath);
+    await cleanupBlob(storagePath);
     return { ok: false, error: 'storage' };
   }
 

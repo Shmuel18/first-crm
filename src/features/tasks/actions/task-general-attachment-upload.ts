@@ -77,41 +77,45 @@ export async function prepareGeneralTaskAttachmentAction(input: {
 export async function finalizeGeneralTaskAttachmentAction(input: {
   taskId: string;
   attachmentId: string;
-  storagePath: string;
   fileName: string;
   fileSize: number;
 }): Promise<FinalizeGeneralTaskAttachmentResult> {
   const supabase = await createClient();
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
-  if (!(await userHasPermission('upload_document')) || !(await taskVisible(input.taskId))) {
-    await cleanupBlob(input.storagePath);
-    return { ok: false, error: 'unauthorized' };
-  }
+
+  // Recompute the storage path server-side from taskId + attachmentId +
+  // sanitized filename — never trust the client path (cross-task binding;
+  // R13 TASK-ATT-2).
   const safeFileName = sanitizeFilename(input.fileName);
   if (!safeFileName) {
-    await cleanupBlob(input.storagePath);
     return { ok: false, error: 'validation', message: 'fileRequired' };
+  }
+  const storagePath = taskAttachmentPath(input.taskId, input.attachmentId, safeFileName);
+
+  if (!(await userHasPermission('upload_document')) || !(await taskVisible(input.taskId))) {
+    await cleanupBlob(storagePath);
+    return { ok: false, error: 'unauthorized' };
   }
 
   // Sniff the magic bytes — never trust the client-declared mime type.
   const { data: signed, error: signErr } = await supabase.storage
     .from(TASK_DOCUMENTS_BUCKET)
-    .createSignedUrl(input.storagePath, 60);
+    .createSignedUrl(storagePath, 60);
   if (signErr || !signed?.signedUrl) {
-    await cleanupBlob(input.storagePath);
+    await cleanupBlob(storagePath);
     return { ok: false, error: 'storage' };
   }
   const sniffRes = await fetch(signed.signedUrl, {
     headers: { Range: `bytes=0-${MAGIC_SNIFF_BYTES - 1}` },
   });
   if (!sniffRes.ok) {
-    await cleanupBlob(input.storagePath);
+    await cleanupBlob(storagePath);
     return { ok: false, error: 'storage' };
   }
   const sniffed = await fileTypeFromBuffer(Buffer.from(await sniffRes.arrayBuffer()));
   if (!sniffed || !(ALLOWED_MIME_TYPES as readonly string[]).includes(sniffed.mime)) {
-    await cleanupBlob(input.storagePath);
+    await cleanupBlob(storagePath);
     return { ok: false, error: 'validation', message: 'fileTypeNotAllowed' };
   }
 
@@ -120,7 +124,7 @@ export async function finalizeGeneralTaskAttachmentAction(input: {
   let driveFileUrl: string | null = null;
   const { data: blob } = await supabase.storage
     .from(TASK_DOCUMENTS_BUCKET)
-    .download(input.storagePath);
+    .download(storagePath);
   if (blob) {
     const out = await uploadGeneralDocumentToDrive({
       file: { content: await blob.arrayBuffer(), name: safeFileName, mimeType: sniffed.mime },
@@ -137,14 +141,14 @@ export async function finalizeGeneralTaskAttachmentAction(input: {
     file_name: safeFileName,
     file_size: input.fileSize,
     mime_type: sniffed.mime,
-    storage_path: input.storagePath,
+    storage_path: storagePath,
     uploaded_by: userRes.user.id,
     drive_file_id: driveFileId,
     drive_file_url: driveFileUrl,
   });
   if (insertErr) {
     console.error('[finalizeGeneralTaskAttachment] insert failed', safeDbError(insertErr));
-    await cleanupBlob(input.storagePath);
+    await cleanupBlob(storagePath);
     return { ok: false, error: 'storage' };
   }
 
