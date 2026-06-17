@@ -1,14 +1,13 @@
 'use client';
 
-import { useMemo, useTransition } from 'react';
+import { useMemo } from 'react';
 
-import { Loader2, Save } from 'lucide-react';
+import { Check, CircleAlert, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { toast } from 'sonner';
 
-import { saveScenarioAction } from '../actions/save-scenario';
 import { mixDti } from '../domain/mix-dti';
 import { useMixCalculator } from '../hooks/use-mix-calculator';
+import { useScenarioAutosave } from '../hooks/use-scenario-autosave';
 import { AmortizationTable } from './amortization-table';
 import { BasketPresets } from './basket-presets';
 import { KpiStrip } from './kpi-strip';
@@ -24,17 +23,21 @@ import type { MixInput, PropertyKind, RegulatoryThresholds } from '../types';
 
 type Props = {
   thresholds: RegulatoryThresholds;
+  /** false when this tab is hidden — skips the heavy charts to keep idle tabs cheap. */
+  active?: boolean;
   caseId?: string;
   primaryBorrowerId?: string | null;
   initialInput?: MixInput;
   initialPropertyKind?: PropertyKind;
-  /** Present → "save" updates this existing scenario in place. */
+  /** Present → auto-save updates this existing scenario; absent → first save creates it. */
   scenarioId?: string;
   initialTitle?: string;
   initialConclusion?: string;
   /** When provided (in-case view, borrower income known) → shows a live total-DTI tile. */
   monthlyNetIncome?: number;
   monthlyObligations?: number;
+  onCreated?: (scenarioId: string) => void;
+  onSaved?: (title: string) => void;
 };
 
 const fieldClass =
@@ -42,6 +45,7 @@ const fieldClass =
 
 export function MixCalculator({
   thresholds,
+  active = true,
   caseId,
   primaryBorrowerId = null,
   initialInput,
@@ -51,9 +55,10 @@ export function MixCalculator({
   initialConclusion,
   monthlyNetIncome,
   monthlyObligations,
+  onCreated,
+  onSaved,
 }: Props) {
   const t = useTranslations('simulators.mix');
-  const [isSaving, startSaving] = useTransition();
   const calc = useMixCalculator({ thresholds, initialInput, initialPropertyKind, initialTitle, initialConclusion });
   const dti = useMemo(
     () =>
@@ -67,36 +72,27 @@ export function MixCalculator({
           }),
     [monthlyNetIncome, monthlyObligations, calc.result.firstPayment, calc.result.maxPayment],
   );
-  const isEdit = Boolean(scenarioId);
-  const saveDisabled = calc.violations.length > 0 || isSaving || calc.title.trim().length === 0;
-  // Why the button is disabled — surfaced so the user isn't left guessing at a
-  // greyed-out "save" (the #1 "save doesn't work" report). Title gate first
-  // (the common case), then regulatory violations (which also show a banner).
-  const disabledReason =
-    isSaving
-      ? null
-      : calc.title.trim().length === 0
-        ? t('saveDisabled.noTitle')
-        : calc.violations.length > 0
-          ? t('saveDisabled.violations')
-          : null;
 
-  const handleSave = () => {
-    startSaving(async () => {
-      const result = await saveScenarioAction({
-        scenarioId: scenarioId ?? null,
-        caseId: caseId ?? null,
-        primaryBorrowerId,
-        kind: 'mix',
-        title: calc.title,
-        propertyKind: calc.propertyKind,
-        mix: { ...calc.mix, tracks: [...calc.mix.tracks] },
-        advisorConclusion: calc.advisorConclusion || null,
-      });
-      if (result.ok) toast.success(t(isEdit ? 'updateSuccess' : 'saveSuccess'));
-      else toast.error(t(`errors.${result.error}`));
-    });
-  };
+  const status = useScenarioAutosave({
+    scenarioId: scenarioId ?? null,
+    caseId: caseId ?? null,
+    primaryBorrowerId,
+    title: calc.title,
+    propertyKind: calc.propertyKind,
+    mix: calc.mix,
+    advisorConclusion: calc.advisorConclusion,
+    hasViolations: calc.violations.length > 0,
+    onCreated,
+    onSaved,
+  });
+
+  // Can't save while blocked — surface why (title gate first, then violations).
+  const blockedReason =
+    calc.title.trim().length === 0
+      ? t('saveDisabled.noTitle')
+      : calc.violations.length > 0
+        ? t('saveDisabled.violations')
+        : null;
 
   return (
     <div className="space-y-5">
@@ -129,13 +125,16 @@ export function MixCalculator({
         onUpdate={calc.updateTrack}
       />
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        <MonthStatePanel result={calc.result} mortgageAmount={calc.mix.mortgageAmount} />
-        <MixChart titleKey="balanceCurve" points={calc.result.balanceCurve} />
-        <PaymentBreakdownChart principalCurve={calc.result.principalCurve} interestCurve={calc.result.interestCurve} />
-      </div>
-
-      <AmortizationTable result={calc.result} />
+      {active && (
+        <>
+          <div className="grid gap-5 lg:grid-cols-3">
+            <MonthStatePanel result={calc.result} mortgageAmount={calc.mix.mortgageAmount} />
+            <MixChart titleKey="balanceCurve" points={calc.result.balanceCurve} />
+            <PaymentBreakdownChart principalCurve={calc.result.principalCurve} interestCurve={calc.result.interestCurve} />
+          </div>
+          <AmortizationTable result={calc.result} />
+        </>
+      )}
 
       <label className="block rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
         <span className="mb-1.5 block text-sm font-medium text-neutral-700">{t('inputs.advisorConclusion')}</span>
@@ -146,23 +145,48 @@ export function MixCalculator({
         />
       </label>
 
-      <div className="flex flex-wrap items-center justify-end gap-3 border-t border-neutral-200 pt-4">
-        {disabledReason ? (
-          <span className="text-xs font-medium text-brand-gold-text">{disabledReason}</span>
-        ) : (
-          <span className="text-xs text-neutral-500">{t('results.snapshotNote')}</span>
-        )}
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={saveDisabled}
-          title={disabledReason ?? undefined}
-          className="btn-gold flex h-11 items-center justify-center gap-2 rounded-lg px-6 disabled:pointer-events-none disabled:opacity-50"
-        >
-          {isSaving ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Save className="size-4" aria-hidden="true" />}
-          {isSaving ? t('saving') : isEdit ? t('update') : t('save')}
-        </button>
+      <div className="flex items-center justify-end gap-2 border-t border-neutral-200 pt-4 text-sm">
+        <SaveStatus status={status} blockedReason={blockedReason} t={t} />
       </div>
     </div>
   );
+}
+
+function SaveStatus({
+  status,
+  blockedReason,
+  t,
+}: {
+  status: ReturnType<typeof useScenarioAutosave>;
+  blockedReason: string | null;
+  t: ReturnType<typeof useTranslations<'simulators.mix'>>;
+}) {
+  if (blockedReason) {
+    return (
+      <span className="inline-flex items-center gap-1.5 font-medium text-brand-gold-text">
+        <CircleAlert className="size-4" aria-hidden="true" />
+        {blockedReason}
+      </span>
+    );
+  }
+  if (status === 'saving') {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-neutral-500">
+        <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+        {t('saving')}
+      </span>
+    );
+  }
+  if (status === 'saved') {
+    return (
+      <span className="inline-flex items-center gap-1.5 font-medium text-emerald-600">
+        <Check className="size-4" aria-hidden="true" />
+        {t('saveSuccess')}
+      </span>
+    );
+  }
+  if (status === 'error') {
+    return <span className="font-medium text-red-600">{t('errors.unknown')}</span>;
+  }
+  return <span className="text-neutral-500">{t('results.snapshotNote')}</span>;
 }

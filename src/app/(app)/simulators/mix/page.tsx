@@ -2,11 +2,11 @@ import { redirect } from 'next/navigation';
 import { Calculator } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
-import { MixCalculator } from '@/features/simulators/components/mix-calculator';
-import { SavedScenariosList } from '@/features/simulators/components/saved-scenarios-list';
+import { MixWorkspace } from '@/features/simulators/components/mix-workspace';
 import { SimulatorToolsNav } from '@/features/simulators/components/simulator-tools-nav';
 import { listStandaloneScenarios } from '@/features/simulators/services/scenarios.service';
 import { getRegulatoryThresholds } from '@/features/simulators/services/settings.service';
+import { seedMixFromCase } from '@/features/simulators/utils/seed-mix';
 import { userHasPermission } from '@/lib/auth/permissions';
 
 export default async function StandaloneMixPage() {
@@ -30,10 +30,7 @@ export default async function StandaloneMixPage() {
         </div>
       </header>
       <SimulatorToolsNav basePath="/simulators" />
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <MixCalculator thresholds={thresholds} />
-        <SavedScenariosList scenarios={scenarios} />
-      </div>
+      <MixWorkspace scenarios={scenarios} newMixSeed={seedMixFromCase({})} thresholds={thresholds} />
     </div>
   );
 }

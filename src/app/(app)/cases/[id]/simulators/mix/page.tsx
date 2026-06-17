@@ -3,8 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { ArrowRight, Calculator } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
-import { MixCalculator } from '@/features/simulators/components/mix-calculator';
-import { SavedScenariosList } from '@/features/simulators/components/saved-scenarios-list';
+import { MixWorkspace } from '@/features/simulators/components/mix-workspace';
 import { SimulatorToolsNav } from '@/features/simulators/components/simulator-tools-nav';
 import { listScenariosForCase } from '@/features/simulators/services/scenarios.service';
 import { getRegulatoryThresholds } from '@/features/simulators/services/settings.service';
@@ -50,17 +49,15 @@ export default async function CaseMixPage({ params }: { params: Promise<{ id: st
         </Link>
       </header>
       <SimulatorToolsNav basePath={`/cases/${id}/simulators`} />
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <MixCalculator
-          thresholds={thresholds}
-          caseId={id}
-          primaryBorrowerId={caseData.primary_borrower_id}
-          initialInput={seedMixFromCase(caseData)}
-          monthlyNetIncome={monthlyNetIncome}
-          monthlyObligations={monthlyObligations}
-        />
-        <SavedScenariosList scenarios={scenarios} caseId={id} />
-      </div>
+      <MixWorkspace
+        scenarios={scenarios}
+        newMixSeed={seedMixFromCase(caseData)}
+        thresholds={thresholds}
+        caseId={id}
+        primaryBorrowerId={caseData.primary_borrower_id}
+        monthlyNetIncome={monthlyNetIncome}
+        monthlyObligations={monthlyObligations}
+      />
     </div>
   );
 }
