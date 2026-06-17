@@ -28,10 +28,21 @@
       d.lang = l; d.dir = l === 'he' ? 'rtl' : 'ltr';
     })();
   </script>
-  <meta name="description" content="A boutique Jerusalem mortgage advisory. We shop every bank, handle the Israeli paperwork, and treat every client like family — from your first question to your keys." />
+  <meta name="description" content="A boutique Jerusalem mortgage advisory. We shop every bank, handle the Israeli paperwork, and treat every client like family." />
+  <link rel="canonical" href="https://kaufman-finance.com/" />
   <meta property="og:title" content="Kaufman Finance Group — Your gateway to property ownership in Israel" />
   <meta property="og:description" content="Boutique mortgage advisory in Jerusalem for buyers from anywhere. Higher LTV for foreign buyers, lower rates, English & Hebrew start to finish." />
   <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://kaufman-finance.com/" />
+  <meta property="og:site_name" content="Kaufman Finance Group" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:locale:alternate" content="he_IL" />
+  <meta property="og:image" content="https://kaufman-finance.com/assets/hero-poster.jpg" />
+  <meta property="og:image:alt" content="Kaufman Finance Group — boutique mortgage advisory in Jerusalem" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Kaufman Finance Group — Your gateway to property ownership in Israel" />
+  <meta name="twitter:description" content="Boutique mortgage advisory in Jerusalem for buyers from anywhere. Higher LTV for foreign buyers, lower rates, English & Hebrew start to finish." />
+  <meta name="twitter:image" content="https://kaufman-finance.com/assets/hero-poster.jpg" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -495,9 +506,41 @@
   html.a11y-grayscale main{filter:grayscale(1)}
   html.a11y-contrast main{filter:contrast(1.4)}
   html.a11y-grayscale.a11y-contrast main{filter:grayscale(1) contrast(1.4)}
+  /* skip-to-content link: off-screen until keyboard-focused (WCAG 2.4.1) */
+  .skip{position:absolute;inset-inline-start:-9999px;top:0;z-index:200;background:var(--black);color:var(--white);padding:.7rem 1.1rem;font-weight:600;text-decoration:none;border-radius:0 0 8px 8px}
+  .skip:focus{inset-inline-start:0}
   </style>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FinancialService",
+    "name": "Kaufman Finance Group",
+    "description": "A boutique Jerusalem mortgage advisory for buyers from Israel and abroad — English and Hebrew, start to finish.",
+    "url": "https://kaufman-finance.com/",
+    "logo": "https://kaufman-finance.com/assets/logo.png",
+    "image": "https://kaufman-finance.com/assets/hero-poster.jpg",
+    "telephone": "+972-2-568-1681",
+    "email": "office@kaufman-finance.com",
+    "serviceType": "Mortgage advisory",
+    "areaServed": "IL",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Ahaliav 17",
+      "addressLocality": "Jerusalem",
+      "addressCountry": "IL"
+    },
+    "openingHoursSpecification": [{
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
+      "opens": "09:00",
+      "closes": "18:00"
+    }]
+  }
+  </script>
 </head>
 <body>
+  <a class="skip" href="#top">דלג לתוכן · Skip to content</a>
   <div class="progress" id="progress"></div>
 
   <!-- ============ TOP BAR ============ -->
@@ -536,7 +579,7 @@
       <span class="brand"><img class="logo-mark" src="assets/logo-coin-square.png" alt="" /><span class="wm">KAUFMAN</span></span>
       <button class="sheet-close" id="sheetClose" aria-label="Close">&times;</button>
     </div>
-    <nav>
+    <nav aria-label="Mobile">
       <a href="#why" data-i18n="nav.why">Why Us</a>
       <a href="#how" data-i18n="nav.how">How it works</a>
       <a href="#stories" data-i18n="nav.stories">Stories</a>
@@ -551,7 +594,7 @@
       <div class="hero-bg">
         <!-- Cinematic background video (Kaufman's own banner, compressed 39MB->2.3MB, muted/looping).
              Poster shows instantly; reduced-motion users see the still poster only. -->
-        <video class="hero-video" autoplay muted loop playsinline preload="auto" poster="assets/hero-poster.jpg">
+        <video class="hero-video" autoplay muted loop playsinline preload="auto" poster="assets/hero-poster.jpg" aria-hidden="true" tabindex="-1">
           <source src="assets/hero-banner.mp4" type="video/mp4" />
         </video>
         <div class="hero-overlay"></div>
@@ -708,7 +751,7 @@
         </div>
         <div class="stories">
           <figure class="scard reveal">
-            <div class="rate dots" aria-label="5 out of 5"><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="rate dots" role="img" aria-label="5 out of 5"><i></i><i></i><i></i><i></i><i></i></div>
             <blockquote class="q" data-i18n="story.1.quote">"We were buying from abroad and terrified of the banks. Kaufman handled everything, explained every step in plain English, and held our hand the whole way. We never once felt alone."</blockquote>
             <figcaption class="who">
               <span class="avatar">L</span>
@@ -716,7 +759,7 @@
             </figcaption>
           </figure>
           <figure class="scard reveal">
-            <div class="rate dots" aria-label="5 out of 5"><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="rate dots" role="img" aria-label="5 out of 5"><i></i><i></i><i></i><i></i><i></i></div>
             <blockquote class="q" data-i18n="story.2.quote">"They found us a rate we genuinely didn't believe was possible, and managed the entire process while we were still overseas. By the time we landed, the keys were waiting."</blockquote>
             <figcaption class="who">
               <span class="avatar">S</span>
