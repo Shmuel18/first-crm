@@ -22,6 +22,9 @@ type Snapshot = {
 type Params = Snapshot & {
   onCreated?: (scenarioId: string) => void;
   onSaved?: (title: string) => void;
+  /** When true (view-only viewer), never auto-save — the server now rejects a
+   *  case-scoped write without can_edit_case (mig 195), so don't even attempt it. */
+  disabled?: boolean;
 };
 
 const DEBOUNCE_MS = 1200;
@@ -91,12 +94,13 @@ export function useScenarioAutosave(params: Params): AutosaveStatus {
 
   const signature = contentSignature(params);
   const dirty = signature !== seedSig;
+  const disabled = params.disabled ?? false;
 
   useEffect(() => {
-    if (!dirty) return;
+    if (disabled || !dirty) return;
     const handle = setTimeout(save, DEBOUNCE_MS);
     return () => clearTimeout(handle);
-  }, [signature, dirty, save]);
+  }, [signature, dirty, disabled, save]);
 
   return status;
 }

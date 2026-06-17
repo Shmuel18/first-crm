@@ -28,6 +28,9 @@ type Props = {
   primaryBorrowerId?: string | null;
   monthlyNetIncome?: number;
   monthlyObligations?: number;
+  /** View-only viewer of the case: hide "new tab" + make each calculator
+   *  read-only (no edit affordances, no auto-save) — C-036 / SIM-PERSIST-2. */
+  readOnly?: boolean;
 };
 
 function tabFromScenario(s: MortgageScenarioWithTracks): Tab {
@@ -55,6 +58,7 @@ export function MixWorkspace({
   primaryBorrowerId = null,
   monthlyNetIncome,
   monthlyObligations,
+  readOnly = false,
 }: Props) {
   const t = useTranslations('simulators');
   const tTools = useTranslations('simulators.tools');
@@ -107,21 +111,24 @@ export function MixWorkspace({
             </button>
           );
         })}
-        <button
-          type="button"
-          onClick={addTab}
-          aria-label={t('saved.new')}
-          title={t('saved.new')}
-          className="inline-flex size-9 items-center justify-center rounded-lg border border-brand-gold/50 text-brand-gold-text transition hover:bg-brand-gold-soft"
-        >
-          <Plus className="size-4" aria-hidden="true" />
-        </button>
+        {!readOnly && (
+          <button
+            type="button"
+            onClick={addTab}
+            aria-label={t('saved.new')}
+            title={t('saved.new')}
+            className="inline-flex size-9 items-center justify-center rounded-lg border border-brand-gold/50 text-brand-gold-text transition hover:bg-brand-gold-soft"
+          >
+            <Plus className="size-4" aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       {tabs.map((tab) => (
         <div key={tab.key} hidden={tab.key !== activeKey}>
           <MixCalculator
             active={tab.key === activeKey}
+            readOnly={readOnly}
             thresholds={thresholds}
             caseId={caseId}
             primaryBorrowerId={primaryBorrowerId}

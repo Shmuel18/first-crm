@@ -34,6 +34,9 @@ type Props = {
   /** When provided (in-case view, borrower income known) → shows a live total-DTI tile. */
   monthlyNetIncome?: number;
   monthlyObligations?: number;
+  /** View-only viewer of the case (no can_edit_case): disable every input and
+   *  skip auto-save (the server rejects the write anyway, mig 195) — C-036. */
+  readOnly?: boolean;
   onCreated?: (scenarioId: string) => void;
   onSaved?: (title: string) => void;
 };
@@ -53,6 +56,7 @@ export function MixCalculator({
   initialConclusion,
   monthlyNetIncome,
   monthlyObligations,
+  readOnly = false,
   onCreated,
   onSaved,
 }: Props) {
@@ -80,6 +84,7 @@ export function MixCalculator({
     mix: calc.mix,
     advisorConclusion: calc.advisorConclusion,
     hasViolations: calc.violations.length > 0,
+    disabled: readOnly,
     onCreated,
     onSaved,
   });
@@ -94,6 +99,9 @@ export function MixCalculator({
 
   return (
     <div className="space-y-5">
+      {/* A disabled <fieldset> natively makes every nested input/select/button
+          non-interactive for a view-only viewer — no per-field wiring (C-036). */}
+      <fieldset disabled={readOnly} className="space-y-5 min-w-0 border-0 p-0 m-0">
       <label className="block">
         <span className="mb-1.5 block text-sm font-medium text-neutral-700">{t('inputs.scenarioTitle')}</span>
         <input
@@ -133,6 +141,7 @@ export function MixCalculator({
           onChange={(e) => calc.setAdvisorConclusion(e.target.value)}
         />
       </label>
+      </fieldset>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-200 pt-4">
         <div className="text-sm">

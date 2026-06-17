@@ -12,19 +12,20 @@ import { getCaseById } from '@/features/cases/services/cases.service';
 import { listIncomesForCase } from '@/features/incomes/services/incomes.service';
 import { listObligationsFlatForCase } from '@/features/obligations/services/obligations.service';
 import { seedMixFromCase } from '@/features/simulators/utils/seed-mix';
-import { userHasPermission } from '@/lib/auth/permissions';
+import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { asCaseId } from '@/lib/types/branded';
 
 export default async function CaseMixPage({ params }: { params: Promise<{ id: string }> }) {
   if (!(await userHasPermission('view_simulators'))) redirect('/cases');
   const { id } = await params;
   const caseId = asCaseId(id);
-  const [caseData, thresholds, scenarios, incomeGroups, obligations, t] = await Promise.all([
+  const [caseData, thresholds, scenarios, incomeGroups, obligations, canEdit, t] = await Promise.all([
     getCaseById(caseId),
     getRegulatoryThresholds(),
     listScenariosForCase(caseId),
     listIncomesForCase(caseId),
     listObligationsFlatForCase(caseId),
+    userCanEditCase(caseId),
     getTranslations('simulators'),
   ]);
   if (!caseData) notFound();
@@ -57,6 +58,7 @@ export default async function CaseMixPage({ params }: { params: Promise<{ id: st
         primaryBorrowerId={caseData.primary_borrower_id}
         monthlyNetIncome={monthlyNetIncome}
         monthlyObligations={monthlyObligations}
+        readOnly={!canEdit}
       />
     </div>
   );
