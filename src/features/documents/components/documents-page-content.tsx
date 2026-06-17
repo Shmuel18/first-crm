@@ -47,6 +47,9 @@ type Props = {
     phone: string | null;
   } | null;
   locale: Locale;
+  /** Whether the viewer can edit this case (can_edit_case). Gates every write
+   *  affordance — upload, sync, request, checklist-manage, recategorize. */
+  canEdit: boolean;
   canDeleteDocuments: boolean;
   canVerifyDocuments: boolean;
 };
@@ -62,6 +65,7 @@ export function DocumentsPageContent({
   checklist,
   primaryBorrower,
   locale,
+  canEdit,
   canDeleteDocuments,
   canVerifyDocuments,
 }: Props) {
@@ -131,20 +135,23 @@ export function DocumentsPageContent({
         driveFolderId={driveFolderId}
         primaryBorrower={primaryBorrower}
         checklist={checklist}
+        canEdit={canEdit}
       />
 
       {selected === null && (
         <>
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={() => setManageOpen(true)}
-              className="inline-flex items-center gap-1.5 text-xs text-brand-gold-text hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
-            >
-              <Pencil className="size-3.5" aria-hidden="true" />
-              {td('manage')}
-            </button>
-          </div>
+          {canEdit && (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setManageOpen(true)}
+                className="inline-flex items-center gap-1.5 text-xs text-brand-gold-text hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+              >
+                <Pencil className="size-3.5" aria-hidden="true" />
+                {td('manage')}
+              </button>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {DRIVE_FOLDERS.map((folder) => (
@@ -190,6 +197,7 @@ export function DocumentsPageContent({
           documents={buckets[selected]}
           checklistItems={checklistByFolder[selected]}
           locale={locale}
+          canEdit={canEdit}
           onBack={() => setSelected(null)}
           onUpload={handleUploadFromFolder}
           onPreview={setPreviewDoc}
@@ -210,6 +218,7 @@ export function DocumentsPageContent({
             documents={uncategorized}
             categories={categories}
             caseId={caseId}
+            canEdit={canEdit}
             onPreview={setPreviewDoc}
           />
         </div>

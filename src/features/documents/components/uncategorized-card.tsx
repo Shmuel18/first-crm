@@ -12,6 +12,8 @@ type Props = {
   documents: DocumentWithRelations[];
   categories: DocumentCategoryRow[];
   caseId: string;
+  /** Gate the recategorize control for view-only users (C-036). */
+  canEdit: boolean;
   onPreview: (doc: DocumentWithRelations) => void;
 };
 
@@ -24,7 +26,7 @@ function FileTypeIcon({ mime, className }: { mime: string | null; className?: st
   return <FileType2 className={className} />;
 }
 
-export function UncategorizedCard({ documents, categories, caseId, onPreview }: Props) {
+export function UncategorizedCard({ documents, categories, caseId, canEdit, onPreview }: Props) {
   const t = useTranslations('documents.uncategorized');
 
   return (
@@ -48,6 +50,7 @@ export function UncategorizedCard({ documents, categories, caseId, onPreview }: 
             doc={doc}
             categories={categories}
             caseId={caseId}
+            canEdit={canEdit}
             onPreview={onPreview}
           />
         ))}
@@ -60,11 +63,13 @@ function UncategorizedRow({
   doc,
   categories,
   caseId,
+  canEdit,
   onPreview,
 }: {
   doc: DocumentWithRelations;
   categories: DocumentCategoryRow[];
   caseId: string;
+  canEdit: boolean;
   onPreview: (doc: DocumentWithRelations) => void;
 }) {
   const t = useTranslations('documents.uncategorized');
@@ -91,7 +96,7 @@ function UncategorizedRow({
       <div className="flex items-center gap-1.5 shrink-0">
         <select
           aria-label={t('pickCategory')}
-          disabled={isPending}
+          disabled={isPending || !canEdit}
           defaultValue=""
           onChange={(e) => handleChange(e.target.value)}
           className="h-8 rounded-md border border-amber-200 bg-white px-2 text-xs text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-gold disabled:opacity-50 max-w-[140px]"

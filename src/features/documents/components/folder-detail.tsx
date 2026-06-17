@@ -17,6 +17,8 @@ type Props = {
   /** Checklist items belonging to this folder (already filtered by caller). */
   checklistItems: ReadonlyArray<DocumentChecklistItem>;
   locale: Locale;
+  /** Gate the upload affordances for view-only users (C-036). */
+  canEdit: boolean;
   onBack: () => void;
   onUpload: (folder: DriveFolder) => void;
   onPreview: (doc: DocumentWithRelations) => void;
@@ -33,6 +35,7 @@ export function FolderDetail({
   documents,
   checklistItems,
   locale,
+  canEdit,
   onBack,
   onUpload,
   onPreview,
@@ -66,14 +69,16 @@ export function FolderDetail({
         <h2 className="flex-1 min-w-0 font-display text-sm font-semibold text-neutral-950 truncate">
           {t(`${folder}.title`)}
         </h2>
-        <button
-          type="button"
-          onClick={() => onUpload(folder)}
-          className="btn-gold inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
-        >
-          <Plus className="size-3.5" aria-hidden="true" />
-          {tc('addDocument')}
-        </button>
+        {canEdit && (
+          <button
+            type="button"
+            onClick={() => onUpload(folder)}
+            className="btn-gold inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
+          >
+            <Plus className="size-3.5" aria-hidden="true" />
+            {tc('addDocument')}
+          </button>
+        )}
       </header>
 
       <div className="p-4 space-y-5">
@@ -116,14 +121,16 @@ export function FolderDetail({
                   <span className="flex-1 min-w-0 text-sm text-neutral-900 truncate">
                     {locale === 'he' ? item.nameHe : item.nameEn}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => onUpload(folder)}
-                    className="shrink-0 inline-flex items-center gap-1 text-xs text-brand-gold-text hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
-                  >
-                    <Upload className="size-3.5" aria-hidden="true" />
-                    {tc('addDocument')}
-                  </button>
+                  {canEdit && (
+                    <button
+                      type="button"
+                      onClick={() => onUpload(folder)}
+                      className="shrink-0 inline-flex items-center gap-1 text-xs text-brand-gold-text hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+                    >
+                      <Upload className="size-3.5" aria-hidden="true" />
+                      {tc('addDocument')}
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>

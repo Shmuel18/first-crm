@@ -34,6 +34,8 @@ type Props = {
     phone: string | null;
   } | null;
   checklist: ReadonlyArray<DocumentChecklistItem>;
+  /** Gate the write affordances (upload / sync / request) for view-only users. */
+  canEdit: boolean;
 };
 
 export function DocumentsActionBar({
@@ -44,6 +46,7 @@ export function DocumentsActionBar({
   driveFolderId,
   primaryBorrower,
   checklist,
+  canEdit,
 }: Props) {
   const t = useTranslations('documents.actions');
   const tPage = useTranslations('documents');
@@ -109,35 +112,39 @@ export function DocumentsActionBar({
         </div>
 
         <div className="flex items-center gap-0.5 shrink-0">
-          <button
-            type="button"
-            onClick={onUpload}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-brand-gold hover:bg-brand-gold-dark text-brand-black font-medium text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text"
-          >
-            <Upload className="size-3.5" aria-hidden="true" />
-            {t('upload')}
-          </button>
-          <button
-            type="button"
-            onClick={handleSync}
-            disabled={isPending}
-            aria-busy={isPending}
-            aria-label={tSync('button')}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-neutral-300 hover:border-brand-gold-text text-neutral-700 hover:text-brand-gold-text bg-white/60 text-xs transition disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
-          >
-            {isPending ? (
-              <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-            ) : (
-              <RefreshCw className="size-3.5" aria-hidden="true" />
-            )}
-            <span className="hidden lg:inline">{tSync('button')}</span>
-          </button>
-          <SendDocRequestButton
-            caseId={caseId}
-            title={t('sendRequest')}
-            borrower={primaryBorrower}
-            checklist={checklist}
-          />
+          {canEdit && (
+            <>
+              <button
+                type="button"
+                onClick={onUpload}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-brand-gold hover:bg-brand-gold-dark text-brand-black font-medium text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text"
+              >
+                <Upload className="size-3.5" aria-hidden="true" />
+                {t('upload')}
+              </button>
+              <button
+                type="button"
+                onClick={handleSync}
+                disabled={isPending}
+                aria-busy={isPending}
+                aria-label={tSync('button')}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-neutral-300 hover:border-brand-gold-text text-neutral-700 hover:text-brand-gold-text bg-white/60 text-xs transition disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
+              >
+                {isPending ? (
+                  <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <RefreshCw className="size-3.5" aria-hidden="true" />
+                )}
+                <span className="hidden lg:inline">{tSync('button')}</span>
+              </button>
+              <SendDocRequestButton
+                caseId={caseId}
+                title={t('sendRequest')}
+                borrower={primaryBorrower}
+                checklist={checklist}
+              />
+            </>
+          )}
           <BarIcon
             icon={FolderOpen}
             title={t('openDrive')}

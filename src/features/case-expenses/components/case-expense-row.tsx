@@ -42,16 +42,18 @@ export function CaseExpenseRow({ caseId, expense, canEdit, onSaveField, onDelete
           value={expense.expense_date}
           onSave={(v) => onSaveField('expense_date', v)}
           label={tc('selectDate')}
+          disabled={!canEdit}
         />
       </Cell>
       <Cell>
-        <NumberCell value={expense.amount} onSave={(v) => onSaveField('amount', v)} />
+        <NumberCell value={expense.amount} onSave={(v) => onSaveField('amount', v)} disabled={!canEdit} />
       </Cell>
       <Cell>
         <TextCell
           value={expense.description}
           onSave={(v) => onSaveField('description', v)}
           placeholder={t('fields.descriptionPlaceholder')}
+          disabled={!canEdit}
         />
       </Cell>
       <td className="px-1 py-1.5 align-middle text-end whitespace-nowrap">
@@ -85,16 +87,18 @@ function Cell({ children }: { children: React.ReactNode }) {
 }
 
 const baseInputClass =
-  'w-full h-9 min-w-0 px-2.5 rounded-md border border-neutral-200 bg-white text-sm text-neutral-900 shadow-xs focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 transition';
+  'w-full h-9 min-w-0 px-2.5 rounded-md border border-neutral-200 bg-white text-sm text-neutral-900 shadow-xs focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 transition disabled:bg-neutral-50 disabled:text-neutral-500 disabled:shadow-none disabled:cursor-default';
 
 function TextCell({
   value,
   onSave,
   placeholder,
+  disabled,
 }: {
   value: string | null;
   onSave: (next: string | null) => void;
   placeholder?: string;
+  disabled?: boolean;
 }) {
   const [local, setLocal] = useState(value ?? '');
   const [propRef, setPropRef] = useState(value ?? '');
@@ -107,6 +111,7 @@ function TextCell({
       type="text"
       value={local}
       placeholder={placeholder}
+      disabled={disabled}
       onChange={(e) => setLocal(e.target.value)}
       onBlur={(e) => {
         const next = e.target.value.trim();
@@ -121,9 +126,11 @@ function TextCell({
 function NumberCell({
   value,
   onSave,
+  disabled,
 }: {
   value: number | null;
   onSave: (next: number | null) => void;
+  disabled?: boolean;
 }) {
   const initial = value === null || value === undefined ? '' : String(value);
   const [local, setLocal] = useState(initial);
@@ -150,6 +157,7 @@ function NumberCell({
         }}
         inputMode="decimal"
         dir="ltr"
+        disabled={disabled}
         className={`${baseInputClass} text-end`}
       />
       <CurrencySign />
@@ -161,10 +169,12 @@ function DateCell({
   value,
   onSave,
   label,
+  disabled,
 }: {
   value: string | null;
   onSave: (next: string | null) => void;
   label: string;
+  disabled?: boolean;
 }) {
   const [local, setLocal] = useState(value ?? '');
   const [propRef, setPropRef] = useState(value ?? '');
@@ -178,6 +188,7 @@ function DateCell({
         type="date"
         value={local}
         dir="ltr"
+        disabled={disabled}
         onChange={(e) => setLocal(e.target.value)}
         onBlur={(e) => {
           const next = e.target.value || null;
@@ -193,6 +204,7 @@ function DateCell({
           onSave(next);
         }}
         label={label}
+        disabled={disabled}
       />
     </div>
   );
