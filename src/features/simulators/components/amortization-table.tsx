@@ -2,11 +2,13 @@
 
 import { useTranslations } from 'next-intl';
 
-import type { MixResult } from '../types';
 import { formatMoney } from '../utils/format';
+
+import type { MixResult } from '../types';
 
 type Props = { result: MixResult };
 
+/** First-12-months amortization rows. Bare — its CollapsibleSection supplies card + title. */
 export function AmortizationTable({ result }: Props) {
   const t = useTranslations('simulators.mix.table');
   const rows = result.paymentCurve.slice(0, 12).map((point) => ({
@@ -16,28 +18,25 @@ export function AmortizationTable({ result }: Props) {
   }));
 
   return (
-    <section className="rounded-xl border border-neutral-200 bg-white p-4">
-      <h2 className="mb-4 font-display text-lg font-semibold text-neutral-950">{t('title')}</h2>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[32rem] text-sm">
-          <thead>
-            <tr className="border-b border-neutral-200 text-neutral-500">
-              <th className="px-3 py-2 text-start font-medium">{t('month')}</th>
-              <th className="px-3 py-2 text-start font-medium">{t('payment')}</th>
-              <th className="px-3 py-2 text-start font-medium">{t('balance')}</th>
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[32rem] text-sm">
+        <thead>
+          <tr className="border-b border-neutral-200 text-neutral-500">
+            <th className="px-3 py-2 text-start font-medium">{t('month')}</th>
+            <th className="px-3 py-2 text-start font-medium">{t('payment')}</th>
+            <th className="px-3 py-2 text-start font-medium">{t('balance')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.month} className="border-b border-neutral-100 last:border-0">
+              <td className="px-3 py-2">{row.month}</td>
+              <td className="px-3 py-2 font-medium">{formatMoney(row.payment)}</td>
+              <td className="px-3 py-2">{formatMoney(row.balance)}</td>
             </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.month} className="border-b border-neutral-100 last:border-0">
-                <td className="px-3 py-2">{row.month}</td>
-                <td className="px-3 py-2 font-medium">{formatMoney(row.payment)}</td>
-                <td className="px-3 py-2">{formatMoney(row.balance)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

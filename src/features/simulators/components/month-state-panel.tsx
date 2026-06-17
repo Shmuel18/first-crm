@@ -2,18 +2,19 @@
 
 import { useMemo, useState } from 'react';
 
-import { CalendarClock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { mortgageStateAtMonth } from '../domain/mix-state';
-import type { MixResult, MoneyAgorot } from '../types';
 import { formatMoney } from '../utils/format';
+
+import type { MixResult, MoneyAgorot } from '../types';
 
 type Props = { result: MixResult; mortgageAmount: MoneyAgorot };
 
 /**
  * Interactive "where is the loan at month N" scrubber. The month slider feeds a
- * pure engine snapshot; the panel only renders the pre-computed figures.
+ * pure engine snapshot; the panel only renders the pre-computed figures. Bare
+ * content — its CollapsibleSection wrapper supplies the card + title.
  */
 export function MonthStatePanel({ result, mortgageAmount }: Props) {
   const t = useTranslations('simulators.mix.monthState');
@@ -36,38 +37,34 @@ export function MonthStatePanel({ result, mortgageAmount }: Props) {
   ];
 
   return (
-    <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-      <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2">
-        <span className="flex size-8 items-center justify-center rounded-lg bg-brand-gold-soft text-brand-gold-text ring-1 ring-brand-gold/20">
-          <CalendarClock className="size-4" aria-hidden="true" />
-        </span>
-        <h2 className="font-display text-lg font-semibold text-neutral-950">{t('title')}</h2>
-        <span className="ms-auto rounded-md bg-brand-black px-2.5 py-1 text-sm font-semibold tabular-nums text-brand-gold">
+    <div>
+      <div className="mb-4 flex items-center gap-3">
+        <input
+          type="range"
+          min={1}
+          max={total}
+          value={Math.min(month, total)}
+          onChange={(event) => setMonth(Number(event.target.value))}
+          aria-label={t('monthLabel')}
+          className="w-full accent-brand-gold-text"
+        />
+        <span className="shrink-0 rounded-md bg-brand-black px-2.5 py-1 text-sm font-semibold tabular-nums text-brand-gold">
           {t('monthValue', { month: state.month })}
         </span>
       </div>
-      <input
-        type="range"
-        min={1}
-        max={total}
-        value={Math.min(month, total)}
-        onChange={(event) => setMonth(Number(event.target.value))}
-        aria-label={t('monthLabel')}
-        className="mb-4 w-full accent-brand-gold-text"
-      />
-      <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
+      <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
         {stats.map(({ key, label, value, accent }) => (
           <div
             key={key}
             className={`min-w-0 rounded-lg border p-3 ${accent ? 'border-brand-gold/30 bg-brand-gold-soft' : 'border-neutral-100 bg-neutral-50'}`}
           >
-            <dt className="truncate text-xs text-neutral-500">{label}</dt>
-            <dd className={`mt-1 truncate text-sm font-semibold tabular-nums ${accent ? 'text-brand-gold-text' : 'text-neutral-900'}`}>
+            <dt className={`text-xs leading-tight ${accent ? 'text-brand-gold-text' : 'text-neutral-500'}`}>{label}</dt>
+            <dd className={`mt-1 text-sm font-semibold tabular-nums ${accent ? 'text-brand-gold-text' : 'text-neutral-900'}`}>
               {formatMoney(value)}
             </dd>
           </div>
         ))}
       </dl>
-    </section>
+    </div>
   );
 }

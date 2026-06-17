@@ -8,15 +8,13 @@ import { useTranslations } from 'next-intl';
 import { mixDti } from '../domain/mix-dti';
 import { useMixCalculator } from '../hooks/use-mix-calculator';
 import { useScenarioAutosave } from '../hooks/use-scenario-autosave';
-import { AmortizationTable } from './amortization-table';
+import { AnalysisSection } from './analysis-section';
 import { BasketPresets } from './basket-presets';
 import { KpiStrip } from './kpi-strip';
-import { MixChart } from './mix-chart';
 import { MixCompositionBar } from './mix-composition-bar';
 import { MixInputsBar } from './mix-inputs-bar';
-import { MonthStatePanel } from './month-state-panel';
-import { PaymentBreakdownChart } from './payment-breakdown-chart';
 import { RegulatoryViolationsBanner } from './regulatory-violations-banner';
+import { ScenarioReportActions } from './scenario-report-actions';
 import { TrackTable } from './track-table';
 
 import type { MixInput, PropertyKind, RegulatoryThresholds } from '../types';
@@ -125,16 +123,7 @@ export function MixCalculator({
         onUpdate={calc.updateTrack}
       />
 
-      {active && (
-        <>
-          <div className="grid gap-5 lg:grid-cols-3">
-            <MonthStatePanel result={calc.result} mortgageAmount={calc.mix.mortgageAmount} />
-            <MixChart titleKey="balanceCurve" points={calc.result.balanceCurve} />
-            <PaymentBreakdownChart principalCurve={calc.result.principalCurve} interestCurve={calc.result.interestCurve} />
-          </div>
-          <AmortizationTable result={calc.result} />
-        </>
-      )}
+      <AnalysisSection result={calc.result} mortgageAmount={calc.mix.mortgageAmount} active={active} />
 
       <label className="block rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
         <span className="mb-1.5 block text-sm font-medium text-neutral-700">{t('inputs.advisorConclusion')}</span>
@@ -145,8 +134,13 @@ export function MixCalculator({
         />
       </label>
 
-      <div className="flex items-center justify-end gap-2 border-t border-neutral-200 pt-4 text-sm">
-        <SaveStatus status={status} blockedReason={blockedReason} t={t} />
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-200 pt-4">
+        <div className="text-sm">
+          <SaveStatus status={status} blockedReason={blockedReason} t={t} />
+        </div>
+        {scenarioId ? (
+          <ScenarioReportActions scenarioId={scenarioId} conclusion={calc.advisorConclusion} canSend={Boolean(caseId)} />
+        ) : null}
       </div>
     </div>
   );
