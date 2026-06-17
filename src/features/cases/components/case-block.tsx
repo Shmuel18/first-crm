@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { ChevronDown } from 'lucide-react';
 
@@ -37,11 +37,26 @@ export function CaseBlock({
   const prefs = useCaseBlockPrefs();
   const initialOpen = blockKey && prefs ? prefs[blockKey] : defaultOpen;
   const [open, setOpen] = useState(initialOpen);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  // On a user-driven expand, bring the block into view. A block low on the page
+  // (e.g. the bottom "תיעוד" thread) otherwise opens entirely below the fold and
+  // the user has to hunt for it. Skip the initial mount so a saved-open block
+  // doesn't yank the page on load.
+  const didMountRef = useRef(false);
+  useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
+    if (open) sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [open]);
 
   return (
     <section
+      ref={sectionRef}
       className={[
-        'bg-white border border-neutral-200 rounded-xl overflow-hidden',
+        'bg-white border border-neutral-200 rounded-xl overflow-hidden scroll-mt-4',
         fullWidth ? 'md:col-span-2' : '',
       ].join(' ')}
     >

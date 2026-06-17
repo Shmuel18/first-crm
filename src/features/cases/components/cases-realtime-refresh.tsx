@@ -3,7 +3,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useTransition } from 'react';
+import { useEffect, useLayoutEffect, useRef, useTransition } from 'react';
 
 import { createClient } from '@/lib/supabase/client';
 
@@ -55,7 +55,26 @@ async function readFingerprint(
  */
 export function CasesRealtimeRefresh({ initialActiveCount }: { initialActiveCount: number }): null {
   const router = useRouter();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
+  // Offset to restore after a refresh. router.refresh() re-renders the dashboard
+  // RSC, which snaps the .app-scroll-viewport back to the top — so editing a cell
+  // (the edit fires a realtime UPDATE → refresh) yanked the user to the top
+  // mid-scroll. Capture the offset when a refresh is scheduled and re-apply it
+  // once the refresh settles, so an edit (or another user's change) keeps the
+  // viewport exactly where it was.
+  const pendingScrollRef = useRef<number | null>(null);
+
+  useLayoutEffect(() => {
+    if (isPending || pendingScrollRef.current === null) return;
+    const top = pendingScrollRef.current;
+    pendingScrollRef.current = null;
+    const vp = document.querySelector<HTMLElement>('.app-scroll-viewport');
+    if (!vp) return;
+    vp.scrollTo(0, top);
+    // Re-apply next frame in case the refreshed content settles a tick later.
+    const raf = requestAnimationFrame(() => vp.scrollTo(0, top));
+    return () => cancelAnimationFrame(raf);
+  }, [isPending]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -75,6 +94,8 @@ export function CasesRealtimeRefresh({ initialActiveCount }: { initialActiveCoun
       if (refreshTimer) clearTimeout(refreshTimer);
       refreshTimer = setTimeout(() => {
         refreshTimer = null;
+        const vp = document.querySelector<HTMLElement>('.app-scroll-viewport');
+        pendingScrollRef.current = vp ? vp.scrollTop : null;
         startTransition(() => router.refresh());
         void resyncBaseline();
       }, 250);
