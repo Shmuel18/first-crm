@@ -27,7 +27,7 @@ export async function CaseCommentsBlock({ caseId }: Props) {
   const [user, canModerate, members] = await Promise.all([
     getCurrentUser(),
     isCurrentUserAdmin(),
-    listMentionableProfiles(),
+    listMentionableProfiles(caseId),
   ]);
   if (!user) return null;
 

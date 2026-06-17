@@ -66,14 +66,34 @@ export async function getCommenterName(userId: string): Promise<string | null> {
   return formatPersonName(data?.first_name, data?.last_name) || null;
 }
 
-/** Active teammates available to @-mention in a comment (id + display name). */
-export async function listMentionableProfiles(): Promise<Array<{ id: string; name: string }>> {
+/**
+ * Teammates the caller may @-mention in THIS case's thread — only active users
+ * who can actually VIEW the case (RPC list_case_mentionable_profiles, migration
+ * 194, mirrors can_view_case), excluding the caller. Scoping the picker stops a
+ * mention/notification from leaking a comment preview to someone with no access
+ * to the case (CC-1 / NOTIF-1).
+ */
+export async function listMentionableProfiles(
+  caseId: string,
+): Promise<Array<{ id: string; name: string }>> {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from('profiles')
-    .select('id, first_name, last_name')
-    .eq('is_active', true)
-    .order('first_name');
+  // The RPC reads auth.uid() (caller context) + can_view_case, so it must run on
+  // the user's session client (createClient), not the admin one.
+  const { data, error } = await (
+    supabase as unknown as {
+      rpc(
+        fn: 'list_case_mentionable_profiles',
+        args: { p_case_id: string },
+      ): PromiseLike<{
+        data: Array<{ id: string; first_name: string | null; last_name: string | null }> | null;
+        error: { code?: string } | null;
+      }>;
+    }
+  ).rpc('list_case_mentionable_profiles', { p_case_id: caseId });
+  if (error) {
+    console.error('[listMentionableProfiles] rpc error', error.code);
+    return []; // degrade to no suggestions, don't crash the thread
+  }
   return (data ?? [])
     .map((p) => ({ id: p.id, name: formatPersonName(p.first_name, p.last_name) || '' }))
     .filter((m) => m.name.length > 0);
