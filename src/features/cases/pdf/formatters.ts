@@ -19,7 +19,7 @@ export function fmtCurrency(
   locale: Locale,
   dash = '—',
 ): string {
-  if (v === null || v === undefined) return dash;
+  if (v === null || v === undefined || !Number.isFinite(v)) return dash;
   return `${Math.round(v).toLocaleString(intlLocale(locale))} ₪`;
 }
 
@@ -39,6 +39,6 @@ export function fmtNum(
   locale: Locale,
   dash = '—',
 ): string {
-  if (v === null || v === undefined) return dash;
+  if (v === null || v === undefined || !Number.isFinite(v)) return dash;
   return v.toLocaleString(intlLocale(locale));
 }

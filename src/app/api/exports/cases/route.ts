@@ -86,39 +86,65 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
   });
   if (!allowed) return errorJson('rate_limited', 429);
 
-  // Respect the dashboard's current filters / search / sort (forwarded as query
-  // params) so the export matches exactly what the user sees, not the whole book.
-  const sp = Object.fromEntries(request.nextUrl.searchParams);
-  const isArchived = sp.view === 'archive';
-  const filters = parseDashboardFilters(sp);
-  const sort = parseCaseSort(sp);
-  const query = typeof sp.q === 'string' ? sp.q : '';
+  // Everything past the auth/rate-limit gate can throw (listCases on a Supabase
+  // error, @react-pdf / ExcelJS on a render/memory error). Wrap it so a failure
+  // honors this route's JSON error contract instead of escaping as a raw Next
+  // 500 — the real cause is logged server-side, never returned to the client.
+  try {
+    // Respect the dashboard's current filters / search / sort (forwarded as query
+    // params) so the export matches exactly what the user sees, not the whole book.
+    const sp = Object.fromEntries(request.nextUrl.searchParams);
+    const isArchived = sp.view === 'archive';
+    const filters = parseDashboardFilters(sp);
+    const sort = parseCaseSort(sp);
+    const query = typeof sp.q === 'string' ? sp.q : '';
 
-  const allCases = await listCases({ isArchived });
-  let cases = filterCases(
-    // The archive intentionally shows closed/frozen, so don't hide them there.
-    allCases,
-    isArchived ? { ...filters, hideClosedFrozen: false } : filters,
-  );
-  cases = filterCasesByQuery(cases, query);
-  if (sort) {
-    const { data: statuses } = await supabase.from('case_statuses').select('id, sort_order');
-    cases = applySort(cases, sort, statuses ?? []);
-  }
-  if (cases.length === 0) return errorJson('empty', 404);
+    const allCases = await listCases({ isArchived });
+    let cases = filterCases(
+      // The archive intentionally shows closed/frozen, so don't hide them there.
+      allCases,
+      isArchived ? { ...filters, hideClosedFrozen: false } : filters,
+    );
+    cases = filterCasesByQuery(cases, query);
+    if (sort) {
+      const { data: statuses } = await supabase.from('case_statuses').select('id, sort_order');
+      cases = applySort(cases, sort, statuses ?? []);
+    }
+    if (cases.length === 0) return errorJson('empty', 404);
 
-  const locale = parseLocale(await getLocale());
-  const t = await getTranslations({ locale, namespace: 'dashboard' });
-  const rows = buildExportRows(cases, locale);
+    const locale = parseLocale(await getLocale());
+    const t = await getTranslations({ locale, namespace: 'dashboard' });
+    const rows = buildExportRows(cases, locale);
 
-  let body: Buffer;
-  let mimeType: string;
-  let filename: string;
+    let body: Buffer;
+    let mimeType: string;
+    let filename: string;
 
-  if (format === 'xlsx') {
-    body = await generateCasesXlsx(
-      rows,
-      {
+    if (format === 'xlsx') {
+      body = await generateCasesXlsx(
+        rows,
+        {
+          row: t('columns.row'),
+          clientName: t('columns.clientName'),
+          nationalId: t('columns.nationalId'),
+          stage: t('columns.stage'),
+          bank: t('columns.bank'),
+          advisor: t('columns.advisor'),
+          shortNote: t('columns.shortNote'),
+        },
+        t('savedViews.xlsx.sheetName'),
+      );
+      mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      filename = `kaufman-cases-${dateStamp()}.xlsx`;
+    } else {
+      const generatedAtLabel = new Date().toLocaleDateString(
+        locale === 'he' ? 'he-IL' : 'en-GB',
+        { day: 'numeric', month: 'long', year: 'numeric' },
+      );
+      body = await generateCasesPdf(rows, {
+        title: t('savedViews.pdf.title'),
+        subtitle: t('savedViews.pdf.subtitle', { count: rows.length }),
+        generatedAt: t('savedViews.pdf.generatedAt', { date: generatedAtLabel }),
         row: t('columns.row'),
         clientName: t('columns.clientName'),
         nationalId: t('columns.nationalId'),
@@ -126,47 +152,30 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
         bank: t('columns.bank'),
         advisor: t('columns.advisor'),
         shortNote: t('columns.shortNote'),
+      });
+      mimeType = 'application/pdf';
+      filename = `kaufman-cases-${dateStamp()}.pdf`;
+    }
+
+    // Fire-and-forget audit; don't block the download on the audit insert.
+    void logCasesExport({ userId: userRes.user.id, format, count: cases.length }).catch(
+      (err) => console.error('[exports] audit log failed', err),
+    );
+
+    return new Response(new Uint8Array(body), {
+      status: 200,
+      headers: {
+        'Content-Type': mimeType,
+        'Content-Length': String(body.byteLength),
+        // RFC 5987 filename* lets the browser preserve UTF-8 / Hebrew filenames.
+        // We always use ASCII (kaufman-cases-YYYY-MM-DD), but include the form
+        // anyway for future-proofing.
+        'Content-Disposition': `attachment; filename="${filename}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
+        'Cache-Control': 'no-store, max-age=0',
       },
-      t('savedViews.xlsx.sheetName'),
-    );
-    mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-    filename = `kaufman-cases-${dateStamp()}.xlsx`;
-  } else {
-    const generatedAtLabel = new Date().toLocaleDateString(
-      locale === 'he' ? 'he-IL' : 'en-GB',
-      { day: 'numeric', month: 'long', year: 'numeric' },
-    );
-    body = await generateCasesPdf(rows, {
-      title: t('savedViews.pdf.title'),
-      subtitle: t('savedViews.pdf.subtitle', { count: rows.length }),
-      generatedAt: t('savedViews.pdf.generatedAt', { date: generatedAtLabel }),
-      row: t('columns.row'),
-      clientName: t('columns.clientName'),
-      nationalId: t('columns.nationalId'),
-      stage: t('columns.stage'),
-      bank: t('columns.bank'),
-      advisor: t('columns.advisor'),
-      shortNote: t('columns.shortNote'),
     });
-    mimeType = 'application/pdf';
-    filename = `kaufman-cases-${dateStamp()}.pdf`;
+  } catch (err) {
+    console.error('[exports] export failed', err);
+    return errorJson('unknown', 500);
   }
-
-  // Fire-and-forget audit; don't block the download on the audit insert.
-  void logCasesExport({ userId: userRes.user.id, format, count: cases.length }).catch(
-    (err) => console.error('[exports] audit log failed', err),
-  );
-
-  return new Response(new Uint8Array(body), {
-    status: 200,
-    headers: {
-      'Content-Type': mimeType,
-      'Content-Length': String(body.byteLength),
-      // RFC 5987 filename* lets the browser preserve UTF-8 / Hebrew filenames.
-      // We always use ASCII (kaufman-cases-YYYY-MM-DD), but include the form
-      // anyway for future-proofing.
-      'Content-Disposition': `attachment; filename="${filename}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
-      'Cache-Control': 'no-store, max-age=0',
-    },
-  });
 }
