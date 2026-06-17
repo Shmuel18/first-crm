@@ -134,7 +134,10 @@ export const styles = StyleSheet.create({
     minHeight: 48,
   },
   conclusionText: { fontSize: 9.5, color: COLOR_TEXT, textAlign: 'right', lineHeight: 1.5 },
-  conclusionEmpty: { fontSize: 9, color: COLOR_MUTED, textAlign: 'right', fontStyle: 'italic' },
+  // No italic: only the upright Heebo is registered (fonts.ts), and react-pdf
+  // throws "Could not resolve font … fontStyle italic" rather than faux-slanting.
+  // The muted grey already marks this as the empty-state placeholder.
+  conclusionEmpty: { fontSize: 9, color: COLOR_MUTED, textAlign: 'right' },
 
   // ─────────── Disclaimer ───────────
   disclaimer: {
