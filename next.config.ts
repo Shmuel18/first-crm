@@ -89,6 +89,15 @@ const SECURITY_HEADERS = [
 
 const nextConfig: NextConfig = {
   deploymentId: process.env.NEXT_DEPLOYMENT_ID,
+  // react-pdf reads public/fonts/heebo-regular.ttf off disk at render time
+  // (features/cases/pdf/fonts.ts → readFileSync(process.cwd()/public/fonts/…)).
+  // Vercel does NOT trace /public assets into a serverless function by default,
+  // so that read ENOENT'd in production and every PDF render (bank file + the
+  // simulator client report) failed with "render_failed". Force the font into
+  // every function's file trace so the on-disk read resolves in prod too.
+  outputFileTracingIncludes: {
+    '/**': ['./public/fonts/**'],
+  },
   // Baked-in at build so /api/health can compare it to the DB's applied schema
   // version and fail readiness when prod lags the code (migration 143).
   env: {
