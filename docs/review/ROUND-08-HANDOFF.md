@@ -87,18 +87,25 @@ Tally (post-verification + synthesis): **1 High, 1 Medium, ~13 Low.**
 | Vultr deploy (`fd572b6`, deploy.sh `SKIP_MIGRATIONS=1`) | live + healthy; deep-health build `fd572b6`, schema **190/190**; Drive degraded = expected staging |
 | Live **committed** add-borrower smoke (demo.advisor `junior_advisor`, Vultr) | **PASS**: old direct-INSERT RLS-denied (42501); `can_edit_case`=true; new RPC committed a real borrower+junction; cleaned up. UI-click variant needs an extension domain-permission grant — not done unilaterally |
 
-## 6. Deferred (cheap Lows — next commit, per plan)
-i18n hardcoded strings (ui-2/ui-3), save-failure toasts on compact fields (ui-5),
-citizenship toggle re-sync (ui-4), LIKE-escape (actions-1), returning-lookup race
-(domain-1), dead income dialog cluster delete (incomes-1/2/3), delete-income log
-consistency (incomes-4), borrower-card file-split (ui-1), missing tests (domain-4),
-select-chevron RTL (ui-6). These are quality/cosmetic; the authz layer was the
-priority and is closed.
+## 6. Cheap Lows — CLOSED 2026-06-17 (commit `a8151956`)
+All deferred quality Lows shipped in one cleanup commit (quality-only; no authz
+change). tsc 0 / eslint 0 / vitest 392 / next build 0:
+- **incomes-1/2/3** dead income-dialog cluster deleted (income-form-dialog.tsx +
+  save-income.ts + getIncomeById + IncomeInsert/IncomeActionState/INCOME_ACTION_INITIAL, −274 lines)
+- **ui-2/ui-3** i18n: save-fail toast → `tc('saveFailed')`; select empty-option → `tc('select')` (via selectPlaceholder prop)
+- **ui-5** save-failure toasts on compact children/language + citizenship toggles + country inputs
+- **ui-4** citizenship/residency toggles re-sync from props (propRef sentinel)
+- **ui-6** select chevron → logical END side (rtl:left/ltr:right) in 3 selects
+- **actions-1** LIKE-escape (%/_/\\) on the returning name probe
+- **domain-1** returning-lookup race: effect keyed on stable criteriaKey; queried marked only on completion; criteria via effect-updated ref
+- **incomes-4** delete-income logs via safeDbError
+- **ui-1** file-split: case-borrower-card-header.tsx extracted; card 302 → 223 lines
+- **domain-4** editable-fields.test.ts covers the isEditableBorrowerField whitelist (+4 tests)
 
 ## 7. Contract C-008 ("Borrower identity & income rules persist correctly")
 Identity matching sound. The two **authority** gaps (junior-can't-add; ungated
-routes) are now closed at the canonical DB layer + the UI. Mark **C-008
-partially verified** — deferred quality Lows remain; R15-16 verify simulator
+routes) are now closed at the canonical DB layer + the UI, and all quality Lows
+are closed (§6). Mark **C-008 partially verified** — R15-16 verify simulator
 consumption; R17-19 verify final DB controls.
 
 ## 8. Instructions for the Next Round / Notes

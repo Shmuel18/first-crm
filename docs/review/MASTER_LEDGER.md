@@ -380,6 +380,7 @@ Authorized coordinator: persist proposed resource rows after reviewing evidence.
 | 2026-06-17 | 8 | Push (carried on `origin/main` within parallel commit `fd572b62`; `024c59d0` is an ancestor) → Vercel deploy | Pass | Vercel commit-status `024c59d0`/`dda4c7f0` = success; Production deployed `fd572b6` (incl. my commit); Kaufman /api/health `ok:true` (schema gate passes, applied≥expected); Kaufman deep-health blocked by local CRON_SECRET drift — schema=190 confirmed via psql instead |
 | 2026-06-17 | 8 | Vultr deploy `fd572b6` via deploy.sh `SKIP_MIGRATIONS=1` (smoke :3798 → swap :3747 → health → rotate) | Pass | live + healthy; deep-health build `fd572b6`, schema **190/190**, db/cronSecret/keys ok; Drive degraded = expected staging baseline |
 | 2026-06-17 | 8 | Live **committed** add-borrower smoke on Vultr (node+pg under demo.advisor `junior_advisor` JWT, case 2026-020) | Pass | OLD path (direct `borrowers` INSERT) RLS-denied (42501); `can_edit_case`=true; NEW `add_empty_borrower_to_case` COMMITTED a real borrower+junction (is_primary=false); test rows cleaned up. UI-click variant blocked by Chrome-extension domain permission (not granted unilaterally) — covered by this committed smoke + behavioral proof |
+| 2026-06-17 | 8 | R8 cheap Lows cleanup commit `a8151956` (15 files, quality-only, no migration; D-020 closed) | Pass | dead income-dialog cluster deleted; i18n (ui-2/3); save-fail toasts (ui-5); toggle re-sync (ui-4); chevron RTL (ui-6); LIKE-escape (actions-1); returning-lookup race (domain-1); delete-income safeDbError (incomes-4); card file-split 302→223 (ui-1); whitelist tests (domain-4). tsc 0 / eslint 0 / vitest 392 / next build 0 |
 
 ## Open Decisions and Accepted Risks
 
@@ -404,7 +405,7 @@ Authorized coordinator: persist proposed resource rows after reviewing evidence.
 | D-017 | User→Prod | R6 fix deployed to BOTH targets via the `main` push (Vercel auto) + Vultr deploy.sh; landed as build bc1cfa5 (a parallel agent's task-dialog fix rode on top of aceb724) | No migration (schema 180); the gate is defense-in-depth so even a UI bug can't cause unauthorized writes | 2026-06-14 | Closed (DB n/a + code) |
 | D-018 | User | R6 read-only/view-only edit-gate verified by unit test only (case-edit-gate.test.ts); live secretary-persona smoke WAIVED | Positive/regression path verified live (authorized editing unchanged); no demo secretary account, and flipping a demo role = access-control change; user accepted unit-test coverage (option c) | If a secretary demo account is ever provisioned | Accepted (waived) |
 | D-019 | User | R7 fixed the Medium + 3 Low; 3 cosmetic Low deferred (borrower-table column cap, PDF date-format options, real heebo-semibold.ttf for bold) | Cosmetic PDF-render polish, not correctness/security; the SemiBold one needs a font asset. bank-PDF rate_limited surfaces the generic toast (tailored copy deferred to avoid touching co-mingled messages/*.json) | When PDF polish is prioritized | Accepted (deferred) |
-| D-020 | User | R8: fix the authorization LAYER first (mig 190 — High + Medium + income/obligation canonical can_edit_case); defer the cheap Lows (i18n, save-fail toasts, citizenship re-sync, LIKE-escape, dead income code, file-split, missing tests) to a follow-up commit | "Where the meat is" = the DB authz; obligations write policies fixed proactively (same legacy pattern) even though obligations is R9 scope, to avoid knowingly shipping the identical gap | Follow-up commit / R9 | Accepted |
+| D-020 | User | R8: fix the authorization LAYER first (mig 190 — High + Medium + income/obligation canonical can_edit_case); defer the cheap Lows (i18n, save-fail toasts, citizenship re-sync, LIKE-escape, dead income code, file-split, missing tests) to a follow-up commit | "Where the meat is" = the DB authz; obligations write policies fixed proactively (same legacy pattern) even though obligations is R9 scope, to avoid knowingly shipping the identical gap | Done | **Closed 2026-06-17** — Lows shipped in `a8151956` (tsc/eslint/vitest 392/build all clean) |
 | D-021 | User→Prod | R8 fix carries MIGRATION 190 — must apply to BOTH DBs (Kaufman prod + Vultr, both at schema 189) BEFORE/with the code push (apply-before-push, zero-downtime); next.config bakes EXPECTED_SCHEMA_VERSION=190 | NOT yet pushed/deployed — awaiting approval after diff + tests + this handoff/ledger | On push/deploy approval | Open |
 
 ## Areas Not Yet Verified
@@ -414,7 +415,7 @@ Authorized coordinator: persist proposed resource rows after reviewing evidence.
   clean but NOT yet pushed/deployed (carries mig 190 → apply to BOTH DBs at 189
   first; D-021). R5-R7 fixes live (Vercel prod; Vultr staging tracks main);
   dynamic AT/visual verification still pending across rounds.
-- R8 cheap quality Lows deferred to a follow-up commit (D-020); obligations write
+- R8 cheap quality Lows CLOSED in `a8151956` (D-020); obligations write
   policies canonicalized proactively in mig 190 (R9 verifies the rest).
 - R7 deferred 3 cosmetic PDF-render Lows (borrower-table cap, date format, real
   SemiBold font — D-019); only R7 fix not live-smoked (export paths covered by
