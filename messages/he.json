@@ -1266,6 +1266,7 @@
         "caseDetails": "פרטי התיק",
         "banks": "בנקים",
         "officeExpenses": "הוצאות משרד",
+        "payouts": "עמלות ומשכורות",
         "openTasks": "משימות פתוחות"
       }
     },
@@ -1623,6 +1624,15 @@
         "unauthorized": "אין הרשאה",
         "generic": "שגיאה בשמירה. נסה שוב."
       }
+    }
+  },
+  "payouts": {
+    "add": "+ הוסף עמלה",
+    "empty": "אין עדיין עמלות/משכורות לתיק זה",
+    "fields": {
+      "recipient": "מקבל",
+      "recipientPlaceholder": "למשל: יועץ / ממליץ",
+      "amount": "סכום"
     }
   },
   "expenses": {

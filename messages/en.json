@@ -1266,6 +1266,7 @@
         "caseDetails": "Case details",
         "banks": "Banks",
         "officeExpenses": "Office expenses",
+        "payouts": "Commissions & salaries",
         "openTasks": "Open tasks"
       }
     },
@@ -1623,6 +1624,15 @@
         "unauthorized": "Not authorized",
         "generic": "Error saving. Please try again."
       }
+    }
+  },
+  "payouts": {
+    "add": "+ Add payout",
+    "empty": "No commissions/salaries recorded for this case yet",
+    "fields": {
+      "recipient": "Recipient",
+      "recipientPlaceholder": "e.g. advisor / referrer",
+      "amount": "Amount"
     }
   },
   "expenses": {

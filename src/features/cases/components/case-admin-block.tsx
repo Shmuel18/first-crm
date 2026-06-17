@@ -1,10 +1,12 @@
-import { Landmark, Receipt, Wallet } from 'lucide-react';
+import { Coins, Landmark, Receipt, Wallet } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 import { CaseBanksInlineList, type CaseBankRowData } from '@/features/case-banks/components/case-banks-inline-list';
 import { listBankOptions } from '@/features/case-banks/services/case-banks.service';
 import { CaseExpensesList } from '@/features/case-expenses/components/case-expenses-list';
 import { listCaseExpenses } from '@/features/case-expenses/services/case-expenses.service';
+import { CasePayoutsList } from '@/features/case-payouts/components/case-payouts-list';
+import { listCasePayouts } from '@/features/case-payouts/services/case-payouts.service';
 import type { Locale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
 import { formatDateShort } from '@/lib/utils/format-date';
@@ -107,9 +109,12 @@ export async function CaseAdminBlock({
 
   // Server-side fetches: bank lookup + this case's expenses. Both are
   // cheap and tightly scoped, so we don't pull them up to the page.
-  const [banks, expenses] = await Promise.all([
+  // Payouts (commissions/salaries) are manager-only — skip the query entirely
+  // for non-managers (RLS would return [] anyway; this avoids the roundtrip).
+  const [banks, expenses, payouts] = await Promise.all([
     listBankOptions(),
     listCaseExpenses(asCaseId(caseId)),
+    canSeeFinancials ? listCasePayouts(asCaseId(caseId)) : Promise.resolve([]),
   ]);
 
   return (
@@ -168,6 +173,16 @@ export async function CaseAdminBlock({
           <CaseExpensesList caseId={caseId} expenses={expenses} canEdit={canEdit} />
         </div>
       </div>
+
+      {/* Section 4 — Commissions & salaries (MANAGER-ONLY). Sits with the
+          fee it's paid out of; gated by canSeeFinancials at the prop level
+          (defense-in-depth alongside the case_payouts is_admin() RLS). */}
+      {canSeeFinancials && (
+        <div className="pt-2">
+          <SectionHeader title={tAdmin('sections.payouts')} icon={<Coins />} />
+          <CasePayoutsList caseId={caseId} payouts={payouts} canEdit={canEdit} />
+        </div>
+      )}
     </CaseBlock>
   );
 }
