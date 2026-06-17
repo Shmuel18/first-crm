@@ -3,43 +3,27 @@
 import { useTranslations } from 'next-intl';
 
 import { agorotToNis, nisToAgorot } from '../utils/format';
+
 import type { MixInput, PropertyKind } from '../types';
 
 type Props = {
-  title: string;
-  advisorConclusion: string;
   propertyKind: PropertyKind;
   mix: MixInput;
-  onTitleChange: (value: string) => void;
-  onConclusionChange: (value: string) => void;
   onPropertyKindChange: (value: PropertyKind) => void;
   onMoneyChange: (field: 'mortgageAmount' | 'propertyValue' | 'equity', value: number) => void;
   onTermChange: (value: number) => void;
 };
 
 const inputClass =
-  'h-10 w-full rounded-lg border border-neutral-200 bg-white px-3 text-sm shadow-xs outline-none transition focus:border-brand-gold-text focus:ring-2 focus:ring-brand-gold-text/30';
+  'h-9 w-full rounded-lg border border-neutral-200 bg-white px-2.5 text-sm shadow-xs outline-none transition focus:border-brand-gold-text focus:ring-2 focus:ring-brand-gold-text/30';
 
-export function MixInputsPanel({
-  title,
-  advisorConclusion,
-  propertyKind,
-  mix,
-  onTitleChange,
-  onConclusionChange,
-  onPropertyKindChange,
-  onMoneyChange,
-  onTermChange,
-}: Props) {
+/** Compact single-row loan inputs (the "operational bar"), replacing the tall form card. */
+export function MixInputsBar({ propertyKind, mix, onPropertyKindChange, onMoneyChange, onTermChange }: Props) {
   const t = useTranslations('simulators.mix.inputs');
 
   return (
-    <section className="rounded-xl border border-neutral-200 bg-white p-4">
-      <h2 className="mb-4 font-display text-lg font-semibold text-neutral-950">{t('title')}</h2>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <Field label={t('scenarioTitle')}>
-          <input className={inputClass} value={title} onChange={(e) => onTitleChange(e.target.value)} />
-        </Field>
+    <section className="rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <Field label={t('propertyKind')}>
           <select className={inputClass} value={propertyKind} onChange={(e) => onPropertyKindChange(parsePropertyKind(e.target.value))}>
             <option value="first_home">{t('propertyKinds.first_home')}</option>
@@ -54,17 +38,14 @@ export function MixInputsPanel({
           <input className={inputClass} type="number" min={1} max={480} value={mix.defaultTermMonths} onChange={(e) => onTermChange(Number(e.target.value))} />
         </Field>
       </div>
-      <Field label={t('advisorConclusion')} className="mt-4">
-        <textarea className={`${inputClass} min-h-24 py-2`} value={advisorConclusion} onChange={(e) => onConclusionChange(e.target.value)} />
-      </Field>
     </section>
   );
 }
 
-function Field({ label, children, className = '' }: { label: string; children: React.ReactNode; className?: string }) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className={`block ${className}`}>
-      <span className="mb-1.5 block text-sm font-medium text-neutral-700">{label}</span>
+    <label className="block">
+      <span className="mb-1 block text-xs font-medium text-neutral-600">{label}</span>
       {children}
     </label>
   );

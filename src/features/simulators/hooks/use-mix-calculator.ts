@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { DEFAULT_REGULATORY_THRESHOLDS } from '../constants';
 import { aggregateMix } from '../domain/mix-aggregate';
 import { composeMixByFamily, type CompositionSlice } from '../domain/mix-composition';
+import { rateExposure, type MixExposure } from '../domain/mix-exposure';
 import { validateMix } from '../domain/regulatory-rules';
 import type {
   MixInput,
@@ -47,6 +48,7 @@ export interface UseMixCalculatorResult {
   result: MixResult;
   violations: ReadonlyArray<RegulatoryViolation>;
   composition: ReadonlyArray<CompositionSlice>;
+  exposure: MixExposure;
 }
 
 // Rates are the all-in annual rate per track (what the borrower actually pays).
@@ -80,6 +82,7 @@ export function useMixCalculator({
     [mix, propertyKind, thresholds],
   );
   const composition = useMemo(() => composeMixByFamily(mix.tracks), [mix.tracks]);
+  const exposure = useMemo(() => rateExposure(composition), [composition]);
 
   const setMoney = (field: 'mortgageAmount' | 'propertyValue' | 'equity', value: number) =>
     setMix((current) => ({ ...current, [field]: value }));
@@ -125,5 +128,6 @@ export function useMixCalculator({
     result,
     violations,
     composition,
+    exposure,
   };
 }

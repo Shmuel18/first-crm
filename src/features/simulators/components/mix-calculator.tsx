@@ -8,17 +8,18 @@ import { toast } from 'sonner';
 
 import { saveScenarioAction } from '../actions/save-scenario';
 import { useMixCalculator } from '../hooks/use-mix-calculator';
-import type { MixInput, PropertyKind, RegulatoryThresholds } from '../types';
 import { AmortizationTable } from './amortization-table';
 import { BasketPresets } from './basket-presets';
 import { KpiStrip } from './kpi-strip';
 import { MixChart } from './mix-chart';
 import { MixCompositionBar } from './mix-composition-bar';
-import { MixInputsPanel } from './mix-inputs-panel';
+import { MixInputsBar } from './mix-inputs-bar';
 import { MonthStatePanel } from './month-state-panel';
 import { PaymentBreakdownChart } from './payment-breakdown-chart';
 import { RegulatoryViolationsBanner } from './regulatory-violations-banner';
-import { TrackEditor } from './track-editor';
+import { TrackTable } from './track-table';
+
+import type { MixInput, PropertyKind, RegulatoryThresholds } from '../types';
 
 type Props = {
   thresholds: RegulatoryThresholds;
@@ -31,6 +32,9 @@ type Props = {
   initialTitle?: string;
   initialConclusion?: string;
 };
+
+const fieldClass =
+  'w-full rounded-lg border border-neutral-200 bg-white px-3 shadow-xs outline-none transition focus:border-brand-gold-text focus:ring-2 focus:ring-brand-gold-text/30';
 
 export function MixCalculator({
   thresholds,
@@ -78,29 +82,53 @@ export function MixCalculator({
 
   return (
     <div className="space-y-5">
+      <label className="block">
+        <span className="mb-1.5 block text-sm font-medium text-neutral-700">{t('inputs.scenarioTitle')}</span>
+        <input
+          className={`${fieldClass} h-11 text-base font-medium`}
+          value={calc.title}
+          onChange={(e) => calc.setTitle(e.target.value)}
+          placeholder={t('inputs.scenarioTitle')}
+        />
+      </label>
+
       <RegulatoryViolationsBanner violations={calc.violations} />
-      <KpiStrip result={calc.result} />
-      <MixCompositionBar slices={calc.composition} />
-      <MixInputsPanel
-        title={calc.title}
-        advisorConclusion={calc.advisorConclusion}
+      <MixInputsBar
         propertyKind={calc.propertyKind}
         mix={calc.mix}
-        onTitleChange={calc.setTitle}
-        onConclusionChange={calc.setAdvisorConclusion}
         onPropertyKindChange={calc.setPropertyKind}
         onMoneyChange={calc.setMoney}
         onTermChange={calc.setTermMonths}
       />
+      <KpiStrip result={calc.result} exposure={calc.exposure} />
+      <MixCompositionBar slices={calc.composition} />
       <BasketPresets onLoad={calc.loadBasket} />
-      <TrackEditor
+      <TrackTable
         tracks={calc.mix.tracks}
         summaries={calc.result.tracks}
         onAdd={calc.addTrack}
         onRemove={calc.removeTrack}
         onUpdate={calc.updateTrack}
       />
-      <div className="flex flex-wrap items-center justify-end gap-3">
+
+      <div className="grid gap-5 lg:grid-cols-3">
+        <MonthStatePanel result={calc.result} mortgageAmount={calc.mix.mortgageAmount} />
+        <MixChart titleKey="balanceCurve" points={calc.result.balanceCurve} />
+        <PaymentBreakdownChart principalCurve={calc.result.principalCurve} interestCurve={calc.result.interestCurve} />
+      </div>
+
+      <AmortizationTable result={calc.result} />
+
+      <label className="block rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+        <span className="mb-1.5 block text-sm font-medium text-neutral-700">{t('inputs.advisorConclusion')}</span>
+        <textarea
+          className={`${fieldClass} min-h-20 py-2 text-sm`}
+          value={calc.advisorConclusion}
+          onChange={(e) => calc.setAdvisorConclusion(e.target.value)}
+        />
+      </label>
+
+      <div className="flex flex-wrap items-center justify-end gap-3 border-t border-neutral-200 pt-4">
         {disabledReason ? (
           <span className="text-xs font-medium text-brand-gold-text">{disabledReason}</span>
         ) : (
@@ -117,15 +145,6 @@ export function MixCalculator({
           {isSaving ? t('saving') : isEdit ? t('update') : t('save')}
         </button>
       </div>
-      <div className="grid gap-5 lg:grid-cols-2">
-        <PaymentBreakdownChart
-          principalCurve={calc.result.principalCurve}
-          interestCurve={calc.result.interestCurve}
-        />
-        <MixChart titleKey="balanceCurve" points={calc.result.balanceCurve} />
-      </div>
-      <MonthStatePanel result={calc.result} mortgageAmount={calc.mix.mortgageAmount} />
-      <AmortizationTable result={calc.result} />
     </div>
   );
 }
