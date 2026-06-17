@@ -47,7 +47,7 @@ export function EditableField(props: FieldProps) {
       if (!result.ok) {
         setHasError(true);
         setLocalValue(value ?? ''); // rollback to last saved
-        toast.error(result.message || 'שמירה נכשלה');
+        toast.error(result.message || tc('saveFailed'));
       }
     });
   };
@@ -113,6 +113,7 @@ export function EditableField(props: FieldProps) {
           isPending,
           hasError,
           resolvedDir,
+          selectPlaceholder: tc('select'),
         })}
         {type === 'date' && (
           <DatePickerPopover

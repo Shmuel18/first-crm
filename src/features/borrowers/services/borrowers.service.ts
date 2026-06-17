@@ -64,6 +64,13 @@ const RETURNING_MATCH_COLUMNS =
 
 const RETURNING_MATCH_LIMIT = 8;
 
+/** Escape SQL LIKE/ILIKE wildcards so a literal % or _ typed into a name probe
+ *  isn't treated as a pattern (e.g. "100%" shouldn't match every row). Precision
+ *  only — RLS already scopes results to the caller's own borrowers. */
+function escapeLike(value: string): string {
+  return value.replace(/[\\%_]/g, (ch) => `\\${ch}`);
+}
+
 /**
  * Find existing borrowers matching a single criterion, for returning-client
  * autofill. RLS (borrowers_select) already scopes results to borrowers on the
@@ -86,8 +93,8 @@ export async function searchReturningBorrowers(
       : criteria.by === 'phone'
         ? base.or(`phone.eq.${criteria.value},landline_phone.eq.${criteria.value}`)
         : base
-            .ilike('first_name', `%${criteria.firstName}%`)
-            .ilike('last_name', `%${criteria.lastName}%`);
+            .ilike('first_name', `%${escapeLike(criteria.firstName)}%`)
+            .ilike('last_name', `%${escapeLike(criteria.lastName)}%`);
 
   const { data, error } = await scoped
     .order('updated_at', { ascending: false })

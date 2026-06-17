@@ -22,6 +22,9 @@ export type ControlRenderProps = FieldProps & {
   isPending: boolean;
   hasError: boolean;
   resolvedDir: 'ltr' | 'rtl' | 'auto' | undefined;
+  /** Empty-option label for selects (i18n'd by the parent — this renderer is
+   *  a plain function and can't call useTranslations). Falls back to '—'. */
+  selectPlaceholder?: string;
 };
 
 export function renderControl(p: ControlRenderProps) {
@@ -44,8 +47,9 @@ export function renderControl(p: ControlRenderProps) {
   }
 
   if (p.type === 'select' || p.type === 'tristate') {
-    // Chevron on the left (RTL end-side) so it doesn't collide with the
-    // selected option text starting from the right.
+    // Chevron pinned to the END side (logical): left in RTL, right in LTR, so
+    // it never collides with the option text and flips correctly per locale.
+    // pe-7 already reserves the end-side padding for it.
     return (
       <select
         id={p.id}
@@ -55,13 +59,13 @@ export function renderControl(p: ControlRenderProps) {
           p.save(e.target.value);
         }}
         disabled={p.disabled || p.isPending}
-        className={`${inputClass} appearance-none ps-3 pe-7 bg-[length:1rem] bg-[left_0.5rem_center] bg-no-repeat`}
+        className={`${inputClass} appearance-none ps-3 pe-7 bg-[length:1rem] bg-no-repeat rtl:bg-[left_0.5rem_center] ltr:bg-[right_0.5rem_center]`}
         style={{
           backgroundImage:
             "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23737373'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E\")",
         }}
       >
-        <option value="">{p.placeholder ?? '— בחר —'}</option>
+        <option value="">{p.placeholder ?? p.selectPlaceholder ?? '—'}</option>
         {p.options.map((opt) => (
           <option key={opt.value} value={opt.value}>
             {opt.label}

@@ -3,6 +3,7 @@
 import { useId, useState } from 'react';
 
 import { useLocale, useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
 import { COUNTRIES } from '@/lib/constants/countries';
 import { parseLocale } from '@/lib/i18n/direction';
@@ -42,18 +43,34 @@ export function BorrowerCitizenshipQuestions({ borrower, saveField }: Props) {
   const locale = parseLocale(useLocale());
   const listId = useId();
 
-  const [hasAddl, setHasAddl] = useState<boolean>(
-    Boolean(borrower.additional_citizenships?.trim()),
-  );
-  const [isForeign, setIsForeign] = useState<boolean>(
-    borrower.residency_type === 'foreign_resident',
-  );
+  const derivedAddl = Boolean(borrower.additional_citizenships?.trim());
+  const derivedForeign = borrower.residency_type === 'foreign_resident';
+  const [hasAddl, setHasAddl] = useState<boolean>(derivedAddl);
+  const [isForeign, setIsForeign] = useState<boolean>(derivedForeign);
+
+  // Re-sync the toggles when the underlying borrower data changes (a sibling
+  // save revalidates the card, or an optimistic rollback restores the prop).
+  // Render-phase setState (React 19 blocks the useEffect variant) — same
+  // propRef sentinel the EditableField / CompactNumber inputs use.
+  const [addlRef, setAddlRef] = useState(derivedAddl);
+  if (derivedAddl !== addlRef) {
+    setAddlRef(derivedAddl);
+    setHasAddl(derivedAddl);
+  }
+  const [foreignRef, setForeignRef] = useState(derivedForeign);
+  if (derivedForeign !== foreignRef) {
+    setForeignRef(derivedForeign);
+    setIsForeign(derivedForeign);
+  }
 
   const onToggleAddl = async (yes: boolean): Promise<void> => {
     setHasAddl(yes);
     if (!yes && borrower.additional_citizenships) {
       const r = await saveField('additional_citizenships', null);
-      if (!r.ok) setHasAddl(true); // roll the toggle back so the input re-reveals
+      if (!r.ok) {
+        setHasAddl(true); // roll the toggle back so the input re-reveals
+        toast.error(r.message || tc('saveFailed'));
+      }
     }
   };
 
@@ -66,12 +83,16 @@ export function BorrowerCitizenshipQuestions({ borrower, saveField }: Props) {
     setIsForeign(yes);
     if (yes) {
       const r = await saveField('residency_type', 'foreign_resident');
-      if (!r.ok) setIsForeign(false);
+      if (!r.ok) {
+        setIsForeign(false);
+        toast.error(r.message || tc('saveFailed'));
+      }
       return;
     }
     const r1 = await saveField('residency_type', 'resident');
     if (!r1.ok) {
       setIsForeign(true);
+      toast.error(r1.message || tc('saveFailed'));
       return;
     }
     if (borrower.foreign_residence_country) {
@@ -81,6 +102,7 @@ export function BorrowerCitizenshipQuestions({ borrower, saveField }: Props) {
         // toggle's visible state matches what's actually persisted.
         await saveField('residency_type', 'foreign_resident');
         setIsForeign(true);
+        toast.error(r2.message || tc('saveFailed'));
       }
     }
   };
@@ -99,7 +121,11 @@ export function BorrowerCitizenshipQuestions({ borrower, saveField }: Props) {
           listId={listId}
           value={borrower.additional_citizenships}
           placeholder={tf('countryPlaceholder')}
-          onSave={(v) => saveField('additional_citizenships', v)}
+          onSave={(v) =>
+            saveField('additional_citizenships', v).then((r) => {
+              if (!r.ok) toast.error(r.message || tc('saveFailed'));
+            })
+          }
         />
       )}
 
@@ -115,7 +141,11 @@ export function BorrowerCitizenshipQuestions({ borrower, saveField }: Props) {
           listId={listId}
           value={borrower.foreign_residence_country}
           placeholder={tf('countryPlaceholder')}
-          onSave={(v) => saveField('foreign_residence_country', v)}
+          onSave={(v) =>
+            saveField('foreign_residence_country', v).then((r) => {
+              if (!r.ok) toast.error(r.message || tc('saveFailed'));
+            })
+          }
         />
       )}
 
@@ -156,7 +186,7 @@ function CompactToggle({
       <select
         value={yes ? 'yes' : 'no'}
         onChange={(e) => onToggle(e.target.value === 'yes')}
-        className="h-8 px-2 pe-6 rounded-md border border-neutral-200 bg-white text-sm text-neutral-900 focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 transition appearance-none bg-[length:0.875rem] bg-[left_0.4rem_center] bg-no-repeat"
+        className="h-8 px-2 pe-6 rounded-md border border-neutral-200 bg-white text-sm text-neutral-900 focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 transition appearance-none bg-[length:0.875rem] bg-no-repeat rtl:bg-[left_0.4rem_center] ltr:bg-[right_0.4rem_center]"
         style={{
           backgroundImage:
             "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23737373'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E\")",

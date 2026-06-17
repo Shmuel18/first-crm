@@ -46,30 +46,46 @@ export function useReturningClientLookup(probe: ReturningProbe): UseReturningCli
 
   const criteria = chooseReturningCriteria(probe);
   const key = criteria ? criteriaKey(criteria) : null;
+  // `criteria` is a fresh object every render, so it can't be an effect dep
+  // without re-firing (and cancelling) the in-flight lookup on every unrelated
+  // re-render — which dropped the result (R8-borrower-domain-1). The lookup
+  // effect is keyed on the stable `key` string; the debounced callback reads
+  // the latest criteria from this ref, kept fresh in an effect (writing a ref
+  // during render is disallowed by react-hooks/refs).
+  const criteriaRef = useRef(criteria);
+  useEffect(() => {
+    criteriaRef.current = criteria;
+  });
   const matches = (result?.key === key ? result.matches : []).filter(
     (m) => !acceptedIds.has(m.id),
   );
 
   useEffect(() => {
-    if (!key || !criteria) return;
+    if (!key) return;
     if (dismissed.current.has(key) || queried.current.has(key)) return;
 
     let cancelled = false;
     const timer = setTimeout(async () => {
-      queried.current.add(key);
+      const c = criteriaRef.current;
+      if (!c) return;
       const lookupInput: ReturningProbeInput =
-        criteria.by === 'name'
-          ? { firstName: criteria.firstName, lastName: criteria.lastName }
-          : { [criteria.by]: criteria.value };
+        c.by === 'name'
+          ? { firstName: c.firstName, lastName: c.lastName }
+          : { [c.by]: c.value };
       const found = await lookupReturningBorrowerAction(lookupInput);
-      if (!cancelled) setResult({ key, matches: found });
+      if (!cancelled) {
+        // Mark queried only once the lookup actually completes — a cancelled
+        // run (key changed mid-flight) must not suppress a later retry.
+        queried.current.add(key);
+        setResult({ key, matches: found });
+      }
     }, DEBOUNCE_MS);
 
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [criteria, key]);
+  }, [key]);
 
   const dismiss = (): void => {
     if (key) dismissed.current.add(key);

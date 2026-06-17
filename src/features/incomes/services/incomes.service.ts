@@ -1,9 +1,9 @@
 import { createClient } from '@/lib/supabase/server';
-import type { CaseId, IncomeId } from '@/lib/types/branded';
+import type { CaseId } from '@/lib/types/branded';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import { sumMonthlyIncomes } from '../domain/totals';
-import type { BorrowerIncomesGroup, IncomeRow, IncomeTypeOption, IncomeWithType } from '../types';
+import type { BorrowerIncomesGroup, IncomeTypeOption, IncomeWithType } from '../types';
 
 // Explicit column list (audit-driven). Mirrors the borrower_incomes Row
 // type — when a new column is added to the schema, listing it here is what
@@ -71,19 +71,6 @@ export async function listIncomesForCase(caseId: CaseId): Promise<BorrowerIncome
       monthlyTotal: sumMonthlyIncomes(own),
     };
   });
-}
-
-export async function getIncomeById(id: IncomeId): Promise<IncomeRow | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('borrower_incomes')
-    .select(INCOME_FULL_COLUMNS)
-    .eq('id', id)
-    .is('deleted_at', null)
-    .maybeSingle();
-
-  if (error) throw error;
-  return data;
 }
 
 export async function listIncomeTypeOptions(): Promise<IncomeTypeOption[]> {

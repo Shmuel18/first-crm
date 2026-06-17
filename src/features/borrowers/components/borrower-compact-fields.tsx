@@ -123,15 +123,15 @@ export function CompactSelect({
   onChange: (next: string) => void;
   options: ReadonlyArray<{ value: string; label: string }>;
 }) {
-  // Arrow positioned on the LEFT (the "end" side in RTL): text now starts
-  // from the right edge with breathing room, no collision with the chevron.
+  // Chevron pinned to the END side (logical): left in RTL, right in LTR, so it
+  // never collides with the option text and flips correctly per locale.
   return (
     <label className="inline-flex items-center gap-1.5 whitespace-nowrap">
       <span className="text-neutral-500">{label}:</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-8 ps-3 pe-7 rounded-md border border-neutral-200 bg-white text-sm appearance-none bg-[length:1rem] bg-[left_0.5rem_center] bg-no-repeat focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+        className="h-8 ps-3 pe-7 rounded-md border border-neutral-200 bg-white text-sm appearance-none bg-[length:1rem] bg-no-repeat rtl:bg-[left_0.5rem_center] ltr:bg-[right_0.5rem_center] focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
         style={{
           backgroundImage:
             "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23737373'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E\")",

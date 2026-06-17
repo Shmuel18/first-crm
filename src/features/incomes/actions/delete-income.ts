@@ -2,6 +2,7 @@
 
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
+import { safeDbError } from '@/lib/supabase/db-error-log';
 import { asBorrowerId, asCaseId } from '@/lib/types/branded';
 
 import { borrowerIsOnCase } from '@/features/borrowers/services/borrowers.service';
@@ -30,13 +31,7 @@ export async function deleteIncomeAction(
   if (error) {
     console.error(
       '[deleteIncome] rpc error',
-      JSON.stringify({
-        incomeId,
-        borrowerId,
-        caseId,
-        code: error.code ?? null,
-        message: error.message ?? null,
-      }),
+      JSON.stringify({ incomeId, borrowerId, caseId, ...safeDbError(error) }),
     );
     return { ok: false, error: 'unknown' };
   }

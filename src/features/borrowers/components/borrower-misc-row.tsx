@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
 import { isSeniorAge } from '../domain/age';
 
@@ -62,7 +63,11 @@ export function BorrowerMiscRow({
       <CompactNumber
         label={tf('childrenCount')}
         value={borrower.children_count}
-        onSave={(v) => saveField('children_count', v === null ? null : String(v))}
+        onSave={(v) =>
+          saveField('children_count', v === null ? null : String(v)).then((r) => {
+            if (!r.ok) toast.error(r.message || tc('saveFailed'));
+          })
+        }
       />
       <CompactReadonly
         label={t('age')}
@@ -74,7 +79,9 @@ export function BorrowerMiscRow({
         label={tf('preferredLanguage')}
         value={borrower.preferred_language ?? ''}
         onChange={(v) => {
-          void saveField('preferred_language', v || null);
+          void saveField('preferred_language', v || null).then((r) => {
+            if (!r.ok) toast.error(r.message || tc('saveFailed'));
+          });
         }}
         options={[{ value: '', label: tc('select') }, ...languageOptions]}
       />
