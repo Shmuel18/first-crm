@@ -1,12 +1,13 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useMemo, useTransition } from 'react';
 
 import { Loader2, Save } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { saveScenarioAction } from '../actions/save-scenario';
+import { mixDti } from '../domain/mix-dti';
 import { useMixCalculator } from '../hooks/use-mix-calculator';
 import { AmortizationTable } from './amortization-table';
 import { BasketPresets } from './basket-presets';
@@ -31,6 +32,9 @@ type Props = {
   scenarioId?: string;
   initialTitle?: string;
   initialConclusion?: string;
+  /** When provided (in-case view, borrower income known) → shows a live total-DTI tile. */
+  monthlyNetIncome?: number;
+  monthlyObligations?: number;
 };
 
 const fieldClass =
@@ -45,10 +49,24 @@ export function MixCalculator({
   scenarioId,
   initialTitle,
   initialConclusion,
+  monthlyNetIncome,
+  monthlyObligations,
 }: Props) {
   const t = useTranslations('simulators.mix');
   const [isSaving, startSaving] = useTransition();
   const calc = useMixCalculator({ thresholds, initialInput, initialPropertyKind, initialTitle, initialConclusion });
+  const dti = useMemo(
+    () =>
+      monthlyNetIncome === undefined
+        ? null
+        : mixDti({
+            firstPayment: calc.result.firstPayment,
+            stressPayment: calc.result.maxPayment,
+            netIncomeMonthly: monthlyNetIncome,
+            obligationsMonthly: monthlyObligations ?? 0,
+          }),
+    [monthlyNetIncome, monthlyObligations, calc.result.firstPayment, calc.result.maxPayment],
+  );
   const isEdit = Boolean(scenarioId);
   const saveDisabled = calc.violations.length > 0 || isSaving || calc.title.trim().length === 0;
   // Why the button is disabled — surfaced so the user isn't left guessing at a
@@ -100,7 +118,7 @@ export function MixCalculator({
         onMoneyChange={calc.setMoney}
         onTermChange={calc.setTermMonths}
       />
-      <KpiStrip result={calc.result} exposure={calc.exposure} />
+      <KpiStrip result={calc.result} exposure={calc.exposure} dti={dti} />
       <MixCompositionBar slices={calc.composition} />
       <BasketPresets onLoad={calc.loadBasket} />
       <TrackTable

@@ -10,6 +10,8 @@ import { listScenariosForCase } from '@/features/simulators/services/scenarios.s
 import { getRegulatoryThresholds } from '@/features/simulators/services/settings.service';
 import { getCaseClientLabelFull } from '@/features/cases/domain/case-derivations';
 import { getCaseById } from '@/features/cases/services/cases.service';
+import { listIncomesForCase } from '@/features/incomes/services/incomes.service';
+import { listObligationsFlatForCase } from '@/features/obligations/services/obligations.service';
 import { seedMixFromCase } from '@/features/simulators/utils/seed-mix';
 import { userHasPermission } from '@/lib/auth/permissions';
 import { asCaseId } from '@/lib/types/branded';
@@ -18,13 +20,18 @@ export default async function CaseMixPage({ params }: { params: Promise<{ id: st
   if (!(await userHasPermission('view_simulators'))) redirect('/cases');
   const { id } = await params;
   const caseId = asCaseId(id);
-  const [caseData, thresholds, scenarios, t] = await Promise.all([
+  const [caseData, thresholds, scenarios, incomeGroups, obligations, t] = await Promise.all([
     getCaseById(caseId),
     getRegulatoryThresholds(),
     listScenariosForCase(caseId),
+    listIncomesForCase(caseId),
+    listObligationsFlatForCase(caseId),
     getTranslations('simulators'),
   ]);
   if (!caseData) notFound();
+
+  const monthlyNetIncome = nisToAgorot(incomeGroups.reduce((sum, group) => sum + group.monthlyTotal, 0));
+  const monthlyObligations = nisToAgorot(obligations.monthlyPaymentTotal);
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -49,9 +56,15 @@ export default async function CaseMixPage({ params }: { params: Promise<{ id: st
           caseId={id}
           primaryBorrowerId={caseData.primary_borrower_id}
           initialInput={seedMixFromCase(caseData)}
+          monthlyNetIncome={monthlyNetIncome}
+          monthlyObligations={monthlyObligations}
         />
         <SavedScenariosList scenarios={scenarios} caseId={id} />
       </div>
     </div>
   );
+}
+
+function nisToAgorot(value: number): number {
+  return Math.max(0, Math.round(value * 100));
 }
