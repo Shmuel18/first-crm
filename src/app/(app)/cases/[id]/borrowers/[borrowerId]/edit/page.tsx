@@ -10,6 +10,7 @@ import {
   getCaseBorrowerLink,
 } from '@/features/borrowers/services/borrowers.service';
 import { getRawCaseById } from '@/features/cases/services/cases.service';
+import { userCanEditCase } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { asBorrowerId, asCaseId } from '@/lib/types/branded';
 import { formatPersonName } from '@/lib/utils/person-name';
@@ -28,6 +29,9 @@ export default async function EditBorrowerPage({ params }: Props) {
   ]);
 
   if (!caseData || !borrower || !link) notFound();
+  // View-only users (can see the case but not edit it) must not get the
+  // editable borrower form — mirrors the case-detail page's can_edit_case gate.
+  if (!(await userCanEditCase(caseId))) notFound();
 
   const t = await getTranslations('case');
   const tc = await getTranslations('common');

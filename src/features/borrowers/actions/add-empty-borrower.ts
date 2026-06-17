@@ -11,15 +11,16 @@ import { createClient } from '@/lib/supabase/server';
  * card appears at the bottom of the borrowers list, ready for inline
  * editing via the existing CaseBorrowerCard machinery.
  *
- * This replaces the old multi-step flow of navigating to
- * /cases/[id]/borrowers/new and submitting a full form. The full form
- * is still reachable for the rare case the user wants to enter every
- * field up front, but the inline path matches the office's actual
- * workflow ("got a phone call — let me jot down a name").
+ * Goes through the atomic add_empty_borrower_to_case RPC (migration 190):
+ * the borrower row + case_borrowers junction + primary-sync commit or roll
+ * back together (no orphan borrower on partial failure), and the RPC's
+ * _assert_can_edit_case guard lets any advisor who can edit the case
+ * (responsible OR associated) add a borrower — the previous direct INSERT
+ * into public.borrowers was RLS-restricted to edit_any_case (admin) by
+ * borrowers_modify (migration 064), silently failing for regular advisors.
  *
- * Returns Result. Failures: missing auth, lacks edit_own/edit_any permission,
- * or DB error. No raw Supabase messages bubble out — the UI maps codes
- * to translated strings.
+ * Returns Result. Failures: missing auth, lacks edit rights, or DB error.
+ * No raw Supabase messages bubble out — the UI maps codes to translated strings.
  */
 export type AddEmptyBorrowerResult =
   | { ok: true; borrowerId: string }
@@ -34,73 +35,30 @@ export async function addEmptyBorrowerAction(
     return { ok: false, error: 'unauthorized' };
   }
 
+  // Fast app-layer gate (defense-in-depth; the RPC re-asserts the same rule).
   if (!(await userCanEditCase(caseId))) {
     return { ok: false, error: 'unauthorized' };
   }
 
-  // Insert an empty borrower. All fields nullable at the DB level
-  // (migration 007 + the progressive-validation principle), so we just stamp
-  // created_by/updated_by and let the user fill the rest inline.
-  const { data: borrower, error: borrowerErr } = await supabase
-    .from('borrowers')
-    .insert({
-      created_by: userRes.user.id,
-      updated_by: userRes.user.id,
-    })
-    .select('id')
-    .single();
+  // database.ts predates migration 190; minimal cast (same pattern as
+  // lib/rate-limit.ts / lib/auth/session.ts). Regenerate types to drop it.
+  const rpcClient = supabase as unknown as {
+    rpc(
+      fn: 'add_empty_borrower_to_case',
+      args: { p_case_id: string },
+    ): PromiseLike<{ data: string | null; error: { code?: string; message: string } | null }>;
+  };
+  const { data: borrowerId, error } = await rpcClient.rpc('add_empty_borrower_to_case', {
+    p_case_id: caseId,
+  });
 
-  if (borrowerErr || !borrower) {
-    console.error('[addEmptyBorrower] borrower insert failed', {
-      caseId,
-      err: borrowerErr?.message,
-    });
-    return { ok: false, error: 'unknown' };
-  }
-
-  // Determine is_primary: first borrower on the case becomes primary.
-  // The partial UNIQUE index uq_case_borrowers_one_primary (migration 024)
-  // enforces "at most one primary per case", so race-safe to set here.
-  const { count: existingCount } = await supabase
-    .from('case_borrowers')
-    .select('borrower_id', { count: 'exact', head: true })
-    .eq('case_id', caseId);
-
-  const isPrimary = (existingCount ?? 0) === 0;
-
-  const { error: linkErr } = await supabase
-    .from('case_borrowers')
-    .insert({
-      case_id: caseId,
-      borrower_id: borrower.id,
-      role_in_case: 'borrower',
-      is_primary: isPrimary,
-    });
-
-  if (linkErr) {
-    console.error('[addEmptyBorrower] case_borrowers insert failed', {
-      caseId,
-      borrowerId: borrower.id,
-      err: linkErr.message,
-    });
-    // Best-effort rollback of the orphan borrower row. Keep retention/audit
-    // semantics by soft-deleting instead of physically deleting PII.
-    await supabase
-      .from('borrowers')
-      .update({ deleted_at: new Date().toISOString(), updated_by: userRes.user.id })
-      .eq('id', borrower.id);
-    return { ok: false, error: 'unknown' };
-  }
-
-  // Mirror primary_borrower_id on the case row when we just promoted the
-  // first borrower (matches save_borrower_for_case behaviour).
-  if (isPrimary) {
-    await supabase
-      .from('cases')
-      .update({ primary_borrower_id: borrower.id, updated_by: userRes.user.id })
-      .eq('id', caseId);
+  if (error || !borrowerId) {
+    console.error('[addEmptyBorrower] rpc failed', { caseId, code: error?.code });
+    // 42501 = the RPC's _assert_can_edit_case refused (race: edit rights lost
+    // between the app check and the RPC). Everything else is a generic failure.
+    return { ok: false, error: error?.code === '42501' ? 'unauthorized' : 'unknown' };
   }
 
   revalidatePath(`/cases/${caseId}`);
-  return { ok: true, borrowerId: borrower.id };
+  return { ok: true, borrowerId };
 }

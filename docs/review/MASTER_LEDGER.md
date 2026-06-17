@@ -16,7 +16,7 @@
 | 5 | Case lifecycle core, dashboard, lists, services | **Complete — 26 findings (2 High, 5 Medium, 19 Low) + 7-entry xcut layer; 2H+5M+2L fixed + DEPLOYED to both deployment targets (Kaufman/Vercel production + Vultr staging), rest deferred; migs 176-180; build fb76e0b; schema 180; 368 tests; 4 pgTAP + 8 erase unit tests; live functional smoke PASSED on Vultr staging (2026-06-14)** | ROUND-05-HANDOFF.md |
 | 6 | Case workspace UI and orchestration | **Complete — 22 findings → 19 confirmed (0 High, 1 Medium, 18 Low) + 3 refuted (multi-agent workflow); 10 fixed + DEPLOYED (build aceb724→bc1cfa5, no migration, schema 180), 8 deferred; 375 tests + edit-gate unit tests (2026-06-14)** | ROUND-06-HANDOFF.md |
 | 7 | Case PDFs, reports, and exports | **Complete — 14 findings → 8 confirmed (0 High, 1 Medium, 6 Low) + 6 refuted (multi-agent workflow); 4 fixed + DEPLOYED (build 1ea7791, no migration), 3 cosmetic Low deferred; 388 tests (2026-06-14)** | ROUND-07-HANDOFF.md |
-| 8 | Borrowers, identity, and income | Not started | Pending |
+| 8 | Borrowers, identity, and income | **Reviewed 2026-06-14 — 23 findings → 18 confirmed (1 High [synthesis-elevated], 1 Medium, ~13 Low) + 5 refuted. Authorization layer FIXED (mig 190 + code): canonical can_edit_case for all borrower/income/obligation writes + atomic add_empty_borrower_to_case RPC + gated borrower routes; behavioral proof 8/8, tsc/lint/388 tests/build clean. NOT pushed (awaiting deploy approval — mig 190). Cheap Lows deferred to a follow-up commit** | ROUND-08-HANDOFF.md |
 | 9 | Obligations, case banks, and expenses | Not started | Pending |
 | 10 | Documents, uploads, storage, retention, erasure | Not started | Pending |
 | 11 | Drive, integrations, backup, restore | Not started | Pending |
@@ -236,6 +236,26 @@ Never delete closed findings.
 | R7-pdf-render-5 | Low | Refuted | High | 7 | — | ✓ glyph in RTL Hebrew numeric cell renders ambiguously | react-pdf flex (row-reverse reorders cells not intra-cell text); legend defines ✓ in both locales. Cosmetic | (none) |
 | R7-format-crosscut-3 | Low | Refuted | High | 7 | — | PDF formatters duplicate/diverge from canonical utils | intentional: reusing canonical would inject RTL/bidi marks that BREAK react-pdf; manual ₪ suffix deliberately deterministic; documented | (none) |
 | R7-format-crosscut-5 | Low | Refuted | High | 7 | — | Mixed He/En text has no bidi isolation | false premise — react-pdf 4.5.1 DOES run the Unicode Bidi Algorithm (bidi-js via @react-pdf/textkit); signature line is all-LTR anyway | (none) |
+| R8-add-borrower-rls | High | Fixed | High | 8 | 19 | addEmptyBorrowerAction direct INSERT to borrowers is RLS-blocked for non-admins (borrowers_modify needs edit_any_case, mig 064) → junior advisor on own case passes userCanEditCase then DB-denied → inline "+ add borrower" silently fails. Synthesis-elevated (workflow filed only the atomicity symptom as R8-borrower-actions-2/Low) | mig 190: new atomic add_empty_borrower_to_case RPC (_assert_can_edit_case); action calls RPC; behavioral 8/8 | supabase/migrations/190, src/features/borrowers/actions/add-empty-borrower.ts |
+| R8-borrower-actions-2 | Low→(folded into High) | Fixed | High | 8 | — | addEmptyBorrowerAction non-atomic 3-statement write (orphan on partial failure) | mig 190 atomic RPC (same fix as R8-add-borrower-rls) | supabase/migrations/190 |
+| R8-routes-crosscut-1 | Medium | Fixed | High | 8 | 19 | /cases/[id]/borrowers/new + /[borrowerId]/edit render the editable BorrowerForm to view-only users (no userCanEditCase gate) — R6-inline-actions-1 family, missed these routes | userCanEditCase → notFound() added to both routes | src/app/(app)/cases/[id]/borrowers/new/page.tsx, [borrowerId]/edit/page.tsx |
+| R8-incomes-canonical | Medium | Fixed | High | 8 | 19 | Income/obligation write authz (RLS policies mig 076 + soft-delete RPCs mig 078 + update_borrower_in_case mig 076 + save_borrower_for_case_full mig 123) used legacy assigned_advisor_id check → EXCLUDED associated advisors (inconsistent w/ can_edit_case) | mig 190: all re-pointed at can_edit_case / _assert_can_edit_case; behavioral proof associated advisor CAN edit income | supabase/migrations/190 |
+| R8-borrower-ui-1 (=routes-crosscut-3) | Low | Deferred | High | 8 | — | case-borrower-card.tsx 302 lines (>250) | file-split (defer) | src/features/borrowers/components/case-borrower-card.tsx |
+| R8-borrower-ui-2 | Low | Deferred | High | 8 | — | Hardcoded 'שמירה נכשלה' toast fallback | → tc('saveFailed') (defer) | src/features/borrowers/components/editable-field.tsx |
+| R8-borrower-ui-3 | Low | Deferred | High | 8 | — | Hardcoded '— בחר —' select placeholder | i18n (defer) | src/features/borrowers/components/editable-field-control.tsx |
+| R8-borrower-ui-4 | Low | Deferred | High | 8 | — | Citizenship/residency toggles never re-sync from props (stale after revalidate) | add propRef sentinel (defer) | src/features/borrowers/components/borrower-citizenship-questions.tsx |
+| R8-borrower-ui-5 | Low | Deferred | High | 8 | — | Compact borrower fields swallow save failures (no toast) | add failure toasts (defer) | src/features/borrowers/components/borrower-misc-row.tsx |
+| R8-borrower-ui-6 | Low | Deferred | High | 8 | — | Select chevron physical-left vs logical pe-* → wrong side in LTR | logical positioning (defer) | src/features/borrowers/components/editable-field-control.tsx |
+| R8-borrower-actions-1 (=domain-3) | Low | Deferred | High | 8 | — | Returning name-search doesn't escape LIKE %/_ (precision; not injection, RLS-scoped) | escapeLike (defer) | src/features/borrowers/services/borrowers.service.ts |
+| R8-borrower-domain-1 | Low | Deferred | High | 8 | — | Returning-lookup effect can drop an in-flight result (stale-closure/race) | move queried.add into !cancelled branch + stable key dep (defer) | src/features/borrowers/hooks/use-returning-client-lookup.ts |
+| R8-borrower-domain-4 | Low | Deferred | High | 8 | — | No tests for isEditableBorrowerField whitelist + the 3 returning hooks | add tests (defer; DB enforces independently) | src/features/borrowers/domain/editable-fields.ts |
+| R8-incomes-1 (=routes-crosscut-2) | Low | Deferred | High | 8 | — | Dead legacy income dialog flow (IncomeFormDialog + saveIncomeAction + getIncomeById + state types) orphaned by inline-edit migration | delete dead cluster (defer) | src/features/incomes/components/income-form-dialog.tsx, actions/save-income.ts |
+| R8-incomes-4 | Low | Deferred | High | 8 | — | delete-income.ts inline log vs safeDbError | consistency (defer) | src/features/incomes/actions/delete-income.ts |
+| R8-borrower-actions-3 | Low | Refuted | High | 8 | — | addEmptyBorrower logs raw error.message | message is the documented SAFE field; suggested fix counterproductive | (none) |
+| R8-borrower-actions-4 | Low | Refuted | High | 8 | — | No Zod on caseId | siblings don't either; can_edit_case fails closed on bad uuid | (none) |
+| R8-borrower-domain-2 | Low | Refuted | High | 8 | — | Returning ID threshold 6 excludes short foreign IDs | intentional documented "don't fire on half-typed IDs" | (none) |
+| R8-borrower-domain-5 | Low | Refuted | High | 8 | — | 32-char nationalId probe cap can't match | harmless loose input cap (self-labeled); RLS+rate-limit neutralize | (none) |
+| R8-routes-crosscut-4 | Low | Refuted | High | 8 | — | add-empty >100 lines | 67 code lines (rest comments/blank); real issue = the High, fixed | (none) |
 
 ## Cross-Round Contracts
 
@@ -251,7 +271,8 @@ evidence.
 | C-005 | 5 | 6,8-10,14,19,20 | Case lifecycle and visibility rules are consistent | R5 found 4 app↔DB consistency breaks (orphan-on-create/convert, case_properties RLS narrower than can_edit_case, status/assign enforced in only 1 of 3 actions, permanent-delete bypassing the retention switch) — all closed by migs 176-180 + DB triggers on both deployment targets (Kaufman/Vercel production + Vultr staging) | Closed for fixed paths — partially open: deferred Lows (inline cross-field rule, fee lost-update, manager-only over-fetch) + R19 final-grant re-verification |
 | C-006 | 6 | 8-14,20 | Case workspace composes child domains without leaks or stale state | R6: composition sound — no cross-case leak (bidi candidate refuted), no stale-state defect (prefs candidate intentional). Closed the edit-affordance gap: case-detail UI now gates every edit surface on can_edit_case + the granular status/assign perms (aceb724), and the dashboard gates per-row (not canViewAll) | Partially verified — incomes/obligations edit gate NOT yet wired (full-width grid, R8/R9); manager-only over-fetch (R6-dashboard-list-2) deferred; R19 re-verifies final state |
 | C-007 | 7 | 8-9,20 | Exports match authorized source data | R7: bulk export route is auth-gated + permission-checked + rate-limited (5/hr PDF, 10/hr XLSX, fail-closed) + RLS-scoped (soft-deleted borrowers redacted via borrowers_select RLS, not service-role); XLSX formula-injection examined + cleared; bank-PDF action hardened (auth+z.uuid()+rate-limit, 1ea7791) | Partially verified — R8/R9 verify the financial/borrower inputs feeding exports; cosmetic PDF-render Lows deferred; R19 verifies final RLS on export read paths |
-| C-008 | 8 | 15,19,20 | Borrower identity and income rules persist correctly | Pending | Open |
+| C-008 | 8 | 15,19,20 | Borrower identity and income rules persist correctly | R8: identity matching sound (RLS-scoped + rate-limited; LIKE/threshold nits Low/deferred). Two authority gaps CLOSED at the canonical DB layer (mig 190): junior/associated advisors can now add borrowers + edit income; view-only blocked; borrower routes gated. Behavioral proof 8/8 | Partially verified — deferred quality Lows; R15-16 verify simulator consumption; R17-19 verify final DB controls |
+| C-037 | 8 | 9,19 | ALL borrower + income/obligation WRITE authorization goes through public.can_edit_case / public._assert_can_edit_case (edit_any OR edit_own AND (assigned OR associated)) — NOT the legacy `assigned_advisor_id = actor OR edit_any_case`, which excluded associated advisors. Covers update_borrower_in_case, save_borrower_for_case_full, add_empty_borrower_to_case, soft_delete_borrower_income/obligation, and the incomes/obligations INSERT+UPDATE RLS policies (mig 190). The inline add-borrower MUST stay on the atomic add_empty_borrower_to_case RPC (direct borrowers INSERT is admin-only via borrowers_modify, mig 064). No later migration may reintroduce the assigned_advisor_id-only check | mig 190; behavioral proof 8/8 (rolled-back, 4 personas) | Open — R9 extends to remaining obligations paths; R19 verifies final state |
 | C-009 | 9 | 10,15,19,20 | Financial, bank, expense, and receipt rules remain consistent | Pending | Open |
 | C-010 | 10 | 11,19,20 | Storage, Drive, retention, and erasure remain consistent | Pending | Open |
 | C-011 | 11 | 19,20 | Backup and restore are complete and operationally recoverable | Pending | Open |
@@ -293,7 +314,7 @@ evidence.
 | Case create/edit/status/delete/restore | 5 | 19-20 | Static review complete; 2H+5M+2L fixed + DEPLOYED to both deployment targets (Kaufman/Vercel production + Vultr staging, migs 176-180); 4 consistency breaks closed; 368 tests + 4 pgTAP + 8 erase unit tests; **live functional smoke PASSED on Vultr staging** (6/6 areas); Kaufman-prod smoke intentionally skipped | ROUND-05-HANDOFF.md |
 | Case workspace orchestration | 6 | 8-14,20 | Static review complete; 19 confirmed/3 refuted; edit-affordance gate (R6-inline-actions-1) + dead-code + polish fixed + DEPLOYED (aceb724→bc1cfa5, no migration); 375 tests + edit-gate unit tests; incomes/obligations gate + file-splits deferred | ROUND-06-HANDOFF.md |
 | PDF/XLSX export | 7 | 20 | Static review complete; 8 confirmed/6 refuted; bank-PDF action rate-limit/validation gap (Medium) + route try/catch + NaN guard fixed + DEPLOYED (1ea7791, no migration); 388 tests; 3 cosmetic Low deferred | ROUND-07-HANDOFF.md |
-| Borrower identity and income editing | 8 | 19-20 | Not tested | Pending |
+| Borrower identity and income editing | 8 | 19-20 | Reviewed; authz layer fixed (mig 190: canonical can_edit_case + atomic add RPC + gated routes); behavioral proof 8/8, tsc/lint/388 tests/build clean; NOT pushed (awaiting deploy approval); cheap Lows deferred | ROUND-08-HANDOFF.md |
 | Obligations, banks, expenses, receipts | 9 | 19-20 | Not tested | Pending |
 | Upload, preview, delete, retention, erasure | 10 | 11,19-20 | Not tested | Pending |
 | Drive sync, backup, restore | 11 | 19-20 | Not tested | Pending |
@@ -351,6 +372,9 @@ Authorized coordinator: persist proposed resource rows after reviewing evidence.
 | 2026-06-14 | 7 | Round-7 review (multi-agent Workflow: 3 dimension reviewers + adversarial verify, 17 agents) | Pass | 14 raw → 8 confirmed / 6 refuted (0 High, 1 Medium, 6 Low) |
 | 2026-06-14 | 7 | `vitest` / `tsc --noEmit` / `eslint` (post-fix) | Pass | 388 tests; 0 type errors; 0 lint warnings |
 | 2026-06-14 | 7 | R7 fix commit `1ea7791` (3 files; isolated from heavy parallel simulator/statistics work — verified via git merge-base that all R5/R6 commits are ancestors) → push `main` → Vercel deploy | Pass | bank-PDF action rate-limit/auth/Zod + export route try/catch + PDF NaN guard; no migration |
+| 2026-06-14 | 8 | Round-8 review (multi-agent Workflow: 5 dimension reviewers + adversarial verify, 28 agents) | Pass | 23 raw → 18 confirmed / 5 refuted (1 High synthesis-elevated, 1 Medium, ~13 Low) |
+| 2026-06-14 | 8 | Mig 190 behavioral proof (node+pg, rolled-back tx on dev/Vultr, 4 personas + atomicity) | Pass (8/8) | junior-assigned CAN add borrower; associated advisor CAN add + insert income; view-only secretary BLOCKED from add (42501) + income (RLS); no orphan borrowers; schema registers 190 |
+| 2026-06-14 | 8 | `vitest` / `tsc --noEmit` / `eslint` / `next build` (post-fix) | Pass | 388 tests; 0 type errors; 0 lint warnings; clean build |
 
 ## Open Decisions and Accepted Risks
 
@@ -375,13 +399,18 @@ Authorized coordinator: persist proposed resource rows after reviewing evidence.
 | D-017 | User→Prod | R6 fix deployed to BOTH targets via the `main` push (Vercel auto) + Vultr deploy.sh; landed as build bc1cfa5 (a parallel agent's task-dialog fix rode on top of aceb724) | No migration (schema 180); the gate is defense-in-depth so even a UI bug can't cause unauthorized writes | 2026-06-14 | Closed (DB n/a + code) |
 | D-018 | User | R6 read-only/view-only edit-gate verified by unit test only (case-edit-gate.test.ts); live secretary-persona smoke WAIVED | Positive/regression path verified live (authorized editing unchanged); no demo secretary account, and flipping a demo role = access-control change; user accepted unit-test coverage (option c) | If a secretary demo account is ever provisioned | Accepted (waived) |
 | D-019 | User | R7 fixed the Medium + 3 Low; 3 cosmetic Low deferred (borrower-table column cap, PDF date-format options, real heebo-semibold.ttf for bold) | Cosmetic PDF-render polish, not correctness/security; the SemiBold one needs a font asset. bank-PDF rate_limited surfaces the generic toast (tailored copy deferred to avoid touching co-mingled messages/*.json) | When PDF polish is prioritized | Accepted (deferred) |
+| D-020 | User | R8: fix the authorization LAYER first (mig 190 — High + Medium + income/obligation canonical can_edit_case); defer the cheap Lows (i18n, save-fail toasts, citizenship re-sync, LIKE-escape, dead income code, file-split, missing tests) to a follow-up commit | "Where the meat is" = the DB authz; obligations write policies fixed proactively (same legacy pattern) even though obligations is R9 scope, to avoid knowingly shipping the identical gap | Follow-up commit / R9 | Accepted |
+| D-021 | User→Prod | R8 fix carries MIGRATION 190 — must apply to BOTH DBs (Kaufman prod + Vultr, both at schema 189) BEFORE/with the code push (apply-before-push, zero-downtime); next.config bakes EXPECTED_SCHEMA_VERSION=190 | NOT yet pushed/deployed — awaiting approval after diff + tests + this handoff/ledger | On push/deploy approval | Open |
 
 ## Areas Not Yet Verified
 
-- Rounds 1-7 reviewed + approved fixes deployed; Rounds 8-20 unstarted. R5
-  (migs 176-180), R6 (build aceb724→bc1cfa5), and R7 (build 1ea7791, no migration)
-  fixes are live (Vercel production; Vultr staging tracks main); dynamic AT/visual
-  verification still pending across rounds.
+- Rounds 1-8 reviewed; R1-R7 approved fixes deployed. R8 authz-layer fix
+  (mig 190) is IMPLEMENTED + behaviorally proven (8/8) + tsc/lint/388-tests/build
+  clean but NOT yet pushed/deployed (carries mig 190 → apply to BOTH DBs at 189
+  first; D-021). R5-R7 fixes live (Vercel prod; Vultr staging tracks main);
+  dynamic AT/visual verification still pending across rounds.
+- R8 cheap quality Lows deferred to a follow-up commit (D-020); obligations write
+  policies canonicalized proactively in mig 190 (R9 verifies the rest).
 - R7 deferred 3 cosmetic PDF-render Lows (borrower-table cap, date format, real
   SemiBold font — D-019); only R7 fix not live-smoked (export paths covered by
   the rate-limit suite + 388 unit tests; no functional regression risk).
