@@ -4,6 +4,7 @@ import { getLocale } from 'next-intl/server';
 
 import { logClientEmail } from '@/features/case-activity/services/client-email-log.service';
 import { userCanEditCase } from '@/lib/auth/permissions';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 
 import { DocumentRequestEmailSchema } from '../schemas/document-request.schema';
@@ -11,7 +12,7 @@ import { sendDocumentRequestEmail } from '../services/document-request-email';
 
 type Result =
   | { ok: true }
-  | { ok: false; error: 'unauthorized' | 'no_email' | 'not_configured' | 'unknown' };
+  | { ok: false; error: 'unauthorized' | 'no_email' | 'not_configured' | 'rate_limited' | 'unknown' };
 
 /**
  * Sends the advisor-reviewed document-request email to the case's primary
@@ -26,6 +27,17 @@ export async function sendDocumentRequestAction(input: unknown): Promise<Result>
 
   const supabase = await createClient();
   if (!(await userCanEditCase(caseId))) return { ok: false, error: 'unauthorized' };
+
+  // Client-facing email — throttle per case so a borrower can't be spammed with
+  // document requests (R-doc-3).
+  const allowed = await checkRateLimit({
+    action: 'send_document_request',
+    subject: `case:${caseId}`,
+    max: 10,
+    windowSeconds: 3600,
+    failMode: 'open',
+  });
+  if (!allowed) return { ok: false, error: 'rate_limited' };
 
   const { data: caseRow } = await supabase
     .from('cases')

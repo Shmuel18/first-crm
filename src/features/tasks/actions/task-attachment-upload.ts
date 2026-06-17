@@ -11,6 +11,7 @@ import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE_BYTES } from '@/features/documents/sc
 import { DOCUMENTS_BUCKET, storagePathFor } from '@/features/documents/services/documents.service';
 import { sanitizeFilename } from '@/features/documents/domain/sanitize-filename';
 import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
@@ -33,7 +34,7 @@ export type PrepareTaskAttachmentResult =
       signedUrl: string;
       safeFileName: string;
     }
-  | { ok: false; error: 'unauthorized' | 'validation' | 'storage' | 'unknown'; message?: string };
+  | { ok: false; error: 'unauthorized' | 'validation' | 'storage' | 'rate_limited' | 'unknown'; message?: string };
 
 export type FinalizeTaskAttachmentInput = {
   taskId: string;
@@ -71,6 +72,16 @@ export async function prepareTaskAttachmentUploadAction(
 
   const taskOk = await taskBelongsToVisibleCase(input.taskId, input.caseId);
   if (!taskOk) return { ok: false, error: 'unauthorized' };
+
+  // Throttle the upload prepare (gates the expensive finalize) per user (TASK-ATT-6).
+  const allowed = await checkRateLimit({
+    action: 'prepare_task_attachment',
+    subject: `user:${userRes.user.id}`,
+    max: 120,
+    windowSeconds: 60,
+    failMode: 'closed',
+  });
+  if (!allowed) return { ok: false, error: 'rate_limited' };
 
   const documentId = randomUUID();
   const path = storagePathFor(input.caseId, documentId, safeFileName);

@@ -4,11 +4,14 @@ import { headers } from 'next/headers';
 
 import { z } from 'zod';
 
+import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 
 import { upsertPushSubscription } from '../services/push-subscriptions.service';
 
-type Result = { ok: true } | { ok: false; error: 'unauthorized' | 'validation' | 'unknown' };
+type Result =
+  | { ok: true }
+  | { ok: false; error: 'unauthorized' | 'validation' | 'rate_limited' | 'unknown' };
 
 const schema = z.object({
   endpoint: z.string().url(),
@@ -32,6 +35,17 @@ export async function subscribePushAction(input: {
   const supabase = await createClient();
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
+
+  // Throttle subscription writes per user — a leaked/looping client shouldn't
+  // churn push_subscriptions (PUSH-3).
+  const allowed = await checkRateLimit({
+    action: 'subscribe_push',
+    subject: `user:${userRes.user.id}`,
+    max: 30,
+    windowSeconds: 60,
+    failMode: 'open',
+  });
+  if (!allowed) return { ok: false, error: 'rate_limited' };
 
   const userAgent = (await headers()).get('user-agent');
   const ok = await upsertPushSubscription(userRes.user.id, parsed.data, userAgent);

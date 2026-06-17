@@ -26,5 +26,6 @@ export type RestoreBackupResult =
         | 'validation'
         | 'invalid_file'
         | 'too_large'
+        | 'rate_limited'
         | 'unknown';
     };

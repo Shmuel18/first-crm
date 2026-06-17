@@ -3,6 +3,7 @@
 import { randomUUID } from 'node:crypto';
 
 import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
@@ -37,7 +38,7 @@ export type PrepareUploadResult =
     }
   | {
       ok: false;
-      error: 'unauthorized' | 'validation' | 'storage' | 'unknown';
+      error: 'unauthorized' | 'validation' | 'storage' | 'rate_limited' | 'unknown';
       message?: string;
     };
 
@@ -81,6 +82,18 @@ export async function prepareUploadAction(
   if (!(await userHasPermission('upload_document')) || !(await userCanEditCase(input.caseId))) {
     return { ok: false, error: 'unauthorized' };
   }
+
+  // Each prepare allocates a signed upload URL and gates the (expensive) finalize
+  // that follows — throttle per user so a loop can't burn storage quota / Drive
+  // round-trips (DOC-UP-2). Generous: ample for a real bulk upload.
+  const allowed = await checkRateLimit({
+    action: 'prepare_upload',
+    subject: `user:${userRes.user.id}`,
+    max: 120,
+    windowSeconds: 60,
+    failMode: 'closed',
+  });
+  if (!allowed) return { ok: false, error: 'rate_limited' };
 
   // Validate the category + borrower link before issuing an upload token.
   // resolveUploadContext returns null when the case row is unreadable (RLS).

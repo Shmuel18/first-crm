@@ -10,6 +10,7 @@ import { sanitizeFilename } from '@/features/documents/domain/sanitize-filename'
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE_BYTES } from '@/features/documents/schemas/document.schema';
 import { uploadGeneralDocumentToDrive } from '@/features/integrations/services/drive-general-uploader';
 import { userHasPermission } from '@/lib/auth/permissions';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
@@ -17,7 +18,7 @@ import { TASK_DOCUMENTS_BUCKET, taskAttachmentPath } from '../services/task-atta
 
 const MAGIC_SNIFF_BYTES = 4096;
 
-type AttachmentError = 'unauthorized' | 'validation' | 'storage' | 'unknown';
+type AttachmentError = 'unauthorized' | 'validation' | 'storage' | 'rate_limited' | 'unknown';
 
 export type PrepareGeneralTaskAttachmentResult =
   | { ok: true; attachmentId: string; path: string; signedUrl: string; safeFileName: string }
@@ -61,6 +62,16 @@ export async function prepareGeneralTaskAttachmentAction(input: {
   if (!(await userHasPermission('upload_document')) || !(await taskVisible(input.taskId))) {
     return { ok: false, error: 'unauthorized' };
   }
+
+  // Throttle the upload prepare (gates the expensive finalize) per user (TASK-ATT-6).
+  const allowed = await checkRateLimit({
+    action: 'prepare_general_task_attachment',
+    subject: `user:${userRes.user.id}`,
+    max: 120,
+    windowSeconds: 60,
+    failMode: 'closed',
+  });
+  if (!allowed) return { ok: false, error: 'rate_limited' };
 
   const attachmentId = randomUUID();
   const path = taskAttachmentPath(input.taskId, attachmentId, safeFileName);

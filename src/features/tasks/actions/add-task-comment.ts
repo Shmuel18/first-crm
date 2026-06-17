@@ -2,13 +2,14 @@
 
 import { revalidatePath } from 'next/cache';
 
+import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 
 import { AddTaskCommentSchema } from '../schemas/task.schema';
 
 type Result =
   | { ok: true }
-  | { ok: false; error: 'unauthorized' | 'not_found' | 'validation' | 'unknown' };
+  | { ok: false; error: 'unauthorized' | 'not_found' | 'validation' | 'rate_limited' | 'unknown' };
 
 /**
  * Add a free-text comment to a task's thread.
@@ -22,6 +23,17 @@ export async function addTaskCommentAction(taskId: string, body: string): Promis
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
   const userId = userRes.user.id;
+
+  // Each comment fans out bell + email notifications (mentions + assignee), so
+  // throttle per user to prevent a notification-spam loop (TC-3).
+  const allowed = await checkRateLimit({
+    action: 'add_task_comment',
+    subject: `user:${userId}`,
+    max: 60,
+    windowSeconds: 60,
+    failMode: 'open',
+  });
+  if (!allowed) return { ok: false, error: 'rate_limited' };
 
   // Verify the task exists and is accessible to this user.
   const { data: task } = await supabase

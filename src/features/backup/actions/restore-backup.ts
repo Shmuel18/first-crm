@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 
 import { getDriveClientIfConnected } from '@/features/integrations/services/drive-case-uploader';
 import { isCurrentUserAdmin } from '@/lib/auth/permissions';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { decryptWithKey } from '@/lib/crypto/secrets';
 import { env } from '@/lib/env';
 import { createClient } from '@/lib/supabase/server';
@@ -29,6 +30,17 @@ export async function restoreBackupAction(driveFileId: string): Promise<RestoreB
   if (typeof driveFileId !== 'string' || driveFileId.length === 0 || driveFileId.length > 200) {
     return { ok: false, error: 'validation' };
   }
+
+  // Restore is destructive + expensive (full Drive download + whole-DB merge) —
+  // hard cap per admin (INTEG-1).
+  const allowed = await checkRateLimit({
+    action: 'restore_backup',
+    subject: `user:${userRes.user.id}`,
+    max: 5,
+    windowSeconds: 3600,
+    failMode: 'closed',
+  });
+  if (!allowed) return { ok: false, error: 'rate_limited' };
 
   const client = await getDriveClientIfConnected();
   if (!client) return { ok: false, error: 'not_connected' };
