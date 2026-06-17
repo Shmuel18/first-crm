@@ -17,7 +17,7 @@ export function CollapsibleSection({ title, open, onToggle, children }: Props) {
         aria-expanded={open}
         className="flex w-full items-center justify-between gap-3 px-4 py-3 text-start transition hover:bg-neutral-50"
       >
-        <span className="font-display text-lg font-semibold text-neutral-950">{title}</span>
+        <span className="min-w-0 break-words font-display text-lg font-semibold text-neutral-950">{title}</span>
         <ChevronDown className={`size-5 shrink-0 text-neutral-400 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
       </button>
       {open ? <div className="border-t border-neutral-100 p-4">{children}</div> : null}

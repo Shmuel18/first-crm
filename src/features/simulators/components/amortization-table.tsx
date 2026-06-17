@@ -19,7 +19,7 @@ export function AmortizationTable({ result }: Props) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[32rem] text-sm">
+      <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-neutral-200 text-neutral-500">
             <th className="px-3 py-2 text-start font-medium">{t('month')}</th>

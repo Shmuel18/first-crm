@@ -56,7 +56,7 @@ export function KpiStrip({ result, exposure, dti }: Props) {
               <Icon className={`size-3.5 ${hero ? 'text-brand-gold' : 'text-brand-gold-light'}`} aria-hidden="true" />
               <span className="truncate">{label}</span>
             </div>
-            <div className={`mt-1 truncate font-semibold tabular-nums ${hero ? 'font-display text-2xl text-brand-gold' : 'text-base text-white'}`}>
+            <div className={`mt-1 truncate font-semibold tabular-nums ${hero ? 'font-display text-xl text-brand-gold sm:text-2xl' : 'text-sm text-white sm:text-base'}`}>
               {value}
             </div>
             {sub && <div className="mt-0.5 truncate text-[11px] text-neutral-400">{sub}</div>}

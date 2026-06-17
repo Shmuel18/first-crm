@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 
 import { SIM_SERIES_COLORS } from '../constants';
 import type { CurvePoint } from '../types';
-import { agorotToNis, formatMoney } from '../utils/format';
+import { agorotToNis, formatCompactNis, formatMoney } from '../utils/format';
 
 export type OverlaySeries = { key: string; name: string; points: ReadonlyArray<CurvePoint> };
 type Props = { title: string; series: ReadonlyArray<OverlaySeries> };
@@ -17,7 +17,7 @@ export function SeriesOverlayChart({ title, series }: Props) {
   return (
     <section className="min-h-72 rounded-xl border border-neutral-200 bg-white p-4">
       <h2 className="mb-4 font-display text-lg font-semibold text-neutral-950">{title}</h2>
-      <div className="h-64">
+      <div className="h-72 sm:h-64">
         {/* minHeight gives the container a definite floor so Recharts never
             measures a 0-height parent (which logs "width(-1)/height(-1)…"
             when the chart briefly renders before/while its container is
@@ -25,12 +25,12 @@ export function SeriesOverlayChart({ title, series }: Props) {
         <ResponsiveContainer width="100%" height="100%" minHeight={256}>
           <LineChart data={data} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
             <XAxis dataKey="year" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
-            <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12 }} width={64} />
+            <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={44} tickFormatter={formatCompactNis} />
             <Tooltip
               formatter={(value, name) => [formatMoney(Number(value) * 100), name]}
               labelFormatter={(value) => t('compare.yearLabel', { year: value })}
             />
-            <Legend />
+            <Legend wrapperStyle={{ fontSize: 11 }} />
             {series.map((item, index) => (
               <Line
                 key={item.key}

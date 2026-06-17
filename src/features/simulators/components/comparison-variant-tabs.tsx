@@ -55,9 +55,9 @@ export function ComparisonVariantTabs({
                 type="button"
                 onClick={() => onRemove(variant.label)}
                 aria-label={t('removeVariant', { label: variant.label })}
-                className="absolute -end-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-400 shadow-xs hover:text-red-600"
+                className="absolute -end-2 -top-2 flex size-6 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-400 shadow-xs hover:text-red-600"
               >
-                <X className="size-3" aria-hidden="true" />
+                <X className="size-3.5" aria-hidden="true" />
               </button>
             ) : null}
           </div>

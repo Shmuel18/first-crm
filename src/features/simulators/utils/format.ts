@@ -19,6 +19,17 @@ export function formatMoney(value: MoneyAgorot): string {
   return nisFormatter.format(agorotToNis(value));
 }
 
+const compactFormatter = new Intl.NumberFormat('en-US', {
+  notation: 'compact',
+  maximumFractionDigits: 1,
+});
+
+/** Compact NIS axis label (e.g. 1.2M, 850K) — keeps chart Y-axes legible on
+ *  narrow phones where the full currency string would clip. Input is in NIS. */
+export function formatCompactNis(nis: number): string {
+  return Number.isFinite(nis) ? compactFormatter.format(nis) : '';
+}
+
 export function formatPct(value: number | null): string {
   if (value === null || !Number.isFinite(value)) return '-';
   return `${value.toFixed(1)}%`;

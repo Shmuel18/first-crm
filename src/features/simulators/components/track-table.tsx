@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 
 import { agorotToNis, formatMoney, formatRatio, nisToAgorot } from '../utils/format';
 
+import type { ReactNode } from 'react';
 import type { RepaymentType, TrackInput, TrackResult, TrackType } from '../types';
 
 type Props = {
@@ -18,13 +19,84 @@ type Props = {
   onUpdate: (id: string, patch: Partial<TrackInput>) => void;
 };
 
+// 40px tap target on phones, dense 32px from sm up (where the table is shown).
 const cellInput =
-  'h-8 w-full rounded-md border border-neutral-200 bg-white px-2 text-sm shadow-xs outline-none transition focus:border-brand-gold-text focus:ring-2 focus:ring-brand-gold-text/30';
+  'h-10 w-full rounded-md border border-neutral-200 bg-white px-2 text-sm shadow-xs outline-none transition focus:border-brand-gold-text focus:ring-2 focus:ring-brand-gold-text/30 sm:h-8';
 
-/** Dense, scannable track editor — one row per track, with per-row results inline when available. */
+type FieldKey = 'type' | 'amount' | 'rate' | 'term' | 'repayment' | 'cpiGrace';
+type FieldDef = { key: FieldKey; render: (track: TrackInput) => ReactNode };
+
+/**
+ * Dense, scannable track editor. From `sm` up it's a wide horizontal table; on
+ * phones it restacks to one labeled card per track (the table would otherwise
+ * force horizontal scroll and a fiddly, cramped editing surface). Both layouts
+ * render from the SAME field definitions, so the controls never diverge.
+ */
 export function TrackTable({ tracks, summaries = [], onAdd, onRemove, onUpdate }: Props) {
   const t = useTranslations('simulators.mix.tracks');
   const showResults = summaries.length > 0;
+
+  const fields: ReadonlyArray<FieldDef> = [
+    {
+      key: 'type',
+      render: (track) => (
+        <select className={cellInput} value={track.type} onChange={(e) => onUpdate(track.id, { type: parseTrackType(e.target.value) })}>
+          {trackTypes.map((type) => (
+            <option key={type} value={type}>
+              {t(`types.${type}`)}
+            </option>
+          ))}
+        </select>
+      ),
+    },
+    {
+      key: 'amount',
+      render: (track) => (
+        <input className={cellInput} inputMode="numeric" value={agorotToNis(track.amount)} onChange={(e) => onUpdate(track.id, { amount: nisToAgorot(e.target.value) })} />
+      ),
+    },
+    {
+      key: 'rate',
+      render: (track) => (
+        <input className={cellInput} type="number" step="0.01" value={track.annualRatePct} onChange={(e) => onUpdate(track.id, { annualRatePct: Number(e.target.value) })} />
+      ),
+    },
+    {
+      key: 'term',
+      render: (track) => (
+        <input className={cellInput} type="number" value={track.termMonths} onChange={(e) => onUpdate(track.id, { termMonths: Number(e.target.value) })} />
+      ),
+    },
+    {
+      key: 'repayment',
+      render: (track) => (
+        <select className={cellInput} value={track.repayment} onChange={(e) => onUpdate(track.id, { repayment: parseRepayment(e.target.value) })}>
+          {repayments.map((item) => (
+            <option key={item} value={item}>
+              {t(`repayments.${item}`)}
+            </option>
+          ))}
+        </select>
+      ),
+    },
+    {
+      key: 'cpiGrace',
+      render: (track) => {
+        const linked = track.type.endsWith('_linked');
+        const balloon = track.repayment === 'balloon';
+        return (
+          <input
+            className={cellInput}
+            type="number"
+            step="0.01"
+            disabled={!linked && !balloon}
+            value={linked ? track.cpiAnnualPct ?? 0 : balloon ? track.graceMonths ?? 0 : ''}
+            onChange={(e) => onUpdate(track.id, linked ? { cpiAnnualPct: Number(e.target.value) } : { graceMonths: Number(e.target.value) })}
+          />
+        );
+      },
+    },
+  ];
 
   return (
     <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
@@ -33,22 +105,28 @@ export function TrackTable({ tracks, summaries = [], onAdd, onRemove, onUpdate }
         <button
           type="button"
           onClick={onAdd}
-          className="inline-flex h-9 items-center gap-2 rounded-lg border border-brand-gold/50 px-3 text-sm font-medium text-brand-gold-text hover:bg-brand-gold-soft"
+          className="inline-flex h-10 items-center gap-2 rounded-lg border border-brand-gold/50 px-3 text-sm font-medium text-brand-gold-text hover:bg-brand-gold-soft sm:h-9"
         >
           <Plus className="size-4" aria-hidden="true" />
           {t('add')}
         </button>
       </div>
-      <div className="overflow-x-auto">
+
+      {/* Phones: one labeled card per track. */}
+      <div className="space-y-3 sm:hidden">
+        {tracks.map((track) => (
+          <TrackCard key={track.id} track={track} fields={fields} summary={summaries.find((s) => s.trackId === track.id)} showResults={showResults} onRemove={onRemove} />
+        ))}
+      </div>
+
+      {/* sm and up: the dense table. */}
+      <div className="hidden overflow-x-auto sm:block">
         <table className={`w-full border-collapse text-sm ${showResults ? 'min-w-[52rem]' : 'min-w-[34rem]'}`}>
           <thead>
             <tr className="text-xs text-neutral-500">
-              <Th>{t('type')}</Th>
-              <Th>{t('amount')}</Th>
-              <Th>{t('rate')}</Th>
-              <Th>{t('term')}</Th>
-              <Th>{t('repayment')}</Th>
-              <Th>{t('cpiGrace')}</Th>
+              {fields.map((field) => (
+                <Th key={field.key}>{t(field.key)}</Th>
+              ))}
               {showResults && (
                 <>
                   <Th align="end">{t('monthly')}</Th>
@@ -61,14 +139,7 @@ export function TrackTable({ tracks, summaries = [], onAdd, onRemove, onUpdate }
           </thead>
           <tbody>
             {tracks.map((track) => (
-              <TrackTableRow
-                key={track.id}
-                track={track}
-                summary={summaries.find((item) => item.trackId === track.id)}
-                showResults={showResults}
-                onRemove={onRemove}
-                onUpdate={onUpdate}
-              />
+              <TrackTableRow key={track.id} track={track} fields={fields} summary={summaries.find((s) => s.trackId === track.id)} showResults={showResults} onRemove={onRemove} />
             ))}
           </tbody>
         </table>
@@ -78,62 +149,21 @@ export function TrackTable({ tracks, summaries = [], onAdd, onRemove, onUpdate }
   );
 }
 
-function TrackTableRow({
-  track,
-  summary,
-  showResults,
-  onRemove,
-  onUpdate,
-}: {
+type RowProps = {
   track: TrackInput;
+  fields: ReadonlyArray<FieldDef>;
   summary?: TrackResult;
   showResults: boolean;
   onRemove: (id: string) => void;
-  onUpdate: (id: string, patch: Partial<TrackInput>) => void;
-}) {
-  const t = useTranslations('simulators.mix.tracks');
-  const linked = track.type.endsWith('_linked');
-  const balloon = track.repayment === 'balloon';
+};
 
+function TrackTableRow({ track, fields, summary, showResults, onRemove }: RowProps) {
+  const t = useTranslations('simulators.mix.tracks');
   return (
     <tr className="border-b border-neutral-100 last:border-0">
-      <Td>
-        <select className={cellInput} value={track.type} onChange={(e) => onUpdate(track.id, { type: parseTrackType(e.target.value) })}>
-          {trackTypes.map((type) => (
-            <option key={type} value={type}>
-              {t(`types.${type}`)}
-            </option>
-          ))}
-        </select>
-      </Td>
-      <Td>
-        <input className={cellInput} inputMode="numeric" value={agorotToNis(track.amount)} onChange={(e) => onUpdate(track.id, { amount: nisToAgorot(e.target.value) })} />
-      </Td>
-      <Td>
-        <input className={cellInput} type="number" step="0.01" value={track.annualRatePct} onChange={(e) => onUpdate(track.id, { annualRatePct: Number(e.target.value) })} />
-      </Td>
-      <Td>
-        <input className={cellInput} type="number" value={track.termMonths} onChange={(e) => onUpdate(track.id, { termMonths: Number(e.target.value) })} />
-      </Td>
-      <Td>
-        <select className={cellInput} value={track.repayment} onChange={(e) => onUpdate(track.id, { repayment: parseRepayment(e.target.value) })}>
-          {repayments.map((item) => (
-            <option key={item} value={item}>
-              {t(`repayments.${item}`)}
-            </option>
-          ))}
-        </select>
-      </Td>
-      <Td>
-        <input
-          className={cellInput}
-          type="number"
-          step="0.01"
-          disabled={!linked && !balloon}
-          value={linked ? track.cpiAnnualPct ?? 0 : balloon ? track.graceMonths ?? 0 : ''}
-          onChange={(e) => onUpdate(track.id, linked ? { cpiAnnualPct: Number(e.target.value) } : { graceMonths: Number(e.target.value) })}
-        />
-      </Td>
+      {fields.map((field) => (
+        <Td key={field.key}>{field.render(track)}</Td>
+      ))}
       {showResults && (
         <>
           <Td align="end" className="text-neutral-800">{summary ? formatMoney(summary.firstPayment) : '—'}</Td>
@@ -155,11 +185,53 @@ function TrackTableRow({
   );
 }
 
-function Th({ children, align = 'start' }: { children?: React.ReactNode; align?: 'start' | 'end' }) {
+function TrackCard({ track, fields, summary, showResults, onRemove }: RowProps) {
+  const t = useTranslations('simulators.mix.tracks');
+  return (
+    <div className="rounded-lg border border-neutral-200 p-3">
+      <div className="space-y-2.5">
+        {fields.map((field) => (
+          <div key={field.key} className="flex items-center justify-between gap-3">
+            <span className="text-xs text-neutral-500">{t(field.key)}</span>
+            <div className="w-40 shrink-0">{field.render(track)}</div>
+          </div>
+        ))}
+      </div>
+      {showResults && (
+        <dl className="mt-3 grid grid-cols-3 gap-2 border-t border-neutral-100 pt-3 text-center">
+          <ResultCell label={t('monthly')} value={summary ? formatMoney(summary.firstPayment) : '—'} />
+          <ResultCell label={t('totalCost')} value={summary ? formatMoney(summary.totalCost) : '—'} />
+          <ResultCell label={t('ratio')} value={summary ? formatRatio(summary.costPerShekel) : '—'} accent />
+        </dl>
+      )}
+      <div className="mt-3 flex justify-end">
+        <button
+          type="button"
+          onClick={() => onRemove(track.id)}
+          className="inline-flex h-9 items-center gap-1.5 rounded-md px-2 text-sm text-neutral-500 hover:bg-red-50 hover:text-red-600"
+        >
+          <Trash2 className="size-4" aria-hidden="true" />
+          {t('remove')}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ResultCell({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className="min-w-0">
+      <dt className="truncate text-[11px] text-neutral-500">{label}</dt>
+      <dd className={`truncate text-sm font-semibold tabular-nums ${accent ? 'text-brand-gold-text' : 'text-neutral-800'}`}>{value}</dd>
+    </div>
+  );
+}
+
+function Th({ children, align = 'start' }: { children?: ReactNode; align?: 'start' | 'end' }) {
   return <th className={`border-b border-neutral-100 px-2 py-2 font-medium ${align === 'end' ? 'text-end' : 'text-start'}`}>{children}</th>;
 }
 
-function Td({ children, align = 'start', className = '' }: { children?: React.ReactNode; align?: 'start' | 'end'; className?: string }) {
+function Td({ children, align = 'start', className = '' }: { children?: ReactNode; align?: 'start' | 'end'; className?: string }) {
   return <td className={`px-2 py-1.5 align-middle tabular-nums ${align === 'end' ? 'text-end' : 'text-start'} ${className}`}>{children}</td>;
 }
 

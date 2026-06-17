@@ -13,7 +13,7 @@ import {
 import { useTranslations } from 'next-intl';
 
 import { sampleAnnualCurve } from '../domain/curve-sampling';
-import { agorotToNis, formatMoney } from '../utils/format';
+import { agorotToNis, formatCompactNis, formatMoney } from '../utils/format';
 
 import type { CurvePoint } from '../types';
 
@@ -43,7 +43,7 @@ export function PaymentBreakdownChart({ principalCurve, interestCurve }: Props) 
       <ResponsiveContainer width="100%" height="100%" minHeight={224}>
         <ComposedChart data={data} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
           <XAxis dataKey="year" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
-          <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12 }} width={64} />
+          <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={44} tickFormatter={formatCompactNis} />
           <Tooltip
             formatter={(value) => formatMoney(Number(value) * 100)}
             labelFormatter={(value) => t('yearLabel', { year: value })}

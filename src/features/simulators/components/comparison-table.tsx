@@ -37,7 +37,7 @@ export function ComparisonTable({ comparison }: Props) {
         <table className="w-full min-w-[36rem] text-sm">
           <thead>
             <tr className="border-b border-neutral-200 text-neutral-500">
-              <th className="px-3 py-2 text-start font-medium">{t('metric')}</th>
+              <th className="sticky start-0 z-10 bg-white px-3 py-2 text-start font-medium">{t('metric')}</th>
               {rows.map((row) => (
                 <th key={row.label} className="px-3 py-2 text-start font-semibold text-neutral-800">
                   {tv('variant', { label: row.label })}
@@ -50,7 +50,7 @@ export function ComparisonTable({ comparison }: Props) {
               const best = bestValue(rows, metric.value);
               return (
                 <tr key={metric.key} className="border-b border-neutral-100 last:border-0">
-                  <td className="px-3 py-2 text-neutral-600">{t(metric.key)}</td>
+                  <td className="sticky start-0 bg-white px-3 py-2 text-neutral-600">{t(metric.key)}</td>
                   {rows.map((row) => {
                     const value = metric.value(row);
                     const isBest = rows.length > 1 && value === best;
