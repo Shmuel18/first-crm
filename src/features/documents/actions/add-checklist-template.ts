@@ -7,14 +7,13 @@ import { z } from 'zod';
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
-import {
-  CHECKLIST_TEMPLATE_KEYS,
-  getChecklistTemplate,
-} from '../domain/checklist-templates';
+import { getChecklistTemplateItems } from '../services/checklist-templates-store.service';
 
 const AddChecklistTemplateSchema = z.object({
   caseId: z.string().min(1).max(100),
-  templateKey: z.enum(CHECKLIST_TEMPLATE_KEYS),
+  // Template keys are DB-driven (editable in settings), so accept any key and
+  // resolve it against the table below — an unknown/inactive key just yields 0.
+  templateKey: z.string().min(1).max(100),
 });
 
 type Result =
@@ -54,8 +53,9 @@ export async function addChecklistTemplateAction(input: unknown): Promise<Result
       .filter((l): l is string => !!l),
   );
 
-  const template = getChecklistTemplate(templateKey);
-  const toAdd = template.items.filter((label) => !existing.has(label.trim()));
+  const items = await getChecklistTemplateItems(templateKey);
+  if (!items) return { ok: false, error: 'unknown' };
+  const toAdd = items.filter((label) => !existing.has(label.trim()));
 
   for (const label of toAdd) {
     const { error } = await supabase.rpc('add_case_checklist_item', {

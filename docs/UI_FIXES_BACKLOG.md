@@ -321,28 +321,27 @@
 
 ---
 
-## F13 — מסך ניהול תבניות צ'ק-ליסט בהגדרות
+## F13 — מסך ניהול תבניות צ'ק-ליסט בהגדרות ✅ (חלק "רשימות מוכנות")
 
-- **סטטוס:** 📋 ממתין
+- **סטטוס:** ✅ **בוצע** — מסך `/settings/checklists` (אדמין-only) לעריכת
+  "הרשימות המוכנות" (כפתור "הוסף רשימה מוכנה" בצ'ק-ליסט של תיק).
 - **בקשה:** שהמנהל יוכל לערוך את תבניות הצ'ק-ליסט בעצמו מההגדרות, בלי מפתח.
-- **מצב קיים:** אין מסך כזה. עריכה פר-תיק קיימת ("נהל רשימת מסמכים"), אבל
-  התבניות הגלובליות אינן ניתנות לעריכה מה-UI:
-  - **ברירת מחדל לפי סוג עסקה** = `case_type_documents` (טבלה קיימת, זרע 087) —
-    כיום רק SQL/Studio.
-  - **הרשימות המוכנות** ("רשימה מוכנה") = קבוע בקוד `checklist-templates.ts` —
-    רק עריכת מפתח.
-- **מימוש (שני חלקים):**
-  1. **עריכת ברירת-המחדל לפי סוג עסקה** — מסך הגדרות שעורך `case_type_documents`
-    (הוסף/הסר קטגוריית מסמך לכל סוג, חובה/מומלץ, שלב). הטבלה כבר קיימת — צריך UI
-    + actions + RLS admin.
-  2. **רשימות מוכנות עריכות** — להעביר את `checklist-templates.ts` מקוד לטבלת DB
-    (מיגרציה: `checklist_templates` + `checklist_template_items`), ולנהל אותן
-    במסך. תבנית כמו מסך הבנקים (מיגרציה 158 + UI admin). `addChecklistTemplateAction`
-    יקרא מה-DB במקום מהקבוע.
-- **איפה בקוד:** מסך חדש `settings/checklists`, מיגרציה לטבלאות התבניות,
-  `src/features/documents/domain/checklist-templates.ts` (→ DB), `add-checklist-template.ts`
-  (לקרוא מ-DB), `case_type_documents` actions.
-- **אומדן:** גדול (מסך הגדרות + 1–2 טבלאות + מיגרציה + העברת הקבוע ל-DB). אדמין-only.
+- **מימוש:**
+  - **מיגרציה 189** — טבלת `checklist_templates` (items כ-JSONB, group_key
+    identity/income/process, is_system לזרע, is_active). RLS: קריאה לכל הצוות
+    (הפיקר), כתיבה `is_admin()` בלבד. זרע 12 רשימות המשרד (is_system=TRUE).
+  - **העברת הקבוע ל-DB** — `checklist-templates-store.service.ts` קורא מהטבלה;
+    הפיקר (`checklist-template-picker.tsx`) טוען דרך `getActiveChecklistTemplatesAction`;
+    `add-checklist-template.ts` מאתר items מה-DB לפי `templateKey` (string, לא enum).
+  - **מסך CRUD** — `settings/checklists/page.tsx` + `ChecklistTemplatesManager`
+    (קבוצות) + `ChecklistTemplateRow` + `ChecklistTemplateFormDialog` (שדות
+    controlled — לא form-action defaultValue, כדי לשרוד את ה-transition). 3 actions
+    create/update/delete (admin-gated). רשימות `is_system` ניתנות לעריכה אך לא למחיקה
+    (משביתים במקום). ניווט בקבוצת "מערכת" עם אייקון `ListChecks`.
+- **נדחה להמשך (חלק ב' מקורי):** **עריכת ברירת-המחדל לפי סוג עסקה**
+  (`case_type_documents`) — מסך נפרד שעורך אילו קטגוריות מסמך נטענות אוטומטית לכל
+  סוג עסקה. הטבלה קיימת (זרע 087), כיום רק SQL/Studio. ערך מוסף נמוך יותר מהרשימות
+  המוכנות; לא נבנה בסבב זה.
 
 ---
 

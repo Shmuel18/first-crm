@@ -1724,6 +1724,7 @@
       "people": "Team & permissions",
       "banks": "Banks & lenders",
       "templates": "Message templates",
+      "checklists": "Document checklists",
       "simulators": "Simulator thresholds",
       "integrations": "Integrations",
       "import": "Data import",
@@ -1817,6 +1818,42 @@
       "logoTypeError": "Unsupported file type (PNG/JPG/WEBP/SVG)",
       "logoSizeError": "Logo is too large (max 1MB)",
       "logoUploadError": "Logo upload failed"
+    },
+    "checklists": {
+      "title": "Document checklists",
+      "subtitle": "The preset lists offered by the \"Add ready-made list\" button in a case checklist. Edit their items, add new lists, or deactivate ones you no longer use.",
+      "new": "New list",
+      "empty": "No preset lists defined yet",
+      "groups": {
+        "identity": "Identity & general",
+        "income": "Income & employment",
+        "process": "Process & property"
+      },
+      "fields": {
+        "nameHe": "Name (Hebrew)",
+        "nameEn": "Name (English)",
+        "nameRequired": "A Hebrew name is required",
+        "group": "Group",
+        "items": "Items",
+        "itemsPlaceholder": "One item per line",
+        "itemsHint": "One item per line. Empty lines are dropped.",
+        "active": "Active (shown in the ready-made lists button)"
+      },
+      "form": {
+        "create": "New preset list",
+        "edit": "Edit preset list",
+        "createSubmit": "Add",
+        "editSubmit": "Save",
+        "saved": "List saved"
+      },
+      "row": {
+        "itemCount": "{count} items",
+        "deleteConfirm": "Delete the list \"{name}\"?",
+        "deleted": "List deleted",
+        "inactive": "Inactive",
+        "system": "System",
+        "systemLocked": "A built-in list can't be deleted — deactivate it instead"
+      }
     },
     "office": {
       "title": "Office details",

@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 
 import { ListPlus, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -18,11 +18,10 @@ import {
 import type { Locale } from '@/lib/i18n/direction';
 
 import { addChecklistTemplateAction } from '../actions/add-checklist-template';
-import {
-  CHECKLIST_TEMPLATES,
-  CHECKLIST_TEMPLATE_GROUPS,
-  type ChecklistTemplateKey,
-} from '../domain/checklist-templates';
+import { getActiveChecklistTemplatesAction } from '../actions/get-checklist-templates';
+import { CHECKLIST_TEMPLATE_GROUPS } from '../domain/checklist-templates';
+
+import type { ChecklistTemplateOption } from '../services/checklist-templates-store.service';
 
 type Props = {
   caseId: string;
@@ -39,8 +38,20 @@ export function ChecklistTemplatePicker({ caseId, locale }: Props) {
   const t = useTranslations('documents.checklist.manage');
   const tc = useTranslations('common');
   const [isPending, startTransition] = useTransition();
+  const [templates, setTemplates] = useState<ChecklistTemplateOption[]>([]);
 
-  const pick = (templateKey: ChecklistTemplateKey) => {
+  // Templates are DB-driven (editable from /settings/checklists) — fetch on mount.
+  useEffect(() => {
+    let alive = true;
+    void getActiveChecklistTemplatesAction().then((res) => {
+      if (alive && res.ok) setTemplates(res.templates);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const pick = (templateKey: string) => {
     startTransition(async () => {
       const res = await addChecklistTemplateAction({ caseId, templateKey });
       if (!res.ok) {
@@ -78,7 +89,7 @@ export function ChecklistTemplatePicker({ caseId, locale }: Props) {
             <DropdownMenuLabel className="text-xs text-neutral-500">
               {t(`templateGroups.${group}`)}
             </DropdownMenuLabel>
-            {CHECKLIST_TEMPLATES.filter((tpl) => tpl.group === group).map((tpl) => (
+            {templates.filter((tpl) => tpl.group === group).map((tpl) => (
               <DropdownMenuItem key={tpl.key} disabled={isPending} onClick={() => pick(tpl.key)}>
                 {locale === 'he' ? tpl.nameHe : tpl.nameEn}
               </DropdownMenuItem>
