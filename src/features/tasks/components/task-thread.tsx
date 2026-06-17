@@ -155,10 +155,11 @@ export function TaskThread({ taskId }: Props) {
 
   useEffect(() => {
     startLoad(async () => {
-      const res = await getTaskMentionableProfilesAction();
+      const res = await getTaskMentionableProfilesAction(taskId);
       if (res.ok) setMembers(res.members);
     });
-  }, []);
+    // Re-fetch when the task changes — the mentionable set is task-scoped.
+  }, [taskId]);
 
   // Scroll to bottom when new comments arrive.
   useEffect(() => {

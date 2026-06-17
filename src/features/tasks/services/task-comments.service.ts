@@ -75,19 +75,34 @@ export async function getTaskCommentsAction(
   return { ok: true, comments };
 }
 
-export async function getTaskMentionableProfilesAction(): Promise<
+type MentionableRow = { id: string; first_name: string | null; last_name: string | null };
+
+/**
+ * Teammates the caller may @-mention in THIS task's thread — only active users
+ * who can actually VIEW the task (RPC list_task_mentionable_profiles, migration
+ * 188, mirrors tasks_select), excluding the caller. Scoping the picker stops a
+ * mention/notification from leaking the task to someone with no access (F11).
+ */
+export async function getTaskMentionableProfilesAction(taskId: string): Promise<
   { ok: true; members: Array<{ id: string; name: string }> } | { ok: false; error: 'unauthorized' }
 > {
   const supabase = await createClient();
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
 
-  const admin = createAdminClient();
-  const { data } = await admin
-    .from('profiles')
-    .select('id, first_name, last_name')
-    .eq('is_active', true)
-    .order('first_name');
+  // The RPC reads auth.uid() (caller context) + can_view_task, so it must run
+  // on the user's session client, not the admin one.
+  const { data, error } = await (supabase as unknown as {
+    rpc(
+      fn: 'list_task_mentionable_profiles',
+      args: { p_task_id: string },
+    ): PromiseLike<{ data: MentionableRow[] | null; error: { code?: string } | null }>;
+  }).rpc('list_task_mentionable_profiles', { p_task_id: taskId });
+
+  if (error) {
+    console.error('[getTaskMentionableProfiles] rpc error', error.code);
+    return { ok: true, members: [] }; // degrade to no suggestions, don't crash the thread
+  }
 
   const members = (data ?? [])
     .map((p) => ({ id: p.id, name: formatPersonName(p.first_name, p.last_name) || '' }))
