@@ -15,7 +15,7 @@
 | 4 | Leads, public intake, landing, consent, legal | **Complete — 20 findings (5 Medium, 15 Low; 2 claimed-High refuted); 11 fixed + DEPLOYED, 8 deferred, 1 note-only; migs 173-175 in prod; build dff8f24** | ROUND-04-HANDOFF.md |
 | 5 | Case lifecycle core, dashboard, lists, services | **Complete — 26 findings (2 High, 5 Medium, 19 Low) + 7-entry xcut layer; 2H+5M+2L fixed + DEPLOYED to both deployment targets (Kaufman/Vercel production + Vultr staging), rest deferred; migs 176-180; build fb76e0b; schema 180; 368 tests; 4 pgTAP + 8 erase unit tests; live functional smoke PASSED on Vultr staging (2026-06-14)** | ROUND-05-HANDOFF.md |
 | 6 | Case workspace UI and orchestration | **Complete — 22 findings → 19 confirmed (0 High, 1 Medium, 18 Low) + 3 refuted (multi-agent workflow); 10 fixed + DEPLOYED (build aceb724→bc1cfa5, no migration, schema 180), 8 deferred; 375 tests + edit-gate unit tests (2026-06-14)** | ROUND-06-HANDOFF.md |
-| 7 | Case PDFs, reports, and exports | Not started | Pending |
+| 7 | Case PDFs, reports, and exports | **Complete — 14 findings → 8 confirmed (0 High, 1 Medium, 6 Low) + 6 refuted (multi-agent workflow); 4 fixed + DEPLOYED (build 1ea7791, no migration), 3 cosmetic Low deferred; 388 tests (2026-06-14)** | ROUND-07-HANDOFF.md |
 | 8 | Borrowers, identity, and income | Not started | Pending |
 | 9 | Obligations, case banks, and expenses | Not started | Pending |
 | 10 | Documents, uploads, storage, retention, erasure | Not started | Pending |
@@ -223,6 +223,19 @@ Never delete closed findings.
 | R6-draft-flow-5 | Low | Deferred | High | 6 | 8 | Returning-client amber overwrite-flag only on 7 of the fillable fields (4 visible misc/citizenship unflagged) | needs R8 borrower compact-field threading | src/features/cases/components/draft-borrower-card.tsx, borrower-misc-row.tsx |
 | R6-draft-flow-6 | Low | Deferred | High | 6 | — | "setup" error shows a developer "run migration 074" message to advisors | duplicate of deferred R5-create-draft-4; practically unreachable | src/features/cases/components/new-case-page-client.tsx, messages/*.json |
 | R6-crosscut-1 | Low | Fixed | High | 6 | — | Sort indicator uses Unicode arrow glyphs as visible UI (= R6-dashboard-list-4) | fixed with dashboard-list-4 | src/features/cases/components/cases-sort-control.tsx |
+| R7-pdf-render-1 | Medium | Fixed | High | 7 | 19 | generateBankPdfAction runs expensive @react-pdf renderToBuffer with NO checkRateLimit (CLAUDE.md requires it for export-pdf; sibling generate-report-pdf.tsx does it). Authenticated cost/availability gap, not a data leak (= R7-format-crosscut-1) | 1ea7791: getCurrentUser + checkRateLimit(export_bank_pdf, 30/hr, fail-closed) | src/features/cases/actions/generate-bank-pdf.tsx |
+| R7-pdf-render-2 | Low | Fixed | High | 7 | — | Same action: raw caseId (no z.uuid()) + no explicit auth.getUser(), relied solely on RLS | 1ea7791: z.uuid() safeParse + getCurrentUser (fixed with render-1) | src/features/cases/actions/generate-bank-pdf.tsx |
+| R7-export-pipeline-2 | Low | Fixed | High | 7 | — | /api/exports/cases had no try/catch → listCases/render throw escaped the JSON error contract as a raw Next 500 | 1ea7791: try/catch → errorJson('unknown',500) | src/app/api/exports/cases/route.ts |
+| R7-format-crosscut-2 | Low | Fixed | High | 7 | — | PDF fmtCurrency/fmtNum guard only null/undefined → 'NaN ₪' possible (canonical uses Number.isFinite); reachability ~nil (numeric cols can't store NaN) | 1ea7791: Number.isFinite guard | src/features/cases/pdf/formatters.ts |
+| R7-pdf-render-3 | Low | Deferred | High | 7 | — | Cover-page borrower table renders one flex:1 column per borrower with no cap → many borrowers cram/wrap on A4 (uncommon; no data loss) | cosmetic (defer) | src/features/cases/pdf/cover-page.tsx |
+| R7-pdf-render-4 | Low | Deferred | High | 7 | — | fmtDate uses bare toLocaleDateString (no options) → format differs from cover stamp + varies across runtimes | cosmetic (defer) | src/features/cases/pdf/formatters.ts |
+| R7-format-crosscut-4 | Low | Deferred | High | 7 | — | fonts.ts registers weight 600 → Regular .ttf (no SemiBold) → fontWeight:600 renders regular; react-pdf does no faux-bold | needs heebo-semibold.ttf asset (defer; documented in code) | src/features/cases/pdf/fonts.ts |
+| R7-export-pipeline-1 | High(claimed) | Refuted | High | 7 | — | Soft-deleted borrowers leak into exports (name+national ID) | RLS borrowers_select USING (deleted_at IS NULL) redacts the embed → null → already filtered; export uses the user client, not service-role | (none) |
+| R7-export-pipeline-3 | Low | Refuted | High | 7 | — | Audit-writer logs error.message — use structured logging | server-side only; narrowing to .message is the intended PII-safe direction; suggested "log full err" was counterproductive | (none) |
+| R7-export-pipeline-4 | Low | Refuted | High | 7 | — | In-memory export + 30s cap = scaling failure | intentional + documented design; ~80-case scale has huge headroom; auth+rate-limited. Informational | (none) |
+| R7-pdf-render-5 | Low | Refuted | High | 7 | — | ✓ glyph in RTL Hebrew numeric cell renders ambiguously | react-pdf flex (row-reverse reorders cells not intra-cell text); legend defines ✓ in both locales. Cosmetic | (none) |
+| R7-format-crosscut-3 | Low | Refuted | High | 7 | — | PDF formatters duplicate/diverge from canonical utils | intentional: reusing canonical would inject RTL/bidi marks that BREAK react-pdf; manual ₪ suffix deliberately deterministic; documented | (none) |
+| R7-format-crosscut-5 | Low | Refuted | High | 7 | — | Mixed He/En text has no bidi isolation | false premise — react-pdf 4.5.1 DOES run the Unicode Bidi Algorithm (bidi-js via @react-pdf/textkit); signature line is all-LTR anyway | (none) |
 
 ## Cross-Round Contracts
 
@@ -237,7 +250,7 @@ evidence.
 | C-004 | 4 | 5,19,20 | Public intake preserves consent and converts safely | R4: consent genuinely captured + DB-enforced for /check (z.literal(true), mig 154); landing web-contact basis made honest per source (mig 175). GAP: consent/provenance NOT propagated to the case on conversion (R4-xcut-2) — survives only via the retained lead | Partially verified — R5 confirmed convert no longer orphans (mig 176); rich consent/metadata import still open (R5 convert rich-path not field-diffed) |
 | C-005 | 5 | 6,8-10,14,19,20 | Case lifecycle and visibility rules are consistent | R5 found 4 app↔DB consistency breaks (orphan-on-create/convert, case_properties RLS narrower than can_edit_case, status/assign enforced in only 1 of 3 actions, permanent-delete bypassing the retention switch) — all closed by migs 176-180 + DB triggers on both deployment targets (Kaufman/Vercel production + Vultr staging) | Closed for fixed paths — partially open: deferred Lows (inline cross-field rule, fee lost-update, manager-only over-fetch) + R19 final-grant re-verification |
 | C-006 | 6 | 8-14,20 | Case workspace composes child domains without leaks or stale state | R6: composition sound — no cross-case leak (bidi candidate refuted), no stale-state defect (prefs candidate intentional). Closed the edit-affordance gap: case-detail UI now gates every edit surface on can_edit_case + the granular status/assign perms (aceb724), and the dashboard gates per-row (not canViewAll) | Partially verified — incomes/obligations edit gate NOT yet wired (full-width grid, R8/R9); manager-only over-fetch (R6-dashboard-list-2) deferred; R19 re-verifies final state |
-| C-007 | 7 | 8-9,20 | Exports match authorized source data | Pending | Open |
+| C-007 | 7 | 8-9,20 | Exports match authorized source data | R7: bulk export route is auth-gated + permission-checked + rate-limited (5/hr PDF, 10/hr XLSX, fail-closed) + RLS-scoped (soft-deleted borrowers redacted via borrowers_select RLS, not service-role); XLSX formula-injection examined + cleared; bank-PDF action hardened (auth+z.uuid()+rate-limit, 1ea7791) | Partially verified — R8/R9 verify the financial/borrower inputs feeding exports; cosmetic PDF-render Lows deferred; R19 verifies final RLS on export read paths |
 | C-008 | 8 | 15,19,20 | Borrower identity and income rules persist correctly | Pending | Open |
 | C-009 | 9 | 10,15,19,20 | Financial, bank, expense, and receipt rules remain consistent | Pending | Open |
 | C-010 | 10 | 11,19,20 | Storage, Drive, retention, and erasure remain consistent | Pending | Open |
@@ -279,7 +292,7 @@ evidence.
 | Landing, intake, consent, lead conversion | 4 | 5,19-20 | Static review complete; 11 findings fixed + DEPLOYED (migs 173-175); consent honest per source; retention master switch; deferred Lows + convert-consent-propagation (R4-xcut-2) open | ROUND-04-HANDOFF.md |
 | Case create/edit/status/delete/restore | 5 | 19-20 | Static review complete; 2H+5M+2L fixed + DEPLOYED to both deployment targets (Kaufman/Vercel production + Vultr staging, migs 176-180); 4 consistency breaks closed; 368 tests + 4 pgTAP + 8 erase unit tests; **live functional smoke PASSED on Vultr staging** (6/6 areas); Kaufman-prod smoke intentionally skipped | ROUND-05-HANDOFF.md |
 | Case workspace orchestration | 6 | 8-14,20 | Static review complete; 19 confirmed/3 refuted; edit-affordance gate (R6-inline-actions-1) + dead-code + polish fixed + DEPLOYED (aceb724→bc1cfa5, no migration); 375 tests + edit-gate unit tests; incomes/obligations gate + file-splits deferred | ROUND-06-HANDOFF.md |
-| PDF/XLSX export | 7 | 20 | Not tested | Pending |
+| PDF/XLSX export | 7 | 20 | Static review complete; 8 confirmed/6 refuted; bank-PDF action rate-limit/validation gap (Medium) + route try/catch + NaN guard fixed + DEPLOYED (1ea7791, no migration); 388 tests; 3 cosmetic Low deferred | ROUND-07-HANDOFF.md |
 | Borrower identity and income editing | 8 | 19-20 | Not tested | Pending |
 | Obligations, banks, expenses, receipts | 9 | 19-20 | Not tested | Pending |
 | Upload, preview, delete, retention, erasure | 10 | 11,19-20 | Not tested | Pending |
@@ -335,6 +348,9 @@ Authorized coordinator: persist proposed resource rows after reviewing evidence.
 | 2026-06-14 | 6 | R6 fix commit `aceb724` (35 files; parallel email-attachments `8962f4b` + pre-existing `task-form-dialog.tsx` EXCLUDED) → push `main` → Vercel deploy | Pass | build aceb724 live (then bc1cfa5 after a parallel push); /api/health 200; schema 180/180; no migration |
 | 2026-06-14 | 6 | Vultr staging deploy (`bc1cfa5` incl. aceb724, deploy.sh `SKIP_MIGRATIONS=1`) | Pass | live + healthy; deep-health build bc1cfa5, schema 180/180, db ok; Drive degraded = expected staging baseline |
 | 2026-06-14 | 6 | Live edit-gate smoke on Vultr — POSITIVE/regression (demo.admin manager, Chrome) | Pass | case-detail status cell renders as an interactive button (chevron) + property block renders editable select/inputs → canEdit=true path unchanged for authorized users (gate didn't break editing). READ-ONLY/negative direction NOT live-checked: no demo secretary account, and flipping a demo role = access-control change (not done unilaterally); read-only logic covered by case-edit-gate.test.ts (view-only secretary persona) |
+| 2026-06-14 | 7 | Round-7 review (multi-agent Workflow: 3 dimension reviewers + adversarial verify, 17 agents) | Pass | 14 raw → 8 confirmed / 6 refuted (0 High, 1 Medium, 6 Low) |
+| 2026-06-14 | 7 | `vitest` / `tsc --noEmit` / `eslint` (post-fix) | Pass | 388 tests; 0 type errors; 0 lint warnings |
+| 2026-06-14 | 7 | R7 fix commit `1ea7791` (3 files; isolated from heavy parallel simulator/statistics work — verified via git merge-base that all R5/R6 commits are ancestors) → push `main` → Vercel deploy | Pass | bank-PDF action rate-limit/auth/Zod + export route try/catch + PDF NaN guard; no migration |
 
 ## Open Decisions and Accepted Risks
 
@@ -358,13 +374,17 @@ Authorized coordinator: persist proposed resource rows after reviewing evidence.
 | D-016 | User | R6 edit-affordance gate (R6-inline-actions-1) shipped for the case-DETAIL page + dashboard, but NOT the incomes/obligations blocks (full-width grid items where a page-level fieldset breaks col-span) | The DB/RLS still blocks the writes (server-enforced); the UI-honesty gate for those two blocks belongs to their owning rounds (R8 incomes, R9 obligations) where it can be wired at the block level | R8 / R9 | Accepted (deferred) |
 | D-017 | User→Prod | R6 fix deployed to BOTH targets via the `main` push (Vercel auto) + Vultr deploy.sh; landed as build bc1cfa5 (a parallel agent's task-dialog fix rode on top of aceb724) | No migration (schema 180); the gate is defense-in-depth so even a UI bug can't cause unauthorized writes | 2026-06-14 | Closed (DB n/a + code) |
 | D-018 | User | R6 read-only/view-only edit-gate verified by unit test only (case-edit-gate.test.ts); live secretary-persona smoke WAIVED | Positive/regression path verified live (authorized editing unchanged); no demo secretary account, and flipping a demo role = access-control change; user accepted unit-test coverage (option c) | If a secretary demo account is ever provisioned | Accepted (waived) |
+| D-019 | User | R7 fixed the Medium + 3 Low; 3 cosmetic Low deferred (borrower-table column cap, PDF date-format options, real heebo-semibold.ttf for bold) | Cosmetic PDF-render polish, not correctness/security; the SemiBold one needs a font asset. bank-PDF rate_limited surfaces the generic toast (tailored copy deferred to avoid touching co-mingled messages/*.json) | When PDF polish is prioritized | Accepted (deferred) |
 
 ## Areas Not Yet Verified
 
-- Rounds 1-6 reviewed + approved fixes deployed; Rounds 7-20 unstarted. R5
-  (migs 176-180) and R6 (build aceb724→bc1cfa5, no migration) fixes are live on
-  both deployment targets (Kaufman/Vercel production + Vultr staging); dynamic
-  AT/visual verification still pending across rounds.
+- Rounds 1-7 reviewed + approved fixes deployed; Rounds 8-20 unstarted. R5
+  (migs 176-180), R6 (build aceb724→bc1cfa5), and R7 (build 1ea7791, no migration)
+  fixes are live (Vercel production; Vultr staging tracks main); dynamic AT/visual
+  verification still pending across rounds.
+- R7 deferred 3 cosmetic PDF-render Lows (borrower-table cap, date format, real
+  SemiBold font — D-019); only R7 fix not live-smoked (export paths covered by
+  the rate-limit suite + 388 unit tests; no functional regression risk).
 - R5 authenticated functional smoke PASSED live on Vultr staging (6/6 areas);
   intentionally skipped on Kaufman prod (D-014).
 - R6 edit-affordance gate: incomes/obligations blocks NOT yet gated (D-016, R8/R9).
