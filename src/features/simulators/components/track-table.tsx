@@ -9,7 +9,9 @@ import type { RepaymentType, TrackInput, TrackResult, TrackType } from '../types
 
 type Props = {
   tracks: ReadonlyArray<TrackInput>;
-  /** Per-track engine results, keyed by trackId, for the inline result columns. */
+  /** Per-track engine results, keyed by trackId. When omitted (comparison /
+   *  scenario editors, which surface costs elsewhere) the result columns are
+   *  hidden and only the editable columns show. */
   summaries?: ReadonlyArray<TrackResult>;
   onAdd: () => void;
   onRemove: (id: string) => void;
@@ -19,9 +21,10 @@ type Props = {
 const cellInput =
   'h-8 w-full rounded-md border border-neutral-200 bg-white px-2 text-sm shadow-xs outline-none transition focus:border-brand-gold-text focus:ring-2 focus:ring-brand-gold-text/30';
 
-/** Dense, scannable track editor — one row per track, with per-row results inline. */
+/** Dense, scannable track editor — one row per track, with per-row results inline when available. */
 export function TrackTable({ tracks, summaries = [], onAdd, onRemove, onUpdate }: Props) {
   const t = useTranslations('simulators.mix.tracks');
+  const showResults = summaries.length > 0;
 
   return (
     <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
@@ -37,7 +40,7 @@ export function TrackTable({ tracks, summaries = [], onAdd, onRemove, onUpdate }
         </button>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[52rem] border-collapse text-sm">
+        <table className={`w-full border-collapse text-sm ${showResults ? 'min-w-[52rem]' : 'min-w-[34rem]'}`}>
           <thead>
             <tr className="text-xs text-neutral-500">
               <Th>{t('type')}</Th>
@@ -46,9 +49,13 @@ export function TrackTable({ tracks, summaries = [], onAdd, onRemove, onUpdate }
               <Th>{t('term')}</Th>
               <Th>{t('repayment')}</Th>
               <Th>{t('cpiGrace')}</Th>
-              <Th align="end">{t('monthly')}</Th>
-              <Th align="end">{t('totalCost')}</Th>
-              <Th align="end">{t('ratio')}</Th>
+              {showResults && (
+                <>
+                  <Th align="end">{t('monthly')}</Th>
+                  <Th align="end">{t('totalCost')}</Th>
+                  <Th align="end">{t('ratio')}</Th>
+                </>
+              )}
               <th className="w-10 border-b border-neutral-100" />
             </tr>
           </thead>
@@ -58,6 +65,7 @@ export function TrackTable({ tracks, summaries = [], onAdd, onRemove, onUpdate }
                 key={track.id}
                 track={track}
                 summary={summaries.find((item) => item.trackId === track.id)}
+                showResults={showResults}
                 onRemove={onRemove}
                 onUpdate={onUpdate}
               />
@@ -73,11 +81,13 @@ export function TrackTable({ tracks, summaries = [], onAdd, onRemove, onUpdate }
 function TrackTableRow({
   track,
   summary,
+  showResults,
   onRemove,
   onUpdate,
 }: {
   track: TrackInput;
   summary?: TrackResult;
+  showResults: boolean;
   onRemove: (id: string) => void;
   onUpdate: (id: string, patch: Partial<TrackInput>) => void;
 }) {
@@ -124,9 +134,13 @@ function TrackTableRow({
           onChange={(e) => onUpdate(track.id, linked ? { cpiAnnualPct: Number(e.target.value) } : { graceMonths: Number(e.target.value) })}
         />
       </Td>
-      <Td align="end" className="text-neutral-800">{summary ? formatMoney(summary.firstPayment) : '—'}</Td>
-      <Td align="end" className="text-neutral-800">{summary ? formatMoney(summary.totalCost) : '—'}</Td>
-      <Td align="end" className="font-semibold text-brand-gold-text">{summary ? formatRatio(summary.costPerShekel) : '—'}</Td>
+      {showResults && (
+        <>
+          <Td align="end" className="text-neutral-800">{summary ? formatMoney(summary.firstPayment) : '—'}</Td>
+          <Td align="end" className="text-neutral-800">{summary ? formatMoney(summary.totalCost) : '—'}</Td>
+          <Td align="end" className="font-semibold text-brand-gold-text">{summary ? formatRatio(summary.costPerShekel) : '—'}</Td>
+        </>
+      )}
       <Td>
         <button
           type="button"

@@ -10,7 +10,7 @@ import { ComparisonTable } from './comparison-table';
 import { ComparisonVariantTabs } from './comparison-variant-tabs';
 import { LoanBasePanel } from './loan-base-panel';
 import { RegulatoryViolationsBanner } from './regulatory-violations-banner';
-import { TrackEditor } from './track-editor';
+import { TrackTable } from './track-table';
 
 type Props = {
   thresholds: RegulatoryThresholds;
@@ -50,7 +50,7 @@ export function MixComparison({ thresholds, initialBase, initialPropertyKind }: 
           onRemove={comp.removeVariant}
         />
         <RegulatoryViolationsBanner violations={comp.activeViolations} />
-        <TrackEditor tracks={comp.activeTracks} onAdd={comp.addTrack} onRemove={comp.removeTrack} onUpdate={comp.updateTrack} />
+        <TrackTable tracks={comp.activeTracks} onAdd={comp.addTrack} onRemove={comp.removeTrack} onUpdate={comp.updateTrack} />
       </div>
 
       <ComparisonRankingCards comparison={comp.comparison} />

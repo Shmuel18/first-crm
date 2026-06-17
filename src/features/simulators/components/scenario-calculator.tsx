@@ -8,7 +8,7 @@ import { LoanBasePanel } from './loan-base-panel';
 import { ScenarioInputsPanel } from './scenario-inputs-panel';
 import { ScenarioPresetPicker } from './scenario-preset-picker';
 import { ScenarioResultPanel } from './scenario-result-panel';
-import { TrackEditor } from './track-editor';
+import { TrackTable } from './track-table';
 
 type Props = {
   initialInput?: MixInput;
@@ -30,7 +30,7 @@ export function ScenarioCalculator({ initialInput, initialPropertyKind }: Props)
         onMoneyChange={sc.setMoney}
         onTermChange={sc.setTermMonths}
       />
-      <TrackEditor tracks={sc.mix.tracks} onAdd={sc.addTrack} onRemove={sc.removeTrack} onUpdate={sc.updateTrack} />
+      <TrackTable tracks={sc.mix.tracks} onAdd={sc.addTrack} onRemove={sc.removeTrack} onUpdate={sc.updateTrack} />
 
       <section className="space-y-4 rounded-xl border border-neutral-200 bg-brand-surface p-4">
         <div>
