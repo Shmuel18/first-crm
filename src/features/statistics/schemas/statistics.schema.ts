@@ -50,6 +50,10 @@ export const StatisticsSummarySchema = z.object({
   financial: z.object({
     active_loan_volume: z.number(),
     executed_fee_total: z.number(),
+    /** Commissions/salaries paid out of the executed cases' fees (migration
+     *  186). Net fee = executed_fee_total − this. Defaults to 0 for payloads
+     *  from an RPC predating migration 187. */
+    executed_payout_total: z.number().default(0),
     executed_expected_income_total: z.number(),
   }),
 });

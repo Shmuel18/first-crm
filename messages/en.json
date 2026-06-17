@@ -274,6 +274,10 @@
       "hide": "Hide",
       "activeLoanVolume": "Active loan volume",
       "executedFees": "Fees (executed)",
+      "feeGross": "Gross fee (executed)",
+      "feeNet": "Net fee (executed)",
+      "tithe": "Tithe (10% of net)",
+      "fifth": "Fifth (20% of net)",
       "expectedIncome": "Expected income (executed)"
     },
     "empty": {

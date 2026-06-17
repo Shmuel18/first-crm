@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { Banknote, Coins, Eye, EyeOff, TrendingUp } from 'lucide-react';
+import { Banknote, Coins, Eye, EyeOff, Gift, HandCoins, TrendingUp, Wallet } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { parseLocale } from '@/lib/i18n/direction';
@@ -28,6 +28,13 @@ export function FinancialSummary({ financial }: Props) {
   const Icon = revealed ? EyeOff : Eye;
   const toggleLabel = revealed ? t('financial.hide') : t('financial.reveal');
 
+  // NET = gross fee − commissions/salaries paid out (case_payouts, migration
+  // 186). מעשר / חומש (tithe / fifth) are 10% / 20% of the net — charity
+  // figures the manager wants at a glance.
+  const netFee = financial.executed_fee_total - financial.executed_payout_total;
+  const tithe = netFee * 0.1;
+  const fifth = netFee * 0.2;
+
   return (
     <section className="rounded-xl border border-neutral-200 bg-brand-gold-soft p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
@@ -45,17 +52,20 @@ export function FinancialSummary({ financial }: Props) {
           <span>{toggleLabel}</span>
         </button>
       </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <KpiCard
           label={t('financial.activeLoanVolume')}
           value={show(financial.active_loan_volume)}
           icon={Banknote}
         />
         <KpiCard
-          label={t('financial.executedFees')}
+          label={t('financial.feeGross')}
           value={show(financial.executed_fee_total)}
           icon={Coins}
         />
+        <KpiCard label={t('financial.feeNet')} value={show(netFee)} icon={Wallet} />
+        <KpiCard label={t('financial.tithe')} value={show(tithe)} icon={HandCoins} />
+        <KpiCard label={t('financial.fifth')} value={show(fifth)} icon={Gift} />
         <KpiCard
           label={t('financial.expectedIncome')}
           value={show(financial.executed_expected_income_total)}
