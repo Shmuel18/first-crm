@@ -10,11 +10,17 @@ import type { NotificationType } from '../types';
 
 /** The kinds this mirror handles. Task assigned/completed email from their
  *  actions; backup/erasure from their watchdog crons; web_lead → office inbox. */
-type MirroredKind = 'case_mention' | 'task_mention' | 'task_reminder' | 'case_status_overdue';
+type MirroredKind =
+  | 'case_mention'
+  | 'task_mention'
+  | 'task_comment'
+  | 'task_reminder'
+  | 'case_status_overdue';
 
 const MIRRORED_KINDS = new Set<MirroredKind>([
   'case_mention',
   'task_mention',
+  'task_comment',
   'task_reminder',
   'case_status_overdue',
 ]);
@@ -53,7 +59,10 @@ export async function sendMirroredNotificationEmail(input: MirrorInput): Promise
 
     const params = bodyParams(input.kind, input.data, locale, tEmail('someone'));
     const url =
-      input.caseId && input.kind !== 'task_reminder' && input.kind !== 'task_mention'
+      input.caseId &&
+      input.kind !== 'task_reminder' &&
+      input.kind !== 'task_mention' &&
+      input.kind !== 'task_comment'
         ? `${env.NEXT_PUBLIC_APP_URL}/cases/${input.caseId}`
         : `${env.NEXT_PUBLIC_APP_URL}/tasks`;
 
@@ -87,7 +96,7 @@ function bodyParams(
   const str = (key: string): string => (typeof data[key] === 'string' ? (data[key] as string) : '');
   const num = (key: string): number => (typeof data[key] === 'number' ? (data[key] as number) : 0);
 
-  if (kind === 'case_mention' || kind === 'task_mention') {
+  if (kind === 'case_mention' || kind === 'task_mention' || kind === 'task_comment') {
     return {
       actor: str('actorName') || fallbackActor,
       preview: str('preview'),

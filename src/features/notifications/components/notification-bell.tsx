@@ -43,7 +43,8 @@ function isTaskNotification(type: NotificationType): boolean {
     type === 'task_assigned' ||
     type === 'task_completed' ||
     type === 'task_reminder' ||
-    type === 'task_mention'
+    type === 'task_mention' ||
+    type === 'task_comment'
   );
 }
 
@@ -193,6 +194,13 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
         const task = d.taskTitle || t('aTask');
         const preview = [task, d.preview].filter(Boolean).join(': ');
         return t('message.case_mention', { actor, preview });
+      }
+      case 'task_comment': {
+        const d = n.data as Partial<NotificationDataTaskMention>;
+        const actor = d.actorName || (n.actor_id ? t('someone') : t('system'));
+        const task = d.taskTitle || t('aTask');
+        const preview = d.preview ?? '';
+        return t('message.task_comment', { actor, task, preview });
       }
       case 'backup_stale':
         return t('message.backup_stale');

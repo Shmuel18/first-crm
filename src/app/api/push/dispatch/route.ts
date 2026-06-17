@@ -31,6 +31,7 @@ const TITLES: Record<NotificationType, { he: string; en: string }> = {
   task_completed: { he: 'משימה הושלמה', en: 'A task was completed' },
   task_reminder: { he: 'תזכורת למשימה', en: 'Task reminder' },
   task_mention: { he: 'אוזכרת במשימה', en: 'You were mentioned in a task' },
+  task_comment: { he: 'תגובה חדשה במשימה', en: 'New comment on a task' },
   case_mention: { he: 'אוזכרת בתיק', en: 'You were mentioned in a case' },
   case_status_overdue: { he: 'תיק ממתין מעבר לזמן', en: 'A case is overdue' },
   backup_stale: { he: 'התראת מערכת', en: 'System alert' },

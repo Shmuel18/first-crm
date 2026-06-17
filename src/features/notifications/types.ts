@@ -9,6 +9,7 @@ export const NOTIFICATION_TYPE_VALUES = [
   'task_reminder',
   'case_mention',
   'task_mention',
+  'task_comment',
   'backup_stale',
   'erasure_stale',
   'web_lead',
@@ -109,6 +110,7 @@ export type NotificationDataByType = {
   task_reminder: NotificationDataTask;
   case_mention: NotificationDataCaseMention;
   task_mention: NotificationDataTaskMention;
+  task_comment: NotificationDataTaskMention;
   backup_stale: NotificationDataBackupStale;
   erasure_stale: NotificationDataErasureStale;
   web_lead: NotificationDataWebLead;
