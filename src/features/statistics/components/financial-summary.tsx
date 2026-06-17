@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { Banknote, Coins, Eye, EyeOff, Gift, HandCoins, TrendingUp, Wallet } from 'lucide-react';
+import { Banknote, CalendarClock, Coins, Eye, EyeOff, Gift, HandCoins, TrendingUp, Wallet } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { parseLocale } from '@/lib/i18n/direction';
@@ -57,6 +57,11 @@ export function FinancialSummary({ financial }: Props) {
           label={t('financial.activeLoanVolume')}
           value={show(financial.active_loan_volume)}
           icon={Banknote}
+        />
+        <KpiCard
+          label={t('financial.activeFee')}
+          value={show(financial.active_fee_total)}
+          icon={CalendarClock}
         />
         <KpiCard
           label={t('financial.feeGross')}

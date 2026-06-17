@@ -273,6 +273,7 @@
       "reveal": "Show",
       "hide": "Hide",
       "activeLoanVolume": "Active loan volume",
+      "activeFee": "Expected fee (active)",
       "executedFees": "Fees (executed)",
       "feeGross": "Gross fee (executed)",
       "feeNet": "Net fee (executed)",
