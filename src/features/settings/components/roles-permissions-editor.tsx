@@ -44,14 +44,22 @@ export function RolesPermissionsEditor({ roles, permissions, granted, locale }: 
   const [selectedRoleId, setSelectedRoleId] = useState(
     () => roles.find((r) => r.key !== 'admin')?.id ?? roles[0]?.id ?? '',
   );
-  const [grantedMap, setGrantedMap] = useState(() => buildMap(granted));
   const [pending, startTransition] = useTransition();
 
-  // Reconcile to fresh server props after a revalidation.
+  // Optimistic grant toggles, keyed `${roleId}:${permId}` -> desired value.
+  // They take precedence over the server `granted` prop and SURVIVE a
+  // revalidation until a fresh prop confirms them. Without this, the post-save
+  // route refetch (which may not yet reflect the just-saved change — a
+  // revalidation/cache race) would overwrite the toggle the server already
+  // accepted, and the switch would visually "jump back".
+  const [overrides, setOverrides] = useState<Map<string, boolean>>(() => new Map());
+
+  // When new server props arrive, drop only the overrides the server now agrees
+  // with; overrides the (possibly stale) prop hasn't caught up to are preserved.
   const [syncedRef, setSyncedRef] = useState(granted);
   if (syncedRef !== granted) {
     setSyncedRef(granted);
-    setGrantedMap(buildMap(granted));
+    setOverrides((prev) => reconcileOverrides(prev, granted));
   }
 
   const grouped = useMemo(
@@ -62,20 +70,31 @@ export function RolesPermissionsEditor({ roles, permissions, granted, locale }: 
   const isAdminRole = selectedRole?.key === 'admin';
   const roleName = (r: RoleRow) => roleManagementLabel(r, locale, tLevel);
 
-  const isOn = (permId: string) =>
-    isAdminRole || (grantedMap[selectedRoleId]?.has(permId) ?? false);
+  const permKey = (permId: string) => `${selectedRoleId}:${permId}`;
+
+  const isOn = (permId: string) => {
+    if (isAdminRole) return true;
+    const override = overrides.get(permKey(permId));
+    return override ?? (granted[selectedRoleId]?.includes(permId) ?? false);
+  };
 
   const toggle = (permId: string) => {
     if (isAdminRole) {
       toast.error(t('toast.adminLocked'));
       return;
     }
-    const next = !(grantedMap[selectedRoleId]?.has(permId) ?? false);
-    setGrantedMap((prev) => withToggle(prev, selectedRoleId, permId, next));
+    const key = permKey(permId);
+    const next = !isOn(permId);
+    setOverrides((prev) => new Map(prev).set(key, next));
     startTransition(async () => {
       const res = await toggleRolePermissionAction(selectedRoleId, permId, next);
       if (!res.ok) {
-        setGrantedMap((prev) => withToggle(prev, selectedRoleId, permId, !next));
+        // Revert to server truth on failure (drop the optimistic override).
+        setOverrides((prev) => {
+          const map = new Map(prev);
+          map.delete(key);
+          return map;
+        });
         toast.error(t('toast.failed'));
       }
     });
@@ -182,22 +201,26 @@ export function RolesPermissionsEditor({ roles, permissions, granted, locale }: 
   );
 }
 
-function buildMap(granted: Record<string, string[]>): Record<string, Set<string>> {
-  const map: Record<string, Set<string>> = {};
-  for (const [roleId, ids] of Object.entries(granted)) map[roleId] = new Set(ids);
-  return map;
-}
-
-function withToggle(
-  prev: Record<string, Set<string>>,
-  roleId: string,
-  permId: string,
-  on: boolean,
-): Record<string, Set<string>> {
-  const set = new Set(prev[roleId] ?? []);
-  if (on) set.add(permId);
-  else set.delete(permId);
-  return { ...prev, [roleId]: set };
+/**
+ * Drop the optimistic overrides the server `granted` prop now reflects (server
+ * has caught up); keep the rest. Returns the SAME reference when nothing
+ * changes, so the render-phase reconcile can't loop. Role/permission ids are
+ * UUIDs (no ':'), so splitting the key on the first ':' is unambiguous.
+ */
+function reconcileOverrides(
+  prev: Map<string, boolean>,
+  granted: Record<string, string[]>,
+): Map<string, boolean> {
+  if (prev.size === 0) return prev;
+  const next = new Map(prev);
+  for (const [key, desired] of prev) {
+    const sep = key.indexOf(':');
+    const roleId = key.slice(0, sep);
+    const permId = key.slice(sep + 1);
+    const serverHas = granted[roleId]?.includes(permId) ?? false;
+    if (serverHas === desired) next.delete(key);
+  }
+  return next.size === prev.size ? prev : next;
 }
 
 function groupByCategory(
