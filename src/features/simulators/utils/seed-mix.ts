@@ -13,10 +13,19 @@ export type CaseSeedFields = {
  * conversion and equity fallback live in one place, not triplicated in routes.
  */
 export function seedBaseFromCase(c: CaseSeedFields): Omit<MixInput, 'tracks'> {
-  const mortgageAmount = Math.max(1, Number(c.requested_mortgage_amount ?? 800000) * 100);
-  const propertyValue = Math.max(mortgageAmount, Number(c.property_value ?? 1200000) * 100);
-  const equity = Math.max(0, Number(c.equity ?? propertyValue / 100 - mortgageAmount / 100) * 100);
+  // `?? default` only substitutes null/undefined — a non-numeric string would
+  // make Number(...) NaN and propagate NaN into every calculator. Coerce to a
+  // finite number (falling back to the default) before scaling to agorot.
+  const mortgageAmount = Math.max(1, num(c.requested_mortgage_amount, 800000) * 100);
+  const propertyValue = Math.max(mortgageAmount, num(c.property_value, 1200000) * 100);
+  const equity = Math.max(0, num(c.equity, propertyValue / 100 - mortgageAmount / 100) * 100);
   return { mortgageAmount, propertyValue, equity, defaultTermMonths: 360 };
+}
+
+/** Coerce a possibly-string/null case field to a finite number, else the fallback. */
+function num(value: number | string | null | undefined, fallback: number): number {
+  const n = Number(value ?? fallback);
+  return Number.isFinite(n) ? n : fallback;
 }
 
 /**

@@ -11,7 +11,8 @@ function intlLocale(locale: Locale): string {
   return locale === 'he' ? 'he-IL' : 'en-GB';
 }
 
-export function fmtAgorot(value: MoneyAgorot, locale: Locale): string {
+export function fmtAgorot(value: MoneyAgorot | null | undefined, locale: Locale, dash = '—'): string {
+  if (value == null || !Number.isFinite(value)) return dash;
   return `${Math.round(value / 100).toLocaleString(intlLocale(locale))} ₪`;
 }
 
