@@ -55,7 +55,7 @@ export async function updateCaseAction(
 
   // Split financials off the cases payload (case_financials has its own
   // permission gate, view_case_fee, per migration 027).
-  const { fee_amount, expected_income, ...caseFields } = parsed.data;
+  const { fee_amount, ...caseFields } = parsed.data;
 
   const { data: updatedRows, error } = await supabase
     .from('cases')
@@ -82,13 +82,14 @@ export async function updateCaseAction(
   // Financials via RPC. Silent skip for non-admin (RPC returns false), but
   // any other failure surfaces - admin-submitted financials must not fail
   // silently (#5).
-  if (fee_amount != null || expected_income != null) {
+  if (fee_amount != null) {
     // Cast around the generated RPC type — see create-case.ts for the
-    // same workaround: NUMERIC params accept NULL at SQL level.
+    // same workaround: NUMERIC params accept NULL at SQL level. expected_income
+    // is no longer a product field — always pass null (the column is dormant).
     const { error: finErr } = await supabase.rpc('upsert_case_financials', {
       p_case_id: caseId,
       p_fee_amount: (fee_amount ?? null) as unknown as number,
-      p_expected_income: (expected_income ?? null) as unknown as number,
+      p_expected_income: null as unknown as number,
       p_user_id: userRes.user.id,
     });
     if (finErr) {

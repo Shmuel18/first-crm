@@ -38,7 +38,6 @@ export default async function EditCasePage({ params }: Props) {
   const initialWithFinancials = {
     ...caseData,
     fee_amount: financials?.fee_amount ?? null,
-    expected_income: financials?.expected_income ?? null,
   };
 
   return (

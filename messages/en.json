@@ -278,8 +278,7 @@
       "feeGross": "Gross fee (executed)",
       "feeNet": "Net fee (executed)",
       "tithe": "Tithe (10% of net)",
-      "fifth": "Fifth (20% of net)",
-      "expectedIncome": "Expected income (executed)"
+      "fifth": "Fifth (20% of net)"
     },
     "empty": {
       "title": "No data available yet",
@@ -1362,7 +1361,6 @@
         "requestedMortgageAmount": "Requested mortgage (₪)",
         "equity": "Down payment (optional, ₪)",
         "feeAmount": "Agreed fee (₪)",
-        "expectedIncome": "Expected income (₪)",
         "blocker": "Blocker",
         "insurance": "Insurance",
         "insuranceNotSpecified": "— Not specified —",

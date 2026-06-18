@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { Banknote, CalendarClock, Coins, Eye, EyeOff, Gift, HandCoins, TrendingUp, Wallet } from 'lucide-react';
+import { Banknote, CalendarClock, Coins, Eye, EyeOff, Gift, HandCoins, Wallet } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { parseLocale } from '@/lib/i18n/direction';
@@ -71,11 +71,6 @@ export function FinancialSummary({ financial }: Props) {
         <KpiCard label={t('financial.feeNet')} value={show(netFee)} icon={Wallet} />
         <KpiCard label={t('financial.tithe')} value={show(tithe)} icon={HandCoins} />
         <KpiCard label={t('financial.fifth')} value={show(fifth)} icon={Gift} />
-        <KpiCard
-          label={t('financial.expectedIncome')}
-          value={show(financial.executed_expected_income_total)}
-          icon={TrendingUp}
-        />
       </div>
     </section>
   );

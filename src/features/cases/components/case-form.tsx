@@ -48,7 +48,6 @@ type AdvisorOption = { id: string; first_name: string | null; last_name: string 
  */
 type CaseFormInitial = CaseRow & Partial<{
   fee_amount: number | null;
-  expected_income: number | null;
 }>;
 
 type CaseFormProps = {
@@ -151,9 +150,6 @@ export function CaseForm({
         <FormSection title={t('sections.financial')}>
           <FormField label={t('fields.feeAmount')} error={fieldErrors.fee_amount}>
             <Input name="fee_amount" type="number" min={0} step="1" defaultValue={value('fee_amount')} dir="ltr" className="text-left" />
-          </FormField>
-          <FormField label={t('fields.expectedIncome')} error={fieldErrors.expected_income}>
-            <Input name="expected_income" type="number" min={0} step="1" defaultValue={value('expected_income')} dir="ltr" className="text-left" />
           </FormField>
         </FormSection>
       )}

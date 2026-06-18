@@ -278,8 +278,7 @@
       "feeGross": "שכר טרחה ברוטו (בוצעו)",
       "feeNet": "שכר טרחה נטו (בוצעו)",
       "tithe": "מעשר (10% מהנטו)",
-      "fifth": "חומש (20% מהנטו)",
-      "expectedIncome": "הכנסה צפויה (בוצעו)"
+      "fifth": "חומש (20% מהנטו)"
     },
     "empty": {
       "title": "אין עדיין נתונים להצגה",
@@ -1362,7 +1361,6 @@
         "requestedMortgageAmount": "גובה משכנתא מבוקש (₪)",
         "equity": "הון עצמי (אופציונלי, ₪)",
         "feeAmount": "שכ״ט סוכם (₪)",
-        "expectedIncome": "הכנסה צפויה (₪)",
         "blocker": "גורם מעכב",
         "insurance": "ביטוחים",
         "insuranceNotSpecified": "— לא צוין —",

@@ -39,7 +39,6 @@ export const CaseFormShape = z.object({
   requested_mortgage_amount: optionalCurrency(CURRENCY_MAX_ILS),
   equity: optionalCurrency(CURRENCY_MAX_ILS),
   fee_amount: optionalCurrency(MONTHLY_AMOUNT_MAX_ILS),
-  expected_income: optionalCurrency(MONTHLY_AMOUNT_MAX_ILS),
   city: optionalShortString(NAME_MAX),
   gush_helka: optionalShortString(NAME_MAX),
   case_type_other_text: optionalShortString(NAME_MAX),

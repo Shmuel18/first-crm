@@ -39,7 +39,7 @@ export async function createCaseAction(
 
   // Split financials off the cases payload (case_financials has its own
   // permission gate, view_case_fee, per migration 027).
-  const { fee_amount, expected_income, ...caseFields } = parsed.data;
+  const { fee_amount, ...caseFields } = parsed.data;
 
   const { data, error } = await supabase
     .from('cases')
@@ -60,16 +60,17 @@ export async function createCaseAction(
   // returns false silently when the caller lacks view_case_fee (the form
   // hides fields for non-admins; ignored values aren't an error). Any other
   // failure is a real bug that MUST surface - finance data can't fail quietly.
-  if (fee_amount != null || expected_income != null) {
+  if (fee_amount != null) {
     // The generated RPC type declares p_fee_amount/p_expected_income as
     // non-null `number`, but the underlying NUMERIC params accept NULL at
     // the SQL level (case_financials.fee_amount / expected_income are
     // nullable columns). Cast through unknown so callers can pass null
-    // without lying about the value being a number.
+    // without lying about the value being a number. expected_income is no
+    // longer a product field — always pass null (the column is dormant).
     const { error: finErr } = await supabase.rpc('upsert_case_financials', {
       p_case_id: data.id,
       p_fee_amount: (fee_amount ?? null) as unknown as number,
-      p_expected_income: (expected_income ?? null) as unknown as number,
+      p_expected_income: null as unknown as number,
       p_user_id: userRes.user.id,
     });
     if (finErr) {
