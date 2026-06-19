@@ -50,8 +50,9 @@ export async function listAdvisorOptions(): Promise<AdvisorOption[]> {
 
 export async function getCaseFinancials(caseId: CaseId): Promise<CaseFinancials | null> {
   const supabase = await createClient();
-  // Manager-only fee / expected income (case_financials has admin RLS) — a
-  // non-admin simply gets null here.
+  // Fee / expected income. case_financials RLS (migration 200) requires
+  // view_case_fee AND can_view_case(case_id), so a caller without the
+  // permission — or without access to this case — simply gets null here.
   const { data } = await supabase
     .from('case_financials')
     .select('fee_amount, expected_income')

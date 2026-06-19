@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { after } from 'next/server';
 
-import { userHasPermission } from '@/lib/auth/permissions';
+import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
@@ -45,6 +45,13 @@ export async function updateCaseFeeAmountAction(
   const feeAmount = parsed.data ?? null;
 
   if (!(await userHasPermission('view_case_fee'))) {
+    return { ok: false, error: 'unauthorized' };
+  }
+
+  // ISS-01 defense-in-depth: fee data is per-case, so the office-wide
+  // view_case_fee permission is not enough — the caller must also be able to
+  // EDIT this specific case (the RLS + RPC enforce this too since migration 200).
+  if (!(await userCanEditCase(caseId))) {
     return { ok: false, error: 'unauthorized' };
   }
 

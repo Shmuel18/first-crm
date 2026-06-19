@@ -73,6 +73,11 @@ export async function saveCaseDraftAction(
     if (rpcErr?.code === '42883' || rpcErr?.message?.includes('create_case_draft')) {
       return { ok: false, error: 'setup' };
     }
+    // 42501 = the RPC refused (missing create_case, or — since migration 201 —
+    // a national_id that resolves to a borrower the caller can't access).
+    if (rpcErr?.code === '42501') {
+      return { ok: false, error: 'unauthorized' };
+    }
     return { ok: false, error: 'unknown' };
   }
 
