@@ -38,7 +38,9 @@ export function BankPdfDocument({
       <CoverPage data={data} strings={strings} locale={locale} />
       <PropertyPage data={data} strings={strings} locale={locale} />
       <SummaryPage data={data} strings={strings} locale={locale} />
-      {data.mix && <MixPage data={{ ...data, mix: data.mix }} strings={strings} locale={locale} />}
+      {data.mixes.map((mix, idx) => (
+        <MixPage key={idx} mix={mix} strings={strings} locale={locale} />
+      ))}
     </Document>
   );
 }

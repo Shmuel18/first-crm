@@ -352,10 +352,10 @@
         "violations": "Resolve the regulatory violations to save"
       },
       "primary": {
-        "mark": "Set as primary mix",
-        "marked": "Primary mix",
-        "hint": "The primary mix is the one embedded in the bank document",
-        "error": "Failed to update the primary mix. Try again."
+        "mark": "Add to bank document",
+        "marked": "In bank document",
+        "hint": "Every marked mix is attached to the bank document (one page each)",
+        "error": "Failed to update the bank-document mixes. Try again."
       },
       "errors": {
         "unauthorized": "You are not allowed to save simulations.",

@@ -42,7 +42,11 @@ export function PipelineFunnel({ snapshot }: Props) {
         <p className="py-6 text-center text-sm text-neutral-400">{t('pipeline.empty')}</p>
       ) : (
         <>
-          <div className="h-80">
+          {/* recharts has no real RTL support — inside the app's dir=rtl the
+              category labels render on top of the bars. Force the chart LTR so
+              the YAxis labels sit in their own clean left column (the Hebrew
+              text itself still shapes RTL). */}
+          <div className="h-80" dir="ltr">
             <ResponsiveContainer width="100%" height="100%" minHeight={280}>
               <BarChart layout="vertical" data={data} margin={{ top: 4, right: 16, bottom: 4, left: 8 }}>
                 <XAxis type="number" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} allowDecimals={false} />
@@ -51,8 +55,8 @@ export function PipelineFunnel({ snapshot }: Props) {
                   dataKey="name"
                   tickLine={false}
                   axisLine={false}
-                  width={120}
-                  tick={{ fontSize: 11 }}
+                  width={132}
+                  tick={{ fontSize: 12, fill: 'var(--color-neutral-700)' }}
                 />
                 <Tooltip
                   formatter={(value) => formatInt(Number(value))}

@@ -4,30 +4,29 @@ import { fmtPct } from '@/features/simulators/pdf/report-formatters';
 import { getReportStrings } from '@/features/simulators/pdf/report-strings';
 import type { Locale } from '@/lib/i18n/direction';
 
-import type { BankPdfData, BankPdfMix } from './bank-pdf-data.service';
+import type { BankPdfMix } from './bank-pdf-data.service';
 import { fmtCurrency, fmtNum } from './formatters';
 import { PageFooter } from './shared';
 import type { PdfStrings } from './strings';
 import { styles } from './styles';
 
 /**
- * Optional final page: the case's proposed mortgage mix. Only the *structure*
- * banks care about — a black headline band (first / min / max / average monthly
- * payment, mirroring the on-screen KpiStrip) plus the track table. The detailed
- * cost breakdown (total interest, indexation, etc.) is deliberately omitted —
- * the bank runs its own. Track-type / repayment labels and the table headers
- * are reused from the simulator report strings so wording stays consistent.
+ * One page per proposed mortgage mix. Only the *structure* banks care about — a
+ * black headline band (first / min / max / average monthly payment, mirroring the
+ * on-screen KpiStrip) plus the track table. The detailed cost breakdown (total
+ * interest, indexation, etc.) is deliberately omitted — the bank runs its own.
+ * Track-type / repayment labels and the table headers are reused from the
+ * simulator report strings so wording stays consistent.
  */
 export function MixPage({
-  data,
+  mix,
   strings,
   locale,
 }: {
-  data: BankPdfData & { mix: BankPdfMix };
+  mix: BankPdfMix;
   strings: PdfStrings;
   locale: Locale;
 }) {
-  const { mix } = data;
   const dash = strings.values.dash;
   const r = getReportStrings(locale);
 

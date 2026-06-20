@@ -80,18 +80,25 @@ export function MixWorkspace({
       : [{ key: 'draft-initial', id: null, mix: newMixSeed, title: `${tTools('mix')} 1`, propertyKind: 'first_home', conclusion: '' }],
   );
   const [activeKey, setActiveKey] = useState<string>(() => tabs[0]?.key ?? 'draft-initial');
-  const [primaryId, setPrimaryId] = useState<string | null>(() => scenarios.find((s) => s.is_primary)?.id ?? null);
+  // Multi-select: every mix flagged here is embedded in the bank PDF (own page).
+  const [includedIds, setIncludedIds] = useState<Set<string>>(
+    () => new Set(scenarios.filter((s) => s.is_primary).map((s) => s.id)),
+  );
   const [primaryPending, startPrimary] = useTransition();
 
-  const handleSetPrimary = (scenarioId: string, makePrimary: boolean) => {
+  const handleToggleInclude = (scenarioId: string, include: boolean) => {
     if (!caseId) return;
-    const prev = primaryId;
-    // Optimistic: at most one primary, so marking one clears the rest.
-    setPrimaryId(makePrimary ? scenarioId : prev === scenarioId ? null : prev);
+    const prev = includedIds;
+    setIncludedIds((cur) => {
+      const next = new Set(cur);
+      if (include) next.add(scenarioId);
+      else next.delete(scenarioId);
+      return next;
+    });
     startPrimary(async () => {
-      const res = await setPrimaryScenarioAction({ scenarioId, caseId, isPrimary: makePrimary });
+      const res = await setPrimaryScenarioAction({ scenarioId, caseId, isPrimary: include });
       if (!res.ok) {
-        setPrimaryId(prev);
+        setIncludedIds(prev);
         toast.error(tPrimary('error'));
       }
     });
@@ -126,7 +133,7 @@ export function MixWorkspace({
                   : 'border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50'
               }`}
             >
-              {tab.id && tab.id === primaryId ? (
+              {tab.id && includedIds.has(tab.id) ? (
                 <Star className="size-3.5 shrink-0 fill-brand-gold text-brand-gold-dark" aria-label={tPrimary('marked')} />
               ) : null}
               <span className="truncate">{tab.title || tTools('mix')}</span>
@@ -161,9 +168,9 @@ export function MixWorkspace({
             initialConclusion={tab.conclusion}
             monthlyNetIncome={monthlyNetIncome}
             monthlyObligations={monthlyObligations}
-            isPrimary={tab.id != null && tab.id === primaryId}
+            isPrimary={tab.id != null && includedIds.has(tab.id)}
             primaryPending={primaryPending}
-            onSetPrimary={caseId ? (makePrimary) => tab.id && handleSetPrimary(tab.id, makePrimary) : undefined}
+            onSetPrimary={caseId ? (include) => tab.id && handleToggleInclude(tab.id, include) : undefined}
             onCreated={(id) => handleCreated(tab.key, id)}
             onSaved={(title) => handleSaved(tab.key, title)}
           />

@@ -1,0 +1,28 @@
+diff --git a/node_modules/@react-pdf/textkit/lib/textkit.js b/node_modules/@react-pdf/textkit/lib/textkit.js
+index 0b8b6fa..25288fc 100644
+--- a/node_modules/@react-pdf/textkit/lib/textkit.js
++++ b/node_modules/@react-pdf/textkit/lib/textkit.js
+@@ -1007,7 +1007,7 @@ const getItemAtIndex = (runs, objectName, index) => {
+             return run[objectName][updatedIndex];
+         }
+     }
+-    throw new Error(`index ${index} out of range`);
++    return undefined;
+ };
+ const reorderLine = (line) => {
+     const levels = getBidiLevels$1(line.runs);
+@@ -1030,10 +1030,13 @@ const reorderLine = (line) => {
+         for (let i = 0; i < selectedIndices.length; i += 1) {
+             const index = selectedIndices[i];
+             const glyph = getItemAtIndex(line.runs, 'glyphs', index);
++            const position = getItemAtIndex(line.runs, 'positions', index);
++            if (!glyph || !position)
++                continue;
+             if (addedGlyphs.has(glyph.id))
+                 continue;
+             updatedGlyphs.push(glyph);
+-            updatedPositions.push(getItemAtIndex(line.runs, 'positions', index));
++            updatedPositions.push(position);
+             if (glyph.isLigature) {
+                 addedGlyphs.add(glyph.id);
+             }

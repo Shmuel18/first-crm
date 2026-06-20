@@ -123,20 +123,21 @@ export type BankPdfData = {
      *  `available_income × ratio`. */
     paymentBands: ReadonlyArray<{ ratio: number; payment: number }>;
   };
-  /** The case's proposed mortgage mix, or null when none is saved. */
-  mix: BankPdfMix | null;
+  /** Mixes embedded in the bank PDF — the ones flagged "include in bank document"
+   *  (else a single fallback). One PDF page per entry. Empty when the case has none. */
+  mixes: BankPdfMix[];
 };
 
 export async function loadCaseForBankPdf(caseId: CaseId): Promise<BankPdfData | null> {
   // getCaseById's embedded case_borrowers query is narrow (only id + names).
   // listBorrowersForCase joins the full borrower row + role_in_case, which is
   // what the PDF needs. Run all three queries in parallel.
-  const [caseData, borrowerLinks, incomeGroups, obligationGroups, mix] = await Promise.all([
+  const [caseData, borrowerLinks, incomeGroups, obligationGroups, mixes] = await Promise.all([
     getCaseById(caseId),
     listBorrowersForCase(caseId),
     listIncomesForCase(caseId),
     listObligationsForCase(caseId),
-    loadPrimaryMixForBankPdf(caseId),
+    loadBankPdfMixes(caseId),
   ]);
 
   if (!caseData) return null;
@@ -270,25 +271,31 @@ export async function loadCaseForBankPdf(caseId: CaseId): Promise<BankPdfData | 
       dtiPercent: calculateDtiPercent(grandObligationsMonthly, grandIncomeMonthly),
       paymentBands: calculateDtiBands(availableIncomeMonthly),
     },
-    mix,
+    mixes,
   };
 }
 
 /**
- * Pick the case's primary mix (else the most-recently-updated one — the list
- * is already ordered updated_at DESC), re-run the engine on its saved inputs,
- * and shape the tracks + payment range for the PDF. Returns null when the case
- * has no usable saved mix (no scenarios, or inputs that no longer parse).
- *
- * Engine money is in agorot; the bank PDF formats NIS, so convert once here.
+ * Mixes embedded in the bank PDF: every 'mix' scenario flagged "include in bank
+ * document" (is_primary), in the list's order (updated_at DESC). When none are
+ * flagged, fall back to the single most-recently-updated mix so a case with mixes
+ * always shows one. Returns [] when the case has no usable saved mix.
  */
-async function loadPrimaryMixForBankPdf(caseId: CaseId): Promise<BankPdfMix | null> {
+async function loadBankPdfMixes(caseId: CaseId): Promise<BankPdfMix[]> {
   const scenarios = await listScenariosForCase(caseId);
   const mixes = scenarios.filter((s) => s.kind === 'mix');
-  const chosen = mixes.find((s) => s.is_primary) ?? mixes[0];
-  if (!chosen) return null;
+  const included = mixes.filter((s) => s.is_primary);
+  const chosen = included.length > 0 ? included : mixes.slice(0, 1);
+  return chosen.map(shapeBankPdfMix).filter((m): m is BankPdfMix => m !== null);
+}
 
-  const parsed = MixInputSchema.safeParse(chosen.inputs);
+/**
+ * Re-run the engine on a scenario's saved inputs and shape the tracks + payment
+ * range for the PDF. Returns null when the inputs no longer parse.
+ * Engine money is in agorot; the bank PDF formats NIS, so convert once here.
+ */
+function shapeBankPdfMix(scenario: { title: string; inputs: unknown }): BankPdfMix | null {
+  const parsed = MixInputSchema.safeParse(scenario.inputs);
   if (!parsed.success) return null;
   const mix = parsed.data;
   const result = aggregateMix(mix);
@@ -301,7 +308,7 @@ async function loadPrimaryMixForBankPdf(caseId: CaseId): Promise<BankPdfMix | nu
   const minPayment = trimmed.length > 0 ? Math.min(...trimmed.map((p) => p.value)) : result.firstPayment;
 
   return {
-    title: chosen.title,
+    title: scenario.title,
     tracks: mix.tracks.map((t) => ({
       type: t.type,
       repayment: t.repayment,
