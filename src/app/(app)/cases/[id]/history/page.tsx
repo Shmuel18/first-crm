@@ -1,9 +1,8 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { getLocale, getTranslations } from 'next-intl/server';
 
-import { BackArrow } from '@/components/shared/back-arrow';
+import { BackLink } from '@/components/shared/back-link';
 import { AuditLogTable } from '@/features/audit/components/audit-log-table';
 import { listDocumentAuditForCase } from '@/features/audit/services/audit.service';
 import { CaseActivityFeed } from '@/features/case-activity/components/case-activity-feed';
@@ -53,13 +52,12 @@ export default async function CaseHistoryPage({ params, searchParams }: Props) {
     <div className="space-y-5 -mt-6">
       <div className="bg-brand-gold-soft text-neutral-900 sticky top-[-1rem] sm:top-[-1.5rem] z-20 -mx-4 border-b border-brand-gold/20 px-4 py-3 shadow-sm sm:-mx-6 sm:px-6">
         <div className="flex items-center gap-3">
-          <Link
+          <BackLink
             href={documentsOnly ? `/cases/${caseData.id}/documents` : `/cases/${caseData.id}`}
-            aria-label={tc('back')}
-            className="inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-neutral-300 bg-white/60 text-neutral-700 transition hover:border-brand-gold-text hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
-          >
-            <BackArrow locale={locale} className="size-3.5" aria-hidden="true" />
-          </Link>
+            label={tc('back')}
+            locale={locale}
+            className="shrink-0"
+          />
           <div className="flex items-center gap-2">
             <span className="font-display text-base font-semibold">{documentsOnly ? t('history.documentsTitle') : t('history.title')}</span>
             <span aria-hidden="true" className="text-neutral-400">·</span>

@@ -1,9 +1,10 @@
-import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 
-import { ArrowRight, ReceiptText } from 'lucide-react';
-import { getTranslations } from 'next-intl/server';
+import { ReceiptText } from 'lucide-react';
+import { getLocale, getTranslations } from 'next-intl/server';
 
+import { BackLink } from '@/components/shared/back-link';
+import { parseLocale } from '@/lib/i18n/direction';
 import { getCaseClientLabelFull } from '@/features/cases/domain/case-derivations';
 import { getCaseById } from '@/features/cases/services/cases.service';
 import { SimulatorToolsNav } from '@/features/simulators/components/simulator-tools-nav';
@@ -27,6 +28,7 @@ export default async function CaseTaxSimulatorPage({
   const [caseData, t] = await Promise.all([getCaseById(caseId), getTranslations('simulators')]);
   if (!caseData) notFound();
 
+  const locale = parseLocale(await getLocale());
   const base = seedBaseFromCase(caseData);
   const initialState: TaxCostsCalculatorInitialState = {
     propertyValue: base.propertyValue,
@@ -37,24 +39,16 @@ export default async function CaseTaxSimulatorPage({
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <header className="flex items-center justify-between gap-4">
-        <div>
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-brand-gold-soft px-3 py-1 text-sm font-medium text-brand-gold-text">
-            <ReceiptText className="size-4" aria-hidden="true" />
-            {t('eyebrow')}
-          </div>
-          <h1 className="font-display text-3xl font-semibold text-neutral-950">
-            {t('tax.title')}
-          </h1>
-          <p className="mt-1 text-sm text-neutral-500">{getCaseClientLabelFull(caseData) || caseData.case_number}</p>
+      <header>
+        <BackLink href={`/cases/${id}`} label={t('backToCase')} locale={locale} className="mb-3" />
+        <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-brand-gold-soft px-3 py-1 text-sm font-medium text-brand-gold-text">
+          <ReceiptText className="size-4" aria-hidden="true" />
+          {t('eyebrow')}
         </div>
-        <Link
-          href={`/cases/${id}`}
-          className="inline-flex h-9 items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
-        >
-          <ArrowRight className="size-4 rtl:rotate-180" aria-hidden="true" />
-          {t('backToCase')}
-        </Link>
+        <h1 className="font-display text-3xl font-semibold text-neutral-950">
+          {t('tax.title')}
+        </h1>
+        <p className="mt-1 text-sm text-neutral-500">{getCaseClientLabelFull(caseData) || caseData.case_number}</p>
       </header>
       <SimulatorToolsNav basePath={`/cases/${id}/simulators`} />
       <TaxCostsCalculator initialState={initialState} />
