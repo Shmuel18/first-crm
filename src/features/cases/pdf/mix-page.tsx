@@ -11,31 +11,41 @@ import type { PdfStrings } from './strings';
 import { styles } from './styles';
 
 /**
- * One page per proposed mortgage mix. Only the *structure* banks care about — a
- * black headline band (first / min / max / average monthly payment, mirroring the
- * on-screen KpiStrip) plus the track table. The detailed cost breakdown (total
- * interest, indexation, etc.) is deliberately omitted — the bank runs its own.
- * Track-type / repayment labels and the table headers are reused from the
- * simulator report strings so wording stays consistent.
+ * One page that lists every proposed mortgage mix, each as a compact block —
+ * mix name + a black headline band (first / min / max / average monthly payment,
+ * mirroring the on-screen KpiStrip) + the track table. Blocks flow on the page
+ * (react-pdf breaks to a new page only when full), and each block is kept whole
+ * (`wrap={false}`), so several mixes share a page instead of one page each. The
+ * detailed cost breakdown is deliberately omitted — the bank runs its own.
+ * Track-type / repayment labels are reused from the simulator report strings.
  */
-export function MixPage({
-  mix,
+export function MixesPage({
+  mixes,
   strings,
   locale,
 }: {
-  mix: BankPdfMix;
+  mixes: BankPdfMix[];
   strings: PdfStrings;
   locale: Locale;
 }) {
+  return (
+    <Page size="A4" style={styles.page}>
+      <Text style={styles.sectionTitle}>{strings.mix.title}</Text>
+      {mixes.map((mix, idx) => (
+        <MixBlock key={idx} mix={mix} strings={strings} locale={locale} />
+      ))}
+      <PageFooter strings={strings} />
+    </Page>
+  );
+}
+
+function MixBlock({ mix, strings, locale }: { mix: BankPdfMix; strings: PdfStrings; locale: Locale }) {
   const dash = strings.values.dash;
   const r = getReportStrings(locale);
 
   return (
-    <Page size="A4" style={styles.page}>
-      <Text style={styles.sectionTitle}>{strings.mix.title}</Text>
-      <Text style={{ fontSize: 9, color: '#525252', textAlign: 'right', marginTop: 6, marginBottom: 8 }}>
-        {mix.title}
-      </Text>
+    <View style={styles.mixBlock} wrap={false}>
+      <Text style={styles.mixName}>{mix.title}</Text>
 
       {/* Black headline band */}
       <View style={styles.mixBand}>
@@ -68,9 +78,7 @@ export function MixPage({
           </View>
         ))}
       </View>
-
-      <PageFooter strings={strings} />
-    </Page>
+    </View>
   );
 }
 

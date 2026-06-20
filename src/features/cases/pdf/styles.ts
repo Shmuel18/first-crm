@@ -270,6 +270,16 @@ export const styles = StyleSheet.create({
   signatureMeta: { fontSize: 8, color: COLOR_MUTED, textAlign: 'left', width: 240 },
   thanksLine: { fontSize: 9, color: COLOR_TEXT, marginTop: 16, textAlign: 'left' },
 
+  // ─────────── Mix: one compact block per mix, several flow on a page ───────────
+  mixBlock: { marginTop: 14 },
+  mixName: {
+    fontSize: 10,
+    fontWeight: 600,
+    color: COLOR_TEXT,
+    textAlign: 'right',
+    marginBottom: 6,
+  },
+
   // ─────────── Mix: black KPI band (mirrors the on-screen KpiStrip) ───────────
   mixBand: {
     flexDirection: 'row-reverse',

@@ -5,7 +5,7 @@ import type { Locale } from '@/lib/i18n/direction';
 import type { BankPdfData } from './bank-pdf-data.service';
 import { CoverPage } from './cover-page';
 import { ensureHebrewFontRegistered } from './fonts';
-import { MixPage } from './mix-page';
+import { MixesPage } from './mix-page';
 import { PropertyPage } from './property-page';
 import { getPdfStrings } from './strings';
 import { SummaryPage } from './summary-page';
@@ -38,9 +38,7 @@ export function BankPdfDocument({
       <CoverPage data={data} strings={strings} locale={locale} />
       <PropertyPage data={data} strings={strings} locale={locale} />
       <SummaryPage data={data} strings={strings} locale={locale} />
-      {data.mixes.map((mix, idx) => (
-        <MixPage key={idx} mix={mix} strings={strings} locale={locale} />
-      ))}
+      {data.mixes.length > 0 && <MixesPage mixes={data.mixes} strings={strings} locale={locale} />}
     </Document>
   );
 }
