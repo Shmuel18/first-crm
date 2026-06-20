@@ -19,7 +19,7 @@ type Strings = {
   cover: {
     titleConnector: string;
     titleSuffix: (extra: number) => string;
-    requestedAmount: (amount: string) => string;
+    requestedAmountLabel: string;
     metaCaseNumber: string;
     metaOpened: string;
     metaStatus: string;
@@ -65,6 +65,13 @@ type Strings = {
     thanks: string;
     signatureFallback: string;
   };
+  mix: {
+    title: string;
+    firstPayment: string;
+    minPayment: string;
+    maxPayment: string;
+    averagePayment: string;
+  };
   footer: {
     brandTagline: string;
     pageOfN: (page: number, total: number) => string;
@@ -94,7 +101,7 @@ const STRINGS_HE: Strings = {
   cover: {
     titleConnector: ' ו',
     titleSuffix: (extra: number) => ` ועוד ${extra}`,
-    requestedAmount: (amount: string) => `סכום המשכנתא המבוקש: ${amount}`,
+    requestedAmountLabel: 'סכום המשכנתא המבוקש:',
     metaCaseNumber: 'מספר תיק',
     metaOpened: 'נפתח',
     metaStatus: 'סטטוס',
@@ -160,8 +167,15 @@ const STRINGS_HE: Strings = {
     thanks: 'תודה מראש,',
     signatureFallback: 'חתימת היועץ',
   },
+  mix: {
+    title: 'מסלולי המשכנתא המוצעים',
+    firstPayment: 'החזר ראשון',
+    minPayment: 'החזר מינימלי',
+    maxPayment: 'החזר מקסימלי',
+    averagePayment: 'החזר ממוצע',
+  },
   footer: {
-    brandTagline: 'Kaufman Finance Group · בקשה להגשה לבנק',
+    brandTagline: 'בקשה להגשה לבנק',
     pageOfN: (page: number, total: number) => `עמוד ${page} מתוך ${total}`,
   },
   values: {
@@ -196,7 +210,7 @@ const STRINGS_EN: Strings = {
   cover: {
     titleConnector: ' & ',
     titleSuffix: (extra: number) => ` and ${extra} more`,
-    requestedAmount: (amount: string) => `Requested mortgage amount: ${amount}`,
+    requestedAmountLabel: 'Requested mortgage amount:',
     metaCaseNumber: 'Case number',
     metaOpened: 'Opened',
     metaStatus: 'Status',
@@ -262,8 +276,15 @@ const STRINGS_EN: Strings = {
     thanks: 'Thank you,',
     signatureFallback: 'Advisor signature',
   },
+  mix: {
+    title: 'Proposed mortgage tracks',
+    firstPayment: 'First payment',
+    minPayment: 'Minimum payment',
+    maxPayment: 'Maximum payment',
+    averagePayment: 'Average payment',
+  },
   footer: {
-    brandTagline: 'Kaufman Finance Group · Bank submission',
+    brandTagline: 'Bank submission',
     pageOfN: (page: number, total: number) => `Page ${page} of ${total}`,
   },
   values: {

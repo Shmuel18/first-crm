@@ -8,7 +8,7 @@ export type ScenarioTrackRow = Database['public']['Tables']['scenario_tracks']['
 export type MortgageScenarioWithTracks = MortgageScenarioRow & { scenario_tracks: ScenarioTrackRow[] };
 
 export const SCENARIO_FULL_COLUMNS =
-  'id, case_id, primary_borrower_id, kind, title, mortgage_amount, property_value, equity, term_months, property_kind, inputs, result_snapshot, advisor_conclusion, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by' as const;
+  'id, case_id, primary_borrower_id, kind, title, mortgage_amount, property_value, equity, term_months, property_kind, inputs, result_snapshot, advisor_conclusion, is_primary, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by' as const;
 
 export const SCENARIO_TRACK_COLUMNS =
   'id, scenario_id, mix_label, track_type, repayment_type, amount, annual_rate_pct, term_months, cpi_annual_pct, grace_months, sort_order, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by' as const;

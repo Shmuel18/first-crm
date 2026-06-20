@@ -26,6 +26,7 @@ export function CoverPage({
   locale: Locale;
 }) {
   const intlLocale = locale === 'he' ? 'he-IL' : 'en-GB';
+  const dir = locale === 'he' ? 'rtl' : 'ltr';
   const generatedAt = new Intl.DateTimeFormat(intlLocale, {
     day: '2-digit',
     month: '2-digit',
@@ -41,21 +42,22 @@ export function CoverPage({
 
   return (
     <Page size="A4" style={styles.page}>
-      {/* Cover header */}
+      {/* Cover header — intentionally unbranded: a bank submission carries no
+          office name or logo, just the request itself (product decision). */}
       <View style={styles.cover}>
         <View style={styles.coverRight}>
-          <Text style={styles.coverTitle}>{title}</Text>
-          <Text style={styles.coverSubtitle}>
-            {strings.cover.requestedAmount(
-              fmtCurrency(data.case.requestedAmount, locale, strings.values.dash),
-            )}
-          </Text>
+          <Text style={[styles.coverTitle, { direction: dir }]}>{title}</Text>
+          {/* Label (RTL Hebrew) and amount (LTR number+₪) are separate Texts so
+              the shekel sign can't drift across the bidi boundary. */}
+          <View style={styles.coverSubtitleRow}>
+            <Text style={[styles.coverSubtitle, { direction: dir }]}>
+              {strings.cover.requestedAmountLabel}
+            </Text>
+            <Text style={styles.coverSubtitle}>
+              {fmtCurrency(data.case.requestedAmount, locale, strings.values.dash)}
+            </Text>
+          </View>
           <Text style={styles.coverDate}>{generatedAt}</Text>
-        </View>
-        <View style={styles.brandBlock}>
-          <View style={styles.brandBar} />
-          <Text style={styles.brandName}>{strings.brandName}</Text>
-          <Text style={styles.brandSub}>{strings.brandSub}</Text>
         </View>
       </View>
       <View style={styles.coverRule} />

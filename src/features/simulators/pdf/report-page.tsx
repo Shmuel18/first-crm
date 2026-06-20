@@ -13,6 +13,7 @@ import { COLOR_CHART, COLOR_CHART_ALT, styles } from './report-styles';
 type Props = { data: ScenarioReportData; strings: ReportStrings; locale: Locale };
 
 export function ReportPage({ data, strings, locale }: Props) {
+  const dir = locale === 'he' ? 'rtl' : 'ltr';
   return (
     <Page size="A4" style={styles.page} wrap>
       <View style={styles.header}>
@@ -46,10 +47,10 @@ export function ReportPage({ data, strings, locale }: Props) {
 
       <ConclusionSection data={data} strings={strings} locale={locale} />
 
-      <Text style={styles.disclaimer}>{strings.disclaimer}</Text>
+      <Text style={[styles.disclaimer, { direction: dir }]}>{strings.disclaimer}</Text>
 
       <View style={styles.footer} fixed>
-        <Text>{strings.footer.brandTagline}</Text>
+        <Text style={{ direction: dir }}>{strings.footer.brandTagline}</Text>
         <Text render={({ pageNumber, totalPages }) => strings.footer.pageOfN(pageNumber, totalPages)} />
       </View>
     </Page>

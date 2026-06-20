@@ -14,10 +14,13 @@ export const COLOR_MUTED = '#525252';
 export const COLOR_LINE = '#E5E5E5';
 export const COLOR_LINE_DARK = '#D4D4D4';
 export const COLOR_BRAND = '#C9A961';
+export const COLOR_BRAND_LIGHT = '#E8C77B';
 export const COLOR_BRAND_DARK = '#A88840';
 export const COLOR_SECTION_BG = '#FAF8F3';
 export const COLOR_HIGHLIGHT_BG = '#FFF8E7';
 export const COLOR_HEADER_BG = '#525252';
+export const COLOR_BLACK = '#0A0A0A';
+export const COLOR_BLACK_SOFT = '#1C1C1C';
 
 export const styles = StyleSheet.create({
   page: {
@@ -35,7 +38,7 @@ export const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingBottom: 14,
   },
-  coverRight: { flexDirection: 'column', alignItems: 'flex-end', maxWidth: '70%' },
+  coverRight: { flexDirection: 'column', alignItems: 'flex-end', maxWidth: '100%' },
   coverTitle: { fontSize: 18, fontWeight: 600, color: COLOR_TEXT, textAlign: 'right' },
   coverSubtitle: {
     fontSize: 10,
@@ -45,10 +48,11 @@ export const styles = StyleSheet.create({
     textAlign: 'right',
   },
   coverDate: { fontSize: 8, color: COLOR_MUTED, marginTop: 4, textAlign: 'right' },
-  brandBlock: { flexDirection: 'column', alignItems: 'flex-start' },
-  brandBar: { width: 60, height: 4, backgroundColor: COLOR_BRAND, marginBottom: 6 },
-  brandName: { fontSize: 13, fontWeight: 600, color: COLOR_BRAND_DARK },
-  brandSub: { fontSize: 8, color: COLOR_MUTED, marginTop: 1 },
+  coverSubtitleRow: {
+    flexDirection: 'row-reverse',
+    alignItems: 'baseline',
+    gap: 4,
+  },
   coverRule: { borderBottom: `2 solid ${COLOR_BRAND}`, marginBottom: 12 },
 
   // ─────────── Meta strip ───────────
@@ -265,6 +269,28 @@ export const styles = StyleSheet.create({
   },
   signatureMeta: { fontSize: 8, color: COLOR_MUTED, textAlign: 'left', width: 240 },
   thanksLine: { fontSize: 9, color: COLOR_TEXT, marginTop: 16, textAlign: 'left' },
+
+  // ─────────── Mix: black KPI band (mirrors the on-screen KpiStrip) ───────────
+  mixBand: {
+    flexDirection: 'row-reverse',
+    backgroundColor: COLOR_BLACK,
+    borderRadius: 6,
+    padding: 8,
+    gap: 8,
+    marginBottom: 12,
+  },
+  mixTile: {
+    flex: 1,
+    backgroundColor: COLOR_BLACK_SOFT,
+    borderRadius: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    alignItems: 'flex-end',
+  },
+  mixTileHero: { border: `1 solid ${COLOR_BRAND_DARK}` },
+  mixTileLabel: { fontSize: 7.5, color: COLOR_BRAND_LIGHT, textAlign: 'right' },
+  mixTileValue: { fontSize: 12, fontWeight: 600, color: '#FFFFFF', marginTop: 3, textAlign: 'right' },
+  mixTileValueHero: { fontSize: 13, fontWeight: 600, color: COLOR_BRAND, marginTop: 3, textAlign: 'right' },
 
   // ─────────── Footer ───────────
   footer: {

@@ -13,6 +13,7 @@ import { BasketPresets } from './basket-presets';
 import { KpiStrip } from './kpi-strip';
 import { MixCompositionBar } from './mix-composition-bar';
 import { MixInputsBar } from './mix-inputs-bar';
+import { PrimaryMixToggle } from './primary-mix-toggle';
 import { RegulatoryViolationsBanner } from './regulatory-violations-banner';
 import { ScenarioReportActions } from './scenario-report-actions';
 import { TrackTable } from './track-table';
@@ -37,6 +38,12 @@ type Props = {
   /** View-only viewer of the case (no can_edit_case): disable every input and
    *  skip auto-save (the server rejects the write anyway, mig 195) — C-036. */
   readOnly?: boolean;
+  /** Whether this saved mix is the case's primary (bank-PDF) mix. */
+  isPrimary?: boolean;
+  /** True while a set-primary request is in flight (shared across tabs). */
+  primaryPending?: boolean;
+  /** Toggle this mix as the case's primary. Absent → no primary affordance. */
+  onSetPrimary?: (makePrimary: boolean) => void;
   onCreated?: (scenarioId: string) => void;
   onSaved?: (title: string) => void;
 };
@@ -57,6 +64,9 @@ export function MixCalculator({
   monthlyNetIncome,
   monthlyObligations,
   readOnly = false,
+  isPrimary = false,
+  primaryPending = false,
+  onSetPrimary,
   onCreated,
   onSaved,
 }: Props) {
@@ -148,7 +158,12 @@ export function MixCalculator({
           <SaveStatus status={status} blockedReason={blockedReason} t={t} />
         </div>
         {scenarioId ? (
-          <ScenarioReportActions scenarioId={scenarioId} conclusion={calc.advisorConclusion} canSend={Boolean(caseId)} />
+          <div className="flex flex-wrap items-center gap-2">
+            {caseId && !readOnly && onSetPrimary ? (
+              <PrimaryMixToggle isPrimary={isPrimary} pending={primaryPending} onToggle={() => onSetPrimary(!isPrimary)} />
+            ) : null}
+            <ScenarioReportActions scenarioId={scenarioId} conclusion={calc.advisorConclusion} canSend={Boolean(caseId)} />
+          </div>
         ) : null}
       </div>
     </div>

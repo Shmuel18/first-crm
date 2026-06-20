@@ -91,16 +91,19 @@ export function ResultsSection({ data, strings, locale }: SectionProps) {
   );
 }
 
-export function ConclusionSection({ data, strings }: SectionProps) {
+export function ConclusionSection({ data, strings, locale }: SectionProps) {
   const text = data.meta.advisorConclusion?.trim();
+  // Advisor prose ends in Hebrew punctuation (periods) that drifts under the
+  // default LTR base; force RTL so sentences read correctly.
+  const dir = locale === 'he' ? 'rtl' : 'ltr';
   return (
     <View wrap={false}>
       <Text style={styles.sectionTitle}>{strings.conclusion.title}</Text>
       <View style={styles.conclusionBox}>
         {text ? (
-          <Text style={styles.conclusionText}>{text}</Text>
+          <Text style={[styles.conclusionText, { direction: dir }]}>{text}</Text>
         ) : (
-          <Text style={styles.conclusionEmpty}>{strings.conclusion.empty}</Text>
+          <Text style={[styles.conclusionEmpty, { direction: dir }]}>{strings.conclusion.empty}</Text>
         )}
       </View>
     </View>

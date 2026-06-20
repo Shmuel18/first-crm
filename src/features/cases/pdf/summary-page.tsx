@@ -88,7 +88,9 @@ export function SummaryPage({
       <View style={styles.notesBox} />
 
       {/* Thanks + signature */}
-      <Text style={styles.thanksLine}>{strings.summary.thanks}</Text>
+      <Text style={[styles.thanksLine, { direction: locale === 'he' ? 'rtl' : 'ltr' }]}>
+        {strings.summary.thanks}
+      </Text>
       <View style={styles.signatureBlock}>
         <View style={styles.signatureLine} />
         {data.advisorName && <Text style={styles.signatureName}>{data.advisorName}</Text>}

@@ -351,6 +351,12 @@
         "noTitle": "Enter a simulation name to save",
         "violations": "Resolve the regulatory violations to save"
       },
+      "primary": {
+        "mark": "Set as primary mix",
+        "marked": "Primary mix",
+        "hint": "The primary mix is the one embedded in the bank document",
+        "error": "Failed to update the primary mix. Try again."
+      },
       "errors": {
         "unauthorized": "You are not allowed to save simulations.",
         "validation": "Some simulation fields are invalid.",

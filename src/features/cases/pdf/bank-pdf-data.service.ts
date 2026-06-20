@@ -2,6 +2,10 @@ import { listBorrowersForCase } from '@/features/borrowers/services/borrowers.se
 import type { RoleInCase } from '@/features/borrowers/types';
 import { listIncomesForCase } from '@/features/incomes/services/incomes.service';
 import { listObligationsForCase } from '@/features/obligations/services/obligations.service';
+import { aggregateMix } from '@/features/simulators/domain/mix-aggregate';
+import { MixInputSchema } from '@/features/simulators/schemas/simulator.schema';
+import { listScenariosForCase } from '@/features/simulators/services/scenarios.service';
+import type { RepaymentType, TrackType } from '@/features/simulators/types';
 import type { CaseId } from '@/lib/types/branded';
 import { formatPersonName } from '@/lib/utils/person-name';
 
@@ -22,6 +26,25 @@ import { getCaseById } from '../services/cases.service';
  * DTI / available-income math lives in `../domain/dti` (testable in
  * isolation). This file is just a SQL→DTO mapper.
  */
+
+/** The case's proposed mortgage mix (primary, else latest), shaped for the
+ *  bank PDF. Money is in NIS (the simulator engine works in agorot — converted
+ *  here once). null when the case has no saved mix. */
+export type BankPdfMix = {
+  title: string;
+  tracks: Array<{
+    type: TrackType;
+    repayment: RepaymentType;
+    amount: number;
+    annualRatePct: number;
+    termMonths: number;
+    cpiAnnualPct: number | null;
+  }>;
+  firstPayment: number;
+  minPayment: number;
+  maxPayment: number;
+  averagePayment: number;
+};
 
 export type BankPdfData = {
   case: {
@@ -100,17 +123,20 @@ export type BankPdfData = {
      *  `available_income × ratio`. */
     paymentBands: ReadonlyArray<{ ratio: number; payment: number }>;
   };
+  /** The case's proposed mortgage mix, or null when none is saved. */
+  mix: BankPdfMix | null;
 };
 
 export async function loadCaseForBankPdf(caseId: CaseId): Promise<BankPdfData | null> {
   // getCaseById's embedded case_borrowers query is narrow (only id + names).
   // listBorrowersForCase joins the full borrower row + role_in_case, which is
   // what the PDF needs. Run all three queries in parallel.
-  const [caseData, borrowerLinks, incomeGroups, obligationGroups] = await Promise.all([
+  const [caseData, borrowerLinks, incomeGroups, obligationGroups, mix] = await Promise.all([
     getCaseById(caseId),
     listBorrowersForCase(caseId),
     listIncomesForCase(caseId),
     listObligationsForCase(caseId),
+    loadPrimaryMixForBankPdf(caseId),
   ]);
 
   if (!caseData) return null;
@@ -244,5 +270,49 @@ export async function loadCaseForBankPdf(caseId: CaseId): Promise<BankPdfData | 
       dtiPercent: calculateDtiPercent(grandObligationsMonthly, grandIncomeMonthly),
       paymentBands: calculateDtiBands(availableIncomeMonthly),
     },
+    mix,
+  };
+}
+
+/**
+ * Pick the case's primary mix (else the most-recently-updated one — the list
+ * is already ordered updated_at DESC), re-run the engine on its saved inputs,
+ * and shape the tracks + payment range for the PDF. Returns null when the case
+ * has no usable saved mix (no scenarios, or inputs that no longer parse).
+ *
+ * Engine money is in agorot; the bank PDF formats NIS, so convert once here.
+ */
+async function loadPrimaryMixForBankPdf(caseId: CaseId): Promise<BankPdfMix | null> {
+  const scenarios = await listScenariosForCase(caseId);
+  const mixes = scenarios.filter((s) => s.kind === 'mix');
+  const chosen = mixes.find((s) => s.is_primary) ?? mixes[0];
+  if (!chosen) return null;
+
+  const parsed = MixInputSchema.safeParse(chosen.inputs);
+  if (!parsed.success) return null;
+  const mix = parsed.data;
+  const result = aggregateMix(mix);
+  const toNis = (agorot: number): number => Math.round(agorot / 100);
+
+  // Smallest monthly payment over the life, ignoring the final month (which can
+  // hold a fractional rounding remainder that would read as a misleading low).
+  const curve = result.paymentCurve;
+  const trimmed = curve.length > 1 ? curve.slice(0, -1) : curve;
+  const minPayment = trimmed.length > 0 ? Math.min(...trimmed.map((p) => p.value)) : result.firstPayment;
+
+  return {
+    title: chosen.title,
+    tracks: mix.tracks.map((t) => ({
+      type: t.type,
+      repayment: t.repayment,
+      amount: toNis(t.amount),
+      annualRatePct: t.annualRatePct,
+      termMonths: t.termMonths,
+      cpiAnnualPct: t.cpiAnnualPct,
+    })),
+    firstPayment: toNis(result.firstPayment),
+    minPayment: toNis(minPayment),
+    maxPayment: toNis(result.maxPayment),
+    averagePayment: toNis(result.averagePayment),
   };
 }

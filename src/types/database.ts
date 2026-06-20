@@ -3359,6 +3359,7 @@ export type Database = {
           equity: number
           id: string
           inputs: Json
+          is_primary: boolean
           kind: string
           market_snapshot_id: string | null
           mortgage_amount: number
@@ -3383,6 +3384,7 @@ export type Database = {
           equity: number
           id?: string
           inputs?: Json
+          is_primary?: boolean
           kind: string
           market_snapshot_id?: string | null
           mortgage_amount: number
@@ -3407,6 +3409,7 @@ export type Database = {
           equity?: number
           id?: string
           inputs?: Json
+          is_primary?: boolean
           kind?: string
           market_snapshot_id?: string | null
           mortgage_amount?: number
@@ -4965,6 +4968,10 @@ export type Database = {
         Returns: undefined
       }
       soft_delete_lead: { Args: { p_lead_id: string }; Returns: undefined }
+      set_primary_scenario: {
+        Args: { p_scenario_id: string; p_is_primary?: boolean }
+        Returns: boolean
+      }
       soft_delete_scenario: {
         Args: { p_scenario_id: string }
         Returns: boolean

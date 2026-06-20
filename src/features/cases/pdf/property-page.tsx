@@ -124,7 +124,9 @@ function ObligationsTable({
         </Text>
       </View>
       <View style={styles.obligationsFootnote}>
-        <Text style={{ fontSize: 8, color: COLOR_MUTED }}>
+        {/* Leading "✓ =" drifts under the default LTR base; force RTL so the
+            marker stays at the start of the Hebrew line. */}
+        <Text style={{ fontSize: 8, color: COLOR_MUTED, direction: locale === 'he' ? 'rtl' : 'ltr' }}>
           {strings.property.longTermFootnote}
         </Text>
       </View>

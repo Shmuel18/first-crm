@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 
-import { Plus } from 'lucide-react';
+import { Plus, Star } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
+import { setPrimaryScenarioAction } from '../actions/set-primary-scenario';
 import { MixCalculator } from './mix-calculator';
 
 import type { MortgageScenarioWithTracks } from '../services/scenarios.service';
@@ -62,6 +64,7 @@ export function MixWorkspace({
 }: Props) {
   const t = useTranslations('simulators');
   const tTools = useTranslations('simulators.tools');
+  const tPrimary = useTranslations('simulators.mix.primary');
   const makeDraft = (ordinal: number): Tab => ({
     key: crypto.randomUUID(),
     id: null,
@@ -77,6 +80,22 @@ export function MixWorkspace({
       : [{ key: 'draft-initial', id: null, mix: newMixSeed, title: `${tTools('mix')} 1`, propertyKind: 'first_home', conclusion: '' }],
   );
   const [activeKey, setActiveKey] = useState<string>(() => tabs[0]?.key ?? 'draft-initial');
+  const [primaryId, setPrimaryId] = useState<string | null>(() => scenarios.find((s) => s.is_primary)?.id ?? null);
+  const [primaryPending, startPrimary] = useTransition();
+
+  const handleSetPrimary = (scenarioId: string, makePrimary: boolean) => {
+    if (!caseId) return;
+    const prev = primaryId;
+    // Optimistic: at most one primary, so marking one clears the rest.
+    setPrimaryId(makePrimary ? scenarioId : prev === scenarioId ? null : prev);
+    startPrimary(async () => {
+      const res = await setPrimaryScenarioAction({ scenarioId, caseId, isPrimary: makePrimary });
+      if (!res.ok) {
+        setPrimaryId(prev);
+        toast.error(tPrimary('error'));
+      }
+    });
+  };
 
   const addTab = () => {
     const tab = makeDraft(tabs.length + 1);
@@ -101,12 +120,15 @@ export function MixWorkspace({
               role="tab"
               aria-selected={active}
               onClick={() => setActiveKey(tab.key)}
-              className={`inline-flex h-9 max-w-52 items-center rounded-lg border px-3 text-sm font-medium transition ${
+              className={`inline-flex h-9 max-w-52 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition ${
                 active
                   ? 'border-brand-gold-dark bg-brand-black text-brand-gold'
                   : 'border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50'
               }`}
             >
+              {tab.id && tab.id === primaryId ? (
+                <Star className="size-3.5 shrink-0 fill-brand-gold text-brand-gold-dark" aria-label={tPrimary('marked')} />
+              ) : null}
               <span className="truncate">{tab.title || tTools('mix')}</span>
             </button>
           );
@@ -139,6 +161,9 @@ export function MixWorkspace({
             initialConclusion={tab.conclusion}
             monthlyNetIncome={monthlyNetIncome}
             monthlyObligations={monthlyObligations}
+            isPrimary={tab.id != null && tab.id === primaryId}
+            primaryPending={primaryPending}
+            onSetPrimary={caseId ? (makePrimary) => tab.id && handleSetPrimary(tab.id, makePrimary) : undefined}
             onCreated={(id) => handleCreated(tab.key, id)}
             onSaved={(title) => handleSaved(tab.key, title)}
           />
