@@ -13,7 +13,7 @@ import {
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
-import { BackArrow } from '@/components/shared/back-arrow';
+import { BackLink } from '@/components/shared/back-link';
 import { Tooltip } from '@/components/ui/tooltip';
 import { parseLocale } from '@/lib/i18n/direction';
 
@@ -89,15 +89,7 @@ export function DocumentsActionBar({
     <div className="bg-brand-gold-soft text-neutral-900 sticky top-[-1rem] sm:top-[-1.5rem] z-20 shadow-sm -mx-4 px-4 sm:-mx-6 sm:px-6 py-3 border-b border-brand-gold/20">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <Tooltip content={tPage('backToCase')}>
-            <Link
-              href={`/cases/${caseId}`}
-              aria-label={tPage('backToCase')}
-              className="inline-flex items-center justify-center size-7 border border-neutral-300 hover:border-brand-gold-text text-neutral-700 hover:text-brand-gold-text bg-white/60 rounded-md transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
-            >
-              <BackArrow locale={locale} className="size-3.5" aria-hidden="true" />
-            </Link>
-          </Tooltip>
+          <BackLink href={`/cases/${caseId}`} label={tPage('backToCase')} locale={locale} className="shrink-0" />
           <div className="flex items-center gap-2 flex-wrap min-w-0">
             <span className="font-display text-base font-semibold truncate max-w-md">
               {borrowerNames || tCase('withBorrowers')}
