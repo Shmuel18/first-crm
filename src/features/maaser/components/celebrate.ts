@@ -1,14 +1,17 @@
 /**
  * Premium full-screen gold celebration fired when a donation is logged — a small
- * "drive" for the mitzvah, on-brand (black/gold/white). Respects
- * prefers-reduced-motion. canvas-confetti is imported dynamically so it never
- * touches SSR and stays out of the initial bundle (loaded on the first gift).
+ * "drive" for the mitzvah, on-brand (black/gold/white). canvas-confetti is
+ * imported dynamically so it never touches SSR and stays out of the initial
+ * bundle (loaded on the first gift). NOTE: deliberately fires even under
+ * prefers-reduced-motion — it's a brief, explicitly-requested celebration on the
+ * owner's own tool, and `disableForReducedMotion` silently suppressed it for
+ * anyone with OS "reduce animations" on.
  */
 const GOLD = ['#C9A961', '#E8C77B', '#B8945A', '#FAF3E0', '#FFFFFF'];
 
 export async function celebrateMaaserGift(): Promise<void> {
   const confetti = (await import('canvas-confetti')).default;
-  const base = { colors: GOLD, disableForReducedMotion: true, zIndex: 9999, ticks: 240 } as const;
+  const base = { colors: GOLD, zIndex: 9999, ticks: 240 } as const;
 
   // Big center burst.
   confetti({ ...base, particleCount: 150, spread: 100, startVelocity: 48, scalar: 1.15, origin: { x: 0.5, y: 0.6 } });
