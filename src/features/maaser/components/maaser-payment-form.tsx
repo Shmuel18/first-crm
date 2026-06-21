@@ -7,6 +7,8 @@ import { Loader2, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { DateInputWithPicker } from '@/components/ui/date-input-with-picker';
+
 import { addMaaserPaymentAction } from '../actions/add-maaser-payment';
 import { celebrateMaaserGift } from './celebrate';
 
@@ -55,12 +57,11 @@ export function MaaserPaymentForm({ defaultDate }: Props) {
   return (
     <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
       <h3 className="mb-3 text-sm font-semibold text-neutral-800">{t('title')}</h3>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[8rem_8rem_1fr_1fr_auto]">
-        <input
-          type="date"
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[11rem_8rem_1fr_1fr_auto]">
+        <DateInputWithPicker
           value={paidOn}
-          onChange={(e) => setPaidOn(e.target.value)}
-          aria-label={t('date')}
+          onChange={setPaidOn}
+          pickerLabel={t('date')}
           className={fieldClass}
         />
         <input

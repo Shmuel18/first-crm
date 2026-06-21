@@ -13,9 +13,15 @@ import type { Locale } from '@/lib/i18n/direction';
 import { deleteMaaserPaymentAction } from '../actions/delete-maaser-payment';
 import type { MaaserPayment } from '../types';
 
-type Props = { payments: ReadonlyArray<MaaserPayment>; locale: Locale };
+type Props = {
+  payments: ReadonlyArray<MaaserPayment>;
+  locale: Locale;
+  /** When false, amounts are redacted (shared eye toggle from MaaserView). */
+  revealed: boolean;
+  mask: string;
+};
 
-export function MaaserPaymentsTable({ payments, locale }: Props) {
+export function MaaserPaymentsTable({ payments, locale, revealed, mask }: Props) {
   const t = useTranslations('maaser.table');
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -58,7 +64,7 @@ export function MaaserPaymentsTable({ payments, locale }: Props) {
             <tr key={p.id} className="border-b border-neutral-100 last:border-0">
               <td className="whitespace-nowrap px-3 py-2 text-neutral-600 tabular-nums">{fmtDate(p.paidOn)}</td>
               <td className="whitespace-nowrap px-3 py-2 font-semibold text-neutral-900 tabular-nums">
-                {formatCurrency(p.amount, locale)}
+                {revealed ? formatCurrency(p.amount, locale) : mask}
               </td>
               <td className="px-3 py-2 text-neutral-700">{p.recipient || '—'}</td>
               <td className="px-3 py-2 text-neutral-500">{p.note || ''}</td>

@@ -233,6 +233,8 @@
     "eyebrow": "Finances",
     "title": "Tithes",
     "subtitle": "Track the charity you've given against the ma'aser (10%) and chomesh (20%) of cumulative net fee.",
+    "reveal": "Show amounts",
+    "hide": "Hide amounts",
     "basis": {
       "gross": "Gross fee",
       "net": "Net fee",

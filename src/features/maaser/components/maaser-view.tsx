@@ -1,5 +1,9 @@
-import { Coins, Gift, HandCoins, Wallet } from 'lucide-react';
-import { getTranslations } from 'next-intl/server';
+'use client';
+
+import { useState } from 'react';
+
+import { Coins, Eye, EyeOff, Gift, HandCoins, Wallet } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { formatCurrency } from '@/lib/utils/format-currency';
 import type { Locale } from '@/lib/i18n/direction';
@@ -17,19 +21,39 @@ type Props = {
   locale: Locale;
 };
 
-export async function MaaserView({ basis, payments, defaultDate, locale }: Props) {
-  const t = await getTranslations('maaser');
+// Visual redaction only — figures are still in the page payload (the manager is
+// authorized). Hidden by default, like the statistics financial summary, so the
+// numbers aren't on screen the moment the page loads.
+const MASK = '••••••';
+
+export function MaaserView({ basis, payments, defaultDate, locale }: Props) {
+  const t = useTranslations('maaser');
+  const [revealed, setRevealed] = useState(false);
   const s = computeMaaserSummary(basis.grossFee, basis.netFee, sumGiven(payments.map((p) => p.amount)));
-  const fmt = (v: number): string => formatCurrency(v, locale);
+  const show = (v: number): string => (revealed ? formatCurrency(v, locale) : MASK);
+  const RevealIcon = revealed ? EyeOff : Eye;
+  const toggleLabel = revealed ? t('hide') : t('reveal');
 
   return (
     <div className="space-y-5">
+      <div className="flex items-center justify-end">
+        <button
+          type="button"
+          onClick={() => setRevealed((v) => !v)}
+          aria-pressed={revealed}
+          className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-neutral-600 transition hover:bg-brand-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+        >
+          <RevealIcon className="size-4" aria-hidden="true" />
+          <span>{toggleLabel}</span>
+        </button>
+      </div>
+
       {/* Basis + obligations */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label={t('basis.gross')} value={fmt(s.grossFee)} icon={Coins} />
-        <StatCard label={t('basis.net')} value={fmt(s.netFee)} icon={Wallet} />
-        <StatCard label={t('basis.maaserDue')} value={fmt(s.maaserDue)} icon={HandCoins} accent />
-        <StatCard label={t('basis.chomeshDue')} value={fmt(s.chomeshDue)} icon={Gift} accent />
+        <StatCard label={t('basis.gross')} value={show(s.grossFee)} icon={Coins} />
+        <StatCard label={t('basis.net')} value={show(s.netFee)} icon={Wallet} />
+        <StatCard label={t('basis.maaserDue')} value={show(s.maaserDue)} icon={HandCoins} accent />
+        <StatCard label={t('basis.chomeshDue')} value={show(s.chomeshDue)} icon={Gift} accent />
       </div>
 
       {/* Given + remaining */}
@@ -37,12 +61,12 @@ export async function MaaserView({ basis, payments, defaultDate, locale }: Props
         <div className="mb-3 flex items-baseline justify-between gap-3">
           <h2 className="font-display text-lg font-semibold text-neutral-950">{t('balance.title')}</h2>
           <div className="text-sm text-neutral-600">
-            {t('balance.totalGiven')}: <span className="font-semibold text-neutral-900 tabular-nums">{fmt(s.totalGiven)}</span>
+            {t('balance.totalGiven')}: <span className="font-semibold text-neutral-900 tabular-nums">{show(s.totalGiven)}</span>
           </div>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Balance label={t('balance.maaser')} due={fmt(s.maaserDue)} remaining={s.maaserRemaining} pct={s.maaserPct} fmt={fmt} t={t} />
-          <Balance label={t('balance.chomesh')} due={fmt(s.chomeshDue)} remaining={s.chomeshRemaining} pct={s.chomeshPct} fmt={fmt} t={t} />
+          <Balance label={t('balance.maaser')} due={show(s.maaserDue)} remaining={s.maaserRemaining} pct={revealed ? s.maaserPct : 0} show={show} revealed={revealed} t={t} />
+          <Balance label={t('balance.chomesh')} due={show(s.chomeshDue)} remaining={s.chomeshRemaining} pct={revealed ? s.chomeshPct : 0} show={show} revealed={revealed} t={t} />
         </div>
       </section>
 
@@ -50,7 +74,7 @@ export async function MaaserView({ basis, payments, defaultDate, locale }: Props
 
       <div>
         <h2 className="mb-2 font-display text-lg font-semibold text-neutral-950">{t('ledger')}</h2>
-        <MaaserPaymentsTable payments={payments} locale={locale} />
+        <MaaserPaymentsTable payments={payments} locale={locale} revealed={revealed} mask={MASK} />
       </div>
     </div>
   );
@@ -83,15 +107,17 @@ function Balance({
   due,
   remaining,
   pct,
-  fmt,
+  show,
+  revealed,
   t,
 }: {
   label: string;
   due: string;
   remaining: number;
   pct: number;
-  fmt: (v: number) => string;
-  t: Awaited<ReturnType<typeof getTranslations<'maaser'>>>;
+  show: (v: number) => string;
+  revealed: boolean;
+  t: ReturnType<typeof useTranslations<'maaser'>>;
 }) {
   const met = remaining <= 0;
   return (
@@ -104,9 +130,11 @@ function Balance({
         <div className={`h-full rounded-full ${met ? 'bg-emerald-500' : 'bg-brand-gold'}`} style={{ width: `${pct}%` }} />
       </div>
       <div className={`mt-2 text-sm font-semibold tabular-nums ${met ? 'text-emerald-600' : 'text-brand-gold-text'}`}>
-        {met
-          ? t('balance.fulfilled', { amount: fmt(Math.abs(remaining)) })
-          : t('balance.remaining', { amount: fmt(remaining) })}
+        {!revealed
+          ? show(0)
+          : met
+            ? t('balance.fulfilled', { amount: show(Math.abs(remaining)) })
+            : t('balance.remaining', { amount: show(remaining) })}
       </div>
     </div>
   );
