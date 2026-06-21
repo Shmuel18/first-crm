@@ -15,24 +15,30 @@
  */
 import confetti from 'canvas-confetti';
 
-const GOLD = ['#C9A961', '#E8C77B', '#B8945A', '#FAF3E0', '#FFFFFF'];
+// Weighted toward the high-contrast brand black/dark-gold tones so the effect
+// stays visible over the predominantly white maaser screen.
+const GOLD = ['#0A0A0A', '#8A6E2D', '#8A6E2D', '#B8945A', '#C9A961', '#E8C77B'];
 
 export function celebrateMaaserGift(): void {
   try {
-    const base = { colors: GOLD, zIndex: 9999, ticks: 240 } as const;
+    // The default renderer creates a blob: Web Worker, which our production CSP
+    // blocks. Render on the main thread so the celebration works without
+    // weakening the site's security policy.
+    const fire = confetti.create(undefined, { resize: true, useWorker: false });
+    const base = { colors: GOLD, zIndex: 9999, ticks: 240, scalar: 1.15 } as const;
 
     // Big center burst.
-    confetti({ ...base, particleCount: 150, spread: 100, startVelocity: 48, scalar: 1.15, origin: { x: 0.5, y: 0.6 } });
+    fire({ ...base, particleCount: 150, spread: 100, startVelocity: 48, scalar: 1.35, origin: { x: 0.5, y: 0.6 } });
     // Two side cannons fill the width.
-    confetti({ ...base, particleCount: 70, angle: 60, spread: 75, startVelocity: 55, origin: { x: 0, y: 0.75 } });
-    confetti({ ...base, particleCount: 70, angle: 120, spread: 75, startVelocity: 55, origin: { x: 1, y: 0.75 } });
+    fire({ ...base, particleCount: 70, angle: 60, spread: 75, startVelocity: 55, origin: { x: 0, y: 0.75 } });
+    fire({ ...base, particleCount: 70, angle: 120, spread: 75, startVelocity: 55, origin: { x: 1, y: 0.75 } });
     // A gentle gold shimmer drifting down from the top.
     window.setTimeout(() => {
-      confetti({ ...base, particleCount: 100, spread: 130, startVelocity: 28, gravity: 0.7, ticks: 300, scalar: 0.95, origin: { x: 0.5, y: -0.1 } });
+      fire({ ...base, particleCount: 100, spread: 130, startVelocity: 28, gravity: 0.7, ticks: 300, scalar: 1.05, origin: { x: 0.5, y: -0.1 } });
     }, 220);
     // A final pop for fullness.
     window.setTimeout(() => {
-      confetti({ ...base, particleCount: 60, spread: 115, startVelocity: 42, scalar: 1, origin: { x: 0.5, y: 0.5 } });
+      fire({ ...base, particleCount: 60, spread: 115, startVelocity: 42, scalar: 1.2, origin: { x: 0.5, y: 0.5 } });
     }, 430);
   } catch (err) {
     // Never let a celebration failure swallow the (successful) save.
