@@ -9,7 +9,7 @@ import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
-import { findMentionQuery, insertMention } from '../domain/mentions';
+import { buildMentionBody, findMentionQuery, insertMentionPlain, type PickedMention } from '../domain/mentions';
 
 type Member = { id: string; name: string };
 
@@ -27,6 +27,8 @@ export function CaseCommentComposer({ members, onPost }: Props) {
   const taRef = useRef<HTMLTextAreaElement>(null);
   const [mention, setMention] = useState<{ start: number; query: string } | null>(null);
   const [activeIdx, setActiveIdx] = useState(0);
+  // Mentions the user picked, in order — folded back into @[name](uuid) on submit.
+  const [picked, setPicked] = useState<PickedMention[]>([]);
 
   const suggestions = mention
     ? members
@@ -44,8 +46,9 @@ export function CaseCommentComposer({ members, onPost }: Props) {
   const applyMention = (m: Member) => {
     if (!mention) return;
     const caret = taRef.current?.selectionStart ?? draft.length;
-    const next = insertMention(draft, mention.start, caret, m.name, m.id);
+    const next = insertMentionPlain(draft, mention.start, caret, m.name);
     setDraft(next.value);
+    setPicked((prev) => [...prev, { name: m.name, uuid: m.id }]);
     setMention(null);
     // Restore focus + caret after the controlled re-render.
     requestAnimationFrame(() => {
@@ -58,13 +61,15 @@ export function CaseCommentComposer({ members, onPost }: Props) {
   };
 
   const submit = () => {
-    const body = draft.trim();
-    if (!body) return;
+    const text = draft.trim();
+    if (!text) return;
+    const body = buildMentionBody(text, picked);
     setDraft('');
     setMention(null);
     startTransition(async () => {
       const ok = await onPost(body);
-      if (!ok) setDraft(body);
+      if (ok) setPicked([]);
+      else setDraft(text); // restore the clean text; picked kept so a retry rebuilds tokens
     });
   };
 

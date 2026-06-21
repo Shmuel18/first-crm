@@ -41,14 +41,45 @@ export function findMentionQuery(
   return { start: caret - query.length - 1, query };
 }
 
-/** Replace the `@query` span [start, caret) with a full mention token. */
-export function insertMention(
+/**
+ * Replace the `@query` span [start, caret) with a CLEAN `@name ` (no uuid shown).
+ * The uuid is tracked separately by the composer and folded back in on submit via
+ * buildMentionBody — so the user never sees the raw `@[name](uuid)` token.
+ */
+export function insertMentionPlain(
   text: string,
   start: number,
   caret: number,
   name: string,
-  uuid: string,
 ): { value: string; caret: number } {
-  const token = `@[${name}](${uuid}) `;
+  const token = `@${name} `;
   return { value: text.slice(0, start) + token + text.slice(caret), caret: start + token.length };
+}
+
+/** A mention the composer recorded when the user picked it from the list. */
+export type PickedMention = { name: string; uuid: string };
+
+const isNameChar = (c: string | undefined): boolean => c !== undefined && /[\p{L}\p{N}_]/u.test(c);
+
+/**
+ * Turn the clean composer text (with visible `@name` mentions) into the stored
+ * body with `@[name](uuid)` tokens, using the mentions the user picked. Each
+ * picked mention claims the first not-yet-claimed `@name` occurrence whose name
+ * ends on a boundary (so `@דן` never matches inside `@דני`). A picked mention
+ * whose text was edited away is silently dropped — it just won't notify.
+ */
+export function buildMentionBody(text: string, picked: ReadonlyArray<PickedMention>): string {
+  let result = '';
+  let cursor = 0;
+  for (const { name, uuid } of picked) {
+    const needle = `@${name}`;
+    let i = text.indexOf(needle, cursor);
+    while (i !== -1 && isNameChar(text[i + needle.length])) {
+      i = text.indexOf(needle, i + 1);
+    }
+    if (i === -1) continue;
+    result += text.slice(cursor, i) + `@[${name}](${uuid})`;
+    cursor = i + needle.length;
+  }
+  return result + text.slice(cursor);
 }

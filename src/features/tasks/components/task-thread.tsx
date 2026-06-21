@@ -9,7 +9,13 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { formatRelativeTime } from '@/features/case-comments/domain/format-relative-time';
-import { findMentionQuery, insertMention, parseMentionBody } from '@/features/case-comments/domain/mentions';
+import {
+  buildMentionBody,
+  findMentionQuery,
+  insertMentionPlain,
+  parseMentionBody,
+  type PickedMention,
+} from '@/features/case-comments/domain/mentions';
 import type { Locale } from '@/lib/i18n/direction';
 import { formatPersonName } from '@/lib/utils/person-name';
 
@@ -133,6 +139,8 @@ export function TaskThread({ taskId }: Props) {
   const [members, setMembers] = useState<Member[]>([]);
   const [mention, setMention] = useState<{ start: number; query: string } | null>(null);
   const [activeIdx, setActiveIdx] = useState(0);
+  // Mentions the user picked, in order — folded back into @[name](uuid) on send.
+  const [picked, setPicked] = useState<PickedMention[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -176,8 +184,9 @@ export function TaskThread({ taskId }: Props) {
   }, []);
 
   const handleSend = () => {
-    const body = draft.trim();
-    if (!body) return;
+    const text = draft.trim();
+    if (!text) return;
+    const body = buildMentionBody(text, picked);
     startSend(async () => {
       const res = await addTaskCommentAction(taskId, body);
       if (!res.ok) {
@@ -185,6 +194,7 @@ export function TaskThread({ taskId }: Props) {
         return;
       }
       setDraft('');
+      setPicked([]);
       setMention(null);
       reload();
     });
@@ -200,8 +210,9 @@ export function TaskThread({ taskId }: Props) {
   const applyMention = (m: Member) => {
     if (!mention) return;
     const caret = textareaRef.current?.selectionStart ?? draft.length;
-    const next = insertMention(draft, mention.start, caret, m.name, m.id);
+    const next = insertMentionPlain(draft, mention.start, caret, m.name);
     setDraft(next.value);
+    setPicked((prev) => [...prev, { name: m.name, uuid: m.id }]);
     setMention(null);
     requestAnimationFrame(() => {
       const el = textareaRef.current;
