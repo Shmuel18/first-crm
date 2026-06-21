@@ -186,6 +186,17 @@
     height: 100dvh;
     overflow: hidden;
   }
+  /* Number inputs: drop the native up/down spin arrows everywhere for a cleaner
+     look (they clutter money fields and overlap RTL text). */
+  input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
 }
 
 @layer utilities {
