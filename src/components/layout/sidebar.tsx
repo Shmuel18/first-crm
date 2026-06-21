@@ -3,14 +3,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { BarChart3, Calculator, CheckSquare, LayoutDashboard, Settings } from 'lucide-react';
+import { BarChart3, Calculator, CheckSquare, HandCoins, LayoutDashboard, Settings } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { isNavItemActive } from './is-nav-item-active';
 
 type NavItem = {
   href: string;
-  labelKey: 'cases' | 'tasks' | 'simulators' | 'statistics' | 'settings';
+  labelKey: 'cases' | 'tasks' | 'simulators' | 'statistics' | 'maaser' | 'settings';
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
   criticalBadge?: number;
@@ -26,6 +26,7 @@ const BASE_TOP_ITEMS: readonly NavItem[] = [
   { href: '/tasks', labelKey: 'tasks', icon: CheckSquare },
   { href: '/simulators', labelKey: 'simulators', icon: Calculator },
   { href: '/statistics', labelKey: 'statistics', icon: BarChart3, adminOnly: true },
+  { href: '/maaser', labelKey: 'maaser', icon: HandCoins, adminOnly: true },
 ] as const;
 
 const BOTTOM_ITEMS: readonly NavItem[] = [

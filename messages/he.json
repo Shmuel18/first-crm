@@ -219,6 +219,7 @@
     "tasks": "משימות",
     "simulators": "סימולטורים",
     "statistics": "סטטיסטיקות",
+    "maaser": "מעשרות",
     "team": "צוות",
     "templates": "תבניות",
     "auditLog": "יומן שינויים",
@@ -227,6 +228,52 @@
     "sidebar": "סרגל צד",
     "skipToContent": "דלג לתוכן הראשי",
     "unreadTasks": "{count, plural, =1 {משימה אחת פתוחה} other {# משימות פתוחות}}"
+  },
+  "maaser": {
+    "eyebrow": "כספים",
+    "title": "מעשרות",
+    "subtitle": "מעקב הצדקה שנתת מול חובת המעשר (10%) והחומש (20%) מהשכר נטו המצטבר.",
+    "basis": {
+      "gross": "שכר טרחה ברוטו",
+      "net": "שכר טרחה נטו",
+      "maaserDue": "חובת מעשר (10%)",
+      "chomeshDue": "חובת חומש (20%)"
+    },
+    "balance": {
+      "title": "יתרה",
+      "totalGiven": "סה״כ נתתי",
+      "maaser": "מעשר",
+      "chomesh": "חומש",
+      "remaining": "נותר: {amount}",
+      "fulfilled": "הושלם · עברת ב-{amount}"
+    },
+    "ledger": "פנקס התשלומים",
+    "form": {
+      "title": "הוסף תשלום",
+      "date": "תאריך",
+      "amount": "סכום (₪)",
+      "recipient": "למי",
+      "note": "הערה",
+      "add": "הוסף",
+      "errors": {
+        "unauthorized": "אין הרשאה.",
+        "validation": "נתונים לא תקינים.",
+        "unknown": "ההוספה נכשלה. נסה שוב."
+      }
+    },
+    "table": {
+      "date": "תאריך",
+      "amount": "סכום",
+      "recipient": "למי",
+      "note": "הערה",
+      "delete": "מחק",
+      "empty": "עדיין לא נרשמו תשלומים.",
+      "errors": {
+        "unauthorized": "אין הרשאה.",
+        "validation": "מזהה לא תקין.",
+        "unknown": "המחיקה נכשלה. נסה שוב."
+      }
+    }
   },
   "statistics": {
     "title": "סטטיסטיקות וניתוח",

@@ -3159,6 +3159,70 @@ export type Database = {
           },
         ]
       }
+      maaser_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          id: string
+          note: string | null
+          paid_on: string
+          recipient: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          note?: string | null
+          paid_on?: string
+          recipient?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          note?: string | null
+          paid_on?: string
+          recipient?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maaser_payments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maaser_payments_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maaser_payments_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       market_data_snapshots: {
         Row: {
           created_at: string
@@ -4957,6 +5021,10 @@ export type Database = {
       }
       soft_delete_case_payout: {
         Args: { p_case_id: string; p_payout_id: string }
+        Returns: boolean
+      }
+      soft_delete_maaser_payment: {
+        Args: { p_id: string }
         Returns: boolean
       }
       soft_delete_case_property: {

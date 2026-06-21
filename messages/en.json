@@ -219,6 +219,7 @@
     "tasks": "Tasks",
     "simulators": "Simulators",
     "statistics": "Statistics",
+    "maaser": "Tithes",
     "team": "Team",
     "templates": "Templates",
     "auditLog": "Audit Log",
@@ -227,6 +228,52 @@
     "sidebar": "Sidebar",
     "skipToContent": "Skip to main content",
     "unreadTasks": "{count, plural, =1 {1 open task} other {# open tasks}}"
+  },
+  "maaser": {
+    "eyebrow": "Finances",
+    "title": "Tithes",
+    "subtitle": "Track the charity you've given against the ma'aser (10%) and chomesh (20%) of cumulative net fee.",
+    "basis": {
+      "gross": "Gross fee",
+      "net": "Net fee",
+      "maaserDue": "Ma'aser due (10%)",
+      "chomeshDue": "Chomesh due (20%)"
+    },
+    "balance": {
+      "title": "Balance",
+      "totalGiven": "Total given",
+      "maaser": "Ma'aser",
+      "chomesh": "Chomesh",
+      "remaining": "Remaining: {amount}",
+      "fulfilled": "Fulfilled · over by {amount}"
+    },
+    "ledger": "Payments ledger",
+    "form": {
+      "title": "Add a donation",
+      "date": "Date",
+      "amount": "Amount (₪)",
+      "recipient": "Recipient",
+      "note": "Note",
+      "add": "Add",
+      "errors": {
+        "unauthorized": "Not authorized.",
+        "validation": "Invalid input.",
+        "unknown": "Failed to add. Try again."
+      }
+    },
+    "table": {
+      "date": "Date",
+      "amount": "Amount",
+      "recipient": "Recipient",
+      "note": "Note",
+      "delete": "Delete",
+      "empty": "No donations recorded yet.",
+      "errors": {
+        "unauthorized": "Not authorized.",
+        "validation": "Invalid id.",
+        "unknown": "Failed to delete. Try again."
+      }
+    }
   },
   "statistics": {
     "title": "Statistics & analytics",
