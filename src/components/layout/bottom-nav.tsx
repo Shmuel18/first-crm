@@ -3,28 +3,29 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { BarChart3, Calculator, CheckSquare, LayoutDashboard, Settings } from 'lucide-react';
+import { BarChart3, Calculator, CheckSquare, HandCoins, LayoutDashboard, Settings } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { isNavItemActive } from './is-nav-item-active';
 
 type NavItem = {
   href: string;
-  labelKey: 'cases' | 'tasks' | 'simulators' | 'statistics' | 'settings';
+  labelKey: 'cases' | 'tasks' | 'simulators' | 'statistics' | 'maaser' | 'settings';
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
   criticalBadge?: number;
   adminOnly?: boolean;
 };
 
-// Flat destinations for the bottom tab bar — four for advisors, five for the
-// manager (the manager-only Statistics tab). Still few enough that a
+// Flat destinations for the bottom tab bar — four for advisors, six for the
+// manager (the manager-only Statistics and Maaser tabs). Still few enough that a
 // thumb-reachable tab bar beats a hamburger drawer.
 const ITEMS: readonly NavItem[] = [
   { href: '/cases', labelKey: 'cases', icon: LayoutDashboard },
   { href: '/tasks', labelKey: 'tasks', icon: CheckSquare },
   { href: '/simulators', labelKey: 'simulators', icon: Calculator },
   { href: '/statistics', labelKey: 'statistics', icon: BarChart3, adminOnly: true },
+  { href: '/maaser', labelKey: 'maaser', icon: HandCoins, adminOnly: true },
   { href: '/settings', labelKey: 'settings', icon: Settings },
 ] as const;
 
@@ -76,7 +77,8 @@ export function BottomNav({
             aria-label={accessibleName}
             aria-current={active ? 'page' : undefined}
             className={[
-              'relative flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px] transition-colors',
+              'relative min-w-0 flex flex-1 flex-col items-center justify-center gap-0.5 py-2 transition-colors',
+              isManager ? 'text-[10px] tracking-tighter' : 'text-[11px]',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-gold',
               active ? 'text-brand-gold-light' : 'text-neutral-300 hover:text-white',
             ].join(' ')}
@@ -102,7 +104,7 @@ export function BottomNav({
                 </span>
               )}
             </span>
-            <span>{label}</span>
+            <span className="max-w-full truncate">{label}</span>
           </Link>
         );
       })}
