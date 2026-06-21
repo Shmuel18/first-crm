@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { addMaaserPaymentAction } from '../actions/add-maaser-payment';
+import { celebrateMaaserGift } from './celebrate';
 
 type Props = {
   /** Today's date (Israel TZ), computed on the server to avoid a hydration mismatch. */
@@ -42,6 +43,7 @@ export function MaaserPaymentForm({ defaultDate }: Props) {
         toast.error(t(`errors.${res.error}`));
         return;
       }
+      void celebrateMaaserGift();
       // Keep the date, clear the rest for the next entry; refresh balances.
       setAmount('');
       setRecipient('');
