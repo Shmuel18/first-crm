@@ -2,8 +2,7 @@
 
 import { useState, useTransition } from 'react';
 
-import { useRouter } from 'next/navigation';
-import { Loader2, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
@@ -22,7 +21,6 @@ const fieldClass =
 
 export function MaaserPaymentForm({ defaultDate }: Props) {
   const t = useTranslations('maaser.form');
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [paidOn, setPaidOn] = useState(defaultDate);
   const [amount, setAmount] = useState('');
@@ -51,7 +49,6 @@ export function MaaserPaymentForm({ defaultDate }: Props) {
         setAmount('');
         setRecipient('');
         setNote('');
-        router.refresh();
       } catch {
         // Network failures reject Server Actions instead of returning Result.
         // Treat them as an expected save failure so the page stays usable.
@@ -107,7 +104,7 @@ export function MaaserPaymentForm({ defaultDate }: Props) {
           disabled={!canSubmit}
           className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-brand-gold px-4 text-sm font-semibold text-brand-black transition hover:bg-brand-gold-hover disabled:opacity-50"
         >
-          {pending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Plus className="size-4" aria-hidden="true" />}
+          <Plus className="size-4" aria-hidden="true" />
           {t('add')}
         </button>
       </div>
