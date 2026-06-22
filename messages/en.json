@@ -2057,6 +2057,17 @@
         "obligations": "Obligations",
         "property": "Property & deal",
         "admin": "Admin"
+      },
+      "celebrations": {
+        "title": "Documentation celebrations",
+        "adminOnly": "Admin only",
+        "description": "When on, a brief celebration animation plays each time a team member adds documentation to a case.",
+        "saving": "Saving…",
+        "on": "Celebrations are on",
+        "off": "Celebrations are off",
+        "enabledToast": "Documentation celebrations turned on",
+        "disabledToast": "Documentation celebrations turned off",
+        "failed": "Update failed. Please try again."
       }
     },
     "people": {
