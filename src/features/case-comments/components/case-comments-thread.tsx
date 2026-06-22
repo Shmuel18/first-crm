@@ -104,13 +104,17 @@ export function CaseCommentsThread({
         x.id === tempId ? { ...x, id: res.comment.id, createdAt: res.comment.createdAt } : x,
       ),
     );
-    const authoredCount =
-      comments.filter((comment) => comment.authorId === currentUserId).length + 1;
-    celebrationIdRef.current += 1;
-    setCelebration({
-      id: celebrationIdRef.current,
-      milestone: isDocumentationMilestone(authoredCount),
-    });
+    if (res.celebrationEnabled) {
+      const authoredCount =
+        comments.filter((comment) => comment.authorId === currentUserId).length + 1;
+      celebrationIdRef.current += 1;
+      setCelebration({
+        id: celebrationIdRef.current,
+        milestone: isDocumentationMilestone(authoredCount),
+      });
+    } else {
+      setCelebration(null);
+    }
     return true;
   };
 

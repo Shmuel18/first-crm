@@ -33,4 +33,5 @@ export type OfficeSettings = {
   tax_id: string | null;
   audit_log_retention_days: number;
   deleted_records_retention_days: number;
+  documentation_celebrations_enabled: boolean;
 };

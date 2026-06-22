@@ -2015,6 +2015,17 @@
       "emailTaskReminder": "Email on task reminders",
       "emailCaseStatusOverdue": "Email when one of my cases is overdue in a stage",
       "saved": "Preferences saved",
+      "celebrations": {
+        "title": "New documentation celebrations",
+        "description": "Shows a gold stamp and confetti after a documentation post. This switch applies to the whole team.",
+        "adminOnly": "Managers only",
+        "on": "On for the whole team",
+        "off": "Off for the whole team",
+        "saving": "Saving...",
+        "enabledToast": "Documentation celebrations enabled",
+        "disabledToast": "Documentation celebrations disabled",
+        "failed": "We couldn't save this setting. Please try again."
+      },
       "errors": {
         "generic": "Save failed. Please try again."
       }

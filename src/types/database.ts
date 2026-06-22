@@ -3720,6 +3720,7 @@ export type Database = {
           default_language: string
           default_task_time: string
           deleted_records_retention_days: number
+          documentation_celebrations_enabled: boolean
           document_expiry_warning_days: number
           email_header_image_url: string | null
           email_main: string | null
@@ -3765,6 +3766,7 @@ export type Database = {
           default_language?: string
           default_task_time?: string
           deleted_records_retention_days?: number
+          documentation_celebrations_enabled?: boolean
           document_expiry_warning_days?: number
           email_header_image_url?: string | null
           email_main?: string | null
@@ -3810,6 +3812,7 @@ export type Database = {
           default_language?: string
           default_task_time?: string
           deleted_records_retention_days?: number
+          documentation_celebrations_enabled?: boolean
           document_expiry_warning_days?: number
           email_header_image_url?: string | null
           email_main?: string | null
@@ -5216,4 +5219,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-
