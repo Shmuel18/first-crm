@@ -33,13 +33,22 @@ export function MaaserPaymentsTable({ payments, locale, revealed, mask }: Props)
   const remove = (id: string) => {
     setDeletingId(id);
     startTransition(async () => {
-      const res = await deleteMaaserPaymentAction(id);
-      setDeletingId(null);
-      if (!res.ok) {
-        toast.error(t(`errors.${res.error}`));
-        return;
+      try {
+        const res = await deleteMaaserPaymentAction(id);
+        if (!res.ok) {
+          toast.error(t(`errors.${res.error}`));
+          return;
+        }
+        router.refresh();
+      } catch {
+        // A Server Action is a network request. Connection changes/offline
+        // moments reject it before it can return our typed Result; keep that
+        // expected failure inside the interaction instead of tripping the
+        // route-level error boundary.
+        toast.error(t('errors.unknown'));
+      } finally {
+        setDeletingId(null);
       }
-      router.refresh();
     });
   };
 

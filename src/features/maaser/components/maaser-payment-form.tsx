@@ -35,22 +35,28 @@ export function MaaserPaymentForm({ defaultDate }: Props) {
   const submit = () => {
     if (!canSubmit) return;
     startTransition(async () => {
-      const res = await addMaaserPaymentAction({
-        paidOn,
-        amount: amountNum,
-        recipient: recipient.trim() || null,
-        note: note.trim() || null,
-      });
-      if (!res.ok) {
-        toast.error(t(`errors.${res.error}`));
-        return;
+      try {
+        const res = await addMaaserPaymentAction({
+          paidOn,
+          amount: amountNum,
+          recipient: recipient.trim() || null,
+          note: note.trim() || null,
+        });
+        if (!res.ok) {
+          toast.error(t(`errors.${res.error}`));
+          return;
+        }
+        void celebrateMaaserGift();
+        // Keep the date, clear the rest for the next entry; refresh balances.
+        setAmount('');
+        setRecipient('');
+        setNote('');
+        router.refresh();
+      } catch {
+        // Network failures reject Server Actions instead of returning Result.
+        // Treat them as an expected save failure so the page stays usable.
+        toast.error(t('errors.unknown'));
       }
-      void celebrateMaaserGift();
-      // Keep the date, clear the rest for the next entry; refresh balances.
-      setAmount('');
-      setRecipient('');
-      setNote('');
-      router.refresh();
     });
   };
 
