@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
@@ -10,9 +10,11 @@ import type { Locale } from '@/lib/i18n/direction';
 import { deleteCaseCommentAction } from '../actions/delete-case-comment';
 import { editCaseCommentAction } from '../actions/edit-case-comment';
 import { postCaseCommentAction } from '../actions/post-case-comment';
+import { isDocumentationMilestone } from '../domain/documentation-celebration';
 import type { CaseCommentView } from '../types';
 import { CaseCommentBubble } from './case-comment-bubble';
 import { CaseCommentComposer } from './case-comment-composer';
+import { DocumentationCelebration } from './documentation-celebration';
 
 type Member = { id: string; name: string };
 
@@ -37,7 +39,14 @@ export function CaseCommentsThread({
 }: Props) {
   const t = useTranslations('caseComments');
   const [comments, setComments] = useState<ReadonlyArray<CaseCommentView>>(initialComments);
+  const [celebration, setCelebration] = useState<{
+    id: number;
+    milestone: boolean;
+  } | null>(null);
+  const celebrationIdRef = useRef(0);
   const listRef = useRef<HTMLDivElement>(null);
+
+  const finishCelebration = useCallback(() => setCelebration(null), []);
 
   // Reconcile to fresh server data on a payload change (render-time, no effect),
   // mirroring TasksBoard's prop-sync pattern.
@@ -77,7 +86,14 @@ export function CaseCommentsThread({
       editedAt: null,
     };
     setComments((c) => [...c, optimistic]);
-    const res = await postCaseCommentAction(caseId, body);
+    let res: Awaited<ReturnType<typeof postCaseCommentAction>>;
+    try {
+      res = await postCaseCommentAction(caseId, body);
+    } catch {
+      setComments((c) => c.filter((x) => x.id !== tempId));
+      toast.error(t('toast.postFailed'));
+      return false;
+    }
     if (!res.ok) {
       setComments((c) => c.filter((x) => x.id !== tempId));
       toast.error(t('toast.postFailed'));
@@ -88,6 +104,13 @@ export function CaseCommentsThread({
         x.id === tempId ? { ...x, id: res.comment.id, createdAt: res.comment.createdAt } : x,
       ),
     );
+    const authoredCount =
+      comments.filter((comment) => comment.authorId === currentUserId).length + 1;
+    celebrationIdRef.current += 1;
+    setCelebration({
+      id: celebrationIdRef.current,
+      milestone: isDocumentationMilestone(authoredCount),
+    });
     return true;
   };
 
@@ -141,6 +164,14 @@ export function CaseCommentsThread({
       )}
 
       <CaseCommentComposer members={members} onPost={handlePost} />
+
+      {celebration && (
+        <DocumentationCelebration
+          celebrationId={celebration.id}
+          milestone={celebration.milestone}
+          onComplete={finishCelebration}
+        />
+      )}
     </div>
   );
 }

@@ -2439,6 +2439,12 @@
       "hint": "Ctrl+Enter to post",
       "post": "Post"
     },
+    "celebration": {
+      "title": "Documented ✓",
+      "message": "Another clear step in the case",
+      "milestoneTitle": "Documentation champion!",
+      "milestoneMessage": "Another 5 documented updates in this case"
+    },
     "toast": {
       "postFailed": "Couldn't post the comment. Please try again.",
       "editFailed": "Couldn't edit the comment. Please try again.",
