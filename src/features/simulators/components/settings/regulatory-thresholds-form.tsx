@@ -6,14 +6,16 @@ import { Loader2, Save } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
-import { Input } from '@/components/ui/input';
-
 import { updateRegulatoryThresholdsAction } from '../../actions/update-regulatory-thresholds';
+import { NumberCell } from '../number-cell';
+
 import type { PropertyKind, RegulatoryThresholds } from '../../types';
 
 type Props = { thresholds: RegulatoryThresholds };
 
 const propertyKinds: readonly PropertyKind[] = ['first_home', 'replacement', 'investment'];
+const inputClass =
+  'h-10 w-full rounded-lg border border-neutral-200 bg-white px-3 text-sm shadow-xs outline-none transition focus:border-brand-gold-text focus:ring-2 focus:ring-brand-gold-text/30';
 
 export function RegulatoryThresholdsForm({ thresholds }: Props) {
   const t = useTranslations('settings.simulators');
@@ -85,7 +87,7 @@ function NumberField({ label, value, onChange }: { label: string; value: number;
   return (
     <label className="block">
       <span className="mb-1.5 block text-sm font-medium text-neutral-700">{label}</span>
-      <Input type="number" min={0} max={480} value={value} onChange={(e) => onChange(Number(e.target.value))} />
+      <NumberCell className={inputClass} ariaLabel={label} decimal value={value} onChange={onChange} />
     </label>
   );
 }

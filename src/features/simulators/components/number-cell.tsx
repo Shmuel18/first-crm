@@ -9,6 +9,8 @@ type Props = {
   disabled?: boolean;
   /** Allow a decimal point (rates / CPI). Off → integer-only (months, NIS). */
   decimal?: boolean;
+  /** Allow a leading minus (stress-scenario deltas can go down). Off → ≥ 0. */
+  allowNegative?: boolean;
   ariaLabel?: string;
 };
 
@@ -20,7 +22,15 @@ type Props = {
  * input like "0." while a decimal is typed; the parsed number flows up via
  * onChange, and an upstream change (preset load, clear-all) re-seeds the text.
  */
-export function NumberCell({ value, onChange, className, disabled, decimal = false, ariaLabel }: Props) {
+export function NumberCell({
+  value,
+  onChange,
+  className,
+  disabled,
+  decimal = false,
+  allowNegative = false,
+  ariaLabel,
+}: Props) {
   const [text, setText] = useState(() => numToText(value));
 
   // Re-seed when the upstream value changes to something the current text doesn't
@@ -32,9 +42,10 @@ export function NumberCell({ value, onChange, className, disabled, decimal = fal
     if (textToNum(text) !== value) setText(numToText(value));
   }
 
+  const allowed = new RegExp(`^${allowNegative ? '-?' : ''}\\d*${decimal ? '\\.?\\d*' : ''}$`);
+
   const handle = (raw: string): void => {
-    const allowed = decimal ? /^\d*\.?\d*$/ : /^\d*$/;
-    if (!allowed.test(raw)) return; // reject letters / extra dots — keep the old text
+    if (!allowed.test(raw)) return; // reject letters / extra dots/signs — keep the old text
     setText(raw);
     const next = textToNum(raw);
     if (Number.isFinite(next)) onChange(next);
@@ -60,5 +71,6 @@ function numToText(value: number): string {
 
 function textToNum(text: string): number {
   const trimmed = text.trim();
-  return trimmed === '' || trimmed === '.' ? 0 : Number(trimmed);
+  // Incomplete entries ("", ".", "-", "-.") read as 0 until a digit lands.
+  return /\d/.test(trimmed) ? Number(trimmed) : 0;
 }

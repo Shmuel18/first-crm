@@ -13,6 +13,7 @@ import {
 import { calculateClosingCosts, type ClosingCostLineItem } from '../domain/closing-costs';
 import type { MoneyAgorot } from '../types';
 import { agorotToNis, formatMoney, nisToAgorot } from '../utils/format';
+import { NumberCell } from './number-cell';
 
 type State = {
   profile: PurchaseTaxBuyerProfile;
@@ -120,14 +121,14 @@ export function TaxCostsCalculator({
               <option value="commercial">{t('profiles.commercial')}</option>
             </select>
           </Field>
-          <NumberField label={t('ownershipShare')} value={state.ownershipSharePct} step="1" onChange={(value) => setNumber('ownershipSharePct', value)} />
+          <NumberField label={t('ownershipShare')} value={state.ownershipSharePct} onChange={(value) => setNumber('ownershipSharePct', value)} />
           <MoneyField label={t('propertyValue')} value={state.propertyValue} onChange={(value) => setMoney('propertyValue', value)} />
           <MoneyField label={t('mortgageAmount')} value={state.mortgageAmount} onChange={(value) => setMoney('mortgageAmount', value)} />
           <MoneyField label={t('equity')} value={state.equity} onChange={(value) => setMoney('equity', value)} />
           <MoneyField label={t('availableCash')} value={state.availableCash} onChange={(value) => setMoney('availableCash', value)} />
-          <NumberField label={t('lawyerPct')} value={state.lawyerPct} step="0.05" onChange={(value) => setNumber('lawyerPct', value)} />
-          <NumberField label={t('brokerPct')} value={state.brokerPct} step="0.05" onChange={(value) => setNumber('brokerPct', value)} />
-          <NumberField label={t('bankOpeningPct')} value={state.bankOpeningPct} step="0.05" onChange={(value) => setNumber('bankOpeningPct', value)} />
+          <NumberField label={t('lawyerPct')} value={state.lawyerPct} onChange={(value) => setNumber('lawyerPct', value)} />
+          <NumberField label={t('brokerPct')} value={state.brokerPct} onChange={(value) => setNumber('brokerPct', value)} />
+          <NumberField label={t('bankOpeningPct')} value={state.bankOpeningPct} onChange={(value) => setNumber('bankOpeningPct', value)} />
           <MoneyField label={t('appraiserAmount')} value={state.appraiserAmount} onChange={(value) => setMoney('appraiserAmount', value)} />
           <MoneyField label={t('movingAmount')} value={state.movingAmount} onChange={(value) => setMoney('movingAmount', value)} />
         </div>
@@ -166,15 +167,15 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function MoneyField({ label, value, onChange }: { label: string; value: MoneyAgorot; onChange: (value: string) => void }) {
   return (
     <Field label={label}>
-      <input className={inputClass} inputMode="numeric" value={agorotToNis(value)} onChange={(e) => onChange(e.target.value)} />
+      <NumberCell className={inputClass} ariaLabel={label} value={agorotToNis(value)} onChange={(nis) => onChange(String(nis))} />
     </Field>
   );
 }
 
-function NumberField({ label, value, step, onChange }: { label: string; value: number; step: string; onChange: (value: string) => void }) {
+function NumberField({ label, value, onChange }: { label: string; value: number; onChange: (value: string) => void }) {
   return (
     <Field label={label}>
-      <input className={inputClass} type="number" min={0} step={step} value={value} onChange={(e) => onChange(e.target.value)} />
+      <NumberCell className={inputClass} ariaLabel={label} decimal value={value} onChange={(n) => onChange(String(n))} />
     </Field>
   );
 }

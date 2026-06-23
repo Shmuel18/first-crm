@@ -12,6 +12,7 @@ import { calculateMaximumMortgage } from '../domain/max-mortgage';
 import { calculateMonthlyPayment } from '../domain/monthly-payment';
 import type { MoneyAgorot, PropertyKind, TrackInput } from '../types';
 import { agorotToNis, formatMoney, formatPct, nisToAgorot } from '../utils/format';
+import { NumberCell } from './number-cell';
 
 type MoneyFieldKey = 'propertyValue' | 'equity' | 'netIncome' | 'obligations' | 'requestedMortgage';
 
@@ -134,10 +135,10 @@ export function AffordabilityCalculator({
           <MoneyField label={t('requestedMortgage')} value={state.requestedMortgage} onChange={(value) => setMoney('requestedMortgage', value)} />
           <MoneyField label={t('netIncome')} value={state.netIncome} onChange={(value) => setMoney('netIncome', value)} />
           <MoneyField label={t('obligations')} value={state.obligations} onChange={(value) => setMoney('obligations', value)} />
-          <NumberField label={t('annualRate')} value={state.annualRatePct} step="0.05" onChange={(value) => setNumber('annualRatePct', value)} />
-          <NumberField label={t('termMonths')} value={state.termMonths} step="1" onChange={(value) => setNumber('termMonths', value)} />
-          <NumberField label={t('warningDti')} value={state.warningDtiPct} step="0.5" onChange={(value) => setNumber('warningDtiPct', value)} />
-          <NumberField label={t('maxDti')} value={state.maxDtiPct} step="0.5" onChange={(value) => setNumber('maxDtiPct', value)} />
+          <NumberField label={t('annualRate')} value={state.annualRatePct} onChange={(value) => setNumber('annualRatePct', value)} />
+          <NumberField label={t('termMonths')} value={state.termMonths} onChange={(value) => setNumber('termMonths', value)} />
+          <NumberField label={t('warningDti')} value={state.warningDtiPct} onChange={(value) => setNumber('warningDtiPct', value)} />
+          <NumberField label={t('maxDti')} value={state.maxDtiPct} onChange={(value) => setNumber('maxDtiPct', value)} />
         </div>
       </section>
 
@@ -172,15 +173,15 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function MoneyField({ label, value, onChange }: { label: string; value: MoneyAgorot; onChange: (value: string) => void }) {
   return (
     <Field label={label}>
-      <input className={inputClass} inputMode="numeric" value={agorotToNis(value)} onChange={(e) => onChange(e.target.value)} />
+      <NumberCell className={inputClass} ariaLabel={label} value={agorotToNis(value)} onChange={(nis) => onChange(String(nis))} />
     </Field>
   );
 }
 
-function NumberField({ label, value, step, onChange }: { label: string; value: number; step: string; onChange: (value: string) => void }) {
+function NumberField({ label, value, onChange }: { label: string; value: number; onChange: (value: string) => void }) {
   return (
     <Field label={label}>
-      <input className={inputClass} type="number" min={0} step={step} value={value} onChange={(e) => onChange(e.target.value)} />
+      <NumberCell className={inputClass} ariaLabel={label} decimal value={value} onChange={(n) => onChange(String(n))} />
     </Field>
   );
 }

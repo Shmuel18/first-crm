@@ -2,8 +2,10 @@
 
 import { useTranslations } from 'next-intl';
 
-import type { StressScenario } from '../domain/scenario-stress';
 import { agorotToNis, nisToAgorot } from '../utils/format';
+import { NumberCell } from './number-cell';
+
+import type { StressScenario } from '../domain/scenario-stress';
 
 type ScenarioParamKey = 'primeDeltaPct' | 'variableDeltaPct' | 'cpiAnnualPct' | 'changeMonth';
 
@@ -24,9 +26,9 @@ export function ScenarioInputsPanel({ scenario, onParamChange, onThresholdChange
     <section className="rounded-xl border border-neutral-200 bg-white p-4">
       <h2 className="mb-4 font-display text-lg font-semibold text-neutral-950">{t('title')}</h2>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <NumberField label={t('primeDelta')} value={scenario.primeDeltaPct} step="0.1" onChange={(v) => onParamChange('primeDeltaPct', v)} />
-        <NumberField label={t('variableDelta')} value={scenario.variableDeltaPct} step="0.1" onChange={(v) => onParamChange('variableDeltaPct', v)} />
-        <NumberField label={t('cpiAnnual')} value={scenario.cpiAnnualPct} step="0.1" onChange={(v) => onParamChange('cpiAnnualPct', v)} />
+        <NumberField label={t('primeDelta')} value={scenario.primeDeltaPct} onChange={(v) => onParamChange('primeDeltaPct', v)} />
+        <NumberField label={t('variableDelta')} value={scenario.variableDeltaPct} onChange={(v) => onParamChange('variableDeltaPct', v)} />
+        <NumberField label={t('cpiAnnual')} value={scenario.cpiAnnualPct} onChange={(v) => onParamChange('cpiAnnualPct', v)} />
         <label className="block">
           <span className="mb-1.5 block text-sm font-medium text-neutral-700">{t('changeMonth')}</span>
           <select className={inputClass} value={scenario.changeMonth} onChange={(e) => onParamChange('changeMonth', Number(e.target.value))}>
@@ -50,11 +52,11 @@ export function ScenarioInputsPanel({ scenario, onParamChange, onThresholdChange
   );
 }
 
-function NumberField({ label, value, step, onChange }: { label: string; value: number; step?: string; onChange: (value: number) => void }) {
+function NumberField({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
   return (
     <label className="block">
       <span className="mb-1.5 block text-sm font-medium text-neutral-700">{label}</span>
-      <input className={inputClass} type="number" step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} />
+      <NumberCell className={inputClass} ariaLabel={label} decimal allowNegative value={value} onChange={onChange} />
     </label>
   );
 }
