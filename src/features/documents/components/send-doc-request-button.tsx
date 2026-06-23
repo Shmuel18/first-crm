@@ -77,9 +77,9 @@ export function SendDocRequestButton({ caseId, title, borrower, checklist }: Pro
     });
   };
 
-  const sendEmail = (subject: string, body: string): void => {
+  const sendEmail = (subject: string, body: string, emailLocale: 'he' | 'en'): void => {
     startTransition(async () => {
-      const res = await sendDocumentRequestAction({ caseId, subject, body });
+      const res = await sendDocumentRequestAction({ caseId, locale: emailLocale, subject, body });
       if (res.ok) {
         toast.success(t('sent'));
         setDraft(null);

@@ -142,6 +142,10 @@
     "hint": "You can edit the message before sending. It will be sent in the office's branded layout.",
     "subjectLabel": "Subject",
     "bodyLabel": "Message body",
+    "bodyPlaceholder": "Write your message here…",
+    "languageLabel": "Email language",
+    "langHe": "Hebrew",
+    "langEn": "English",
     "send": "Send",
     "cancel": "Cancel",
     "attachments": {
@@ -2444,7 +2448,10 @@
     "heading3": "Heading 3",
     "bulletList": "Bullet list",
     "orderedList": "Ordered list",
-    "blockquote": "Quote"
+    "blockquote": "Quote",
+    "link": "Link",
+    "removeLink": "Remove link",
+    "linkPrompt": "Enter a link URL:"
   },
   "caseComments": {
     "blockTitle": "Documentation",

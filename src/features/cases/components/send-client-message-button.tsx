@@ -84,13 +84,13 @@ export function SendClientMessageButton({ caseId, title, borrower, templates }: 
     setDraft({ subject: tpl.subject?.trim() || t('emailDefaultSubject'), body: tpl.body });
   };
 
-  const send = (subject: string, body: string): void => {
+  const send = (subject: string, body: string, locale: 'he' | 'en'): void => {
     startTransition(async () => {
       const documentIds = attachments.flatMap((a) => (a.kind === 'document' ? [a.id] : []));
       const uploads = attachments.flatMap((a) =>
         a.kind === 'upload' ? [{ path: a.path, fileName: a.fileName }] : [],
       );
-      const res = await sendClientEmailAction({ caseId, subject, body, documentIds, uploads });
+      const res = await sendClientEmailAction({ caseId, locale, subject, body, documentIds, uploads });
       if (res.ok) {
         toast.success(t('emailSent'));
         closeDialog();

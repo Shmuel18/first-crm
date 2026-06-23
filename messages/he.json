@@ -142,6 +142,10 @@
     "hint": "אפשר לערוך את ההודעה לפני השליחה. היא תישלח בעיצוב הממותג של המשרד.",
     "subjectLabel": "נושא",
     "bodyLabel": "תוכן ההודעה",
+    "bodyPlaceholder": "כתוב/י את ההודעה כאן…",
+    "languageLabel": "שפת המייל",
+    "langHe": "עברית",
+    "langEn": "אנגלית",
     "send": "שלח",
     "cancel": "ביטול",
     "attachments": {
@@ -2444,7 +2448,10 @@
     "heading3": "כותרת קטנה",
     "bulletList": "רשימה בולטים",
     "orderedList": "רשימה ממוספרת",
-    "blockquote": "ציטוט"
+    "blockquote": "ציטוט",
+    "link": "קישור",
+    "removeLink": "הסר קישור",
+    "linkPrompt": "הזן/י כתובת קישור (URL):"
   },
   "caseComments": {
     "blockTitle": "תיעוד",

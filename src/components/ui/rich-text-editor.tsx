@@ -10,6 +10,8 @@ import {
   Heading2,
   Heading3,
   Italic,
+  Link2,
+  Link2Off,
   List,
   ListOrdered,
   Quote,
@@ -29,6 +31,12 @@ type Props = {
    *  e.g. for a viewer who lacks edit permission. TipTap still parses the
    *  HTML to its safe node schema, so this stays XSS-safe. Defaults to true. */
   editable?: boolean;
+  /** Show a link / unlink button. The Link mark ships with StarterKit v3, so
+   *  this only toggles the toolbar control (default off — opt-in per usage). */
+  enableLink?: boolean;
+  /** Text direction of the editable area (not the toolbar). Lets a bilingual
+   *  caller force LTR/RTL independent of the surrounding UI; omit to inherit. */
+  dir?: 'rtl' | 'ltr';
 };
 
 export function RichTextEditor({
@@ -38,13 +46,17 @@ export function RichTextEditor({
   placeholder,
   minRows = 8,
   editable = true,
+  enableLink = false,
+  dir,
 }: Props) {
   const editor = useEditor({
     immediatelyRender: false,
     editable,
     extensions: [
-      // StarterKit v3 already includes Underline - no need to add separately
-      StarterKit.configure({ heading: { levels: [2, 3] } }),
+      // StarterKit v3 already includes Underline + Link - no need to add either
+      // separately. openOnClick:false so clicking a link while editing places
+      // the caret instead of navigating away.
+      StarterKit.configure({ heading: { levels: [2, 3] }, link: { openOnClick: false } }),
       Placeholder.configure({ placeholder: placeholder ?? '' }),
     ],
     content: value,
@@ -90,14 +102,30 @@ export function RichTextEditor({
       onBlur={editable ? handleContainerBlur : undefined}
       className="border border-neutral-200 rounded-md overflow-hidden bg-white focus-within:border-brand-gold focus-within:ring-2 focus-within:ring-brand-gold/20 transition"
     >
-      {editable && <Toolbar editor={editor} />}
-      <EditorContent editor={editor} />
+      {editable && <Toolbar editor={editor} enableLink={enableLink} />}
+      <div dir={dir}>
+        <EditorContent editor={editor} />
+      </div>
     </div>
   );
 }
 
-function Toolbar({ editor }: { editor: Editor }) {
+function Toolbar({ editor, enableLink }: { editor: Editor; enableLink: boolean }) {
   const t = useTranslations('richTextEditor');
+
+  const editLink = (): void => {
+    const href = editor.getAttributes('link').href;
+    const previous = typeof href === 'string' ? href : 'https://';
+    const url = window.prompt(t('linkPrompt'), previous);
+    if (url === null) return; // cancelled
+    const trimmed = url.trim();
+    if (trimmed === '') {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run();
+      return;
+    }
+    editor.chain().focus().extendMarkRange('link').setLink({ href: trimmed }).run();
+  };
+
   return (
     <div className="flex items-center gap-0.5 border-b border-neutral-200 bg-brand-gold-soft px-2 py-1.5">
       <ToolBtn
@@ -159,6 +187,22 @@ function Toolbar({ editor }: { editor: Editor }) {
       >
         <Quote className="size-3.5" />
       </ToolBtn>
+      {enableLink && (
+        <>
+          <Divider />
+          <ToolBtn active={editor.isActive('link')} onClick={editLink} title={t('link')}>
+            <Link2 className="size-3.5" />
+          </ToolBtn>
+          <ToolBtn
+            active={false}
+            disabled={!editor.isActive('link')}
+            onClick={() => editor.chain().focus().unsetLink().run()}
+            title={t('removeLink')}
+          >
+            <Link2Off className="size-3.5" />
+          </ToolBtn>
+        </>
+      )}
     </div>
   );
 }
@@ -172,19 +216,22 @@ function ToolBtn({
   onClick,
   title,
   children,
+  disabled = false,
 }: {
   active: boolean;
   onClick: () => void;
   title: string;
   children: ReactNode;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       title={title}
+      disabled={disabled}
       aria-pressed={active}
-      className={`size-7 rounded flex items-center justify-center transition ${
+      className={`size-7 rounded flex items-center justify-center transition disabled:opacity-40 disabled:pointer-events-none ${
         active
           ? 'bg-brand-black text-white'
           : 'text-neutral-600 hover:bg-white hover:text-brand-black'

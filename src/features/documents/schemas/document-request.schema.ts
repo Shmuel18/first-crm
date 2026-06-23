@@ -8,8 +8,11 @@ import { z } from 'zod';
  */
 export const DocumentRequestEmailSchema = z.object({
   caseId: z.string().min(1).max(100),
+  /** Email language chosen in the compose dialog — sets direction + footer. */
+  locale: z.enum(['he', 'en']),
   subject: z.string().trim().min(1).max(200),
-  body: z.string().trim().min(1).max(5000),
+  // Rich-text HTML from the editor (sanitized server-side before send).
+  body: z.string().trim().min(1).max(20000),
 });
 
 export type DocumentRequestEmailInput = z.infer<typeof DocumentRequestEmailSchema>;

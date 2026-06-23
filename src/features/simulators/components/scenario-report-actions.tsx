@@ -52,9 +52,9 @@ export function ScenarioReportActions({ scenarioId, conclusion, canSend = false 
     });
   };
 
-  const handleSend = (subject: string, body: string) => {
+  const handleSend = (subject: string, body: string, locale: 'he' | 'en') => {
     startSendTransition(async () => {
-      const res = await emailScenarioReportAction({ scenarioId, subject, body, advisorConclusion: conclusion.trim() || null });
+      const res = await emailScenarioReportAction({ scenarioId, locale, subject, body, advisorConclusion: conclusion.trim() || null });
       if (res.ok) {
         toast.success(t('emailSent'));
         setDraft(null);

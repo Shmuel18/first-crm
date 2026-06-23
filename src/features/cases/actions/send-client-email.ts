@@ -2,14 +2,15 @@
 
 import { after } from 'next/server';
 
-import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
 
 import { logClientEmail } from '@/features/case-activity/services/client-email-log.service';
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
+import { htmlToPlainText } from '@/lib/utils/html-to-text';
 
 import { MAX_ATTACHMENT_COUNT } from '../domain/email-attachment-limits';
+import { getPrimaryBorrowerEmail } from '../services/borrower-email.service';
 import { sendBrandedClientEmail } from '../services/client-email.service';
 import {
   cleanupEmailTempFiles,
@@ -18,8 +19,12 @@ import {
 
 const SendClientEmailSchema = z.object({
   caseId: z.string().min(1).max(100),
+  /** Email language chosen in the compose dialog — sets direction + footer. */
+  locale: z.enum(['he', 'en']),
   subject: z.string().trim().min(1).max(200),
-  body: z.string().trim().min(1).max(5000),
+  // Rich-text HTML from the editor (sanitized server-side before send); the
+  // markup overhead means a larger cap than the old plain-text 5000.
+  body: z.string().trim().min(1).max(20000),
   /** Existing case documents to attach (resolved server-side against the case). */
   documentIds: z.array(z.uuid()).max(MAX_ATTACHMENT_COUNT).optional(),
   /** Newly uploaded transient blobs: temp storage path + original file name. */
@@ -45,31 +50,16 @@ type Result =
 export async function sendClientEmailAction(input: unknown): Promise<Result> {
   const parsed = SendClientEmailSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: 'unknown' };
-  const { caseId, subject, body, documentIds = [], uploads = [] } = parsed.data;
+  const { caseId, locale, subject, body, documentIds = [], uploads = [] } = parsed.data;
 
   const supabase = await createClient();
   if (!(await userCanEditCase(caseId))) return { ok: false, error: 'unauthorized' };
 
-  const { data: caseRow } = await supabase
-    .from('cases')
-    .select('primary_borrower_id')
-    .eq('id', caseId)
-    .maybeSingle();
-  const borrowerId = caseRow?.primary_borrower_id;
-  if (!borrowerId) return { ok: false, error: 'no_email' };
-
-  const { data: borrower } = await supabase
-    .from('borrowers')
-    .select('email')
-    .eq('id', borrowerId)
-    .maybeSingle();
-  const email = borrower?.email?.trim();
+  const email = await getPrimaryBorrowerEmail(supabase, caseId);
   if (!email) return { ok: false, error: 'no_email' };
 
   const resolved = await resolveClientEmailAttachments(supabase, { caseId, documentIds, uploads });
   if (!resolved.ok) return { ok: false, error: 'attachment' };
-
-  const locale = (await getLocale()) === 'en' ? 'en' : 'he';
 
   // The actual Resend HTTP call (plus attachment upload) is the slow part and
   // was previously awaited, spinning the compose dialog. Validation, auth and
@@ -82,11 +72,17 @@ export async function sendClientEmailAction(input: unknown): Promise<Result> {
         to: email,
         locale,
         subject,
-        bodyText: body,
+        bodyHtml: body,
         attachments: resolved.attachments,
       });
       if (sent === 'sent') {
-        await logClientEmail({ caseId, kind: 'advisor_message', recipient: email, subject, body });
+        await logClientEmail({
+          caseId,
+          kind: 'advisor_message',
+          recipient: email,
+          subject,
+          body: htmlToPlainText(body),
+        });
       } else {
         console.error('[sendClientEmail] not delivered', { caseId, sent });
       }

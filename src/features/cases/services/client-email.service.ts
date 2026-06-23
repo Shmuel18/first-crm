@@ -1,7 +1,8 @@
 import { getTranslations } from 'next-intl/server';
 
-import { escapeHtml, renderBrandedEmail } from '@/lib/email/render';
+import { renderBrandedEmail } from '@/lib/email/render';
 import { sendEmail } from '@/lib/email/send';
+import { sanitizeRichTextHtml } from '@/lib/utils/sanitize-html';
 
 import type { EmailAttachment } from '@/lib/email/send';
 
@@ -9,11 +10,11 @@ const OFFICE_EMAIL = 'office@kaufman-finance.com';
 
 type BrandedClientEmailInput = {
   to: string;
-  /** UI locale the advisor wrote under — sets the shell's direction. */
+  /** Advisor-chosen email language — sets the shell's direction + footer. */
   locale: 'he' | 'en';
   subject: string;
-  /** Advisor-reviewed plain text (newlines preserved). */
-  bodyText: string;
+  /** Advisor-reviewed rich-text body (HTML from the compose editor). */
+  bodyHtml: string;
   /** Optional file attachments resolved server-side. */
   attachments?: EmailAttachment[];
 };
@@ -28,23 +29,20 @@ export async function sendBrandedClientEmail({
   to,
   locale,
   subject,
-  bodyText,
+  bodyHtml,
   attachments,
 }: BrandedClientEmailInput): Promise<'sent' | 'skipped' | 'failed'> {
   const html = renderBrandedEmail({
     locale,
     heading: subject,
-    bodyHtml: textToHtml(bodyText),
+    // sanitizeRichTextHtml is the escape contract for renderBrandedEmail's
+    // bodyHtml: it strips everything outside the safe tag whitelist and forces
+    // rel/target on links, so advisor HTML can't inject script/markup.
+    bodyHtml: sanitizeRichTextHtml(bodyHtml),
     footer: (await getTranslations({ locale, namespace: 'email' }))('footer'),
   });
 
   const res = await sendEmail({ to, subject, html, replyTo: OFFICE_EMAIL, attachments });
   if (res.ok && 'skipped' in res && res.skipped) return 'skipped';
   return res.ok ? 'sent' : 'failed';
-}
-
-/** Escape the advisor's text and preserve their line breaks. */
-function textToHtml(text: string): string {
-  const lines = text.split('\n').map((line) => escapeHtml(line));
-  return `<p style="margin:0;line-height:1.7;">${lines.join('<br>')}</p>`;
 }
