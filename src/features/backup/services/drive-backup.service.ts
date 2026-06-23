@@ -1,3 +1,6 @@
+import { decryptWithKey } from '@/lib/crypto/secrets';
+import { env } from '@/lib/env';
+
 import type { GoogleDriveClient } from '@/features/integrations/services/google-drive';
 
 import type { BackupFileMeta } from '../types';
@@ -32,6 +35,42 @@ export async function uploadBackup(
     mimeType: BACKUP_MIME,
     parentId: folderId,
   });
+}
+
+// Drive is occasionally not-yet-consistent in the moment right after an upload
+// (the new file briefly 404s or returns stale/empty bytes). A single read-back
+// would fail an otherwise-good backup and leave the run unstamped — exactly the
+// transient miss the nightly cron hit. Retry a few times before giving up.
+const READBACK_DELAYS_MS = [0, 1000, 2500];
+
+/**
+ * Confirm a just-uploaded backup round-trips byte-for-byte under the current
+ * key/salt. Returns true ONLY on an exact match; retries transient read-back
+ * failures (thrown errors or content mismatch) across READBACK_DELAYS_MS first.
+ * An unverifiable backup is worse than an obvious failure — callers must never
+ * stamp success on a false return.
+ */
+export async function verifyBackupReadBack(
+  client: GoogleDriveClient,
+  fileId: string,
+  expectedJson: string,
+): Promise<boolean> {
+  let lastIssue = 'no attempt made';
+  for (const delayMs of READBACK_DELAYS_MS) {
+    if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs));
+    try {
+      const roundTrip = await client.downloadFileText(fileId);
+      const decrypted = decryptWithKey(roundTrip, env.BACKUP_ENCRYPTION_KEY, {
+        saltV2: env.BACKUP_ENCRYPTION_SALT_V2,
+      });
+      if (decrypted === expectedJson) return true;
+      lastIssue = 'content mismatch';
+    } catch (err) {
+      lastIssue = err instanceof Error ? err.message : 'download/decrypt threw';
+    }
+  }
+  console.error('[backup] read-back verification failed after retries', { fileId, lastIssue });
+  return false;
 }
 
 export async function listBackups(

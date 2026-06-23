@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 
 import { getDriveClientIfConnected } from '@/features/integrations/services/drive-case-uploader';
 import { isCurrentUserAdmin } from '@/lib/auth/permissions';
-import { decryptWithKey, encryptWithKey, encryptWithKeyV2 } from '@/lib/crypto/secrets';
+import { encryptWithKey, encryptWithKeyV2 } from '@/lib/crypto/secrets';
 import { env } from '@/lib/env';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
@@ -15,6 +15,7 @@ import {
   backupFilename,
   ensureBackupFolder,
   uploadBackup,
+  verifyBackupReadBack,
 } from '../services/drive-backup.service';
 
 import type { RunBackupResult } from '../types';
@@ -64,14 +65,9 @@ export async function runBackupAction(): Promise<RunBackupResult> {
     const filename = backupFilename();
     const result = await uploadBackup(client, folderId, filename, payload);
 
-    // Read-back verification: confirm the upload decrypts byte-for-byte before
-    // reporting success — an unrecoverable backup is worse than an obvious
-    // failure the admin can see and retry.
-    const roundTrip = await client.downloadFileText(result.id);
-    const decrypted = decryptWithKey(roundTrip, env.BACKUP_ENCRYPTION_KEY, {
-      saltV2: env.BACKUP_ENCRYPTION_SALT_V2,
-    });
-    if (decrypted !== json) {
+    // Read-back verification (retries transient Drive inconsistency): an
+    // unrecoverable backup is worse than an obvious failure the admin can retry.
+    if (!(await verifyBackupReadBack(client, result.id, json))) {
       console.error('runBackupAction read-back verification failed', { filename });
       return { ok: false, error: 'unknown' };
     }
