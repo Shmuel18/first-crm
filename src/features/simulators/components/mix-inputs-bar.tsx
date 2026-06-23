@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 
 import { agorotToNis, nisToAgorot } from '../utils/format';
+import { NumberCell } from './number-cell';
 
 import type { MixInput, PropertyKind } from '../types';
 
@@ -35,7 +36,7 @@ export function MixInputsBar({ propertyKind, mix, onPropertyKindChange, onMoneyC
         <MoneyField label={t('equity')} value={mix.equity} onChange={(v) => onMoneyChange('equity', v)} />
         <MoneyField label={t('mortgageAmount')} value={mix.mortgageAmount} onChange={(v) => onMoneyChange('mortgageAmount', v)} />
         <Field label={t('termMonths')}>
-          <input className={inputClass} type="number" min={1} max={480} value={mix.defaultTermMonths} onChange={(e) => onTermChange(Number(e.target.value))} />
+          <NumberCell className={inputClass} ariaLabel={t('termMonths')} value={mix.defaultTermMonths} onChange={onTermChange} />
         </Field>
       </div>
     </section>
@@ -54,7 +55,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function MoneyField({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
   return (
     <Field label={label}>
-      <input className={inputClass} inputMode="numeric" value={agorotToNis(value)} onChange={(e) => onChange(nisToAgorot(e.target.value))} />
+      <NumberCell className={inputClass} ariaLabel={label} value={agorotToNis(value)} onChange={(nis) => onChange(nisToAgorot(String(nis)))} />
     </Field>
   );
 }

@@ -2,9 +2,11 @@
 
 import { useTranslations } from 'next-intl';
 
+import { agorotToNis, nisToAgorot } from '../utils/format';
+import { NumberCell } from './number-cell';
+
 import type { ComparisonBase } from '../hooks/use-mix-comparison';
 import type { PropertyKind } from '../types';
-import { agorotToNis, nisToAgorot } from '../utils/format';
 
 type Props = {
   title: string;
@@ -38,7 +40,7 @@ export function LoanBasePanel({ title, subtitle, base, propertyKind, onPropertyK
         <MoneyField label={t('equity')} value={base.equity} onChange={(v) => onMoneyChange('equity', v)} />
         <MoneyField label={t('mortgageAmount')} value={base.mortgageAmount} onChange={(v) => onMoneyChange('mortgageAmount', v)} />
         <Field label={t('termMonths')}>
-          <input className={inputClass} type="number" min={1} max={480} value={base.defaultTermMonths} onChange={(e) => onTermChange(Number(e.target.value))} />
+          <NumberCell className={inputClass} ariaLabel={t('termMonths')} value={base.defaultTermMonths} onChange={onTermChange} />
         </Field>
       </div>
     </section>
@@ -57,7 +59,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function MoneyField({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
   return (
     <Field label={label}>
-      <input className={inputClass} inputMode="numeric" value={agorotToNis(value)} onChange={(e) => onChange(nisToAgorot(e.target.value))} />
+      <NumberCell className={inputClass} ariaLabel={label} value={agorotToNis(value)} onChange={(nis) => onChange(nisToAgorot(String(nis)))} />
     </Field>
   );
 }

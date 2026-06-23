@@ -4,6 +4,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { agorotToNis, formatMoney, formatRatio, nisToAgorot } from '../utils/format';
+import { NumberCell } from './number-cell';
 
 import type { ReactNode } from 'react';
 import type { RepaymentType, TrackInput, TrackResult, TrackType } from '../types';
@@ -52,19 +53,19 @@ export function TrackTable({ tracks, summaries = [], onAdd, onRemove, onUpdate }
     {
       key: 'amount',
       render: (track) => (
-        <input className={cellInput} inputMode="numeric" value={agorotToNis(track.amount)} onChange={(e) => onUpdate(track.id, { amount: nisToAgorot(e.target.value) })} />
+        <NumberCell className={cellInput} ariaLabel={t('amount')} value={agorotToNis(track.amount)} onChange={(nis) => onUpdate(track.id, { amount: nisToAgorot(String(nis)) })} />
       ),
     },
     {
       key: 'rate',
       render: (track) => (
-        <input className={cellInput} type="number" step="0.01" value={track.annualRatePct} onChange={(e) => onUpdate(track.id, { annualRatePct: Number(e.target.value) })} />
+        <NumberCell className={cellInput} ariaLabel={t('rate')} decimal value={track.annualRatePct} onChange={(rate) => onUpdate(track.id, { annualRatePct: rate })} />
       ),
     },
     {
       key: 'term',
       render: (track) => (
-        <input className={cellInput} type="number" value={track.termMonths} onChange={(e) => onUpdate(track.id, { termMonths: Number(e.target.value) })} />
+        <NumberCell className={cellInput} ariaLabel={t('term')} value={track.termMonths} onChange={(term) => onUpdate(track.id, { termMonths: term })} />
       ),
     },
     {
@@ -84,14 +85,15 @@ export function TrackTable({ tracks, summaries = [], onAdd, onRemove, onUpdate }
       render: (track) => {
         const linked = track.type.endsWith('_linked');
         const balloon = track.repayment === 'balloon';
+        const disabled = !linked && !balloon;
         return (
-          <input
+          <NumberCell
             className={cellInput}
-            type="number"
-            step="0.01"
-            disabled={!linked && !balloon}
-            value={linked ? track.cpiAnnualPct ?? 0 : balloon ? track.graceMonths ?? 0 : ''}
-            onChange={(e) => onUpdate(track.id, linked ? { cpiAnnualPct: Number(e.target.value) } : { graceMonths: Number(e.target.value) })}
+            ariaLabel={t('cpiGrace')}
+            decimal={linked}
+            disabled={disabled}
+            value={disabled ? 0 : linked ? track.cpiAnnualPct ?? 0 : track.graceMonths ?? 0}
+            onChange={(n) => onUpdate(track.id, linked ? { cpiAnnualPct: n } : { graceMonths: n })}
           />
         );
       },
