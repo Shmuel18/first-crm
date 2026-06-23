@@ -9,6 +9,7 @@ import { env } from '@/lib/env';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 
+import { recordBackupSuccess } from '../services/backup-freshness.service';
 import { buildBackupSnapshot } from '../services/backup-snapshot.service';
 import {
   backupFilename,
@@ -74,6 +75,12 @@ export async function runBackupAction(): Promise<RunBackupResult> {
       console.error('runBackupAction read-back verification failed', { filename });
       return { ok: false, error: 'unknown' };
     }
+
+    // Stamp the verified success so the staleness watchdog + the Settings card
+    // agree a real backup just happened — mirrors the nightly cron. Without
+    // this a manual backup uploads a fresh file yet the "backup stale" warning
+    // never clears. Best-effort: never fail a good backup on the stamp.
+    await recordBackupSuccess();
 
     revalidatePath('/settings/backup');
     return { ok: true, filename, webViewLink: result.webViewLink, totalRows };
