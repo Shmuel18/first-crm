@@ -10,6 +10,9 @@ export type LayoutBootstrap = {
   authenticated: boolean;
   isAdmin: boolean;
   canCreateCase: boolean;
+  /** Gates the collections (גבייה) nav item — view_collections, NOT is_admin,
+   *  so an appointed "collections officer" sees it without being an admin. */
+  canViewCollections: boolean;
   pendingTasks: number;
   criticalTasks: number;
   unreadNotifications: number;
@@ -39,6 +42,7 @@ const UNAUTHED: LayoutBootstrap = {
   authenticated: false,
   isAdmin: false,
   canCreateCase: false,
+  canViewCollections: false,
   pendingTasks: 0,
   criticalTasks: 0,
   unreadNotifications: 0,
@@ -75,7 +79,12 @@ export const getLayoutBootstrap = cache(async (): Promise<LayoutBootstrap> => {
 
   // Same check save-case-draft.ts enforces — keeps the "New case" affordance
   // in lockstep with the server guard so a non-permitted user never sees it.
-  const canCreateCase = await userHasPermission('create_case');
+  // Collections nav visibility rides the same per-permission check (not the
+  // admin flag), so the manager can delegate גבייה to a non-admin.
+  const [canCreateCase, canViewCollections] = await Promise.all([
+    userHasPermission('create_case'),
+    userHasPermission('view_collections'),
+  ]);
 
   const profile = envelope.profile as Record<string, unknown> | null;
   const role =
@@ -87,6 +96,7 @@ export const getLayoutBootstrap = cache(async (): Promise<LayoutBootstrap> => {
     authenticated: true,
     isAdmin: envelope.is_admin === true,
     canCreateCase,
+    canViewCollections,
     pendingTasks: Number(envelope.pending_tasks ?? 0),
     criticalTasks: Number(envelope.critical_tasks ?? 0),
     unreadNotifications: Number(envelope.unread_notifications ?? 0),

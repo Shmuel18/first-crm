@@ -3,18 +3,20 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { BarChart3, Calculator, CheckSquare, HandCoins, LayoutDashboard, Settings } from 'lucide-react';
+import { BarChart3, Calculator, CheckSquare, Coins, HandCoins, LayoutDashboard, Settings } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { isNavItemActive } from './is-nav-item-active';
 
 type NavItem = {
   href: string;
-  labelKey: 'cases' | 'tasks' | 'simulators' | 'statistics' | 'maaser' | 'settings';
+  labelKey: 'cases' | 'tasks' | 'simulators' | 'statistics' | 'maaser' | 'collections' | 'settings';
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
   criticalBadge?: number;
   adminOnly?: boolean;
+  /** Gated on view_collections (not the admin flag). */
+  collectionsOnly?: boolean;
 };
 
 // Flat destinations for the bottom tab bar — four for advisors, six for the
@@ -25,6 +27,7 @@ const ITEMS: readonly NavItem[] = [
   { href: '/tasks', labelKey: 'tasks', icon: CheckSquare },
   { href: '/simulators', labelKey: 'simulators', icon: Calculator },
   { href: '/statistics', labelKey: 'statistics', icon: BarChart3, adminOnly: true },
+  { href: '/collections', labelKey: 'collections', icon: Coins, collectionsOnly: true },
   { href: '/maaser', labelKey: 'maaser', icon: HandCoins, adminOnly: true },
   { href: '/settings', labelKey: 'settings', icon: Settings },
 ] as const;
@@ -33,6 +36,7 @@ type Props = {
   tasksBadge?: number;
   criticalTasksBadge?: number;
   isManager?: boolean;
+  canViewCollections?: boolean;
 };
 
 /**
@@ -46,11 +50,14 @@ export function BottomNav({
   tasksBadge,
   criticalTasksBadge,
   isManager,
+  canViewCollections,
 }: Props): React.ReactElement {
   const pathname = usePathname();
   const t = useTranslations('nav');
 
-  const items = ITEMS.filter((item) => !item.adminOnly || isManager).map((item) =>
+  const items = ITEMS.filter(
+    (item) => (!item.adminOnly || isManager) && (!item.collectionsOnly || canViewCollections),
+  ).map((item) =>
     item.labelKey === 'tasks'
       ? { ...item, badge: tasksBadge, criticalBadge: criticalTasksBadge }
       : item,

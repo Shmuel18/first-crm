@@ -223,6 +223,7 @@
     "tasks": "משימות",
     "simulators": "סימולטורים",
     "statistics": "סטטיסטיקות",
+    "collections": "גבייה",
     "maaser": "מעשרות",
     "team": "צוות",
     "templates": "תבניות",
@@ -232,6 +233,87 @@
     "sidebar": "סרגל צד",
     "skipToContent": "דלג לתוכן הראשי",
     "unreadTasks": "{count, plural, =1 {משימה אחת פתוחה} other {# משימות פתוחות}}"
+  },
+  "collections": {
+    "eyebrow": "כספים",
+    "title": "גבייה",
+    "subtitle": "מעקב אחרי שכר טרחה שנגבה והוצאות המשרד — כמה שולם, מתי, איך ואיזה חלק.",
+    "reveal": "הצג סכומים",
+    "hide": "הסתר סכומים",
+    "block": {
+      "title": "גבייה",
+      "collected": "נגבה",
+      "collectedShort": "נגבה",
+      "agreedFee": "שכ״ט סוכם",
+      "balance": "יתרה לגבייה"
+    },
+    "status": {
+      "not_started": "טרם נגבה",
+      "partial": "נגבה חלקית",
+      "collected": "נגבה במלואו",
+      "overpaid": "נגבה ביתר"
+    },
+    "method": {
+      "cash": "מזומן",
+      "bank_transfer": "העברה בנקאית",
+      "check": "צ׳ק",
+      "credit_card": "כרטיס אשראי",
+      "bit": "ביט",
+      "other": "אחר"
+    },
+    "form": {
+      "title": "הוסף תשלום",
+      "date": "תאריך",
+      "amount": "סכום (₪)",
+      "method": "אמצעי תשלום",
+      "methodPlaceholder": "אמצעי תשלום",
+      "label": "חלק / תווית",
+      "note": "הערה",
+      "add": "הוסף",
+      "errors": {
+        "unauthorized": "אין הרשאה.",
+        "validation": "נתונים לא תקינים.",
+        "unknown": "ההוספה נכשלה. נסה שוב."
+      }
+    },
+    "table": {
+      "date": "תאריך",
+      "amount": "סכום",
+      "method": "אמצעי",
+      "label": "חלק",
+      "note": "הערה",
+      "delete": "מחק",
+      "empty": "עדיין לא נרשמו תשלומים.",
+      "errors": {
+        "unauthorized": "אין הרשאה.",
+        "validation": "מזהה לא תקין.",
+        "unknown": "המחיקה נכשלה. נסה שוב."
+      }
+    },
+    "summary": {
+      "collected": "סה״כ נגבה",
+      "open": "יתרה פתוחה",
+      "expenses": "סה״כ הוצאות",
+      "profit": "רווח נטו"
+    },
+    "filter": {
+      "label": "סינון לפי סטטוס",
+      "all": "הכול",
+      "not_started": "טרם נגבה",
+      "partial": "חלקי",
+      "collected": "נגבה",
+      "overpaid": "ביתר"
+    },
+    "overview": {
+      "empty": "אין תיקים להצגה.",
+      "case": "תיק",
+      "advisor": "יועץ",
+      "agreedFee": "שכ״ט סוכם",
+      "collected": "נגבה",
+      "balance": "יתרה",
+      "status": "סטטוס",
+      "lastPayment": "תשלום אחרון"
+    }
   },
   "maaser": {
     "eyebrow": "כספים",
@@ -1346,6 +1428,7 @@
       "incomes": "הכנסות",
       "obligations": "התחייבויות",
       "admin": "מנהלה",
+      "collections": "גבייה",
       "tasks": "משימות",
       "shortNote": "הערה קצרה",
       "shortNoteEmpty": "ללא הערה. מוצגת בדשבורד מתחת לסטטוס - לתזכורות מהירות.",
