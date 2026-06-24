@@ -1,7 +1,6 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { getCurrentUser, userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
@@ -19,10 +18,7 @@ export async function addFeePaymentAction(input: AddFeePaymentInput): Promise<Re
   if (!parsed.success) return { ok: false, error: 'validation' };
 
   const supabase = await createClient();
-  // case_fee_payments isn't in the generated Database types until the next
-  // gen-types — write through an untyped handle (RLS still enforces the gate).
-  const db = supabase as unknown as SupabaseClient;
-  const { error } = await db.from('case_fee_payments').insert({
+  const { error } = await supabase.from('case_fee_payments').insert({
     case_id: parsed.data.caseId,
     paid_on: parsed.data.paidOn ?? null,
     amount: parsed.data.amount,

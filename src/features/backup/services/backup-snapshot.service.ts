@@ -22,10 +22,7 @@ const BACKUP_TABLES = [
   'case_expenses',
   'case_properties',
   'case_payouts',
-  // TODO(collections): add 'case_fee_payments' here after the next
-  // `supabase gen types` — it's absent from the generated Database types, so the
-  // `satisfies` below rejects it until then. The restore RPC (migration 206)
-  // already lists it; this writer is the matching side once types catch up.
+  'case_fee_payments',
   'maaser_payments',
   'case_comments',
   'banks',

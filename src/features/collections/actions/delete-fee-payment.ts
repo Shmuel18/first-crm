@@ -1,7 +1,6 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
 import { getCurrentUser, userHasPermission } from '@/lib/auth/permissions';
@@ -20,9 +19,7 @@ export async function deleteFeePaymentAction(caseId: string, paymentId: string):
   if (!parsed.success) return { ok: false, error: 'validation' };
 
   const supabase = await createClient();
-  // RPC not in generated types yet — untyped handle (migration 206).
-  const db = supabase as unknown as SupabaseClient;
-  const { data, error } = await db.rpc('soft_delete_fee_payment', {
+  const { data, error } = await supabase.rpc('soft_delete_fee_payment', {
     p_case_id: parsed.data.caseId,
     p_payment_id: parsed.data.paymentId,
   });

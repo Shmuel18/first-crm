@@ -2031,6 +2031,83 @@ export type Database = {
           },
         ]
       }
+      case_fee_payments: {
+        Row: {
+          amount: number | null
+          case_id: string
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          id: string
+          label: string | null
+          note: string | null
+          paid_on: string | null
+          payment_method: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          amount?: number | null
+          case_id: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          label?: string | null
+          note?: string | null
+          paid_on?: string | null
+          payment_method?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          amount?: number | null
+          case_id?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          label?: string | null
+          note?: string | null
+          paid_on?: string | null
+          payment_method?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_fee_payments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_fee_payments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_fee_payments_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_fee_payments_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_financials: {
         Row: {
           case_id: string
@@ -4847,6 +4924,19 @@ export type Database = {
       cleanup_rate_limit_counters: { Args: never; Returns: number }
       cleanup_soft_deleted_records: { Args: never; Returns: Json }
       cleanup_soft_deleted_records_impl: { Args: never; Returns: Json }
+      collections_overview: {
+        Args: never
+        Returns: {
+          assigned_advisor_id: string | null
+          case_id: string
+          case_number: string
+          collected: number
+          expenses: number
+          fee_amount: number | null
+          last_payment_on: string | null
+          payment_count: number
+        }[]
+      }
       consume_public_contact_rate_limit: {
         Args: { p_subject: string }
         Returns: boolean
@@ -5020,6 +5110,10 @@ export type Database = {
       soft_delete_case: { Args: { p_case_id: string }; Returns: boolean }
       soft_delete_case_expense: {
         Args: { p_case_id: string; p_expense_id: string }
+        Returns: boolean
+      }
+      soft_delete_fee_payment: {
+        Args: { p_case_id: string; p_payment_id: string }
         Returns: boolean
       }
       soft_delete_case_payout: {
