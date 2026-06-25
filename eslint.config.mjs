@@ -15,6 +15,10 @@ const eslintConfig = defineConfig([
     // Claude Code worktrees keep their own .next/ and node_modules artifacts.
     // Linting through them blows the rule set up on build output.
     ".claude/**",
+    // Standalone Node CommonJS tools (run via `node scripts/x.cjs`), not part of
+    // the Next app graph — require() is correct there, so don't apply the app
+    // rules (no-require-imports) to them.
+    "scripts/**/*.cjs",
   ]),
 ]);
 
