@@ -1,52 +1,34 @@
 'use client';
 
-import { useOptimistic, useTransition } from 'react';
-
-import { Trash2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { toast } from 'sonner';
 
 import { formatCurrency } from '@/lib/utils/format-currency';
 import type { Locale } from '@/lib/i18n/direction';
 
-import { deleteFeePaymentAction } from '../actions/delete-fee-payment';
 import type { FeePayment } from '../types';
 
 type Props = {
-  caseId: string;
   payments: ReadonlyArray<FeePayment>;
   locale: Locale;
   /** Hide the delete column for a view-only (no manage_collections) caller. */
   canManage: boolean;
+  /** Delete is owned by the parent, which keeps the optimistic list + summary. */
+  onDelete?: (id: string) => void;
+  /** Row currently being deleted — shows a spinner + disables its button. */
+  deletingId?: string | null;
 };
 
-export function FeePaymentsTable({ caseId, payments, locale, canManage }: Props) {
+/** Presentational ledger of fee payments. The list + add/delete state live in
+ *  the parent so a mutation never has to revalidate the heavy case page. */
+export function FeePaymentsTable({ payments, locale, canManage, onDelete, deletingId }: Props) {
   const t = useTranslations('collections.table');
   const tMethod = useTranslations('collections.method');
-  const [pending, startTransition] = useTransition();
-  const [optimistic, removeOptimistic] = useOptimistic(payments, (current, id: string) =>
-    current.filter((p) => p.id !== id),
-  );
 
   const fmtDate = (iso: string | null): string =>
     iso ? new Date(iso).toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-GB') : '—';
 
-  const remove = (id: string) => {
-    startTransition(async () => {
-      removeOptimistic(id);
-      try {
-        const res = await deleteFeePaymentAction(caseId, id);
-        if (!res.ok) {
-          toast.error(t(`errors.${res.error}`));
-          return;
-        }
-      } catch {
-        toast.error(t('errors.unknown'));
-      }
-    });
-  };
-
-  if (optimistic.length === 0) {
+  if (payments.length === 0) {
     return <p className="py-6 text-center text-sm text-neutral-400">{t('empty')}</p>;
   }
 
@@ -64,7 +46,7 @@ export function FeePaymentsTable({ caseId, payments, locale, canManage }: Props)
           </tr>
         </thead>
         <tbody>
-          {optimistic.map((p) => (
+          {payments.map((p) => (
             <tr key={p.id} className="border-b border-neutral-100 last:border-0">
               <td className="whitespace-nowrap px-3 py-2 text-neutral-600 tabular-nums">
                 {fmtDate(p.paidOn)}
@@ -81,12 +63,16 @@ export function FeePaymentsTable({ caseId, payments, locale, canManage }: Props)
                 <td className="px-3 py-2 text-end">
                   <button
                     type="button"
-                    onClick={() => remove(p.id)}
-                    disabled={pending}
+                    onClick={() => onDelete?.(p.id)}
+                    disabled={deletingId === p.id}
                     aria-label={t('delete')}
                     className="inline-flex size-7 items-center justify-center rounded-md text-neutral-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
                   >
-                    <Trash2 className="size-4" aria-hidden="true" />
+                    {deletingId === p.id ? (
+                      <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                    ) : (
+                      <Trash2 className="size-4" aria-hidden="true" />
+                    )}
                   </button>
                 </td>
               )}

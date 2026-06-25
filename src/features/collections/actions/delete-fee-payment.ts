@@ -28,7 +28,8 @@ export async function deleteFeePaymentAction(caseId: string, paymentId: string):
     return { ok: false, error: 'unknown' };
   }
 
-  revalidatePath(`/cases/${parsed.data.caseId}`);
+  // NOT revalidatePath(/cases/[id]) — it re-renders the whole case page and
+  // scroll-jumps to the top. The case block removes the row optimistically.
   revalidatePath('/collections');
   return { ok: true };
 }

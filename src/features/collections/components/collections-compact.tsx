@@ -1,14 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 
 import { ChevronDown, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
 import { formatCurrency } from '@/lib/utils/format-currency';
 import type { Locale } from '@/lib/i18n/direction';
 
-import type { CollectionStatus, FeePayment } from '../types';
+import { deleteFeePaymentAction } from '../actions/delete-fee-payment';
+import {
+  collectionBalance,
+  collectionProgressPct,
+  collectionStatus,
+  sumCollected,
+} from '../domain/collections-calc';
+import type { FeePayment } from '../types';
 import { FeePaymentForm } from './fee-payment-form';
 import { FeePaymentsTable } from './fee-payments-table';
 
@@ -16,10 +24,6 @@ type Props = {
   caseId: string;
   payments: FeePayment[];
   feeAmount: number | null;
-  collected: number;
-  balance: number;
-  pct: number;
-  status: CollectionStatus;
   canManage: boolean;
   defaultDate: string;
   locale: Locale;
@@ -30,22 +34,58 @@ type Props = {
  * line (collected / balance + a thin progress bar) that expands to the full
  * add-form + ledger on click. Collapsed by default so it never dominates the
  * block; the full management surface also lives on the central /collections.
+ *
+ * Owns the ledger in local state so add/delete update in place — the server
+ * actions deliberately do NOT revalidate /cases/[id] (that re-renders the heavy
+ * case page and scroll-jumps to the top).
  */
 export function CollectionsCompact({
   caseId,
-  payments,
+  payments: initialPayments,
   feeAmount,
-  collected,
-  balance,
-  pct,
-  status,
   canManage,
   defaultDate,
   locale,
 }: Props) {
   const t = useTranslations('collections');
   const [open, setOpen] = useState(false);
+  const [payments, setPayments] = useState(initialPayments);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
+
+  // Re-sync if the server sends a fresh ledger (navigation / external revalidate).
+  // Self-triggered re-renders keep the same prop reference, so optimistic state survives.
+  const [seededFrom, setSeededFrom] = useState(initialPayments);
+  if (initialPayments !== seededFrom) {
+    setSeededFrom(initialPayments);
+    setPayments(initialPayments);
+  }
+
+  const collected = sumCollected(payments.map((p) => p.amount));
+  const balance = collectionBalance(feeAmount, collected);
+  const pct = collectionProgressPct(feeAmount, collected);
+  const status = collectionStatus(feeAmount, collected);
   const met = status === 'collected' || status === 'overpaid';
+
+  const handleDelete = (id: string) => {
+    const prev = payments;
+    setPayments((list) => list.filter((p) => p.id !== id));
+    setDeletingId(id);
+    startTransition(async () => {
+      try {
+        const res = await deleteFeePaymentAction(caseId, id);
+        if (!res.ok) {
+          setPayments(prev);
+          toast.error(t(`table.errors.${res.error}`));
+        }
+      } catch {
+        setPayments(prev);
+        toast.error(t('table.errors.unknown'));
+      } finally {
+        setDeletingId(null);
+      }
+    });
+  };
 
   return (
     <div className="rounded-lg border border-neutral-200 bg-white">
@@ -76,7 +116,9 @@ export function CollectionsCompact({
                 </>
               )}
               {payments.length > 0 && (
-                <span className="text-xs text-neutral-400">({t('block.paymentsCount', { count: payments.length })})</span>
+                <span className="text-xs text-neutral-400">
+                  ({t('block.paymentsCount', { count: payments.length })})
+                </span>
               )}
             </div>
             {feeAmount != null && (
@@ -107,8 +149,20 @@ export function CollectionsCompact({
 
       {open && (
         <div className="space-y-3 border-t border-neutral-100 p-3">
-          {canManage && <FeePaymentForm caseId={caseId} defaultDate={defaultDate} />}
-          <FeePaymentsTable caseId={caseId} payments={payments} locale={locale} canManage={canManage} />
+          {canManage && (
+            <FeePaymentForm
+              caseId={caseId}
+              defaultDate={defaultDate}
+              onAdded={(p) => setPayments((list) => [p, ...list])}
+            />
+          )}
+          <FeePaymentsTable
+            payments={payments}
+            locale={locale}
+            canManage={canManage}
+            onDelete={handleDelete}
+            deletingId={deletingId}
+          />
         </div>
       )}
     </div>

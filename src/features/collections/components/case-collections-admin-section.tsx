@@ -5,12 +5,6 @@ import { userHasPermission } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
 
-import {
-  collectionBalance,
-  collectionProgressPct,
-  collectionStatus,
-  sumCollected,
-} from '../domain/collections-calc';
 import { getCaseAgreedFee, listCaseFeePayments } from '../services/collections.service';
 import { CollectionsCompact } from './collections-compact';
 
@@ -33,10 +27,6 @@ export async function CaseCollectionsAdminSection({ caseId }: { caseId: string }
     getLocale().then(parseLocale),
   ]);
 
-  const collected = sumCollected(payments.map((p) => p.amount));
-  const status = collectionStatus(feeAmount, collected);
-  const balance = collectionBalance(feeAmount, collected);
-  const pct = collectionProgressPct(feeAmount, collected);
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(new Date());
 
   return (
@@ -51,10 +41,6 @@ export async function CaseCollectionsAdminSection({ caseId }: { caseId: string }
         caseId={caseId}
         payments={payments}
         feeAmount={feeAmount}
-        collected={collected}
-        balance={balance}
-        pct={pct}
-        status={status}
         canManage={canManage}
         defaultDate={today}
         locale={locale}

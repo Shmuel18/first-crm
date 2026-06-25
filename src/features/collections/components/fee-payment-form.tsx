@@ -10,13 +10,15 @@ import { DateInputWithPicker } from '@/components/ui/date-input-with-picker';
 
 import { addFeePaymentAction } from '../actions/add-fee-payment';
 import { PAYMENT_METHODS } from '../domain/payment-methods';
+import type { FeePayment } from '../types';
 
 type Props = {
   caseId: string;
   /** Today's date (Israel TZ), computed on the server to avoid a hydration mismatch. */
   defaultDate: string;
-  /** Fired after a payment is saved — e.g. the dashboard dialog closes itself. */
-  onAdded?: () => void;
+  /** Fired with the saved payment so the parent can update its list optimistically
+   *  (the case block) or close itself (the dashboard dialog ignores the arg). */
+  onAdded?: (payment: FeePayment) => void;
 };
 
 const fieldClass =
@@ -39,11 +41,12 @@ export function FeePaymentForm({ caseId, defaultDate, onAdded }: Props) {
     if (!canSubmit) return;
     startTransition(async () => {
       try {
+        const paymentMethod = method ? (method as (typeof PAYMENT_METHODS)[number]) : null;
         const res = await addFeePaymentAction({
           caseId,
           paidOn: paidOn || null,
           amount: amountNum,
-          paymentMethod: method ? (method as (typeof PAYMENT_METHODS)[number]) : null,
+          paymentMethod,
           label: label.trim() || null,
           note: note.trim() || null,
         });
@@ -51,12 +54,20 @@ export function FeePaymentForm({ caseId, defaultDate, onAdded }: Props) {
           toast.error(t(`errors.${res.error}`));
           return;
         }
+        onAdded?.({
+          id: res.id,
+          caseId,
+          paidOn: paidOn || null,
+          amount: amountNum,
+          paymentMethod,
+          label: label.trim() || null,
+          note: note.trim() || null,
+        });
         // Keep the date, clear the rest for the next entry.
         setAmount('');
         setMethod('');
         setLabel('');
         setNote('');
-        onAdded?.();
       } catch {
         toast.error(t('errors.unknown'));
       }
