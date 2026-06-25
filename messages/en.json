@@ -246,7 +246,9 @@
       "collected": "Collected",
       "collectedShort": "Collected",
       "agreedFee": "Agreed fee",
-      "balance": "Outstanding"
+      "balance": "Outstanding",
+      "add": "Add payment",
+      "paymentsCount": "{count} payments"
     },
     "status": {
       "not_started": "Not started",
@@ -299,6 +301,7 @@
     },
     "filter": {
       "label": "Filter by status",
+      "open": "To collect",
       "all": "All",
       "not_started": "Not started",
       "partial": "Partial",
@@ -313,7 +316,8 @@
       "collected": "Collected",
       "balance": "Balance",
       "status": "Status",
-      "lastPayment": "Last payment"
+      "lastPayment": "Last payment",
+      "addTitle": "Record payment — case {case}"
     }
   },
   "maaser": {

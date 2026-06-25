@@ -246,7 +246,9 @@
       "collected": "נגבה",
       "collectedShort": "נגבה",
       "agreedFee": "שכ״ט סוכם",
-      "balance": "יתרה לגבייה"
+      "balance": "יתרה לגבייה",
+      "add": "הוסף תשלום",
+      "paymentsCount": "{count} תשלומים"
     },
     "status": {
       "not_started": "טרם נגבה",
@@ -299,6 +301,7 @@
     },
     "filter": {
       "label": "סינון לפי סטטוס",
+      "open": "לגבייה",
       "all": "הכול",
       "not_started": "טרם נגבה",
       "partial": "חלקי",
@@ -313,7 +316,8 @@
       "collected": "נגבה",
       "balance": "יתרה",
       "status": "סטטוס",
-      "lastPayment": "תשלום אחרון"
+      "lastPayment": "תשלום אחרון",
+      "addTitle": "רישום תשלום — תיק {case}"
     }
   },
   "maaser": {

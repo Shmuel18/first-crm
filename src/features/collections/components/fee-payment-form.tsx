@@ -15,12 +15,14 @@ type Props = {
   caseId: string;
   /** Today's date (Israel TZ), computed on the server to avoid a hydration mismatch. */
   defaultDate: string;
+  /** Fired after a payment is saved — e.g. the dashboard dialog closes itself. */
+  onAdded?: () => void;
 };
 
 const fieldClass =
   'h-10 w-full rounded-lg border border-neutral-200 bg-white px-3 text-sm shadow-xs outline-none transition focus:border-brand-gold-text focus:ring-2 focus:ring-brand-gold-text/30';
 
-export function FeePaymentForm({ caseId, defaultDate }: Props) {
+export function FeePaymentForm({ caseId, defaultDate, onAdded }: Props) {
   const t = useTranslations('collections.form');
   const tMethod = useTranslations('collections.method');
   const [pending, startTransition] = useTransition();
@@ -54,6 +56,7 @@ export function FeePaymentForm({ caseId, defaultDate }: Props) {
         setMethod('');
         setLabel('');
         setNote('');
+        onAdded?.();
       } catch {
         toast.error(t('errors.unknown'));
       }

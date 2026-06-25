@@ -4,24 +4,32 @@ import { useMemo, useState } from 'react';
 
 import Link from 'next/link';
 
-import { Coins, Eye, EyeOff, Receipt, TrendingUp, Wallet } from 'lucide-react';
+import { Coins, Eye, EyeOff, Plus, Receipt, TrendingUp, Wallet } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
 
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { formatCurrency } from '@/lib/utils/format-currency';
 import type { Locale } from '@/lib/i18n/direction';
 
 import { collectionBalance, collectionStatus, netProfit, sumCollected } from '../domain/collections-calc';
 import type { CollectionOverviewRow, CollectionStatus } from '../types';
+import { FeePaymentForm } from './fee-payment-form';
 
 type Props = {
   rows: ReadonlyArray<CollectionOverviewRow>;
   /** advisor id → display name, resolved on the server. */
   advisorNames: Record<string, string>;
+  /** manage_collections — gates the inline "record payment" action. */
+  canManage: boolean;
+  /** Today (Israel TZ), server-computed, for the inline payment form. */
+  defaultDate: string;
   locale: Locale;
 };
 
-const FILTERS = ['all', 'not_started', 'partial', 'collected', 'overpaid'] as const;
+// 'open' (an outstanding balance — the cases still to collect from) leads and is
+// the default view, so the dashboard always foregrounds what's left to collect.
+const FILTERS = ['open', 'all', 'not_started', 'partial', 'collected', 'overpaid'] as const;
 type Filter = (typeof FILTERS)[number];
 
 const MASK = '••••••';
@@ -33,12 +41,13 @@ const STATUS_STYLES: Record<CollectionStatus, string> = {
   overpaid: 'bg-amber-50 text-amber-700',
 };
 
-export function CollectionsOverview({ rows, advisorNames, locale }: Props) {
+export function CollectionsOverview({ rows, advisorNames, canManage, defaultDate, locale }: Props) {
   const t = useTranslations('collections');
   const [revealed, setRevealed] = useState(false);
+  const [payCase, setPayCase] = useState<{ caseId: string; caseNumber: string } | null>(null);
   const [filter, setFilter] = useQueryState(
     'status',
-    parseAsStringEnum<Filter>([...FILTERS]).withDefault('all'),
+    parseAsStringEnum<Filter>([...FILTERS]).withDefault('open'),
   );
 
   const enriched = useMemo(
@@ -58,7 +67,16 @@ export function CollectionsOverview({ rows, advisorNames, locale }: Props) {
     return { collected, expenses, open, profit: netProfit(collected, expenses) };
   }, [enriched]);
 
-  const visible = filter === 'all' ? enriched : enriched.filter((r) => r.status === filter);
+  const visible = (
+    filter === 'all'
+      ? enriched
+      : filter === 'open'
+        ? enriched.filter((r) => r.feeAmount != null && r.balance > 0)
+        : enriched.filter((r) => r.status === filter)
+  )
+    .slice()
+    // Most-owed first — the dashboard is about what's left to collect.
+    .sort((a, b) => b.balance - a.balance);
 
   const show = (v: number): string => (revealed ? formatCurrency(v, locale) : MASK);
   const fmtDate = (iso: string | null): string =>
@@ -121,6 +139,7 @@ export function CollectionsOverview({ rows, advisorNames, locale }: Props) {
                 <th className="px-3 py-2 text-start font-medium">{t('overview.balance')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.status')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.lastPayment')}</th>
+                {canManage && <th className="px-3 py-2" />}
               </tr>
             </thead>
             <tbody>
@@ -154,12 +173,41 @@ export function CollectionsOverview({ rows, advisorNames, locale }: Props) {
                   <td className="whitespace-nowrap px-3 py-2 text-neutral-500 tabular-nums">
                     {fmtDate(r.lastPaymentOn)}
                   </td>
+                  {canManage && (
+                    <td className="whitespace-nowrap px-3 py-2 text-end">
+                      <button
+                        type="button"
+                        onClick={() => setPayCase({ caseId: r.caseId, caseNumber: r.caseNumber })}
+                        className="inline-flex items-center gap-1 rounded-md border border-brand-gold/50 px-2 py-1 text-xs font-medium text-brand-gold-text transition hover:bg-brand-gold-soft"
+                      >
+                        <Plus className="size-3.5" aria-hidden="true" />
+                        {t('block.add')}
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+
+      <Dialog open={payCase !== null} onOpenChange={(open) => !open && setPayCase(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {payCase ? t('overview.addTitle', { case: payCase.caseNumber }) : ''}
+            </DialogTitle>
+          </DialogHeader>
+          {payCase && (
+            <FeePaymentForm
+              caseId={payCase.caseId}
+              defaultDate={defaultDate}
+              onAdded={() => setPayCase(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

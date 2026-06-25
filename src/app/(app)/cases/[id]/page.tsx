@@ -2,13 +2,12 @@ import { Suspense } from 'react';
 
 import { notFound } from 'next/navigation';
 
-import { Coins, MessagesSquare, Receipt, UserCircle2, Wallet } from 'lucide-react';
+import { MessagesSquare, Receipt, UserCircle2, Wallet } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import { CaseBorrowerCard } from '@/features/borrowers/components/case-borrower-card';
 import { listBorrowersForCase } from '@/features/borrowers/services/borrowers.service';
 import { CaseCommentsBlock } from '@/features/case-comments/components/case-comments-block';
-import { CaseCollectionsBlock } from '@/features/collections/components/case-collections-block';
 import { CaseActionBar } from '@/features/cases/components/case-action-bar';
 import { CaseAdminBlock } from '@/features/cases/components/case-admin-block';
 import { CaseBlock } from '@/features/cases/components/case-block';
@@ -303,15 +302,6 @@ export default async function CaseDetailPage({ params }: Props) {
           canAssignAdvisor={canAssignAdvisor}
           locale={locale}
         />
-
-        {/* Collections (גבייה) — fee-payment ledger for this case. Self-gating
-            on view_collections (renders null without it), so it's safe to drop
-            in unconditionally; streams in like the other money blocks. */}
-        <Suspense
-          fallback={<CaseBlockSkeleton title={t('blocks.collections')} icon={<Coins />} />}
-        >
-          <CaseCollectionsBlock caseId={caseData.id} />
-        </Suspense>
 
         {/* Documentation (internal team thread) — intentionally last on the
             page: it's a running log, not a data-entry block, so it sits below
