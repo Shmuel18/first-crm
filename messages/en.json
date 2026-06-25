@@ -311,6 +311,7 @@
     "overview": {
       "empty": "No cases to display.",
       "case": "Case",
+      "client": "Client",
       "advisor": "Advisor",
       "agreedFee": "Agreed fee",
       "collected": "Collected",

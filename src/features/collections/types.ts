@@ -20,7 +20,8 @@ export type CollectionStatus = 'not_started' | 'partial' | 'collected' | 'overpa
 export type CollectionOverviewRow = {
   caseId: string;
   caseNumber: string;
-  assignedAdvisorId: string | null;
+  /** All borrowers on the case, primary first, comma-joined (null if none). */
+  borrowers: string | null;
   feeAmount: number | null;
   collected: number;
   expenses: number;

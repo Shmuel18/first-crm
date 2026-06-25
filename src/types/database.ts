@@ -4928,6 +4928,7 @@ export type Database = {
         Args: never
         Returns: {
           assigned_advisor_id: string | null
+          borrowers: string | null
           case_id: string
           case_number: string
           collected: number

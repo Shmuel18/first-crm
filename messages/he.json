@@ -311,6 +311,7 @@
     "overview": {
       "empty": "אין תיקים להצגה.",
       "case": "תיק",
+      "client": "לקוח",
       "advisor": "יועץ",
       "agreedFee": "שכ״ט סוכם",
       "collected": "נגבה",

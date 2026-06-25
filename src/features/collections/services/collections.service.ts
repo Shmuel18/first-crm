@@ -79,7 +79,7 @@ export async function getCollectionsOverview(): Promise<CollectionOverviewRow[]>
   return (data ?? []).map((r) => ({
     caseId: r.case_id,
     caseNumber: r.case_number,
-    assignedAdvisorId: r.assigned_advisor_id,
+    borrowers: r.borrowers,
     feeAmount: r.fee_amount == null ? null : Number(r.fee_amount),
     collected: Number(r.collected ?? 0),
     expenses: Number(r.expenses ?? 0),

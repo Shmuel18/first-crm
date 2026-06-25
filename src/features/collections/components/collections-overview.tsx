@@ -18,8 +18,6 @@ import { FeePaymentForm } from './fee-payment-form';
 
 type Props = {
   rows: ReadonlyArray<CollectionOverviewRow>;
-  /** advisor id → display name, resolved on the server. */
-  advisorNames: Record<string, string>;
   /** manage_collections — gates the inline "record payment" action. */
   canManage: boolean;
   /** Today (Israel TZ), server-computed, for the inline payment form. */
@@ -41,7 +39,7 @@ const STATUS_STYLES: Record<CollectionStatus, string> = {
   overpaid: 'bg-amber-50 text-amber-700',
 };
 
-export function CollectionsOverview({ rows, advisorNames, canManage, defaultDate, locale }: Props) {
+export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Props) {
   const t = useTranslations('collections');
   const [revealed, setRevealed] = useState(false);
   const [payCase, setPayCase] = useState<{ caseId: string; caseNumber: string } | null>(null);
@@ -132,8 +130,7 @@ export function CollectionsOverview({ rows, advisorNames, canManage, defaultDate
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-neutral-200 bg-neutral-50 text-xs text-neutral-500">
-                <th className="px-3 py-2 text-start font-medium">{t('overview.case')}</th>
-                <th className="px-3 py-2 text-start font-medium">{t('overview.advisor')}</th>
+                <th className="px-3 py-2 text-start font-medium">{t('overview.client')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.agreedFee')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.collected')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.balance')}</th>
@@ -145,16 +142,13 @@ export function CollectionsOverview({ rows, advisorNames, canManage, defaultDate
             <tbody>
               {visible.map((r) => (
                 <tr key={r.caseId} className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50/60">
-                  <td className="whitespace-nowrap px-3 py-2">
+                  <td className="px-3 py-2">
                     <Link
                       href={`/cases/${r.caseId}`}
                       className="font-medium text-brand-gold-text hover:underline"
                     >
-                      {r.caseNumber}
+                      {r.borrowers || r.caseNumber}
                     </Link>
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2 text-neutral-600">
-                    {(r.assignedAdvisorId && advisorNames[r.assignedAdvisorId]) || '—'}
                   </td>
                   <td className="whitespace-nowrap px-3 py-2 text-neutral-700 tabular-nums">
                     {r.feeAmount == null ? '—' : show(r.feeAmount)}
