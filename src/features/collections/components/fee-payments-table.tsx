@@ -40,7 +40,6 @@ export function FeePaymentsTable({ payments, locale, canManage, onDelete, deleti
             <th className="px-3 py-2 text-start font-medium">{t('date')}</th>
             <th className="px-3 py-2 text-start font-medium">{t('amount')}</th>
             <th className="px-3 py-2 text-start font-medium">{t('method')}</th>
-            <th className="px-3 py-2 text-start font-medium">{t('label')}</th>
             <th className="px-3 py-2 text-start font-medium">{t('note')}</th>
             {canManage && <th className="px-3 py-2" />}
           </tr>
@@ -57,8 +56,7 @@ export function FeePaymentsTable({ payments, locale, canManage, onDelete, deleti
               <td className="whitespace-nowrap px-3 py-2 text-neutral-700">
                 {p.paymentMethod ? tMethod(p.paymentMethod) : '—'}
               </td>
-              <td className="px-3 py-2 text-neutral-700">{p.label || '—'}</td>
-              <td className="px-3 py-2 text-neutral-500">{p.note || ''}</td>
+              <td className="px-3 py-2 text-neutral-500">{p.note || '—'}</td>
               {canManage && (
                 <td className="px-3 py-2 text-end">
                   <button

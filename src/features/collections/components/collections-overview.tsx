@@ -42,7 +42,7 @@ const STATUS_STYLES: Record<CollectionStatus, string> = {
 export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Props) {
   const t = useTranslations('collections');
   const [revealed, setRevealed] = useState(false);
-  const [payCase, setPayCase] = useState<{ caseId: string; caseNumber: string } | null>(null);
+  const [payCase, setPayCase] = useState<{ caseId: string; name: string } | null>(null);
   const [filter, setFilter] = useQueryState(
     'status',
     parseAsStringEnum<Filter>([...FILTERS]).withDefault('open'),
@@ -171,7 +171,14 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
                     <td className="whitespace-nowrap px-3 py-2 text-end">
                       <button
                         type="button"
-                        onClick={() => setPayCase({ caseId: r.caseId, caseNumber: r.caseNumber })}
+                        onClick={() =>
+                          setPayCase({
+                            caseId: r.caseId,
+                            // Lead with the primary borrower (borrowers is ordered
+                            // is_primary first); fall back to the case number.
+                            name: r.borrowers ? (r.borrowers.split(', ')[0] ?? r.borrowers) : r.caseNumber,
+                          })
+                        }
                         className="inline-flex items-center gap-1 rounded-md border border-brand-gold/50 px-2 py-1 text-xs font-medium text-brand-gold-text transition hover:bg-brand-gold-soft"
                       >
                         <Plus className="size-3.5" aria-hidden="true" />
@@ -190,7 +197,7 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {payCase ? t('overview.addTitle', { case: payCase.caseNumber }) : ''}
+              {payCase ? t('overview.addTitle', { name: payCase.name }) : ''}
             </DialogTitle>
           </DialogHeader>
           {payCase && (

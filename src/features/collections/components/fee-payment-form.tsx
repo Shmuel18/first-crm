@@ -31,7 +31,6 @@ export function FeePaymentForm({ caseId, defaultDate, onAdded }: Props) {
   const [paidOn, setPaidOn] = useState(defaultDate);
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState<string>('');
-  const [label, setLabel] = useState('');
   const [note, setNote] = useState('');
 
   const amountNum = Number(amount);
@@ -47,7 +46,6 @@ export function FeePaymentForm({ caseId, defaultDate, onAdded }: Props) {
           paidOn: paidOn || null,
           amount: amountNum,
           paymentMethod,
-          label: label.trim() || null,
           note: note.trim() || null,
         });
         if (!res.ok) {
@@ -60,13 +58,12 @@ export function FeePaymentForm({ caseId, defaultDate, onAdded }: Props) {
           paidOn: paidOn || null,
           amount: amountNum,
           paymentMethod,
-          label: label.trim() || null,
+          label: null,
           note: note.trim() || null,
         });
         // Keep the date, clear the rest for the next entry.
         setAmount('');
         setMethod('');
-        setLabel('');
         setNote('');
       } catch {
         toast.error(t('errors.unknown'));
@@ -112,11 +109,11 @@ export function FeePaymentForm({ caseId, defaultDate, onAdded }: Props) {
         </select>
         <input
           type="text"
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          placeholder={t('label')}
-          aria-label={t('label')}
-          maxLength={120}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder={t('note')}
+          aria-label={t('note')}
+          maxLength={500}
           className={fieldClass}
         />
         <button
@@ -129,15 +126,6 @@ export function FeePaymentForm({ caseId, defaultDate, onAdded }: Props) {
           {t('add')}
         </button>
       </div>
-      <input
-        type="text"
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-        placeholder={t('note')}
-        aria-label={t('note')}
-        maxLength={500}
-        className={`${fieldClass} mt-2`}
-      />
     </div>
   );
 }

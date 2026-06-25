@@ -270,7 +270,6 @@
       "amount": "סכום (₪)",
       "method": "אמצעי תשלום",
       "methodPlaceholder": "אמצעי תשלום",
-      "label": "חלק / תווית",
       "note": "הערה",
       "add": "הוסף",
       "errors": {
@@ -283,7 +282,6 @@
       "date": "תאריך",
       "amount": "סכום",
       "method": "אמצעי",
-      "label": "חלק",
       "note": "הערה",
       "delete": "מחק",
       "empty": "עדיין לא נרשמו תשלומים.",
@@ -318,7 +316,7 @@
       "balance": "יתרה",
       "status": "סטטוס",
       "lastPayment": "תשלום אחרון",
-      "addTitle": "רישום תשלום — תיק {case}"
+      "addTitle": "רישום תשלום — {name}"
     }
   },
   "maaser": {
