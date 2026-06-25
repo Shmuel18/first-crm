@@ -50,15 +50,18 @@ SELECT pg_temp.mk_user(:'manager', 'mgr@test.local', 'admin');
 INSERT INTO public.cases (id, status_id, created_by, updated_by, deleted_at)
 VALUES (:'case_a', (SELECT id FROM public.case_statuses WHERE key = 'case_opened'),
         :'manager', :'manager', now());
-CREATE TEMP TABLE _cn AS SELECT case_number FROM public.cases WHERE id = :'case_a';
+-- Capture the auto-generated case_number into a psql variable (interpolated as a
+-- literal in the calls below). A temp table here is owned by postgres and the
+-- local stack denies the authenticated role access to it once login_as()
+-- switches role ("permission denied for _cn") — so the throws_ok body would die
+-- on the temp-table read before ever reaching the PT001 guard it means to test.
+SELECT case_number FROM public.cases WHERE id = :'case_a' \gset
 
 -- ---- retention PAUSED → refused ---------------------------------------------
 UPDATE public.office_settings SET retention_purge_enabled = FALSE WHERE id = 1;
 SELECT pg_temp.login_as(:'manager');
 SELECT throws_ok(
-  $$ SELECT public.permanently_delete_case(
-       '55555555-5555-5555-5555-555555555555'::uuid,
-       (SELECT case_number FROM _cn)) $$,
+  format('SELECT public.permanently_delete_case(%L::uuid, %L)', :'case_a', :'case_number'),
   'PT001', NULL,
   'permanent delete is refused (PT001) while retention is paused');
 
@@ -71,9 +74,7 @@ SELECT is(
 UPDATE public.office_settings SET retention_purge_enabled = TRUE WHERE id = 1;
 SELECT pg_temp.login_as(:'manager');
 SELECT lives_ok(
-  $$ SELECT public.permanently_delete_case(
-       '55555555-5555-5555-5555-555555555555'::uuid,
-       (SELECT case_number FROM _cn)) $$,
+  format('SELECT public.permanently_delete_case(%L::uuid, %L)', :'case_a', :'case_number'),
   'permanent delete proceeds once retention is enabled');
 
 SELECT pg_temp.logout();
