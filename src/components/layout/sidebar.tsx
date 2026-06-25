@@ -3,18 +3,21 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { BarChart3, Calculator, CheckSquare, HandCoins, LayoutDashboard, Settings } from 'lucide-react';
+import { BarChart3, Calculator, CheckSquare, Coins, HandCoins, LayoutDashboard, Settings } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { isNavItemActive } from './is-nav-item-active';
 
 type NavItem = {
   href: string;
-  labelKey: 'cases' | 'tasks' | 'simulators' | 'statistics' | 'maaser' | 'settings';
+  labelKey: 'cases' | 'tasks' | 'simulators' | 'statistics' | 'maaser' | 'collections' | 'settings';
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
   criticalBadge?: number;
   adminOnly?: boolean;
+  /** Gated on the view_collections permission (not the admin flag) so the
+   *  manager can delegate גבייה to a non-admin "collections officer". */
+  collectionsOnly?: boolean;
 };
 
 // Team / Templates / Audit Log used to live here as top-level admin items.
@@ -26,6 +29,7 @@ const BASE_TOP_ITEMS: readonly NavItem[] = [
   { href: '/tasks', labelKey: 'tasks', icon: CheckSquare },
   { href: '/simulators', labelKey: 'simulators', icon: Calculator },
   { href: '/statistics', labelKey: 'statistics', icon: BarChart3, adminOnly: true },
+  { href: '/collections', labelKey: 'collections', icon: Coins, collectionsOnly: true },
   { href: '/maaser', labelKey: 'maaser', icon: HandCoins, adminOnly: true },
 ] as const;
 
@@ -37,13 +41,16 @@ type SidebarProps = {
   tasksBadge?: number;
   criticalTasksBadge?: number;
   isManager?: boolean;
+  canViewCollections?: boolean;
 };
 
-export function Sidebar({ tasksBadge, criticalTasksBadge, isManager }: SidebarProps) {
+export function Sidebar({ tasksBadge, criticalTasksBadge, isManager, canViewCollections }: SidebarProps) {
   const pathname = usePathname();
   const t = useTranslations('nav');
 
-  const topItems = BASE_TOP_ITEMS.filter((item) => !item.adminOnly || isManager).map((item) =>
+  const topItems = BASE_TOP_ITEMS.filter(
+    (item) => (!item.adminOnly || isManager) && (!item.collectionsOnly || canViewCollections),
+  ).map((item) =>
     item.labelKey === 'tasks'
       ? { ...item, badge: tasksBadge, criticalBadge: criticalTasksBadge }
       : item,

@@ -223,6 +223,8 @@
     "tasks": "Tasks",
     "simulators": "Simulators",
     "statistics": "Statistics",
+    "collections": "Collections",
+    "finance": "Finances",
     "maaser": "Tithes",
     "team": "Team",
     "templates": "Templates",
@@ -232,6 +234,87 @@
     "sidebar": "Sidebar",
     "skipToContent": "Skip to main content",
     "unreadTasks": "{count, plural, =1 {1 open task} other {# open tasks}}"
+  },
+  "collections": {
+    "eyebrow": "Finances",
+    "title": "Collections",
+    "subtitle": "Track collected fees and office expenses — how much was paid, when, how, and which part.",
+    "reveal": "Show amounts",
+    "hide": "Hide amounts",
+    "block": {
+      "title": "Collections",
+      "collected": "Collected",
+      "collectedShort": "Collected",
+      "agreedFee": "Agreed fee",
+      "balance": "Outstanding"
+    },
+    "status": {
+      "not_started": "Not started",
+      "partial": "Partially collected",
+      "collected": "Fully collected",
+      "overpaid": "Overpaid"
+    },
+    "method": {
+      "cash": "Cash",
+      "bank_transfer": "Bank transfer",
+      "check": "Check",
+      "credit_card": "Credit card",
+      "bit": "Bit",
+      "other": "Other"
+    },
+    "form": {
+      "title": "Add payment",
+      "date": "Date",
+      "amount": "Amount (₪)",
+      "method": "Payment method",
+      "methodPlaceholder": "Payment method",
+      "label": "Part / label",
+      "note": "Note",
+      "add": "Add",
+      "errors": {
+        "unauthorized": "Not authorized.",
+        "validation": "Invalid data.",
+        "unknown": "Adding failed. Try again."
+      }
+    },
+    "table": {
+      "date": "Date",
+      "amount": "Amount",
+      "method": "Method",
+      "label": "Part",
+      "note": "Note",
+      "delete": "Delete",
+      "empty": "No payments recorded yet.",
+      "errors": {
+        "unauthorized": "Not authorized.",
+        "validation": "Invalid id.",
+        "unknown": "Deletion failed. Try again."
+      }
+    },
+    "summary": {
+      "collected": "Total collected",
+      "open": "Outstanding",
+      "expenses": "Total expenses",
+      "profit": "Net profit"
+    },
+    "filter": {
+      "label": "Filter by status",
+      "all": "All",
+      "not_started": "Not started",
+      "partial": "Partial",
+      "collected": "Collected",
+      "overpaid": "Overpaid"
+    },
+    "overview": {
+      "empty": "No cases to display.",
+      "case": "Case",
+      "advisor": "Advisor",
+      "agreedFee": "Agreed fee",
+      "collected": "Collected",
+      "balance": "Balance",
+      "status": "Status",
+      "lastPayment": "Last payment"
+    }
   },
   "maaser": {
     "eyebrow": "Finances",
@@ -1346,6 +1429,7 @@
       "incomes": "Income",
       "obligations": "Obligations",
       "admin": "Administration",
+      "collections": "Collections",
       "tasks": "Tasks",
       "shortNote": "Short note",
       "shortNoteEmpty": "No note yet. Shown in dashboard under status - for quick reminders.",

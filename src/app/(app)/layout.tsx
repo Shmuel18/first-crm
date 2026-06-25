@@ -43,11 +43,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           tasksBadge={bootstrap.pendingTasks}
           criticalTasksBadge={bootstrap.criticalTasks}
           isManager={bootstrap.isAdmin}
+          canViewCollections={bootstrap.canViewCollections}
         />
         <BottomNav
           tasksBadge={bootstrap.pendingTasks}
           criticalTasksBadge={bootstrap.criticalTasks}
           isManager={bootstrap.isAdmin}
+          canViewCollections={bootstrap.canViewCollections}
         />
       {/* The inner viewport owns scrolling. Sticky subheaders compensate for
           viewport padding so they pin flush under the fixed topbar. */}

@@ -22,6 +22,7 @@ const BACKUP_TABLES = [
   'case_expenses',
   'case_properties',
   'case_payouts',
+  'case_fee_payments',
   'maaser_payments',
   'case_comments',
   'banks',
