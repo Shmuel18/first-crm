@@ -19,7 +19,12 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 SELECT plan(14);
 
-UPDATE public.office_settings SET deleted_records_retention_days = 14 WHERE id = 1;
+-- retention_purge_enabled is the master switch (migration 173) every destructive
+-- purge now honors; it defaults to FALSE (paused), so the cleanup below would
+-- no-op and every PURGE assertion would fail without turning it on here.
+UPDATE public.office_settings
+   SET deleted_records_retention_days = 14, retention_purge_enabled = TRUE
+ WHERE id = 1;
 
 \set c1 '11111111-1111-1111-1111-111111111111'
 \set c2 '22222222-2222-2222-2222-222222222222'
