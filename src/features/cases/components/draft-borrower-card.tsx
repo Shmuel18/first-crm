@@ -289,7 +289,9 @@ export function DraftBorrowerCard({
         />
       </FieldGroup>
 
-      <ReturningClientAutofill probe={probe} onFill={onFill} financialImport />
+      {!localBorrower.source_borrower_id && (
+        <ReturningClientAutofill probe={probe} onFill={onFill} financialImport />
+      )}
 
       {/* Contact — phone w/ WhatsApp+call adornments, email w/ mailto. */}
       <FieldGroup>
