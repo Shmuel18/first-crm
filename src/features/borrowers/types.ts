@@ -59,6 +59,44 @@ export type ReturningBorrowerMatch = Pick<
   | 'employer_name'
 >;
 
+/**
+ * A co-borrower on a returning client's most-recent case. Returned when the
+ * advisor imports the client into a new case so the WHOLE household comes over
+ * as fresh per-case copies (copy-per-case, migration 209). Carries the full
+ * draft-fillable field set + the source borrower id (→ source_borrower_id, for
+ * the financial snapshot) + their role on the source case.
+ */
+export type ReturningHouseholdMember = Pick<
+  BorrowerRow,
+  | 'id'
+  | 'first_name'
+  | 'last_name'
+  | 'national_id'
+  | 'id_issue_date'
+  | 'id_expiry_date'
+  | 'gender'
+  | 'phone'
+  | 'landline_phone'
+  | 'email'
+  | 'preferred_language'
+  | 'birth_date'
+  | 'marital_status'
+  | 'children_count'
+  | 'relationship_in_case'
+  | 'address'
+  | 'city'
+  | 'citizenship'
+  | 'additional_citizenships'
+  | 'residency_type'
+  | 'foreign_residence_country'
+  | 'employment_status'
+  | 'employer_name'
+  | 'credit_rating'
+  | 'owns_other_property'
+  | 'related_to_sellers'
+  | 'notes'
+> & { role_in_case: RoleInCase };
+
 /** Current values the autofill watches to decide whether to search. */
 export type ReturningProbe = {
   firstName: string | null | undefined;
