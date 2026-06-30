@@ -248,7 +248,8 @@
       "agreedFee": "Agreed fee",
       "balance": "Outstanding",
       "add": "Add payment",
-      "paymentsCount": "{count} payments"
+      "paymentsCount": "{count} payments",
+      "advanceAgreed": "Advance agreed"
     },
     "status": {
       "not_started": "Not started",

@@ -41,24 +41,34 @@ export async function listCaseFeePayments(caseId: CaseId): Promise<FeePayment[]>
 }
 
 /**
- * The case's agreed fee (case_financials.fee_amount), or null when unset OR
- * when the caller lacks view_case_fee (RLS nulls the row). The case-level block
- * uses it to draw the balance bar; a collections officer without view_case_fee
- * still sees the ledger + collected total, just no agreed-fee comparison.
+ * Fee + advance_agreed flag for a case, used by the מנהלה collections block.
+ * Returns null for feeAmount when unset or caller lacks view_case_fee (RLS
+ * nulls the row). advance_agreed is false when the row is missing.
  */
-export async function getCaseAgreedFee(caseId: CaseId): Promise<number | null> {
+export async function getCaseCollectionsData(
+  caseId: CaseId,
+): Promise<{ feeAmount: number | null; advanceAgreed: boolean }> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  // advance_agreed added in migration 210 — not yet in database.ts; cast the result.
+  type Row = { fee_amount: number | null; advance_agreed: boolean };
+  const raw = await supabase
     .from('case_financials')
-    .select('fee_amount')
+    .select('fee_amount, advance_agreed')
     .eq('case_id', caseId)
     .maybeSingle();
+  const { data, error } = raw as unknown as {
+    data: Row | null;
+    error: { code: string } | null;
+  };
 
   if (error) {
-    console.error('[collections] agreed fee error', { code: error.code });
-    return null;
+    console.error('[collections] case data error', { code: error.code });
+    return { feeAmount: null, advanceAgreed: false };
   }
-  return data?.fee_amount == null ? null : Number(data.fee_amount);
+  return {
+    feeAmount: data?.fee_amount == null ? null : Number(data.fee_amount),
+    advanceAgreed: Boolean(data?.advance_agreed ?? false),
+  };
 }
 
 /**
@@ -76,11 +86,15 @@ export async function getCollectionsOverview(): Promise<CollectionOverviewRow[]>
     return [];
   }
 
-  return (data ?? []).map((r) => ({
+  // case_status + advance_agreed added in migration 210; cast until database.ts regenerated.
+  type RpcRow = (typeof data)[number] & { case_status?: string; advance_agreed?: boolean };
+  return (data ?? []).map((r: RpcRow) => ({
     caseId: r.case_id,
     caseNumber: r.case_number,
     borrowers: r.borrowers,
+    caseStatus: r.case_status ?? '',
     feeAmount: r.fee_amount == null ? null : Number(r.fee_amount),
+    advanceAgreed: Boolean(r.advance_agreed ?? false),
     collected: Number(r.collected ?? 0),
     expenses: Number(r.expenses ?? 0),
     paymentCount: Number(r.payment_count ?? 0),

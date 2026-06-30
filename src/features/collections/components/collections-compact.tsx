@@ -10,6 +10,7 @@ import { formatCurrency } from '@/lib/utils/format-currency';
 import type { Locale } from '@/lib/i18n/direction';
 
 import { deleteFeePaymentAction } from '../actions/delete-fee-payment';
+import { setAdvanceAgreedAction } from '../actions/set-advance-agreed';
 import {
   collectionBalance,
   collectionProgressPct,
@@ -24,6 +25,7 @@ type Props = {
   caseId: string;
   payments: FeePayment[];
   feeAmount: number | null;
+  advanceAgreed: boolean;
   canManage: boolean;
   defaultDate: string;
   locale: Locale;
@@ -43,6 +45,7 @@ export function CollectionsCompact({
   caseId,
   payments: initialPayments,
   feeAmount,
+  advanceAgreed: initialAdvanceAgreed,
   canManage,
   defaultDate,
   locale,
@@ -51,6 +54,7 @@ export function CollectionsCompact({
   const [open, setOpen] = useState(false);
   const [payments, setPayments] = useState(initialPayments);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [advanceAgreed, setAdvanceAgreed] = useState(initialAdvanceAgreed);
   const [, startTransition] = useTransition();
 
   // Re-sync if the server sends a fresh ledger (navigation / external revalidate).
@@ -66,6 +70,14 @@ export function CollectionsCompact({
   const pct = collectionProgressPct(feeAmount, collected);
   const status = collectionStatus(feeAmount, collected);
   const met = status === 'collected' || status === 'overpaid';
+
+  const handleAdvanceAgreed = (checked: boolean) => {
+    setAdvanceAgreed(checked);
+    startTransition(async () => {
+      const res = await setAdvanceAgreedAction(caseId, checked);
+      if (!res.ok) setAdvanceAgreed(!checked);
+    });
+  };
 
   const handleDelete = (id: string) => {
     const prev = payments;
@@ -145,6 +157,24 @@ export function CollectionsCompact({
             {t('block.add')}
           </button>
         )}
+      </div>
+
+      {/* Advance-agreed toggle — visible collapsed too so it's easy to set */}
+      <div className="flex items-center gap-2 border-t border-neutral-100 px-3 py-2">
+        <input
+          id={`advance-agreed-${caseId}`}
+          type="checkbox"
+          checked={advanceAgreed}
+          onChange={(e) => canManage && handleAdvanceAgreed(e.target.checked)}
+          disabled={!canManage}
+          className="size-4 rounded border-neutral-300 accent-brand-gold-text disabled:opacity-50"
+        />
+        <label
+          htmlFor={`advance-agreed-${caseId}`}
+          className={`text-xs ${canManage ? 'cursor-pointer' : 'cursor-default'} text-neutral-700 select-none`}
+        >
+          {t('block.advanceAgreed')}
+        </label>
       </div>
 
       {open && (

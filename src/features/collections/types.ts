@@ -22,7 +22,9 @@ export type CollectionOverviewRow = {
   caseNumber: string;
   /** All borrowers on the case, primary first, comma-joined (null if none). */
   borrowers: string | null;
+  caseStatus: string;
   feeAmount: number | null;
+  advanceAgreed: boolean;
   collected: number;
   expenses: number;
   paymentCount: number;

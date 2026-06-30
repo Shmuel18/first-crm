@@ -248,7 +248,8 @@
       "agreedFee": "שכ״ט סוכם",
       "balance": "יתרה לגבייה",
       "add": "הוסף תשלום",
-      "paymentsCount": "{count} תשלומים"
+      "paymentsCount": "{count} תשלומים",
+      "advanceAgreed": "סוכם על מקדמה"
     },
     "status": {
       "not_started": "טרם נגבה",
