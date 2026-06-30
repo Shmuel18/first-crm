@@ -8,6 +8,7 @@ import type {
   BorrowerRow,
   CaseBorrowerWithBorrower,
   ReturningBorrowerMatch,
+  ReturningHouseholdMember,
   RoleInCase,
 } from '../types';
 
@@ -117,6 +118,99 @@ function dedupeByNationalId(rows: ReturningBorrowerMatch[]): ReturningBorrowerMa
     seen.add(row.national_id);
     return true;
   });
+}
+
+// Draft-fillable columns for the household import (mirrors ReturningHouseholdMember
+// + deleted_at for the soft-delete filter). No financials / deal flags here —
+// those are copied server-side by the snapshot, not surfaced to the client.
+const HOUSEHOLD_COLUMNS =
+  'id, first_name, last_name, national_id, id_issue_date, id_expiry_date, gender, phone, landline_phone, email, preferred_language, birth_date, marital_status, children_count, relationship_in_case, address, city, citizenship, additional_citizenships, residency_type, foreign_residence_country, employment_status, employer_name, credit_rating, owns_other_property, related_to_sellers, notes, deleted_at' as const;
+
+/**
+ * The OTHER borrowers on the source client's most-recent visible case. Powers
+ * the new-case "import full household" flow: when the advisor imports a
+ * returning client, their co-borrowers come over too (each becomes a fresh
+ * per-case copy on save — copy-per-case, migration 209). RLS-scoped, so only
+ * cases/borrowers the caller may see are returned; returns [] on any miss.
+ */
+export async function getReturningHousehold(
+  sourceBorrowerId: BorrowerId,
+): Promise<ReturningHouseholdMember[]> {
+  const supabase = await createClient();
+
+  // every case the source borrower is linked to (RLS already scopes these)
+  const { data: links } = await supabase
+    .from('case_borrowers')
+    .select('case_id')
+    .eq('borrower_id', sourceBorrowerId);
+  const caseIds = (links ?? []).map((l) => l.case_id);
+  if (caseIds.length === 0) return [];
+
+  // pick the most-recent non-deleted one as the household source
+  const { data: recent } = await supabase
+    .from('cases')
+    .select('id')
+    .in('id', caseIds)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+    .limit(1);
+  const caseId = recent?.[0]?.id;
+  if (!caseId) return [];
+
+  const { data, error } = await supabase
+    .from('case_borrowers')
+    .select(`role_in_case, borrower:borrowers(${HOUSEHOLD_COLUMNS})`)
+    .eq('case_id', caseId)
+    .neq('borrower_id', sourceBorrowerId);
+  if (error) {
+    console.error('[getReturningHousehold] query failed', error.code);
+    return [];
+  }
+
+  return (data ?? [])
+    .filter(
+      // Skip soft-deleted and nameless co-borrowers (empty placeholder rows) —
+      // importing the latter would create blank cards and fail the save guard
+      // (create_case_draft requires first_name + last_name).
+      (row): row is typeof row & { borrower: BorrowerRow } =>
+        row.borrower !== null &&
+        row.borrower.deleted_at === null &&
+        Boolean(row.borrower.first_name?.trim()) &&
+        Boolean(row.borrower.last_name?.trim()),
+    )
+    .map((row) => {
+      const b = row.borrower;
+      return {
+        id: b.id,
+        first_name: b.first_name,
+        last_name: b.last_name,
+        national_id: b.national_id,
+        id_issue_date: b.id_issue_date,
+        id_expiry_date: b.id_expiry_date,
+        gender: b.gender,
+        phone: b.phone,
+        landline_phone: b.landline_phone,
+        email: b.email,
+        preferred_language: b.preferred_language,
+        birth_date: b.birth_date,
+        marital_status: b.marital_status,
+        children_count: b.children_count,
+        relationship_in_case: b.relationship_in_case,
+        address: b.address,
+        city: b.city,
+        citizenship: b.citizenship,
+        additional_citizenships: b.additional_citizenships,
+        residency_type: b.residency_type,
+        foreign_residence_country: b.foreign_residence_country,
+        employment_status: b.employment_status,
+        employer_name: b.employer_name,
+        credit_rating: b.credit_rating,
+        owns_other_property: b.owns_other_property,
+        related_to_sellers: b.related_to_sellers,
+        notes: b.notes,
+        role_in_case: row.role_in_case as RoleInCase,
+      };
+    });
 }
 
 export async function getCaseBorrowerLink(

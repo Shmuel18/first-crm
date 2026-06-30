@@ -1617,7 +1617,10 @@
       "found": "Existing client found: {name}",
       "import": "Import details",
       "chooseTitle": "Several existing clients found — pick one:",
-      "dismiss": "Dismiss"
+      "dismiss": "Dismiss",
+      "bringLabel": "Include:",
+      "copyIncomes": "Incomes",
+      "copyObligations": "Obligations"
     },
     "sections": {
       "roleInCase": "Role in case",

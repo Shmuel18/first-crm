@@ -16,13 +16,22 @@ import { EditableField } from '@/features/borrowers/components/editable-field';
 import { ReturningClientAutofill } from '@/features/borrowers/components/returning-client-autofill';
 import { calculateAge } from '@/features/borrowers/domain/age';
 import { buildMailLink, buildTelLink, buildWhatsAppLink } from '@/features/borrowers/domain/contact-links';
-import { applyMatchFields } from '@/features/borrowers/domain/returning-autofill-fields';
+import {
+  applyMatchFields,
+  type ReturningSnapshotChoice,
+} from '@/features/borrowers/domain/returning-autofill-fields';
 import { useDraftReturningAutofill } from '@/features/borrowers/hooks/use-draft-returning-autofill';
 import { ROLE_IN_CASE_VALUES } from '@/features/borrowers/schemas/borrower.schema';
 import type { EditableBorrowerField } from '@/features/borrowers/actions/update-borrower-field';
-import type { BorrowerRow, ReturningBorrowerMatch } from '@/features/borrowers/types';
+import { lookupReturningHouseholdAction } from '@/features/borrowers/actions/lookup-returning-household';
+import type {
+  BorrowerRow,
+  ReturningBorrowerMatch,
+  ReturningHouseholdMember,
+} from '@/features/borrowers/types';
 
 import type { DraftBorrower } from '../hooks/use-case-draft-state';
+import type { CaseDraftBorrowerInput } from '../schemas/case-draft.schema';
 
 /**
  * Inline-editable borrower card for /cases/new draft mode. Layout is
@@ -57,9 +66,42 @@ type Props = {
    * save constraint and prevents the user from emptying the block.
    */
   canRemove: boolean;
+  /**
+   * Add the rest of the source client's household as new draft cards when a
+   * returning client is imported (copy-per-case, migration 209). Only the draft
+   * passes this; undefined elsewhere keeps the import single-borrower.
+   */
+  onImportHousehold?: (members: CaseDraftBorrowerInput[]) => void;
 };
 
-export function DraftBorrowerCard({ borrower, onChange, onRemove, canRemove }: Props) {
+/**
+ * Map a fetched household member to a draft borrower input. The member's fields
+ * mirror the draft 1:1 at runtime; the Zod-input vs DB-row types differ only
+ * nominally (same reason as the `as unknown as BorrowerRow` cast below). Carries
+ * source_borrower_id + the advisor's snapshot choice so create_case_draft copies
+ * this person's financials onto their fresh per-case copy.
+ */
+function householdMemberToDraftInput(
+  m: ReturningHouseholdMember,
+  snapshot: ReturningSnapshotChoice | undefined,
+): CaseDraftBorrowerInput {
+  const { id, role_in_case, ...fields } = m;
+  return {
+    ...fields,
+    role_in_case,
+    source_borrower_id: id,
+    copy_incomes: snapshot?.copyIncomes ?? false,
+    copy_obligations: snapshot?.copyObligations ?? false,
+  } as unknown as CaseDraftBorrowerInput;
+}
+
+export function DraftBorrowerCard({
+  borrower,
+  onChange,
+  onRemove,
+  canRemove,
+  onImportHousehold,
+}: Props) {
   const t = useTranslations('case.borrower');
   const tf = useTranslations('borrowerForm.fields');
   const tc = useTranslations('common');
@@ -74,10 +116,29 @@ export function DraftBorrowerCard({ borrower, onChange, onRemove, canRemove }: P
   // fields (markClass), cleared per-field when the user re-edits (clearMark).
   const { probe, onFill, markClass, clearMark } = useDraftReturningAutofill(
     localBorrower,
-    (match: ReturningBorrowerMatch) => {
-      const next = applyMatchFields(localBorrower, match);
+    (match: ReturningBorrowerMatch, snapshot?: ReturningSnapshotChoice) => {
+      // Personal fields merge client-side (as today). The snapshot fields ride
+      // along on the draft borrower so create_case_draft (migration 209) copies
+      // the source client's financials onto this fresh per-case copy on save.
+      const next: DraftBorrower = {
+        ...applyMatchFields(localBorrower, match),
+        source_borrower_id: match.id,
+        copy_incomes: snapshot?.copyIncomes ?? false,
+        copy_obligations: snapshot?.copyObligations ?? false,
+      };
       setLocalBorrower(next);
       onChange(next);
+
+      // Bring the rest of the household from the source client's case — each
+      // co-borrower becomes its own fresh per-case copy on save. Fire-and-forget:
+      // the cards appear once the lookup resolves.
+      if (onImportHousehold) {
+        void lookupReturningHouseholdAction(match.id).then((members) => {
+          if (members.length > 0) {
+            onImportHousehold(members.map((m) => householdMemberToDraftInput(m, snapshot)));
+          }
+        });
+      }
     },
   );
 
@@ -228,7 +289,9 @@ export function DraftBorrowerCard({ borrower, onChange, onRemove, canRemove }: P
         />
       </FieldGroup>
 
-      <ReturningClientAutofill probe={probe} onFill={onFill} />
+      {!localBorrower.source_borrower_id && (
+        <ReturningClientAutofill probe={probe} onFill={onFill} financialImport />
+      )}
 
       {/* Contact — phone w/ WhatsApp+call adornments, email w/ mailto. */}
       <FieldGroup>

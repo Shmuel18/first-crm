@@ -75,6 +75,9 @@ export function DraftBorrowersBlock({ borrowers, onAdd, onUpdate, onRemove }: Pr
               borrower={b}
               onChange={(next) => onUpdate(b.tempId, next)}
               onRemove={() => onRemove(b.tempId)}
+              // Importing a returning client brings their co-borrowers too —
+              // each added as a fresh draft card (copy-per-case, migration 209).
+              onImportHousehold={(members) => members.forEach(onAdd)}
               // Index 0 is the primary-to-be (see RPC migration 074, which
               // derives is_primary from array position). Locking it from
               // removal here keeps the draft consistent with the save

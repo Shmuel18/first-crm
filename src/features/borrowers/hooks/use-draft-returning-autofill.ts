@@ -7,6 +7,7 @@ import {
   RETURNING_OVERWRITE_CLASS,
   returningOverwrittenFields,
   type ReturningFillField,
+  type ReturningSnapshotChoice,
 } from '../domain/returning-autofill-fields';
 
 import type { ReturningBorrowerMatch, ReturningProbe } from '../types';
@@ -26,7 +27,7 @@ function asProbeString(value: unknown): string {
  */
 export function useDraftReturningAutofill(
   current: CurrentValues,
-  applyMatch: (match: ReturningBorrowerMatch) => void,
+  applyMatch: (match: ReturningBorrowerMatch, snapshot?: ReturningSnapshotChoice) => void,
 ) {
   const [overwritten, setOverwritten] = useState<ReadonlySet<ReturningFillField>>(new Set());
 
@@ -37,9 +38,9 @@ export function useDraftReturningAutofill(
     phone: asProbeString(current.phone),
   };
 
-  const onFill = (match: ReturningBorrowerMatch): void => {
+  const onFill = (match: ReturningBorrowerMatch, snapshot?: ReturningSnapshotChoice): void => {
     setOverwritten(new Set(returningOverwrittenFields(current, pickReturningFields(match))));
-    applyMatch(match);
+    applyMatch(match, snapshot);
   };
 
   const markClass = (field: ReturningFillField): string | undefined =>
