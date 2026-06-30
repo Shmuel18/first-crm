@@ -1617,7 +1617,10 @@
       "found": "נמצא לקוח קיים: {name}",
       "import": "ייבא פרטים",
       "chooseTitle": "נמצאו כמה לקוחות קיימים — בחר אחד:",
-      "dismiss": "התעלם"
+      "dismiss": "התעלם",
+      "bringLabel": "כולל:",
+      "copyIncomes": "הכנסות",
+      "copyObligations": "התחייבויות"
     },
     "sections": {
       "roleInCase": "תפקיד בתיק",

@@ -16,7 +16,10 @@ import { EditableField } from '@/features/borrowers/components/editable-field';
 import { ReturningClientAutofill } from '@/features/borrowers/components/returning-client-autofill';
 import { calculateAge } from '@/features/borrowers/domain/age';
 import { buildMailLink, buildTelLink, buildWhatsAppLink } from '@/features/borrowers/domain/contact-links';
-import { applyMatchFields } from '@/features/borrowers/domain/returning-autofill-fields';
+import {
+  applyMatchFields,
+  type ReturningSnapshotChoice,
+} from '@/features/borrowers/domain/returning-autofill-fields';
 import { useDraftReturningAutofill } from '@/features/borrowers/hooks/use-draft-returning-autofill';
 import { ROLE_IN_CASE_VALUES } from '@/features/borrowers/schemas/borrower.schema';
 import type { EditableBorrowerField } from '@/features/borrowers/actions/update-borrower-field';
@@ -74,8 +77,16 @@ export function DraftBorrowerCard({ borrower, onChange, onRemove, canRemove }: P
   // fields (markClass), cleared per-field when the user re-edits (clearMark).
   const { probe, onFill, markClass, clearMark } = useDraftReturningAutofill(
     localBorrower,
-    (match: ReturningBorrowerMatch) => {
-      const next = applyMatchFields(localBorrower, match);
+    (match: ReturningBorrowerMatch, snapshot?: ReturningSnapshotChoice) => {
+      // Personal fields merge client-side (as today). The snapshot fields ride
+      // along on the draft borrower so create_case_draft (migration 209) copies
+      // the source client's financials onto this fresh per-case copy on save.
+      const next: DraftBorrower = {
+        ...applyMatchFields(localBorrower, match),
+        source_borrower_id: match.id,
+        copy_incomes: snapshot?.copyIncomes ?? false,
+        copy_obligations: snapshot?.copyObligations ?? false,
+      };
       setLocalBorrower(next);
       onChange(next);
     },
@@ -228,7 +239,7 @@ export function DraftBorrowerCard({ borrower, onChange, onRemove, canRemove }: P
         />
       </FieldGroup>
 
-      <ReturningClientAutofill probe={probe} onFill={onFill} />
+      <ReturningClientAutofill probe={probe} onFill={onFill} financialImport />
 
       {/* Contact — phone w/ WhatsApp+call adornments, email w/ mailto. */}
       <FieldGroup>

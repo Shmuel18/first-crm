@@ -27,7 +27,15 @@ import { optionalLongText, REQUEST_DETAILS_MAX } from '@/lib/validators/form-pri
 
 // is_primary is computed server-side (first borrower in the array becomes
 // primary). The client never sends it — the RPC sets it from the array index.
-export const DraftBorrowerSchema = BorrowerFormSchema.omit({ is_primary: true });
+export const DraftBorrowerSchema = BorrowerFormSchema.omit({ is_primary: true }).extend({
+  // Copy-per-case snapshot (migration 209): when this borrower was pre-filled
+  // from a returning client, carry the source borrower id + the advisor's
+  // "what to bring" choice so create_case_draft can snapshot their financials
+  // onto the fresh per-case copy. Personal fields are still merged client-side.
+  source_borrower_id: z.uuid().optional(),
+  copy_incomes: z.boolean().optional(),
+  copy_obligations: z.boolean().optional(),
+});
 
 export type CaseDraftBorrowerInput = z.infer<typeof DraftBorrowerSchema>;
 

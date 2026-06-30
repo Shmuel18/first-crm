@@ -31,6 +31,17 @@ export const RETURNING_FILL_FIELDS = [
 export type ReturningFillField = (typeof RETURNING_FILL_FIELDS)[number];
 
 /**
+ * The advisor's "what to bring" choice when importing a returning client into a
+ * new case (copy-per-case, migration 209). Personal fields always come over;
+ * these flags add the source borrower's financials as an independent snapshot.
+ * Only offered in the new-case draft — the add-borrower form stays profile-only.
+ */
+export type ReturningSnapshotChoice = {
+  copyIncomes: boolean;
+  copyObligations: boolean;
+};
+
+/**
  * Amber ring marking a field whose imported value replaced something the
  * user had typed. `ring-*` (not bg/border) so it layers cleanly over both
  * the EditableField and the plain Input without a specificity fight.
