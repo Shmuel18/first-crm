@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { formatCurrency } from '@/lib/utils/format-currency';
 import type { Locale } from '@/lib/i18n/direction';
 
-import { collectionBalance, collectionStatus, netProfit, sumCollected } from '../domain/collections-calc';
+import { collectionStatus, netProfit, sumCollected } from '../domain/collections-calc';
 import type { CollectionOverviewRow, CollectionStatus } from '../types';
 import { FeePaymentForm } from './fee-payment-form';
 
@@ -53,17 +53,15 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
       rows.map((r) => ({
         ...r,
         status: collectionStatus(r.feeAmount, r.collected),
-        // Fee balance: remaining on the advisor fee (execution cases only).
+        // Payments cover expenses first; surplus above expenses covers the fee.
+        // Expense reimbursements happen throughout the case; advisory fees only
+        // at/after execution — so allocating early payments to expenses first
+        // reflects real practice and prevents a pending fee from masking that
+        // expenses are already covered.
+        expenseBalance: Math.max(0, r.expenses - r.collected),
         feeBalance: r.caseStatus === 'execution'
-          ? Math.max(0, collectionBalance(r.feeAmount, r.collected))
+          ? Math.max(0, (r.feeAmount ?? 0) - Math.max(0, r.collected - r.expenses))
           : 0,
-        // Expense balance: payments first cover the fee; any surplus offsets expenses.
-        // This way a client who paid more than the fee won't show pending expenses they've
-        // already effectively reimbursed.
-        expenseBalance: Math.max(
-          0,
-          r.expenses - Math.max(0, r.collected - (r.feeAmount ?? 0)),
-        ),
         advance: r.advanceAmount ?? 0,
       })),
     [rows],
