@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { formatCurrency } from '@/lib/utils/format-currency';
 import type { Locale } from '@/lib/i18n/direction';
 
-import { collectionStatus, netProfit, sumCollected } from '../domain/collections-calc';
+import { netProfit, sumCollected } from '../domain/collections-calc';
 import type { CollectionOverviewRow, CollectionStatus } from '../types';
 import { FeePaymentForm } from './fee-payment-form';
 
@@ -50,20 +50,30 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
 
   const enriched = useMemo(
     () =>
-      rows.map((r) => ({
-        ...r,
-        status: collectionStatus(r.feeAmount, r.collected),
-        // Payments cover expenses first; surplus above expenses covers the fee.
-        // Expense reimbursements happen throughout the case; advisory fees only
-        // at/after execution — so allocating early payments to expenses first
-        // reflects real practice and prevents a pending fee from masking that
-        // expenses are already covered.
-        expenseBalance: Math.max(0, r.expenses - r.collected),
-        feeBalance: r.caseStatus === 'execution'
+      rows.map((r) => {
+        // Payments cover what's currently due: expenses + advance first, fee only
+        // at execution. This order matches real practice: expense reimbursements
+        // and advances are collected before the case closes; the advisory fee comes
+        // at/after execution.
+        const expenseBalance = Math.max(0, r.expenses - r.collected);
+        const feeBalance = r.caseStatus === 'execution'
           ? Math.max(0, (r.feeAmount ?? 0) - Math.max(0, r.collected - r.expenses))
-          : 0,
-        advance: r.advanceAmount ?? 0,
-      })),
+          : 0;
+        const advance = r.advanceAmount ?? 0;
+
+        // Status reflects whether everything *currently due* has been collected —
+        // not whether the full lifetime fee has been paid. A case whose expenses
+        // are fully covered is "collected" even if the advisory fee kicks in later.
+        const outstanding = feeBalance + expenseBalance + advance;
+        const totalAgreed = (r.feeAmount ?? 0) + r.expenses + (r.advanceAmount ?? 0);
+        const status: CollectionStatus =
+          r.collected <= 0 ? 'not_started'
+          : totalAgreed > 0 && r.collected > totalAgreed ? 'overpaid'
+          : outstanding <= 0 ? 'collected'
+          : 'partial';
+
+        return { ...r, expenseBalance, feeBalance, advance, status };
+      }),
     [rows],
   );
 
