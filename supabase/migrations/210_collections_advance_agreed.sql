@@ -18,9 +18,10 @@ ALTER TABLE public.case_financials
   ADD COLUMN IF NOT EXISTS advance_agreed BOOLEAN NOT NULL DEFAULT FALSE;
 
 -- ---- Refresh collections_overview() -----------------------------------------
--- Replace to add advance_agreed + case_status to output and add WHERE filter.
--- Uses OR so a case appears if it satisfies ANY one of the three conditions.
-CREATE OR REPLACE FUNCTION public.collections_overview()
+-- DROP first — CREATE OR REPLACE cannot change RETURNS TABLE columns (postgres
+-- limitation; same fix applied in migration 208).
+DROP FUNCTION IF EXISTS public.collections_overview();
+CREATE FUNCTION public.collections_overview()
 RETURNS TABLE (
   case_id             UUID,
   case_number         TEXT,

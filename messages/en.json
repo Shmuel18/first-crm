@@ -249,7 +249,8 @@
       "balance": "Outstanding",
       "add": "Add payment",
       "paymentsCount": "{count} payments",
-      "advanceAgreed": "Advance agreed"
+      "advanceAgreed": "Advance agreed",
+      "advanceAmount": "Advance agreed (₪)"
     },
     "status": {
       "not_started": "Not started",
@@ -315,7 +316,9 @@
       "agreedFee": "Agreed fee",
       "collected": "Collected",
       "balance": "Fee balance",
+      "feeBalance": "Fee balance",
       "expenses": "Office expenses",
+      "advance": "Advance",
       "totalBalance": "Total due",
       "status": "Status",
       "lastPayment": "Last payment",

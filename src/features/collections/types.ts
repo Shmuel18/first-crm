@@ -24,7 +24,8 @@ export type CollectionOverviewRow = {
   borrowers: string | null;
   caseStatus: string;
   feeAmount: number | null;
-  advanceAgreed: boolean;
+  /** Agreed advance amount (₪). null = no advance. Replaces the old boolean advanceAgreed. */
+  advanceAmount: number | null;
   collected: number;
   expenses: number;
   paymentCount: number;

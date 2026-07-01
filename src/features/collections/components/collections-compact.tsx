@@ -10,7 +10,7 @@ import { formatCurrency } from '@/lib/utils/format-currency';
 import type { Locale } from '@/lib/i18n/direction';
 
 import { deleteFeePaymentAction } from '../actions/delete-fee-payment';
-import { setAdvanceAgreedAction } from '../actions/set-advance-agreed';
+import { setAdvanceAmountAction } from '../actions/set-advance-amount';
 import {
   collectionBalance,
   collectionProgressPct,
@@ -25,7 +25,7 @@ type Props = {
   caseId: string;
   payments: FeePayment[];
   feeAmount: number | null;
-  advanceAgreed: boolean;
+  advanceAmount: number | null;
   canManage: boolean;
   defaultDate: string;
   locale: Locale;
@@ -45,7 +45,7 @@ export function CollectionsCompact({
   caseId,
   payments: initialPayments,
   feeAmount,
-  advanceAgreed: initialAdvanceAgreed,
+  advanceAmount: initialAdvanceAmount,
   canManage,
   defaultDate,
   locale,
@@ -54,7 +54,10 @@ export function CollectionsCompact({
   const [open, setOpen] = useState(false);
   const [payments, setPayments] = useState(initialPayments);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [advanceAgreed, setAdvanceAgreed] = useState(initialAdvanceAgreed);
+  // Local draft for the advance amount input (string so the field stays editable)
+  const [advanceDraft, setAdvanceDraft] = useState(
+    initialAdvanceAmount != null ? String(initialAdvanceAmount) : '',
+  );
   const [, startTransition] = useTransition();
 
   // Re-sync if the server sends a fresh ledger (navigation / external revalidate).
@@ -71,11 +74,12 @@ export function CollectionsCompact({
   const status = collectionStatus(feeAmount, collected);
   const met = status === 'collected' || status === 'overpaid';
 
-  const handleAdvanceAgreed = (checked: boolean) => {
-    setAdvanceAgreed(checked);
+  const handleAdvanceBlur = () => {
+    const trimmed = advanceDraft.trim();
+    const parsed = trimmed === '' ? null : Number(trimmed);
+    if (parsed !== null && (!Number.isFinite(parsed) || parsed < 0)) return;
     startTransition(async () => {
-      const res = await setAdvanceAgreedAction(caseId, checked);
-      if (!res.ok) setAdvanceAgreed(!checked);
+      await setAdvanceAmountAction(caseId, parsed);
     });
   };
 
@@ -159,22 +163,30 @@ export function CollectionsCompact({
         )}
       </div>
 
-      {/* Advance-agreed toggle — visible collapsed too so it's easy to set */}
+      {/* Advance amount — visible collapsed too so it's easy to set */}
       <div className="flex items-center gap-2 border-t border-neutral-100 px-3 py-2">
-        <input
-          id={`advance-agreed-${caseId}`}
-          type="checkbox"
-          checked={advanceAgreed}
-          onChange={(e) => canManage && handleAdvanceAgreed(e.target.checked)}
-          disabled={!canManage}
-          className="size-4 rounded border-neutral-300 accent-brand-gold-text disabled:opacity-50"
-        />
         <label
-          htmlFor={`advance-agreed-${caseId}`}
-          className={`text-xs ${canManage ? 'cursor-pointer' : 'cursor-default'} text-neutral-700 select-none`}
+          htmlFor={`advance-amount-${caseId}`}
+          className="shrink-0 text-xs text-neutral-500 select-none"
         >
-          {t('block.advanceAgreed')}
+          {t('block.advanceAmount')}
         </label>
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-neutral-400">₪</span>
+          <input
+            id={`advance-amount-${caseId}`}
+            type="number"
+            min="0"
+            step="100"
+            value={advanceDraft}
+            onChange={(e) => canManage && setAdvanceDraft(e.target.value)}
+            onBlur={handleAdvanceBlur}
+            onKeyDown={(e) => e.key === 'Enter' && (e.currentTarget as HTMLInputElement).blur()}
+            disabled={!canManage}
+            placeholder="—"
+            className="w-24 rounded border border-neutral-200 px-1.5 py-0.5 text-xs tabular-nums text-neutral-900 focus:border-brand-gold-text focus:outline-none focus:ring-1 focus:ring-brand-gold-text/30 disabled:opacity-50"
+          />
+        </div>
       </div>
 
       {open && (

@@ -53,7 +53,9 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
       rows.map((r) => ({
         ...r,
         status: collectionStatus(r.feeAmount, r.collected),
-        balance: collectionBalance(r.feeAmount, r.collected),
+        // Fee balance: what remains on the advisor fee (execution cases only)
+        feeBalance: r.caseStatus === 'execution' ? Math.max(0, collectionBalance(r.feeAmount, r.collected)) : 0,
+        advance: r.advanceAmount ?? 0,
       })),
     [rows],
   );
@@ -61,7 +63,7 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
   const totals = useMemo(() => {
     const collected = sumCollected(enriched.map((r) => r.collected));
     const expenses = sumCollected(enriched.map((r) => r.expenses));
-    const open = enriched.reduce((acc, r) => acc + Math.max(0, r.balance), 0);
+    const open = enriched.reduce((acc, r) => acc + r.feeBalance + r.expenses + r.advance, 0);
     return { collected, expenses, open, profit: netProfit(collected, expenses) };
   }, [enriched]);
 
@@ -69,12 +71,12 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
     filter === 'all'
       ? enriched
       : filter === 'open'
-        ? enriched.filter((r) => r.feeAmount != null && r.balance > 0)
+        ? enriched.filter((r) => r.feeBalance > 0 || r.expenses > 0 || r.advance > 0)
         : enriched.filter((r) => r.status === filter)
   )
     .slice()
-    // Most-owed first — the dashboard is about what's left to collect.
-    .sort((a, b) => b.balance - a.balance);
+    // Most outstanding overall first — highest collector priority at the top.
+    .sort((a, b) => (b.feeBalance + b.expenses + b.advance) - (a.feeBalance + a.expenses + a.advance));
 
   const show = (v: number): string => (revealed ? formatCurrency(v, locale) : MASK);
   const fmtDate = (iso: string | null): string =>
@@ -131,10 +133,9 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
             <thead>
               <tr className="border-b border-neutral-200 bg-neutral-50 text-xs text-neutral-500">
                 <th className="px-3 py-2 text-start font-medium">{t('overview.client')}</th>
-                <th className="px-3 py-2 text-start font-medium">{t('overview.agreedFee')}</th>
-                <th className="px-3 py-2 text-start font-medium">{t('overview.collected')}</th>
+                <th className="px-3 py-2 text-start font-medium">{t('overview.feeBalance')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.expenses')}</th>
-                <th className="px-3 py-2 text-start font-medium">{t('overview.totalBalance')}</th>
+                <th className="px-3 py-2 text-start font-medium">{t('overview.advance')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.status')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.lastPayment')}</th>
                 {canManage && <th className="px-3 py-2" />}
@@ -151,17 +152,20 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
                       {r.borrowers || r.caseNumber}
                     </Link>
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2 text-neutral-700 tabular-nums">
-                    {r.feeAmount == null ? '—' : show(r.feeAmount)}
+                  <td className="whitespace-nowrap px-3 py-2 tabular-nums">
+                    {r.feeBalance > 0
+                      ? <span className="font-semibold text-red-600">{show(r.feeBalance)}</span>
+                      : <span className="text-neutral-300">—</span>}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2 font-semibold text-neutral-900 tabular-nums">
-                    {show(r.collected)}
+                  <td className="whitespace-nowrap px-3 py-2 tabular-nums">
+                    {r.expenses > 0
+                      ? <span className="font-semibold text-amber-700">{show(r.expenses)}</span>
+                      : <span className="text-neutral-300">—</span>}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2 text-neutral-700 tabular-nums">
-                    {r.expenses > 0 ? show(r.expenses) : '—'}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2 font-semibold text-red-600 tabular-nums">
-                    {show(Math.max(0, r.balance) + r.expenses)}
+                  <td className="whitespace-nowrap px-3 py-2 tabular-nums">
+                    {r.advance > 0
+                      ? <span className="font-semibold text-brand-gold-text">{show(r.advance)}</span>
+                      : <span className="text-neutral-300">—</span>}
                   </td>
                   <td className="whitespace-nowrap px-3 py-2">
                     <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[r.status]}`}>
