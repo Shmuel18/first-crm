@@ -314,7 +314,9 @@
       "advisor": "Advisor",
       "agreedFee": "Agreed fee",
       "collected": "Collected",
-      "balance": "Balance",
+      "balance": "Fee balance",
+      "expenses": "Office expenses",
+      "totalBalance": "Total due",
       "status": "Status",
       "lastPayment": "Last payment",
       "addTitle": "Record payment — {name}"

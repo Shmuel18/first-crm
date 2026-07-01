@@ -314,7 +314,9 @@
       "advisor": "יועץ",
       "agreedFee": "שכ״ט סוכם",
       "collected": "נגבה",
-      "balance": "יתרה",
+      "balance": "יתרה שכ״ט",
+      "expenses": "הוצאות משרד",
+      "totalBalance": "סה״כ לגבייה",
       "status": "סטטוס",
       "lastPayment": "תשלום אחרון",
       "addTitle": "רישום תשלום — {name}"

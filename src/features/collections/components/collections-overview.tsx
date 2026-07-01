@@ -134,6 +134,8 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
                 <th className="px-3 py-2 text-start font-medium">{t('overview.agreedFee')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.collected')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.balance')}</th>
+                <th className="px-3 py-2 text-start font-medium">{t('overview.expenses')}</th>
+                <th className="px-3 py-2 text-start font-medium">{t('overview.totalBalance')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.status')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.lastPayment')}</th>
                 {canManage && <th className="px-3 py-2" />}
@@ -158,6 +160,12 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
                   </td>
                   <td className="whitespace-nowrap px-3 py-2 text-neutral-700 tabular-nums">
                     {r.feeAmount == null ? '—' : show(Math.max(0, r.balance))}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-2 text-neutral-700 tabular-nums">
+                    {r.expenses > 0 ? show(r.expenses) : '—'}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-2 font-semibold text-red-600 tabular-nums">
+                    {show(Math.max(0, r.balance) + r.expenses)}
                   </td>
                   <td className="whitespace-nowrap px-3 py-2">
                     <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[r.status]}`}>
