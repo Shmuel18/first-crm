@@ -73,7 +73,7 @@ export function ScheduleMeetingButton({ title, clientLabel }: Props) {
           type="button"
           aria-label={title}
           onClick={openDialog}
-          className="relative flex size-8 items-center justify-center rounded-md text-neutral-600 transition hover:bg-white hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
+          className="tap-target relative flex size-8 items-center justify-center rounded-md text-neutral-600 transition hover:bg-white hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
         >
           <Calendar className="size-3.5" aria-hidden="true" />
         </button>

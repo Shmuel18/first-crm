@@ -49,7 +49,7 @@ export function ScenarioResultPanel({ result }: Props) {
           <table className="w-full min-w-[32rem] text-sm">
             <thead>
               <tr className="border-b border-neutral-200 text-neutral-500">
-                <th className="px-3 py-2 text-start font-medium">{t('metric')}</th>
+                <th className="sticky start-0 z-10 bg-white px-3 py-2 text-start font-medium">{t('metric')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('baseline')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('stressed')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('delta')}</th>
@@ -62,7 +62,7 @@ export function ScenarioResultPanel({ result }: Props) {
                 const delta = stressed - base;
                 return (
                   <tr key={metric.key} className="border-b border-neutral-100 last:border-0">
-                    <td className="px-3 py-2 text-neutral-600">{t(`metrics.${metric.key}`)}</td>
+                    <td className="sticky start-0 z-10 bg-white px-3 py-2 text-neutral-600">{t(`metrics.${metric.key}`)}</td>
                     <td className="px-3 py-2">{formatMoney(base)}</td>
                     <td className="px-3 py-2 font-medium">{formatMoney(stressed)}</td>
                     <td className={`px-3 py-2 font-medium ${delta > 0 ? 'text-red-600' : 'text-neutral-500'}`}>

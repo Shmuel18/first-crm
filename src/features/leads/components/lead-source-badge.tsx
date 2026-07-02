@@ -14,7 +14,7 @@ export function LeadSourceBadge({ metadata }: { metadata: unknown }) {
   if (source === 'manual') return null;
   return (
     <span
-      className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${STYLES[source]}`}
+      className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium ${STYLES[source]}`}
     >
       {t(source)}
     </span>

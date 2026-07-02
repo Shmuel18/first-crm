@@ -156,7 +156,7 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-neutral-200 bg-neutral-50 text-xs text-neutral-500">
-                <th className="px-3 py-2 text-start font-medium">{t('overview.client')}</th>
+                <th className="sticky start-0 z-10 bg-neutral-50 px-3 py-2 text-start font-medium">{t('overview.client')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.feeBalance')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.expenses')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.advance')}</th>
@@ -169,7 +169,7 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
             <tbody>
               {visible.map((r) => (
                 <tr key={r.caseId} className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50/60">
-                  <td className="px-3 py-2">
+                  <td className="sticky start-0 z-10 bg-white px-3 py-2">
                     <Link
                       href={`/cases/${r.caseId}`}
                       className="font-medium text-brand-gold-text hover:underline"

@@ -201,15 +201,15 @@ export function SystemTemplateDialog({ open, onOpenChange, template, initialLoca
               <p className="mb-2 text-xs font-medium text-neutral-600">{t('preview')}</p>
               <div
                 dir={locale === 'he' ? 'rtl' : 'ltr'}
-                className="overflow-hidden rounded-lg border border-neutral-200 bg-[#f7f4ec]"
+                className="overflow-hidden rounded-lg border border-neutral-200 bg-brand-gold-soft"
               >
-                <div className="bg-[#0a0a0a] px-5 py-5 text-center text-[#c9a961]">
+                <div className="bg-brand-black px-5 py-5 text-center text-brand-gold">
                   <p className="text-[10px] tracking-[0.2em]">KAUFMAN</p>
                 </div>
                 <div className="bg-white px-5 py-6">
                   <p className="mb-3 text-base font-semibold text-neutral-950">{heading}</p>
                   <div className="whitespace-pre-wrap text-xs leading-6 text-neutral-600">{body}</div>
-                  <div className="mt-5 inline-flex min-h-9 items-center rounded-full bg-[#c9a961] px-4 text-xs font-semibold text-[#0a0a0a]">
+                  <div className="mt-5 inline-flex min-h-9 items-center rounded-full bg-brand-gold px-4 text-xs font-semibold text-brand-black">
                     {ctaLabel}
                   </div>
                 </div>

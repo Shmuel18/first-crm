@@ -98,7 +98,7 @@ export async function CaseActionBar({
             <Link
               href="/cases"
               aria-label={tc('back')}
-              className="inline-flex items-center justify-center size-7 border border-neutral-300 hover:border-brand-gold-text text-neutral-700 hover:text-brand-gold-text bg-white/60 rounded-md transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
+              className="tap-target inline-flex items-center justify-center size-7 border border-neutral-300 hover:border-brand-gold-text text-neutral-700 hover:text-brand-gold-text bg-white/60 rounded-md transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
             >
               <BackArrow locale={locale} className="size-3.5" aria-hidden="true" />
             </Link>
@@ -209,8 +209,8 @@ function ActionIcon({
 }) {
   const isDisabled = !!comingSoonLabel;
   const className = isDisabled
-    ? 'relative size-8 rounded-md text-neutral-400 opacity-50 cursor-not-allowed flex items-center justify-center'
-    : 'relative size-8 rounded-md text-neutral-600 hover:bg-white hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50 transition flex items-center justify-center';
+    ? 'tap-target relative size-8 rounded-md text-neutral-400 opacity-50 cursor-not-allowed flex items-center justify-center'
+    : 'tap-target relative size-8 rounded-md text-neutral-600 hover:bg-white hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50 transition flex items-center justify-center';
   const content = (
     <>
       <Icon className="size-3.5" aria-hidden="true" />

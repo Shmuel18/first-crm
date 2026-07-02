@@ -70,7 +70,7 @@ export function CaseExpenseRow({ caseId, expense, canEdit, onSaveField, onDelete
                 type="button"
                 onClick={onDelete}
                 aria-label={tc('delete')}
-                className="size-7 rounded inline-flex items-center justify-center text-neutral-400 hover:text-red-600 hover:bg-red-50 transition opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                className="size-7 rounded inline-flex items-center justify-center text-neutral-400 hover:text-red-600 hover:bg-red-50 transition tap-target opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
               >
                 <Trash2 className="size-3.5" aria-hidden="true" />
               </button>

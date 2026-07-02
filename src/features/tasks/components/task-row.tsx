@@ -131,7 +131,7 @@ export function TaskRow({ task, locale, onEdit, onReassign, onThread, compact = 
           </p>
           <span
             className={[
-              'inline-flex items-center gap-1.5 ps-1.5 pe-2 h-5 rounded-full text-[10px] font-medium border',
+              'inline-flex items-center gap-1.5 ps-1.5 pe-2 h-5 rounded-full text-xs font-medium border',
               priorityBadgeClass(task.priority),
             ].join(' ')}
           >
@@ -150,7 +150,7 @@ export function TaskRow({ task, locale, onEdit, onReassign, onThread, compact = 
                     type="button"
                     aria-label={t('changeStatus')}
                     className={[
-                      'inline-flex items-center gap-1.5 ps-1.5 pe-2 h-5 rounded-full text-[10px] font-medium border transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40',
+                      'inline-flex items-center gap-1.5 ps-1.5 pe-2 h-5 rounded-full text-xs font-medium border transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40',
                       statusBadgeClass(task.status),
                     ].join(' ')}
                   />
@@ -169,12 +169,12 @@ export function TaskRow({ task, locale, onEdit, onReassign, onThread, compact = 
             </DropdownMenu>
           )}
           {overdue && (
-            <span className="inline-flex items-center px-1.5 h-5 rounded-full text-[10px] font-medium bg-red-100 text-red-700 border border-red-200">
+            <span className="inline-flex items-center px-1.5 h-5 rounded-full text-xs font-medium bg-red-100 text-red-700 border border-red-200">
               {t('overdue')}
             </span>
           )}
           {task.is_private && (
-            <span className="inline-flex items-center gap-1 ps-1.5 pe-2 h-5 rounded-full text-[10px] font-medium border border-brand-gold-dark/40 bg-brand-gold-soft text-brand-gold-text">
+            <span className="inline-flex items-center gap-1 ps-1.5 pe-2 h-5 rounded-full text-xs font-medium border border-brand-gold-dark/40 bg-brand-gold-soft text-brand-gold-text">
               <Lock className="size-3" aria-hidden="true" />
               {t('privateLabel')}
             </span>

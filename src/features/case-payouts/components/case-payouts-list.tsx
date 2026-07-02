@@ -112,7 +112,7 @@ export function CasePayoutsList({ caseId, payouts, canEdit }: Props) {
       <div className="overflow-x-auto">
         <table className="w-full text-sm border-separate border-spacing-0">
           <thead>
-            <tr className="text-right">
+            <tr className="text-start">
               <Th>{tf('recipient')}</Th>
               <Th>{tf('amount')}</Th>
               <th aria-hidden="true" className="w-9" />

@@ -125,10 +125,10 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
           <div className="flex items-center gap-2">
             <p className="text-sm font-semibold text-neutral-900 truncate">{fullName}</p>
             {isSelf && (
-              <span className="text-[10px] font-medium text-brand-gold-text shrink-0">({t('you')})</span>
+              <span className="text-xs font-medium text-brand-gold-text shrink-0">({t('you')})</span>
             )}
             {!member.is_active && (
-              <span className="inline-flex items-center px-1.5 h-5 rounded-full text-[10px] font-medium bg-neutral-200 text-neutral-800 shrink-0">
+              <span className="inline-flex items-center px-1.5 h-5 rounded-full text-xs font-medium bg-neutral-200 text-neutral-800 shrink-0">
                 {t('status.inactive')}
               </span>
             )}

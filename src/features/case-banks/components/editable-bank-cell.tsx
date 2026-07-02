@@ -223,7 +223,7 @@ function BankAvatar({ bank, size }: { bank: BankOption; size: 'sm' | 'md' }) {
   // Row height is enforced on the cells (see CasesTable), so the logo just has
   // to fit: a touch smaller in the tight compact row, larger otherwise.
   const sizeClass = size === 'md' && density === 'compact' ? 'size-6' : 'size-7';
-  const fallbackText = size === 'md' ? 'text-[10px]' : 'text-[10px]';
+  const fallbackText = 'text-xs';
   const sources = [bank.logo_url].filter((s): s is string => Boolean(s));
   const [srcIndex, setSrcIndex] = useState(0);
 

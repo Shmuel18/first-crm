@@ -90,7 +90,7 @@ export function DatePickerPopover({ value, onSelect, label, disabled }: Props) {
             // Fixed width keeps the popup from shifting horizontally
             // when month length changes; min-height keeps the grid
             // tall enough for 6 weeks. The user sees a stable card.
-            className="w-[20rem] rounded-xl border border-neutral-200 bg-white shadow-lg ring-1 ring-foreground/5 outline-none overflow-hidden"
+            className="w-[min(20rem,calc(100vw-1.5rem))] rounded-xl border border-neutral-200 bg-white shadow-lg ring-1 ring-foreground/5 outline-none overflow-hidden"
           >
             <DayPicker
               mode="single"

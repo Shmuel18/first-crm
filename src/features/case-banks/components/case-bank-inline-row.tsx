@@ -82,7 +82,7 @@ export function CaseBankInlineRow({ caseId, row, canEdit, onSetPrimary, onDelete
             disabled={row.is_primary || !row.bank}
             aria-label={row.is_primary ? t('isPrimary') : t('makePrimary')}
             aria-pressed={row.is_primary}
-            className="size-7 rounded inline-flex items-center justify-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 disabled:cursor-default"
+            className="size-7 rounded inline-flex items-center justify-center transition tap-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 disabled:cursor-default"
           >
             <Star
               aria-hidden="true"
@@ -101,7 +101,7 @@ export function CaseBankInlineRow({ caseId, row, canEdit, onSetPrimary, onDelete
             type="button"
             onClick={() => onDelete(row.id)}
             aria-label={tc('delete')}
-            className="size-7 rounded inline-flex items-center justify-center text-neutral-400 hover:text-red-600 hover:bg-red-50 transition opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+            className="size-7 rounded inline-flex items-center justify-center text-neutral-400 hover:text-red-600 hover:bg-red-50 transition tap-target opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
           >
             <Trash2 className="size-3.5" aria-hidden="true" />
           </button>

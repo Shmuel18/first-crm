@@ -31,7 +31,7 @@ export async function CaseBankRow({ caseId, caseBank: cb }: Props) {
           {cb.bank?.name_he ?? '—'}
         </span>
         {cb.is_primary && (
-          <span className="text-[10px] text-brand-gold-text font-bold">
+          <span className="text-xs text-brand-gold-text font-bold">
             {t('primaryBankMarker')}
           </span>
         )}

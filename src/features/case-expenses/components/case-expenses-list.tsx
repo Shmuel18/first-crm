@@ -140,7 +140,7 @@ export function CaseExpensesList({ caseId, expenses, canEdit }: Props) {
             <col className="w-14" />
           </colgroup>
           <thead>
-            <tr className="text-right">
+            <tr className="text-start">
               <Th>{tf('expenseDate')}</Th>
               <Th>{tf('amount')}</Th>
               <Th>{tf('description')}</Th>

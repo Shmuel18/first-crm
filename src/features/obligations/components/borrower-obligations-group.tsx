@@ -131,7 +131,7 @@ export function BorrowerObligationsGroup({
                   <span className="text-xs text-neutral-500 truncate">· {ob.description}</span>
                 )}
                 {ob.months_remaining !== null && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600 shrink-0">
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600 shrink-0">
                     {t('monthsLeft', { count: ob.months_remaining })}
                   </span>
                 )}
@@ -140,13 +140,13 @@ export function BorrowerObligationsGroup({
                 {ob.monthly_payment !== null ? formatCurrency(Number(ob.monthly_payment), locale) : '—'}
               </span>
               {canEdit && (
-                <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition">
+                <div className="flex items-center gap-0.5 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition">
                   <Tooltip content={tc('edit')}>
                     <button
                       type="button"
                       onClick={() => setDialog({ mode: 'edit', obligation: ob })}
                       aria-label={tc('edit')}
-                      className="size-6 rounded flex items-center justify-center text-neutral-500 hover:text-brand-gold-text hover:bg-white transition"
+                      className="size-6 rounded flex items-center justify-center text-neutral-500 hover:text-brand-gold-text hover:bg-white transition tap-target"
                     >
                       <Pencil className="size-3" aria-hidden="true" />
                     </button>
@@ -157,7 +157,7 @@ export function BorrowerObligationsGroup({
                       onClick={() => setConfirmTarget(ob)}
                       disabled={isPending && deletingId === ob.id}
                       aria-label={tc('delete')}
-                      className="size-6 rounded flex items-center justify-center text-neutral-500 hover:text-red-600 hover:bg-white transition disabled:opacity-50"
+                      className="size-6 rounded flex items-center justify-center text-neutral-500 hover:text-red-600 hover:bg-white transition tap-target disabled:opacity-50"
                     >
                       <Trash2 className="size-3" aria-hidden="true" />
                     </button>

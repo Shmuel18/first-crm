@@ -143,7 +143,7 @@ export function ObligationRow({ caseId, obligation, locale, canEdit }: Props) {
                 </>
               )}
               {row.months_remaining !== null && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600 shrink-0">
+                <span className="text-xs px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600 shrink-0">
                   {t('monthsLeft', { count: row.months_remaining })}
                 </span>
               )}
@@ -157,7 +157,7 @@ export function ObligationRow({ caseId, obligation, locale, canEdit }: Props) {
               onClick={handleDelete}
               disabled={isDeleting}
               aria-label={tc('delete')}
-              className="shrink-0 size-7 rounded inline-flex items-center justify-center text-neutral-400 hover:text-red-600 hover:bg-neutral-50 transition opacity-0 group-hover:opacity-100 disabled:opacity-50"
+              className="shrink-0 size-7 rounded inline-flex items-center justify-center text-neutral-400 hover:text-red-600 hover:bg-neutral-50 transition tap-target opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 disabled:opacity-50"
             >
               {isDeleting ? (
                 <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
@@ -265,7 +265,7 @@ function InlineStackedField({
 
   return (
     <label className={['flex flex-col gap-0.5 min-w-0', className ?? ''].join(' ')}>
-      <span className="text-[10px] font-medium text-neutral-500 truncate">{label}</span>
+      <span className="text-xs font-medium text-neutral-500 truncate">{label}</span>
       <input
         type={type}
         value={local}

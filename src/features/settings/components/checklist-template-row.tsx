@@ -35,16 +35,16 @@ export function ChecklistTemplateRow({ template, onEdit }: Props) {
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className="truncate text-sm font-medium text-neutral-900">{template.name_he}</p>
-          <span className="rounded-full bg-neutral-100 px-1.5 py-0.5 text-[10px] text-neutral-700">
+          <span className="rounded-full bg-neutral-100 px-1.5 py-0.5 text-xs text-neutral-700">
             {t('row.itemCount', { count: template.items.length })}
           </span>
           {!template.is_active && (
-            <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] text-amber-800">
+            <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">
               {t('row.inactive')}
             </span>
           )}
           {template.is_system && (
-            <span className="rounded-full bg-neutral-100 px-1.5 py-0.5 text-[10px] text-neutral-500">
+            <span className="rounded-full bg-neutral-100 px-1.5 py-0.5 text-xs text-neutral-500">
               {t('row.system')}
             </span>
           )}

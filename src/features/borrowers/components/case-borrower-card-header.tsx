@@ -82,7 +82,7 @@ export function CaseBorrowerCardHeader({
             <span className="text-xs text-neutral-500 flex items-center gap-1.5 flex-wrap">
               <span>{roleLabel}</span>
               {relatedToSellers && (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-medium">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium">
                   {t('relatedToSellers')}
                 </span>
               )}

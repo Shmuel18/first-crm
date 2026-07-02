@@ -103,7 +103,7 @@ export function CaseCommentBubble({ comment, locale, canEdit, canDelete, onSaveE
                   <button
                     type="button"
                     aria-label={tc('more')}
-                    className="ms-auto opacity-0 group-hover/comment:opacity-100 focus-visible:opacity-100 transition text-neutral-400 hover:text-neutral-700"
+                    className="ms-auto tap-target opacity-100 md:opacity-0 md:group-hover/comment:opacity-100 md:focus-visible:opacity-100 transition text-neutral-400 hover:text-neutral-700"
                   />
                 }
               >

@@ -51,7 +51,7 @@ export async function Topbar() {
             width={1536}
             height={1024}
             priority
-            className="h-12 w-auto max-w-none shrink-0"
+            className="h-12 w-16 object-contain"
           />
         </Link>
 

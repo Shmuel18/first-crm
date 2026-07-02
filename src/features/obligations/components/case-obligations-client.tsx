@@ -198,7 +198,7 @@ export function CaseObligationsClient({
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-separate border-spacing-0">
                 <thead>
-                  <tr className="text-right">
+                  <tr className="text-start">
                     <Th>{tf('loanAmount')}</Th>
                     <Th>{tf('monthlyPayment')}</Th>
                     <Th>{tf('endDate')}</Th>

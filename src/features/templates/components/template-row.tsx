@@ -43,7 +43,7 @@ export function TemplateRow({ template, onEdit }: Props) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="text-sm font-medium text-neutral-900">{template.name}</p>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-neutral-100 text-neutral-700">
+          <span className="text-xs px-1.5 py-0.5 rounded-full bg-neutral-100 text-neutral-700">
             {t(`channels.${template.channel}`)}
           </span>
         </div>

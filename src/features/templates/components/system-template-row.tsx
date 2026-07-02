@@ -31,16 +31,16 @@ export function SystemTemplateRow({ template, locale, onEdit }: Props) {
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-sm font-medium text-neutral-900">{t(`names.${template.key}`)}</p>
-          <span className="rounded-full bg-neutral-100 px-1.5 py-0.5 text-[10px] text-neutral-700">
+          <span className="rounded-full bg-neutral-100 px-1.5 py-0.5 text-xs text-neutral-700">
             {t(`categories.${template.category}`)}
           </span>
           {template.critical ? (
-            <span className="rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-800">
+            <span className="rounded-full bg-amber-50 px-1.5 py-0.5 text-xs text-amber-800">
               {t('critical')}
             </span>
           ) : (
             <span
-              className={`rounded-full px-1.5 py-0.5 text-[10px] ${
+              className={`rounded-full px-1.5 py-0.5 text-xs ${
                 version.isEnabled
                   ? 'bg-emerald-50 text-emerald-800'
                   : 'bg-neutral-100 text-neutral-500'
@@ -50,7 +50,7 @@ export function SystemTemplateRow({ template, locale, onEdit }: Props) {
             </span>
           )}
           {version.isCustomized && (
-            <span className="rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] text-blue-800">
+            <span className="rounded-full bg-blue-50 px-1.5 py-0.5 text-xs text-blue-800">
               {t('customized')}
             </span>
           )}

@@ -83,7 +83,7 @@ export function MaaserPaymentsTable({ payments, locale, revealed, mask }: Props)
                   onClick={() => remove(p.id)}
                   disabled={pending}
                   aria-label={t('delete')}
-                  className="inline-flex size-7 items-center justify-center rounded-md text-neutral-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                  className="tap-target inline-flex size-7 items-center justify-center rounded-md text-neutral-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
                 >
                   <Trash2 className="size-4" aria-hidden="true" />
                 </button>

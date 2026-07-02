@@ -64,7 +64,7 @@ export function FeePaymentsTable({ payments, locale, canManage, onDelete, deleti
                     onClick={() => onDelete?.(p.id)}
                     disabled={deletingId === p.id}
                     aria-label={t('delete')}
-                    className="inline-flex size-7 items-center justify-center rounded-md text-neutral-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                    className="tap-target inline-flex size-7 items-center justify-center rounded-md text-neutral-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
                   >
                     {deletingId === p.id ? (
                       <Loader2 className="size-4 animate-spin" aria-hidden="true" />
