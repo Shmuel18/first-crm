@@ -129,13 +129,22 @@ export function CaseExpensesList({ caseId, expenses, canEdit }: Props) {
   return (
     <div className="space-y-1">
       <div className="overflow-x-auto">
-        <table className="w-full text-sm border-separate border-spacing-0">
+        {/* table-fixed + colgroup: pins each column so the native date input's
+            large intrinsic width can't swallow the row and squeeze amount /
+            description off-screen on mobile. Description takes the remainder. */}
+        <table className="w-full text-sm border-separate border-spacing-0 table-fixed">
+          <colgroup>
+            <col className="w-32" />
+            <col className="w-24" />
+            <col />
+            <col className="w-14" />
+          </colgroup>
           <thead>
             <tr className="text-right">
               <Th>{tf('expenseDate')}</Th>
               <Th>{tf('amount')}</Th>
               <Th>{tf('description')}</Th>
-              <th aria-hidden="true" className="w-9" />
+              <th aria-hidden="true" />
             </tr>
           </thead>
           <tbody>

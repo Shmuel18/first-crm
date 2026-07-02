@@ -56,7 +56,7 @@ export function CaseExpenseRow({ caseId, expense, canEdit, onSaveField, onDelete
           disabled={!canEdit}
         />
       </Cell>
-      <td className="px-1 py-1.5 align-middle text-end whitespace-nowrap">
+      <td className="px-0.5 py-1.5 align-middle text-end whitespace-nowrap">
         <span className="inline-flex items-center justify-end">
           <ExpenseReceiptCell
             caseId={caseId}
@@ -83,11 +83,13 @@ export function CaseExpenseRow({ caseId, expense, canEdit, onSaveField, onDelete
 }
 
 function Cell({ children }: { children: React.ReactNode }) {
-  return <td className="px-1.5 py-1.5 align-middle">{children}</td>;
+  return <td className="px-1 py-1.5 align-middle">{children}</td>;
 }
 
+// Padding is applied per-cell (not here) so the tight date column can use a
+// smaller inset than the text/amount cells and still show the full date.
 const baseInputClass =
-  'w-full h-9 min-w-0 px-2.5 rounded-md border border-neutral-200 bg-white text-sm text-neutral-900 shadow-xs focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 transition disabled:bg-neutral-50 disabled:text-neutral-500 disabled:shadow-none disabled:cursor-default';
+  'w-full h-9 min-w-0 rounded-md border border-neutral-200 bg-white text-sm text-neutral-900 shadow-xs focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 transition disabled:bg-neutral-50 disabled:text-neutral-500 disabled:shadow-none disabled:cursor-default';
 
 function TextCell({
   value,
@@ -118,7 +120,7 @@ function TextCell({
         if (next === (value ?? '').trim()) return;
         onSave(next === '' ? null : next);
       }}
-      className={baseInputClass}
+      className={`${baseInputClass} px-2.5`}
     />
   );
 }
@@ -158,7 +160,7 @@ function NumberCell({
         inputMode="decimal"
         dir="ltr"
         disabled={disabled}
-        className={`${baseInputClass} text-end`}
+        className={`${baseInputClass} px-2.5 text-end`}
       />
       <CurrencySign />
     </div>
@@ -195,7 +197,7 @@ function DateCell({
           if (next === value) return;
           onSave(next);
         }}
-        className={`${baseInputClass} [&::-webkit-calendar-picker-indicator]:hidden`}
+        className={`${baseInputClass} px-1.5 [&::-webkit-calendar-picker-indicator]:hidden`}
       />
       <DatePickerPopover
         value={local || null}
