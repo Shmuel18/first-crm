@@ -40,7 +40,13 @@ const contentSignature = (s: Snapshot): string =>
  * so later edits update in place. Debounce coalesces bursts, so a skipped
  * in-flight overlap is re-armed by the next edit.
  */
-export function useScenarioAutosave(params: Params): AutosaveStatus {
+export type UseScenarioAutosave = {
+  status: AutosaveStatus;
+  /** Force an immediate save (bypassing the debounce); resolves to the id or null. */
+  saveNow: () => Promise<string | null>;
+};
+
+export function useScenarioAutosave(params: Params): UseScenarioAutosave {
   const [status, setStatus] = useState<AutosaveStatus>('idle');
 
   const latest = useRef<Params>(params);
@@ -54,17 +60,19 @@ export function useScenarioAutosave(params: Params): AutosaveStatus {
   // Seed signature captured once (state, not a ref → safe to read during render).
   const [seedSig] = useState(() => contentSignature(params));
 
-  const save = useCallback(async (): Promise<void> => {
-    if (inFlightRef.current) return;
+  // Returns the persisted scenario id (or null when blocked / on error) so an
+  // explicit "print/send" can save-then-act without waiting for the debounce.
+  const save = useCallback(async (): Promise<string | null> => {
+    if (inFlightRef.current) return idRef.current;
     const s = latest.current;
     if (s.title.trim().length === 0 || s.hasViolations) {
       setStatus('blocked');
-      return;
+      return null;
     }
     const sig = contentSignature(s);
     if (sig === savedSigRef.current) {
       setStatus('saved');
-      return;
+      return idRef.current;
     }
     inFlightRef.current = true;
     setStatus('saving');
@@ -87,9 +95,10 @@ export function useScenarioAutosave(params: Params): AutosaveStatus {
       }
       s.onSaved?.(s.title);
       setStatus('saved');
-    } else {
-      setStatus('error');
+      return idRef.current;
     }
+    setStatus('error');
+    return null;
   }, []);
 
   const signature = contentSignature(params);
@@ -102,5 +111,5 @@ export function useScenarioAutosave(params: Params): AutosaveStatus {
     return () => clearTimeout(handle);
   }, [signature, dirty, disabled, save]);
 
-  return status;
+  return { status, saveNow: save };
 }

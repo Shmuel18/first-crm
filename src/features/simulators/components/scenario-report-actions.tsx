@@ -12,7 +12,10 @@ import { emailScenarioReportAction } from '../actions/email-scenario-report';
 import { generateReportPdfAction } from '../actions/generate-report-pdf';
 
 type Props = {
-  scenarioId: string;
+  /** Present when the scenario is already saved; undefined for an unsaved draft. */
+  scenarioId?: string;
+  /** Persist the scenario if it isn't saved yet; resolves to the id (or null on failure). */
+  onEnsureSaved: () => Promise<string | null>;
   /** Live advisor conclusion to bake into the PDF (overrides the saved value). */
   conclusion: string;
   /** Only case-scoped scenarios can be emailed to a client. */
@@ -23,9 +26,10 @@ type Draft = { subject: string; body: string };
 /**
  * Download the rendered scenario PDF, or email it to the client (branded, PDF
  * attached, reviewed in the compose dialog first). Shared by the report page
- * and the mix workspace footer — the scenario must already be saved.
+ * and the mix workspace footer. If the scenario hasn't been auto-saved yet, the
+ * action saves it first (so a valid mix can be printed without a conclusion).
  */
-export function ScenarioReportActions({ scenarioId, conclusion, canSend = false }: Props) {
+export function ScenarioReportActions({ scenarioId, onEnsureSaved, conclusion, canSend = false }: Props) {
   const t = useTranslations('simulators.report');
   const [isPending, startTransition] = useTransition();
   const [isSending, startSendTransition] = useTransition();
@@ -34,7 +38,12 @@ export function ScenarioReportActions({ scenarioId, conclusion, canSend = false 
   const handleDownload = () => {
     if (isPending) return;
     startTransition(async () => {
-      const result = await generateReportPdfAction({ scenarioId, advisorConclusion: conclusion.trim() || null });
+      const id = scenarioId ?? (await onEnsureSaved());
+      if (!id) {
+        toast.error(t('errors.unknown'));
+        return;
+      }
+      const result = await generateReportPdfAction({ scenarioId: id, advisorConclusion: conclusion.trim() || null });
       if (!result.ok) {
         toast.error(t(`errors.${result.error}`));
         return;
@@ -54,7 +63,12 @@ export function ScenarioReportActions({ scenarioId, conclusion, canSend = false 
 
   const handleSend = (subject: string, body: string, locale: 'he' | 'en') => {
     startSendTransition(async () => {
-      const res = await emailScenarioReportAction({ scenarioId, locale, subject, body, advisorConclusion: conclusion.trim() || null });
+      const id = scenarioId ?? (await onEnsureSaved());
+      if (!id) {
+        toast.error(t('errors.unknown'));
+        return;
+      }
+      const res = await emailScenarioReportAction({ scenarioId: id, locale, subject, body, advisorConclusion: conclusion.trim() || null });
       if (res.ok) {
         toast.success(t('emailSent'));
         setDraft(null);

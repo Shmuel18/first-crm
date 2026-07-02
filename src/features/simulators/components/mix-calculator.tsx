@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 
 import { mixDti } from '../domain/mix-dti';
 import { useMixCalculator } from '../hooks/use-mix-calculator';
-import { useScenarioAutosave } from '../hooks/use-scenario-autosave';
+import { useScenarioAutosave, type AutosaveStatus } from '../hooks/use-scenario-autosave';
 import { AnalysisSection } from './analysis-section';
 import { BasketPresets } from './basket-presets';
 import { KpiStrip } from './kpi-strip';
@@ -85,7 +85,7 @@ export function MixCalculator({
     [monthlyNetIncome, monthlyObligations, calc.result.firstPayment, calc.result.maxPayment],
   );
 
-  const status = useScenarioAutosave({
+  const { status, saveNow } = useScenarioAutosave({
     scenarioId: scenarioId ?? null,
     caseId: caseId ?? null,
     primaryBorrowerId,
@@ -157,12 +157,21 @@ export function MixCalculator({
         <div className="text-sm">
           <SaveStatus status={status} blockedReason={blockedReason} t={t} />
         </div>
-        {scenarioId ? (
+        {/* Report actions appear as soon as the mix is valid (titled + no
+            violations) — no advisor conclusion required. When the scenario
+            isn't auto-saved yet, download/send saves it first (SIM-PRINT-1).
+            The primary-mix toggle still needs a persisted scenario. */}
+        {blockedReason === null ? (
           <div className="flex flex-wrap items-center gap-2">
-            {caseId && !readOnly && onSetPrimary ? (
+            {scenarioId && caseId && !readOnly && onSetPrimary ? (
               <PrimaryMixToggle isPrimary={isPrimary} pending={primaryPending} onToggle={() => onSetPrimary(!isPrimary)} />
             ) : null}
-            <ScenarioReportActions scenarioId={scenarioId} conclusion={calc.advisorConclusion} canSend={Boolean(caseId)} />
+            <ScenarioReportActions
+              scenarioId={scenarioId}
+              onEnsureSaved={saveNow}
+              conclusion={calc.advisorConclusion}
+              canSend={Boolean(caseId)}
+            />
           </div>
         ) : null}
       </div>
@@ -175,7 +184,7 @@ function SaveStatus({
   blockedReason,
   t,
 }: {
-  status: ReturnType<typeof useScenarioAutosave>;
+  status: AutosaveStatus;
   blockedReason: string | null;
   t: ReturnType<typeof useTranslations<'simulators.mix'>>;
 }) {
