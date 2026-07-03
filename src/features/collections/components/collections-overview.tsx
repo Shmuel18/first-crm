@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 
 import Link from 'next/link';
 
-import { Coins, Eye, EyeOff, Plus, Receipt, TrendingUp, Wallet } from 'lucide-react';
+import { Coins, Eye, EyeOff, Plus, Receipt, Wallet } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
 
@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { formatCurrency } from '@/lib/utils/format-currency';
 import type { Locale } from '@/lib/i18n/direction';
 
-import { netProfit, sumCollected } from '../domain/collections-calc';
+import { sumCollected } from '../domain/collections-calc';
 import type { CollectionOverviewRow, CollectionStatus } from '../types';
 import { FeePaymentForm } from './fee-payment-form';
 
@@ -84,7 +84,7 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
       (acc, r) => acc + r.feeBalance + r.expenseBalance + r.advance,
       0,
     );
-    return { collected, expenses, open, profit: netProfit(collected, expenses) };
+    return { collected, expenses, open };
   }, [enriched]);
 
   const visible = (
@@ -122,11 +122,10 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <SummaryCard label={t('summary.collected')} value={show(totals.collected)} icon={Wallet} accent />
         <SummaryCard label={t('summary.open')} value={show(totals.open)} icon={Coins} />
         <SummaryCard label={t('summary.expenses')} value={show(totals.expenses)} icon={Receipt} />
-        <SummaryCard label={t('summary.profit')} value={show(totals.profit)} icon={TrendingUp} />
       </div>
 
       {/* Status filter */}
