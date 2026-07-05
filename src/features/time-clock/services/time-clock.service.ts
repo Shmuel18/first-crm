@@ -160,6 +160,45 @@ export async function listStaffForTracking(): Promise<TrackedEmployee[]> {
   return (data ?? []).map((r) => mapEmployee(r as ProfileRow));
 }
 
+/** Manager: every tracked employee + their shifts in [fromISO, toISO) — the timesheet. */
+export async function getManagerTimesheet(
+  fromISO: string,
+  toISO: string,
+): Promise<{ employee: TrackedEmployee; entries: TimeEntry[] }[]> {
+  if (!(await isCurrentUserAdmin())) return [];
+  const supabase = await createClient();
+  const { data: staff, error } = await supabase
+    .from('profiles')
+    .select('id, first_name, last_name, time_tracked, auto_clock_in')
+    .eq('time_tracked', true)
+    .eq('is_active', true)
+    .order('first_name', { ascending: true });
+  if (error) {
+    console.error('[time-clock] timesheet staff error', { code: error.code });
+    return [];
+  }
+  const employees = (staff ?? []).map((r) => mapEmployee(r as ProfileRow));
+  if (employees.length === 0) return [];
+
+  const { data: rows } = await supabase
+    .from('time_entries')
+    .select(TIME_ENTRY_COLUMNS)
+    .in('user_id', employees.map((e) => e.id))
+    .gte('clock_in', fromISO)
+    .lt('clock_in', toISO)
+    .is('deleted_at', null)
+    .order('clock_in', { ascending: false });
+
+  const byUser = new Map<string, TimeEntry[]>();
+  for (const r of rows ?? []) {
+    const entry = mapEntry(r as EntryRow);
+    const list = byUser.get(entry.userId) ?? [];
+    list.push(entry);
+    byUser.set(entry.userId, list);
+  }
+  return employees.map((employee) => ({ employee, entries: byUser.get(employee.id) ?? [] }));
+}
+
 /** Manager: one employee's shifts in [fromISO, toISO) (newest first). */
 export async function listEntriesForRange(
   userId: string,

@@ -359,6 +359,24 @@
       "tracked": "Tracked",
       "auto": "Auto clock-in"
     },
+    "manager": {
+      "timesheet": "Timesheet",
+      "prevMonth": "Previous month",
+      "nextMonth": "Next month",
+      "addEntry": "Add entry",
+      "editEntry": "Edit entry",
+      "newEntry": "New entry — {name}",
+      "clockIn": "Clock in",
+      "clockOut": "Clock out",
+      "clockOutHint": "Leave empty if still on the clock.",
+      "note": "Note",
+      "save": "Save",
+      "delete": "Delete",
+      "saved": "Saved",
+      "deleted": "Deleted",
+      "outBeforeIn": "Clock-out is before clock-in.",
+      "noEntries": "No entries this month."
+    },
     "errors": {
       "unauthorized": "Not authorized.",
       "already_open": "Already clocked in.",

@@ -5,6 +5,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 
 import { ClockPunch } from '@/features/time-clock/components/clock-punch';
 import { ManagerPanel } from '@/features/time-clock/components/manager-panel';
+import { ManagerTimesheet } from '@/features/time-clock/components/manager-timesheet';
 import {
   getBoard,
   getClockAccess,
@@ -45,6 +46,7 @@ export default async function TimeClockPage() {
         <>
           {access.isTracked && <hr className="border-neutral-200" />}
           <ManagerPanel board={board} staff={staff} locale={locale} />
+          <ManagerTimesheet locale={locale} />
         </>
       )}
     </div>

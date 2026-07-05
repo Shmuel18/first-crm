@@ -359,6 +359,24 @@
       "tracked": "במעקב",
       "auto": "כניסה אוטומטית"
     },
+    "manager": {
+      "timesheet": "דוח שעות",
+      "prevMonth": "חודש קודם",
+      "nextMonth": "חודש הבא",
+      "addEntry": "הוסף רישום",
+      "editEntry": "עריכת רישום",
+      "newEntry": "רישום חדש — {name}",
+      "clockIn": "כניסה",
+      "clockOut": "יציאה",
+      "clockOutHint": "השאר ריק אם עדיין בעבודה.",
+      "note": "הערה",
+      "save": "שמור",
+      "delete": "מחק",
+      "saved": "נשמר",
+      "deleted": "נמחק",
+      "outBeforeIn": "היציאה לפני הכניסה.",
+      "noEntries": "אין רישומים החודש."
+    },
     "errors": {
       "unauthorized": "אין הרשאה.",
       "already_open": "כבר רשומה כניסה פתוחה.",
