@@ -11,12 +11,7 @@ import type { Locale } from '@/lib/i18n/direction';
 
 import { deleteFeePaymentAction } from '../actions/delete-fee-payment';
 import { setAdvanceAmountAction } from '../actions/set-advance-amount';
-import {
-  collectionBalance,
-  collectionProgressPct,
-  collectionStatus,
-  sumCollected,
-} from '../domain/collections-calc';
+import { outstandingBalance, sumCollected } from '../domain/collections-calc';
 import type { FeePayment } from '../types';
 import { FeePaymentForm } from './fee-payment-form';
 import { FeePaymentsTable } from './fee-payments-table';
@@ -26,6 +21,10 @@ type Props = {
   payments: FeePayment[];
   feeAmount: number | null;
   advanceAmount: number | null;
+  /** Total office expenses on the case — folded into the balance to collect. */
+  expenses: number;
+  /** True once the case is in execution — the advisory fee becomes collectible. */
+  isExecution: boolean;
   canManage: boolean;
   defaultDate: string;
   locale: Locale;
@@ -46,6 +45,8 @@ export function CollectionsCompact({
   payments: initialPayments,
   feeAmount,
   advanceAmount: initialAdvanceAmount,
+  expenses,
+  isExecution,
   canManage,
   defaultDate,
   locale,
@@ -69,10 +70,12 @@ export function CollectionsCompact({
   }
 
   const collected = sumCollected(payments.map((p) => p.amount));
-  const balance = collectionBalance(feeAmount, collected);
-  const pct = collectionProgressPct(feeAmount, collected);
-  const status = collectionStatus(feeAmount, collected);
-  const met = status === 'collected' || status === 'overpaid';
+  // "יתרה לגבייה" = unpaid fee (post-execution) + unpaid office expenses.
+  const balance = outstandingBalance(feeAmount, expenses, collected, isExecution);
+  const hasOwed = (feeAmount != null && feeAmount > 0) || expenses > 0;
+  const totalToCollect = collected + balance;
+  const pct = totalToCollect > 0 ? Math.max(0, Math.min(100, Math.round((collected / totalToCollect) * 100))) : 0;
+  const met = hasOwed && balance <= 0;
 
   const handleAdvanceBlur = () => {
     const trimmed = advanceDraft.trim();
@@ -118,7 +121,7 @@ export function CollectionsCompact({
               <span className="font-semibold text-neutral-900 tabular-nums">
                 {formatCurrency(collected, locale)}
               </span>
-              {feeAmount != null && (
+              {hasOwed && (
                 <>
                   <span className="text-neutral-300" aria-hidden="true">
                     ·
@@ -137,7 +140,7 @@ export function CollectionsCompact({
                 </span>
               )}
             </div>
-            {feeAmount != null && (
+            {hasOwed && (
               <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-100">
                 <div
                   className={`h-full rounded-full ${met ? 'bg-emerald-500' : 'bg-brand-gold'}`}

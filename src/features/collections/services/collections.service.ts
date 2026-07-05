@@ -41,33 +41,44 @@ export async function listCaseFeePayments(caseId: CaseId): Promise<FeePayment[]>
 }
 
 /**
- * Fee + advance amount for a case, used by the מנהלה collections block.
- * Returns null for feeAmount when unset or caller lacks view_case_fee (RLS
- * nulls the row). advanceAmount is null when no advance is set.
+ * Fee + advance + office expenses + execution status for a case, used by the
+ * מנהלה collections block to show the full outstanding balance (fee + expenses).
+ * Returns null feeAmount when unset / RLS-nulled; expenses 0 when none.
  */
-export async function getCaseCollectionsData(
-  caseId: CaseId,
-): Promise<{ feeAmount: number | null; advanceAmount: number | null }> {
+export async function getCaseCollectionsData(caseId: CaseId): Promise<{
+  feeAmount: number | null;
+  advanceAmount: number | null;
+  expenses: number;
+  isExecution: boolean;
+}> {
   const supabase = await createClient();
-  // advance_amount added in migration 212 — not yet in database.ts; cast the result.
-  type Row = { fee_amount: number | null; advance_amount: number | null };
-  const raw = await supabase
-    .from('case_financials')
-    .select('fee_amount, advance_amount')
-    .eq('case_id', caseId)
-    .maybeSingle();
-  const { data, error } = raw as unknown as {
-    data: Row | null;
+  const [finRaw, expRes, caseRes, execRes] = await Promise.all([
+    // advance_amount added in migration 212 — not yet in database.ts; cast the result.
+    supabase.from('case_financials').select('fee_amount, advance_amount').eq('case_id', caseId).maybeSingle(),
+    supabase.from('case_expenses').select('amount').eq('case_id', caseId).is('deleted_at', null),
+    supabase.from('cases').select('status_id').eq('id', caseId).maybeSingle(),
+    supabase.from('case_statuses').select('id').eq('key', 'execution').maybeSingle(),
+  ]);
+  const { data, error } = finRaw as unknown as {
+    data: { fee_amount: number | null; advance_amount: number | null } | null;
     error: { code: string } | null;
   };
 
   if (error) {
     console.error('[collections] case data error', { code: error.code });
-    return { feeAmount: null, advanceAmount: null };
+    return { feeAmount: null, advanceAmount: null, expenses: 0, isExecution: false };
   }
+
+  const expenses = (expRes.data ?? []).reduce((acc, e) => acc + Number(e.amount), 0);
+  const isExecution = Boolean(
+    caseRes.data?.status_id && execRes.data?.id && caseRes.data.status_id === execRes.data.id,
+  );
+
   return {
     feeAmount: data?.fee_amount == null ? null : Number(data.fee_amount),
     advanceAmount: data?.advance_amount == null ? null : Number(data.advance_amount),
+    expenses,
+    isExecution,
   };
 }
 

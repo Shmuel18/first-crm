@@ -33,3 +33,37 @@ export function collectionProgressPct(feeAmount: number | null, collected: numbe
 export function netProfit(collected: number, expenses: number): number {
   return collected - expenses;
 }
+
+// ---------------------------------------------------------------------------
+// Shared outstanding-balance logic — the single source of truth for BOTH the
+// central /collections dashboard and the in-case מנהלה block, so the two agree.
+// Payments cover office expenses first; the advisory fee is due only once the
+// case reaches execution, and only the surplus above expenses reduces it.
+// ---------------------------------------------------------------------------
+
+/** Office expenses still to collect (payments cover expenses first). */
+export function expenseBalance(expenses: number, collected: number): number {
+  return Math.max(0, expenses - collected);
+}
+
+/** Advisory fee still to collect: only at/after execution, after expenses. */
+export function feeBalanceDue(
+  feeAmount: number | null,
+  expenses: number,
+  collected: number,
+  isExecution: boolean,
+): number {
+  if (!isExecution) return 0;
+  return Math.max(0, (feeAmount ?? 0) - Math.max(0, collected - expenses));
+}
+
+/** Everything still to collect on a case: unpaid fee (post-execution) + unpaid
+ *  office expenses. Advance is tracked separately and NOT added here. */
+export function outstandingBalance(
+  feeAmount: number | null,
+  expenses: number,
+  collected: number,
+  isExecution: boolean,
+): number {
+  return feeBalanceDue(feeAmount, expenses, collected, isExecution) + expenseBalance(expenses, collected);
+}

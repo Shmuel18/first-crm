@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { formatCurrency } from '@/lib/utils/format-currency';
 import type { Locale } from '@/lib/i18n/direction';
 
-import { sumCollected } from '../domain/collections-calc';
+import { expenseBalance, feeBalanceDue, sumCollected } from '../domain/collections-calc';
 import type { CollectionOverviewRow, CollectionStatus } from '../types';
 import { FeePaymentForm } from './fee-payment-form';
 
@@ -55,16 +55,15 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
         // at execution. This order matches real practice: expense reimbursements
         // and advances are collected before the case closes; the advisory fee comes
         // at/after execution.
-        const expenseBalance = Math.max(0, r.expenses - r.collected);
-        const feeBalance = r.caseStatus === 'execution'
-          ? Math.max(0, (r.feeAmount ?? 0) - Math.max(0, r.collected - r.expenses))
-          : 0;
+        // Shared with the in-case מנהלה block via the domain helpers.
+        const expenseBal = expenseBalance(r.expenses, r.collected);
+        const feeBal = feeBalanceDue(r.feeAmount, r.expenses, r.collected, r.caseStatus === 'execution');
         const advance = r.advanceAmount ?? 0;
 
         // Status reflects whether everything *currently due* has been collected —
         // not whether the full lifetime fee has been paid. A case whose expenses
         // are fully covered is "collected" even if the advisory fee kicks in later.
-        const outstanding = feeBalance + expenseBalance + advance;
+        const outstanding = feeBal + expenseBal + advance;
         const totalAgreed = (r.feeAmount ?? 0) + r.expenses + (r.advanceAmount ?? 0);
         const status: CollectionStatus =
           r.collected <= 0 ? 'not_started'
@@ -72,7 +71,7 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
           : outstanding <= 0 ? 'collected'
           : 'partial';
 
-        return { ...r, expenseBalance, feeBalance, advance, status };
+        return { ...r, expenseBalance: expenseBal, feeBalance: feeBal, advance, status };
       }),
     [rows],
   );

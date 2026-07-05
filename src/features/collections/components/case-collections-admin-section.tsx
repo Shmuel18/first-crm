@@ -26,7 +26,7 @@ export async function CaseCollectionsAdminSection({ caseId }: { caseId: string }
     getTranslations('collections'),
     getLocale().then(parseLocale),
   ]);
-  const { feeAmount, advanceAmount } = collectionsData;
+  const { feeAmount, advanceAmount, expenses, isExecution } = collectionsData;
 
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(new Date());
 
@@ -43,6 +43,8 @@ export async function CaseCollectionsAdminSection({ caseId }: { caseId: string }
         payments={payments}
         feeAmount={feeAmount}
         advanceAmount={advanceAmount}
+        expenses={expenses}
+        isExecution={isExecution}
         canManage={canManage}
         defaultDate={today}
         locale={locale}
