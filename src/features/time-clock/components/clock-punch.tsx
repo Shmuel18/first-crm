@@ -6,21 +6,24 @@ import { AlertTriangle, Loader2, LogIn, LogOut } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { formatCurrency } from '@/lib/utils/format-currency';
 import type { Locale } from '@/lib/i18n/direction';
 
 import { clockInAction } from '../actions/clock-in';
 import { clockOutAction } from '../actions/clock-out';
-import { entryMinutes, formatHm, groupByDay, israelDay, totalMinutes } from '../domain/hours';
+import { earnings, entryMinutes, formatHm, groupByDay, israelDay, totalMinutes } from '../domain/hours';
 import type { TimeEntry } from '../types';
 
 type Props = {
   initialOpen: TimeEntry | null;
   initialEntries: TimeEntry[];
+  /** The employee's own wage per hour (₪), or null — gates the earnings display. */
+  hourlyRate: number | null;
   locale: Locale;
 };
 
 /** The employee's punch clock: live status + one big IN/OUT button + totals + history. */
-export function ClockPunch({ initialOpen, initialEntries, locale }: Props) {
+export function ClockPunch({ initialOpen, initialEntries, hourlyRate, locale }: Props) {
   const t = useTranslations('timeClock');
   const [open, setOpen] = useState(initialOpen);
   const [entries, setEntries] = useState(initialEntries);
@@ -58,6 +61,8 @@ export function ClockPunch({ initialOpen, initialEntries, locale }: Props) {
   const days = groupByDay(entries, nowMs);
   // Shift still open from a previous calendar day → probably a forgotten clock-out.
   const staleOpen = open != null && israelDay(open.clockIn) !== todayKey;
+  const showMoney = hourlyRate != null && hourlyRate > 0;
+  const money = (minutes: number): string => formatCurrency(earnings(minutes, hourlyRate), locale);
 
   const fmtTime = (iso: string) =>
     new Date(iso).toLocaleTimeString(locale === 'he' ? 'he-IL' : 'en-GB', {
@@ -103,6 +108,11 @@ export function ClockPunch({ initialOpen, initialEntries, locale }: Props) {
         {open ? (
           <div className="mt-4 mb-5">
             <div className="font-display text-5xl font-bold text-emerald-700 tabular-nums">{formatHm(elapsed)}</div>
+            {showMoney && (
+              <div className="mt-1 font-display text-xl font-semibold text-emerald-600 tabular-nums">
+                {money(elapsed)}
+              </div>
+            )}
             <div className="mt-1 text-sm text-neutral-500">
               {t('punch.onClockSince', { time: fmtTime(open.clockIn) })}
             </div>
@@ -135,10 +145,12 @@ export function ClockPunch({ initialOpen, initialEntries, locale }: Props) {
         <div className="rounded-xl border border-neutral-200 bg-white p-3 text-center">
           <div className="text-xs text-neutral-500">{t('totals.today')}</div>
           <div className="font-display text-2xl font-semibold text-neutral-950 tabular-nums">{formatHm(todayMins)}</div>
+          {showMoney && <div className="text-xs font-medium text-brand-gold-text tabular-nums">{money(todayMins)}</div>}
         </div>
         <div className="rounded-xl border border-neutral-200 bg-white p-3 text-center">
           <div className="text-xs text-neutral-500">{t('totals.week')}</div>
           <div className="font-display text-2xl font-semibold text-neutral-950 tabular-nums">{formatHm(weekMins)}</div>
+          {showMoney && <div className="text-xs font-medium text-brand-gold-text tabular-nums">{money(weekMins)}</div>}
         </div>
       </div>
 
@@ -153,7 +165,10 @@ export function ClockPunch({ initialOpen, initialEntries, locale }: Props) {
               <li key={d.day} className="rounded-xl border border-neutral-200 bg-white p-3">
                 <div className="mb-1 flex items-center justify-between">
                   <span className="text-sm font-medium text-neutral-800">{fmtDay(d.day)}</span>
-                  <span className="text-sm font-semibold text-brand-gold-text tabular-nums">{formatHm(d.minutes)}</span>
+                  <span className="text-sm font-semibold text-brand-gold-text tabular-nums">
+                    {formatHm(d.minutes)}
+                    {showMoney && <span className="text-neutral-400"> · {money(d.minutes)}</span>}
+                  </span>
                 </div>
                 <ul className="space-y-0.5 text-xs text-neutral-500">
                   {d.entries.map((e) => (

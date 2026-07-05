@@ -24,6 +24,7 @@ export async function setEmployeeTrackingAction(input: SetTrackingInput): Promis
     .update({
       time_tracked: parsed.data.timeTracked,
       auto_clock_in: parsed.data.autoClockIn,
+      hourly_rate: parsed.data.hourlyRate,
       updated_by: user.id,
     })
     .eq('id', parsed.data.userId);

@@ -17,6 +17,12 @@ export function totalMinutes(entries: readonly Pick<TimeEntry, 'clockIn' | 'cloc
   return entries.reduce((acc, e) => acc + entryMinutes(e, nowMs), 0);
 }
 
+/** Wage earned for `minutes` at `ratePerHour` (₪). Null/zero rate → 0. */
+export function earnings(minutes: number, ratePerHour: number | null): number {
+  if (!ratePerHour || ratePerHour <= 0) return 0;
+  return (minutes / 60) * ratePerHour;
+}
+
 /** Minutes → "H:MM" (e.g. 154 → "2:34"). */
 export function formatHm(minutes: number): string {
   const safe = Math.max(0, Math.floor(minutes));

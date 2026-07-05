@@ -4060,6 +4060,7 @@ export type Database = {
           phone: string | null
           role_id: string | null
           auto_clock_in: boolean
+          hourly_rate: number | null
           time_tracked: boolean
           updated_at: string
           updated_by: string | null
@@ -4082,6 +4083,7 @@ export type Database = {
           phone?: string | null
           role_id?: string | null
           auto_clock_in?: boolean
+          hourly_rate?: number | null
           time_tracked?: boolean
           updated_at?: string
           updated_by?: string | null
@@ -4104,6 +4106,7 @@ export type Database = {
           phone?: string | null
           role_id?: string | null
           auto_clock_in?: boolean
+          hourly_rate?: number | null
           time_tracked?: boolean
           updated_at?: string
           updated_by?: string | null

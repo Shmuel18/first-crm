@@ -39,7 +39,12 @@ export default async function TimeClockPage() {
       </header>
 
       {access.isTracked && (
-        <ClockPunch initialOpen={openEntry} initialEntries={myEntries} locale={locale} />
+        <ClockPunch
+          initialOpen={openEntry}
+          initialEntries={myEntries}
+          hourlyRate={access.hourlyRate}
+          locale={locale}
+        />
       )}
 
       {access.isManager && (

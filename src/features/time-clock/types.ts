@@ -17,6 +17,8 @@ export type TrackedEmployee = {
   lastName: string | null;
   timeTracked: boolean;
   autoClockIn: boolean;
+  /** Wage per hour (₪), or null when unset. */
+  hourlyRate: number | null;
 };
 
 /** A row on the manager's live board: an employee + their current open shift (if any). */
@@ -31,4 +33,6 @@ export type ClockAccess = {
   isManager: boolean;
   /** Flagged hourly employee — sees their own punch clock. */
   isTracked: boolean;
+  /** The current user's own wage per hour (₪), for their earnings display. */
+  hourlyRate: number | null;
 };

@@ -372,7 +372,8 @@
       "title": "Tracked employees",
       "hint": "Flag who is hourly. \"Auto clock-in\" punches them in on every login to the system.",
       "tracked": "Tracked",
-      "auto": "Auto clock-in"
+      "auto": "Auto clock-in",
+      "rate": "₪/hr"
     },
     "manager": {
       "timesheet": "Timesheet",
@@ -409,7 +410,9 @@
       "out": "Out",
       "hours": "Hours",
       "note": "Note",
-      "total": "Total"
+      "total": "Total",
+      "rate": "Rate/hr",
+      "pay": "Total pay"
     },
     "errors": {
       "unauthorized": "Not authorized.",

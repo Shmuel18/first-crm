@@ -34,6 +34,7 @@ type ProfileRow = {
   last_name: string | null;
   time_tracked: boolean;
   auto_clock_in: boolean;
+  hourly_rate: number | null;
 };
 
 function mapEmployee(r: ProfileRow): TrackedEmployee {
@@ -43,21 +44,26 @@ function mapEmployee(r: ProfileRow): TrackedEmployee {
     lastName: r.last_name,
     timeTracked: r.time_tracked,
     autoClockIn: r.auto_clock_in,
+    hourlyRate: r.hourly_rate == null ? null : Number(r.hourly_rate),
   };
 }
 
 /** What the current user can do with the clock: manage (admin) and/or punch (tracked). */
 export async function getClockAccess(): Promise<ClockAccess> {
   const [isManager, user] = await Promise.all([isCurrentUserAdmin(), getCurrentUser()]);
-  if (!user) return { isManager: false, isTracked: false };
+  if (!user) return { isManager: false, isTracked: false, hourlyRate: null };
 
   const supabase = await createClient();
   const { data } = await supabase
     .from('profiles')
-    .select('time_tracked')
+    .select('time_tracked, hourly_rate')
     .eq('id', user.id)
     .maybeSingle();
-  return { isManager, isTracked: Boolean(data?.time_tracked) };
+  return {
+    isManager,
+    isTracked: Boolean(data?.time_tracked),
+    hourlyRate: data?.hourly_rate == null ? null : Number(data.hourly_rate),
+  };
 }
 
 /**
@@ -122,7 +128,7 @@ export async function getBoard(): Promise<BoardRow[]> {
   const supabase = await createClient();
   const { data: staff, error } = await supabase
     .from('profiles')
-    .select('id, first_name, last_name, time_tracked, auto_clock_in')
+    .select('id, first_name, last_name, time_tracked, auto_clock_in, hourly_rate')
     .eq('time_tracked', true)
     .eq('is_active', true)
     .order('first_name', { ascending: true });
@@ -150,7 +156,7 @@ export async function listStaffForTracking(): Promise<TrackedEmployee[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, first_name, last_name, time_tracked, auto_clock_in')
+    .select('id, first_name, last_name, time_tracked, auto_clock_in, hourly_rate')
     .eq('is_active', true)
     .order('first_name', { ascending: true });
   if (error) {
@@ -169,7 +175,7 @@ export async function getManagerTimesheet(
   const supabase = await createClient();
   const { data: staff, error } = await supabase
     .from('profiles')
-    .select('id, first_name, last_name, time_tracked, auto_clock_in')
+    .select('id, first_name, last_name, time_tracked, auto_clock_in, hourly_rate')
     .eq('time_tracked', true)
     .eq('is_active', true)
     .order('first_name', { ascending: true });

@@ -6,10 +6,11 @@ import { ChevronDown, ChevronLeft, ChevronRight, FileSpreadsheet, Loader2, Penci
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { formatCurrency } from '@/lib/utils/format-currency';
 import type { Locale } from '@/lib/i18n/direction';
 
 import { fetchManagerTimesheetAction } from '../actions/fetch-manager-timesheet';
-import { formatHm, groupByDay, totalMinutes } from '../domain/hours';
+import { earnings, formatHm, groupByDay, totalMinutes } from '../domain/hours';
 import type { TimeEntry, TrackedEmployee } from '../types';
 import { EntryEditDialog } from './entry-edit-dialog';
 
@@ -150,6 +151,9 @@ export function ManagerTimesheet({ locale }: { locale: Locale }) {
             const name = fullName(employee, t('unnamed'));
             const isOpen = expanded === employee.id;
             const days = groupByDay(entries, nowMs);
+            const empMins = totalMinutes(entries, nowMs);
+            const showMoney = employee.hourlyRate != null && employee.hourlyRate > 0;
+            const money = (mins: number): string => formatCurrency(earnings(mins, employee.hourlyRate), locale);
             return (
               <li key={employee.id} className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
                 <div className="flex items-center gap-2 px-4 py-3">
@@ -161,8 +165,9 @@ export function ManagerTimesheet({ locale }: { locale: Locale }) {
                   >
                     <ChevronDown className={`size-4 shrink-0 text-neutral-400 transition ${isOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
                     <span className="truncate text-sm font-medium text-neutral-900">{name}</span>
-                    <span className="ms-auto shrink-0 text-sm font-semibold text-brand-gold-text tabular-nums">
-                      {formatHm(totalMinutes(entries, nowMs))}
+                    <span className="ms-auto shrink-0 text-end tabular-nums">
+                      <span className="block text-sm font-semibold text-brand-gold-text">{formatHm(empMins)}</span>
+                      {showMoney && <span className="block text-xs text-neutral-400">{money(empMins)}</span>}
                     </span>
                   </button>
                   <button
@@ -185,7 +190,10 @@ export function ManagerTimesheet({ locale }: { locale: Locale }) {
                           <li key={d.day}>
                             <div className="flex items-center justify-between text-xs text-neutral-500">
                               <span>{fmtDay(d.day)}</span>
-                              <span className="font-medium tabular-nums">{formatHm(d.minutes)}</span>
+                              <span className="font-medium tabular-nums">
+                                {formatHm(d.minutes)}
+                                {showMoney && <span className="text-neutral-400"> · {money(d.minutes)}</span>}
+                              </span>
                             </div>
                             <ul className="mt-0.5 space-y-0.5">
                               {d.entries.map((e) => (

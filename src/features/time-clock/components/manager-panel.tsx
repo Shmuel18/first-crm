@@ -92,9 +92,17 @@ function StaffRow({ staff, label }: { staff: TrackedEmployee; label: string }) {
   const t = useTranslations('timeClock');
   const [tracked, setTracked] = useState(staff.timeTracked);
   const [auto, setAuto] = useState(staff.autoClockIn);
+  const [rate, setRate] = useState(staff.hourlyRate != null ? String(staff.hourlyRate) : '');
   const [, start] = useTransition();
 
-  const save = (nextTracked: boolean, nextAuto: boolean) => {
+  const parseRate = (s: string): number | null => {
+    const v = s.trim();
+    if (v === '') return null;
+    const n = Number(v);
+    return Number.isFinite(n) && n >= 0 ? n : null;
+  };
+
+  const save = (nextTracked: boolean, nextAuto: boolean, nextRate: number | null) => {
     const prevT = tracked;
     const prevA = auto;
     setTracked(nextTracked);
@@ -104,6 +112,7 @@ function StaffRow({ staff, label }: { staff: TrackedEmployee; label: string }) {
         userId: staff.id,
         timeTracked: nextTracked,
         autoClockIn: nextAuto,
+        hourlyRate: nextRate,
       });
       if (!res.ok) {
         setTracked(prevT);
@@ -116,12 +125,26 @@ function StaffRow({ staff, label }: { staff: TrackedEmployee; label: string }) {
   return (
     <li className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
       <span className="text-sm font-medium text-neutral-900">{label}</span>
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex items-center gap-1 text-xs text-neutral-700">
+          <span>{t('settings.rate')}</span>
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value={rate}
+            placeholder="—"
+            onChange={(e) => setRate(e.target.value)}
+            onBlur={() => save(tracked, auto, parseRate(rate))}
+            className="w-16 rounded border border-neutral-200 px-1.5 py-0.5 text-xs tabular-nums text-neutral-900 focus:border-brand-gold-text focus:outline-none focus:ring-1 focus:ring-brand-gold-text/30"
+          />
+          <span className="text-neutral-400">₪</span>
+        </div>
         <label className="flex items-center gap-1.5 text-xs text-neutral-700">
           <input
             type="checkbox"
             checked={tracked}
-            onChange={(e) => save(e.target.checked, e.target.checked ? auto : false)}
+            onChange={(e) => save(e.target.checked, e.target.checked ? auto : false, parseRate(rate))}
             className="size-4 rounded border-neutral-300 accent-brand-gold-text"
           />
           {t('settings.tracked')}
@@ -131,7 +154,7 @@ function StaffRow({ staff, label }: { staff: TrackedEmployee; label: string }) {
             type="checkbox"
             checked={auto}
             disabled={!tracked}
-            onChange={(e) => save(tracked, e.target.checked)}
+            onChange={(e) => save(tracked, e.target.checked, parseRate(rate))}
             className="size-4 rounded border-neutral-300 accent-brand-gold-text disabled:opacity-50"
           />
           {t('settings.auto')}

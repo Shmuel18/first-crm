@@ -54,6 +54,8 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
         summarySheet: t('xlsx.summarySheet'),
         nameCol: t('xlsx.name'),
         totalCol: t('xlsx.totalHours'),
+        rateCol: t('xlsx.rate'),
+        payCol: t('xlsx.pay'),
         dateCol: t('xlsx.date'),
         inCol: t('xlsx.in'),
         outCol: t('xlsx.out'),

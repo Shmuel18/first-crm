@@ -26,10 +26,12 @@ export const UpsertEntrySchema = z
   );
 export type UpsertEntryInput = z.infer<typeof UpsertEntrySchema>;
 
-/** Manager toggles which staff are hourly-tracked / auto-clocked-in. */
+/** Manager toggles which staff are hourly-tracked / auto-clocked-in + sets the wage. */
 export const SetTrackingSchema = z.object({
   userId: z.uuid(),
   timeTracked: z.boolean(),
   autoClockIn: z.boolean(),
+  /** Wage per hour (₪); null clears it. */
+  hourlyRate: z.number().nonnegative().max(100000).nullable(),
 });
 export type SetTrackingInput = z.infer<typeof SetTrackingSchema>;
