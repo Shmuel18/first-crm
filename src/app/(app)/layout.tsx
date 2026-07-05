@@ -11,6 +11,7 @@ import { Topbar } from '@/components/layout/topbar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppBadgeSync } from '@/features/pwa/components/app-badge-sync';
 import { InstallBanner } from '@/features/pwa/components/install-banner';
+import { isCurrentUserTimeTracked } from '@/features/time-clock/services/time-clock.service';
 import { getDirection, parseLocale } from '@/lib/i18n/direction';
 import { getLayoutBootstrap } from '@/lib/layout/bootstrap';
 
@@ -24,6 +25,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     getTranslations('nav'),
   ]);
   const dir = getDirection(parseLocale(rawLocale));
+
+  // Time-clock nav: managers always; tracked hourly staff via a cheap own-profile
+  // read (short-circuited for admins so they never pay for it).
+  const canUseTimeClock =
+    bootstrap.isAdmin || (bootstrap.authenticated && (await isCurrentUserTimeTracked()));
 
   return (
     <TooltipProvider>
@@ -44,12 +50,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           criticalTasksBadge={bootstrap.criticalTasks}
           isManager={bootstrap.isAdmin}
           canViewCollections={bootstrap.canViewCollections}
+          canUseTimeClock={canUseTimeClock}
         />
         <BottomNav
           tasksBadge={bootstrap.pendingTasks}
           criticalTasksBadge={bootstrap.criticalTasks}
           isManager={bootstrap.isAdmin}
           canViewCollections={bootstrap.canViewCollections}
+          canUseTimeClock={canUseTimeClock}
         />
       {/* The inner viewport owns scrolling. Sticky subheaders compensate for
           viewport padding so they pin flush under the fixed topbar. */}

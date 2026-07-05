@@ -226,6 +226,7 @@
     "collections": "גבייה",
     "finance": "כספים",
     "maaser": "מעשרות",
+    "timeClock": "שעון נוכחות",
     "team": "צוות",
     "templates": "תבניות",
     "auditLog": "יומן שינויים",
@@ -323,6 +324,47 @@
       "status": "סטטוס",
       "lastPayment": "תשלום אחרון",
       "addTitle": "רישום תשלום — {name}"
+    }
+  },
+  "timeClock": {
+    "eyebrow": "נוכחות",
+    "title": "שעון נוכחות",
+    "unnamed": "עובד",
+    "punch": {
+      "onClockSince": "בעבודה מ-{time}",
+      "offClock": "לא בעבודה",
+      "clockIn": "כניסה",
+      "clockOut": "יציאה",
+      "inDone": "כניסה נרשמה",
+      "outDone": "יציאה נרשמה"
+    },
+    "totals": {
+      "today": "היום",
+      "week": "השבוע"
+    },
+    "history": {
+      "title": "היסטוריית שעות",
+      "empty": "עדיין לא נרשמו שעות.",
+      "stillOpen": "עדיין בעבודה"
+    },
+    "board": {
+      "title": "מי בעבודה עכשיו",
+      "empty": "אין עובדים במעקב. סמן עובדים למטה.",
+      "since": "מ-{time}",
+      "off": "לא בעבודה"
+    },
+    "settings": {
+      "title": "עובדים במעקב",
+      "hint": "סמן מי עובד שעתי. \"כניסה אוטומטית\" תחתים כניסה עם ההתחברות (בקרוב).",
+      "tracked": "במעקב",
+      "auto": "כניסה אוטומטית"
+    },
+    "errors": {
+      "unauthorized": "אין הרשאה.",
+      "already_open": "כבר רשומה כניסה פתוחה.",
+      "not_open": "אין משמרת פתוחה.",
+      "validation": "נתונים לא תקינים.",
+      "unknown": "הפעולה נכשלה. נסה שוב."
     }
   },
   "maaser": {

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { BarChart3, Calculator, CheckSquare, Coins, HandCoins, LayoutDashboard, Settings, Wallet } from 'lucide-react';
+import { BarChart3, Calculator, CheckSquare, Clock, Coins, HandCoins, LayoutDashboard, Settings, Wallet } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -16,7 +16,9 @@ import {
 import { isNavItemActive } from './is-nav-item-active';
 
 type FinanceKey = 'statistics' | 'collections' | 'maaser';
-type LabelKey = 'cases' | 'tasks' | 'simulators' | 'settings' | 'finance' | FinanceKey;
+type LabelKey = 'cases' | 'tasks' | 'simulators' | 'timeClock' | 'settings' | 'finance' | FinanceKey;
+
+const TIME_CLOCK_ITEM = { href: '/time-clock', labelKey: 'timeClock', icon: Clock } as const;
 
 type NavItem = {
   href: string;
@@ -60,6 +62,7 @@ type Props = {
   criticalTasksBadge?: number;
   isManager?: boolean;
   canViewCollections?: boolean;
+  canUseTimeClock?: boolean;
 };
 
 /**
@@ -74,6 +77,7 @@ export function BottomNav({
   criticalTasksBadge,
   isManager,
   canViewCollections,
+  canUseTimeClock,
 }: Props): React.ReactElement {
   const pathname = usePathname();
   const t = useTranslations('nav');
@@ -103,6 +107,8 @@ export function BottomNav({
         <TabLink item={finance[0]} pathname={pathname} t={t} />
       )}
       {finance.length > 1 && <FinanceMenu items={finance} pathname={pathname} t={t} />}
+
+      {canUseTimeClock && <TabLink item={TIME_CLOCK_ITEM} pathname={pathname} t={t} />}
 
       {TRAILING_ITEMS.map((item) => (
         <TabLink key={item.href} item={item} pathname={pathname} t={t} />

@@ -3300,6 +3300,80 @@ export type Database = {
           },
         ]
       }
+      time_entries: {
+        Row: {
+          clock_in: string
+          clock_out: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          id: string
+          note: string | null
+          source: string
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          clock_in?: string
+          clock_out?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          note?: string | null
+          source?: string
+          updated_at?: string
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          clock_in?: string
+          clock_out?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          note?: string | null
+          source?: string
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_entries_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_entries_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_entries_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_entries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       market_data_snapshots: {
         Row: {
           created_at: string
@@ -3985,6 +4059,8 @@ export type Database = {
           metadata: Json
           phone: string | null
           role_id: string | null
+          auto_clock_in: boolean
+          time_tracked: boolean
           updated_at: string
           updated_by: string | null
         }
@@ -4005,6 +4081,8 @@ export type Database = {
           metadata?: Json
           phone?: string | null
           role_id?: string | null
+          auto_clock_in?: boolean
+          time_tracked?: boolean
           updated_at?: string
           updated_by?: string | null
         }
@@ -4025,6 +4103,8 @@ export type Database = {
           metadata?: Json
           phone?: string | null
           role_id?: string | null
+          auto_clock_in?: boolean
+          time_tracked?: boolean
           updated_at?: string
           updated_by?: string | null
         }
@@ -5122,6 +5202,10 @@ export type Database = {
         Returns: boolean
       }
       soft_delete_maaser_payment: {
+        Args: { p_id: string }
+        Returns: boolean
+      }
+      soft_delete_time_entry: {
         Args: { p_id: string }
         Returns: boolean
       }

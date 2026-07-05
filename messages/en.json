@@ -226,6 +226,7 @@
     "collections": "Collections",
     "finance": "Finances",
     "maaser": "Tithes",
+    "timeClock": "Time clock",
     "team": "Team",
     "templates": "Templates",
     "auditLog": "Audit Log",
@@ -323,6 +324,47 @@
       "status": "Status",
       "lastPayment": "Last payment",
       "addTitle": "Record payment — {name}"
+    }
+  },
+  "timeClock": {
+    "eyebrow": "Attendance",
+    "title": "Time clock",
+    "unnamed": "Employee",
+    "punch": {
+      "onClockSince": "On the clock since {time}",
+      "offClock": "Not on the clock",
+      "clockIn": "Clock in",
+      "clockOut": "Clock out",
+      "inDone": "Clocked in",
+      "outDone": "Clocked out"
+    },
+    "totals": {
+      "today": "Today",
+      "week": "This week"
+    },
+    "history": {
+      "title": "Hours history",
+      "empty": "No hours logged yet.",
+      "stillOpen": "Still on the clock"
+    },
+    "board": {
+      "title": "Who's on the clock now",
+      "empty": "No tracked employees. Flag staff below.",
+      "since": "since {time}",
+      "off": "Off the clock"
+    },
+    "settings": {
+      "title": "Tracked employees",
+      "hint": "Flag who is hourly. \"Auto clock-in\" will punch them in on login (coming soon).",
+      "tracked": "Tracked",
+      "auto": "Auto clock-in"
+    },
+    "errors": {
+      "unauthorized": "Not authorized.",
+      "already_open": "Already clocked in.",
+      "not_open": "No open shift.",
+      "validation": "Invalid data.",
+      "unknown": "Action failed. Try again."
     }
   },
   "maaser": {

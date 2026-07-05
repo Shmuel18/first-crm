@@ -3,18 +3,20 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { BarChart3, Calculator, CheckSquare, Coins, HandCoins, LayoutDashboard, Settings } from 'lucide-react';
+import { BarChart3, Calculator, CheckSquare, Clock, Coins, HandCoins, LayoutDashboard, Settings } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { isNavItemActive } from './is-nav-item-active';
 
 type NavItem = {
   href: string;
-  labelKey: 'cases' | 'tasks' | 'simulators' | 'statistics' | 'maaser' | 'collections' | 'settings';
+  labelKey: 'cases' | 'tasks' | 'simulators' | 'statistics' | 'maaser' | 'collections' | 'timeClock' | 'settings';
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
   criticalBadge?: number;
   adminOnly?: boolean;
+  /** Gated on being a manager OR a tracked hourly employee (the time clock). */
+  timeClockOnly?: boolean;
   /** Gated on the view_collections permission (not the admin flag) so the
    *  manager can delegate גבייה to a non-admin "collections officer". */
   collectionsOnly?: boolean;
@@ -31,6 +33,7 @@ const BASE_TOP_ITEMS: readonly NavItem[] = [
   { href: '/statistics', labelKey: 'statistics', icon: BarChart3, adminOnly: true },
   { href: '/collections', labelKey: 'collections', icon: Coins, collectionsOnly: true },
   { href: '/maaser', labelKey: 'maaser', icon: HandCoins, adminOnly: true },
+  { href: '/time-clock', labelKey: 'timeClock', icon: Clock, timeClockOnly: true },
 ] as const;
 
 const BOTTOM_ITEMS: readonly NavItem[] = [
@@ -42,14 +45,18 @@ type SidebarProps = {
   criticalTasksBadge?: number;
   isManager?: boolean;
   canViewCollections?: boolean;
+  canUseTimeClock?: boolean;
 };
 
-export function Sidebar({ tasksBadge, criticalTasksBadge, isManager, canViewCollections }: SidebarProps) {
+export function Sidebar({ tasksBadge, criticalTasksBadge, isManager, canViewCollections, canUseTimeClock }: SidebarProps) {
   const pathname = usePathname();
   const t = useTranslations('nav');
 
   const topItems = BASE_TOP_ITEMS.filter(
-    (item) => (!item.adminOnly || isManager) && (!item.collectionsOnly || canViewCollections),
+    (item) =>
+      (!item.adminOnly || isManager) &&
+      (!item.collectionsOnly || canViewCollections) &&
+      (!item.timeClockOnly || canUseTimeClock),
   ).map((item) =>
     item.labelKey === 'tasks'
       ? { ...item, badge: tasksBadge, criticalBadge: criticalTasksBadge }
