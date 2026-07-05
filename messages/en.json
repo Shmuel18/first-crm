@@ -331,8 +331,11 @@
     "title": "Time clock",
     "unnamed": "Employee",
     "punch": {
-      "onClockSince": "On the clock since {time}",
+      "onClockSince": "since {time}",
       "offClock": "Not on the clock",
+      "statusOn": "On the clock",
+      "statusOff": "Off the clock",
+      "readyHint": "Tap Clock in to start your workday",
       "clockIn": "Clock in",
       "clockOut": "Clock out",
       "inDone": "Clocked in",

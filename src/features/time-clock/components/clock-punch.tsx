@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 
-import { AlertTriangle, LogIn, LogOut, Clock } from 'lucide-react';
+import { AlertTriangle, Loader2, LogIn, LogOut } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
@@ -87,28 +87,45 @@ export function ClockPunch({ initialOpen, initialEntries, locale }: Props) {
 
       {/* Status + punch button */}
       <div
-        className={`rounded-2xl border p-6 text-center transition ${
-          open ? 'border-emerald-200 bg-emerald-50/60' : 'border-neutral-200 bg-white'
+        className={`rounded-2xl border p-6 text-center transition sm:p-8 ${
+          open ? 'border-emerald-200 bg-gradient-to-b from-emerald-50 to-white' : 'border-neutral-200 bg-white'
         }`}
       >
-        <div className="mb-1 inline-flex items-center gap-2 text-sm font-medium text-neutral-500">
-          <Clock className="size-4" aria-hidden="true" />
-          {open ? t('punch.onClockSince', { time: fmtTime(open.clockIn) }) : t('punch.offClock')}
-        </div>
-        {open && (
-          <div className="mb-4 font-display text-4xl font-bold text-emerald-700 tabular-nums">
-            {formatHm(elapsed)}
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+            open ? 'bg-emerald-100 text-emerald-700' : 'bg-neutral-100 text-neutral-500'
+          }`}
+        >
+          <span className={`size-2 rounded-full ${open ? 'bg-emerald-500' : 'bg-neutral-400'}`} aria-hidden="true" />
+          {open ? t('punch.statusOn') : t('punch.statusOff')}
+        </span>
+
+        {open ? (
+          <div className="mt-4 mb-5">
+            <div className="font-display text-5xl font-bold text-emerald-700 tabular-nums">{formatHm(elapsed)}</div>
+            <div className="mt-1 text-sm text-neutral-500">
+              {t('punch.onClockSince', { time: fmtTime(open.clockIn) })}
+            </div>
           </div>
+        ) : (
+          <p className="mt-3 mb-5 text-sm text-neutral-500">{t('punch.readyHint')}</p>
         )}
+
         <button
           type="button"
           onClick={punch}
           disabled={pending}
-          className={`tap-target inline-flex h-14 w-full max-w-xs items-center justify-center gap-2 rounded-xl text-lg font-bold text-white shadow-sm transition disabled:opacity-60 ${
+          className={`tap-target inline-flex h-16 w-full max-w-xs items-center justify-center gap-2.5 rounded-2xl text-xl font-bold text-white shadow-sm transition active:translate-y-px disabled:opacity-60 ${
             open ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'
           }`}
         >
-          {open ? <LogOut className="size-5" aria-hidden="true" /> : <LogIn className="size-5" aria-hidden="true" />}
+          {pending ? (
+            <Loader2 className="size-5 animate-spin" aria-hidden="true" />
+          ) : open ? (
+            <LogOut className="size-5" aria-hidden="true" />
+          ) : (
+            <LogIn className="size-5" aria-hidden="true" />
+          )}
           {open ? t('punch.clockOut') : t('punch.clockIn')}
         </button>
       </div>

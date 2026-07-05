@@ -331,8 +331,11 @@
     "title": "שעון נוכחות",
     "unnamed": "עובד",
     "punch": {
-      "onClockSince": "בעבודה מ-{time}",
+      "onClockSince": "מאז {time}",
       "offClock": "לא בעבודה",
+      "statusOn": "בעבודה",
+      "statusOff": "לא בעבודה",
+      "readyHint": "לחץ כניסה כדי להתחיל את יום העבודה",
       "clockIn": "כניסה",
       "clockOut": "יציאה",
       "inDone": "כניסה נרשמה",
