@@ -28,14 +28,14 @@ function monthRange(nowMs: number, offset: number): { fromISO: string; toISO: st
 const fullName = (e: TrackedEmployee, fallback: string): string =>
   [e.firstName, e.lastName].filter(Boolean).join(' ').trim() || fallback;
 
-export function ManagerTimesheet({ locale }: { locale: Locale }) {
+export function ManagerTimesheet({ locale, refreshKey = 0 }: { locale: Locale; refreshKey?: number }) {
   const t = useTranslations('timeClock');
   const [offset, setOffset] = useState(0);
   const [reloadKey, setReloadKey] = useState(0);
   const [rows, setRows] = useState<Row[]>([]);
   // Snapshot of "now" (refreshed on each load) — avoids impure Date.now() in render.
   const [nowMs, setNowMs] = useState(() => Date.now());
-  const currentKey = `${offset}:${reloadKey}`;
+  const currentKey = `${offset}:${reloadKey}:${refreshKey}`;
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const loading = loadedKey !== currentKey;
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -70,7 +70,7 @@ export function ManagerTimesheet({ locale }: { locale: Locale }) {
 
   useEffect(() => {
     let alive = true;
-    const key = `${offset}:${reloadKey}`;
+    const key = `${offset}:${reloadKey}:${refreshKey}`;
     const { fromISO, toISO } = monthRange(Date.now(), offset);
     fetchManagerTimesheetAction(fromISO, toISO).then((res) => {
       if (!alive) return;
@@ -81,7 +81,7 @@ export function ManagerTimesheet({ locale }: { locale: Locale }) {
     return () => {
       alive = false;
     };
-  }, [offset, reloadKey]);
+  }, [offset, reloadKey, refreshKey]);
 
   const dLocale = locale === 'he' ? 'he-IL' : 'en-GB';
   const base = new Date(nowMs);

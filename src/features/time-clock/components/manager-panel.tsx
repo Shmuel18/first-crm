@@ -17,13 +17,15 @@ type Props = {
   board: BoardRow[];
   staff: TrackedEmployee[];
   locale: Locale;
+  /** Fired after a tracking/rate change so a sibling (the timesheet) can re-fetch. */
+  onChanged?: () => void;
 };
 
 const fullName = (e: { firstName: string | null; lastName: string | null }, fallback: string): string =>
   [e.firstName, e.lastName].filter(Boolean).join(' ').trim() || fallback;
 
 /** Manager view: live "who's on the clock now" board + per-employee tracking toggles. */
-export function ManagerPanel({ board, staff, locale }: Props) {
+export function ManagerPanel({ board, staff, locale, onChanged }: Props) {
   const t = useTranslations('timeClock');
   const router = useRouter();
 
@@ -80,7 +82,7 @@ export function ManagerPanel({ board, staff, locale }: Props) {
         <p className="mb-2 text-xs text-neutral-500">{t('settings.hint')}</p>
         <ul className="divide-y divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white">
           {staff.map((s) => (
-            <StaffRow key={s.id} staff={s} label={fullName(s, t('unnamed'))} />
+            <StaffRow key={s.id} staff={s} label={fullName(s, t('unnamed'))} onChanged={onChanged} />
           ))}
         </ul>
       </section>
@@ -88,7 +90,7 @@ export function ManagerPanel({ board, staff, locale }: Props) {
   );
 }
 
-function StaffRow({ staff, label }: { staff: TrackedEmployee; label: string }) {
+function StaffRow({ staff, label, onChanged }: { staff: TrackedEmployee; label: string; onChanged?: () => void }) {
   const t = useTranslations('timeClock');
   const [tracked, setTracked] = useState(staff.timeTracked);
   const [auto, setAuto] = useState(staff.autoClockIn);
@@ -118,8 +120,9 @@ function StaffRow({ staff, label }: { staff: TrackedEmployee; label: string }) {
         setTracked(prevT);
         setAuto(prevA);
         toast.error(t(`errors.${res.error}`));
-      } else if (notify) {
-        toast.success(t('settings.saved'));
+      } else {
+        if (notify) toast.success(t('settings.saved'));
+        onChanged?.();
       }
     });
   };

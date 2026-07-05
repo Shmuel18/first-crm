@@ -4,8 +4,7 @@ import { Clock } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import { ClockPunch } from '@/features/time-clock/components/clock-punch';
-import { ManagerPanel } from '@/features/time-clock/components/manager-panel';
-import { ManagerTimesheet } from '@/features/time-clock/components/manager-timesheet';
+import { ManagerSection } from '@/features/time-clock/components/manager-section';
 import {
   getBoard,
   getClockAccess,
@@ -50,8 +49,7 @@ export default async function TimeClockPage() {
       {access.isManager && (
         <>
           {access.isTracked && <hr className="border-neutral-200" />}
-          <ManagerPanel board={board} staff={staff} locale={locale} />
-          <ManagerTimesheet locale={locale} />
+          <ManagerSection board={board} staff={staff} locale={locale} />
         </>
       )}
     </div>
