@@ -102,7 +102,7 @@ function StaffRow({ staff, label }: { staff: TrackedEmployee; label: string }) {
     return Number.isFinite(n) && n >= 0 ? n : null;
   };
 
-  const save = (nextTracked: boolean, nextAuto: boolean, nextRate: number | null) => {
+  const save = (nextTracked: boolean, nextAuto: boolean, nextRate: number | null, notify = false) => {
     const prevT = tracked;
     const prevA = auto;
     setTracked(nextTracked);
@@ -118,6 +118,8 @@ function StaffRow({ staff, label }: { staff: TrackedEmployee; label: string }) {
         setTracked(prevT);
         setAuto(prevA);
         toast.error(t(`errors.${res.error}`));
+      } else if (notify) {
+        toast.success(t('settings.saved'));
       }
     });
   };
@@ -135,7 +137,8 @@ function StaffRow({ staff, label }: { staff: TrackedEmployee; label: string }) {
             value={rate}
             placeholder="—"
             onChange={(e) => setRate(e.target.value)}
-            onBlur={() => save(tracked, auto, parseRate(rate))}
+            onBlur={() => save(tracked, auto, parseRate(rate), true)}
+            onKeyDown={(e) => e.key === 'Enter' && (e.currentTarget as HTMLInputElement).blur()}
             className="w-16 rounded border border-neutral-200 px-1.5 py-0.5 text-xs tabular-nums text-neutral-900 focus:border-brand-gold-text focus:outline-none focus:ring-1 focus:ring-brand-gold-text/30"
           />
           <span className="text-neutral-400">₪</span>

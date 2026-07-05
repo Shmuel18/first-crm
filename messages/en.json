@@ -373,7 +373,8 @@
       "hint": "Flag who is hourly. \"Auto clock-in\" punches them in on every login to the system.",
       "tracked": "Tracked",
       "auto": "Auto clock-in",
-      "rate": "₪/hr"
+      "rate": "₪/hr",
+      "saved": "Saved"
     },
     "manager": {
       "timesheet": "Timesheet",
