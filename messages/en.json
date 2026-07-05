@@ -370,7 +370,7 @@
     },
     "settings": {
       "title": "Tracked employees",
-      "hint": "Flag who is hourly. \"Auto clock-in\" will punch them in on login (coming soon).",
+      "hint": "Flag who is hourly. \"Auto clock-in\" punches them in on every login to the system.",
       "tracked": "Tracked",
       "auto": "Auto clock-in"
     },
