@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 
-import { ChevronDown, ChevronLeft, ChevronRight, Loader2, Pencil, Plus } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, FileSpreadsheet, Loader2, Pencil, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
 import type { Locale } from '@/lib/i18n/direction';
 
@@ -15,8 +16,8 @@ import { EntryEditDialog } from './entry-edit-dialog';
 type Row = { employee: TrackedEmployee; entries: TimeEntry[] };
 
 /** [start, end) of the offset-th calendar month, in the browser's zone (Israel). */
-function monthRange(offset: number): { fromISO: string; toISO: string } {
-  const now = new Date();
+function monthRange(nowMs: number, offset: number): { fromISO: string; toISO: string } {
+  const now = new Date(nowMs);
   return {
     fromISO: new Date(now.getFullYear(), now.getMonth() + offset, 1).toISOString(),
     toISO: new Date(now.getFullYear(), now.getMonth() + offset + 1, 1).toISOString(),
@@ -31,30 +32,62 @@ export function ManagerTimesheet({ locale }: { locale: Locale }) {
   const [offset, setOffset] = useState(0);
   const [reloadKey, setReloadKey] = useState(0);
   const [rows, setRows] = useState<Row[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Snapshot of "now" (refreshed on each load) — avoids impure Date.now() in render.
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const currentKey = `${offset}:${reloadKey}`;
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const loading = loadedKey !== currentKey;
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editing, setEditing] = useState<{ entry: TimeEntry | null; userId: string; name: string } | null>(null);
+  const [exporting, setExporting] = useState(false);
+
+  const doExport = async () => {
+    const { fromISO, toISO } = monthRange(nowMs, offset);
+    setExporting(true);
+    try {
+      const res = await fetch(
+        `/api/exports/timesheet?from=${encodeURIComponent(fromISO)}&to=${encodeURIComponent(toISO)}`,
+      );
+      if (!res.ok) {
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        toast.error(t(`manager.exportErrors.${j.error ?? 'unknown'}`));
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kaufman-timesheet.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error(t('manager.exportErrors.unknown'));
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useEffect(() => {
     let alive = true;
-    setLoading(true);
-    const { fromISO, toISO } = monthRange(offset);
+    const key = `${offset}:${reloadKey}`;
+    const { fromISO, toISO } = monthRange(Date.now(), offset);
     fetchManagerTimesheetAction(fromISO, toISO).then((res) => {
       if (!alive) return;
       setRows(res.ok ? res.rows : []);
-      setLoading(false);
+      setNowMs(Date.now());
+      setLoadedKey(key);
     });
     return () => {
       alive = false;
     };
   }, [offset, reloadKey]);
 
-  const nowMs = Date.now();
   const dLocale = locale === 'he' ? 'he-IL' : 'en-GB';
-  const monthLabel = new Date(new Date().getFullYear(), new Date().getMonth() + offset, 1).toLocaleDateString(
-    dLocale,
-    { month: 'long', year: 'numeric' },
-  );
+  const base = new Date(nowMs);
+  const monthLabel = new Date(base.getFullYear(), base.getMonth() + offset, 1).toLocaleDateString(dLocale, {
+    month: 'long',
+    year: 'numeric',
+  });
   const fmtTime = (iso: string) =>
     new Date(iso).toLocaleTimeString(dLocale, { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' });
   const fmtDay = (day: string) =>
@@ -62,8 +95,23 @@ export function ManagerTimesheet({ locale }: { locale: Locale }) {
 
   return (
     <section>
-      <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-neutral-900">{t('manager.timesheet')}</h2>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-neutral-900">{t('manager.timesheet')}</h2>
+          <button
+            type="button"
+            onClick={doExport}
+            disabled={exporting || rows.length === 0}
+            className="inline-flex items-center gap-1 rounded-md border border-emerald-300 px-2 py-1 text-xs font-medium text-emerald-700 transition hover:bg-emerald-50 disabled:opacity-50"
+          >
+            {exporting ? (
+              <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+            ) : (
+              <FileSpreadsheet className="size-3.5" aria-hidden="true" />
+            )}
+            {t('manager.export')}
+          </button>
+        </div>
         <div className="inline-flex items-center gap-1">
           <button
             type="button"

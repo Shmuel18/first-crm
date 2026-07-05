@@ -347,6 +347,18 @@
       "empty": "No hours logged yet.",
       "stillOpen": "Still on the clock"
     },
+    "stale": {
+      "title": "Still clocked in since {day}",
+      "hint": "Forgot to clock out? Tap Clock out — the manager can fix the time."
+    },
+    "reminderEmail": {
+      "subject": "Reminder: forgot to clock out?",
+      "greeting": "Hi {name},",
+      "body": "You have a shift open since {since} that hasn't been closed. If you're done for the day, please clock out so your hours are accurate.",
+      "cta": "Open the time clock",
+      "footer": "Automated message from the Kaufman Finance system.",
+      "fallbackName": "there"
+    },
     "board": {
       "title": "Who's on the clock now",
       "empty": "No tracked employees. Flag staff below.",
@@ -375,7 +387,26 @@
       "saved": "Saved",
       "deleted": "Deleted",
       "outBeforeIn": "Clock-out is before clock-in.",
-      "noEntries": "No entries this month."
+      "noEntries": "No entries this month.",
+      "export": "Export Excel",
+      "exportErrors": {
+        "empty": "No data to export for this month.",
+        "rate_limited": "Too many exports. Try again in a few minutes.",
+        "invalid_range": "Invalid range.",
+        "unauthorized": "Not authorized.",
+        "unknown": "Export failed. Try again."
+      }
+    },
+    "xlsx": {
+      "summarySheet": "Summary",
+      "name": "Employee",
+      "totalHours": "Total hours",
+      "date": "Date",
+      "in": "In",
+      "out": "Out",
+      "hours": "Hours",
+      "note": "Note",
+      "total": "Total"
     },
     "errors": {
       "unauthorized": "Not authorized.",

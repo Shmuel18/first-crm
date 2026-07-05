@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 
-import { LogIn, LogOut, Clock } from 'lucide-react';
+import { AlertTriangle, LogIn, LogOut, Clock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
@@ -56,6 +56,8 @@ export function ClockPunch({ initialOpen, initialEntries, locale }: Props) {
   const weekMins = totalMinutes(allWithOpen.filter((e) => Date.parse(e.clockIn) >= weekAgo), nowMs);
   const elapsed = open ? entryMinutes(open, nowMs) : 0;
   const days = groupByDay(entries, nowMs);
+  // Shift still open from a previous calendar day → probably a forgotten clock-out.
+  const staleOpen = open != null && israelDay(open.clockIn) !== todayKey;
 
   const fmtTime = (iso: string) =>
     new Date(iso).toLocaleTimeString(locale === 'he' ? 'he-IL' : 'en-GB', {
@@ -72,6 +74,17 @@ export function ClockPunch({ initialOpen, initialEntries, locale }: Props) {
 
   return (
     <div className="space-y-6">
+      {/* Forgot-to-clock-out safety net: the shift is open from a previous day. */}
+      {staleOpen && open && (
+        <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <div>
+            <p className="font-medium">{t('stale.title', { day: fmtDay(israelDay(open.clockIn)) })}</p>
+            <p className="text-xs">{t('stale.hint')}</p>
+          </div>
+        </div>
+      )}
+
       {/* Status + punch button */}
       <div
         className={`rounded-2xl border p-6 text-center transition ${

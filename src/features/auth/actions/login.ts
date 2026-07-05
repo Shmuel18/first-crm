@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 
+import { autoClockInIfEnabled } from '@/features/time-clock/services/auto-clock-in';
 import { getRequestIp } from '@/lib/http/request-ip';
 import { checkRateLimit, refundRateLimit, type RateLimitConfig } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
@@ -96,5 +97,9 @@ export async function loginAction(
   }
 
   await Promise.all(failGates.map((gate) => refundRateLimit(gate)));
+
+  // Opt-in auto punch-in for hourly staff (best-effort; never blocks login).
+  await autoClockInIfEnabled(supabase);
+
   redirect(next);
 }

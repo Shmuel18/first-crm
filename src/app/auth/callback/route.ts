@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { autoClockInIfEnabled } from '@/features/time-clock/services/auto-clock-in';
 import { env } from '@/lib/env';
 import { createClient } from '@/lib/supabase/server';
 
@@ -48,6 +49,9 @@ export async function GET(request: Request): Promise<Response> {
     // error code as a translated message.
     return redirectNoStore(`${env.NEXT_PUBLIC_APP_URL}/login?error=invalid_invite`);
   }
+
+  // Opt-in auto punch-in for hourly staff (best-effort; never blocks the flow).
+  await autoClockInIfEnabled(supabase);
 
   return redirectNoStore(`${env.NEXT_PUBLIC_APP_URL}${next}`);
 }
