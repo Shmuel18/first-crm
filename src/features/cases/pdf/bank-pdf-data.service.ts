@@ -16,6 +16,7 @@ import {
   calculateDtiPercent,
   isLongTermObligation,
 } from '../domain/dti';
+import { getAdvisorContact } from '../services/advisor-contact.service';
 import { getCaseById } from '../services/cases.service';
 
 /**
@@ -238,11 +239,9 @@ export async function loadCaseForBankPdf(caseId: CaseId): Promise<BankPdfData | 
     borrowersObligationsLongTermMonthly,
   );
 
-  const advisorName =
-    formatPersonName(
-      caseData.assigned_advisor?.first_name,
-      caseData.assigned_advisor?.last_name,
-    ) || null;
+  // Resolve advisor via the admin client — the cases→profiles embed is NULL for
+  // a non-admin generating the PDF (profiles self-or-admin). See advisor-contact.
+  const advisor = await getAdvisorContact(caseData.assigned_advisor_id);
 
   return {
     case: {
@@ -254,9 +253,9 @@ export async function loadCaseForBankPdf(caseId: CaseId): Promise<BankPdfData | 
       equity: caseData.equity,
       ltv: calculateLtv(caseData.property_value, caseData.requested_mortgage_amount),
     },
-    advisorName,
-    advisorPhone: caseData.assigned_advisor?.phone ?? null,
-    advisorEmail: caseData.assigned_advisor?.email ?? null,
+    advisorName: advisor.name,
+    advisorPhone: advisor.phone,
+    advisorEmail: advisor.email,
     borrowers,
     totals: {
       borrowersIncomeMonthly,

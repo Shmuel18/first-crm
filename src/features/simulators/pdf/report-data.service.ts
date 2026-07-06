@@ -1,6 +1,6 @@
+import { getAdvisorContact } from '@/features/cases/services/advisor-contact.service';
 import { getCaseById } from '@/features/cases/services/cases.service';
 import { asCaseId, type MortgageScenarioId } from '@/lib/types/branded';
-import { formatPersonName } from '@/lib/utils/person-name';
 
 import { aggregateMix } from '../domain/mix-aggregate';
 import { MixInputSchema, PropertyKindSchema, ScenarioKindSchema } from '../schemas/simulator.schema';
@@ -77,10 +77,7 @@ export async function loadScenarioReport(id: MortgageScenarioId): Promise<Scenar
 async function loadCaseInfo(caseId: string): Promise<{ caseNumber: string; advisorName: string | null } | null> {
   const caseData = await getCaseById(asCaseId(caseId));
   if (!caseData) return null;
-  const advisorName =
-    formatPersonName(
-      caseData.assigned_advisor?.first_name,
-      caseData.assigned_advisor?.last_name,
-    ) || null;
-  return { caseNumber: caseData.case_number, advisorName };
+  // Admin-client resolve — the cases→profiles embed is NULL for a non-admin here.
+  const advisor = await getAdvisorContact(caseData.assigned_advisor_id);
+  return { caseNumber: caseData.case_number, advisorName: advisor.name };
 }

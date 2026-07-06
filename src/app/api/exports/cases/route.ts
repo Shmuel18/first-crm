@@ -9,6 +9,7 @@ import {
   parseDashboardFilters,
 } from '@/features/cases/domain/case-filters';
 import { applySort, parseCaseSort } from '@/features/cases/domain/case-sort';
+import { getAdvisorContactsByIds } from '@/features/cases/services/advisor-contact.service';
 import { buildExportRows } from '@/features/cases/services/export/build-export-rows';
 import { listCases } from '@/features/cases/services/cases.service';
 import { generateCasesPdf } from '@/features/cases/services/export/pdf-generator';
@@ -114,7 +115,15 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
 
     const locale = parseLocale(await getLocale());
     const t = await getTranslations({ locale, namespace: 'dashboard' });
-    const rows = buildExportRows(cases, locale);
+    // Resolve advisor names via the admin client — the cases→profiles embed is
+    // NULL for a non-admin exporter (profiles self-or-admin), which would blank
+    // the advisor column; backfill it by id.
+    const advisorContacts = await getAdvisorContactsByIds(
+      cases.map((c) => c.assigned_advisor_id).filter((v): v is string => Boolean(v)),
+    );
+    const advisorNamesById = new Map<string, string>();
+    for (const [id, contact] of advisorContacts) if (contact.name) advisorNamesById.set(id, contact.name);
+    const rows = buildExportRows(cases, locale, advisorNamesById);
 
     let body: Buffer;
     let mimeType: string;

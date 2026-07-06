@@ -27,6 +27,11 @@ export type ExportRow = {
 export function buildExportRows(
   cases: ReadonlyArray<CaseWithRelations>,
   locale: Locale = 'he',
+  // id→name resolved via the admin client by the caller. The cases→profiles embed
+  // is NULL for a non-admin exporter (profiles self-or-admin), so the embed alone
+  // would blank the advisor column; the map backfills it. Falls back to the embed
+  // when absent (e.g. unit tests) to preserve existing behaviour.
+  advisorNamesById?: ReadonlyMap<string, string>,
 ): ExportRow[] {
   const pickName = <T extends { name_he: string; name_en: string }>(o: T): string =>
     locale === 'he' ? o.name_he : o.name_en;
@@ -35,9 +40,9 @@ export function buildExportRows(
     const primaryBank = getPrimaryBank(c);
     const secondaryCount = getSecondaryBanksCount(c);
     const advisor = c.assigned_advisor;
-    const advisorName = advisor
-      ? formatPersonName(advisor.first_name, advisor.last_name)
-      : '';
+    const advisorName =
+      (c.assigned_advisor_id ? advisorNamesById?.get(c.assigned_advisor_id) : undefined) ??
+      (advisor ? formatPersonName(advisor.first_name, advisor.last_name) : '');
     const bankName = primaryBank ? pickName(primaryBank) : '';
     const bankLabel = primaryBank
       ? secondaryCount > 0
