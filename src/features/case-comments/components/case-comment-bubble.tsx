@@ -23,7 +23,6 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import type { Locale } from '@/lib/i18n/direction';
 
-import { formatRelativeTime } from '../domain/format-relative-time';
 import { parseMentionBody } from '../domain/mentions';
 import type { CaseCommentView } from '../types';
 
@@ -49,10 +48,20 @@ export function CaseCommentBubble({ comment, locale, canEdit, canDelete, onSaveE
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  const fullDate = new Intl.DateTimeFormat(locale === 'he' ? 'he-IL' : 'en-US', {
-    dateStyle: 'medium',
+  // Absolute date + time, pinned to Israel time (office zone) — deterministic
+  // across server/client render. Kaufman asked for an exact stamp, not "3h ago".
+  const created = new Date(comment.createdAt);
+  const intlLocale = locale === 'he' ? 'he-IL' : 'en-GB';
+  const dateTime = new Intl.DateTimeFormat(intlLocale, {
+    dateStyle: 'short',
     timeStyle: 'short',
-  }).format(new Date(comment.createdAt));
+    timeZone: 'Asia/Jerusalem',
+  }).format(created);
+  const fullDate = new Intl.DateTimeFormat(intlLocale, {
+    dateStyle: 'full',
+    timeStyle: 'short',
+    timeZone: 'Asia/Jerusalem',
+  }).format(created);
 
   const handleSave = () => {
     const body = draft.trim();
@@ -90,9 +99,9 @@ export function CaseCommentBubble({ comment, locale, canEdit, canDelete, onSaveE
             dateTime={comment.createdAt}
             title={fullDate}
             suppressHydrationWarning
-            className="text-[11px] text-neutral-500 shrink-0"
+            className="text-[11px] text-neutral-500 shrink-0 tabular-nums"
           >
-            {formatRelativeTime(comment.createdAt, locale)}
+            {dateTime}
           </time>
           {comment.editedAt && <span className="text-[11px] text-neutral-400">{t('edited')}</span>}
 

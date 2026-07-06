@@ -9,8 +9,10 @@ import type { Locale } from '@/lib/i18n/direction';
 
 import { deleteCaseCommentAction } from '../actions/delete-case-comment';
 import { editCaseCommentAction } from '../actions/edit-case-comment';
+import { fetchCaseCommentsAction } from '../actions/fetch-case-comments';
 import { postCaseCommentAction } from '../actions/post-case-comment';
 import { isDocumentationMilestone } from '../domain/documentation-celebration';
+import { useCaseCommentsRealtime } from '../hooks/use-case-comments-realtime';
 import type { CaseCommentView } from '../types';
 import { CaseCommentBubble } from './case-comment-bubble';
 import { CaseCommentComposer } from './case-comment-composer';
@@ -56,14 +58,18 @@ export function CaseCommentsThread({
     setComments(initialComments);
   }
 
-  // Relative timestamps in the bubbles ("a second ago") are computed at render,
-  // so without a re-render they freeze. Tick every 30s so they stay current
-  // without a manual refresh — one timer for the whole thread, not per bubble.
-  const [, setNowTick] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => setNowTick((tick) => tick + 1), 30_000);
-    return () => clearInterval(id);
-  }, []);
+  // Live-update when ANOTHER user posts/edits/deletes on this case. Realtime is
+  // the signal; we re-fetch the RLS-scoped list (author names come back correct)
+  // and preserve any of our own optimistic bubbles still round-tripping.
+  const handleRemoteChange = useCallback(async () => {
+    const res = await fetchCaseCommentsAction(caseId);
+    if (!res.ok) return;
+    setComments((prev) => {
+      const pendingTemps = prev.filter((c) => c.id.startsWith('temp-'));
+      return [...res.comments, ...pendingTemps];
+    });
+  }, [caseId]);
+  useCaseCommentsRealtime(caseId, currentUserId, handleRemoteChange);
 
   // Keep the newest comment in view when the count changes — DOM-only side
   // effect (no setState), the legitimate use of useEffect.
