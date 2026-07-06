@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { formatPersonName } from '@/lib/utils/person-name';
 
@@ -7,10 +8,6 @@ import type { ClientEmailKind, ClientEmailLogRow } from '../types';
 
 // Newest-first cap so the feed payload stays bounded on long-lived cases.
 const MAX_EMAILS = 100;
-
-type EmailJoinRow = ClientEmailLogRow & {
-  sender: { first_name: string | null; last_name: string | null } | null;
-};
 
 export type ClientEmailLogEntry = { row: ClientEmailLogRow; senderName: string | null };
 
@@ -24,14 +21,12 @@ export async function listClientEmailLog(caseId: string): Promise<ClientEmailLog
   const supabase = await createClient();
   // `client_email_log` (migration 163) isn't in the generated Database types
   // until they're regenerated post-migration — use an untyped handle and shape
-  // the result through EmailJoinRow. Remove the cast after the next types gen.
+  // the result through ClientEmailLogRow. Remove the cast after the next types gen.
   const db = supabase as unknown as SupabaseClient;
 
   const { data, error } = await db
     .from('client_email_log')
-    .select(
-      'id, case_id, kind, recipient_email, subject, body, sent_by, created_at, sender:profiles!client_email_log_sent_by_fkey(first_name, last_name)',
-    )
+    .select('id, case_id, kind, recipient_email, subject, body, sent_by, created_at')
     .eq('case_id', caseId)
     .order('created_at', { ascending: false })
     .limit(MAX_EMAILS);
@@ -40,13 +35,29 @@ export async function listClientEmailLog(caseId: string): Promise<ClientEmailLog
     return [];
   }
 
-  // PostgREST types a to-one embed as an array on the untyped client; at
-  // runtime sent_by→profiles is to-one (object|null). Cast through unknown,
-  // same as case-comments.service.
-  const rows = (data ?? []) as unknown as EmailJoinRow[];
-  return rows.map(({ sender, ...row }) => ({
+  const rows = (data ?? []) as unknown as ClientEmailLogRow[];
+
+  // Resolve sender names with the admin client — profiles is self-or-admin, so a
+  // non-admin viewer (advisor/secretary) can't read a colleague's profile via an
+  // embed (the name came back null → "sent by" blank in the feed). Names only,
+  // and only for sent_by ids in THIS feed. Mirrors task-comments.service.
+  const senderIds = [...new Set(rows.map((r) => r.sent_by).filter((v): v is string => !!v))];
+  const nameById = new Map<string, string>();
+  if (senderIds.length > 0) {
+    const admin = createAdminClient();
+    const { data: profiles } = await admin
+      .from('profiles')
+      .select('id, first_name, last_name')
+      .in('id', senderIds);
+    for (const p of profiles ?? []) {
+      const name = formatPersonName(p.first_name, p.last_name);
+      if (name) nameById.set(p.id, name);
+    }
+  }
+
+  return rows.map((row) => ({
     row,
-    senderName: formatPersonName(sender?.first_name, sender?.last_name) || null,
+    senderName: (row.sent_by && nameById.get(row.sent_by)) || null,
   }));
 }
 
