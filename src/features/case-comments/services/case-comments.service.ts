@@ -10,36 +10,63 @@ import type { CaseCommentView } from '../types';
 // renders them oldest→newest. ~80 active cases in MVP, so 200 is generous.
 const MAX_COMMENTS = 200;
 
-type CommentJoinRow = {
+type CommentRow = {
   id: string;
   author_id: string;
   body: string;
   created_at: string;
   edited_at: string | null;
-  author: { first_name: string | null; last_name: string | null } | null;
 };
+
+/**
+ * author_id → display name for a case's comment authors. The `profiles` table is
+ * self-or-admin (mig 145 — it holds the calendar token, must not be broadened),
+ * so a non-admin embedding profiles gets NULL for everyone else's name (the whole
+ * thread would show "—"). This SECURITY DEFINER RPC (mig 217) exposes ONLY the
+ * first/last name of authors on a case the caller may view.
+ */
+async function resolveAuthorNames(db: SupabaseClient, caseId: CaseId): Promise<Map<string, string>> {
+  const { data, error } = await (
+    db as unknown as {
+      rpc(
+        fn: 'list_case_comment_authors',
+        args: { p_case_id: string },
+      ): PromiseLike<{
+        data: Array<{ id: string; first_name: string | null; last_name: string | null }> | null;
+        error: { code?: string } | null;
+      }>;
+    }
+  ).rpc('list_case_comment_authors', { p_case_id: caseId });
+  if (error) {
+    console.error('[listCaseComments] author-name rpc error', error.code);
+    return new Map();
+  }
+  const map = new Map<string, string>();
+  for (const p of data ?? []) {
+    const name = formatPersonName(p.first_name, p.last_name);
+    if (name) map.set(p.id, name);
+  }
+  return map;
+}
 
 export async function listCaseComments(caseId: CaseId): Promise<CaseCommentView[]> {
   const supabase = await createClient();
   // `case_comments` (migration 107) isn't in the generated Database types until
   // they're regenerated post-migration — use an untyped handle and shape the
-  // result through CommentJoinRow. Remove the cast after the next types gen.
+  // result through CommentRow. Remove the cast after the next types gen.
   const db = supabase as unknown as SupabaseClient;
 
   const { data, error } = await db
     .from('case_comments')
-    .select(
-      'id, author_id, body, created_at, edited_at, author:profiles!case_comments_author_id_fkey(first_name, last_name)',
-    )
+    .select('id, author_id, body, created_at, edited_at')
     .eq('case_id', caseId)
     .order('created_at', { ascending: false })
     .limit(MAX_COMMENTS);
   if (error) throw error;
 
-  // PostgREST types a to-one embed as an array on the untyped client; at
-  // runtime author_id→profiles is to-one (object|null). Cast through unknown,
-  // same as incomes.service.
-  const rows = (data ?? []) as unknown as CommentJoinRow[];
+  const rows = (data ?? []) as unknown as CommentRow[];
+  const names = await resolveAuthorNames(db, caseId);
+
   // Reverse the newest-first fetch back to chronological order (oldest first).
   return rows
     .slice()
@@ -47,7 +74,7 @@ export async function listCaseComments(caseId: CaseId): Promise<CaseCommentView[
     .map((r) => ({
       id: r.id,
       authorId: r.author_id,
-      authorName: formatPersonName(r.author?.first_name, r.author?.last_name) || '—',
+      authorName: names.get(r.author_id) || '—',
       body: r.body,
       createdAt: r.created_at,
       editedAt: r.edited_at,
