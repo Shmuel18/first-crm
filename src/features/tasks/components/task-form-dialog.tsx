@@ -1,27 +1,26 @@
 'use client';
 
 import { useActionState, useCallback, useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useFormStatus } from 'react-dom';
 
-import Link from 'next/link';
-
-import { ExternalLink, Loader2, Pencil, Upload as UploadIcon, X } from 'lucide-react';
+import { Loader2, Pencil } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { FormField, NativeSelect } from '@/components/shared/form-fields';
+import { Linkify } from '@/components/shared/linkify';
 import { Button } from '@/components/ui/button';
-import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE_BYTES } from '@/features/documents/schemas/document.schema';
+import { DateInputWithPicker } from '@/components/ui/date-input-with-picker';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { DateInputWithPicker } from '@/components/ui/date-input-with-picker';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { FormField, NativeSelect } from '@/components/shared/form-fields';
-import { Linkify } from '@/components/shared/linkify';
 import { fieldDefault } from '@/lib/utils/form-defaults';
 import { formatPersonName } from '@/lib/utils/person-name';
 
@@ -29,12 +28,15 @@ import { createTaskAction } from '../actions/create-task';
 import { updateTaskAction } from '../actions/update-task';
 import {
   TASK_ACTION_INITIAL,
-  TASK_PRIORITY_VALUES,
   type TaskActionState,
+  type TaskPriority,
   type TaskWithRelations,
 } from '../types';
 import { TaskAssignmentHistory } from './task-assignment-history';
 import { TaskAttachmentsList } from './task-attachments-list';
+import { TaskAttachmentUploadField } from './task-attachment-upload-field';
+import { TaskLinkedCaseField } from './task-linked-case-field';
+import { TaskPriorityField } from './task-priority-field';
 import { runTaskAttachmentUploads } from './upload-task-attachments';
 
 type Profile = { id: string; first_name: string | null; last_name: string | null };
@@ -61,18 +63,13 @@ export function TaskFormDialog({
 }: Props) {
   const t = useTranslations('tasks.form');
   const tc = useTranslations('common');
-  const tp = useTranslations('tasks.priority');
 
   const action = mode === 'create' ? createTaskAction : updateTaskAction;
-  const [state, formAction] = useActionState<TaskActionState, FormData>(
-    action,
-    TASK_ACTION_INITIAL,
-  );
+  const [state, formAction] = useActionState<TaskActionState, FormData>(action, TASK_ACTION_INITIAL);
 
   const fieldErrors =
     state.ok === false && state.error === 'validation' ? state.fieldErrors ?? {} : {};
-  const submitted =
-    state.ok === false && state.error !== 'idle' ? state.values : undefined;
+  const submitted = state.ok === false && state.error !== 'idle' ? state.values : undefined;
 
   const initialRecord = (task ?? null) as Record<string, unknown> | null;
   const value = (name: string) => fieldDefault(name, submitted, initialRecord);
@@ -82,35 +79,21 @@ export function TaskFormDialog({
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [attachmentPending, setAttachmentPending] = useState(false);
   // Description is controlled so it can render as clickable links (view) or an
-  // editable textarea (edit) while always submitting via a hidden input. Start
-  // in view mode when there's text to read, edit mode when empty.
+  // editable textarea (edit) while always submitting via a hidden input.
   const [description, setDescription] = useState<string>(value('description'));
   const [editingDesc, setEditingDesc] = useState<boolean>(!value('description'));
   const handledSuccessRef = useRef<TaskActionState | null>(null);
 
   const genericError = getGenericError(state, t);
 
-  // The option lists are bounded (newest 200 cases, active profiles only). In
-  // edit mode, make sure the task's current case/assignee is always selectable
-  // so a routine save doesn't silently null out a value missing from the list.
+  // Make sure the task's current assignee is always selectable even if it's not
+  // in the bounded option list, so a routine save doesn't null it out.
   const currentAssignee = task?.assignee ?? null;
   const effectiveAssignees =
     currentAssignee && !assignees.some((a) => a.id === currentAssignee.id)
       ? [currentAssignee, ...assignees]
       : assignees;
 
-  const currentCase = task?.case ?? null;
-  const effectiveCases =
-    currentCase && !cases.some((c) => c.id === currentCase.id)
-      ? [
-          {
-            id: currentCase.id,
-            case_number: currentCase.case_number,
-            label: `#${currentCase.case_number}`,
-          },
-          ...cases,
-        ]
-      : cases;
   const resetAttachmentState = useCallback((): void => {
     setSelectedCaseId(presetCaseId ?? task?.case_id ?? '');
     setAttachments([]);
@@ -118,10 +101,13 @@ export function TaskFormDialog({
     setAttachmentPending(false);
   }, [presetCaseId, task?.case_id]);
 
-  const handleDialogOpenChange = useCallback((nextOpen: boolean): void => {
-    if (!nextOpen) resetAttachmentState();
-    onOpenChange(nextOpen);
-  }, [onOpenChange, resetAttachmentState]);
+  const handleDialogOpenChange = useCallback(
+    (nextOpen: boolean): void => {
+      if (!nextOpen) resetAttachmentState();
+      onOpenChange(nextOpen);
+    },
+    [onOpenChange, resetAttachmentState],
+  );
 
   useEffect(() => {
     if (state.ok !== true) return;
@@ -144,27 +130,22 @@ export function TaskFormDialog({
     void (async () => {
       await runTaskAttachmentUploads(state.taskId, selectedCaseId || null, attachments);
       if (!cancelled) handleDialogOpenChange(false);
-    })().catch((err) => {
-      if (!cancelled) setAttachmentError(mapAttachmentError(err, t));
-    }).finally(() => {
-      if (!cancelled) setAttachmentPending(false);
-    });
+    })()
+      .catch((err) => {
+        if (!cancelled) setAttachmentError(mapAttachmentError(err, t));
+      })
+      .finally(() => {
+        if (!cancelled) setAttachmentPending(false);
+      });
 
     return () => {
       cancelled = true;
     };
   }, [attachments, handleDialogOpenChange, mode, selectedCaseId, state, t]);
 
-  const [caseSearch, setCaseSearch] = useState('');
-
-  // tasks-list / tasks-board render ONE shared TaskFormDialog and swap the `task`
-  // prop; the create button reuses one instance across clicks. These controlled
-  // fields live in this always-mounted component, so — unlike the uncontrolled
-  // defaultValue fields, which re-seed when the Base UI popup remounts on open —
-  // they would otherwise keep the PREVIOUS task's value, e.g. the linked-case
-  // field showing a case from a task opened earlier (reported bug). Re-seed from
-  // the current task whenever the dialog opens or the target task changes. React
-  // "adjust state during render when a prop changes" pattern (cf. compose-email-dialog).
+  // One shared TaskFormDialog instance is reused across rows; its controlled
+  // fields would otherwise keep the previous task's values. Re-seed from the
+  // current task whenever the dialog opens or the target task changes.
   const seedKey = open ? `${task?.id ?? 'new'}:${presetCaseId ?? ''}` : null;
   const [seededKey, setSeededKey] = useState(seedKey);
   if (seedKey !== seededKey) {
@@ -172,7 +153,6 @@ export function TaskFormDialog({
     if (open) {
       setSelectedCaseId(presetCaseId ?? task?.case_id ?? '');
       setIsPrivate(Boolean(task?.is_private));
-      setCaseSearch('');
       setAttachments([]);
       setAttachmentError(null);
       const seededDesc = value('description');
@@ -181,242 +161,143 @@ export function TaskFormDialog({
     }
   }
 
-  const normalizedCaseSearch = caseSearch.trim().toLowerCase();
-  const matchingCases = normalizedCaseSearch
-    ? effectiveCases.filter((c) =>
-        `${c.case_number} ${c.label}`.toLowerCase().includes(normalizedCaseSearch),
-      )
-    : effectiveCases;
-  const selectedCase = effectiveCases.find((c) => c.id === selectedCaseId);
-  // Label for the "open case" link: prefer the task's own client name, else the
-  // option label (case number). Lets the user jump to the client from inside the
-  // task, mirroring the row + thread dialog.
-  const caseLinkLabel =
-    task?.case && task.case.id === selectedCaseId
-      ? (task.case.clientName ?? `#${task.case.case_number}`)
-      : (selectedCase?.label ?? null);
-  const filteredCases =
-    selectedCase && !matchingCases.some((c) => c.id === selectedCase.id)
-      ? [selectedCase, ...matchingCases]
-      : matchingCases;
-
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>
-            {mode === 'create' ? t('title.create') : t('title.edit')}
-          </DialogTitle>
+          <DialogTitle>{mode === 'create' ? t('title.create') : t('title.edit')}</DialogTitle>
+          <DialogDescription>{t('subtitle')}</DialogDescription>
         </DialogHeader>
 
-        <form action={formAction} className="space-y-4" noValidate>
-          {mode === 'edit' && task && (
-            <input type="hidden" name="task_id" value={task.id} />
-          )}
+        <form action={formAction} className="space-y-5" noValidate>
+          {mode === 'edit' && task && <input type="hidden" name="task_id" value={task.id} />}
 
-          <FormField label={t('fields.title')} required error={fieldErrors.title}>
-            <Input
-              name="title"
-              defaultValue={value('title')}
-              placeholder={t('fields.titlePlaceholder')}
-              autoFocus
-              maxLength={240}
-            />
-          </FormField>
-
-          <FormField label={t('fields.description')} error={fieldErrors.description}>
-            {/* Hidden input always carries the value, so it submits whether the
-                field is in view (clickable links) or edit (textarea) mode. */}
-            <input type="hidden" name="description" value={description} />
-            {editingDesc ? (
-              <Textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder={t('fields.descriptionPlaceholder')}
-                rows={3}
-                maxLength={2000}
+          <Section title={t('sections.details')}>
+            <FormField label={t('fields.title')} required error={fieldErrors.title}>
+              <Input
+                name="title"
+                defaultValue={value('title')}
+                placeholder={t('fields.titlePlaceholder')}
+                autoFocus
+                maxLength={240}
               />
-            ) : (
-              <div
-                onClick={() => setEditingDesc(true)}
-                className="min-h-10 cursor-text rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800"
-              >
-                <Linkify text={description} />
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditingDesc(true);
-                  }}
-                  className="mt-1.5 flex items-center gap-1 text-xs text-brand-gold-text hover:underline"
+            </FormField>
+
+            <FormField label={t('fields.description')} error={fieldErrors.description} htmlFor="task-description">
+              {/* Hidden input always carries the value, so it submits in both
+                  view (clickable links) and edit (textarea) modes. */}
+              <input type="hidden" name="description" value={description} />
+              {editingDesc ? (
+                <Textarea
+                  id="task-description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder={t('fields.descriptionPlaceholder')}
+                  rows={3}
+                  maxLength={2000}
+                />
+              ) : (
+                <div
+                  onClick={() => setEditingDesc(true)}
+                  className="min-h-10 cursor-text rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800"
                 >
-                  <Pencil className="size-3" aria-hidden="true" />
-                  {t('fields.descriptionEdit')}
-                </button>
-              </div>
-            )}
-          </FormField>
+                  <Linkify text={description} />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingDesc(true);
+                    }}
+                    className="mt-1.5 flex items-center gap-1.5 text-xs text-brand-gold-text hover:underline"
+                  >
+                    <Pencil className="size-3.5" aria-hidden="true" />
+                    {t('fields.descriptionEdit')}
+                  </button>
+                </div>
+              )}
+            </FormField>
+          </Section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Section title={t('sections.schedule')}>
             <FormField label={t('fields.priority')} error={fieldErrors.priority}>
-              <NativeSelect name="priority" defaultValue={value('priority') || 'normal'}>
-                {TASK_PRIORITY_VALUES.map((p) => (
-                  <option key={p} value={p}>{tp(p)}</option>
-                ))}
-              </NativeSelect>
+              {/* value() returns a string; priority is CHECK-constrained to TaskPriority. */}
+              <TaskPriorityField name="priority" defaultValue={(value('priority') || 'normal') as TaskPriority} />
             </FormField>
 
-            <FormField label={t('fields.dueDate')} error={fieldErrors.due_date}>
-              <DateInputWithPicker
-                name="due_date"
-                defaultValue={value('due_date').slice(0, 10)}
-                pickerLabel={t('fields.dueDate')}
-              />
-            </FormField>
-          </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormField label={t('fields.dueDate')} error={fieldErrors.due_date}>
+                <DateInputWithPicker
+                  name="due_date"
+                  defaultValue={value('due_date').slice(0, 10)}
+                  pickerLabel={t('fields.dueDate')}
+                />
+              </FormField>
 
-          <label className="flex items-start gap-2 rounded-lg border border-neutral-200 bg-brand-gold-soft/40 p-3 text-sm">
-            <input
-              type="checkbox"
-              name="is_private"
-              checked={isPrivate}
-              onChange={(e) => setIsPrivate(e.target.checked)}
-              className="mt-0.5 size-4 rounded border-neutral-300 text-brand-gold-text focus:ring-2 focus:ring-brand-gold-text/40"
+              <FormField label={t('fields.assignee')} error={fieldErrors.assigned_to}>
+                <NativeSelect name="assigned_to" defaultValue={value('assigned_to')} disabled={isPrivate}>
+                  <option value="">{t('fields.assigneeUnassigned')}</option>
+                  {effectiveAssignees.map((p) => {
+                    const name = formatPersonName(p.first_name, p.last_name) || tc('noName');
+                    return (
+                      <option key={p.id} value={p.id}>
+                        {name}
+                      </option>
+                    );
+                  })}
+                </NativeSelect>
+              </FormField>
+            </div>
+            {isPrivate && <p className="text-xs text-neutral-500">{t('fields.privateAssignee')}</p>}
+
+            <div>
+              <label className="flex items-center gap-2 text-sm text-neutral-700">
+                <input
+                  type="checkbox"
+                  name="is_private"
+                  checked={isPrivate}
+                  onChange={(e) => setIsPrivate(e.target.checked)}
+                  className="size-4 rounded border-neutral-300 text-brand-gold-text focus:ring-2 focus:ring-brand-gold-text/40"
+                />
+                {t('fields.private')}
+              </label>
+              <p className="mt-1 ps-6 text-xs text-neutral-500">{t('fields.privateHint')}</p>
+            </div>
+          </Section>
+
+          <Section title={t('sections.case')}>
+            <TaskLinkedCaseField
+              cases={cases}
+              presetCaseId={presetCaseId}
+              task={task}
+              selectedCaseId={selectedCaseId}
+              onSelectedCaseChange={setSelectedCaseId}
+              error={fieldErrors.case_id}
             />
-            <span>
-              <span className="font-medium text-neutral-800">{t('fields.private')}</span>
-              <span className="mt-0.5 block text-xs text-neutral-500">{t('fields.privateHint')}</span>
-            </span>
-          </label>
+          </Section>
 
-          <FormField label={t('fields.assignee')} error={fieldErrors.assigned_to}>
-            <NativeSelect name="assigned_to" defaultValue={value('assigned_to')} disabled={isPrivate}>
-              <option value="">{t('fields.assigneeUnassigned')}</option>
-              {effectiveAssignees.map((p) => {
-                const name = formatPersonName(p.first_name, p.last_name) || tc('noName');
-                return <option key={p.id} value={p.id}>{name}</option>;
-              })}
-            </NativeSelect>
-            {isPrivate && <p className="mt-1 text-xs text-neutral-500">{t('fields.privateAssignee')}</p>}
-          </FormField>
+          {mode === 'edit' && task && <TaskAttachmentsList taskId={task.id} />}
+          {mode === 'create' && (
+            <TaskAttachmentUploadField
+              attachments={attachments}
+              onAttachmentsChange={setAttachments}
+              error={attachmentError}
+              onError={setAttachmentError}
+              pending={attachmentPending}
+              hasCaseLinked={Boolean(selectedCaseId)}
+            />
+          )}
 
           {mode === 'edit' && task && <TaskAssignmentHistory task={task} />}
 
-          <FormField label={t('fields.case')} error={fieldErrors.case_id}>
-            {/* A disabled <select> is omitted from FormData, so when the case is
-                preset (locked) we submit it via a hidden input and leave the
-                visible select purely presentational (no name). */}
-            {presetCaseId && <input type="hidden" name="case_id" value={presetCaseId} />}
-            {!presetCaseId && (
-              <Input
-                type="search"
-                value={caseSearch}
-                onChange={(e) => setCaseSearch(e.target.value)}
-                placeholder={t('fields.caseSearchPlaceholder')}
-                aria-label={t('fields.caseSearch')}
-                className="mb-2"
-              />
-            )}
-            <NativeSelect
-              name={presetCaseId ? undefined : 'case_id'}
-              value={selectedCaseId}
-              onChange={(e) => setSelectedCaseId(e.target.value)}
-              disabled={!!presetCaseId}
-            >
-              <option value="">{t('fields.caseNone')}</option>
-              {filteredCases.map((c) => (
-                <option key={c.id} value={c.id}>{c.label}</option>
-              ))}
-            </NativeSelect>
-            {!presetCaseId && filteredCases.length === 0 && (
-              <p className="mt-1 text-xs text-neutral-500">{t('fields.caseNoMatches')}</p>
-            )}
-            {selectedCaseId && caseLinkLabel && (
-              <Link
-                href={`/cases/${selectedCaseId}`}
-                aria-label={`${t('fields.openCase')}: ${caseLinkLabel}`}
-                className="mt-1.5 inline-flex w-fit items-center gap-1 text-xs text-neutral-600 transition hover:text-brand-gold-text hover:underline decoration-brand-gold underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 rounded"
-              >
-                <ExternalLink className="size-3 shrink-0" aria-hidden="true" />
-                {caseLinkLabel}
-              </Link>
-            )}
-          </FormField>
-
-          {mode === 'edit' && task && <TaskAttachmentsList taskId={task.id} />}
-
-          {mode === 'create' && (
-            <FormField
-              label={t('fields.attachments')}
-              error={attachmentError ?? undefined}
-            >
-              <div className="flex items-center gap-2">
-                <label
-                  htmlFor="task-attachments"
-                  className="flex h-10 flex-1 cursor-pointer items-center gap-2 rounded-md border border-dashed border-neutral-300 bg-neutral-50 px-3 text-sm text-neutral-700 transition hover:border-brand-gold-text hover:bg-brand-gold/8 focus-within:border-brand-gold-text focus-within:ring-2 focus-within:ring-brand-gold-text/30"
-                >
-                  <UploadIcon className="size-4 shrink-0" />
-                  <span className="truncate">
-                    {attachments.length > 0
-                      ? t('fields.attachmentsSelected', { count: attachments.length })
-                      : t('fields.attachmentsPlaceholder')}
-                  </span>
-                </label>
-                {attachments.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAttachments([]);
-                      setAttachmentError(null);
-                    }}
-                    className="flex size-9 items-center justify-center rounded-md border border-neutral-200 text-neutral-500 transition hover:border-rose-200 hover:text-rose-600"
-                    aria-label={t('fields.attachmentsClear')}
-                    disabled={attachmentPending}
-                  >
-                    <X className="size-4" />
-                  </button>
-                )}
-              </div>
-              <input
-                id="task-attachments"
-                type="file"
-                multiple
-                accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,.doc,.docx,.xls,.xlsx"
-                className="sr-only"
-                onChange={(e) => {
-                  setAttachmentError(null);
-                  const files = Array.from(e.target.files ?? []);
-                  const err = validateAttachmentFiles(files, t);
-                  if (err) {
-                    setAttachmentError(err);
-                    e.target.value = '';
-                    setAttachments([]);
-                    return;
-                  }
-                  setAttachments(files);
-                }}
-              />
-              <p className="mt-1 text-xs text-neutral-500">
-                {selectedCaseId
-                  ? t('fields.attachmentsHint')
-                  : t('fields.attachmentsHintGeneral')}
-              </p>
-            </FormField>
-          )}
-
           {(genericError || attachmentPending) && (
-            <div className="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+            <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {attachmentPending ? t('fields.attachmentsUploading') : genericError}
             </div>
           )}
 
           <DialogFooter>
             <SubmitButton mode={mode} uploading={attachmentPending} />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleDialogOpenChange(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => handleDialogOpenChange(false)}>
               {tc('cancel')}
             </Button>
           </DialogFooter>
@@ -426,18 +307,31 @@ export function TaskFormDialog({
   );
 }
 
-function SubmitButton({
-  mode,
-  uploading,
-}: {
-  mode: 'create' | 'edit';
-  uploading: boolean;
-}) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="space-y-3">
+      <p className="text-xs font-medium text-neutral-500">{title}</p>
+      {children}
+    </section>
+  );
+}
+
+function SubmitButton({ mode, uploading }: { mode: 'create' | 'edit'; uploading: boolean }) {
   const { pending } = useFormStatus();
   const t = useTranslations('tasks.form.submit');
   return (
-    <Button type="submit" disabled={pending || uploading} className="bg-brand-gold hover:bg-brand-gold-hover text-brand-black font-semibold">
-      {pending || uploading ? <Loader2 className="size-4 animate-spin" /> : mode === 'create' ? t('create') : t('update')}
+    <Button
+      type="submit"
+      disabled={pending || uploading}
+      className="bg-brand-gold hover:bg-brand-gold-hover text-brand-black font-semibold"
+    >
+      {pending || uploading ? (
+        <Loader2 className="size-4 animate-spin" />
+      ) : mode === 'create' ? (
+        t('create')
+      ) : (
+        t('update')
+      )}
     </Button>
   );
 }
@@ -453,26 +347,7 @@ function getGenericError(
   return t('errors.generic');
 }
 
-function validateAttachmentFiles(
-  files: File[],
-  t: ReturnType<typeof useTranslations>,
-): string | null {
-  if (files.length === 0) return null;
-  if (files.length > 5) return t('fields.attachmentsTooMany');
-  for (const file of files) {
-    if (file.size === 0) return t('fields.attachmentsFileRequired');
-    if (file.size > MAX_FILE_SIZE_BYTES) return t('fields.attachmentsTooLarge');
-    if (!(ALLOWED_MIME_TYPES as readonly string[]).includes(file.type)) {
-      return t('fields.attachmentsTypeNotAllowed');
-    }
-  }
-  return null;
-}
-
-function mapAttachmentError(
-  err: unknown,
-  t: ReturnType<typeof useTranslations>,
-): string {
+function mapAttachmentError(err: unknown, t: ReturnType<typeof useTranslations>): string {
   const message = err instanceof Error ? err.message : '';
   if (message === 'fileRequired') return t('fields.attachmentsFileRequired');
   if (message === 'fileTooLarge') return t('fields.attachmentsTooLarge');
