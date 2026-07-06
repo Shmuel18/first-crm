@@ -67,3 +67,26 @@ export async function getRolesPermissions(): Promise<RolesPermissionsData> {
     granted,
   };
 }
+
+/**
+ * Every per-user permission exception, as userId → (permissionId → is_granted).
+ * These take precedence over the role default in has_permission(), so the
+ * per-user editor renders effective state = override ?? role grant. Admin-only
+ * SELECT is enforced by RLS (user_overrides_select_self_or_admin, mig 011).
+ */
+export async function getUserPermissionOverrides(): Promise<Record<string, Record<string, boolean>>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('user_permission_overrides')
+    .select('user_id, permission_id, is_granted');
+  if (error) {
+    console.error('[permissions.service] overrides query failed', { code: error.code });
+    return {};
+  }
+  const out: Record<string, Record<string, boolean>> = {};
+  for (const row of data ?? []) {
+    if (!row.user_id || !row.permission_id) continue;
+    (out[row.user_id] ??= {})[row.permission_id] = row.is_granted;
+  }
+  return out;
+}

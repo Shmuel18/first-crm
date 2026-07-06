@@ -5,7 +5,7 @@ import { parseAsStringEnum, useQueryState } from 'nuqs';
 
 import type { ReactNode } from 'react';
 
-const TABS = ['members', 'roles'] as const;
+const TABS = ['members', 'roles', 'perms'] as const;
 type Tab = (typeof TABS)[number];
 
 type Props = {
@@ -15,6 +15,8 @@ type Props = {
   membersSlot: ReactNode;
   /** Rendered when the active tab is "roles". */
   rolesSlot: ReactNode;
+  /** Rendered when the active tab is "perms" (per-user permissions). */
+  permsSlot: ReactNode;
 };
 
 /**
@@ -24,7 +26,7 @@ type Props = {
  * so its local state (selected role, expanded categories, etc.) resets on
  * re-entry, which is the behaviour each section was already built for.
  */
-export function PeopleTabsShell({ initialTab = 'members', membersSlot, rolesSlot }: Props) {
+export function PeopleTabsShell({ initialTab = 'members', membersSlot, rolesSlot, permsSlot }: Props) {
   const t = useTranslations('settings.people.tabs');
   const [tab, setTab] = useQueryState(
     'tab',
@@ -40,9 +42,10 @@ export function PeopleTabsShell({ initialTab = 'members', membersSlot, rolesSlot
       >
         <PillTab label={t('members')} active={tab === 'members'} onClick={() => setTab('members')} />
         <PillTab label={t('roles')} active={tab === 'roles'} onClick={() => setTab('roles')} />
+        <PillTab label={t('perms')} active={tab === 'perms'} onClick={() => setTab('perms')} />
       </div>
 
-      {tab === 'members' ? membersSlot : rolesSlot}
+      {tab === 'members' ? membersSlot : tab === 'roles' ? rolesSlot : permsSlot}
     </div>
   );
 }

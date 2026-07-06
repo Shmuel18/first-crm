@@ -5,12 +5,17 @@ import { getLocale, getTranslations } from 'next-intl/server';
 
 import { PeopleTabsShell } from '@/features/settings/components/people-tabs-shell';
 import { RolesPermissionsEditor } from '@/features/settings/components/roles-permissions-editor';
-import { getRolesPermissions } from '@/features/settings/services/permissions.service';
+import { UserPermissionsEditor } from '@/features/settings/components/user-permissions-editor';
+import {
+  getRolesPermissions,
+  getUserPermissionOverrides,
+} from '@/features/settings/services/permissions.service';
 import { TeamTable } from '@/features/team/components/team-table';
 import { listRoles, listTeamMembers } from '@/features/team/services/team.service';
 import { isCurrentUserAdmin } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { createClient } from '@/lib/supabase/server';
+import { formatPersonName } from '@/lib/utils/person-name';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('settings.people');
@@ -34,11 +39,24 @@ export default async function PeopleSettingsPage() {
 
   // Fetch both datasets in parallel — admin-only page hit by 1 user, both
   // sub-tabs are small queries, so render-time parallelism beats lazy.
-  const [members, teamRoles, rolesPerms] = await Promise.all([
+  const [members, teamRoles, rolesPerms, overrides] = await Promise.all([
     listTeamMembers(),
     listRoles(),
     getRolesPermissions(),
+    getUserPermissionOverrides(),
   ]);
+
+  // Per-user editor works on active members only (inactive can't log in). Role
+  // name is shown as the "default" context; admin members are locked (fixed).
+  const permMembers = members
+    .filter((m) => m.is_active)
+    .map((m) => ({
+      id: m.id,
+      name: formatPersonName(m.first_name, m.last_name) || m.email || '—',
+      roleId: m.role?.id ?? null,
+      roleName: m.role ? (locale === 'he' ? m.role.name_he : m.role.name_en) : '',
+      isAdmin: m.role?.key === 'admin',
+    }));
 
   return (
     <div>
@@ -61,6 +79,15 @@ export default async function PeopleSettingsPage() {
             roles={rolesPerms.roles}
             permissions={rolesPerms.permissions}
             granted={rolesPerms.granted}
+            locale={locale}
+          />
+        }
+        permsSlot={
+          <UserPermissionsEditor
+            members={permMembers}
+            permissions={rolesPerms.permissions}
+            granted={rolesPerms.granted}
+            overrides={overrides}
             locale={locale}
           />
         }

@@ -2274,7 +2274,8 @@
       "tabs": {
         "groupLabel": "View selection",
         "members": "People",
-        "roles": "Roles"
+        "roles": "Roles",
+        "perms": "Per-person permissions"
       }
     },
     "roles": {
@@ -2286,6 +2287,25 @@
         "base": "Mortgage Advisor",
         "extended": "Mortgage Advisor (Extended)"
       },
+      "categories": {
+        "view": "Viewing",
+        "cases": "Cases",
+        "leads": "Leads",
+        "documents": "Documents",
+        "financial": "Financial data",
+        "system": "System"
+      },
+      "toast": {
+        "failed": "Failed to update permission. Please try again.",
+        "adminLocked": "The manager's permissions cannot be edited."
+      }
+    },
+    "userPermissions": {
+      "title": "Permissions per person",
+      "roleDefault": "Role default: {role}. Any switch you change here overrides the role.",
+      "custom": "Custom",
+      "resetToDefault": "Reset to the role default",
+      "adminLocked": "The manager includes all permissions and cannot be edited.",
       "categories": {
         "view": "Viewing",
         "cases": "Cases",
