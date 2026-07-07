@@ -43,7 +43,7 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  const { data: authData, error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {
     // Invalid / expired / already-used token. The login page surfaces the
     // error code as a translated message.
@@ -51,7 +51,7 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   // Opt-in auto punch-in for hourly staff (best-effort; never blocks the flow).
-  await autoClockInIfEnabled(supabase);
+  await autoClockInIfEnabled(supabase, authData.user?.id);
 
   return redirectNoStore(`${env.NEXT_PUBLIC_APP_URL}${next}`);
 }

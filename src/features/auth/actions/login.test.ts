@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { autoClockInIfEnabled } from '@/features/time-clock/services/auto-clock-in';
 import { checkRateLimit, refundRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 
@@ -14,12 +15,17 @@ vi.mock('@/lib/rate-limit', () => ({
 vi.mock('@/lib/http/request-ip', () => ({
   getRequestIp: vi.fn(async () => '1.2.3.4'),
 }));
+vi.mock('@/features/time-clock/services/auto-clock-in', () => ({
+  autoClockInIfEnabled: vi.fn(async () => undefined),
+}));
 vi.mock('@/lib/supabase/server', () => ({ createClient: vi.fn() }));
 vi.mock('next/navigation', () => ({
   redirect: vi.fn((url: string) => {
     throw new Error(`REDIRECT:${url}`);
   }),
 }));
+
+const LOGIN_USER_ID = '11111111-1111-4111-8111-111111111111';
 
 function form(fields: Record<string, string>): FormData {
   const fd = new FormData();
@@ -28,7 +34,10 @@ function form(fields: Record<string, string>): FormData {
 }
 
 function mockSignIn(result: { error: { code?: string; message: string } | null }) {
-  const signInWithPassword = vi.fn(async () => result);
+  const signInWithPassword = vi.fn(async () => ({
+    data: { user: result.error ? null : { id: LOGIN_USER_ID } },
+    error: result.error,
+  }));
   // Partial client fixture — the action only touches auth.signInWithPassword.
   vi.mocked(createClient).mockResolvedValue({
     auth: { signInWithPassword },
@@ -57,6 +66,7 @@ describe('loginAction lockout flow', () => {
       .mock.calls.map((c) => c[0].action)
       .sort();
     expect(refunded).toEqual(['login_fail', 'login_fail_global']);
+    expect(autoClockInIfEnabled).toHaveBeenCalledWith(expect.anything(), LOGIN_USER_ID);
   });
 
   it('bad credentials: the failure budgets stay consumed (no refund)', async () => {

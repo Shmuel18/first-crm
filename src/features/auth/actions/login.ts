@@ -81,7 +81,7 @@ export async function loginAction(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  const { data: authData, error } = await supabase.auth.signInWithPassword(parsed.data);
 
   if (error) {
     // Structured code first; legacy message sniff as fallback only. A failed
@@ -99,7 +99,7 @@ export async function loginAction(
   await Promise.all(failGates.map((gate) => refundRateLimit(gate)));
 
   // Opt-in auto punch-in for hourly staff (best-effort; never blocks login).
-  await autoClockInIfEnabled(supabase);
+  await autoClockInIfEnabled(supabase, authData.user?.id);
 
   redirect(next);
 }
