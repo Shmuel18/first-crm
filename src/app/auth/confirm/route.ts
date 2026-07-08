@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import type { EmailOtpType } from '@supabase/supabase-js';
 
+import { autoClockInIfEnabled } from '@/features/time-clock/services/auto-clock-in';
 import { env } from '@/lib/env';
 import { createClient } from '@/lib/supabase/server';
 
@@ -50,21 +51,24 @@ export async function GET(request: Request): Promise<Response> {
   const nextParam = url.searchParams.get('next');
 
   const next =
-    typeof nextParam === 'string' && nextParam.startsWith('/') && !nextParam.startsWith('//')
-      ? nextParam
-      : '/cases';
+      typeof nextParam === 'string' && nextParam.startsWith('/') && !nextParam.startsWith('//')
+          ? nextParam
+          : '/cases';
 
   if (!tokenHash || !type) {
     return redirectNoStore(`${env.NEXT_PUBLIC_APP_URL}/login?error=missing_code`);
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
+  const { data: authData, error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
   if (error) {
     // Invalid / expired / already-used token. The login page surfaces the
     // error code as a translated message.
     return redirectNoStore(`${env.NEXT_PUBLIC_APP_URL}/login?error=invalid_invite`);
   }
+
+  // Opt-in auto punch-in for hourly staff (best-effort; never blocks the flow).
+  await autoClockInIfEnabled(supabase, authData.user?.id);
 
   return redirectNoStore(`${env.NEXT_PUBLIC_APP_URL}${next}`);
 }
