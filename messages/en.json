@@ -998,7 +998,7 @@
       "leadsEmpty": "No leads to show"
     },
     "filters": {
-      "search": "Search by name / ID / number",
+      "search": "Search by name / ID / number / phone",
       "advisor": "Advisor",
       "stage": "Stage",
       "bank": "Bank",

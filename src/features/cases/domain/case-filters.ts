@@ -92,7 +92,8 @@ export function filterCases(
 /**
  * Free-text search shared by the dashboard search box and the export endpoint
  * (so a filtered export matches the on-screen list exactly). Matches client
- * name, national ID, or case number. Empty term → everything. Pure.
+ * name, national ID, case number, or borrower phone. Empty term → everything.
+ * Pure.
  */
 export function filterCasesByQuery(
   cases: ReadonlyArray<CaseWithRelations>,
@@ -100,10 +101,41 @@ export function filterCasesByQuery(
 ): CaseWithRelations[] {
   const t = term.trim().toLowerCase();
   if (!t) return [...cases];
-  return cases.filter((c) =>
-    [getCaseClientLabel(c), getPrimaryBorrowerNationalId(c) ?? '', c.case_number ?? '']
+  const phoneTerms = phoneSearchVariants(t);
+  return cases.filter((c) => {
+    const textMatches = [
+      getCaseClientLabel(c),
+      getPrimaryBorrowerNationalId(c) ?? '',
+      c.case_number ?? '',
+    ]
       .join(' ')
       .toLowerCase()
-      .includes(t),
-  );
+      .includes(t);
+    if (textMatches) return true;
+    if (phoneTerms.length === 0) return false;
+    return borrowerPhoneValues(c).some((phone) =>
+      phoneSearchVariants(phone).some((candidate) =>
+        phoneTerms.some((query) => candidate.includes(query)),
+      ),
+    );
+  });
+}
+
+function borrowerPhoneValues(caseItem: CaseWithRelations): string[] {
+  return (caseItem.case_borrowers ?? [])
+    .flatMap((cb) => [cb.borrower?.phone, cb.borrower?.landline_phone])
+    .filter((value): value is string => Boolean(value));
+}
+
+function phoneSearchVariants(value: string): string[] {
+  const digits = value.replace(/\D/g, '');
+  if (!digits) return [];
+  const variants = new Set([digits]);
+  if (digits.startsWith('972') && digits.length > 3) {
+    variants.add(`0${digits.slice(3)}`);
+  }
+  if (digits.startsWith('0') && digits.length > 1) {
+    variants.add(`972${digits.slice(1)}`);
+  }
+  return [...variants];
 }

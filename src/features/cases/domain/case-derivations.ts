@@ -16,6 +16,8 @@ type CaseBorrowerJoin = {
     first_name: string | null;
     last_name: string | null;
     national_id?: string | null;
+    phone?: string | null;
+    landline_phone?: string | null;
   } | null;
 };
 

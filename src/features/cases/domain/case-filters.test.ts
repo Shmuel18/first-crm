@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   filterCases,
+  filterCasesByQuery,
   parseCaseView,
   parseDashboardFilters,
   type DashboardFilters,
@@ -16,6 +17,17 @@ type TestCase = {
   status: { id: string; key: string } | null;
   case_banks: BankLink[];
   target_date: string | null;
+  case_number: string | null;
+  case_borrowers: Array<{
+    is_primary: boolean;
+    borrower: {
+      first_name: string | null;
+      last_name: string | null;
+      national_id?: string | null;
+      phone?: string | null;
+      landline_phone?: string | null;
+    } | null;
+  }>;
 };
 
 // Minimal fixture: filterCases only reads the fields below. Cast through
@@ -27,6 +39,8 @@ function makeCase(o: Partial<TestCase> = {}): CaseWithRelations {
     status: o.status ?? { id: 'open', key: 'open' },
     case_banks: o.case_banks ?? [],
     target_date: o.target_date ?? null,
+    case_number: o.case_number ?? null,
+    case_borrowers: o.case_borrowers ?? [],
   } as unknown as CaseWithRelations;
 }
 
@@ -129,5 +143,54 @@ describe('filterCases', () => {
     expect(
       filterCases([open, onHold, closed], { ...NO_FILTERS, hideClosedFrozen: true }),
     ).toEqual([open]);
+  });
+});
+
+describe('filterCasesByQuery', () => {
+  const caseWithPhone = makeCase({
+    case_number: 'C-101',
+    case_borrowers: [
+      {
+        is_primary: true,
+        borrower: {
+          first_name: 'Dana',
+          last_name: 'Levi',
+          national_id: '123456789',
+          phone: '0501234567',
+          landline_phone: '025551111',
+        },
+      },
+    ],
+  });
+  const other = makeCase({
+    case_number: 'C-202',
+    case_borrowers: [
+      {
+        is_primary: true,
+        borrower: {
+          first_name: 'Moshe',
+          last_name: 'Cohen',
+          phone: '0527654321',
+        },
+      },
+    ],
+  });
+
+  it('keeps the existing text search behavior', () => {
+    expect(filterCasesByQuery([caseWithPhone, other], 'Dana')).toEqual([caseWithPhone]);
+    expect(filterCasesByQuery([caseWithPhone, other], '123456789')).toEqual([caseWithPhone]);
+    expect(filterCasesByQuery([caseWithPhone, other], 'C-202')).toEqual([other]);
+  });
+
+  it('matches borrower mobile and landline phones regardless of punctuation', () => {
+    expect(filterCasesByQuery([caseWithPhone, other], '050-123-4567')).toEqual([caseWithPhone]);
+    expect(filterCasesByQuery([caseWithPhone, other], '501234')).toEqual([caseWithPhone]);
+    expect(filterCasesByQuery([caseWithPhone, other], '02 555 1111')).toEqual([caseWithPhone]);
+  });
+
+  it('matches Israeli +972 phone queries against canonical 05 numbers', () => {
+    expect(filterCasesByQuery([caseWithPhone, other], '+972-50-123-4567')).toEqual([
+      caseWithPhone,
+    ]);
   });
 });
