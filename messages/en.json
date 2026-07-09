@@ -838,6 +838,7 @@
         "paymentCap": "Payment capacity",
         "binding": "Binding constraint",
         "maxByLtv": "LTV ceiling",
+        "requiredIncome": "Required income ({pct}% DTI)",
         "excess": "Excess above LTV"
       },
       "constraints": {

@@ -47,6 +47,29 @@ function paymentCap(input: MaximumMortgageInput): MoneyAgorot {
   return Math.max(0, totalDebtCap - input.obligationsMonthly);
 }
 
+export interface DtiBandIncome {
+  dtiPct: number;
+  requiredIncome: MoneyAgorot;
+}
+
+/**
+ * Net monthly income the borrower must earn for a given mortgage payment to stay
+ * within each DTI band — (payment + existing obligations) ÷ dti%. A STRICTER
+ * (lower) band requires MORE income. Shown in the affordability view so the
+ * advisor can tell the client "for this mortgage you need to earn X at 40%, more
+ * at a safer 35%". requiredIncome is 0 for a non-positive band.
+ */
+export function requiredIncomeByDtiBands(
+  params: { mortgagePaymentMonthly: MoneyAgorot; obligationsMonthly: MoneyAgorot },
+  bands: readonly number[],
+): DtiBandIncome[] {
+  const totalDebt = Math.max(0, params.mortgagePaymentMonthly) + Math.max(0, params.obligationsMonthly);
+  return bands.map((dtiPct) => ({
+    dtiPct,
+    requiredIncome: dtiPct > 0 ? roundAgorot(totalDebt / (dtiPct / 100)) : 0,
+  }));
+}
+
 function principalFromPayment(payment: MoneyAgorot, annualRatePct: number, termMonths: number): MoneyAgorot {
   if (payment <= 0 || termMonths <= 0) return 0;
   const rate = monthlyRate(annualRatePct);

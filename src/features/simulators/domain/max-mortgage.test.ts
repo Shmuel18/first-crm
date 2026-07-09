@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { DEFAULT_REGULATORY_THRESHOLDS } from '../constants';
-import { calculateMaximumMortgage } from './max-mortgage';
+import { calculateMaximumMortgage, requiredIncomeByDtiBands } from './max-mortgage';
 
 const baseInput = {
   netIncomeMonthly: 20_000,
@@ -31,5 +31,24 @@ describe('calculateMaximumMortgage', () => {
 
     expect(result.maxByPayment).toBe(0);
     expect(result.bindingConstraint).toBe('payment');
+  });
+});
+
+describe('requiredIncomeByDtiBands', () => {
+  it('income = (payment + obligations) / dti%, a stricter band needs more income', () => {
+    const bands = requiredIncomeByDtiBands(
+      { mortgagePaymentMonthly: 10_000, obligationsMonthly: 2_000 },
+      [40, 38, 35],
+    );
+
+    // 40%: 12,000 / 0.40 = 30,000 (exact)
+    expect(bands[0]).toEqual({ dtiPct: 40, requiredIncome: 30_000 });
+    expect(bands[1]!.requiredIncome).toBeGreaterThan(bands[0]!.requiredIncome);
+    expect(bands[2]!.requiredIncome).toBeGreaterThan(bands[1]!.requiredIncome);
+  });
+
+  it('is 0 for a non-positive band', () => {
+    const bands = requiredIncomeByDtiBands({ mortgagePaymentMonthly: 10_000, obligationsMonthly: 2_000 }, [0]);
+    expect(bands[0]).toEqual({ dtiPct: 0, requiredIncome: 0 });
   });
 });

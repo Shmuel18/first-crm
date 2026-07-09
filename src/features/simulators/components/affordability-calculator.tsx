@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl';
 import { DEFAULT_REGULATORY_THRESHOLDS } from '../constants';
 import { calculateDtiScenario } from '../domain/dti';
 import { calculateLtvScenario } from '../domain/ltv';
-import { calculateMaximumMortgage } from '../domain/max-mortgage';
+import { calculateMaximumMortgage, requiredIncomeByDtiBands } from '../domain/max-mortgage';
 import { calculateMonthlyPayment } from '../domain/monthly-payment';
 import type { MoneyAgorot, PropertyKind, TrackInput } from '../types';
 import { agorotToNis, formatMoney, formatPct, nisToAgorot } from '../utils/format';
@@ -41,6 +41,9 @@ const DEFAULT_STATE: State = {
 
 const inputClass =
   'h-10 w-full rounded-lg border border-neutral-200 bg-white px-3 text-sm shadow-xs outline-none transition focus:border-brand-gold-text focus:ring-2 focus:ring-brand-gold-text/30';
+
+// Required-income bands shown in the decision panel: regulatory max → comfortable.
+const DTI_BANDS = [40, 38, 35] as const;
 
 export function AffordabilityCalculator({
   initialState = {},
@@ -94,6 +97,10 @@ export function AffordabilityCalculator({
         state.requestedMortgage,
         state.propertyKind,
         DEFAULT_REGULATORY_THRESHOLDS,
+      ),
+      requiredIncomes: requiredIncomeByDtiBands(
+        { mortgagePaymentMonthly: payment, obligationsMonthly: state.obligations },
+        DTI_BANDS,
       ),
     };
   }, [monthlyTrack, state]);
@@ -153,6 +160,13 @@ export function AffordabilityCalculator({
             <DecisionRow label={t('decision.paymentCap')} value={formatMoney(result.maxMortgage.paymentCap)} />
             <DecisionRow label={t('decision.binding')} value={t(`constraints.${result.maxMortgage.bindingConstraint}`)} />
             <DecisionRow label={t('decision.maxByLtv')} value={formatMoney(result.maxMortgage.maxByLtv)} />
+            {result.requiredIncomes.map((band) => (
+              <DecisionRow
+                key={band.dtiPct}
+                label={t('decision.requiredIncome', { pct: band.dtiPct })}
+                value={formatMoney(band.requiredIncome)}
+              />
+            ))}
             <DecisionRow label={t('decision.excess')} value={formatMoney(result.ltv.excessAmount)} danger={result.ltv.excessAmount > 0} />
           </div>
         </section>

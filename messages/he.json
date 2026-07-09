@@ -838,6 +838,7 @@
         "paymentCap": "יכולת החזר",
         "binding": "מגבלה קובעת",
         "maxByLtv": "תקרת LTV",
+        "requiredIncome": "הכנסה נדרשת ({pct}% DTI)",
         "excess": "חריגה מעל LTV"
       },
       "constraints": {
