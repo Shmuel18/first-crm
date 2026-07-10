@@ -1115,6 +1115,9 @@
     "convertBody": "ליצור תיק חדש מהליד הזה? פרטי הליד יועתקו ללווה הראשי בתיק, והליד יסומן כ\"הומר\".",
     "form": {
       "title": "ליד חדש",
+      "sections": {
+        "discovery": "פרטי בירור"
+      },
       "fields": {
         "firstName": "שם פרטי",
         "lastName": "שם משפחה",
@@ -1123,9 +1126,45 @@
         "nationalId": "ת\"ז",
         "notes": "הערות",
         "assignee": "משויך ל",
-        "assigneeUnassigned": "ללא שיוך"
+        "assigneeUnassigned": "ללא שיוך",
+        "purpose": "מטרת הפנייה / סוג עסקה",
+        "purposePlaceholder": "לדוגמה: רכישת דירה ראשונה",
+        "propertyValue": "שווי נכס (₪)",
+        "requestedMortgage": "סכום מבוקש (₪)",
+        "equity": "הון עצמי (₪)",
+        "monthlyIncome": "הכנסה חודשית משוערת (₪)",
+        "followUp": "תאריך לחזור ללקוח"
       },
       "submit": "צור ליד"
+    },
+    "details": {
+      "view": "צפייה בפרטים",
+      "contact": "פרטי קשר",
+      "phone": "טלפון",
+      "email": "אימייל",
+      "nationalId": "ת\"ז",
+      "followUp": "מעקב",
+      "followUpDate": "תאריך לחזור ללקוח",
+      "property": "נכס ובקשה",
+      "purpose": "מטרה",
+      "propertyCity": "עיר הנכס",
+      "propertyValue": "שווי נכס",
+      "requestedMortgage": "סכום מבוקש",
+      "equity": "הון עצמי",
+      "borrower": "פרטי הלווה",
+      "borrowerN": "לווה {n}",
+      "name": "שם",
+      "birthDate": "תאריך לידה",
+      "city": "עיר",
+      "address": "כתובת",
+      "citizenship": "אזרחות",
+      "children": "מספר ילדים",
+      "employer": "מעסיק",
+      "monthlyIncome": "הכנסה חודשית",
+      "employmentStart": "תחילת עבודה",
+      "story": "סיפור הפנייה",
+      "notes": "הערות",
+      "empty": "אין פרטים נוספים לליד הזה. הוא נוצר עם פרטי קשר בלבד."
     },
     "errors": {
       "nameRequired": "שם פרטי הוא שדה חובה",

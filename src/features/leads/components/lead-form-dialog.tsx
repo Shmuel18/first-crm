@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { DateInputWithPicker } from '@/components/ui/date-input-with-picker';
 import { FormField, NativeSelect } from '@/components/shared/form-fields';
 import { fieldDefault } from '@/lib/utils/form-defaults';
 import { formatPersonName } from '@/lib/utils/person-name';
@@ -107,6 +108,47 @@ export function LeadFormDialog({ open, onOpenChange, assignees }: Props) {
                   );
                 })}
               </NativeSelect>
+            </FormField>
+          </div>
+
+          {/* Discovery-call details — all optional. Saved to the lead and imported
+              to the client card on conversion, so a "we'll think about it" prospect
+              stays a rich lead instead of a half-empty case in the archive. */}
+          <div className="space-y-4 rounded-lg border border-neutral-200 bg-brand-gold-soft/30 p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-gold-text">
+              {t('sections.discovery')}
+            </p>
+
+            <FormField label={t('fields.purpose')} error={fieldErrors.purpose}>
+              <Input
+                name="purpose"
+                defaultValue={value('purpose')}
+                maxLength={120}
+                placeholder={t('fields.purposePlaceholder')}
+              />
+            </FormField>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField label={t('fields.propertyValue')} error={fieldErrors.property_value}>
+                <Input name="property_value" type="number" inputMode="numeric" min="0" defaultValue={value('property_value')} dir="ltr" />
+              </FormField>
+              <FormField label={t('fields.requestedMortgage')} error={fieldErrors.requested_mortgage_amount}>
+                <Input name="requested_mortgage_amount" type="number" inputMode="numeric" min="0" defaultValue={value('requested_mortgage_amount')} dir="ltr" />
+              </FormField>
+              <FormField label={t('fields.equity')} error={fieldErrors.equity}>
+                <Input name="equity" type="number" inputMode="numeric" min="0" defaultValue={value('equity')} dir="ltr" />
+              </FormField>
+              <FormField label={t('fields.monthlyIncome')} error={fieldErrors.monthly_income}>
+                <Input name="monthly_income" type="number" inputMode="numeric" min="0" defaultValue={value('monthly_income')} dir="ltr" />
+              </FormField>
+            </div>
+
+            <FormField label={t('fields.followUp')} error={fieldErrors.follow_up_date}>
+              <DateInputWithPicker
+                name="follow_up_date"
+                defaultValue={value('follow_up_date').slice(0, 10)}
+                pickerLabel={t('fields.followUp')}
+              />
             </FormField>
           </div>
 

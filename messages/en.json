@@ -1115,6 +1115,9 @@
     "convertBody": "Create a new case from this lead? The lead's details will be copied to the case's primary borrower, and the lead will be marked as converted.",
     "form": {
       "title": "New lead",
+      "sections": {
+        "discovery": "Discovery details"
+      },
       "fields": {
         "firstName": "First name",
         "lastName": "Last name",
@@ -1123,9 +1126,45 @@
         "nationalId": "ID number",
         "notes": "Notes",
         "assignee": "Assigned to",
-        "assigneeUnassigned": "Unassigned"
+        "assigneeUnassigned": "Unassigned",
+        "purpose": "Purpose / deal type",
+        "purposePlaceholder": "e.g. buying a first home",
+        "propertyValue": "Property value (₪)",
+        "requestedMortgage": "Requested amount (₪)",
+        "equity": "Equity (₪)",
+        "monthlyIncome": "Approx. monthly income (₪)",
+        "followUp": "Follow-up date"
       },
       "submit": "Create lead"
+    },
+    "details": {
+      "view": "View details",
+      "contact": "Contact",
+      "phone": "Phone",
+      "email": "Email",
+      "nationalId": "ID number",
+      "followUp": "Follow-up",
+      "followUpDate": "Follow-up date",
+      "property": "Property & request",
+      "purpose": "Purpose",
+      "propertyCity": "Property city",
+      "propertyValue": "Property value",
+      "requestedMortgage": "Requested amount",
+      "equity": "Equity",
+      "borrower": "Borrower",
+      "borrowerN": "Borrower {n}",
+      "name": "Name",
+      "birthDate": "Date of birth",
+      "city": "City",
+      "address": "Address",
+      "citizenship": "Citizenship",
+      "children": "Children",
+      "employer": "Employer",
+      "monthlyIncome": "Monthly income",
+      "employmentStart": "Employment start",
+      "story": "Their story",
+      "notes": "Notes",
+      "empty": "No extra details for this lead. It was created with contact info only."
     },
     "errors": {
       "nameRequired": "First name is required",

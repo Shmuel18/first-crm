@@ -4,7 +4,9 @@ import { userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
+import type { Json } from '@/types/database';
 
+import { buildLeadMetadata } from '../domain/lead-details';
 import { LeadFormSchema } from '../schemas/lead.schema';
 import type { LeadActionState } from '../types';
 
@@ -33,6 +35,22 @@ export async function createLeadAction(
   const canAssignOthers = await userHasPermission('view_all_leads');
   const assignedTo = canAssignOthers ? (parsed.data.assigned_to ?? null) : userRes.user.id;
 
+  // Discovery-call fields → metadata (intake shape). Empty {} for a bare lead.
+  const metadata = buildLeadMetadata({
+    firstName: parsed.data.first_name,
+    lastName: parsed.data.last_name ?? null,
+    phone: parsed.data.phone ?? null,
+    email: parsed.data.email ?? null,
+    nationalId: parsed.data.national_id ?? null,
+    purpose: parsed.data.purpose ?? null,
+    propertyValue: parsed.data.property_value ?? null,
+    requestedMortgage: parsed.data.requested_mortgage_amount ?? null,
+    equity: parsed.data.equity ?? null,
+    monthlyIncome: parsed.data.monthly_income ?? null,
+    followUpDate: parsed.data.follow_up_date ?? null,
+    notes: parsed.data.notes ?? null,
+  });
+
   const { data, error } = await supabase
     .from('leads')
     .insert({
@@ -43,6 +61,8 @@ export async function createLeadAction(
       national_id: parsed.data.national_id ?? null,
       notes: parsed.data.notes ?? null,
       assigned_to: assignedTo,
+      // buildLeadMetadata returns a plain JSON object; the column type is Json.
+      metadata: metadata as Json,
       created_by: userRes.user.id,
       updated_by: userRes.user.id,
     })

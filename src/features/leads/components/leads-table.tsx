@@ -6,6 +6,7 @@ import type { LeadRow } from '../types';
 
 import { ConvertLeadButton } from './convert-lead-button';
 import { DeleteLeadButton } from './delete-lead-button';
+import { LeadDetailsButton } from './lead-details-button';
 import { LeadSourceBadge } from './lead-source-badge';
 
 type Props = { leads: ReadonlyArray<LeadRow> };
@@ -64,7 +65,8 @@ export function LeadsTable({ leads }: Props) {
                   </span>
                 </Td>
                 <Td>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <LeadDetailsButton lead={lead} />
                     {lead.status !== 'converted' && <ConvertLeadButton leadId={lead.id} />}
                     <DeleteLeadButton
                       leadId={lead.id}
