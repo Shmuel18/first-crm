@@ -1,6 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import { after } from 'next/server';
 
 import { sendTaskNotificationEmail } from '@/features/notifications/services/notification-email';
@@ -91,13 +90,12 @@ export async function createTaskAction(
     );
   }
 
-  // NOTE: intentionally NOT revalidating the ('/(app)','layout') shell here.
-  // That forced a full layout re-render (layout_bootstrap RPC + perm check) into
-  // the action's POST response and, combined with the per-request auth round-trip
-  // in middleware, contributed to intermittent 503s. The recipient's realtime
-  // bell performs a follow-up task-shell refresh instead.
-  revalidatePath('/tasks');
-  if (parsed.data.case_id) revalidatePath(`/cases/${parsed.data.case_id}`);
-
+  // NOTE: no revalidatePath here. Revalidating /tasks — and especially the heavy
+  // /cases/[id] — forced that page's RSC to re-render INTO this action's POST
+  // response, so the submit button spun ~1.5s (measured) until the re-render
+  // streamed back (the reported "button hangs when assigning a task"). The client
+  // closes the dialog the instant the insert returns and calls router.refresh()
+  // to update the list in the background; the recipient's realtime bell covers
+  // their view. The in-app bell (DB trigger) + email (after()) are handled above.
   return { ok: true, taskId: inserted.id };
 }

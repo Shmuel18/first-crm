@@ -4,6 +4,7 @@ import { useActionState, useCallback, useEffect, useRef, useState } from 'react'
 import { useFormStatus } from 'react-dom';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { ExternalLink, Loader2, Pencil, Upload as UploadIcon, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -63,6 +64,7 @@ export function TaskFormDialog({
   const tc = useTranslations('common');
   const tp = useTranslations('tasks.priority');
 
+  const router = useRouter();
   const action = mode === 'create' ? createTaskAction : updateTaskAction;
   const [state, formAction] = useActionState<TaskActionState, FormData>(
     action,
@@ -128,6 +130,11 @@ export function TaskFormDialog({
     if (handledSuccessRef.current === state) return;
     handledSuccessRef.current = state;
 
+    // The action no longer revalidates server-side (that spun the button on the
+    // heavy case/tasks re-render). Refresh the list in the background now that the
+    // action has returned and the button is released.
+    router.refresh();
+
     if (mode !== 'create' || attachments.length === 0) {
       queueMicrotask(() => handleDialogOpenChange(false));
       return;
@@ -153,7 +160,7 @@ export function TaskFormDialog({
     return () => {
       cancelled = true;
     };
-  }, [attachments, handleDialogOpenChange, mode, selectedCaseId, state, t]);
+  }, [attachments, handleDialogOpenChange, mode, router, selectedCaseId, state, t]);
 
   const [caseSearch, setCaseSearch] = useState('');
 

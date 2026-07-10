@@ -1,6 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import { after } from 'next/server';
 import { z } from 'zod';
 
@@ -93,16 +92,9 @@ export async function updateTaskAction(
     );
   }
 
-  revalidatePath('/tasks');
-  const newCaseId = parsed.data.case_id ?? null;
-  if (newCaseId) revalidatePath(`/cases/${newCaseId}`);
-  // On a case move, refresh the old case too so the task stops showing there.
-  if (existing.case_id && existing.case_id !== newCaseId) {
-    revalidatePath(`/cases/${existing.case_id}`);
-  }
-  // No revalidatePath('/(app)','layout') — it forces a layout_bootstrap RPC into
-  // the response and made task edit/reassign spin 0.5-2s (client-reported). The
-  // shell badge refreshes via the bell + next navigation, like create/reassign.
-
+  // No revalidatePath (same reason as create-task): revalidating the heavy
+  // /cases/[id] re-rendered it into this POST response and spun the button
+  // 0.5-2s. The shared TaskFormDialog calls router.refresh() on success to
+  // update the list in the background; the bell covers the recipient's view.
   return { ok: true, taskId };
 }
