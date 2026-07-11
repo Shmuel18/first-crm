@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
@@ -59,6 +57,9 @@ export async function addEmptyBorrowerAction(
     return { ok: false, error: error?.code === '42501' ? 'unauthorized' : 'unknown' };
   }
 
-  revalidatePath(`/cases/${caseId}`);
+  // No revalidatePath: it re-rendered the heavy /cases/[id] into the POST response,
+  // so the button spun ~1-1.6s for a single empty row. The consumer (AddBorrowerButton)
+  // calls router.refresh() after this returns — the new card streams in in the
+  // background while the button releases immediately. Mirrors the task create/edit fix.
   return { ok: true, borrowerId };
 }

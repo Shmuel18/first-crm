@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 
 import { Loader2, RotateCcw } from 'lucide-react';
@@ -33,6 +34,7 @@ type Props = {
 export function TaskReassignDialog({ open, onOpenChange, task, assignees }: Props) {
   const t = useTranslations('tasks');
   const tc = useTranslations('common');
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
 
   const currentId = task?.assignee?.id ?? task?.assigned_to ?? '';
@@ -73,6 +75,9 @@ export function TaskReassignDialog({ open, onOpenChange, task, assignees }: Prop
       }
       toast.success(t('toast.reassigned'));
       onOpenChange(false);
+      // The action no longer revalidates (that spun the button on the heavy case
+      // re-render). Refresh the list in the background now that the dialog is closed.
+      router.refresh();
     });
   };
 

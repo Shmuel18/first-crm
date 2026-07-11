@@ -1,9 +1,11 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 import { AlertCircle, FileType2, Image as ImageIcon, FileText, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
 import { assignDocumentCategoryAction } from '../actions/assign-document-category';
 import type { DocumentCategoryRow, DocumentWithRelations } from '../types';
@@ -73,14 +75,27 @@ function UncategorizedRow({
   onPreview: (doc: DocumentWithRelations) => void;
 }) {
   const t = useTranslations('documents.uncategorized');
-  const [isPending, startTransition] = useTransition();
+  const tc = useTranslations('common');
+  const router = useRouter();
+  // Local busy (not a transition) so the <select> re-enables the instant the
+  // now-revalidate-free action returns; the row hides optimistically + refreshes.
+  const [busy, setBusy] = useState(false);
+  const [hidden, setHidden] = useState(false);
 
-  const handleChange = (categoryId: string) => {
-    if (!categoryId) return;
-    startTransition(async () => {
-      await assignDocumentCategoryAction(doc.id, caseId, categoryId);
-    });
+  const handleChange = async (categoryId: string) => {
+    if (!categoryId || busy) return;
+    setBusy(true);
+    const res = await assignDocumentCategoryAction(doc.id, caseId, categoryId);
+    setBusy(false);
+    if (!res.ok) {
+      toast.error(tc('saveFailed'));
+      return;
+    }
+    setHidden(true); // the doc now has a category — drop it from the "uncategorized" card
+    router.refresh(); // background — reconcile the parent list
   };
+
+  if (hidden) return null;
 
   return (
     <div className="flex items-center gap-3 px-3 py-2 rounded-md bg-white border border-amber-100">
@@ -96,7 +111,7 @@ function UncategorizedRow({
       <div className="flex items-center gap-1.5 shrink-0">
         <select
           aria-label={t('pickCategory')}
-          disabled={isPending || !canEdit}
+          disabled={busy || !canEdit}
           defaultValue=""
           onChange={(e) => handleChange(e.target.value)}
           className="h-8 rounded-md border border-amber-200 bg-white px-2 text-xs text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-gold disabled:opacity-50 max-w-[140px]"
@@ -110,7 +125,7 @@ function UncategorizedRow({
             </option>
           ))}
         </select>
-        {isPending && <Loader2 className="size-3.5 animate-spin text-amber-600" />}
+        {busy && <Loader2 className="size-3.5 animate-spin text-amber-600" />}
       </div>
     </div>
   );

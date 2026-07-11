@@ -2,6 +2,7 @@
 
 import { randomUUID } from 'node:crypto';
 
+import { after } from 'next/server';
 import { fileTypeFromBuffer } from 'file-type';
 
 import { sanitizeFilename } from '@/features/documents/domain/sanitize-filename';
@@ -120,18 +121,18 @@ export async function uploadExpenseReceiptAction(
     return { ok: false, error: 'storage' };
   }
 
-  // Replace: drop the previous blob now (an in-place replacement isn't a
-  // soft-delete, so the retention cron — which now also sweeps soft-deleted
-  // expense receipts, migration 139 — won't pick the old blob up).
-  if (oldPath && oldPath !== path) {
-    await admin.storage.from(BUCKET).remove([oldPath]).catch(() => undefined);
-  }
-
-  // Best-effort Drive mirror (decision #3) — never blocks success.
-  await mirrorReceiptToDrive(caseId, expenseId, {
-    content: buf,
-    name: safeName,
-    mimeType: sniffed.mime,
+  // Best-effort cleanup + Drive mirror AFTER the response. The receipt is already in
+  // Storage + stamped on the row (the user's actual request), so these must not block
+  // the paperclip button: the old-blob replace-remove and especially the Drive mirror
+  // (a full-file HTTP round-trip) used to be awaited and spun the spinner for seconds.
+  // The Drive sync sweep backfills a missed mirror; the doc's "never blocks" contract
+  // is now actually honoured.
+  const mime = sniffed.mime;
+  after(async () => {
+    if (oldPath && oldPath !== path) {
+      await admin.storage.from(BUCKET).remove([oldPath]).catch(() => undefined);
+    }
+    await mirrorReceiptToDrive(caseId, expenseId, { content: buf, name: safeName, mimeType: mime });
   });
 
   return { ok: true, receiptName: safeName, receiptMime: sniffed.mime };

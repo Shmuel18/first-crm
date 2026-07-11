@@ -1,5 +1,7 @@
 'use server';
 
+import { after } from 'next/server';
+
 import { eraseDriveTargets } from '@/features/integrations/services/drive-case-uploader';
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -60,14 +62,20 @@ export async function removeExpenseReceiptAction(
     return { ok: false, error: 'unknown' };
   }
 
-  // Erase the blob + Drive copy (best-effort — pointers are already cleared, so
-  // a failure here just leaves a file for manual cleanup, never a dangling ref).
-  if (path) {
-    const admin = createAdminClient();
-    await admin.storage.from(BUCKET).remove([path]).catch(() => undefined);
-  }
-  if (driveId) {
-    await eraseDriveTargets({ fileIds: [driveId] }).catch(() => undefined);
+  // Erase the blob + Drive copy AFTER the response (best-effort). The pointer columns
+  // are already cleared — the visible detach — so this housekeeping must not block the
+  // button: a Drive DELETE round-trip (with a possible token refresh) used to be
+  // awaited before returning. A failure just leaves a file for the retention sweep.
+  if (path || driveId) {
+    after(async () => {
+      if (path) {
+        const admin = createAdminClient();
+        await admin.storage.from(BUCKET).remove([path]).catch(() => undefined);
+      }
+      if (driveId) {
+        await eraseDriveTargets({ fileIds: [driveId] }).catch(() => undefined);
+      }
+    });
   }
 
   return { ok: true };

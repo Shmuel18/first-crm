@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 
 import { Loader2, Upload as UploadIcon, X } from 'lucide-react';
@@ -52,6 +53,7 @@ export function UploadDocumentModal({
 }: Props) {
   const t = useTranslations('documents.uploadModal');
   const tErr = useTranslations('documents.errors');
+  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -168,9 +170,10 @@ export function UploadDocumentModal({
         return;
       }
 
-      // Success — close the modal. The parent should remount via
-      // key={String(open)} so all internal state resets cleanly.
+      // Success — close the modal, then refresh in the background (the action no
+      // longer revalidates; that spun the button on the heavy documents re-render).
       onOpenChange(false);
+      router.refresh();
     } catch {
       setGenericError(tErr('uploadFailed'));
     } finally {

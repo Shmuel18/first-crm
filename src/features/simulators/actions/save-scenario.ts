@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 
 import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
@@ -49,11 +50,20 @@ export async function saveScenarioAction(input: SaveScenarioInput): Promise<Save
     return { ok: false, error: 'unknown' };
   }
 
-  revalidatePath('/simulators');
-  if (parsed.data.caseId) {
-    revalidatePath(`/cases/${parsed.data.caseId}`);
-    revalidatePath(`/cases/${parsed.data.caseId}/simulators`);
-  }
+  // Purge the cross-route caches AFTER the response. This action is the debounced
+  // auto-save — it fires every ~1.2s while the advisor edits. A synchronous
+  // revalidatePath makes the framework refetch the current (dynamic) workspace route
+  // into the action response, so the "saving → saved" indicator lagged on every
+  // keystroke-batch. The workspace UI is fully client-state (tab id via onCreated,
+  // title via onSaved), so nothing here needs a live refresh; deferring the purge
+  // keeps the saved-list / case page fresh for the next navigation at no latency cost.
+  after(() => {
+    revalidatePath('/simulators');
+    if (parsed.data.caseId) {
+      revalidatePath(`/cases/${parsed.data.caseId}`);
+      revalidatePath(`/cases/${parsed.data.caseId}/simulators`);
+    }
+  });
   return { ok: true, scenarioId: data };
 }
 

@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { useState, useTransition } from 'react';
 
 import {
   AlertTriangle,
@@ -59,7 +60,12 @@ export function TaskRow({ task, locale, onEdit, onReassign, onThread, compact = 
   const tp = useTranslations('tasks.priority');
   const ts = useTranslations('tasks.status');
   const tc = useTranslations('common');
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
+  // The complete/reopen toggle runs OUTSIDE a transition so the checkbox releases
+  // the moment the (now-revalidate-free) action returns; router.refresh() then
+  // updates the row in the background without re-disabling the checkbox.
+  const [toggleBusy, setToggleBusy] = useState(false);
 
   const overdue = isOverdue(task);
   const immediate = isImmediateTask(task);
@@ -71,17 +77,17 @@ export function TaskRow({ task, locale, onEdit, onReassign, onThread, compact = 
     formatPersonName(task.assigner?.first_name, task.assigner?.last_name) ||
     (task.assigned_by ? t('assignment.unknownPerson') : t('assignment.system'));
 
-  const handleToggleComplete = () => {
-    startTransition(async () => {
-      const res = completed
-        ? await reopenTaskAction(task.id)
-        : await completeTaskAction(task.id);
-      if (!res.ok) {
-        toast.error(t('toast.actionFailed'));
-      } else {
-        toast.success(completed ? t('toast.reopened') : t('toast.completed'));
-      }
-    });
+  const handleToggleComplete = async () => {
+    if (toggleBusy) return;
+    setToggleBusy(true);
+    const res = completed ? await reopenTaskAction(task.id) : await completeTaskAction(task.id);
+    setToggleBusy(false); // release the checkbox the instant the DB write returns
+    if (!res.ok) {
+      toast.error(t('toast.actionFailed'));
+      return;
+    }
+    toast.success(completed ? t('toast.reopened') : t('toast.completed'));
+    router.refresh(); // background — updates the row without re-disabling the button
   };
 
   const handleStatus = (status: TaskStatus) => {
@@ -107,7 +113,7 @@ export function TaskRow({ task, locale, onEdit, onReassign, onThread, compact = 
       <button
         type="button"
         onClick={handleToggleComplete}
-        disabled={pending}
+        disabled={toggleBusy || pending}
         aria-label={completed ? t('action.reopen') : t('action.complete')}
         className={[
           'mt-0.5 size-5 rounded border-2 flex items-center justify-center transition shrink-0',

@@ -1,11 +1,12 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 
 import { fileTypeFromBuffer } from 'file-type';
 
 import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { uploadCaseDocumentToDrive } from '@/features/integrations/services/drive-case-uploader';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
@@ -143,33 +144,7 @@ export async function finalizeUploadAction(
     return { ok: false, error: 'validation', message: 'fileTooLarge' };
   }
 
-  // ── Drive upload (best-effort) ────────────────────────────────────────
-  let driveFileId: string | null = null;
-  let driveFileUrl: string | null = null;
-  if (ctx.driveFolder) {
-    // Download the full file from Storage for Drive upload.
-    // TODO future: have Drive pull from a signed URL directly so we don't
-    // round-trip the bytes through this function.
-    const { data: blob, error: dlErr } = await supabase.storage
-      .from(BUCKET)
-      .download(storagePath);
-    if (!dlErr && blob) {
-      const buf = await blob.arrayBuffer();
-      const out = await uploadCaseDocumentToDrive({
-        caseId: input.caseId,
-        caseNumber: ctx.caseNumber,
-        familyName: ctx.familyName,
-        driveFolder: ctx.driveFolder,
-        file: { content: buf, name: safeFileName, mimeType: sniffed.mime },
-      });
-      if (out.ok) {
-        driveFileId = out.driveFileId;
-        driveFileUrl = out.webViewLink;
-      }
-    }
-  }
-
-  // ── INSERT the documents row ──────────────────────────────────────────
+  // ── INSERT the documents row (Drive mirror runs AFTER the response) ─────
   const { error: insertErr } = await supabase.from('documents').insert({
     id: input.documentId,
     case_id: input.caseId,
@@ -183,21 +158,54 @@ export async function finalizeUploadAction(
     uploaded_by: userRes.user.id,
     status: 'new',
     metadata: { storage_path: storagePath },
-    drive_file_id: driveFileId,
-    drive_file_url: driveFileUrl,
+    drive_file_id: null,
+    drive_file_url: null,
   });
 
   if (insertErr) {
     console.error('[finalizeUpload] insert failed', safeDbError(insertErr));
     await cleanupBlob(supabase, storagePath);
-    // Drive blob is intentionally NOT cleaned up here — the existing
-    // uploadDocumentBlobs path doesn't either, and an orphan Drive file
-    // shows up in the next sync sweep.
     return { ok: false, error: 'storage' };
   }
 
-  revalidatePath(`/cases/${input.caseId}/documents`);
-  revalidatePath(`/cases/${input.caseId}`);
+  // Best-effort Drive mirror AFTER the response. It used to be awaited before
+  // returning (download the FULL file back out of Storage + a Drive HTTP round-trip
+  // of the bytes), which spun the upload button for seconds when Drive is connected.
+  // Now the row is saved immediately; the mirror runs in the background via the admin
+  // client (no request context inside after()) and stamps drive_file_id/url onto the
+  // row. A failed/skipped mirror is backfilled by the periodic Drive sync sweep.
+  if (ctx.driveFolder) {
+    const driveFolder = ctx.driveFolder;
+    const caseNumber = ctx.caseNumber;
+    const familyName = ctx.familyName;
+    const mimeType = sniffed.mime;
+    after(async () => {
+      try {
+        const admin = createAdminClient();
+        const { data: blob } = await admin.storage.from(BUCKET).download(storagePath);
+        if (!blob) return;
+        const out = await uploadCaseDocumentToDrive({
+          caseId: input.caseId,
+          caseNumber,
+          familyName,
+          driveFolder,
+          file: { content: await blob.arrayBuffer(), name: safeFileName, mimeType },
+        });
+        if (out.ok) {
+          await admin
+            .from('documents')
+            .update({ drive_file_id: out.driveFileId, drive_file_url: out.webViewLink })
+            .eq('id', input.documentId);
+        }
+      } catch (err) {
+        console.error('[finalizeUpload] drive mirror (after) failed', err);
+      }
+    });
+  }
+
+  // No revalidatePath: the heavy /cases/[id]/documents + /cases/[id] re-render into
+  // the POST response spun the upload button. The modal calls router.refresh() after
+  // it closes to bring the new document into the grid.
   return { ok: true, documentId: input.documentId };
 }
 

@@ -1,6 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import { after } from 'next/server';
 
 import { sendTaskNotificationEmail } from '@/features/notifications/services/notification-email';
@@ -82,10 +81,10 @@ export async function reassignTaskAction(
     );
   }
 
-  // Keep the action POST light; the recipient's realtime bell refreshes their
-  // shell, while this revalidates the task page/case page for the actor.
-  revalidatePath('/tasks');
-  if (result.case_id) revalidatePath(`/cases/${result.case_id}`);
+  // No revalidatePath: from the case popover this re-rendered the heavy /cases/[id]
+  // into the POST response and spun the submit button. The recipient's realtime bell
+  // refreshes their shell; TaskReassignDialog calls router.refresh() after it closes
+  // to update the actor's list in the background.
   return { ok: true };
 }
 

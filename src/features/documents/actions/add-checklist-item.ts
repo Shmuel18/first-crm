@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
@@ -36,6 +34,8 @@ export async function addChecklistItemAction(
     return { ok: false, error: 'unknown' };
   }
 
-  revalidatePath(`/cases/${caseId}/documents`);
+  // No revalidatePath: re-rendering the heavy documents page into the POST response
+  // spun the add button over the input. The modal releases the button on return and
+  // calls router.refresh() in the background to bring the new row (with its real id).
   return { ok: true };
 }

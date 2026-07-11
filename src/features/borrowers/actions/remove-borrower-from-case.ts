@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
@@ -74,6 +72,9 @@ export async function removeBorrowerFromCaseAction(
   }
   if (count === 0) return { ok: false, error: 'not_found' };
 
-  revalidatePath(`/cases/${caseId}`);
+  // No revalidatePath: the consumer (CaseBorrowerCardHeader) already calls
+  // router.refresh() on success — revalidating the heavy /cases/[id] here on top of
+  // that re-rendered the page TWICE into the POST response, keeping the confirm
+  // button disabled the whole time.
   return { ok: true };
 }

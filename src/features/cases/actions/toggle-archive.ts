@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { safeDbError } from '@/lib/supabase/db-error-log';
@@ -36,7 +37,11 @@ export async function toggleArchiveAction(
     return { ok: false, error: 'unknown' };
   }
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized' };
-  revalidatePath('/cases');
-  revalidatePath(`/cases/${caseId}`);
+  // The caller (CaseMoreMenu) already calls router.refresh() on success, which re-
+  // renders the current /cases/[id] page — so revalidating it here just doubled the
+  // heavy re-render and kept the menu's pending state up. Purge the dashboard list
+  // AFTER the response (the user stays on the case page; /cases matters on the next
+  // visit, when the archived filter must reflect the change).
+  after(() => revalidatePath('/cases'));
   return { ok: true };
 }

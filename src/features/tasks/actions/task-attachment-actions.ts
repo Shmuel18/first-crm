@@ -1,8 +1,9 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 
 import { getDriveClientIfConnected } from '@/features/integrations/services/drive-case-uploader';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 
 import {
@@ -105,13 +106,24 @@ export async function deleteTaskAttachmentAction(
     .select('id');
   if (delErr || !deleted || deleted.length === 0) return { ok: false };
 
-  // Best-effort cleanup — never fail the delete on these.
-  await supabase.storage.from(TASK_DOCUMENTS_BUCKET).remove([row.storage_path]).catch(() => undefined);
-  if (row.drive_file_id) {
-    const client = await getDriveClientIfConnected();
-    if (client) await client.deleteFile(row.drive_file_id).catch(() => undefined);
-  }
+  // Best-effort cleanup AFTER the response — never block the trash button. The row is
+  // already deleted (the user's action, and TaskAttachmentsList drops it from its own
+  // state on success), so the Storage remove + a Drive deleteFile (token refresh +
+  // DELETE round-trip when connected) must not be awaited before returning. Admin
+  // client for the Storage remove: after() runs outside the request, so there's no
+  // user session for the user-client to authenticate with.
+  const storagePath = row.storage_path;
+  const driveFileId = row.drive_file_id;
+  after(async () => {
+    const admin = createAdminClient();
+    await admin.storage.from(TASK_DOCUMENTS_BUCKET).remove([storagePath]).catch(() => undefined);
+    if (driveFileId) {
+      const client = await getDriveClientIfConnected();
+      if (client) await client.deleteFile(driveFileId).catch(() => undefined);
+    }
+  });
 
-  revalidatePath('/tasks');
+  // No revalidatePath('/tasks'): TaskAttachmentsList drops the deleted row from its
+  // own list, so re-rendering the tasks page into this POST would only add latency.
   return { ok: true };
 }

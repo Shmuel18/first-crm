@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 
 import {
@@ -70,6 +71,10 @@ export function ChecklistManagerModal({
   const [label, setLabel] = useState('');
   const [pendingRemove, setPendingRemove] = useState<DocumentChecklistItem | null>(null);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+  // Add runs OUTSIDE the transition so the button releases the moment the (now
+  // revalidate-free) action returns; router.refresh() then brings the real row.
+  const [addBusy, setAddBusy] = useState(false);
 
   // Pointer-based drag → works on touch (mobile) and mouse. Small activation
   // distance so a tap on the handle isn't read as a drag.
@@ -102,14 +107,18 @@ export function ChecklistManagerModal({
     });
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const value = label.trim();
-    if (!value) return;
-    startTransition(async () => {
-      const res = await addChecklistItemAction(caseId, value);
-      if (res.ok) setLabel('');
-      else toast.error(tc('saveFailed'));
-    });
+    if (!value || addBusy) return;
+    setAddBusy(true);
+    const res = await addChecklistItemAction(caseId, value);
+    setAddBusy(false); // release the add button the instant the DB write returns
+    if (!res.ok) {
+      toast.error(tc('saveFailed'));
+      return;
+    }
+    setLabel('');
+    router.refresh(); // background — the resync from `items` brings the real new row
   };
 
   const doRemove = (item: DocumentChecklistItem) => {
@@ -199,10 +208,10 @@ export function ChecklistManagerModal({
           />
           <button
             type="submit"
-            disabled={isPending || label.trim().length === 0}
+            disabled={addBusy || label.trim().length === 0}
             className="inline-flex items-center gap-1.5 rounded-lg bg-brand-gold px-4 py-2 text-sm font-medium text-brand-black transition hover:bg-brand-gold-hover disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
           >
-            {isPending ? (
+            {addBusy ? (
               <Loader2 className="size-4 animate-spin" aria-hidden="true" />
             ) : (
               <Plus className="size-4" aria-hidden="true" />

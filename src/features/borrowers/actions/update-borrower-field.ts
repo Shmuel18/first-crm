@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
@@ -76,6 +74,9 @@ export async function updateBorrowerFieldAction(
     return { ok: false, error: 'unauthorized' };
   }
 
-  revalidatePath(`/cases/${caseId}`);
+  // No revalidatePath: the borrower card mutates optimistically (setLocalBorrower),
+  // and revalidating the heavy /cases/[id] route re-renders the whole page into the
+  // POST response — the save spinner spun until it returned + a scroll-jump. Mirrors
+  // updateBorrowerRoleAction / updateIncomeFieldAction (already fixed the same way).
   return { ok: true };
 }

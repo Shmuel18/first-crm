@@ -1,6 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
 import { safeDbError } from '@/lib/supabase/db-error-log';
@@ -61,9 +60,8 @@ export async function reopenTaskAction(taskId: string): Promise<Result> {
     body: '↩ נפתחה מחדש',
   });
 
-  // Skip the heavy ('/(app)','layout') shell revalidate (see create-task note) —
-  // badge updates on next nav; keeps the action POST light to avoid 503s.
-  revalidatePath('/tasks');
-  if (existing.case_id) revalidatePath(`/cases/${existing.case_id}`);
+  // No revalidatePath (same as completeTaskAction): revalidating /tasks + the heavy
+  // /cases/[id] into this POST response spun the checkbox. TaskRow releases it on
+  // return and refreshes in the background.
   return { ok: true };
 }

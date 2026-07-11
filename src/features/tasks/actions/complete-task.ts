@@ -1,6 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import { after } from 'next/server';
 import { z } from 'zod';
 
@@ -92,11 +91,10 @@ export async function completeTaskAction(taskId: string): Promise<Result> {
     .eq('user_id', userRes.user.id)
     .is('read_at', null);
 
-  revalidatePath('/tasks');
-  if (existing.case_id) revalidatePath(`/cases/${existing.case_id}`);
-  // NOTE: do NOT revalidatePath('/(app)','layout') here — it forces a synchronous
-  // layout_bootstrap RPC (4+ queries) into the action response and adds 0.5-2s to
-  // the spinner (client-reported). The sidebar task badge / critical dot refresh
-  // via the bell's follow-up shell refresh + next navigation, like create/reassign.
+  // No revalidatePath: from the case-page task popover the current route is the
+  // heavy /cases/[id], and even /tasks re-rendered INTO this POST response kept the
+  // completion checkbox disabled ~1-1.6s. TaskRow now releases the checkbox the
+  // moment this returns and calls router.refresh() in the background instead.
+  // (The '/(app)','layout' shell revalidate was already skipped for the same reason.)
   return { ok: true };
 }

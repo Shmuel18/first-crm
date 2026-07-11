@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 
@@ -56,7 +54,7 @@ export async function addTaskCommentAction(taskId: string, body: string): Promis
     return { ok: false, error: 'unknown' };
   }
 
-  revalidatePath('/tasks');
-  if (task.case_id) revalidatePath(`/cases/${task.case_id}`);
+  // No revalidatePath: the thread reloads its own comments (task-thread reload()),
+  // and revalidating the heavy /cases/[id] from the popover spun the Send button.
   return { ok: true };
 }

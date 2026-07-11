@@ -1,7 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { createClient } from '@/lib/supabase/server';
 import { safeDbError } from '@/lib/supabase/db-error-log';
 
@@ -43,6 +41,8 @@ export async function assignDocumentCategoryAction(
     return { ok: false, error: 'unknown' };
   }
 
-  revalidatePath(`/cases/${caseId}/documents`);
+  // No revalidatePath: re-rendering the heavy documents page into the POST response
+  // kept the <select> disabled with a spinner ~1s to categorize one document. The row
+  // hides itself optimistically and calls router.refresh() in the background instead.
   return { ok: true };
 }

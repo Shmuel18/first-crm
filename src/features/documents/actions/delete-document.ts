@@ -1,6 +1,6 @@
 'use server';
 
-import { refresh, revalidatePath } from 'next/cache';
+import { revalidatePath } from 'next/cache';
 
 import { z } from 'zod';
 
@@ -17,10 +17,12 @@ const DeleteDocumentSchema = z.object({
   caseId: z.string().uuid(),
 });
 
+// Only mark the parent case path stale (light). The heavy current-route
+// (/cases/[id]/documents) revalidate + refresh() re-rendered into the POST response
+// and froze the delete-confirm; the DocumentPreviewModal calls router.refresh() after
+// it closes instead.
 function refreshDocumentViews(caseId: string) {
-  revalidatePath(`/cases/${caseId}/documents`);
   revalidatePath(`/cases/${caseId}`);
-  refresh();
 }
 
 /**

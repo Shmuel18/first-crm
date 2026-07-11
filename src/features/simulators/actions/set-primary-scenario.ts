@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 import { z } from 'zod';
 
 import { getCurrentUser, userHasPermission } from '@/lib/auth/permissions';
@@ -40,7 +41,10 @@ export async function setPrimaryScenarioAction(input: SetPrimaryScenarioInput): 
     return { ok: false, error: 'unknown' };
   }
 
-  revalidatePath(`/cases/${parsed.data.caseId}/simulators/mix`);
-  revalidatePath(`/cases/${parsed.data.caseId}`);
+  // No synchronous revalidate: the workspace toggles the star optimistically
+  // (includedIds) and the bank PDF re-queries is_primary fresh, so re-rendering the
+  // current mix-workspace route into this response only kept the star's pending state
+  // spinning. Purge the case page cache AFTER the response for the next navigation.
+  after(() => revalidatePath(`/cases/${parsed.data.caseId}`));
   return { ok: true };
 }

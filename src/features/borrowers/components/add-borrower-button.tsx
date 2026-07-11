@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from 'react';
 
+import { useRouter } from 'next/navigation';
+
 import { Loader2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
@@ -33,6 +35,7 @@ type Props = {
 export function AddBorrowerButton({ caseId, variant = 'header' }: Props) {
   const t = useTranslations('case.blocks');
   const tc = useTranslations('common');
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   // Local "already firing" flag — double-clicks during the transition would
   // create two empty rows. useTransition already disables the button via
@@ -47,10 +50,12 @@ export function AddBorrowerButton({ caseId, variant = 'header' }: Props) {
       const result = await addEmptyBorrowerAction(caseId);
       if (!result.ok) {
         toast.error(tc('saveFailed'));
+      } else {
+        // The action no longer revalidates (that spun the button on the heavy
+        // /cases/[id] re-render). Refresh in the background now that it returned —
+        // the new empty card streams in while the button is already released.
+        router.refresh();
       }
-      // Success: revalidatePath inside the action triggers a re-render
-      // and the new empty card appears. Nothing to do client-side beyond
-      // resetting the flag for the next click.
       setFiring(false);
     });
   };

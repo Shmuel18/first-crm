@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useEffect, useState, useTransition } from 'react';
 
 import { Download, ExternalLink } from 'lucide-react';
@@ -50,6 +51,7 @@ export function DocumentPreviewModal({
   const [loading, setLoading] = useState<boolean>(() => Boolean(doc && !doc.drive_file_id));
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
@@ -104,6 +106,7 @@ export function DocumentPreviewModal({
         setError(res.error === 'unauthorized' ? tErr('unauthorized') : tErr('statusUpdateFailed'));
       } else {
         onClose();
+        router.refresh(); // action no longer re-renders the heavy grid into the response
       }
     });
 
@@ -119,6 +122,7 @@ export function DocumentPreviewModal({
         setError(res.error === 'unauthorized' ? tErr('unauthorized') : tErr('deleteFailed'));
       } else {
         onClose();
+        router.refresh(); // action no longer re-renders the heavy grid into the response
       }
     });
 

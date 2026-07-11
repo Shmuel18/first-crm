@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 
 import { isCurrentUserAdmin } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
@@ -56,10 +57,14 @@ export async function permanentDeleteCaseAction(input: Input): Promise<Result> {
   }
   if (deleted !== true) return { ok: false, error: 'not_found' };
 
-  // Row erased — now erase the actual files (LEGAL-3 right-to-erasure). Best-
-  // effort + logged: the DB delete already succeeded, so a file-cleanup hiccup
-  // must not turn a completed erasure into an error.
-  await eraseCaseFiles(input.caseId, collected.refs);
+  // Row erased — now erase the actual files (LEGAL-3 right-to-erasure) AFTER the
+  // response. Best-effort + logged: the DB delete already succeeded (the user's
+  // requested action), so a file-cleanup hiccup must not turn a completed erasure
+  // into an error. eraseCaseFiles does a Storage remove + a serial Drive deleteFile
+  // per file when connected — seconds for a doc-heavy case — which used to be
+  // awaited here and froze the confirm dialog's button. It uses its own admin
+  // client, so it runs fine outside the request.
+  after(() => eraseCaseFiles(input.caseId, collected.refs));
 
   revalidatePath('/settings/recycle-bin');
   return { ok: true };

@@ -1,6 +1,6 @@
 'use server';
 
-import { refresh, revalidatePath } from 'next/cache';
+import { revalidatePath } from 'next/cache';
 
 import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
@@ -56,8 +56,10 @@ export async function updateDocumentStatusAction(
     return { ok: false, error: 'unknown' };
   }
 
-  revalidatePath(`/cases/${caseId}/documents`);
+  // No current-route revalidate + refresh(): they re-rendered the heavy documents
+  // page INTO the POST response and kept the status buttons disabled ~1-1.6s. Keep
+  // only the light parent-path revalidate (marks /cases/[id] stale for next nav);
+  // the DocumentPreviewModal calls router.refresh() after it closes.
   revalidatePath(`/cases/${caseId}`);
-  refresh();
   return { ok: true };
 }
