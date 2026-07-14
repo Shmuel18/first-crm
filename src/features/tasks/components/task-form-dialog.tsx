@@ -28,6 +28,7 @@ import { formatPersonName } from '@/lib/utils/person-name';
 
 import { createTaskAction } from '../actions/create-task';
 import { updateTaskAction } from '../actions/update-task';
+import { RECORDING_MAX_PER_TASK } from '../domain/recording';
 import {
   TASK_ACTION_INITIAL,
   TASK_PRIORITY_VALUES,
@@ -36,7 +37,9 @@ import {
 } from '../types';
 import { TaskAssignmentHistory } from './task-assignment-history';
 import { TaskAttachmentsList } from './task-attachments-list';
+import { TaskEditRecorder, TaskRecordingsField } from './task-recordings-field';
 import { runTaskAttachmentUploads } from './upload-task-attachments';
+import { runTaskRecordingUploads } from './upload-task-recordings';
 
 type Profile = { id: string; first_name: string | null; last_name: string | null };
 type CaseOption = { id: string; case_number: string; label: string };
@@ -81,8 +84,13 @@ export function TaskFormDialog({
   const [isPrivate, setIsPrivate] = useState<boolean>(Boolean(task?.is_private));
   const [selectedCaseId, setSelectedCaseId] = useState<string>(presetCaseId ?? task?.case_id ?? '');
   const [attachments, setAttachments] = useState<File[]>([]);
+  // Voice-note recordings — kept separate from attachments because they always
+  // route to the general task store (audio never enters case documents).
+  const [recordings, setRecordings] = useState<File[]>([]);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [attachmentPending, setAttachmentPending] = useState(false);
+  // Bumped after an edit-mode recording upload to refresh the attachments list.
+  const [reloadToken, setReloadToken] = useState(0);
   // Description is controlled so it can render as clickable links (view) or an
   // editable textarea (edit) while always submitting via a hidden input. Start
   // in view mode when there's text to read, edit mode when empty.
@@ -116,6 +124,7 @@ export function TaskFormDialog({
   const resetAttachmentState = useCallback((): void => {
     setSelectedCaseId(presetCaseId ?? task?.case_id ?? '');
     setAttachments([]);
+    setRecordings([]);
     setAttachmentError(null);
     setAttachmentPending(false);
   }, [presetCaseId, task?.case_id]);
@@ -135,7 +144,7 @@ export function TaskFormDialog({
     // action has returned and the button is released.
     router.refresh();
 
-    if (mode !== 'create' || attachments.length === 0) {
+    if (mode !== 'create' || (attachments.length === 0 && recordings.length === 0)) {
       queueMicrotask(() => handleDialogOpenChange(false));
       return;
     }
@@ -150,6 +159,7 @@ export function TaskFormDialog({
 
     void (async () => {
       await runTaskAttachmentUploads(state.taskId, selectedCaseId || null, attachments);
+      await runTaskRecordingUploads(state.taskId, recordings);
       if (!cancelled) handleDialogOpenChange(false);
     })().catch((err) => {
       if (!cancelled) setAttachmentError(mapAttachmentError(err, t));
@@ -160,7 +170,7 @@ export function TaskFormDialog({
     return () => {
       cancelled = true;
     };
-  }, [attachments, handleDialogOpenChange, mode, router, selectedCaseId, state, t]);
+  }, [attachments, recordings, handleDialogOpenChange, mode, router, selectedCaseId, state, t]);
 
   const [caseSearch, setCaseSearch] = useState('');
 
@@ -181,6 +191,7 @@ export function TaskFormDialog({
       setIsPrivate(Boolean(task?.is_private));
       setCaseSearch('');
       setAttachments([]);
+      setRecordings([]);
       setAttachmentError(null);
       const seededDesc = value('description');
       setDescription(seededDesc);
@@ -350,7 +361,17 @@ export function TaskFormDialog({
             )}
           </FormField>
 
-          {mode === 'edit' && task && <TaskAttachmentsList taskId={task.id} />}
+          {mode === 'edit' && task && (
+            <>
+              <FormField label={t('fields.recordVoice')}>
+                <TaskEditRecorder
+                  taskId={task.id}
+                  onUploaded={() => setReloadToken((n) => n + 1)}
+                />
+              </FormField>
+              <TaskAttachmentsList taskId={task.id} reloadToken={reloadToken} />
+            </>
+          )}
 
           {mode === 'create' && (
             <FormField
@@ -408,6 +429,24 @@ export function TaskFormDialog({
                   ? t('fields.attachmentsHint')
                   : t('fields.attachmentsHintGeneral')}
               </p>
+            </FormField>
+          )}
+
+          {mode === 'create' && (
+            <FormField label={t('fields.recordVoice')}>
+              <TaskRecordingsField
+                recordings={recordings}
+                atLimit={recordings.length >= RECORDING_MAX_PER_TASK}
+                disabled={attachmentPending}
+                onAdd={(file) =>
+                  setRecordings((prev) =>
+                    prev.length >= RECORDING_MAX_PER_TASK ? prev : [...prev, file],
+                  )
+                }
+                onRemove={(index) =>
+                  setRecordings((prev) => prev.filter((_, i) => i !== index))
+                }
+              />
             </FormField>
           )}
 

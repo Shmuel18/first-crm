@@ -60,6 +60,7 @@ export async function runTaskAttachmentUploads(
         attachmentId: prep.attachmentId,
         fileName: prep.safeFileName,
         fileSize: file.size,
+        mimeType: file.type,
       });
       if (!final.ok) throw new Error(final.message ?? final.error);
     }

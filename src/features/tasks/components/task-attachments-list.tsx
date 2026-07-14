@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { Eye, FileText, Loader2, Trash2 } from 'lucide-react';
+import { AudioLines, Eye, FileText, Loader2, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
@@ -14,10 +14,11 @@ import {
   listTaskAttachmentsAction,
   listTaskCaseDocumentsAction,
 } from '../actions/task-attachment-actions';
+import { isAudioMime } from '../domain/recording';
 
 import { TaskDocPreviewDialog } from './task-doc-preview-dialog';
 
-type Props = { taskId: string };
+type Props = { taskId: string; reloadToken?: number };
 type Item = {
   id: string;
   fileName: string;
@@ -34,7 +35,7 @@ type Preview = { url: string; fileName: string; mimeType: string | null; driveUr
  * "Kaufman uploaded a doc but I can't see it" report). Case docs are download-
  * only here (a "in case" badge); they're managed on the case's Documents page.
  */
-export function TaskAttachmentsList({ taskId }: Props) {
+export function TaskAttachmentsList({ taskId, reloadToken }: Props) {
   const t = useTranslations('tasks.form.fields');
   const tc = useTranslations('common');
   const [items, setItems] = useState<Item[] | null>(null);
@@ -68,7 +69,7 @@ export function TaskAttachmentsList({ taskId }: Props) {
     return () => {
       active = false;
     };
-  }, [taskId]);
+  }, [taskId, reloadToken]);
 
   if (items === null || items.length === 0) return null;
 
@@ -116,7 +117,11 @@ export function TaskAttachmentsList({ taskId }: Props) {
               key={a.id}
               className="flex items-center gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm"
             >
-              <FileText className="size-4 shrink-0 text-brand-gold-text" aria-hidden="true" />
+              {isAudioMime(a.mimeType) ? (
+                <AudioLines className="size-4 shrink-0 text-brand-gold-text" aria-hidden="true" />
+              ) : (
+                <FileText className="size-4 shrink-0 text-brand-gold-text" aria-hidden="true" />
+              )}
               <span className="flex-1 truncate text-neutral-800">{a.fileName}</span>
               {a.kind === 'case' && (
                 <span className="shrink-0 rounded-full bg-brand-gold-soft px-2 py-0.5 text-[10px] font-medium text-brand-gold-text">

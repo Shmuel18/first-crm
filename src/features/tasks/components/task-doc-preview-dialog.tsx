@@ -12,6 +12,8 @@ import {
 } from '@/components/ui/dialog';
 import { DocumentPreviewBody } from '@/features/documents/components/document-preview-body';
 
+import { isAudioMime } from '../domain/recording';
+
 type Props = {
   url: string;
   fileName: string;
@@ -30,6 +32,7 @@ type Props = {
  */
 export function TaskDocPreviewDialog({ url, fileName, mimeType, driveUrl, onClose }: Props) {
   const t = useTranslations('documents.previewModal');
+  const isAudio = isAudioMime(mimeType);
   const isImage = mimeType?.startsWith('image/') ?? false;
   const isPdf = mimeType === 'application/pdf';
 
@@ -41,16 +44,24 @@ export function TaskDocPreviewDialog({ url, fileName, mimeType, driveUrl, onClos
           <DialogDescription className="sr-only">{fileName}</DialogDescription>
         </DialogHeader>
 
-        <DocumentPreviewBody
-          loading={false}
-          error={null}
-          drivePreviewUrl={null}
-          url={url}
-          fileName={fileName}
-          isImage={isImage}
-          isPdf={isPdf}
-          onRetry={() => undefined}
-        />
+        {isAudio ? (
+          // Audio stays tasks-only — play inline without touching the shared
+          // documents preview body.
+          <audio controls src={url} preload="metadata" className="w-full">
+            <track kind="captions" />
+          </audio>
+        ) : (
+          <DocumentPreviewBody
+            loading={false}
+            error={null}
+            drivePreviewUrl={null}
+            url={url}
+            fileName={fileName}
+            isImage={isImage}
+            isPdf={isPdf}
+            onRetry={() => undefined}
+          />
+        )}
 
         <div className="flex flex-wrap items-center gap-4">
           {driveUrl && (

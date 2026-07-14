@@ -2875,7 +2875,11 @@
         "attachmentsFileRequired": "יש לבחור קובץ לצירוף.",
         "attachmentsTooLarge": "אחד הקבצים חורג ממגבלת 20MB.",
         "attachmentsTypeNotAllowed": "אחד מסוגי הקבצים לא נתמך.",
-        "attachmentsFailed": "המשימה נוצרה, אבל צירוף המסמכים נכשל. אפשר להעלות אותם מעמוד המסמכים."
+        "attachmentsFailed": "המשימה נוצרה, אבל צירוף המסמכים נכשל. אפשר להעלות אותם מעמוד המסמכים.",
+        "recordVoice": "הקלטת תזכורת קולית",
+        "recordStop": "סיום הקלטה",
+        "recordCancel": "ביטול הקלטה",
+        "recordMicDenied": "אין גישה למיקרופון — בדקו את הרשאות הדפדפן"
       },
       "submit": {
         "create": "צור משימה",

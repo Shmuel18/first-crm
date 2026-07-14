@@ -2875,7 +2875,11 @@
         "attachmentsFileRequired": "Choose a file to attach.",
         "attachmentsTooLarge": "One of the files exceeds the 20MB limit.",
         "attachmentsTypeNotAllowed": "One of the file types is not supported.",
-        "attachmentsFailed": "The task was created, but attaching documents failed. You can upload them from the documents page."
+        "attachmentsFailed": "The task was created, but attaching documents failed. You can upload them from the documents page.",
+        "recordVoice": "Record voice note",
+        "recordStop": "Stop recording",
+        "recordCancel": "Cancel recording",
+        "recordMicDenied": "Microphone unavailable — check browser permissions"
       },
       "submit": {
         "create": "Create task",

@@ -7,13 +7,14 @@ import { revalidatePath } from 'next/cache';
 import { fileTypeFromBuffer } from 'file-type';
 
 import { sanitizeFilename } from '@/features/documents/domain/sanitize-filename';
-import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE_BYTES } from '@/features/documents/schemas/document.schema';
+import { MAX_FILE_SIZE_BYTES } from '@/features/documents/schemas/document.schema';
 import { uploadGeneralDocumentToDrive } from '@/features/integrations/services/drive-general-uploader';
 import { userHasPermission } from '@/lib/auth/permissions';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
 
+import { isAcceptedDeclaredMime, resolveStoredMime } from '../domain/recording';
 import { TASK_DOCUMENTS_BUCKET, taskAttachmentPath } from '../services/task-attachments.service';
 
 const MAGIC_SNIFF_BYTES = 4096;
@@ -50,7 +51,7 @@ export async function prepareGeneralTaskAttachmentAction(input: {
   if (input.fileSize > MAX_FILE_SIZE_BYTES) {
     return { ok: false, error: 'validation', message: 'fileTooLarge' };
   }
-  if (!(ALLOWED_MIME_TYPES as readonly string[]).includes(input.mimeType)) {
+  if (!isAcceptedDeclaredMime(input.mimeType)) {
     return { ok: false, error: 'validation', message: 'fileTypeNotAllowed' };
   }
   const safeFileName = sanitizeFilename(input.fileName);
@@ -90,6 +91,9 @@ export async function finalizeGeneralTaskAttachmentAction(input: {
   attachmentId: string;
   fileName: string;
   fileSize: number;
+  // Declared mime — advisory (the sniff below stays authoritative). Only used to
+  // tell an audio recording (which sniffs as a video/* container) from a document.
+  mimeType: string;
 }): Promise<FinalizeGeneralTaskAttachmentResult> {
   const supabase = await createClient();
   const { data: userRes } = await supabase.auth.getUser();
@@ -125,7 +129,8 @@ export async function finalizeGeneralTaskAttachmentAction(input: {
     return { ok: false, error: 'storage' };
   }
   const sniffed = await fileTypeFromBuffer(Buffer.from(await sniffRes.arrayBuffer()));
-  if (!sniffed || !(ALLOWED_MIME_TYPES as readonly string[]).includes(sniffed.mime)) {
+  const storedMime = sniffed ? resolveStoredMime(input.mimeType, sniffed.mime) : null;
+  if (!storedMime) {
     await cleanupBlob(storagePath);
     return { ok: false, error: 'validation', message: 'fileTypeNotAllowed' };
   }
@@ -138,7 +143,7 @@ export async function finalizeGeneralTaskAttachmentAction(input: {
     .download(storagePath);
   if (blob) {
     const out = await uploadGeneralDocumentToDrive({
-      file: { content: await blob.arrayBuffer(), name: safeFileName, mimeType: sniffed.mime },
+      file: { content: await blob.arrayBuffer(), name: safeFileName, mimeType: storedMime },
     });
     if (out.ok) {
       driveFileId = out.driveFileId;
@@ -151,7 +156,7 @@ export async function finalizeGeneralTaskAttachmentAction(input: {
     task_id: input.taskId,
     file_name: safeFileName,
     file_size: input.fileSize,
-    mime_type: sniffed.mime,
+    mime_type: storedMime,
     storage_path: storagePath,
     uploaded_by: userRes.user.id,
     drive_file_id: driveFileId,
