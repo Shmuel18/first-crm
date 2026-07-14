@@ -2,6 +2,7 @@ import { cache } from 'react';
 
 import { getCurrentUser, isCurrentUserAdmin } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
+import { israelMonthStartIso } from '@/lib/utils/israel-time';
 
 import type { BoardRow, ClockAccess, TimeEntry, TrackedEmployee } from '../types';
 
@@ -102,11 +103,11 @@ export async function getMyOpenEntry(): Promise<TimeEntry | null> {
   return data ? mapEntry(data as EntryRow) : null;
 }
 
-/** The current user's own shifts within the last `days` (newest first). */
-export async function listMyEntries(days = 30): Promise<TimeEntry[]> {
+/** The current user's own shifts from the start of the Israel-local month (newest first). */
+export async function listMyEntries(): Promise<TimeEntry[]> {
   const user = await getCurrentUser();
   if (!user) return [];
-  const since = new Date(Date.now() - days * 86_400_000).toISOString();
+  const since = israelMonthStartIso();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('time_entries')

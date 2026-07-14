@@ -38,3 +38,27 @@ export function israelCivil(now: Date = new Date()): IsraelCivil {
     hour: get('hour') % 24,
   };
 }
+
+/**
+ * The UTC instant at which the current Israel-local calendar month began.
+ *
+ * The server runs in UTC, while Israel is UTC+2 or UTC+3 depending on DST.
+ * Resolve the offset at the first day of the relevant month so a database
+ * range never drops the first hours of the month or includes the prior month.
+ */
+export function israelMonthStartIso(now: Date = new Date()): string {
+  const { year, month } = israelCivil(now);
+  const firstDayMiddayUtc = new Date(Date.UTC(year, month - 1, 1, 12));
+  const zoneName = new Intl.DateTimeFormat('en-US', {
+    timeZone: ISRAEL_TZ,
+    timeZoneName: 'longOffset',
+  })
+    .formatToParts(firstDayMiddayUtc)
+    .find((part) => part.type === 'timeZoneName')?.value;
+  const match = zoneName?.match(/^GMT([+-])(\d{2}):(\d{2})$/);
+  if (!match) throw new Error('Unable to resolve Israel UTC offset');
+
+  const [, sign, hours, minutes] = match;
+  const offsetMinutes = (Number(hours) * 60 + Number(minutes)) * (sign === '+' ? 1 : -1);
+  return new Date(Date.UTC(year, month - 1, 1) - offsetMinutes * 60_000).toISOString();
+}

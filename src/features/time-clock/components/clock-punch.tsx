@@ -55,8 +55,11 @@ export function ClockPunch({ initialOpen, initialEntries, hourlyRate, locale }: 
   const allWithOpen = open ? [open, ...entries.filter((e) => e.id !== open.id)] : entries;
   const todayKey = israelDay(new Date(nowMs).toISOString());
   const todayMins = totalMinutes(allWithOpen.filter((e) => israelDay(e.clockIn) === todayKey), nowMs);
-  const weekAgo = nowMs - 7 * 86_400_000;
-  const weekMins = totalMinutes(allWithOpen.filter((e) => Date.parse(e.clockIn) >= weekAgo), nowMs);
+  const monthKey = todayKey.slice(0, 7);
+  const monthMins = totalMinutes(
+    allWithOpen.filter((e) => israelDay(e.clockIn).slice(0, 7) === monthKey),
+    nowMs,
+  );
   const elapsed = open ? entryMinutes(open, nowMs) : 0;
   const days = groupByDay(entries, nowMs);
   // Shift still open from a previous calendar day → probably a forgotten clock-out.
@@ -148,9 +151,9 @@ export function ClockPunch({ initialOpen, initialEntries, hourlyRate, locale }: 
           {showMoney && <div className="text-xs font-medium text-brand-gold-text tabular-nums">{money(todayMins)}</div>}
         </div>
         <div className="rounded-xl border border-neutral-200 bg-white p-3 text-center">
-          <div className="text-xs text-neutral-500">{t('totals.week')}</div>
-          <div className="font-display text-2xl font-semibold text-neutral-950 tabular-nums">{formatHm(weekMins)}</div>
-          {showMoney && <div className="text-xs font-medium text-brand-gold-text tabular-nums">{money(weekMins)}</div>}
+          <div className="text-xs text-neutral-500">{t('totals.month')}</div>
+          <div className="font-display text-2xl font-semibold text-neutral-950 tabular-nums">{formatHm(monthMins)}</div>
+          {showMoney && <div className="text-xs font-medium text-brand-gold-text tabular-nums">{money(monthMins)}</div>}
         </div>
       </div>
 

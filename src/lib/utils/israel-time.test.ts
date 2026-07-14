@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { israelCivil } from './israel-time';
+import { israelCivil, israelMonthStartIso } from './israel-time';
 
 describe('israelCivil', () => {
   it('computes Israel civil parts in winter (UTC+2)', () => {
@@ -31,5 +31,19 @@ describe('israelCivil', () => {
       day: 15,
       hour: 23,
     });
+  });
+});
+
+describe('israelMonthStartIso', () => {
+  it('returns Israel midnight in winter', () => {
+    expect(israelMonthStartIso(new Date('2026-01-15T12:00:00.000Z'))).toBe(
+      '2025-12-31T22:00:00.000Z',
+    );
+  });
+
+  it('returns Israel midnight in summer', () => {
+    expect(israelMonthStartIso(new Date('2026-07-14T12:00:00.000Z'))).toBe(
+      '2026-06-30T21:00:00.000Z',
+    );
   });
 });

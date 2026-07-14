@@ -343,7 +343,7 @@
     },
     "totals": {
       "today": "Today",
-      "week": "This week"
+      "month": "This month"
     },
     "history": {
       "title": "Hours history",
