@@ -184,7 +184,11 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions, 
           {canViewAll && <col className="w-44" />}
           <col />
         </colgroup>
-        <thead className="sticky top-[-1rem] z-10 sm:top-[-1.5rem]">
+        {/* Pins just below the sticky DashboardViewSelector (≈63px tall at xl,
+            where this table renders) instead of flush at the viewport top, so
+            the search bar and the column headers stay stacked, both visible.
+            z-10 sits under the selector's z-20. */}
+        <thead className="sticky top-[39px] z-10">
           <tr className="bg-neutral-100 border-b-2 border-neutral-300">
             <Th>{t('row')}</Th>
             <SortableTh

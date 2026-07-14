@@ -29,10 +29,10 @@ export async function setAdvanceAmountAction(
   const supabase = await createClient();
   // advance_amount added in migration 212; advance_agreed synced for backward compat.
   // Both columns not yet in database.ts — cast is safe: fields validated above.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updatePayload = {
     advance_amount: parsed.data.amount,
     advance_agreed: parsed.data.amount != null && parsed.data.amount > 0,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any;
   const { error } = await supabase
     .from('case_financials')
