@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
 import { Mic, Square, X } from 'lucide-react';
+import fixWebmDuration from 'fix-webm-duration';
 import { useTranslations } from 'next-intl';
 
 import { RECORDING_MAX_SECONDS, recordingFileName, stripCodecSuffix } from '../domain/recording';
@@ -56,6 +57,7 @@ export function VoiceRecorderButton({ disabled, onRecordingReady }: Props) {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const startedAtRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const cancelledRef = useRef(false);
 
@@ -100,17 +102,33 @@ export function VoiceRecorderButton({ disabled, onRecordingReady }: Props) {
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
-      recorder.onstop = () => {
+      recorder.onstop = async () => {
         const wasCancelled = cancelledRef.current;
         const type = stripCodecSuffix(recorder.mimeType || mime || 'audio/webm');
         const blob = new Blob(chunksRef.current, { type });
+        const durationMs = Math.max(1, performance.now() - startedAtRef.current);
         cleanup();
         if (!wasCancelled && blob.size > 0) {
-          onRecordingReady(new File([blob], recordingFileName(type, new Date()), { type }));
+          // Chromium's MediaRecorder omits WebM Duration metadata. A remote
+          // <audio> element can then report 0:00 and refuse to seek/play even
+          // though the Opus frames are intact. Patch only WebM; Safari's MP4
+          // output already carries its own duration metadata.
+          let playableBlob = blob;
+          if (type === 'audio/webm') {
+            try {
+              playableBlob = await fixWebmDuration(blob, durationMs, { logger: false });
+            } catch {
+              // Preserve the recording if metadata repair ever fails.
+            }
+          }
+          onRecordingReady(
+            new File([playableBlob], recordingFileName(type, new Date()), { type }),
+          );
         }
       };
 
       recorder.start();
+      startedAtRef.current = performance.now();
       setRecording(true);
       setElapsed(0);
       timerRef.current = setInterval(() => {

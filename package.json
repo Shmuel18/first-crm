@@ -34,6 +34,7 @@
     "date-fns": "^4.3.0",
     "exceljs": "^4.4.0",
     "file-type": "^22.0.1",
+    "fix-webm-duration": "^1.0.6",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
     "next-intl": "^4.12.0",

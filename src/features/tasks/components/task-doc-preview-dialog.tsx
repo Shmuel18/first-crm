@@ -1,5 +1,7 @@
 'use client';
 
+import type { SyntheticEvent } from 'react';
+
 import { Download, ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -22,6 +24,33 @@ type Props = {
   driveUrl: string | null;
   onClose: () => void;
 };
+
+function recoverMissingWebmDuration(event: SyntheticEvent<HTMLAudioElement>): void {
+  const audio = event.currentTarget;
+  if (Number.isFinite(audio.duration) && audio.duration > 0) return;
+
+  // Older Chromium MediaRecorder uploads have no WebM Duration element. Seeking
+  // to the end makes Chromium scan the clusters and derive a finite duration.
+  // No playback is started, so opening the preview remains silent.
+  audio.dataset.recoveringDuration = 'true';
+  try {
+    audio.currentTime = Number.MAX_SAFE_INTEGER;
+  } catch {
+    delete audio.dataset.recoveringDuration;
+  }
+}
+
+function finishDurationRecovery(event: SyntheticEvent<HTMLAudioElement>): void {
+  const audio = event.currentTarget;
+  if (
+    audio.dataset.recoveringDuration === 'true' &&
+    Number.isFinite(audio.duration) &&
+    audio.duration > 0
+  ) {
+    delete audio.dataset.recoveringDuration;
+    audio.currentTime = 0;
+  }
+}
 
 /**
  * Inline preview (PDF iframe / image) for a file attached to a task, so it can
@@ -47,7 +76,15 @@ export function TaskDocPreviewDialog({ url, fileName, mimeType, driveUrl, onClos
         {isAudio ? (
           // Audio stays tasks-only — play inline without touching the shared
           // documents preview body.
-          <audio controls src={url} preload="metadata" className="w-full">
+          <audio
+            controls
+            src={url}
+            preload="metadata"
+            className="w-full"
+            onLoadedMetadata={mimeType === 'audio/webm' ? recoverMissingWebmDuration : undefined}
+            onDurationChange={mimeType === 'audio/webm' ? finishDurationRecovery : undefined}
+            onTimeUpdate={mimeType === 'audio/webm' ? finishDurationRecovery : undefined}
+          >
             <track kind="captions" />
           </audio>
         ) : (
