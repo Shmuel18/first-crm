@@ -30,7 +30,12 @@ export function DashboardViewSelector({
   const [query, setQuery] = useQueryState('q', parseAsString.withOptions({ shallow: true }));
 
   return (
-    <div className="bg-white px-6 py-2.5 border-b border-neutral-200 flex items-center gap-3 flex-wrap">
+    <div className="sticky top-[-1rem] sm:top-[-1.5rem] z-20 bg-white px-6 py-2.5 border-b border-neutral-200 flex items-center gap-3 flex-wrap">
+      {/* Sticky so the search box + view tabs stay reachable while the (long)
+          list scrolls under them. top-[-1rem]/-1.5rem cancels the scroll
+          viewport's p-4/p-6 so it pins flush under the fixed topbar — same
+          trick the table header uses. z-20 keeps it above the table's sticky
+          thead (z-10), which offsets itself to sit just below this bar. */}
       {/* Segmented control: one shared track, the active "tab" is a dark pill,
           the others are flat text. Not a real ARIA tab pattern — clicking
           updates the URL and the whole page re-renders, there's no in-place
