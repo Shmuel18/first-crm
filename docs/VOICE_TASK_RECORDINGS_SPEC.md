@@ -17,11 +17,14 @@ microphone and attach it to a task — both when **creating** a task and on an
 - No transcription.
 - No audio uploads via the regular file picker (recordings come only from the in-app recorder).
 - No audio on case documents, borrower documents, or anywhere else.
-- No waveform UI; a plain `<audio controls>` player is enough.
+- No waveform UI; render a plain inline `<audio controls>` player directly in
+  the task attachment row (no preview/eye click for recordings).
 - Normalize Chrome/Chromium WebM duration metadata before upload so the remote
   `<audio>` player receives a finite duration and remains playable/seekable.
 - Keep a player-side duration recovery for WebM recordings uploaded before that
   normalization was introduced.
+- The CSP must allow `media-src` from the app origin, `blob:`, and the scoped
+  Supabase Storage host pattern used by signed recording URLs.
 
 ## 2. Architecture decision — recordings ALWAYS use the general task store
 

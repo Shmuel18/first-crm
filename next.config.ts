@@ -40,6 +40,8 @@ const cspDirectives = [
   `script-src 'self' 'unsafe-inline'${isProduction ? '' : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://*.supabase.co https://drive.google.com https://docs.google.com",
+  // Task voice notes are served from short-lived signed Supabase Storage URLs.
+  "media-src 'self' blob: https://*.supabase.co",
   "font-src 'self' data:",
   // wss://*.supabase.co — the Realtime WebSocket (instant notification bell).
   // Without it the browser blocks the wss connection under connect-src and the

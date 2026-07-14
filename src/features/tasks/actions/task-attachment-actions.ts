@@ -59,6 +59,8 @@ export async function listTaskCaseDocumentsAction(taskId: string): Promise<TaskC
 
 export type TaskAttachmentUrlResult = { ok: true; url: string } | { ok: false };
 
+const INLINE_AUDIO_URL_TTL_SECONDS = 10 * 60;
+
 /** Short-lived signed URL to download one attachment. RLS gates the row read. */
 export async function getTaskAttachmentUrlAction(
   attachmentId: string,
@@ -76,7 +78,7 @@ export async function getTaskAttachmentUrlAction(
 
   const { data: signed, error: signErr } = await supabase.storage
     .from(TASK_DOCUMENTS_BUCKET)
-    .createSignedUrl(row.storage_path, 60);
+    .createSignedUrl(row.storage_path, INLINE_AUDIO_URL_TTL_SECONDS);
   if (signErr || !signed?.signedUrl) return { ok: false };
   return { ok: true, url: signed.signedUrl };
 }
