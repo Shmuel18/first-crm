@@ -68,7 +68,10 @@ const cspDirectives = [
  * - X-Content-Type-Options nosniff: blocks MIME-sniff confusion.
  * - Referrer-Policy strict-origin-when-cross-origin: URLs (which include
  *   /cases/:id) don't leak to third parties on link clicks.
- * - Permissions-Policy: disables sensors the CRM never asks for.
+ * - Permissions-Policy: disables sensors the CRM never asks for. Microphone is
+ *   allowed for our OWN origin (self) — task voice-note recordings need
+ *   getUserMedia; an empty allowlist blocks it before the permission prompt even
+ *   shows. Camera/geolocation/payment stay fully disabled (unused).
  */
 const SECURITY_HEADERS = [
   ...(isHttpsPublicApp
@@ -79,7 +82,7 @@ const SECURITY_HEADERS = [
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   {
     key: 'Permissions-Policy',
-    value: 'camera=(), microphone=(), geolocation=(), interest-cohort=(), payment=()',
+    value: 'camera=(), microphone=(self), geolocation=(), interest-cohort=(), payment=()',
   },
   {
     key: 'Content-Security-Policy',
