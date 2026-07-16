@@ -87,7 +87,11 @@
       "select": "Select",
       "yes": "Yes",
       "no": "No",
-      "gender": { "male": "Male", "female": "Female", "other": "Other" },
+      "gender": {
+        "male": "Male",
+        "female": "Female",
+        "other": "Other"
+      },
       "maritalStatus": {
         "single": "Single",
         "married": "Married",
@@ -106,7 +110,10 @@
         "unemployed": "Unemployed",
         "pensioner": "Pensioner"
       },
-      "language": { "he": "Hebrew", "en": "English" }
+      "language": {
+        "he": "Hebrew",
+        "en": "English"
+      }
     },
     "success": {
       "title": "Thank you! We got your request",
@@ -119,6 +126,10 @@
       "contactRequired": "Please provide a phone or email so we can reach you.",
       "rateLimited": "Too many requests from this address. Please try again in an hour.",
       "unknown": "Something went wrong. Please try again."
+    },
+    "footer": {
+      "privacy": "Privacy Policy",
+      "accessibility": "Accessibility Statement"
     }
   },
   "pwa": {

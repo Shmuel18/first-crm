@@ -434,6 +434,10 @@
   .hp-field{position:absolute !important;inset-inline-start:-9999px;width:1px;height:1px;overflow:hidden;opacity:0}
   .form-note{margin-top:.9rem;font-size:.78rem;color:rgba(255,255,255,.6);line-height:1.5}
   .form-note a{color:var(--gold-light);text-decoration:underline}
+  .consent{display:flex;align-items:flex-start;gap:.6rem;margin:0 0 1.2rem}
+  .consent input{flex:0 0 auto;width:1.1rem;height:1.1rem;margin-top:.15rem;accent-color:var(--gold);cursor:pointer}
+  .consent label{font-size:.78rem;color:rgba(255,255,255,.62);line-height:1.5;cursor:pointer}
+  .consent label a{color:var(--gold-light);text-decoration:underline}
   .form-error{display:none;align-items:center;gap:.5rem;margin-top:1rem;padding:.7rem .9rem;border-radius:10px;background:rgba(214,90,90,.14);border:1px solid rgba(214,90,90,.4);color:#f2b8b8;font-size:.88rem;line-height:1.45}
   .form-error.show{display:flex}
 
@@ -829,8 +833,11 @@
             <div class="field"><label for="f-subject" data-i18n="contact.form.subject">Subject</label><input id="f-subject" name="subject" type="text" /></div>
             <div class="field"><label for="f-message" data-i18n="contact.form.message">Message (optional)</label><textarea id="f-message" name="message"></textarea></div>
             <input class="hp-field" type="text" name="company" id="f-company" tabindex="-1" autocomplete="off" aria-hidden="true" />
+            <div class="consent">
+              <input type="checkbox" id="f-consent" name="consent" required />
+              <label for="f-consent"><span data-i18n="contact.form.consent">I have read and agree to the</span> <a href="privacy.html" target="_blank" rel="noopener" data-i18n="contact.form.notePolicy">privacy policy</a>.</label>
+            </div>
             <button type="submit" class="submit" data-i18n="contact.form.submit">Send message</button>
-            <p class="form-note"><span data-i18n="contact.form.note">By submitting this form I agree to the</span> <a href="privacy.html" target="_blank" rel="noopener" data-i18n="contact.form.notePolicy">privacy policy</a>.</p>
             <div class="form-success" id="formSuccess">
               <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
               <span data-i18n="contact.form.success">Thank you — we'll be in touch within one business day.</span>
@@ -924,7 +931,7 @@
       "faq.6.q":"האם חובה לעשות ביטוח חיים?","faq.6.a":"כן — הבנקים בישראל דורשים גם ביטוח חיים וגם ביטוח מבנה כתנאי למשכנתא, בהיקף שמותאם לגובה ההלוואה. זו הגנה פשוטה וזולה למשפחה שלכם, ואנחנו נפנה אתכם לאפשרויות הוגנות ומשתלמות, במקום לתת לבנק לשבץ אתכם אוטומטית ביקרה ביותר.",
       "contact.eyebrow":"בואו נתחיל","contact.heading":"בואו נדבר על המעבר שלכם לישראל",
       "contact.blurb":"ספרו לנו איפה אתם בדרך — שאלה ראשונה או חוזה חתום — ונחזור אליכם תוך יום עסקים אחד. בלי לחץ, בלי התחייבות.",
-      "contact.form.name":"שם","contact.form.email":"אימייל","contact.form.subject":"נושא","contact.form.message":"הודעה (לא חובה)","contact.form.submit":"שליחת הודעה","contact.form.success":"תודה — נחזור אליכם תוך יום עסקים אחד.","contact.form.note":"בשליחת הטופס אני מאשר/ת את","contact.form.notePolicy":"מדיניות הפרטיות","contact.form.error":"משהו השתבש בשליחה. נסו שוב, או כתבו לנו ל‑office@kaufman-finance.com.",
+      "contact.form.name":"שם","contact.form.email":"אימייל","contact.form.subject":"נושא","contact.form.message":"הודעה (לא חובה)","contact.form.submit":"שליחת הודעה","contact.form.success":"תודה — נחזור אליכם תוך יום עסקים אחד.","contact.form.consent":"קראתי ואני מאשר/ת את","contact.form.notePolicy":"מדיניות הפרטיות","contact.form.error":"משהו השתבש בשליחה. נסו שוב, או כתבו לנו ל‑office@kaufman-finance.com.",
       "contact.label.address":"משרד","contact.value.address":"אהליאב 17, ירושלים","contact.label.phone":"טלפון","contact.label.email":"אימייל","contact.label.hours":"שעות פעילות","contact.value.hours":"א׳–ה׳, 9:00–18:00 (שעון ישראל)",
       "contact.whatsapp":"שלחו לנו הודעה בוואטסאפ",
       "footer.tagline":"ייעוץ משכנתאות בוטיק בלב ירושלים — שמתייחס לכל לקוח כמו אל בן משפחה.",

@@ -15,3 +15,9 @@ export const WEBSITE_URL = 'https://kaufman-finance.com';
  * Public URL of the privacy policy the /check consent checkbox links to.
  */
 export const PRIVACY_POLICY_URL = `${WEBSITE_URL}/privacy.html`;
+
+/**
+ * Public URL of the accessibility statement, linked from the /check footer.
+ * The statement lives on the marketing site; /check runs on the CRM domain.
+ */
+export const ACCESSIBILITY_URL = `${WEBSITE_URL}/accessibility.html`;
