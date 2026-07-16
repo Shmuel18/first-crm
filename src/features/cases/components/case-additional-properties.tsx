@@ -1,40 +1,22 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-
 import { Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { toast } from 'sonner';
 
-import { addCasePropertyAction } from '../actions/add-case-property';
-import { removeCasePropertyAction } from '../actions/remove-case-property';
-import { updateCasePropertyFieldAction } from '../actions/update-case-property-field';
-
+import { useCaseProperties } from '../hooks/use-case-properties';
 import { PropertyFields } from './property-fields';
 
 import type { CaseProperty } from '../services/case-properties.service';
 
 type CaseTypeOption = { id: string; key: string; name_he: string };
-type PropertyField = 'city' | 'gush_helka' | 'property_value' | 'requested_mortgage_amount';
-type SaveResult = { ok: true } | { ok: false; message?: string };
-
-// Text fields pass through as-is; the rest are numeric and get coerced.
-const TEXT_PROPERTY_FIELDS: ReadonlyArray<PropertyField> = ['city', 'gush_helka'];
-
-const BLANK: Omit<CaseProperty, 'id'> = {
-  case_type_primary_id: null,
-  case_type_other_text: null,
-  city: null,
-  gush_helka: null,
-  property_value: null,
-  requested_mortgage_amount: null,
-};
 
 /**
  * The "additional properties" section under the primary property. Each row is
  * the same four fields (purpose · city · value · loan), editable inline, plus a
- * remove button; an "add property" button appends a blank row. All mutations are
- * optimistic (no revalidatePath) to avoid the heavy /cases/[id] scroll-jump.
+ * remove button; an "add property" button appends a blank row. State lives in
+ * useCaseProperties: optimistic mutations (no revalidatePath — avoids the heavy
+ * /cases/[id] scroll-jump) + the debounced background router.refresh that keeps
+ * the router cache from restoring the pre-mutation page.
  */
 export function CaseAdditionalProperties({
   caseId,
@@ -51,65 +33,10 @@ export function CaseAdditionalProperties({
   canEdit?: boolean;
 }) {
   const t = useTranslations('case.property');
-  const [rows, setRows] = useState<CaseProperty[]>([...initial]);
-  const [adding, startAdd] = useTransition();
-
-  const onAdd = (): void =>
-    startAdd(async () => {
-      const res = await addCasePropertyAction(caseId);
-      if (!res.ok) {
-        toast.error(t('addFailed'));
-        return;
-      }
-      setRows((r) => [...r, { id: res.id, ...BLANK }]);
-    });
-
-  const onRemove = async (id: string): Promise<void> => {
-    const prev = rows;
-    setRows((r) => r.filter((p) => p.id !== id));
-    const res = await removeCasePropertyAction(caseId, id);
-    if (!res.ok) {
-      setRows(prev);
-      toast.error(t('removeFailed'));
-    }
-  };
-
-  const saveField =
-    (id: string) =>
-    async (field: PropertyField, value: string | null): Promise<SaveResult> => {
-      const prev = rows;
-      const coerced = TEXT_PROPERTY_FIELDS.includes(field)
-        ? value
-        : value === null || value === ''
-          ? null
-          : Number(value);
-      setRows((r) => r.map((p) => (p.id === id ? { ...p, [field]: coerced as never } : p)));
-      const res = await updateCasePropertyFieldAction(caseId, id, field, value);
-      if (!res.ok) {
-        setRows(prev);
-        return { ok: false };
-      }
-      return { ok: true };
-    };
-
-  const savePurpose =
-    (id: string) =>
-    async (primary: string | null, other: string | null): Promise<void> => {
-      const prev = rows;
-      setRows((r) =>
-        r.map((p) =>
-          p.id === id
-            ? { ...p, case_type_primary_id: primary, case_type_other_text: other }
-            : p,
-        ),
-      );
-      const r1 = await updateCasePropertyFieldAction(caseId, id, 'case_type_primary_id', primary);
-      const r2 = await updateCasePropertyFieldAction(caseId, id, 'case_type_other_text', other);
-      if (!r1.ok || !r2.ok) {
-        setRows(prev);
-        toast.error(t('saveFailed'));
-      }
-    };
+  const { rows, adding, onAdd, onRemove, saveField, savePurpose } = useCaseProperties(
+    caseId,
+    initial,
+  );
 
   return (
     <div className="mt-4 space-y-3">

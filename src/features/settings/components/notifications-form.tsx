@@ -5,6 +5,8 @@ import { useFormStatus } from 'react-dom';
 
 import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -75,11 +77,16 @@ export function NotificationsForm({ preferences, thresholds, statuses, showSla, 
     setSla(seedSla(statuses, thresholds));
   }
 
+  // Refresh after a successful save: the action skips revalidatePath, so
+  // without this the router cache keeps serving the pre-save payload.
+  const router = useRouter();
   useEffect(() => {
-    if (state.ok === true) toast.success(t('saved'));
-    else if (state.ok === false && (state.error === 'unauthorized' || state.error === 'unknown'))
+    if (state.ok === true) {
+      toast.success(t('saved'));
+      router.refresh();
+    } else if (state.ok === false && (state.error === 'unauthorized' || state.error === 'unknown'))
       toast.error(t('errors.generic'));
-  }, [state, t]);
+  }, [state, t, router]);
 
   const fieldErrors =
     state.ok === false && state.error === 'validation' ? state.fieldErrors ?? {} : {};

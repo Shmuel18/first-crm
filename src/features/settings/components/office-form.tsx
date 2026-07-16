@@ -5,6 +5,8 @@ import { useFormStatus } from 'react-dom';
 
 import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -47,9 +49,16 @@ export function OfficeForm({ office }: Props) {
     });
   }
 
+  // Refresh after a successful save: update-office skips revalidatePath, so
+  // without this the router cache keeps the pre-save payload and back/forward
+  // navigation restores stale settings.
+  const router = useRouter();
   useEffect(() => {
-    if (state.ok === true) toast.success(t('saved'));
-  }, [state, t]);
+    if (state.ok === true) {
+      toast.success(t('saved'));
+      router.refresh();
+    }
+  }, [state, t, router]);
 
   const fieldErrors =
     state.ok === false && state.error === 'validation' ? state.fieldErrors ?? {} : {};

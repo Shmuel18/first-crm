@@ -1,18 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-
 import { Mail, MessageCircle, Phone } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { formatPersonName } from '@/lib/utils/person-name';
 
-import { updateBorrowerFieldAction, type EditableBorrowerField } from '../actions/update-borrower-field';
-import { updateBorrowerRoleAction } from '../actions/update-borrower-role';
 import { ROLE_IN_CASE_VALUES } from '../schemas/borrower.schema';
 import { buildMailLink, buildTelLink, buildWhatsAppLink } from '../domain/contact-links';
 import { calculateAge } from '../domain/age';
+import { useBorrowerCardState } from '../hooks/use-borrower-card-state';
 
 import { BorrowerCitizenshipQuestions } from './borrower-citizenship-questions';
 import { FieldGroup } from './borrower-compact-fields';
@@ -49,46 +46,16 @@ export function CaseBorrowerCard({
 
   // localBorrower is the optimistic view: each successful inline save updates
   // it so derived bits (header name, computed age, contact-icon visibility)
-  // refresh immediately. On error we restore the previous value here AND the
-  // EditableField rolls back its own input via its `value` prop effect.
-  const [localBorrower, setLocalBorrower] = useState(borrower);
-  const [localRole, setLocalRole] = useState<RoleInCase>(roleInCase);
+  // refresh immediately; the hook rolls back on error, resyncs from props
+  // when idle, and schedules the background router-cache refresh.
+  const { localBorrower, localRole, saveField, saveRole } = useBorrowerCardState(
+    caseId,
+    borrower,
+    roleInCase,
+  );
 
   const fullName =
     formatPersonName(localBorrower.first_name, localBorrower.last_name) || tc('noName');
-
-  // Generic save bridge: each EditableField calls this with its field name,
-  // we run the optimistic update + the server action and roll back on error.
-  const saveField = async (
-    field: EditableBorrowerField,
-    value: string | null,
-  ): Promise<{ ok: true } | { ok: false; message?: string }> => {
-    const prev = localBorrower[field];
-    setLocalBorrower((b) => ({ ...b, [field]: value }));
-    const result = await updateBorrowerFieldAction(borrower.id, caseId, field, value);
-    if (!result.ok) {
-      setLocalBorrower((b) => ({ ...b, [field]: prev }));
-      return { ok: false, message: result.message };
-    }
-    return { ok: true };
-  };
-
-  // Role lives on case_borrowers (junction), so it routes through its own
-  // action rather than the borrower-table saveField bridge above.
-  const saveRole = async (
-    value: string | null,
-  ): Promise<{ ok: true } | { ok: false; message?: string }> => {
-    const next = ROLE_IN_CASE_VALUES.find((r) => r === value);
-    if (!next) return { ok: false };
-    const prev = localRole;
-    setLocalRole(next);
-    const result = await updateBorrowerRoleAction(caseId, borrower.id, next);
-    if (!result.ok) {
-      setLocalRole(prev);
-      return { ok: false, message: result.message };
-    }
-    return { ok: true };
-  };
 
   const roleOptions = ROLE_IN_CASE_VALUES.map((r) => ({ value: r, label: t(r) }));
 

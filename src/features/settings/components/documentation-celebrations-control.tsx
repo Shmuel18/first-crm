@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 
 import { Sparkles } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
@@ -12,6 +13,7 @@ type Props = { initialEnabled: boolean };
 
 export function DocumentationCelebrationsControl({ initialEnabled }: Props) {
   const t = useTranslations('settings.display.celebrations');
+  const router = useRouter();
   const [enabled, setEnabled] = useState(initialEnabled);
   const [pending, startTransition] = useTransition();
 
@@ -25,6 +27,9 @@ export function DocumentationCelebrationsControl({ initialEnabled }: Props) {
         const result = await updateDocumentationCelebrationsAction(next);
         if (result.ok) {
           toast.success(t(next ? 'enabledToast' : 'disabledToast'));
+          // The action skips revalidatePath — refresh so the router cache
+          // doesn't keep serving the pre-toggle payload on back/forward.
+          router.refresh();
           return;
         }
       } catch {

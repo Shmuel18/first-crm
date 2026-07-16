@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { baseInputClass } from '@/features/borrowers/components/editable-field-shared';
+import { useInlineMutationSync } from '@/lib/hooks/use-inline-mutation-sync';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import { addAssociatedAdvisorAction } from '../actions/add-associated-advisor';
@@ -50,12 +51,17 @@ export function AssociatedAdvisorsField({
   const [, startTransition] = useTransition();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  // The advisor actions skip revalidatePath (FE-1) — schedule a background
+  // router.refresh so the router cache never restores the pre-edit payload.
+  const { pendingCount, refreshOwed, beginOp, endOp, refreshSoon } = useInlineMutationSync();
 
-  // Re-sync to fresh server props (e.g. another tab edited the list).
+  // Re-sync to fresh server props (e.g. another tab edited the list) — always
+  // advance past the payload, apply only while idle (a mid-mutation payload
+  // predates a write and would revert it).
   const [syncedRef, setSyncedRef] = useState(associatedIds);
   if (syncedRef !== associatedIds) {
     setSyncedRef(associatedIds);
-    setIds([...associatedIds]);
+    if (pendingCount === 0 && !refreshOwed) setIds([...associatedIds]);
   }
 
   useEffect(() => {
@@ -90,13 +96,22 @@ export function AssociatedAdvisorsField({
     const isOn = ids.includes(advisorId);
     const prev = ids;
     setIds(isOn ? ids.filter((id) => id !== advisorId) : [...ids, advisorId]);
+    beginOp();
     startTransition(async () => {
-      const res = isOn
-        ? await removeAssociatedAdvisorAction(caseId, advisorId)
-        : await addAssociatedAdvisorAction(caseId, advisorId);
-      if (!res.ok) {
+      try {
+        const res = isOn
+          ? await removeAssociatedAdvisorAction(caseId, advisorId)
+          : await addAssociatedAdvisorAction(caseId, advisorId);
+        if (!res.ok) {
+          setIds(prev);
+          toast.error(tc('saveFailed'));
+        }
+      } catch {
         setIds(prev);
         toast.error(tc('saveFailed'));
+      } finally {
+        endOp();
+        refreshSoon();
       }
     });
   };
