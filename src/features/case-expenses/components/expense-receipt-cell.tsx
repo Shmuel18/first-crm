@@ -18,6 +18,10 @@ type Props = {
   expenseId: string;
   canEdit: boolean;
   initialName: string | null;
+  /** Report upload/remove into the parent's mutation sync (begin/settle) so
+   *  the router cache gets refreshed after receipt changes too. */
+  onMutateStart: () => void;
+  onMutateSettled: (ok: boolean) => void;
 };
 
 const ACCEPT = RECEIPT_ALLOWED_MIME_TYPES.join(',');
@@ -29,13 +33,28 @@ const ACCEPT = RECEIPT_ALLOWED_MIME_TYPES.join(',');
  * View is shown to anyone who can see the row; upload/replace/remove only with
  * edit rights.
  */
-export function ExpenseReceiptCell({ caseId, expenseId, canEdit, initialName }: Props) {
+export function ExpenseReceiptCell({
+  caseId,
+  expenseId,
+  canEdit,
+  initialName,
+  onMutateStart,
+  onMutateSettled,
+}: Props) {
   const t = useTranslations('expenses.receipt');
   const tc = useTranslations('common');
   const [name, setName] = useState<string | null>(initialName);
   const [isBusy, startBusy] = useTransition();
   const [opening, setOpening] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Resync to server truth when the parent row's payload changes (the parent
+  // gates resyncs so a stale payload can't arrive mid-upload).
+  const [propRef, setPropRef] = useState(initialName);
+  if (initialName !== propRef) {
+    setPropRef(initialName);
+    setName(initialName);
+  }
 
   const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -45,22 +64,31 @@ export function ExpenseReceiptCell({ caseId, expenseId, canEdit, initialName }: 
     fd.set('caseId', caseId);
     fd.set('expenseId', expenseId);
     fd.set('file', file);
+    onMutateStart();
     startBusy(async () => {
-      const res = await uploadExpenseReceiptAction(fd);
-      if (res.ok) {
-        setName(res.receiptName);
-        toast.success(t('uploaded'));
-        return;
+      let ok = false;
+      try {
+        const res = await uploadExpenseReceiptAction(fd);
+        ok = res.ok;
+        if (res.ok) {
+          setName(res.receiptName);
+          toast.success(t('uploaded'));
+          return;
+        }
+        toast.error(
+          res.error === 'rate_limited'
+            ? t('errors.rateLimited')
+            : res.message === 'fileTooLarge'
+              ? t('errors.tooLarge')
+              : res.message === 'fileTypeNotAllowed'
+                ? t('errors.type')
+                : t('errors.generic'),
+        );
+      } catch {
+        toast.error(t('errors.generic'));
+      } finally {
+        onMutateSettled(ok);
       }
-      toast.error(
-        res.error === 'rate_limited'
-          ? t('errors.rateLimited')
-          : res.message === 'fileTooLarge'
-            ? t('errors.tooLarge')
-            : res.message === 'fileTypeNotAllowed'
-              ? t('errors.type')
-              : t('errors.generic'),
-      );
     });
   };
 
@@ -75,13 +103,22 @@ export function ExpenseReceiptCell({ caseId, expenseId, canEdit, initialName }: 
   };
 
   const onRemove = () => {
+    onMutateStart();
     startBusy(async () => {
-      const res = await removeExpenseReceiptAction(expenseId, caseId);
-      if (res.ok) {
-        setName(null);
-        toast.success(t('removed'));
-      } else {
+      let ok = false;
+      try {
+        const res = await removeExpenseReceiptAction(expenseId, caseId);
+        ok = res.ok;
+        if (res.ok) {
+          setName(null);
+          toast.success(t('removed'));
+        } else {
+          toast.error(tc('saveFailed'));
+        }
+      } catch {
         toast.error(tc('saveFailed'));
+      } finally {
+        onMutateSettled(ok);
       }
     });
   };

@@ -24,6 +24,10 @@ type Props = {
   /** Remove the row. The parent deletes optimistically (the row vanishes
    *  immediately), so there is no per-row spinner. */
   onDelete: () => void;
+  /** Receipt upload/remove report into the parent's mutation sync so the
+   *  router cache gets refreshed after them too (same bug class as cells). */
+  onReceiptMutateStart: () => void;
+  onReceiptMutateSettled: (ok: boolean) => void;
 };
 
 /**
@@ -31,7 +35,15 @@ type Props = {
  * a per-row delete. Same look-and-feel as obligation-table-row so the
  * admin block's two tables (expenses + open tasks) read consistently.
  */
-export function CaseExpenseRow({ caseId, expense, canEdit, onSaveField, onDelete }: Props) {
+export function CaseExpenseRow({
+  caseId,
+  expense,
+  canEdit,
+  onSaveField,
+  onDelete,
+  onReceiptMutateStart,
+  onReceiptMutateSettled,
+}: Props) {
   const tc = useTranslations('common');
   const t = useTranslations('expenses');
 
@@ -63,6 +75,8 @@ export function CaseExpenseRow({ caseId, expense, canEdit, onSaveField, onDelete
             expenseId={expense.id}
             canEdit={canEdit}
             initialName={expense.receipt_name}
+            onMutateStart={onReceiptMutateStart}
+            onMutateSettled={onReceiptMutateSettled}
           />
           {canEdit && (
             <Tooltip content={tc('delete')}>

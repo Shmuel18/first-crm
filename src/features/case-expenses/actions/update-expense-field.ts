@@ -24,10 +24,9 @@ export type UpdateExpenseFieldResult =
 type ExpenseUpdate = Database['public']['Tables']['case_expenses']['Update'];
 
 /**
- * Patches a single case_expenses column. Same shape as
- * updateObligationFieldAction / updateBorrowerFieldAction — whitelist +
- * per-field Zod validator + user-can-edit gate. Errors come back as
- * generic codes; the UI maps to translated strings.
+ * Patches a single case_expenses column. Same shape as the obligation /
+ * borrower field actions — whitelist + per-field Zod + user-can-edit gate;
+ * errors return as generic codes the UI maps to translated strings.
  */
 export async function updateExpenseFieldAction(
   expenseId: string,
@@ -66,12 +65,13 @@ export async function updateExpenseFieldAction(
     updated_by: userRes.user.id,
   } as ExpenseUpdate;
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from('case_expenses')
     .update(patch)
     .eq('id', expenseId)
     .eq('case_id', caseId)
-    .is('deleted_at', null);
+    .is('deleted_at', null)
+    .select('id');
 
   if (error) {
     console.error(
@@ -85,6 +85,12 @@ export async function updateExpenseFieldAction(
       }),
     );
     return { ok: false, error: 'unknown' };
+  }
+  // 0 rows matched (bad id / soft-deleted / RLS) is a silent no-op in
+  // PostgREST — without this check the client reports "saved" unwritten.
+  if (!updated || updated.length === 0) {
+    console.error('[updateExpenseField] no row matched', JSON.stringify({ expenseId, caseId }));
+    return { ok: false, error: 'unauthorized' };
   }
 
   // No revalidatePath — the client updates the cell optimistically (FE-1);
