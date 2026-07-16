@@ -19,12 +19,17 @@ type Props = {
   /** Fired with the saved payment so the parent can update its list optimistically
    *  (the case block) or close itself (the dashboard dialog ignores the arg). */
   onAdded?: (payment: FeePayment) => void;
+  /** Report the server call into the parent's mutation sync (useFeePayments)
+   *  so the router cache gets refreshed after an add too. Optional — the
+   *  dashboard dialog doesn't sync. */
+  onMutateStart?: () => void;
+  onMutateSettled?: (ok: boolean) => void;
 };
 
 const fieldClass =
   'h-10 w-full rounded-lg border border-neutral-200 bg-white px-3 text-sm shadow-xs outline-none transition focus:border-brand-gold-text focus:ring-2 focus:ring-brand-gold-text/30';
 
-export function FeePaymentForm({ caseId, defaultDate, onAdded }: Props) {
+export function FeePaymentForm({ caseId, defaultDate, onAdded, onMutateStart, onMutateSettled }: Props) {
   const t = useTranslations('collections.form');
   const tMethod = useTranslations('collections.method');
   const [pending, startTransition] = useTransition();
@@ -38,7 +43,9 @@ export function FeePaymentForm({ caseId, defaultDate, onAdded }: Props) {
 
   const submit = () => {
     if (!canSubmit) return;
+    onMutateStart?.();
     startTransition(async () => {
+      let ok = false;
       try {
         const paymentMethod = method ? (method as (typeof PAYMENT_METHODS)[number]) : null;
         const res = await addFeePaymentAction({
@@ -52,6 +59,7 @@ export function FeePaymentForm({ caseId, defaultDate, onAdded }: Props) {
           toast.error(t(`errors.${res.error}`));
           return;
         }
+        ok = true;
         onAdded?.({
           id: res.id,
           caseId,
@@ -67,6 +75,8 @@ export function FeePaymentForm({ caseId, defaultDate, onAdded }: Props) {
         setNote('');
       } catch {
         toast.error(t('errors.unknown'));
+      } finally {
+        onMutateSettled?.(ok);
       }
     });
   };

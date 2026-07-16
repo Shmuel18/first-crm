@@ -10,55 +10,55 @@ import { useOptimisticIds } from '@/lib/hooks/use-optimistic-ids';
 import { useSyncedRows } from '@/lib/hooks/use-synced-rows';
 import { reinsertAt } from '@/lib/utils/reinsert-at';
 
-import { createEmptyExpenseAction } from '../actions/create-empty-expense';
-import { deleteExpenseAction } from '../actions/delete-expense';
+import { createEmptyObligationAction } from '../actions/create-empty-obligation';
+import { deleteObligationAction } from '../actions/delete-obligation';
 import {
-  updateExpenseFieldAction,
-  type EditableExpenseField,
-} from '../actions/update-expense-field';
-import { emptyExpenseRow } from '../domain/case-expense-empty-row';
-import type { CaseExpenseRow } from '../types';
+  updateObligationFieldAction,
+  type EditableObligationField,
+} from '../actions/update-obligation-field';
+import { monthsUntil } from '../domain/months-remaining';
+import { emptyObligationRow } from '../domain/obligation-empty-row';
+import type { ObligationRow } from '../types';
 
-type UseExpenseRowsResult = {
-  rows: CaseExpenseRow[];
+type UseObligationRowsResult = {
+  rows: ObligationRow[];
   isAdding: boolean;
   addRow: () => void;
   deleteRow: (id: string) => void;
-  saveField: (id: string, field: EditableExpenseField, value: unknown) => void;
+  saveField: (id: string, field: EditableObligationField, value: unknown) => void;
   /** Stable React key — survives the temp -> real id swap (no remount). */
   rowKey: (id: string) => string;
-  /** Wire the receipt cell's upload/remove into the same sync machinery. */
-  onReceiptMutateStart: () => void;
-  onReceiptMutateSettled: (ok: boolean) => void;
 };
 
 /**
- * Optimistic state (add / delete / inline blur-save) for CaseExpensesList,
- * closing the "wrote it but it's gone" holes that made office staff re-type
- * expenses — see useInlineMutationSync (cache refresh) and useOptimisticIds
- * (temp-id routing); every failure path rolls back AND toasts.
+ * Optimistic state (add / delete / inline blur-save) for CaseObligationsClient,
+ * incl. the end_date -> months_remaining smart default. Mirrors useExpenseRows:
+ * useInlineMutationSync keeps the router cache fresh (FE-1), useOptimisticIds
+ * routes ops that beat the row's insert.
  */
-export function useExpenseRows(
+export function useObligationRows(
   caseId: string,
-  expenses: ReadonlyArray<CaseExpenseRow>,
-): UseExpenseRowsResult {
-  const t = useTranslations('expenses');
+  primaryBorrowerId: string | null,
+  initialObligations: ReadonlyArray<ObligationRow>,
+): UseObligationRowsResult {
+  const t = useTranslations('obligations');
   const tc = useTranslations('common');
   const [isAdding, startAdd] = useTransition();
   const { pendingCount, refreshOwed, beginOp, endOp, refreshSoon } = useInlineMutationSync();
   const { newTempId, registerCreate, resolveRealId, markCreated, rowKey } = useOptimisticIds();
 
-  const sig = expenses
-    .map((e) => `${e.id}:${e.expense_date ?? ''}:${e.amount ?? ''}:${e.description ?? ''}:${e.receipt_name ?? ''}`)
+  const sig = initialObligations
+    .map((r) => `${r.id}:${r.monthly_payment ?? ''}:${r.loan_amount ?? ''}:${r.end_date ?? ''}:${r.months_remaining ?? ''}:${r.lender ?? ''}`)
     .join('|');
-  const [rows, setRows] = useSyncedRows(sig, () => [...expenses], pendingCount === 0 && !refreshOwed);
+  const [rows, setRows] = useSyncedRows(sig, () => [...initialObligations], pendingCount === 0 && !refreshOwed);
 
   const addRow = (): void => {
+    if (!primaryBorrowerId) return;
     const tempId = newTempId();
-    setRows((prev) => [...prev, emptyExpenseRow(tempId, caseId)]);
+    setRows((prev) => [...prev, emptyObligationRow(tempId, primaryBorrowerId)]);
     beginOp();
-    const created = createEmptyExpenseAction(caseId)
-      .then((result) => (result.ok ? result.expenseId : null))
+    const created = createEmptyObligationAction(caseId, primaryBorrowerId)
+      .then((result) => (result.ok ? result.obligationId : null))
       .catch(() => null);
     registerCreate(tempId, created);
     startAdd(async () => {
@@ -76,7 +76,12 @@ export function useExpenseRows(
     });
   };
 
-  const saveField = (id: string, field: EditableExpenseField, value: unknown): void => {
+  // Patch one row by either id — the row may swap temp -> real mid-save.
+  const patchRow = (id: string, realId: string | null, patch: Partial<ObligationRow>): void => {
+    setRows((cur) => cur.map((r) => (r.id === id || r.id === realId ? { ...r, ...patch } : r)));
+  };
+
+  const saveField = (id: string, field: EditableObligationField, value: unknown): void => {
     const target = rows.find((r) => r.id === id);
     if (!target) return;
     const prev = target[field];
@@ -90,14 +95,22 @@ export function useExpenseRows(
         realId = await resolveRealId(id);
         // Insert failed — addRow already removed the row and toasted once.
         if (!realId) return;
-        const result = await updateExpenseFieldAction(realId, caseId, field, value);
+        const result = await updateObligationFieldAction(realId, caseId, field, value);
         if (!result.ok) {
           message = result.message;
           throw new Error(result.error);
         }
+        // Smart default: filling end_date derives months_remaining from it (the
+        // reverse is left manual). Clearing end_date leaves months as-is.
+        if (field === 'end_date' && typeof value === 'string' && value) {
+          const prevMonths = target.months_remaining;
+          const months = monthsUntil(value);
+          patchRow(id, realId, { months_remaining: months });
+          const monthsResult = await updateObligationFieldAction(realId, caseId, 'months_remaining', months);
+          if (!monthsResult.ok) patchRow(id, realId, { months_remaining: prevMonths });
+        }
         refreshSoon();
       } catch {
-        // Match both ids — the row may have swapped temp -> real while we awaited.
         setRows((cur) => cur.map((r) => (r.id === id || r.id === realId ? { ...r, [field]: prev as never } : r)));
         toast.error(message ?? tc('saveFailed'));
         refreshSoon();
@@ -118,7 +131,7 @@ export function useExpenseRows(
         const realId = await resolveRealId(id);
         // Never-inserted row: nothing to delete server-side, addRow toasted.
         if (realId) {
-          const result = await deleteExpenseAction(realId, caseId);
+          const result = await deleteObligationAction(realId, removed.borrower_id, caseId);
           if (!result.ok) throw new Error(result.error);
           toast.success(t('deleteSuccess'));
           refreshSoon();
@@ -133,10 +146,5 @@ export function useExpenseRows(
     })();
   };
 
-  const onReceiptMutateSettled = (ok: boolean): void => {
-    endOp();
-    if (ok) refreshSoon();
-  };
-
-  return { rows, isAdding, addRow, deleteRow, saveField, rowKey, onReceiptMutateStart: beginOp, onReceiptMutateSettled };
+  return { rows, isAdding, addRow, deleteRow, saveField, rowKey };
 }

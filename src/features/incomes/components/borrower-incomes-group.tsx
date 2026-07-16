@@ -17,6 +17,9 @@ type Props = {
   locale: 'he' | 'en';
   canEdit: boolean;
   isAdding: boolean;
+  /** Stable React key — survives the temp -> real id swap (no remount that
+   *  would wipe a cell the user is typing in). */
+  rowKey: (id: string) => string;
   onAdd: () => void;
   onSaveField: (incomeId: string, field: EditableIncomeField, value: unknown) => Promise<IncomeSaveResult>;
   onDelete: (incomeId: string) => void;
@@ -36,6 +39,7 @@ export function BorrowerIncomesGroup({
   locale,
   canEdit,
   isAdding,
+  rowKey,
   onAdd,
   onSaveField,
   onDelete,
@@ -88,7 +92,7 @@ export function BorrowerIncomesGroup({
         <ul className="space-y-2">
           {incomes.map((inc, index) => (
             <IncomeRow
-              key={inc.id}
+              key={rowKey(inc.id)}
               income={inc}
               incomeTypes={incomeTypes}
               locale={locale}

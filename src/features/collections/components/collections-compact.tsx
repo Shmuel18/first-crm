@@ -1,17 +1,15 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 
 import { ChevronDown, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { toast } from 'sonner';
 
 import { formatCurrency } from '@/lib/utils/format-currency';
 import type { Locale } from '@/lib/i18n/direction';
 
-import { deleteFeePaymentAction } from '../actions/delete-fee-payment';
-import { setAdvanceAmountAction } from '../actions/set-advance-amount';
 import { outstandingBalance, sumCollected } from '../domain/collections-calc';
+import { useFeePayments } from '../hooks/use-fee-payments';
 import type { FeePayment } from '../types';
 import { FeePaymentForm } from './fee-payment-form';
 import { FeePaymentsTable } from './fee-payments-table';
@@ -36,9 +34,11 @@ type Props = {
  * add-form + ledger on click. Collapsed by default so it never dominates the
  * block; the full management surface also lives on the central /collections.
  *
- * Owns the ledger in local state so add/delete update in place — the server
- * actions deliberately do NOT revalidate /cases/[id] (that re-renders the heavy
- * case page and scroll-jumps to the top).
+ * State lives in useFeePayments: optimistic add/delete + advance draft — the
+ * server actions deliberately do NOT revalidate /cases/[id] (that re-renders
+ * the heavy case page and scroll-jumps to the top); the hook's debounced
+ * background router.refresh keeps the router cache from restoring the
+ * pre-mutation page instead.
  */
 export function CollectionsCompact({
   caseId,
@@ -53,21 +53,17 @@ export function CollectionsCompact({
 }: Props) {
   const t = useTranslations('collections');
   const [open, setOpen] = useState(false);
-  const [payments, setPayments] = useState(initialPayments);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  // Local draft for the advance amount input (string so the field stays editable)
-  const [advanceDraft, setAdvanceDraft] = useState(
-    initialAdvanceAmount != null ? String(initialAdvanceAmount) : '',
-  );
-  const [, startTransition] = useTransition();
-
-  // Re-sync if the server sends a fresh ledger (navigation / external revalidate).
-  // Self-triggered re-renders keep the same prop reference, so optimistic state survives.
-  const [seededFrom, setSeededFrom] = useState(initialPayments);
-  if (initialPayments !== seededFrom) {
-    setSeededFrom(initialPayments);
-    setPayments(initialPayments);
-  }
+  const {
+    payments,
+    deletingId,
+    addPayment,
+    deletePayment,
+    advanceDraft,
+    setAdvanceDraft,
+    saveAdvanceDraft,
+    onFormMutateStart,
+    onFormMutateSettled,
+  } = useFeePayments(caseId, initialPayments, initialAdvanceAmount);
 
   const collected = sumCollected(payments.map((p) => p.amount));
   // "יתרה לגבייה" = unpaid fee (post-execution) + unpaid office expenses.
@@ -76,35 +72,6 @@ export function CollectionsCompact({
   const totalToCollect = collected + balance;
   const pct = totalToCollect > 0 ? Math.max(0, Math.min(100, Math.round((collected / totalToCollect) * 100))) : 0;
   const met = hasOwed && balance <= 0;
-
-  const handleAdvanceBlur = () => {
-    const trimmed = advanceDraft.trim();
-    const parsed = trimmed === '' ? null : Number(trimmed);
-    if (parsed !== null && (!Number.isFinite(parsed) || parsed < 0)) return;
-    startTransition(async () => {
-      await setAdvanceAmountAction(caseId, parsed);
-    });
-  };
-
-  const handleDelete = (id: string) => {
-    const prev = payments;
-    setPayments((list) => list.filter((p) => p.id !== id));
-    setDeletingId(id);
-    startTransition(async () => {
-      try {
-        const res = await deleteFeePaymentAction(caseId, id);
-        if (!res.ok) {
-          setPayments(prev);
-          toast.error(t(`table.errors.${res.error}`));
-        }
-      } catch {
-        setPayments(prev);
-        toast.error(t('table.errors.unknown'));
-      } finally {
-        setDeletingId(null);
-      }
-    });
-  };
 
   return (
     <div className="rounded-lg border border-neutral-200 bg-white">
@@ -183,7 +150,7 @@ export function CollectionsCompact({
             step="100"
             value={advanceDraft}
             onChange={(e) => canManage && setAdvanceDraft(e.target.value)}
-            onBlur={handleAdvanceBlur}
+            onBlur={saveAdvanceDraft}
             onKeyDown={(e) => e.key === 'Enter' && (e.currentTarget as HTMLInputElement).blur()}
             disabled={!canManage}
             placeholder="—"
@@ -198,14 +165,16 @@ export function CollectionsCompact({
             <FeePaymentForm
               caseId={caseId}
               defaultDate={defaultDate}
-              onAdded={(p) => setPayments((list) => [p, ...list])}
+              onAdded={addPayment}
+              onMutateStart={onFormMutateStart}
+              onMutateSettled={onFormMutateSettled}
             />
           )}
           <FeePaymentsTable
             payments={payments}
             locale={locale}
             canManage={canManage}
-            onDelete={handleDelete}
+            onDelete={deletePayment}
             deletingId={deletingId}
           />
         </div>

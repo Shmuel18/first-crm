@@ -1,4 +1,4 @@
-import type { BorrowerIncomesGroup, IncomeWithType } from '../types';
+import type { BorrowerIncomesGroup, IncomeTypeOption, IncomeWithType } from '../types';
 
 /** Client-owned per-borrower income group (the optimistic mirror of the
  *  server's BorrowerIncomesGroup, minus the derived monthlyTotal which the
@@ -52,6 +52,16 @@ export function mapIncome(
   );
 }
 
+/** Joined income_type shape for an income_type_id — swapped optimistically so
+ *  the card header updates without a round-trip. */
+export function incomeTypeFor(
+  incomeTypes: ReadonlyArray<IncomeTypeOption>,
+  id: unknown,
+): IncomeWithType['income_type'] {
+  const opt = incomeTypes.find((it) => it.id === id);
+  return opt ? { id: opt.id, key: opt.key, name_he: opt.name_he, name_en: opt.name_en } : null;
+}
+
 /** Transform the income array of one borrower's group (add / remove / reorder). */
 export function mapGroupIncomes(
   groups: IncomeGroupState[],
@@ -59,6 +69,19 @@ export function mapGroupIncomes(
   fn: (incomes: IncomeWithType[]) => IncomeWithType[],
 ): IncomeGroupState[] {
   return groups.map((g) => (g.borrowerId === borrowerId ? { ...g, incomes: fn(g.incomes) } : g));
+}
+
+/** Replace incomes matching ANY of `ids` — a rollback helper that catches a
+ *  row whichever side of the temp -> real id swap it is on. */
+export function mapIncomeByIds(
+  groups: IncomeGroupState[],
+  borrowerId: string,
+  ids: ReadonlyArray<string | null>,
+  fn: (income: IncomeWithType) => IncomeWithType,
+): IncomeGroupState[] {
+  return mapGroupIncomes(groups, borrowerId, (inc) =>
+    inc.map((i) => (ids.includes(i.id) ? fn(i) : i)),
+  );
 }
 
 /**

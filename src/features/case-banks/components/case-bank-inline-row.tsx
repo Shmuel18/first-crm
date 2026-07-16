@@ -4,38 +4,32 @@ import { useState } from 'react';
 
 import { Star, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { toast } from 'sonner';
 
 import { Tooltip } from '@/components/ui/tooltip';
 
-import { updateCaseBankFieldAction } from '../actions/update-case-bank-field';
-import type { BankOption } from '../services/case-banks.service';
 import { BankAvatar } from './bank-avatar';
+import type { CaseBankRowData } from '../types';
 
-/** Slim row shape — just what the inline list needs to render. */
-export type CaseBankRowData = {
-  id: string;
-  bank: BankOption | null;
-  banker_name: string | null;
-  is_primary: boolean;
-};
+// Re-exported so existing importers keep their import path.
+export type { CaseBankRowData };
 
 type Props = {
-  caseId: string;
   row: CaseBankRowData;
   canEdit: boolean;
   onSetPrimary: (rowId: string) => void;
   onDelete: (rowId: string) => void;
+  /** Persist banker_name. Owned by the list's useCaseBankRows so the save is
+   *  routed to the row's real id and reported into the mutation sync. */
+  onSaveBankerName: (rowId: string, next: string | null) => void;
 };
 
 /**
- * One bank row inside CaseBanksInlineList. Dumb: the primary toggle and delete
- * are owned by the list (which updates its optimistic rows), so this row holds
- * no pending state for them — the list reflects the change instantly. Only the
- * inline banker_name edit is local (save-on-blur), and it re-syncs from props
- * whenever fresh server data flows back down.
+ * One bank row inside CaseBanksInlineList. Dumb: every mutation (primary
+ * toggle, delete, banker_name blur-save) is owned by the list's hook, which
+ * updates its optimistic rows — this row only keeps the input draft local and
+ * re-syncs it from props whenever fresh server data flows back down.
  */
-export function CaseBankInlineRow({ caseId, row, canEdit, onSetPrimary, onDelete }: Props) {
+export function CaseBankInlineRow({ row, canEdit, onSetPrimary, onDelete, onSaveBankerName }: Props) {
   const t = useTranslations('caseBanks');
   const tc = useTranslations('common');
   const [bankerName, setBankerName] = useState(row.banker_name ?? '');
@@ -47,11 +41,6 @@ export function CaseBankInlineRow({ caseId, row, canEdit, onSetPrimary, onDelete
     setPrevBankerName(row.banker_name ?? '');
     setBankerName(row.banker_name ?? '');
   }
-
-  const saveBankerName = async (next: string | null) => {
-    const result = await updateCaseBankFieldAction(row.id, caseId, 'banker_name', next);
-    if (!result.ok) toast.error(tc('saveFailed'));
-  };
 
   return (
     <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-2 px-2 py-1.5 rounded-md hover:bg-neutral-50 transition group">
@@ -70,7 +59,7 @@ export function CaseBankInlineRow({ caseId, row, canEdit, onSetPrimary, onDelete
         onBlur={(e) => {
           const next = e.target.value.trim();
           if (next === (row.banker_name ?? '').trim()) return;
-          void saveBankerName(next === '' ? null : next);
+          onSaveBankerName(row.id, next === '' ? null : next);
         }}
         className="h-8 min-w-0 px-2 rounded-md border border-neutral-200 bg-white text-sm shadow-xs focus:outline-none focus-visible:border-brand-gold-text focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 disabled:opacity-60 disabled:cursor-not-allowed transition"
       />

@@ -42,16 +42,23 @@ export async function updatePayoutFieldAction(
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
 
   const db = supabase as unknown as SupabaseClient;
-  const { error } = await db
+  const { data: updated, error } = await db
     .from('case_payouts')
     .update({ [safeField]: parsed.data ?? null, updated_by: userRes.user.id })
     .eq('id', payoutId)
     .eq('case_id', caseId)
-    .is('deleted_at', null);
+    .is('deleted_at', null)
+    .select('id');
 
   if (error) {
     console.error('[updatePayoutField] update error', error.code);
     return { ok: false, error: 'unknown' };
+  }
+  // 0 rows matched (bad id / soft-deleted / RLS) is a silent no-op in
+  // PostgREST — without this check the client reports "saved" unwritten.
+  if (!updated || updated.length === 0) {
+    console.error('[updatePayoutField] no row matched', JSON.stringify({ payoutId, caseId }));
+    return { ok: false, error: 'unauthorized' };
   }
   return { ok: true };
 }

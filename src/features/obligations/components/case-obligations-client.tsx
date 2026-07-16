@@ -1,23 +1,15 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useMemo } from 'react';
 
 import { CreditCard, Loader2, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { toast } from 'sonner';
 
 import { CaseBlock } from '@/features/cases/components/case-block';
 import { formatCurrency } from '@/lib/utils/format-currency';
 
-import { createEmptyObligationAction } from '../actions/create-empty-obligation';
-import { deleteObligationAction } from '../actions/delete-obligation';
-import {
-  updateObligationFieldAction,
-  type EditableObligationField,
-} from '../actions/update-obligation-field';
-import { monthsUntil } from '../domain/months-remaining';
 import { sumMonthlyPayments } from '../domain/totals';
-import { emptyObligationRow } from './obligation-empty-row';
+import { useObligationRows } from '../hooks/use-obligation-rows';
 import { ObligationTableRow } from './obligation-table-row';
 import type { ObligationRow } from '../types';
 
@@ -32,12 +24,11 @@ type Props = {
 };
 
 /**
- * Owns the obligations list as client state so inline edits, adds and deletes
- * update in place — the grand-total header recomputes from the same state and
- * the rest of the heavy case page is NOT re-rendered. Previously every mutation
- * called revalidatePath, which re-fetched/reflowed all blocks and threw away the
- * user's scroll position (the "jumps to top" report). Mirrors the case-banks
- * optimistic pattern; resyncs to server truth whenever the props change.
+ * Renders the obligations block; state lives in useObligationRows (optimistic
+ * add / delete / blur-save so the heavy case page never re-renders + the
+ * debounced background router.refresh that keeps the router cache from
+ * restoring the pre-mutation page). The grand-total header recomputes from
+ * the same client state.
  */
 export function CaseObligationsClient({
   caseId,
@@ -48,94 +39,17 @@ export function CaseObligationsClient({
 }: Props) {
   const t = useTranslations('obligations');
   const tf = useTranslations('obligations.fields');
-  const tc = useTranslations('common');
 
-  const [rows, setRows] = useState<ObligationRow[]>(() => [...initialObligations]);
-  const sig = initialObligations
-    .map(
-      (r) =>
-        `${r.id}:${r.monthly_payment ?? ''}:${r.loan_amount ?? ''}:${r.end_date ?? ''}:${r.months_remaining ?? ''}:${r.lender ?? ''}`,
-    )
-    .join('|');
-  const [prevSig, setPrevSig] = useState(sig);
-  if (sig !== prevSig) {
-    setPrevSig(sig);
-    setRows([...initialObligations]);
-  }
-
-  const [isAdding, startAdd] = useTransition();
+  const { rows, isAdding, addRow, deleteRow, saveField, rowKey } = useObligationRows(
+    caseId,
+    primaryBorrowerId,
+    initialObligations,
+  );
 
   const monthlyTotal = useMemo(() => sumMonthlyPayments(rows), [rows]);
 
   const canAdd = canEdit && primaryBorrowerId !== null;
   const hasRows = rows.length > 0;
-
-  const handleAdd = () => {
-    if (!canAdd || !primaryBorrowerId) return;
-    const tempId = `optimistic-${prevSig.length}-${rows.length}`;
-    setRows((prev) => [...prev, emptyObligationRow(tempId, primaryBorrowerId)]);
-    startAdd(async () => {
-      const result = await createEmptyObligationAction(caseId, primaryBorrowerId);
-      if (!result.ok) {
-        setRows((prev) => prev.filter((r) => r.id !== tempId));
-        toast.error(result.message || tc('saveFailed'));
-        return;
-      }
-      setRows((prev) =>
-        prev.map((r) => (r.id === tempId ? { ...r, id: result.obligationId } : r)),
-      );
-    });
-  };
-
-  const handleDelete = (id: string) => {
-    const index = rows.findIndex((r) => r.id === id);
-    const removed = rows[index];
-    if (!removed) return;
-    setRows((prev) => prev.filter((r) => r.id !== id));
-    void deleteObligationAction(id, removed.borrower_id, caseId).then((result) => {
-      if (result.ok) {
-        toast.success(t('deleteSuccess'));
-        return;
-      }
-      setRows((prev) => {
-        const next = [...prev];
-        next.splice(Math.min(index, next.length), 0, removed);
-        return next;
-      });
-      toast.error(t('deleteError'));
-    });
-  };
-
-  const saveField = async (id: string, field: EditableObligationField, value: unknown) => {
-    const target = rows.find((r) => r.id === id);
-    if (!target) return;
-    const prev = target[field];
-    // `as never` for the computed-key write: EditableObligationField spans
-    // string/number/null columns, so a dynamic [field] assignment can't be
-    // proven type-safe at compile time; the action validates the field+value.
-    setRows((cur) => cur.map((r) => (r.id === id ? { ...r, [field]: value as never } : r)));
-    const result = await updateObligationFieldAction(id, caseId, field, value);
-    if (!result.ok) {
-      setRows((cur) => cur.map((r) => (r.id === id ? { ...r, [field]: prev as never } : r)));
-      return;
-    }
-
-    // Smart default: filling end_date derives months_remaining from it (the
-    // reverse is left manual). Clearing end_date leaves months as-is.
-    if (field === 'end_date' && typeof value === 'string' && value) {
-      const prevMonths = target.months_remaining;
-      const months = monthsUntil(value);
-      setRows((cur) =>
-        cur.map((r) => (r.id === id ? { ...r, months_remaining: months } : r)),
-      );
-      const monthsResult = await updateObligationFieldAction(id, caseId, 'months_remaining', months);
-      if (!monthsResult.ok) {
-        setRows((cur) =>
-          cur.map((r) => (r.id === id ? { ...r, months_remaining: prevMonths } : r)),
-        );
-      }
-    }
-  };
 
   return (
     <CaseBlock
@@ -162,7 +76,7 @@ export function CaseObligationsClient({
             <div className="flex items-center justify-end">
               <button
                 type="button"
-                onClick={handleAdd}
+                onClick={addRow}
                 disabled={isAdding}
                 className="inline-flex items-center gap-1.5 text-[11px] font-medium text-brand-gold-text bg-brand-gold-soft border border-brand-gold/40 rounded-full px-2.5 py-1 hover:bg-brand-gold/20 hover:border-brand-gold/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -180,7 +94,7 @@ export function CaseObligationsClient({
             canAdd ? (
               <button
                 type="button"
-                onClick={handleAdd}
+                onClick={addRow}
                 disabled={isAdding}
                 className="w-full inline-flex items-center justify-center gap-1.5 text-sm font-medium text-brand-gold-text bg-brand-gold-soft border border-dashed border-brand-gold/50 rounded-md px-3 py-3 hover:bg-brand-gold/20 hover:border-brand-gold/70 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -210,11 +124,11 @@ export function CaseObligationsClient({
                 <tbody>
                   {rows.map((ob) => (
                     <ObligationTableRow
-                      key={ob.id}
+                      key={rowKey(ob.id)}
                       obligation={ob}
                       canEdit={canEdit}
                       onSaveField={(field, value) => saveField(ob.id, field, value)}
-                      onDelete={() => handleDelete(ob.id)}
+                      onDelete={() => deleteRow(ob.id)}
                     />
                   ))}
                 </tbody>

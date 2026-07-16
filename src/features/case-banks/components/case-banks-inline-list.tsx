@@ -1,19 +1,17 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Loader2, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { toast } from 'sonner';
 
 import { calcDropdownPos, type DropdownPosition } from '@/features/cases/components/dropdown-position';
 
-import { addCaseBankAction } from '../actions/add-case-bank';
-import { deleteCaseBankAction } from '../actions/delete-case-bank';
-import { setPrimaryBankAction } from '../actions/set-primary-bank';
+import { useCaseBankRows } from '../hooks/use-case-bank-rows';
 import type { BankOption } from '../services/case-banks.service';
 import { BankAvatar } from './bank-avatar';
-import { CaseBankInlineRow, type CaseBankRowData } from './case-bank-inline-row';
+import { CaseBankInlineRow } from './case-bank-inline-row';
+import type { CaseBankRowData } from '../types';
 
 // Re-exported so existing importers (case-admin-block) keep their import path.
 export type { CaseBankRowData };
@@ -36,38 +34,25 @@ type Props = {
  * easier UX is "delete + re-add" than figuring out what happens to the
  * banker_name / dates / notes on the row when the bank changes underneath.
  *
- * All three mutations (add / delete / set-primary) update `optimisticRows` in
- * place so the change shows instantly and the rest of the heavy case page is
- * NOT re-rendered. The bank actions used to call revalidatePath, which
- * re-rendered every block (re-fetching incomes/obligations/etc.); when that
- * data was cold the layout reflowed and the browser threw away the user's
- * scroll position (the "jumps to the top" report). We resync to server truth
- * whenever the props change — e.g. another action elsewhere does revalidate.
+ * All mutations live in useCaseBankRows: optimistic updates (no full-page
+ * re-render / scroll loss) plus the debounced background router.refresh that
+ * keeps the router cache from restoring the pre-mutation page.
  */
-export function CaseBanksInlineList({ caseId, rows, banks, canEdit }: Props) {
+export function CaseBanksInlineList({ caseId, rows: serverRows, banks, canEdit }: Props) {
   const t = useTranslations('caseBanks');
-  const tc = useTranslations('common');
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [isMutating, startMutate] = useTransition();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<DropdownPosition | null>(null);
 
-  const [optimisticRows, setOptimisticRows] = useState<CaseBankRowData[]>(() => [...rows]);
-  const rowsSig = rows
-    .map((r) => `${r.id}:${r.bank?.id ?? ''}:${r.is_primary}:${r.banker_name ?? ''}`)
-    .join('|');
-  const [prevSig, setPrevSig] = useState(rowsSig);
-  if (rowsSig !== prevSig) {
-    setPrevSig(rowsSig);
-    setOptimisticRows([...rows]);
-  }
+  const { rows, isAdding, addRow, setPrimary, deleteRow, saveBankerName, rowKey } =
+    useCaseBankRows(caseId, serverRows);
 
   // Banks not yet linked to the case — what the picker offers.
   const availableBanks = useMemo(() => {
-    const used = new Set(optimisticRows.map((r) => r.bank?.id).filter(Boolean));
+    const used = new Set(rows.map((r) => r.bank?.id).filter(Boolean));
     return banks.filter((b) => !used.has(b.id));
-  }, [banks, optimisticRows]);
+  }, [banks, rows]);
 
   // Close the (fixed-position) picker on scroll/resize so it never drifts away
   // from its trigger — scrolling inside the dropdown itself is exempt.
@@ -95,79 +80,23 @@ export function CaseBanksInlineList({ caseId, rows, banks, canEdit }: Props) {
     setPickerOpen(false);
     const bank = banks.find((b) => b.id === bankId);
     if (!bank) return;
-    // Optimistic insert — the row appears now, no full-page re-render. First
-    // bank on the case becomes primary (mirrors addCaseBankAction's rule).
-    const tempId = `optimistic-${bankId}`;
-    const isPrimary = optimisticRows.length === 0;
-    setOptimisticRows((prev) => [
-      ...prev,
-      { id: tempId, bank, banker_name: null, is_primary: isPrimary },
-    ]);
-    startMutate(async () => {
-      const result = await addCaseBankAction(caseId, bankId);
-      if (!result.ok) {
-        setOptimisticRows((prev) => prev.filter((r) => r.id !== tempId));
-        toast.error(
-          result.error === 'already_linked' ? t('errors.alreadyLinked') : tc('saveFailed'),
-        );
-        return;
-      }
-      // Swap the temp id for the real one so a later delete/primary targets it.
-      setOptimisticRows((prev) =>
-        prev.map((r) => (r.id === tempId ? { ...r, id: result.caseBankId } : r)),
-      );
-    });
-  };
-
-  const handleSetPrimary = (rowId: string) => {
-    const target = optimisticRows.find((r) => r.id === rowId);
-    if (!target || target.is_primary || !target.bank) return;
-    const snapshot = optimisticRows;
-    setOptimisticRows((prev) => prev.map((r) => ({ ...r, is_primary: r.id === rowId })));
-    startMutate(async () => {
-      const result = await setPrimaryBankAction(caseId, target.bank!.id);
-      if (!result.ok) {
-        setOptimisticRows(snapshot);
-        toast.error(tc('saveFailed'));
-      }
-    });
-  };
-
-  const handleDelete = (rowId: string) => {
-    const index = optimisticRows.findIndex((r) => r.id === rowId);
-    const removed = optimisticRows[index];
-    if (!removed) return;
-    setOptimisticRows((prev) => prev.filter((r) => r.id !== rowId));
-    startMutate(async () => {
-      const result = await deleteCaseBankAction(rowId, caseId);
-      if (result.ok) {
-        toast.success(t('deleteSuccess'));
-        return;
-      }
-      // Re-insert at its original position on failure.
-      setOptimisticRows((prev) => {
-        const next = [...prev];
-        next.splice(Math.min(index, next.length), 0, removed);
-        return next;
-      });
-      toast.error(t('deleteError'));
-    });
+    addRow(bank);
   };
 
   return (
     <div className="space-y-2">
-      {optimisticRows.length === 0 ? (
+      {rows.length === 0 ? (
         <p className="text-xs text-neutral-500 italic">{t('empty')}</p>
       ) : (
         <div className="space-y-1.5">
-          {optimisticRows.map((row) => (
+          {rows.map((row) => (
             <CaseBankInlineRow
-              key={row.id}
-              caseId={caseId}
+              key={rowKey(row.id)}
               row={row}
               canEdit={canEdit}
-              onSetPrimary={handleSetPrimary}
-              onDelete={handleDelete}
+              onSetPrimary={setPrimary}
+              onDelete={deleteRow}
+              onSaveBankerName={saveBankerName}
             />
           ))}
         </div>
@@ -179,12 +108,12 @@ export function CaseBanksInlineList({ caseId, rows, banks, canEdit }: Props) {
             ref={triggerRef}
             type="button"
             onClick={() => (pickerOpen ? setPickerOpen(false) : openPicker())}
-            disabled={isMutating}
+            disabled={isAdding}
             aria-haspopup="listbox"
             aria-expanded={pickerOpen}
             className="inline-flex items-center gap-1 text-xs font-medium text-brand-gold-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 rounded disabled:opacity-50"
           >
-            {isMutating ? (
+            {isAdding ? (
               <Loader2 className="size-3 animate-spin" aria-hidden="true" />
             ) : (
               <Plus className="size-3" aria-hidden="true" />

@@ -69,12 +69,13 @@ export async function updateCaseBankFieldAction(
     updated_by: userRes.user.id,
   } as CaseBankUpdate;
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from('case_banks')
     .update(patch)
     .eq('id', caseBankId)
     .eq('case_id', caseId)
-    .is('deleted_at', null);
+    .is('deleted_at', null)
+    .select('id');
 
   if (error) {
     if (error.code === '23505') {
@@ -82,18 +83,18 @@ export async function updateCaseBankFieldAction(
     }
     console.error(
       '[updateCaseBankField] update error',
-      JSON.stringify({
-        caseBankId,
-        caseId,
-        field: safeField,
-        code: error.code ?? null,
-        message: error.message ?? null,
-      }),
+      JSON.stringify({ caseBankId, caseId, field: safeField, code: error.code ?? null }),
     );
     return { ok: false, error: 'unknown' };
   }
+  // 0 rows matched (bad id / soft-deleted / RLS) is a silent no-op in
+  // PostgREST — without this check the client reports "saved" unwritten.
+  if (!updated || updated.length === 0) {
+    console.error('[updateCaseBankField] no row matched', JSON.stringify({ caseBankId, caseId }));
+    return { ok: false, error: 'unauthorized' };
+  }
 
-  // No revalidatePath — the row shows the edited value from its own local
-  // state (case-bank-inline-row); the saved value flows back on the next load.
+  // No revalidatePath — the client updates the row optimistically (FE-1);
+  // useInlineMutationSync refreshes the router cache in the background.
   return { ok: true };
 }

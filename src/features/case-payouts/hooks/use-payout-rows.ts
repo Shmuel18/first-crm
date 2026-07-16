@@ -10,55 +10,46 @@ import { useOptimisticIds } from '@/lib/hooks/use-optimistic-ids';
 import { useSyncedRows } from '@/lib/hooks/use-synced-rows';
 import { reinsertAt } from '@/lib/utils/reinsert-at';
 
-import { createEmptyExpenseAction } from '../actions/create-empty-expense';
-import { deleteExpenseAction } from '../actions/delete-expense';
-import {
-  updateExpenseFieldAction,
-  type EditableExpenseField,
-} from '../actions/update-expense-field';
-import { emptyExpenseRow } from '../domain/case-expense-empty-row';
-import type { CaseExpenseRow } from '../types';
+import { createEmptyPayoutAction } from '../actions/create-empty-payout';
+import { deletePayoutAction } from '../actions/delete-payout';
+import { updatePayoutFieldAction, type EditablePayoutField } from '../actions/update-payout-field';
+import { emptyPayoutRow } from '../domain/case-payout-empty-row';
+import type { CasePayoutRow } from '../types';
 
-type UseExpenseRowsResult = {
-  rows: CaseExpenseRow[];
+type UsePayoutRowsResult = {
+  rows: CasePayoutRow[];
   isAdding: boolean;
   addRow: () => void;
   deleteRow: (id: string) => void;
-  saveField: (id: string, field: EditableExpenseField, value: unknown) => void;
+  saveField: (id: string, field: EditablePayoutField, value: unknown) => void;
   /** Stable React key — survives the temp -> real id swap (no remount). */
   rowKey: (id: string) => string;
-  /** Wire the receipt cell's upload/remove into the same sync machinery. */
-  onReceiptMutateStart: () => void;
-  onReceiptMutateSettled: (ok: boolean) => void;
 };
 
 /**
- * Optimistic state (add / delete / inline blur-save) for CaseExpensesList,
- * closing the "wrote it but it's gone" holes that made office staff re-type
- * expenses — see useInlineMutationSync (cache refresh) and useOptimisticIds
- * (temp-id routing); every failure path rolls back AND toasts.
+ * Optimistic state (add / delete / inline blur-save) for CasePayoutsList.
+ * Mirrors useExpenseRows: useInlineMutationSync keeps the router cache from
+ * serving the pre-mutation page after FE-1 mutations, useOptimisticIds routes
+ * blur-saves/deletes that beat the row's insert to the real id.
  */
-export function useExpenseRows(
+export function usePayoutRows(
   caseId: string,
-  expenses: ReadonlyArray<CaseExpenseRow>,
-): UseExpenseRowsResult {
-  const t = useTranslations('expenses');
+  payouts: ReadonlyArray<CasePayoutRow>,
+): UsePayoutRowsResult {
   const tc = useTranslations('common');
   const [isAdding, startAdd] = useTransition();
   const { pendingCount, refreshOwed, beginOp, endOp, refreshSoon } = useInlineMutationSync();
   const { newTempId, registerCreate, resolveRealId, markCreated, rowKey } = useOptimisticIds();
 
-  const sig = expenses
-    .map((e) => `${e.id}:${e.expense_date ?? ''}:${e.amount ?? ''}:${e.description ?? ''}:${e.receipt_name ?? ''}`)
-    .join('|');
-  const [rows, setRows] = useSyncedRows(sig, () => [...expenses], pendingCount === 0 && !refreshOwed);
+  const sig = payouts.map((p) => `${p.id}:${p.recipient ?? ''}:${p.amount ?? ''}`).join('|');
+  const [rows, setRows] = useSyncedRows(sig, () => [...payouts], pendingCount === 0 && !refreshOwed);
 
   const addRow = (): void => {
     const tempId = newTempId();
-    setRows((prev) => [...prev, emptyExpenseRow(tempId, caseId)]);
+    setRows((prev) => [...prev, emptyPayoutRow(tempId, caseId)]);
     beginOp();
-    const created = createEmptyExpenseAction(caseId)
-      .then((result) => (result.ok ? result.expenseId : null))
+    const created = createEmptyPayoutAction(caseId)
+      .then((result) => (result.ok ? result.payoutId : null))
       .catch(() => null);
     registerCreate(tempId, created);
     startAdd(async () => {
@@ -76,7 +67,7 @@ export function useExpenseRows(
     });
   };
 
-  const saveField = (id: string, field: EditableExpenseField, value: unknown): void => {
+  const saveField = (id: string, field: EditablePayoutField, value: unknown): void => {
     const target = rows.find((r) => r.id === id);
     if (!target) return;
     const prev = target[field];
@@ -90,7 +81,7 @@ export function useExpenseRows(
         realId = await resolveRealId(id);
         // Insert failed — addRow already removed the row and toasted once.
         if (!realId) return;
-        const result = await updateExpenseFieldAction(realId, caseId, field, value);
+        const result = await updatePayoutFieldAction(realId, caseId, field, value);
         if (!result.ok) {
           message = result.message;
           throw new Error(result.error);
@@ -118,14 +109,13 @@ export function useExpenseRows(
         const realId = await resolveRealId(id);
         // Never-inserted row: nothing to delete server-side, addRow toasted.
         if (realId) {
-          const result = await deleteExpenseAction(realId, caseId);
+          const result = await deletePayoutAction(realId, caseId);
           if (!result.ok) throw new Error(result.error);
-          toast.success(t('deleteSuccess'));
           refreshSoon();
         }
       } catch {
         setRows((prev) => reinsertAt(prev, index, removed));
-        toast.error(t('deleteError'));
+        toast.error(tc('saveFailed'));
         refreshSoon();
       } finally {
         endOp();
@@ -133,10 +123,5 @@ export function useExpenseRows(
     })();
   };
 
-  const onReceiptMutateSettled = (ok: boolean): void => {
-    endOp();
-    if (ok) refreshSoon();
-  };
-
-  return { rows, isAdding, addRow, deleteRow, saveField, rowKey, onReceiptMutateStart: beginOp, onReceiptMutateSettled };
+  return { rows, isAdding, addRow, deleteRow, saveField, rowKey };
 }

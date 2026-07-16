@@ -1,6 +1,16 @@
 import type { Database } from '@/types/database';
 
+import type { BankOption } from './services/case-banks.service';
+
 export type CaseBankRow = Database['public']['Tables']['case_banks']['Row'];
+
+/** Slim row shape — just what the admin block's inline banks list needs. */
+export type CaseBankRowData = {
+  id: string;
+  bank: BankOption | null;
+  banker_name: string | null;
+  is_primary: boolean;
+};
 
 export type CaseBankInsert = Database['public']['Tables']['case_banks']['Insert'];
 
