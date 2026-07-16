@@ -19,9 +19,9 @@ type Props = {
   /** Fired with the saved payment so the parent can update its list optimistically
    *  (the case block) or close itself (the dashboard dialog ignores the arg). */
   onAdded?: (payment: FeePayment) => void;
-  /** Report the server call into the parent's mutation sync (useFeePayments)
-   *  so the router cache gets refreshed after an add too. Optional — the
-   *  dashboard dialog doesn't sync. */
+  /** Report the server call into the parent's mutation sync (useFeePayments
+   *  in the case block, useInlineMutationSync on the /collections dashboard)
+   *  so the router cache gets refreshed after an add too. */
   onMutateStart?: () => void;
   onMutateSettled?: (ok: boolean) => void;
 };

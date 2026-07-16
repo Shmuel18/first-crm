@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useInlineMutationSync } from '@/lib/hooks/use-inline-mutation-sync';
 import { formatCurrency } from '@/lib/utils/format-currency';
 import type { Locale } from '@/lib/i18n/direction';
 
@@ -43,6 +44,11 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
   const t = useTranslations('collections');
   const [revealed, setRevealed] = useState(false);
   const [payCase, setPayCase] = useState<{ caseId: string; name: string } | null>(null);
+  // The collections actions skip revalidatePath (FE-1), so without this the
+  // server-fetched rows/totals and the router cache would keep the
+  // pre-payment payload until a hard reload. There's no optimistic row state
+  // here — the debounced background router.refresh re-fetches the overview.
+  const { beginOp, endOp, refreshSoon } = useInlineMutationSync();
   const [filter, setFilter] = useQueryState(
     'status',
     parseAsStringEnum<Filter>([...FILTERS]).withDefault('open'),
@@ -239,6 +245,11 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
               caseId={payCase.caseId}
               defaultDate={defaultDate}
               onAdded={() => setPayCase(null)}
+              onMutateStart={beginOp}
+              onMutateSettled={(ok) => {
+                endOp();
+                if (ok) refreshSoon();
+              }}
             />
           )}
         </DialogContent>
