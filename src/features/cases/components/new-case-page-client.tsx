@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from 'react';
 
+import { useRouter } from 'next/navigation';
+
 import { Home, Receipt, Wallet } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -29,6 +31,7 @@ type Props = {
 };
 
 export function NewCasePageClient({ locale }: Props) {
+  const router = useRouter();
   const tDraft = useTranslations('case.draft');
   const tBlocks = useTranslations('case.blocks');
 
@@ -74,12 +77,19 @@ export function NewCasePageClient({ locale }: Props) {
     };
 
     // R5-create-draft-2: do NOT clear the dirty flag before the save resolves.
-    // On success the action redirects (App-Router nav doesn't fire beforeunload,
-    // and the page unmounts), so no stale prompt; on FAILURE isDirty stays true
-    // and the unsaved-changes guard keeps protecting the entered data.
+    // On success we push to the new case (App-Router nav doesn't fire
+    // beforeunload, and the link-guard only intercepts anchor clicks — a
+    // programmatic push passes), so no stale prompt; on FAILURE isDirty stays
+    // true and the unsaved-changes guard keeps protecting the entered data.
     startTransition(async () => {
       const result = await saveCaseDraftAction(payload);
-      if (result.ok === false) {
+      if (result.ok) {
+        // Client-side navigation (instead of a server redirect inside the
+        // action) lets /cases/[id]'s loading.tsx skeleton appear immediately
+        // while the heavy detail page streams in — the save button no longer
+        // freezes for the full render round-trip.
+        router.push(`/cases/${result.caseId}`);
+      } else {
         if (result.error === 'validation') {
           setGenericError(tDraft('errors.validation'));
           // Surface the specific reasons (deduped translated messages, e.g.

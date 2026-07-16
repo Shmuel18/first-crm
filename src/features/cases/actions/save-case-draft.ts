@@ -1,7 +1,6 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import { after } from 'next/server';
 
 import { userHasPermission } from '@/lib/auth/permissions';
@@ -17,22 +16,23 @@ import { CaseDraftSchema, type CaseDraftInput } from '../schemas/case-draft.sche
  *
  * The page holds a draft client-side (no DB writes until this fires); a
  * single RPC commits the case + borrowers + case_borrowers atomically.
- * On success → redirect to /cases/[id] where everything is unlocked and
- * the remaining blocks (banks, incomes, …) can be edited inline.
+ * On success → returns the caseId and the CLIENT navigates to /cases/[id].
+ * (A server-side redirect() renders the whole detail page into this POST
+ * response — which the router then refetches, double payload — freezing the
+ * save spinner; returning streams the page behind its loading.tsx instead.)
  *
- * Errors are returned as generic codes (never the raw Supabase error.message
- * — that can leak constraint/policy names). The UI maps the code to a
- * translated string.
+ * Errors are generic codes (never the raw Supabase error.message — it can
+ * leak constraint/policy names); the UI maps them to translated strings.
  */
-
 export type SaveCaseDraftResult =
-  | { ok: true; caseId: string } // Practically unreachable — success path redirects (throws)
+  | { ok: true; caseId: string }
   | { ok: false; error: 'validation'; fieldErrors: Record<string, string> }
   | { ok: false; error: 'unauthorized' | 'setup' | 'unknown' };
 
 export async function saveCaseDraftAction(
   input: CaseDraftInput,
 ): Promise<SaveCaseDraftResult> {
+  const t0 = performance.now();
   const parsed = CaseDraftSchema.safeParse(input);
   if (!parsed.success) {
     const fieldErrors = await resolveSchemaErrors(parsed.error);
@@ -44,22 +44,21 @@ export async function saveCaseDraftAction(
   if (!userRes.user) {
     return { ok: false, error: 'unauthorized' };
   }
+  const tAuth = performance.now();
 
-  // Defense in depth — the RPC also enforces create_case, but failing fast
-  // here returns a clean 'unauthorized' instead of an opaque 'unknown' from
-  // the RPC's exception path.
+  // Defense in depth — the RPC also enforces create_case; failing fast here
+  // returns a clean 'unauthorized' instead of the RPC's opaque 'unknown'.
   if (!(await userHasPermission('create_case'))) {
     return { ok: false, error: 'unauthorized' };
   }
+  const tPerm = performance.now();
 
-  // Sanitize the rich-text before the RPC sees it — same defense as
-  // createCaseAction. Even though the case-detail page re-sanitizes on
-  // render (dangerouslySetInnerHTML + sanitizeRichTextHtml), strip-on-write
-  // keeps the stored bytes clean (no second-order audit-replay XSS).
+  // Strip-on-write (same defense as createCaseAction): stored bytes stay
+  // clean even though the case-detail page re-sanitizes on render.
   const safeRequestDetails = sanitizeRichTextHtml(parsed.data.request_details ?? null);
 
-  // The RPC takes JSONB — serialize borrowers as plain JSON. The RPC does
-  // its own per-borrower validation (defense in depth — see migration 074).
+  // The RPC takes JSONB and does its own per-borrower validation
+  // (defense in depth — see migration 074).
   const { data: caseId, error: rpcErr } = await supabase.rpc('create_case_draft', {
     p_request_details: safeRequestDetails,
     p_borrowers: parsed.data.borrowers,
@@ -73,16 +72,28 @@ export async function saveCaseDraftAction(
     if (rpcErr?.code === '42883' || rpcErr?.message?.includes('create_case_draft')) {
       return { ok: false, error: 'setup' };
     }
-    // 42501 = the RPC refused (missing create_case, or — since migration 201 —
-    // a national_id that resolves to a borrower the caller can't access).
+    // 42501 = the RPC refused (missing create_case, or a source borrower the
+    // caller can't access — migrations 201/209).
     if (rpcErr?.code === '42501') {
       return { ok: false, error: 'unauthorized' };
     }
     return { ok: false, error: 'unknown' };
   }
 
-  // Defer the heavy dashboard rebuild to after the response — we redirect to the
-  // detail page, so the dashboard only needs to be fresh on the next visit.
+  // Always-on once-per-creation timing (not PERF_LOGS-gated): the office
+  // reported minute-long saves that left no server-side trace — the
+  // auth/permission/rpc phase split must be readable in prod logs.
+  const now = performance.now();
+  console.info('[perf] saveCaseDraft', {
+    caseId,
+    totalMs: Math.round(now - t0),
+    authMs: Math.round(tAuth - t0),
+    permMs: Math.round(tPerm - tAuth),
+    rpcMs: Math.round(now - tPerm),
+  });
+
+  // Defer the heavy dashboard rebuild to after the response — the dashboard
+  // only needs to be fresh on the user's next visit there.
   after(() => revalidatePath('/cases'));
-  redirect(`/cases/${caseId}`);
+  return { ok: true, caseId };
 }
