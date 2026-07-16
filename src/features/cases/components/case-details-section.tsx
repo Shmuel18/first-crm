@@ -1,9 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-
 import { useTranslations } from 'next-intl';
-import { toast } from 'sonner';
 
 import { CurrencySign } from '@/components/ui/currency-sign';
 import { formatPersonName } from '@/lib/utils/person-name';
@@ -11,13 +8,7 @@ import { formatPersonName } from '@/lib/utils/person-name';
 import { FieldGroup } from '@/features/borrowers/components/borrower-compact-fields';
 import { EditableField } from '@/features/borrowers/components/editable-field';
 
-import { updateCaseFeeAmountAction } from '../actions/update-case-fee-amount';
-import { updateCaseFeePaidAction } from '../actions/update-case-fee-paid';
-import { updateCaseFieldAction } from '../actions/update-case-field';
-import {
-  isEditableCaseField,
-  type EditableCaseField,
-} from '../domain/editable-case-fields';
+import { useCaseDetailsState, type LocalCase } from '../hooks/use-case-details-state';
 import {
   CASE_BLOCKER_VALUES,
   INSURANCE_STATUS_VALUES,
@@ -26,7 +17,6 @@ import type {
   AdvisorOption,
   StatusOption,
 } from '../services/case-lookups.service';
-import type { CaseRow } from '../types';
 
 import { AssociatedAdvisorsField } from './associated-advisors-field';
 import { EditableStatusCell } from './editable-status-cell';
@@ -42,19 +32,6 @@ import { EditableStatusCell } from './editable-status-cell';
  * through setPrimaryBankAction → set_primary_bank RPC (migration 021),
  * which idempotently reconciles case_banks (promote/insert/demote).
  */
-
-type LocalCase = Pick<
-  CaseRow,
-  | 'status_id'
-  | 'assigned_advisor_id'
-  | 'case_blocker'
-  | 'insurance_status'
-  | 'insurance_agent_name'
-  | 'appraiser_name'
-  | 'target_date'
-  | 'referrer_name'
-  | 'short_note'
->;
 
 type Props = {
   caseId: string;
@@ -103,77 +80,11 @@ export function CaseDetailsSection({
   const tInsurance = useTranslations('case.insurance');
   const tc = useTranslations('common');
 
-  const [localCase, setLocalCase] = useState<LocalCase>(initial);
-  const [localFee, setLocalFee] = useState<number | null>(initialFeeAmount);
-
-  // Re-sync fee from prop on revalidation (e.g. another admin tab updated it).
-  const [feeRef, setFeeRef] = useState<number | null>(initialFeeAmount);
-  if (initialFeeAmount !== feeRef) {
-    setFeeRef(initialFeeAmount);
-    setLocalFee(initialFeeAmount);
-  }
-
-  // "Fee paid" checkbox state (manager-only). Stamps fee_paid_at on check.
-  const [localPaid, setLocalPaid] = useState<boolean>(initialFeePaid);
-  const [localPaidAt, setLocalPaidAt] = useState<string | null>(initialFeePaidAt);
-  const [paidRef, setPaidRef] = useState<boolean>(initialFeePaid);
-  if (initialFeePaid !== paidRef) {
-    setPaidRef(initialFeePaid);
-    setLocalPaid(initialFeePaid);
-    setLocalPaidAt(initialFeePaidAt);
-  }
-
-  const savePaid = (checked: boolean) => {
-    const prevPaid = localPaid;
-    const prevAt = localPaidAt;
-    setLocalPaid(checked);
-    setLocalPaidAt(checked ? new Date().toISOString() : null);
-    void updateCaseFeePaidAction(caseId, checked).then((res) => {
-      if (!res.ok) {
-        setLocalPaid(prevPaid);
-        setLocalPaidAt(prevAt);
-        toast.error(tc('saveFailed'));
-      } else {
-        setLocalPaidAt(res.paidAt);
-      }
-    });
-  };
-
-  const saveFee = async (
-    value: string | null,
-  ): Promise<{ ok: true } | { ok: false; message?: string }> => {
-    const prev = localFee;
-    const coerced =
-      value === null || value === '' ? null : Number(value);
-    setLocalFee(coerced);
-    const result = await updateCaseFeeAmountAction(caseId, value);
-    if (!result.ok) {
-      setLocalFee(prev);
-      return { ok: false, message: result.message };
-    }
-    return { ok: true };
-  };
-
-  const saveField = async (
-    field: EditableCaseField,
-    value: string | null,
-  ): Promise<{ ok: true } | { ok: false; message?: string }> => {
-    if (!isEditableCaseField(field)) return { ok: false };
-    // Cast to LocalCase keys — saveField is only ever called with the
-    // admin-section fields below, all of which exist on LocalCase. The
-    // wider EditableCaseField type lets us share the action contract
-    // with the property block.
-    const key = field as keyof LocalCase;
-    const prev = localCase[key];
-
-    setLocalCase((c) => ({ ...c, [key]: value as never }));
-    const result = await updateCaseFieldAction(caseId, field, value);
-    if (!result.ok) {
-      setLocalCase((c) => ({ ...c, [key]: prev as never }));
-      return { ok: false, message: result.message };
-    }
-    return { ok: true };
-  };
+  // All optimistic field state + saves live in the hook, which also wires
+  // the background router-cache refresh (stale back/forward payloads were
+  // reverting and even overwriting saved values — see the hook doc).
+  const { localCase, localFee, localPaid, localPaidAt, saveField, saveFee, savePaid } =
+    useCaseDetailsState(caseId, initial, initialFeeAmount, initialFeePaid, initialFeePaidAt);
 
   const advisorOptions = advisors.map((a) => ({
     value: a.id,
