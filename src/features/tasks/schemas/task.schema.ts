@@ -37,6 +37,18 @@ export const TaskFormSchema = z.object({
   assigned_to: optionalUuid,
   case_id: optionalUuid,
   due_date: optionalDate,
+  // "Deliver this task at" — an Israel wall-clock datetime-local string
+  // ("2026-07-19T08:00"), NOT an instant. The action converts it in
+  // Asia/Jerusalem and parks the task until then; empty = deliver now.
+  // Format only here; "must be future" is checked in the action (needs `now`).
+  scheduled_for: z.preprocess(
+    emptyToNull,
+    z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, { error: 'common.errors.invalidDate' })
+      .nullable()
+      .optional(),
+  ),
   // Checkbox: present ('on') only when checked → true, otherwise false.
   is_private: z.preprocess((v) => v === true || v === 'on' || v === 'true', z.boolean()),
 });

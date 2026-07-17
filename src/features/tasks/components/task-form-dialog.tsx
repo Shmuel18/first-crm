@@ -38,6 +38,7 @@ import {
 import { TaskAssignmentHistory } from './task-assignment-history';
 import { TaskAttachmentsList } from './task-attachments-list';
 import { TaskEditRecorder, TaskRecordingsField } from './task-recordings-field';
+import { TaskScheduleField } from './task-schedule-field';
 import { runTaskAttachmentUploads } from './upload-task-attachments';
 import { runTaskRecordingUploads } from './upload-task-recordings';
 
@@ -306,6 +307,16 @@ export function TaskFormDialog({
               <span className="mt-0.5 block text-xs text-neutral-500">{t('fields.privateHint')}</span>
             </span>
           </label>
+
+          {/* Create-only: scheduling an EXISTING task is what the ⋯ snooze menu
+              already does, and the edit form deliberately never touches
+              status/snoozed_until (update-task.ts). */}
+          {mode === 'create' && (
+            <TaskScheduleField
+              defaultValue={value('scheduled_for')}
+              error={fieldErrors.scheduled_for}
+            />
+          )}
 
           <FormField label={t('fields.assignee')} error={fieldErrors.assigned_to}>
             <NativeSelect name="assigned_to" defaultValue={value('assigned_to')} disabled={isPrivate}>

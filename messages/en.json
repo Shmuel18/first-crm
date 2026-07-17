@@ -2890,7 +2890,11 @@
         "recordVoice": "Record voice note",
         "recordStop": "Stop recording",
         "recordCancel": "Cancel recording",
-        "recordMicDenied": "Microphone unavailable — check browser permissions"
+        "recordMicDenied": "Microphone unavailable — check browser permissions",
+        "scheduledFor": "Scheduled delivery",
+        "scheduledForClear": "Clear",
+        "scheduledForHint": "The task is delivered immediately. To schedule it, pick a date and time (Israel time).",
+        "scheduledForSetHint": "The task waits and no notification is sent until then. At that time it appears for the assignee and an email goes out."
       },
       "submit": {
         "create": "Create task",

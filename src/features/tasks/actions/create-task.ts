@@ -1,15 +1,17 @@
 'use server';
 
-import { after } from 'next/server';
+import { getTranslations } from 'next-intl/server';
 
-import { sendTaskNotificationEmail } from '@/features/notifications/services/notification-email';
 import { createClient } from '@/lib/supabase/server';
 import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
+import { resolveScheduledDelivery } from '../domain/scheduled-delivery';
+import { buildTaskInsertPayload, scheduleErrorKey } from '../domain/task-payload';
 import { emitTaskEvent } from '../lib/emit-task-event';
+import { emailAssignedTask } from '../lib/notify-assigned-task';
 import { TaskFormSchema } from '../schemas/task.schema';
-import type { TaskActionState, TaskInsert } from '../types';
+import type { TaskActionState } from '../types';
 
 export async function createTaskAction(
   _prevState: TaskActionState,
@@ -20,6 +22,14 @@ export async function createTaskAction(
   const parsed = TaskFormSchema.safeParse(formDataToObject(formData));
   if (!parsed.success) {
     const fieldErrors = await resolveSchemaErrors(parsed.error);
+    return { ok: false, error: 'validation', fieldErrors, values };
+  }
+
+  // "Deliver at" → the UTC instant the task is parked until (null = now).
+  const schedule = resolveScheduledDelivery(parsed.data.scheduled_for);
+  if (!schedule.ok) {
+    const t = await getTranslations();
+    const fieldErrors = { scheduled_for: t(scheduleErrorKey(schedule.error)) };
     return { ok: false, error: 'validation', fieldErrors, values };
   }
 
@@ -39,23 +49,8 @@ export async function createTaskAction(
     if (!caseRow) return { ok: false, error: 'unauthorized', values };
   }
 
-  // A private task is a reminder to oneself — force self-assignment so it
-  // satisfies the tasks_private_self_assigned CHECK and stays invisible to
-  // others. `is_private` (migration 098) isn't in the generated types yet, so
-  // the payload is cast to TaskInsert (the value is still sent at runtime).
-  const isPrivate = parsed.data.is_private;
-  const assignee = isPrivate ? userId : parsed.data.assigned_to ?? null;
-  const payload = {
-    title: parsed.data.title,
-    description: parsed.data.description ?? null,
-    priority: parsed.data.priority ?? 'normal',
-    assigned_to: assignee,
-    case_id: parsed.data.case_id ?? null,
-    due_date: parsed.data.due_date ?? null,
-    is_private: isPrivate,
-    created_by: userId,
-    updated_by: userId,
-  } as TaskInsert;
+  const payload = buildTaskInsertPayload(parsed.data, userId, schedule.iso);
+  const assignee = payload.assigned_to ?? null;
 
   const { data: inserted, error } = await supabase
     .from('tasks')
@@ -73,21 +68,15 @@ export async function createTaskAction(
     body: '✦ נוצרה',
   });
 
-  if (assignee && assignee !== userId) {
-    // Best-effort email mirror — run AFTER the response so the submit button
-    // releases the moment the task is saved (the in-app bell is created by a DB
-    // trigger on insert, so the recipient is still notified instantly). The
-    // email itself does ~4 DB hops + a Resend HTTP call (10s timeout); blocking
-    // the action on it made the button spin for seconds (R4 perf).
-    after(() =>
-      sendTaskNotificationEmail({
-        recipientId: assignee,
-        actorId: userId,
-        kind: 'task_assigned',
-        taskTitle: parsed.data.title,
-        caseId: parsed.data.case_id ?? null,
-      }),
-    );
+  // `!schedule.iso`: a scheduled task must not email now — it reaches the
+  // assignee at its scheduled time (see emailAssignedTask).
+  if (assignee && assignee !== userId && !schedule.iso) {
+    emailAssignedTask({
+      recipientId: assignee,
+      actorId: userId,
+      taskTitle: parsed.data.title,
+      caseId: parsed.data.case_id ?? null,
+    });
   }
 
   // NOTE: no revalidatePath here. Revalidating /tasks — and especially the heavy

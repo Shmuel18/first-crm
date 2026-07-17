@@ -1,13 +1,13 @@
 'use server';
 
-import { after } from 'next/server';
 import { z } from 'zod';
 
-import { sendTaskNotificationEmail } from '@/features/notifications/services/notification-email';
 import { createClient } from '@/lib/supabase/server';
 import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
+import { isScheduledDelivery } from '../domain/scheduled-delivery';
+import { emailAssignedTask } from '../lib/notify-assigned-task';
 import { TaskFormSchema } from '../schemas/task.schema';
 import type { TaskActionState, TaskUpdate } from '../types';
 
@@ -36,11 +36,16 @@ export async function updateTaskAction(
   // Surface "not_found" cleanly before mutating; RLS would also catch this.
   const { data: existing } = await supabase
     .from('tasks')
-    .select('id, case_id, assigned_to, created_by')
+    .select('id, case_id, assigned_to, created_by, status, snoozed_until')
     .eq('id', taskId)
     .is('deleted_at', null)
     .maybeSingle();
   if (!existing) return { ok: false, error: 'not_found', values };
+
+  // Editing never changes the schedule (status/snoozed_until aren't in the
+  // patch) — but a task still parked for a future hand-off must stay silent:
+  // the cron delivers it (and any reassignment) at its time. Mirrors mig 218.
+  const stillScheduled = isScheduledDelivery(existing.status, existing.snoozed_until);
 
   // Reassign to a different case → confirm visibility.
   if (parsed.data.case_id && parsed.data.case_id !== existing.case_id) {
@@ -78,18 +83,13 @@ export async function updateTaskAction(
   if (error) return { ok: false, error: 'unknown', values };
   if (!updated || updated.length === 0) return { ok: false, error: 'unauthorized', values };
 
-  if (assignee && assignee !== existing.assigned_to && assignee !== userRes.user.id) {
-    // Best-effort email mirror, sent AFTER the response so the button releases
-    // immediately (Resend HTTP + DB hops). Bell is DB-trigger-driven.
-    after(() =>
-      sendTaskNotificationEmail({
-        recipientId: assignee,
-        actorId: userRes.user.id,
-        kind: 'task_assigned',
-        taskTitle: parsed.data.title,
-        caseId: parsed.data.case_id ?? existing.case_id,
-      }),
-    );
+  if (assignee && assignee !== existing.assigned_to && assignee !== userRes.user.id && !stillScheduled) {
+    emailAssignedTask({
+      recipientId: assignee,
+      actorId: userRes.user.id,
+      taskTitle: parsed.data.title,
+      caseId: parsed.data.case_id ?? existing.case_id,
+    });
   }
 
   // No revalidatePath (same reason as create-task): revalidating the heavy
