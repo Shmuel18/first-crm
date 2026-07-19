@@ -2895,7 +2895,9 @@
         "scheduledForClear": "בטל תזמון",
         "scheduledForHint": "המשימה תישלח מיד. לתזמון — בחרו תאריך ושעה (שעון ישראל).",
         "scheduledForSetHint": "המשימה תמתין ולא תישלח התראה עד המועד שנבחר. אז היא תופיע אצל האחראי/ת ותישלח התראה במייל.",
-        "scheduledForTime": "שעה"
+        "scheduledForTime": "שעה",
+        "scheduledForHour": "שעה",
+        "scheduledForMinute": "דקות"
       },
       "submit": {
         "create": "צור משימה",

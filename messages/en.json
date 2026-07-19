@@ -2895,7 +2895,9 @@
         "scheduledForClear": "Clear",
         "scheduledForHint": "The task is delivered immediately. To schedule it, pick a date and time (Israel time).",
         "scheduledForSetHint": "The task waits and no notification is sent until then. At that time it appears for the assignee and an email goes out.",
-        "scheduledForTime": "Time"
+        "scheduledForTime": "Time",
+        "scheduledForHour": "Hour",
+        "scheduledForMinute": "Minutes"
       },
       "submit": {
         "create": "Create task",
