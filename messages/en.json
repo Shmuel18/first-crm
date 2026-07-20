@@ -308,6 +308,10 @@
     "summary": {
       "collected": "Total collected",
       "open": "Outstanding",
+      "feeOpen": "Fee to collect",
+      "expensesOpen": "Expenses to collect",
+      "expensesHint": "of {total} office expenses",
+      "advanceHint": "incl. advances {amount}",
       "expenses": "Total expenses",
       "profit": "Net profit"
     },

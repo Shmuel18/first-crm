@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 
 import Link from 'next/link';
 
-import { Coins, Eye, EyeOff, Plus, Receipt, Wallet } from 'lucide-react';
+import { Banknote, Coins, Eye, EyeOff, Plus, Receipt, Wallet } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
 
@@ -82,14 +82,26 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
     [rows],
   );
 
+  // The open balance is split into its parts (fee / expenses / advances) so the
+  // headline number is auditable — "how much of the 314K is fee and how much is
+  // expenses" was the first question the office asked of it. open === feeOpen +
+  // expensesOpen + advanceOpen by construction; `expenses` stays the GROSS
+  // office spend (≠ expensesOpen, which nets out what's already been collected)
+  // and is shown as a hint under the expenses card rather than its own tile.
   const totals = useMemo(() => {
     const collected = sumCollected(enriched.map((r) => r.collected));
     const expenses = sumCollected(enriched.map((r) => r.expenses));
-    const open = enriched.reduce(
-      (acc, r) => acc + r.feeBalance + r.expenseBalance + r.advance,
-      0,
-    );
-    return { collected, expenses, open };
+    const feeOpen = sumCollected(enriched.map((r) => r.feeBalance));
+    const expensesOpen = sumCollected(enriched.map((r) => r.expenseBalance));
+    const advanceOpen = sumCollected(enriched.map((r) => r.advance));
+    return {
+      collected,
+      expenses,
+      feeOpen,
+      expensesOpen,
+      advanceOpen,
+      open: feeOpen + expensesOpen + advanceOpen,
+    };
   }, [enriched]);
 
   const visible = (
@@ -126,11 +138,27 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
         </button>
       </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      {/* Summary cards. The open balance leads, then its two components broken
+          out separately — fee alone and expenses alone. */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard label={t('summary.collected')} value={show(totals.collected)} icon={Wallet} accent />
-        <SummaryCard label={t('summary.open')} value={show(totals.open)} icon={Coins} />
-        <SummaryCard label={t('summary.expenses')} value={show(totals.expenses)} icon={Receipt} />
+        <SummaryCard
+          label={t('summary.open')}
+          value={show(totals.open)}
+          icon={Coins}
+          hint={
+            totals.advanceOpen > 0
+              ? t('summary.advanceHint', { amount: show(totals.advanceOpen) })
+              : undefined
+          }
+        />
+        <SummaryCard label={t('summary.feeOpen')} value={show(totals.feeOpen)} icon={Banknote} />
+        <SummaryCard
+          label={t('summary.expensesOpen')}
+          value={show(totals.expensesOpen)}
+          icon={Receipt}
+          hint={t('summary.expensesHint', { total: show(totals.expenses) })}
+        />
       </div>
 
       {/* Status filter */}
@@ -263,11 +291,14 @@ function SummaryCard({
   value,
   icon: Icon,
   accent,
+  hint,
 }: {
   label: string;
   value: string;
   icon: React.ComponentType<{ className?: string }>;
   accent?: boolean;
+  /** Optional caption under the figure (e.g. the gross expense total). */
+  hint?: string;
 }) {
   return (
     <div className={`rounded-xl border p-3 ${accent ? 'border-brand-gold/40 bg-brand-gold-soft' : 'border-neutral-200 bg-white'}`}>
@@ -276,6 +307,7 @@ function SummaryCard({
         <span className="truncate">{label}</span>
       </div>
       <div className="mt-1 truncate font-display text-xl font-semibold text-neutral-950 tabular-nums">{value}</div>
+      {hint && <div className="mt-0.5 truncate text-xs text-neutral-400 tabular-nums">{hint}</div>}
     </div>
   );
 }

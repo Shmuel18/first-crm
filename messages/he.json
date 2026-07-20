@@ -308,6 +308,10 @@
     "summary": {
       "collected": "סה״כ נגבה",
       "open": "יתרה פתוחה",
+      "feeOpen": "שכ״ט לגבייה",
+      "expensesOpen": "הוצאות לגבייה",
+      "expensesHint": "מתוך {total} הוצאות משרד",
+      "advanceHint": "כולל מקדמות {amount}",
       "expenses": "סה״כ הוצאות",
       "profit": "רווח נטו"
     },
