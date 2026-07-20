@@ -289,10 +289,6 @@ export default async function CaseDetailPage({ params }: Props) {
             // value down to the client when the UI is going to hide it.
             canSeeFinancials ? caseData.case_financials?.fee_amount ?? null : null
           }
-          feePaid={canSeeFinancials ? caseData.case_financials?.fee_paid ?? false : false}
-          feePaidAt={
-            canSeeFinancials ? caseData.case_financials?.fee_paid_at ?? null : null
-          }
           statuses={statusOptions}
           advisors={advisorOptions}
           associatedAdvisorIds={associatedAdvisorIds}

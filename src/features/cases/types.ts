@@ -54,11 +54,13 @@ export type CaseWithRelations = CaseRow & {
     } | null;
   }> | null;
   /** Manager-only financials. RLS on case_financials returns null for non-admins. */
+  /** fee_paid / fee_paid_at (migration 114) are deliberately NOT selected:
+   *  collections derives paid/partial/collected from the fee_payments ledger,
+   *  so the binary flag is dormant in the DB (same treatment as
+   *  expected_income). Don't re-add it as a second source of truth. */
   case_financials: {
     fee_amount: number | null;
     expected_income: number | null;
-    fee_paid: boolean;
-    fee_paid_at: string | null;
   } | null;
   /** Associated advisors (0..N) — migration 146. Only the id is loaded; names
    *  resolve via the list_active_advisors() options (a profiles embed would be

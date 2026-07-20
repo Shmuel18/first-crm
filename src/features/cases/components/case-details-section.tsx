@@ -54,8 +54,6 @@ type Props = {
   /** Manager-only: agreed fee shows + is editable only when this is true. */
   canSeeFinancials: boolean;
   initialFeeAmount: number | null;
-  initialFeePaid: boolean;
-  initialFeePaidAt: string | null;
 };
 
 export function CaseDetailsSection({
@@ -72,8 +70,6 @@ export function CaseDetailsSection({
   canAssignAdvisor,
   canSeeFinancials,
   initialFeeAmount,
-  initialFeePaid,
-  initialFeePaidAt,
 }: Props) {
   const tFields = useTranslations('case.fields');
   const tBlocker = useTranslations('case.blocker');
@@ -83,8 +79,8 @@ export function CaseDetailsSection({
   // All optimistic field state + saves live in the hook, which also wires
   // the background router-cache refresh (stale back/forward payloads were
   // reverting and even overwriting saved values — see the hook doc).
-  const { localCase, localFee, localPaid, localPaidAt, saveField, saveFee, savePaid } =
-    useCaseDetailsState(caseId, initial, initialFeeAmount, initialFeePaid, initialFeePaidAt);
+  const { localCase, localFee, saveField, saveFee } =
+    useCaseDetailsState(caseId, initial, initialFeeAmount);
 
   const advisorOptions = advisors.map((a) => ({
     value: a.id,
@@ -179,9 +175,11 @@ export function CaseDetailsSection({
         onSave={(v) => saveField('referrer_name', v)}
         canEdit={canEdit}
       />
-      {/* Manager-only agreed-fee. The "שולם" checkbox rides inside the field as
-          a compact adornment (not its own column) so it stays small and frees a
-          column for the note to sit on this row (case_financials, RLS-gated). */}
+      {/* Manager-only agreed-fee (case_financials, RLS-gated). This is the
+          INPUT to collections — the גבייה section below derives collected /
+          balance / status from the real payment ledger, so there is no manual
+          "paid" flag here anymore (it was a second, conflicting source of
+          truth for the same question). */}
       {canSeeFinancials && (
         <EditableField
           type="number"
@@ -191,29 +189,7 @@ export function CaseDetailsSection({
           dir="ltr"
           groupThousands
           canEdit={canEdit}
-          adornment={
-            <span className="flex items-center gap-1.5">
-              <CurrencySign />
-              <label
-                className="inline-flex items-center gap-1 cursor-pointer text-xs text-neutral-600"
-                title={
-                  localPaid && localPaidAt
-                    ? new Date(localPaidAt).toLocaleDateString()
-                    : tFields('feePaid')
-                }
-              >
-                <input
-                  type="checkbox"
-                  checked={localPaid}
-                  onChange={(e) => savePaid(e.target.checked)}
-                  disabled={!canEdit}
-                  aria-label={tFields('feePaid')}
-                  className="size-3.5 rounded border-neutral-300 accent-brand-gold-text cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
-                />
-                {tFields('feePaid')}
-              </label>
-            </span>
-          }
+          adornment={<CurrencySign />}
         />
       )}
       {/* Short note last + spans 2 columns so it gets the biggest visual

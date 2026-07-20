@@ -2,13 +2,9 @@
 
 import { useState } from 'react';
 
-import { useTranslations } from 'next-intl';
-import { toast } from 'sonner';
-
 import { useInlineMutationSync } from '@/lib/hooks/use-inline-mutation-sync';
 
 import { updateCaseFeeAmountAction } from '../actions/update-case-fee-amount';
-import { updateCaseFeePaidAction } from '../actions/update-case-fee-paid';
 import { updateCaseFieldAction } from '../actions/update-case-field';
 import { isEditableCaseField, type EditableCaseField } from '../domain/editable-case-fields';
 import type { CaseRow } from '../types';
@@ -40,10 +36,7 @@ export function useCaseDetailsState(
   caseId: string,
   initial: LocalCase,
   initialFeeAmount: number | null,
-  initialFeePaid: boolean,
-  initialFeePaidAt: string | null,
 ) {
-  const tc = useTranslations('common');
   const { pendingCount, refreshOwed, beginOp, endOp, refreshSoon } = useInlineMutationSync();
   const canApplyResync = pendingCount === 0 && !refreshOwed;
 
@@ -60,17 +53,6 @@ export function useCaseDetailsState(
   if (initialFeeAmount !== feeRef) {
     setFeeRef(initialFeeAmount);
     if (canApplyResync) setLocalFee(initialFeeAmount);
-  }
-
-  const [localPaid, setLocalPaid] = useState<boolean>(initialFeePaid);
-  const [localPaidAt, setLocalPaidAt] = useState<string | null>(initialFeePaidAt);
-  const [paidRef, setPaidRef] = useState<boolean>(initialFeePaid);
-  if (initialFeePaid !== paidRef) {
-    setPaidRef(initialFeePaid);
-    if (canApplyResync) {
-      setLocalPaid(initialFeePaid);
-      setLocalPaidAt(initialFeePaidAt);
-    }
   }
 
   const saveField = async (field: EditableCaseField, value: string | null): Promise<SaveResult> => {
@@ -118,32 +100,5 @@ export function useCaseDetailsState(
     }
   };
 
-  const savePaid = (checked: boolean): void => {
-    const prevPaid = localPaid;
-    const prevAt = localPaidAt;
-    setLocalPaid(checked);
-    setLocalPaidAt(checked ? new Date().toISOString() : null);
-    beginOp();
-    void updateCaseFeePaidAction(caseId, checked)
-      .then((res) => {
-        if (!res.ok) {
-          setLocalPaid(prevPaid);
-          setLocalPaidAt(prevAt);
-          toast.error(tc('saveFailed'));
-        } else {
-          setLocalPaidAt(res.paidAt);
-        }
-      })
-      .catch(() => {
-        setLocalPaid(prevPaid);
-        setLocalPaidAt(prevAt);
-        toast.error(tc('saveFailed'));
-      })
-      .finally(() => {
-        endOp();
-        refreshSoon();
-      });
-  };
-
-  return { localCase, localFee, localPaid, localPaidAt, saveField, saveFee, savePaid };
+  return { localCase, localFee, saveField, saveFee };
 }
