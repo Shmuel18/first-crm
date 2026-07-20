@@ -310,6 +310,7 @@
       "open": "Outstanding",
       "feeOpen": "Fee to collect",
       "expensesOpen": "Expenses to collect",
+      "feeHint": "of {total} fee on cases in execution",
       "expensesHint": "of {total} office expenses",
       "advanceHint": "incl. advances {amount}",
       "expenses": "Total expenses",

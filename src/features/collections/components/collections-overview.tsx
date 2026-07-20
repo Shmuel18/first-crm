@@ -88,15 +88,26 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
   // expensesOpen + advanceOpen by construction; `expenses` stays the GROSS
   // office spend (≠ expensesOpen, which nets out what's already been collected)
   // and is shown as a hint under the expenses card rather than its own tile.
+  //
+  // Each "to collect" card carries its GROSS counterpart as a hint, so the gap
+  // between them reads the same way on both: money already collected. That only
+  // holds if the fee denominator is the fee of cases that are actually
+  // collectible — i.e. at execution, matching feeBalanceDue's own gate. Summing
+  // fee_amount across ALL cases would make the gap mean "collected + not due
+  // yet", two different things wearing one label.
   const totals = useMemo(() => {
     const collected = sumCollected(enriched.map((r) => r.collected));
     const expenses = sumCollected(enriched.map((r) => r.expenses));
     const feeOpen = sumCollected(enriched.map((r) => r.feeBalance));
     const expensesOpen = sumCollected(enriched.map((r) => r.expenseBalance));
     const advanceOpen = sumCollected(enriched.map((r) => r.advance));
+    const feeGross = sumCollected(
+      enriched.map((r) => (r.caseStatus === 'execution' ? (r.feeAmount ?? 0) : 0)),
+    );
     return {
       collected,
       expenses,
+      feeGross,
       feeOpen,
       expensesOpen,
       advanceOpen,
@@ -152,12 +163,26 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
               : undefined
           }
         />
-        <SummaryCard label={t('summary.feeOpen')} value={show(totals.feeOpen)} icon={Banknote} />
+        <SummaryCard
+          label={t('summary.feeOpen')}
+          value={show(totals.feeOpen)}
+          icon={Banknote}
+          // Nothing collectible yet → a "0 of 0" hint is noise, not context.
+          hint={
+            totals.feeGross > 0
+              ? t('summary.feeHint', { total: show(totals.feeGross) })
+              : undefined
+          }
+        />
         <SummaryCard
           label={t('summary.expensesOpen')}
           value={show(totals.expensesOpen)}
           icon={Receipt}
-          hint={t('summary.expensesHint', { total: show(totals.expenses) })}
+          hint={
+            totals.expenses > 0
+              ? t('summary.expensesHint', { total: show(totals.expenses) })
+              : undefined
+          }
         />
       </div>
 

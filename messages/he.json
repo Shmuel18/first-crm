@@ -310,6 +310,7 @@
       "open": "יתרה פתוחה",
       "feeOpen": "שכ״ט לגבייה",
       "expensesOpen": "הוצאות לגבייה",
+      "feeHint": "מתוך {total} שכ״ט בתיקי ביצוע",
       "expensesHint": "מתוך {total} הוצאות משרד",
       "advanceHint": "כולל מקדמות {amount}",
       "expenses": "סה״כ הוצאות",
