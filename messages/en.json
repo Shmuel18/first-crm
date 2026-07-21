@@ -339,6 +339,7 @@
       "totalBalance": "Total due",
       "status": "Status",
       "lastPayment": "Last payment",
+      "total": "Total",
       "addTitle": "Record payment — {name}"
     }
   },

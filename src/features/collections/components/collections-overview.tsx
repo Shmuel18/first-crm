@@ -130,6 +130,16 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
         (a.feeBalance + a.expenseBalance + a.advance),
     );
 
+  // Column totals for the table foot — summed over the VISIBLE (filtered) rows,
+  // so the footer always reconciles with what's on screen under the active
+  // filter, not the whole book.
+  const visibleTotals = {
+    feeBalance: sumCollected(visible.map((r) => r.feeBalance)),
+    expenseBalance: sumCollected(visible.map((r) => r.expenseBalance)),
+    advance: sumCollected(visible.map((r) => r.advance)),
+    collected: sumCollected(visible.map((r) => r.collected)),
+  };
+
   const show = (v: number): string => (revealed ? formatCurrency(v, locale) : MASK);
   const fmtDate = (iso: string | null): string =>
     iso ? new Date(iso).toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-GB') : '—';
@@ -282,6 +292,31 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
                 </tr>
               ))}
             </tbody>
+            <tfoot>
+              <tr className="border-t-2 border-neutral-300 bg-neutral-50 font-semibold text-neutral-900">
+                <th
+                  scope="row"
+                  className="sticky start-0 z-10 bg-neutral-50 px-3 py-2 text-start"
+                >
+                  {t('overview.total')}
+                </th>
+                <td className="whitespace-nowrap px-3 py-2 text-start tabular-nums text-red-600">
+                  {visibleTotals.feeBalance > 0 ? show(visibleTotals.feeBalance) : <span className="text-neutral-300">—</span>}
+                </td>
+                <td className="whitespace-nowrap px-3 py-2 text-start tabular-nums text-amber-700">
+                  {visibleTotals.expenseBalance > 0 ? show(visibleTotals.expenseBalance) : <span className="text-neutral-300">—</span>}
+                </td>
+                <td className="whitespace-nowrap px-3 py-2 text-start tabular-nums text-brand-gold-text">
+                  {visibleTotals.advance > 0 ? show(visibleTotals.advance) : <span className="text-neutral-300">—</span>}
+                </td>
+                <td className="whitespace-nowrap px-3 py-2 text-start tabular-nums text-neutral-700">
+                  {visibleTotals.collected > 0 ? show(visibleTotals.collected) : <span className="text-neutral-300">—</span>}
+                </td>
+                <td className="px-3 py-2" />
+                <td className="px-3 py-2" />
+                {canManage && <td className="px-3 py-2" />}
+              </tr>
+            </tfoot>
           </table>
         </div>
       )}

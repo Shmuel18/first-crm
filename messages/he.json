@@ -339,6 +339,7 @@
       "totalBalance": "סה״כ לגבייה",
       "status": "סטטוס",
       "lastPayment": "תשלום אחרון",
+      "total": "סה״כ",
       "addTitle": "רישום תשלום — {name}"
     }
   },
