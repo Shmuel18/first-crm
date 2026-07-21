@@ -38,6 +38,8 @@ type Props = {
   canViewAll: boolean;
   // Inline-edit authority for the row cells (separate from canViewAll).
   editGate: CaseEditGate;
+  // Manager-only: case ids to flag with the unread star. Empty otherwise.
+  unreadCaseIds?: ReadonlyArray<string>;
 };
 
 const SORT_DIRS: SortDir[] = ['asc', 'desc'];
@@ -66,11 +68,12 @@ function readSavedSort(): { col: SortColumn; dir: SortDir } | null {
   }
 }
 
-export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions, canViewAll, editGate }: Props) {
+export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions, canViewAll, editGate, unreadCaseIds }: Props) {
   const t = useTranslations('dashboard.columns');
   const tf = useTranslations('dashboard.filters');
   const filtered = useCaseQueryFilter(cases);
   const density = useRowDensity();
+  const unreadSet = useMemo(() => new Set(unreadCaseIds ?? []), [unreadCaseIds]);
 
   // Sort is opt-in: URL is clean → null → table keeps its incoming order
   // (which `listCases` returns newest-first). Click a header to activate.
@@ -220,7 +223,7 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions, 
           {ordered.map((c, index) => (
             <CaseTableRow
               key={c.id}
-              row={toRowData(c, index + 1)}
+              row={toRowData(c, index + 1, unreadSet)}
               statusOptions={statusOptions}
               bankOptions={bankOptions}
               advisorOptions={advisorOptions}

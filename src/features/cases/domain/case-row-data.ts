@@ -14,9 +14,14 @@ import { isFrozenCase, isStuckCase } from './case-state';
  * Flatten a CaseWithRelations + its 1-based row index into the shape the
  * <CaseTableRow> component consumes. Pure — used by <CasesTable> when
  * mapping the sorted+filtered list to rows, and easy to unit-test against
- * fixture cases.
+ * fixture cases. `unreadIds` (manager-only, empty otherwise) flags the unread
+ * star; membership is precomputed server-side in getUnreadCaseIds.
  */
-export function toRowData(c: CaseWithRelations, index: number): CaseTableRowData {
+export function toRowData(
+  c: CaseWithRelations,
+  index: number,
+  unreadIds?: ReadonlySet<string>,
+): CaseTableRowData {
   const advisorName =
     formatPersonName(c.assigned_advisor?.first_name, c.assigned_advisor?.last_name) || null;
   const primaryBank = getPrimaryBank(c);
@@ -46,6 +51,7 @@ export function toRowData(c: CaseWithRelations, index: number): CaseTableRowData
     shortNote: c.short_note ?? null,
     isStuck: isStuckCase(c),
     isFrozen: isFrozenCase(c),
+    isUnread: unreadIds?.has(c.id) ?? false,
     updatedAt: c.updated_at,
   };
 }

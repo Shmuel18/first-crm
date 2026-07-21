@@ -6,7 +6,11 @@ import { getMyCaseBlockPreferences } from '@/features/cases/services/case-block-
 import { InstallAppControl } from '@/features/pwa/components/install-app-control';
 import { CaseBlocksForm } from '@/features/settings/components/case-blocks-form';
 import { DocumentationCelebrationsControl } from '@/features/settings/components/documentation-celebrations-control';
-import { getDocumentationCelebrationsEnabled } from '@/features/settings/services/settings.service';
+import { UnreadStarControl } from '@/features/settings/components/unread-star-control';
+import {
+  getDocumentationCelebrationsEnabled,
+  getUnreadStarConfig,
+} from '@/features/settings/services/settings.service';
 import { createClient } from '@/lib/supabase/server';
 
 /**
@@ -20,9 +24,10 @@ export default async function DisplaySettingsPage() {
   if (!userRes.user) redirect('/login');
 
   const t = await getTranslations('settings.display');
-  const [preferences, celebrationsEnabled, { data: isAdmin }] = await Promise.all([
+  const [preferences, celebrationsEnabled, unreadStar, { data: isAdmin }] = await Promise.all([
     getMyCaseBlockPreferences(),
     getDocumentationCelebrationsEnabled(),
+    getUnreadStarConfig(),
     supabase.rpc('is_admin'),
   ]);
 
@@ -34,8 +39,12 @@ export default async function DisplaySettingsPage() {
       </header>
 
       {isAdmin === true && (
-        <div className="mb-8">
+        <div className="mb-8 space-y-4">
           <DocumentationCelebrationsControl initialEnabled={celebrationsEnabled} />
+          <UnreadStarControl
+            initialCadence={unreadStar.cadence}
+            initialWeekday={unreadStar.weekday}
+          />
         </div>
       )}
 

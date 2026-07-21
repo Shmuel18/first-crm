@@ -1,5 +1,6 @@
 'use client';
 
+import { Star } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { useLocale, useTranslations } from 'next-intl';
@@ -88,10 +89,20 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions, 
       <td className="px-4 py-3 text-xs text-neutral-600 tabular-nums">{row.index}</td>
 
       <td className="px-4 py-3">
-        <span className="font-medium text-sm text-neutral-900 group-hover:text-brand-gold-text transition whitespace-nowrap">
-          {row.clientLabel || (
-            <span className="italic font-normal text-neutral-500">{t('noBorrowers')}</span>
+        <span className="flex items-center gap-1.5">
+          {row.isUnread && (
+            <Star
+              className="size-3.5 shrink-0 fill-brand-gold text-brand-gold-dark"
+              aria-label={t('unread')}
+            >
+              <title>{t('unread')}</title>
+            </Star>
           )}
+          <span className="font-medium text-sm text-neutral-900 group-hover:text-brand-gold-text transition whitespace-nowrap">
+            {row.clientLabel || (
+              <span className="italic font-normal text-neutral-500">{t('noBorrowers')}</span>
+            )}
+          </span>
         </span>
       </td>
 

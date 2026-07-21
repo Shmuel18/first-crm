@@ -98,6 +98,9 @@ export type CaseTableRowData = {
   shortNote: string | null;
   isStuck: boolean;
   isFrozen: boolean;
+  /** Manager-only: not opened since the current reset boundary (mig 219). Always
+   *  false for non-managers and when the feature is off. Drives the unread star. */
+  isUnread: boolean;
   updatedAt: string;
 };
 

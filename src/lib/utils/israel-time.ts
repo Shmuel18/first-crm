@@ -59,16 +59,26 @@ function israelOffsetMinutes(at: Date): number {
 }
 
 /**
- * The UTC instant at which the current Israel-local calendar month began.
+ * The UTC instant at which a given Israel-local civil day began (00:00 local).
  *
- * The server runs in UTC, while Israel is UTC+2 or UTC+3 depending on DST.
- * Resolve the offset at the first day of the relevant month so a database
- * range never drops the first hours of the month or includes the prior month.
+ * The server runs in UTC while Israel is UTC+2 / UTC+3 depending on DST, so
+ * resolve the offset near midday of that civil day (DST-safe) and subtract it
+ * from the UTC-midnight of the same calendar date. Pass calendar parts, not an
+ * instant — callers doing date math (month start, most-recent-Sunday) build the
+ * target civil date first, then hand it here.
+ */
+export function israelDayStartIso(year: number, month: number, day: number): string {
+  const offsetMinutes = israelOffsetMinutes(new Date(Date.UTC(year, month - 1, day, 12)));
+  return new Date(Date.UTC(year, month - 1, day) - offsetMinutes * 60_000).toISOString();
+}
+
+/**
+ * The UTC instant at which the current Israel-local calendar month began.
+ * Thin wrapper over israelDayStartIso for day 1 of the current civil month.
  */
 export function israelMonthStartIso(now: Date = new Date()): string {
   const { year, month } = israelCivil(now);
-  const offsetMinutes = israelOffsetMinutes(new Date(Date.UTC(year, month - 1, 1, 12)));
-  return new Date(Date.UTC(year, month - 1, 1) - offsetMinutes * 60_000).toISOString();
+  return israelDayStartIso(year, month, 1);
 }
 
 /**

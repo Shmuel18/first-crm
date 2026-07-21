@@ -36,6 +36,8 @@ type Props = {
   canViewAll: boolean;
   // Inline-edit authority for the card cells (separate from canViewAll).
   editGate: CaseEditGate;
+  // Manager-only: case ids to flag with the unread star. Empty otherwise.
+  unreadCaseIds?: ReadonlyArray<string>;
 };
 
 /**
@@ -43,9 +45,10 @@ type Props = {
  * so on small screens we render one card per case. Status, target date and
  * advisor are editable inline on each card (see CaseCard).
  */
-export function CasesCardList({ cases, statusOptions, advisorOptions, canViewAll, editGate }: Props) {
+export function CasesCardList({ cases, statusOptions, advisorOptions, canViewAll, editGate, unreadCaseIds }: Props) {
   const t = useTranslations('dashboard');
   const filtered = useCaseQueryFilter(cases);
+  const unreadSet = useMemo(() => new Set(unreadCaseIds ?? []), [unreadCaseIds]);
 
   // Mobile sort: read the same sort/dir URL params the desktop headers write
   // (shallow) and re-sort client-side so the cards reorder instantly.
@@ -78,7 +81,7 @@ export function CasesCardList({ cases, statusOptions, advisorOptions, canViewAll
       {ordered.map((c, index) => (
         <li key={c.id}>
           <CaseCard
-            row={toRowData(c, index + 1)}
+            row={toRowData(c, index + 1, unreadSet)}
             statusOptions={statusOptions}
             advisorOptions={advisorOptions}
             canViewAll={canViewAll}

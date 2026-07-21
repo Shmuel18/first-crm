@@ -1087,7 +1087,8 @@
     "rowState": {
       "noBorrowers": "(No borrowers)",
       "recentlyUpdated": "Updated within 24h",
-      "updatedOn": "Updated on {date}"
+      "updatedOn": "Updated on {date}",
+      "unread": "Not viewed since the last reset"
     },
     "targetDate": {
       "label": "Target date",
@@ -2321,6 +2322,29 @@
         "enabledToast": "Documentation celebrations turned on",
         "disabledToast": "Documentation celebrations turned off",
         "failed": "Update failed. Please try again."
+      },
+      "unreadStar": {
+        "title": "Unviewed-case marker",
+        "adminOnly": "Admin only",
+        "description": "A small star appears on every dashboard case and resets on a schedule. It clears the moment you open the case — so you can see at a glance which cases you haven't reviewed.",
+        "cadenceLabel": "Reset",
+        "weekdayLabel": "On",
+        "saved": "Setting saved",
+        "failed": "Update failed. Please try again.",
+        "cadence": {
+          "off": "Off",
+          "daily": "Every day",
+          "weekly": "Every week"
+        },
+        "weekdays": {
+          "0": "Sunday",
+          "1": "Monday",
+          "2": "Tuesday",
+          "3": "Wednesday",
+          "4": "Thursday",
+          "5": "Friday",
+          "6": "Saturday"
+        }
       }
     },
     "people": {

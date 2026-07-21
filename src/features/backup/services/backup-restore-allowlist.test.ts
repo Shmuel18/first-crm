@@ -93,6 +93,7 @@ const EXCLUDED_FROM_BACKUP: Record<string, string> = {
   // device-scoped / cosmetic / re-derivable
   push_subscriptions: 'device push endpoints — clients re-subscribe',
   case_block_preferences: 'per-user UI layout — cosmetic, re-derivable',
+  case_review_state: 'manager unread/viewed timestamps — cosmetic, self-heals next reset',
   // simulator reference / market data (mig 106) — seeded or refreshed from source
   approval_rulesets: 'simulator reference data (mig 106), re-seeded',
   bank_offers: 'simulator reference data (mig 106), re-seeded',

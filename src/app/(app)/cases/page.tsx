@@ -15,6 +15,7 @@ import {
   parseDashboardFilters,
 } from '@/features/cases/domain/case-filters';
 import { applySort, parseCaseSort } from '@/features/cases/domain/case-sort';
+import { getUnreadCaseIds } from '@/features/cases/services/case-review.service';
 import { getCasesDashboardBootstrap } from '@/features/cases/services/cases-dashboard-bootstrap.service';
 import { listCases } from '@/features/cases/services/cases.service';
 import { LeadsCardList } from '@/features/leads/components/leads-card-list';
@@ -119,6 +120,9 @@ export default async function CasesListPage({ searchParams }: Props) {
   } else {
     if (!casesPromise) throw new Error('cases page data was not requested');
     const cases = await casesPromise;
+    // Manager-only unread stars (mig 219): [] for everyone else / when off.
+    // Not in the archive view — stars are about the ACTIVE working set.
+    const unreadCaseIds = isArchive ? [] : await getUnreadCaseIds(cases, isManager);
     // In the archive, "hide closed & frozen" would hide exactly the cases that
     // were archived (completed / on-hold), so don't apply it there.
     //
@@ -175,6 +179,7 @@ export default async function CasesListPage({ searchParams }: Props) {
               advisorOptions={advisorOptions}
               canViewAll={canViewAll}
               editGate={editGate}
+              unreadCaseIds={unreadCaseIds}
             />
           </div>
           <div className="hidden xl:block">
@@ -185,6 +190,7 @@ export default async function CasesListPage({ searchParams }: Props) {
               advisorOptions={advisorOptions}
               canViewAll={canViewAll}
               editGate={editGate}
+              unreadCaseIds={unreadCaseIds}
             />
           </div>
         </>

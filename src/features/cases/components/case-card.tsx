@@ -1,5 +1,6 @@
 'use client';
 
+import { Star } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { useLocale, useTranslations } from 'next-intl';
@@ -81,6 +82,14 @@ export function CaseCard({ row, statusOptions, advisorOptions, canViewAll, editG
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           <span className="text-xs text-neutral-400 tabular-nums">{row.index}</span>
+          {row.isUnread && (
+            <Star
+              className="size-3.5 shrink-0 fill-brand-gold text-brand-gold-dark"
+              aria-label={t('rowState.unread')}
+            >
+              <title>{t('rowState.unread')}</title>
+            </Star>
+          )}
           <span className="truncate text-sm font-medium text-neutral-900">
             {row.clientLabel || (
               <span className="font-normal italic text-neutral-400">

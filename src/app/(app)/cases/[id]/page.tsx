@@ -13,6 +13,7 @@ import { CaseAdminBlock } from '@/features/cases/components/case-admin-block';
 import { CaseBlock } from '@/features/cases/components/case-block';
 import { CaseBlockPrefsProvider } from '@/features/cases/components/case-block-prefs-context';
 import { CaseBlockSkeleton } from '@/features/cases/components/case-block-skeleton';
+import { MarkCaseViewed } from '@/features/cases/components/mark-case-viewed';
 import { AddBorrowerButton } from '@/features/borrowers/components/add-borrower-button';
 import { CasePropertyBlock } from '@/features/cases/components/case-property-block';
 import { CaseRequestDetailsBlock } from '@/features/cases/components/case-request-details-block';
@@ -27,7 +28,7 @@ import { listCaseProperties } from '@/features/cases/services/case-properties.se
 import { getCaseById } from '@/features/cases/services/cases.service';
 import { CaseIncomesBlock } from '@/features/incomes/components/case-incomes-block';
 import { CaseObligationsBlock } from '@/features/obligations/components/case-obligations-block';
-import { userCanEditCase, userHasPermissions } from '@/lib/auth/permissions';
+import { isCurrentUserAdmin, userCanEditCase, userHasPermissions } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { timeAsync } from '@/lib/perf/timing';
 import { asCaseId } from '@/lib/types/branded';
@@ -67,7 +68,7 @@ export default async function CaseDetailPage({ params }: Props) {
   // canSeeFinancials gates the manager-only agreed-fee row in the admin
   // block. The DB enforces the same gate via case_financials RLS — this
   // app-side check is for clean UX (hide the row) + defense-in-depth.
-  const [permissions, canEditCase] = await Promise.all([
+  const [permissions, canEditCase, isManager] = await Promise.all([
     timeAsync('cases.detail.permissions', () =>
       userHasPermissions(
         'view_case_fee',
@@ -84,6 +85,8 @@ export default async function CaseDetailPage({ params }: Props) {
     // but cannot edit it must see read-only fields — not controls that fail
     // at the server boundary. The DB still enforces; this keeps the UI honest.
     timeAsync('cases.detail.canEditCase', () => userCanEditCase(caseId)),
+    // Manager (is_admin): gates the dashboard unread-star stamp below.
+    isCurrentUserAdmin(),
   ]);
   const canSeeFinancials = permissions.view_case_fee === true;
   const canArchive = permissions.archive_case === true;
@@ -145,6 +148,8 @@ export default async function CaseDetailPage({ params }: Props) {
 
   return (
     <div className="space-y-5 -mt-6">
+      {/* Manager opened this case → clear its dashboard unread star (mig 219). */}
+      {isManager && <MarkCaseViewed caseId={caseData.id} />}
       <CaseActionBar
         caseId={caseData.id}
         caseNumber={caseData.case_number}
