@@ -310,9 +310,8 @@
       "open": "יתרה פתוחה",
       "feeOpen": "שכ״ט לגבייה",
       "expensesOpen": "הוצאות לגבייה",
-      "feeHint": "מתוך {total} שכ״ט בתיקי ביצוע",
+      "feeHint": "מתוך {total} שכ״ט שבשל לגבייה",
       "expensesHint": "מתוך {total} הוצאות משרד",
-      "advanceHint": "כולל מקדמות {amount}",
       "expenses": "סה״כ הוצאות",
       "profit": "רווח נטו"
     },
@@ -335,7 +334,6 @@
       "balance": "יתרה שכ״ט",
       "feeBalance": "שכ״ט לגבייה",
       "expenses": "הוצאות משרד",
-      "advance": "מקדמה",
       "totalBalance": "סה״כ לגבייה",
       "status": "סטטוס",
       "lastPayment": "תשלום אחרון",

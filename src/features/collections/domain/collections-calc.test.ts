@@ -4,7 +4,10 @@ import {
   collectionBalance,
   collectionProgressPct,
   collectionStatus,
+  expenseBalance,
+  feeBalanceDue,
   netProfit,
+  outstandingBalance,
   sumCollected,
 } from './collections-calc';
 
@@ -65,5 +68,47 @@ describe('netProfit', () => {
   it('subtracts expenses from collected', () => {
     expect(netProfit(10000, 1500)).toBe(8500);
     expect(netProfit(1000, 1500)).toBe(-500);
+  });
+});
+
+describe('feeBalanceDue (advance is part of the fee)', () => {
+  // fee 40000, advance 5000 (of the fee), expenses 1000.
+  it('pre-execution: only the advance portion of the fee is due', () => {
+    expect(feeBalanceDue(40000, 5000, 1000, 0, false)).toBe(5000);
+  });
+  it('pre-execution: paying expenses + advance clears the fee-due (no phantom balance)', () => {
+    // The bug this fixes: 6000 covers expenses(1000)+advance(5000) → 0 due, not 5000.
+    expect(feeBalanceDue(40000, 5000, 1000, 6000, false)).toBe(0);
+  });
+  it('at execution: the whole fee is due, less payments beyond expenses', () => {
+    expect(feeBalanceDue(40000, 5000, 1000, 6000, true)).toBe(35000);
+  });
+  it('no advance configured pre-execution → nothing of the fee is due yet', () => {
+    expect(feeBalanceDue(40000, 0, 0, 0, false)).toBe(0);
+  });
+  it('advance is clamped to the fee (never exceeds it)', () => {
+    expect(feeBalanceDue(3000, 9000, 0, 0, false)).toBe(3000);
+  });
+  it('payments cover expenses first, so a small payment leaves the advance mostly due', () => {
+    // 1000 fully absorbed by expenses → advance still 5000 due pre-execution.
+    expect(feeBalanceDue(40000, 5000, 1000, 1000, false)).toBe(5000);
+  });
+});
+
+describe('outstandingBalance (advance folded into the fee, never added on top)', () => {
+  it('pre-execution: advance + unpaid expenses', () => {
+    expect(outstandingBalance(40000, 5000, 1000, 0, false)).toBe(6000);
+  });
+  it('pre-execution: fully paid upfront → 0 (was inflated by the advance before the fix)', () => {
+    expect(outstandingBalance(40000, 5000, 1000, 6000, false)).toBe(0);
+  });
+  it('at execution: full fee + expenses, less collected', () => {
+    expect(outstandingBalance(40000, 5000, 1000, 0, true)).toBe(41000);
+  });
+  it('equals feeBalanceDue + expenseBalance by construction', () => {
+    const [fee, adv, exp, col, exec] = [40000, 5000, 1000, 3000, true] as const;
+    expect(outstandingBalance(fee, adv, exp, col, exec)).toBe(
+      feeBalanceDue(fee, adv, exp, col, exec) + expenseBalance(exp, col),
+    );
   });
 });

@@ -57,52 +57,58 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
   const enriched = useMemo(
     () =>
       rows.map((r) => {
-        // Payments cover what's currently due: expenses + advance first, fee only
-        // at execution. This order matches real practice: expense reimbursements
-        // and advances are collected before the case closes; the advisory fee comes
-        // at/after execution.
-        // Shared with the in-case מנהלה block via the domain helpers.
+        // Payments cover expenses first, then the fee-due. The advance is the
+        // upfront PORTION OF the fee (mig 212 semantics), so pre-execution it IS
+        // the fee-due and at execution the whole fee is — it's never added on top
+        // (that double-counted it). Shared with the מנהלה block via the helpers.
         const expenseBal = expenseBalance(r.expenses, r.collected);
-        const feeBal = feeBalanceDue(r.feeAmount, r.expenses, r.collected, r.caseStatus === 'execution');
-        const advance = r.advanceAmount ?? 0;
+        const feeBal = feeBalanceDue(
+          r.feeAmount,
+          r.advanceAmount ?? 0,
+          r.expenses,
+          r.collected,
+          r.caseStatus === 'execution',
+        );
 
         // Status reflects whether everything *currently due* has been collected —
         // not whether the full lifetime fee has been paid. A case whose expenses
-        // are fully covered is "collected" even if the advisory fee kicks in later.
-        const outstanding = feeBal + expenseBal + advance;
-        const totalAgreed = (r.feeAmount ?? 0) + r.expenses + (r.advanceAmount ?? 0);
+        // + advance are covered is "collected" even if the rest of the fee kicks
+        // in later at execution.
+        const outstanding = feeBal + expenseBal;
+        const totalAgreed = (r.feeAmount ?? 0) + r.expenses;
         const status: CollectionStatus =
           r.collected <= 0 ? 'not_started'
           : totalAgreed > 0 && r.collected > totalAgreed ? 'overpaid'
           : outstanding <= 0 ? 'collected'
           : 'partial';
 
-        return { ...r, expenseBalance: expenseBal, feeBalance: feeBal, advance, status };
+        return { ...r, expenseBalance: expenseBal, feeBalance: feeBal, status };
       }),
     [rows],
   );
 
-  // The open balance is split into its parts (fee / expenses / advances) so the
-  // headline number is auditable — "how much of the 314K is fee and how much is
-  // expenses" was the first question the office asked of it. open === feeOpen +
-  // expensesOpen + advanceOpen by construction; `expenses` stays the GROSS
-  // office spend (≠ expensesOpen, which nets out what's already been collected)
-  // and is shown as a hint under the expenses card rather than its own tile.
+  // The open balance is split into fee vs expenses so the headline is auditable
+  // — "how much of the total is fee and how much is expenses". open === feeOpen
+  // + expensesOpen by construction (the advance is folded into the fee, never a
+  // third bucket). `expenses` stays the GROSS office spend (≠ expensesOpen, which
+  // nets out what's collected) and rides as a hint under the expenses card.
   //
   // Each "to collect" card carries its GROSS counterpart as a hint, so the gap
-  // between them reads the same way on both: money already collected. That only
-  // holds if the fee denominator is the fee of cases that are actually
-  // collectible — i.e. at execution, matching feeBalanceDue's own gate. Summing
-  // fee_amount across ALL cases would make the gap mean "collected + not due
-  // yet", two different things wearing one label.
+  // reads the same on both: money already collected. feeGross is the fee that is
+  // CURRENTLY collectible — the full fee at execution, only the advance before it
+  // — matching feeBalanceDue. Summing fee_amount across all cases would make the
+  // gap mean "collected + not due yet", two different things under one label.
   const totals = useMemo(() => {
     const collected = sumCollected(enriched.map((r) => r.collected));
     const expenses = sumCollected(enriched.map((r) => r.expenses));
     const feeOpen = sumCollected(enriched.map((r) => r.feeBalance));
     const expensesOpen = sumCollected(enriched.map((r) => r.expenseBalance));
-    const advanceOpen = sumCollected(enriched.map((r) => r.advance));
     const feeGross = sumCollected(
-      enriched.map((r) => (r.caseStatus === 'execution' ? (r.feeAmount ?? 0) : 0)),
+      enriched.map((r) =>
+        r.caseStatus === 'execution'
+          ? r.feeAmount ?? 0
+          : Math.min(r.advanceAmount ?? 0, r.feeAmount ?? 0),
+      ),
     );
     return {
       collected,
@@ -110,8 +116,7 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
       feeGross,
       feeOpen,
       expensesOpen,
-      advanceOpen,
-      open: feeOpen + expensesOpen + advanceOpen,
+      open: feeOpen + expensesOpen,
     };
   }, [enriched]);
 
@@ -119,15 +124,14 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
     filter === 'all'
       ? enriched
       : filter === 'open'
-        ? enriched.filter((r) => r.feeBalance > 0 || r.expenseBalance > 0 || r.advance > 0)
+        ? enriched.filter((r) => r.feeBalance > 0 || r.expenseBalance > 0)
         : enriched.filter((r) => r.status === filter)
   )
     .slice()
     // Most outstanding overall first — highest collector priority at the top.
     .sort(
       (a, b) =>
-        (b.feeBalance + b.expenseBalance + b.advance) -
-        (a.feeBalance + a.expenseBalance + a.advance),
+        (b.feeBalance + b.expenseBalance) - (a.feeBalance + a.expenseBalance),
     );
 
   const show = (v: number): string => (revealed ? formatCurrency(v, locale) : MASK);
@@ -153,16 +157,7 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
           out separately — fee alone and expenses alone. */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard label={t('summary.collected')} value={show(totals.collected)} icon={Wallet} accent />
-        <SummaryCard
-          label={t('summary.open')}
-          value={show(totals.open)}
-          icon={Coins}
-          hint={
-            totals.advanceOpen > 0
-              ? t('summary.advanceHint', { amount: show(totals.advanceOpen) })
-              : undefined
-          }
-        />
+        <SummaryCard label={t('summary.open')} value={show(totals.open)} icon={Coins} />
         <SummaryCard
           label={t('summary.feeOpen')}
           value={show(totals.feeOpen)}
@@ -217,7 +212,6 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
                 <th className="px-3 py-2 text-start font-semibold text-neutral-700">{t('overview.totalBalance')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.feeBalance')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.expenses')}</th>
-                <th className="px-3 py-2 text-start font-medium">{t('overview.advance')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.collected')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.status')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.lastPayment')}</th>
@@ -235,11 +229,12 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
                       {r.borrowers || r.caseNumber}
                     </Link>
                   </td>
-                  {/* Per-client total to collect = fee + expenses + advance. The
-                      number to quote the client; the columns after it break it down. */}
+                  {/* Per-client total to collect = fee-due + expenses (the advance
+                      is part of the fee, already inside feeBalance). The number to
+                      quote the client; the columns after it break it down. */}
                   <td className="whitespace-nowrap px-3 py-2 tabular-nums">
                     {(() => {
-                      const rowTotal = r.feeBalance + r.expenseBalance + r.advance;
+                      const rowTotal = r.feeBalance + r.expenseBalance;
                       return rowTotal > 0
                         ? <span className="font-bold text-neutral-900">{show(rowTotal)}</span>
                         : <span className="text-neutral-300">—</span>;
@@ -253,11 +248,6 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
                   <td className="whitespace-nowrap px-3 py-2 tabular-nums">
                     {r.expenseBalance > 0
                       ? <span className="font-semibold text-amber-700">{show(r.expenseBalance)}</span>
-                      : <span className="text-neutral-300">—</span>}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2 tabular-nums">
-                    {r.advance > 0
-                      ? <span className="font-semibold text-brand-gold-text">{show(r.advance)}</span>
                       : <span className="text-neutral-300">—</span>}
                   </td>
                   <td className="whitespace-nowrap px-3 py-2 text-neutral-600 tabular-nums">

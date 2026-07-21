@@ -37,8 +37,10 @@ export function netProfit(collected: number, expenses: number): number {
 // ---------------------------------------------------------------------------
 // Shared outstanding-balance logic — the single source of truth for BOTH the
 // central /collections dashboard and the in-case מנהלה block, so the two agree.
-// Payments cover office expenses first; the advisory fee is due only once the
-// case reaches execution, and only the surplus above expenses reduces it.
+// Payments cover office expenses first, then the fee-due. The advance (מקדמה) is
+// the upfront PORTION OF the fee (not an extra amount): pre-execution only the
+// advance is due, at/after execution the whole fee is. So the advance is never
+// added on top of the fee — that would double-count it.
 // ---------------------------------------------------------------------------
 
 /** Office expenses still to collect (payments cover expenses first). */
@@ -46,24 +48,36 @@ export function expenseBalance(expenses: number, collected: number): number {
   return Math.max(0, expenses - collected);
 }
 
-/** Advisory fee still to collect: only at/after execution, after expenses. */
+/**
+ * Advisory fee still to collect. The advance is the upfront part OF the fee, so
+ * pre-execution only the advance is due; at/after execution the whole fee is.
+ * Payments cover expenses first, so only the surplus above expenses reduces it.
+ */
 export function feeBalanceDue(
   feeAmount: number | null,
+  advance: number,
   expenses: number,
   collected: number,
   isExecution: boolean,
 ): number {
-  if (!isExecution) return 0;
-  return Math.max(0, (feeAmount ?? 0) - Math.max(0, collected - expenses));
+  const fee = feeAmount ?? 0;
+  // The advance is a milestone WITHIN the fee, so it never exceeds it.
+  const feeDueNow = isExecution ? fee : Math.min(Math.max(0, advance), fee);
+  return Math.max(0, feeDueNow - Math.max(0, collected - expenses));
 }
 
-/** Everything still to collect on a case: unpaid fee (post-execution) + unpaid
- *  office expenses. Advance is tracked separately and NOT added here. */
+/** Everything still to collect on a case now: unpaid fee-due (advance pre-
+ *  execution, full fee at execution) + unpaid office expenses. The advance is
+ *  part of the fee — never added on top. */
 export function outstandingBalance(
   feeAmount: number | null,
+  advance: number,
   expenses: number,
   collected: number,
   isExecution: boolean,
 ): number {
-  return feeBalanceDue(feeAmount, expenses, collected, isExecution) + expenseBalance(expenses, collected);
+  return (
+    feeBalanceDue(feeAmount, advance, expenses, collected, isExecution) +
+    expenseBalance(expenses, collected)
+  );
 }

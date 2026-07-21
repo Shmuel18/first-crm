@@ -310,9 +310,8 @@
       "open": "Outstanding",
       "feeOpen": "Fee to collect",
       "expensesOpen": "Expenses to collect",
-      "feeHint": "of {total} fee on cases in execution",
+      "feeHint": "of {total} fee due now",
       "expensesHint": "of {total} office expenses",
-      "advanceHint": "incl. advances {amount}",
       "expenses": "Total expenses",
       "profit": "Net profit"
     },
@@ -335,7 +334,6 @@
       "balance": "Fee balance",
       "feeBalance": "Fee balance",
       "expenses": "Office expenses",
-      "advance": "Advance",
       "totalBalance": "Total due",
       "status": "Status",
       "lastPayment": "Last payment",

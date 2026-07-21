@@ -66,8 +66,11 @@ export function CollectionsCompact({
   } = useFeePayments(caseId, initialPayments, initialAdvanceAmount);
 
   const collected = sumCollected(payments.map((p) => p.amount));
-  // "יתרה לגבייה" = unpaid fee (post-execution) + unpaid office expenses.
-  const balance = outstandingBalance(feeAmount, expenses, collected, isExecution);
+  // "יתרה לגבייה" = unpaid fee-due + unpaid office expenses. The advance is the
+  // upfront PORTION OF the fee, so pre-execution it IS the fee-due (live from the
+  // editable draft); it's never added on top. See outstandingBalance.
+  const advance = Number(advanceDraft) || 0;
+  const balance = outstandingBalance(feeAmount, advance, expenses, collected, isExecution);
   const hasOwed = (feeAmount != null && feeAmount > 0) || expenses > 0;
   const totalToCollect = collected + balance;
   const pct = totalToCollect > 0 ? Math.max(0, Math.min(100, Math.round((collected / totalToCollect) * 100))) : 0;
