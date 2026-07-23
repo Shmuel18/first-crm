@@ -339,7 +339,9 @@
       "totalBalance": "Total due",
       "status": "Status",
       "lastPayment": "Last payment",
-      "addTitle": "Record payment — {name}"
+      "addTitle": "Record payment — {name}",
+      "feeGross": "Agreed fee",
+      "toCollect": "Left to collect"
     }
   },
   "timeClock": {

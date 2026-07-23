@@ -209,10 +209,10 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
             <thead>
               <tr className="border-b border-neutral-200 bg-neutral-50 text-xs text-neutral-500">
                 <th className="sticky start-0 z-10 bg-neutral-50 px-3 py-2 text-start font-medium">{t('overview.client')}</th>
-                <th className="px-3 py-2 text-start font-semibold text-neutral-700">{t('overview.totalBalance')}</th>
-                <th className="px-3 py-2 text-start font-medium">{t('overview.feeBalance')}</th>
+                <th className="px-3 py-2 text-start font-medium">{t('overview.feeGross')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.expenses')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.collected')}</th>
+                <th className="px-3 py-2 text-start font-semibold text-neutral-700">{t('overview.toCollect')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.status')}</th>
                 <th className="px-3 py-2 text-start font-medium">{t('overview.lastPayment')}</th>
                 {canManage && <th className="px-3 py-2" />}
@@ -229,46 +229,34 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
                       {r.borrowers || r.caseNumber}
                     </Link>
                   </td>
-                  {/* Per-client total to collect = fee-due + expenses (the advance
-                      is part of the fee, already inside feeBalance). The number to
-                      quote the client; the columns after it break it down. */}
-                  <td className="whitespace-nowrap px-3 py-2 tabular-nums">
-                    {(() => {
-                      const rowTotal = r.feeBalance + r.expenseBalance;
-                      return rowTotal > 0
-                        ? <span className="font-bold text-neutral-900">{show(rowTotal)}</span>
-                        : <span className="text-neutral-300">—</span>;
-                    })()}
+                  {/* Four plain sums, not remainders: agreed fee, office expenses,
+                      what came in, what is still open. An earlier version showed
+                      three different "what's left" figures under names that read
+                      like totals ("שכ״ט לגבייה", "הוצאות משרד"), which was
+                      unreadable. Everything here is a straight amount and
+                      fee + expenses − collected = left to collect. */}
+                  <td className="whitespace-nowrap px-3 py-2 text-neutral-700 tabular-nums">
+                    {r.feeAmount != null && r.feeAmount > 0
+                      ? show(r.feeAmount)
+                      : <span className="text-neutral-300">—</span>}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-2 text-neutral-700 tabular-nums">
+                    {r.expenses > 0 ? show(r.expenses) : <span className="text-neutral-300">—</span>}
                   </td>
                   <td className="whitespace-nowrap px-3 py-2 tabular-nums">
-                    {r.feeBalance > 0
-                      ? <span className="font-semibold text-red-600">{show(r.feeBalance)}</span>
+                    {r.collected > 0
+                      ? <span className="font-medium text-emerald-700">{show(r.collected)}</span>
                       : <span className="text-neutral-300">—</span>}
                   </td>
                   <td className="whitespace-nowrap px-3 py-2 tabular-nums">
-                    {r.expenseBalance > 0
-                      ? <span className="font-semibold text-amber-700">{show(r.expenseBalance)}</span>
-                      : <span className="text-neutral-300">—</span>}
-                  </td>
-                  {/* Collected against the case's full agreed value (fee +
-                      expenses). Every other money column here is a REMAINDER, so
-                      without this anchor "5,000 left" is unreadable — it could be
-                      untouched or nearly done. Rendered as "collected / total"
-                      rather than a 7th column, to keep the table scannable. */}
-                  <td className="whitespace-nowrap px-3 py-2 text-neutral-600 tabular-nums">
                     {(() => {
-                      const rowBase = (r.feeAmount ?? 0) + r.expenses;
-                      if (rowBase <= 0 && r.collected <= 0) {
+                      const left = (r.feeAmount ?? 0) + r.expenses - r.collected;
+                      if ((r.feeAmount ?? 0) + r.expenses <= 0) {
                         return <span className="text-neutral-300">—</span>;
                       }
-                      return (
-                        <>
-                          <span className="font-medium text-neutral-900">{show(r.collected)}</span>
-                          {rowBase > 0 && (
-                            <span className="text-neutral-400"> / {show(rowBase)}</span>
-                          )}
-                        </>
-                      );
+                      return left > 0
+                        ? <span className="font-bold text-neutral-900">{show(left)}</span>
+                        : <span className="font-semibold text-emerald-600">{show(0)}</span>;
                     })()}
                   </td>
                   <td className="whitespace-nowrap px-3 py-2">

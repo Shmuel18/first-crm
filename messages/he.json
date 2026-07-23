@@ -339,7 +339,9 @@
       "totalBalance": "סה״כ לגבייה",
       "status": "סטטוס",
       "lastPayment": "תשלום אחרון",
-      "addTitle": "רישום תשלום — {name}"
+      "addTitle": "רישום תשלום — {name}",
+      "feeGross": "שכר טרחה",
+      "toCollect": "יתרה לגבות"
     }
   },
   "timeClock": {
