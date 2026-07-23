@@ -24,6 +24,7 @@ const BACKUP_TABLES = [
   'case_payouts',
   'case_fee_payments',
   'maaser_payments',
+  'maaser_ledger_entries',
   'time_entries',
   'case_comments',
   'banks',

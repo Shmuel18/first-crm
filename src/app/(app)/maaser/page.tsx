@@ -5,7 +5,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 
 import { MaaserView } from '@/features/maaser/components/maaser-view';
 import { pickDailyQuote } from '@/features/maaser/domain/quotes';
-import { getMaaserBasis, listMaaserPayments } from '@/features/maaser/services/maaser.service';
+import { getMaaserBasis, listMaaserEntries, listMaaserPayments } from '@/features/maaser/services/maaser.service';
 import { isCurrentUserAdmin } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 
@@ -14,8 +14,9 @@ export default async function MaaserPage() {
   // RPC's is_admin() gate enforce this server-side; this is the user-facing guard.
   if (!(await isCurrentUserAdmin())) redirect('/cases');
 
-  const [basis, payments, t] = await Promise.all([
+  const [basis, entries, payments, t] = await Promise.all([
     getMaaserBasis(),
+    listMaaserEntries(),
     listMaaserPayments(),
     getTranslations('maaser'),
   ]);
@@ -40,7 +41,7 @@ export default async function MaaserPage() {
           <figcaption className="mt-0.5 text-xs text-neutral-400">{quote.source}</figcaption>
         </figure>
       </header>
-      <MaaserView basis={basis} payments={payments} defaultDate={today} locale={locale} />
+      <MaaserView basis={basis} entries={entries} payments={payments} defaultDate={today} locale={locale} />
     </div>
   );
 }

@@ -2,20 +2,24 @@
 
 import { useState } from 'react';
 
-import { Coins, Eye, EyeOff, Gift, HandCoins, Wallet } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { formatCurrency } from '@/lib/utils/format-currency';
 import type { Locale } from '@/lib/i18n/direction';
 
-import { computeMaaserSummary, sumGiven } from '../domain/calc';
+import { computeMaaserSummary, sumAmounts } from '../domain/calc';
 import type { MaaserBasis } from '../services/maaser.service';
-import type { MaaserPayment } from '../types';
+import type { MaaserEntry, MaaserPayment } from '../types';
+import { MaaserBasisCards } from './maaser-basis-cards';
+import { MaaserEntriesTable } from './maaser-entries-table';
+import { MaaserEntryForm } from './maaser-entry-form';
 import { MaaserPaymentForm } from './maaser-payment-form';
 import { MaaserPaymentsTable } from './maaser-payments-table';
 
 type Props = {
   basis: MaaserBasis;
+  entries: MaaserEntry[];
   payments: MaaserPayment[];
   defaultDate: string;
   locale: Locale;
@@ -26,10 +30,18 @@ type Props = {
 // numbers aren't on screen the moment the page loads.
 const MASK = '••••••';
 
-export function MaaserView({ basis, payments, defaultDate, locale }: Props) {
+export function MaaserView({ basis, entries, payments, defaultDate, locale }: Props) {
   const t = useTranslations('maaser');
   const [revealed, setRevealed] = useState(false);
-  const s = computeMaaserSummary(basis.grossFee, basis.netFee, sumGiven(payments.map((p) => p.amount)));
+
+  const manualIncome = sumAmounts(entries.filter((e) => e.kind === 'income').map((e) => e.amount));
+  const manualExpenses = sumAmounts(entries.filter((e) => e.kind === 'expense').map((e) => e.amount));
+  const totalGiven = sumAmounts(payments.map((p) => p.amount));
+  const s = computeMaaserSummary(
+    { collected: basis.collected, autoExpenses: basis.autoExpenses, manualIncome, manualExpenses },
+    totalGiven,
+  );
+
   const show = (v: number): string => (revealed ? formatCurrency(v, locale) : MASK);
   const RevealIcon = revealed ? EyeOff : Eye;
   const toggleLabel = revealed ? t('hide') : t('reveal');
@@ -48,20 +60,15 @@ export function MaaserView({ basis, payments, defaultDate, locale }: Props) {
         </button>
       </div>
 
-      {/* Basis + obligations */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label={t('basis.gross')} value={show(s.grossFee)} icon={Coins} />
-        <StatCard label={t('basis.net')} value={show(s.netFee)} icon={Wallet} />
-        <StatCard label={t('basis.maaserDue')} value={show(s.maaserDue)} icon={HandCoins} accent />
-        <StatCard label={t('basis.chomeshDue')} value={show(s.chomeshDue)} icon={Gift} accent />
-      </div>
+      <MaaserBasisCards s={s} show={show} />
 
       {/* Given + remaining */}
       <section className="rounded-xl border border-neutral-200 bg-brand-gold-soft p-4">
         <div className="mb-3 flex items-baseline justify-between gap-3">
           <h2 className="font-display text-lg font-semibold text-neutral-950">{t('balance.title')}</h2>
           <div className="text-sm text-neutral-600">
-            {t('balance.totalGiven')}: <span className="font-semibold text-neutral-900 tabular-nums">{show(s.totalGiven)}</span>
+            {t('balance.totalGiven')}:{' '}
+            <span className="font-semibold text-neutral-900 tabular-nums">{show(s.totalGiven)}</span>
           </div>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -70,34 +77,19 @@ export function MaaserView({ basis, payments, defaultDate, locale }: Props) {
         </div>
       </section>
 
-      <MaaserPaymentForm defaultDate={defaultDate} />
+      {/* Manual income / expense ledger */}
+      <section className="space-y-2">
+        <MaaserEntryForm defaultDate={defaultDate} />
+        <h2 className="font-display text-lg font-semibold text-neutral-950">{t('entriesLedger')}</h2>
+        <MaaserEntriesTable entries={entries} locale={locale} revealed={revealed} mask={MASK} />
+      </section>
 
-      <div>
-        <h2 className="mb-2 font-display text-lg font-semibold text-neutral-950">{t('ledger')}</h2>
+      {/* Donations */}
+      <section className="space-y-2">
+        <MaaserPaymentForm defaultDate={defaultDate} />
+        <h2 className="font-display text-lg font-semibold text-neutral-950">{t('ledger')}</h2>
         <MaaserPaymentsTable payments={payments} locale={locale} revealed={revealed} mask={MASK} />
-      </div>
-    </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-  accent,
-}: {
-  label: string;
-  value: string;
-  icon: React.ComponentType<{ className?: string }>;
-  accent?: boolean;
-}) {
-  return (
-    <div className={`rounded-xl border p-3 ${accent ? 'border-brand-gold/40 bg-brand-gold-soft' : 'border-neutral-200 bg-white'}`}>
-      <div className="flex items-center gap-1.5 text-xs text-neutral-500">
-        <Icon className="size-3.5 text-brand-gold-text" />
-        <span className="truncate">{label}</span>
-      </div>
-      <div className="mt-1 truncate font-display text-xl font-semibold text-neutral-950 tabular-nums">{value}</div>
+      </section>
     </div>
   );
 }

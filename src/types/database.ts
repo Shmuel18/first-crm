@@ -3236,6 +3236,70 @@ export type Database = {
           },
         ]
       }
+      maaser_ledger_entries: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          description: string | null
+          entry_date: string
+          id: string
+          kind: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          description?: string | null
+          entry_date?: string
+          id?: string
+          kind: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          description?: string | null
+          entry_date?: string
+          id?: string
+          kind?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maaser_ledger_entries_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maaser_ledger_entries_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maaser_ledger_entries_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maaser_payments: {
         Row: {
           amount: number
@@ -5202,6 +5266,14 @@ export type Database = {
       }
       soft_delete_case_payout: {
         Args: { p_case_id: string; p_payout_id: string }
+        Returns: boolean
+      }
+      maaser_income_basis: {
+        Args: never
+        Returns: { collected: number; expenses: number }[]
+      }
+      soft_delete_maaser_entry: {
+        Args: { p_id: string }
         Returns: boolean
       }
       soft_delete_maaser_payment: {

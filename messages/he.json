@@ -440,12 +440,16 @@
   "maaser": {
     "eyebrow": "כספים",
     "title": "מעשרות",
-    "subtitle": "מעקב הצדקה שנתת מול חובת המעשר (10%) והחומש (20%) מהשכר נטו המצטבר.",
+    "subtitle": "מעקב הצדקה שנתת מול חובת המעשר (10%) והחומש (20%) מהרווח הנקי המצטבר שנגבה.",
     "reveal": "הצג סכומים",
     "hide": "הסתר סכומים",
     "basis": {
-      "gross": "שכר טרחה ברוטו",
-      "net": "שכר טרחה נטו",
+      "title": "בסיס המעשר",
+      "collected": "נגבה בפועל",
+      "manualIncome": "הכנסות ידניות",
+      "autoExpenses": "הוצאות תיק",
+      "manualExpenses": "הוצאות ידניות",
+      "net": "בסיס נטו",
       "maaserDue": "חובת מעשר (10%)",
       "chomeshDue": "חובת חומש (20%)"
     },
@@ -456,6 +460,36 @@
       "chomesh": "חומש",
       "remaining": "נותר: {amount}",
       "fulfilled": "הושלם · עברת ב-{amount}"
+    },
+    "entriesLedger": "הכנסות והוצאות ידניות",
+    "entryForm": {
+      "title": "הוסף הכנסה או הוצאה",
+      "income": "הכנסה",
+      "expense": "הוצאה",
+      "date": "תאריך",
+      "amount": "סכום (₪)",
+      "description": "תיאור",
+      "add": "הוסף",
+      "errors": {
+        "unauthorized": "אין הרשאה.",
+        "validation": "נתונים לא תקינים.",
+        "unknown": "ההוספה נכשלה. נסה שוב."
+      }
+    },
+    "entriesTable": {
+      "date": "תאריך",
+      "kind": "סוג",
+      "income": "הכנסה",
+      "expense": "הוצאה",
+      "amount": "סכום",
+      "description": "תיאור",
+      "delete": "מחק",
+      "empty": "עדיין לא נרשמו הכנסות או הוצאות ידניות.",
+      "errors": {
+        "unauthorized": "אין הרשאה.",
+        "validation": "מזהה לא תקין.",
+        "unknown": "המחיקה נכשלה. נסה שוב."
+      }
     },
     "ledger": "פנקס התשלומים",
     "form": {

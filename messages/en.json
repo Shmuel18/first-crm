@@ -440,12 +440,16 @@
   "maaser": {
     "eyebrow": "Finances",
     "title": "Tithes",
-    "subtitle": "Track the charity you've given against the ma'aser (10%) and chomesh (20%) of cumulative net fee.",
+    "subtitle": "Track the charity you've given against the ma'aser (10%) and chomesh (20%) of cumulative net profit collected.",
     "reveal": "Show amounts",
     "hide": "Hide amounts",
     "basis": {
-      "gross": "Gross fee",
-      "net": "Net fee",
+      "title": "Tithe base",
+      "collected": "Collected",
+      "manualIncome": "Manual income",
+      "autoExpenses": "Case expenses",
+      "manualExpenses": "Manual expenses",
+      "net": "Net base",
       "maaserDue": "Ma'aser due (10%)",
       "chomeshDue": "Chomesh due (20%)"
     },
@@ -456,6 +460,36 @@
       "chomesh": "Chomesh",
       "remaining": "Remaining: {amount}",
       "fulfilled": "Fulfilled · over by {amount}"
+    },
+    "entriesLedger": "Manual income & expenses",
+    "entryForm": {
+      "title": "Add income or expense",
+      "income": "Income",
+      "expense": "Expense",
+      "date": "Date",
+      "amount": "Amount (₪)",
+      "description": "Description",
+      "add": "Add",
+      "errors": {
+        "unauthorized": "Not authorized.",
+        "validation": "Invalid input.",
+        "unknown": "Failed to add. Try again."
+      }
+    },
+    "entriesTable": {
+      "date": "Date",
+      "kind": "Type",
+      "income": "Income",
+      "expense": "Expense",
+      "amount": "Amount",
+      "description": "Description",
+      "delete": "Delete",
+      "empty": "No manual income or expenses recorded yet.",
+      "errors": {
+        "unauthorized": "Not authorized.",
+        "validation": "Invalid id.",
+        "unknown": "Failed to delete. Try again."
+      }
     },
     "ledger": "Payments ledger",
     "form": {
