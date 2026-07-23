@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  caseCollectionSummary,
   collectionBalance,
   collectionProgressPct,
   collectionStatus,
@@ -110,5 +111,44 @@ describe('outstandingBalance (advance folded into the fee, never added on top)',
     expect(outstandingBalance(fee, adv, exp, col, exec)).toBe(
       feeBalanceDue(fee, adv, exp, col, exec) + expenseBalance(exp, col),
     );
+  });
+});
+
+describe('caseCollectionSummary', () => {
+  it('reports the balance due now, against the full agreed value as the base', () => {
+    // fee 40000 + expenses 1000 = 41000 agreed; pre-execution only 6000 is due.
+    const s = caseCollectionSummary(40000, 5000, 1000, 0, false);
+    expect(s.balance).toBe(6000);
+    expect(s.totalAgreed).toBe(41000);
+    expect(s.hasOwed).toBe(true);
+    expect(s.met).toBe(false);
+    expect(s.pct).toBe(0);
+  });
+
+  it('pct measures against the agreed value, so it does NOT jump at execution', () => {
+    const pre = caseCollectionSummary(40000, 5000, 1000, 6000, false);
+    const post = caseCollectionSummary(40000, 5000, 1000, 6000, true);
+    expect(pre.pct).toBe(15); // 6000 / 41000
+    expect(post.pct).toBe(15);
+    // The balance DOES move — that's "due now", which is the point.
+    expect(pre.balance).toBe(0);
+    expect(post.balance).toBe(35000);
+  });
+
+  it('met once everything currently due is in', () => {
+    expect(caseCollectionSummary(40000, 5000, 1000, 6000, false).met).toBe(true);
+    expect(caseCollectionSummary(40000, 5000, 1000, 5999, false).met).toBe(false);
+  });
+
+  it('falls back to collected+balance as the base when no fee/expenses are set', () => {
+    const s = caseCollectionSummary(null, 0, 0, 2000, false);
+    expect(s.totalAgreed).toBe(0);
+    expect(s.hasOwed).toBe(false);
+    expect(s.met).toBe(false); // nothing owed → nothing "met"
+    expect(s.pct).toBe(100); // 2000 / (2000 + 0)
+  });
+
+  it('pct is clamped to 0–100 when overpaid', () => {
+    expect(caseCollectionSummary(10000, 10000, 0, 15000, true).pct).toBe(100);
   });
 });

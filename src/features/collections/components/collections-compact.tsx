@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl';
 import { formatCurrency } from '@/lib/utils/format-currency';
 import type { Locale } from '@/lib/i18n/direction';
 
-import { outstandingBalance, sumCollected } from '../domain/collections-calc';
+import { caseCollectionSummary, sumCollected } from '../domain/collections-calc';
 import { useFeePayments } from '../hooks/use-fee-payments';
 import type { FeePayment } from '../types';
 import { FeePaymentForm } from './fee-payment-form';
@@ -66,22 +66,17 @@ export function CollectionsCompact({
   } = useFeePayments(caseId, initialPayments, initialAdvanceAmount);
 
   const collected = sumCollected(payments.map((p) => p.amount));
-  // "יתרה לגבייה" = unpaid fee-due + unpaid office expenses. The advance is the
-  // upfront PORTION OF the fee, so pre-execution it IS the fee-due (live from the
-  // editable draft); it's never added on top. See outstandingBalance.
+  // The advance is read live from the editable draft. It's the upfront PORTION
+  // OF the fee, so pre-execution it IS the fee-due — never added on top. The
+  // balance/progress derivation lives in caseCollectionSummary.
   const advance = Number(advanceDraft) || 0;
-  const balance = outstandingBalance(feeAmount, advance, expenses, collected, isExecution);
-  const hasOwed = (feeAmount != null && feeAmount > 0) || expenses > 0;
-  // Stable anchor: what the case is worth in total (agreed fee + office
-  // expenses). Deliberately NOT collected+balance — pre-execution only the
-  // advance is due, so that figure jumps at execution and is useless as a
-  // reference. `balance` above stays "due now"; this is the base it's measured
-  // against. Falls back to collected+balance when no fee is set/visible.
-  const totalAgreed = (feeAmount ?? 0) + expenses;
-  const progressBase = totalAgreed > 0 ? totalAgreed : collected + balance;
-  const pct =
-    progressBase > 0 ? Math.max(0, Math.min(100, Math.round((collected / progressBase) * 100))) : 0;
-  const met = hasOwed && balance <= 0;
+  const { balance, hasOwed, totalAgreed, pct, met } = caseCollectionSummary(
+    feeAmount,
+    advance,
+    expenses,
+    collected,
+    isExecution,
+  );
 
   return (
     <div className="rounded-lg border border-neutral-200 bg-white">

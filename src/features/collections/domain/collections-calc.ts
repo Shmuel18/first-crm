@@ -81,3 +81,42 @@ export function outstandingBalance(
     expenseBalance(expenses, collected)
   );
 }
+
+/** Collection progress of one case, as the in-case מנהלה block shows it. */
+export type CaseCollectionSummary = {
+  /** "יתרה לגבייה" — unpaid fee-due + unpaid office expenses. */
+  balance: number;
+  /** There is something to collect against (a fee and/or expenses). */
+  hasOwed: boolean;
+  /** The case's full agreed value: fee + office expenses. */
+  totalAgreed: number;
+  /** Collected as a clamped 0–100 % of the agreed value. */
+  pct: number;
+  /** Everything currently due has come in. */
+  met: boolean;
+};
+
+/**
+ * Progress figures for a single case's collection block.
+ *
+ * `pct` measures against the case's TOTAL agreed value (fee + expenses), a
+ * stable anchor — deliberately NOT collected+balance, which jumps at execution
+ * (pre-execution only the advance is due) and is therefore useless as a
+ * reference point. `balance` stays "due now"; totalAgreed is the base it's
+ * measured against. Falls back to collected+balance when no fee is set/visible.
+ */
+export function caseCollectionSummary(
+  feeAmount: number | null,
+  advance: number,
+  expenses: number,
+  collected: number,
+  isExecution: boolean,
+): CaseCollectionSummary {
+  const balance = outstandingBalance(feeAmount, advance, expenses, collected, isExecution);
+  const hasOwed = (feeAmount != null && feeAmount > 0) || expenses > 0;
+  const totalAgreed = (feeAmount ?? 0) + expenses;
+  const progressBase = totalAgreed > 0 ? totalAgreed : collected + balance;
+  const pct =
+    progressBase > 0 ? Math.max(0, Math.min(100, Math.round((collected / progressBase) * 100))) : 0;
+  return { balance, hasOwed, totalAgreed, pct, met: hasOwed && balance <= 0 };
+}
