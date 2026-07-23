@@ -5270,7 +5270,7 @@ export type Database = {
       }
       maaser_income_basis: {
         Args: never
-        Returns: { collected: number; expenses: number }[]
+        Returns: { fee_collected: number; commissions: number }[]
       }
       soft_delete_maaser_entry: {
         Args: { p_id: string }

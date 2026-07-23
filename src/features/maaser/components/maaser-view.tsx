@@ -38,7 +38,12 @@ export function MaaserView({ basis, entries, payments, defaultDate, locale }: Pr
   const manualExpenses = sumAmounts(entries.filter((e) => e.kind === 'expense').map((e) => e.amount));
   const totalGiven = sumAmounts(payments.map((p) => p.amount));
   const s = computeMaaserSummary(
-    { collected: basis.collected, autoExpenses: basis.autoExpenses, manualIncome, manualExpenses },
+    {
+      feeCollected: basis.feeCollected,
+      commissions: basis.commissions,
+      manualIncome,
+      manualExpenses,
+    },
     totalGiven,
   );
 

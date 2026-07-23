@@ -23,9 +23,9 @@ export function MaaserBasisCards({ s, show }: Props) {
       <section className="rounded-xl border border-neutral-200 bg-white p-4">
         <h2 className="mb-3 font-display text-lg font-semibold text-neutral-950">{t('basis.title')}</h2>
         <dl className="space-y-1.5 text-sm">
-          <Line label={t('basis.collected')} value={show(s.collected)} sign="+" />
+          <Line label={t('basis.collected')} value={show(s.feeCollected)} sign="+" />
+          <Line label={t('basis.commissions')} value={show(s.commissions)} sign="−" muted />
           <Line label={t('basis.manualIncome')} value={show(s.manualIncome)} sign="+" />
-          <Line label={t('basis.autoExpenses')} value={show(s.autoExpenses)} sign="−" muted />
           <Line label={t('basis.manualExpenses')} value={show(s.manualExpenses)} sign="−" muted />
           <div className="!mt-3 flex items-baseline justify-between border-t border-neutral-200 pt-2">
             <dt className="font-semibold text-neutral-900">{t('basis.net')}</dt>

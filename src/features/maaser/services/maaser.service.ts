@@ -54,16 +54,17 @@ export async function listMaaserEntries(): Promise<MaaserEntry[]> {
   }));
 }
 
-/** Automatic side of the ma'aser base: money actually collected and the office
- *  expenses to net against it. Manual income/expense lines are added on top in
- *  the view. */
-export type MaaserBasis = { collected: number; autoExpenses: number };
+/** Automatic side of the ma'aser base: the fee actually collected and the
+ *  commissions deductible from it. Manual income/expense lines are added on top
+ *  in the view. */
+export type MaaserBasis = { feeCollected: number; commissions: number };
 
 /**
- * All-time collected-fee basis for the ma'aser/chomesh obligation. Goes through
- * the is_admin()-gated maaser_income_basis() RPC (migration 220) so the figures
- * follow money ACTUALLY received (the גבייה ledger), not the agreed fee — the
- * obligation only grows once the money is in.
+ * All-time collected-fee basis for the ma'aser/chomesh obligation, via the
+ * is_admin()-gated maaser_income_basis() RPC (migration 221). Per case it takes
+ * MAX(collected − expenses, 0) as the fee actually received — office expenses
+ * never enter the tithe calculation — and LEAST(payouts, fee) as the deductible
+ * commission, so a case with no collection contributes nothing either way.
  */
 export async function getMaaserBasis(): Promise<MaaserBasis> {
   const supabase = await createClient();
@@ -71,12 +72,12 @@ export async function getMaaserBasis(): Promise<MaaserBasis> {
 
   if (error) {
     console.error('[maaser] income basis rpc error', { code: error.code });
-    return { collected: 0, autoExpenses: 0 };
+    return { feeCollected: 0, commissions: 0 };
   }
 
   const row = data?.[0];
   return {
-    collected: Number(row?.collected ?? 0),
-    autoExpenses: Number(row?.expenses ?? 0),
+    feeCollected: Number(row?.fee_collected ?? 0),
+    commissions: Number(row?.commissions ?? 0),
   };
 }

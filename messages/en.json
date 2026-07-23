@@ -445,10 +445,10 @@
     "hide": "Hide amounts",
     "basis": {
       "title": "Tithe base",
-      "collected": "Collected",
+      "collected": "Fee collected",
+      "commissions": "Case commissions",
       "manualIncome": "Manual income",
-      "autoExpenses": "Case expenses",
-      "manualExpenses": "Manual expenses",
+      "manualExpenses": "Manual commissions",
       "net": "Net base",
       "maaserDue": "Ma'aser due (10%)",
       "chomeshDue": "Chomesh due (20%)"
@@ -461,11 +461,11 @@
       "remaining": "Remaining: {amount}",
       "fulfilled": "Fulfilled · over by {amount}"
     },
-    "entriesLedger": "Manual income & expenses",
+    "entriesLedger": "Manual income & commissions",
     "entryForm": {
-      "title": "Add income or expense",
+      "title": "Add income or commission",
       "income": "Income",
-      "expense": "Expense",
+      "expense": "Commission",
       "date": "Date",
       "amount": "Amount (₪)",
       "description": "Description",
@@ -480,11 +480,11 @@
       "date": "Date",
       "kind": "Type",
       "income": "Income",
-      "expense": "Expense",
+      "expense": "Commission",
       "amount": "Amount",
       "description": "Description",
       "delete": "Delete",
-      "empty": "No manual income or expenses recorded yet.",
+      "empty": "No manual income or commissions recorded yet.",
       "errors": {
         "unauthorized": "Not authorized.",
         "validation": "Invalid id.",

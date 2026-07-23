@@ -445,10 +445,10 @@
     "hide": "הסתר סכומים",
     "basis": {
       "title": "בסיס המעשר",
-      "collected": "נגבה בפועל",
+      "collected": "שכר טרחה שנגבה",
+      "commissions": "עמלות תיק",
       "manualIncome": "הכנסות ידניות",
-      "autoExpenses": "הוצאות תיק",
-      "manualExpenses": "הוצאות ידניות",
+      "manualExpenses": "עמלות ידניות",
       "net": "בסיס נטו",
       "maaserDue": "חובת מעשר (10%)",
       "chomeshDue": "חובת חומש (20%)"
@@ -461,11 +461,11 @@
       "remaining": "נותר: {amount}",
       "fulfilled": "הושלם · עברת ב-{amount}"
     },
-    "entriesLedger": "הכנסות והוצאות ידניות",
+    "entriesLedger": "הכנסות ועמלות ידניות",
     "entryForm": {
-      "title": "הוסף הכנסה או הוצאה",
+      "title": "הוסף הכנסה או עמלה",
       "income": "הכנסה",
-      "expense": "הוצאה",
+      "expense": "עמלה",
       "date": "תאריך",
       "amount": "סכום (₪)",
       "description": "תיאור",
@@ -480,11 +480,11 @@
       "date": "תאריך",
       "kind": "סוג",
       "income": "הכנסה",
-      "expense": "הוצאה",
+      "expense": "עמלה",
       "amount": "סכום",
       "description": "תיאור",
       "delete": "מחק",
-      "empty": "עדיין לא נרשמו הכנסות או הוצאות ידניות.",
+      "empty": "עדיין לא נרשמו הכנסות או עמלות ידניות.",
       "errors": {
         "unauthorized": "אין הרשאה.",
         "validation": "מזהה לא תקין.",
