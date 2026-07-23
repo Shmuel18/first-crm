@@ -250,8 +250,26 @@ export function CollectionsOverview({ rows, canManage, defaultDate, locale }: Pr
                       ? <span className="font-semibold text-amber-700">{show(r.expenseBalance)}</span>
                       : <span className="text-neutral-300">—</span>}
                   </td>
+                  {/* Collected against the case's full agreed value (fee +
+                      expenses). Every other money column here is a REMAINDER, so
+                      without this anchor "5,000 left" is unreadable — it could be
+                      untouched or nearly done. Rendered as "collected / total"
+                      rather than a 7th column, to keep the table scannable. */}
                   <td className="whitespace-nowrap px-3 py-2 text-neutral-600 tabular-nums">
-                    {r.collected > 0 ? show(r.collected) : <span className="text-neutral-300">—</span>}
+                    {(() => {
+                      const rowBase = (r.feeAmount ?? 0) + r.expenses;
+                      if (rowBase <= 0 && r.collected <= 0) {
+                        return <span className="text-neutral-300">—</span>;
+                      }
+                      return (
+                        <>
+                          <span className="font-medium text-neutral-900">{show(r.collected)}</span>
+                          {rowBase > 0 && (
+                            <span className="text-neutral-400"> / {show(rowBase)}</span>
+                          )}
+                        </>
+                      );
+                    })()}
                   </td>
                   <td className="whitespace-nowrap px-3 py-2">
                     <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[r.status]}`}>

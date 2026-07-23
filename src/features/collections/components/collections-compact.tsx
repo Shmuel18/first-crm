@@ -72,8 +72,15 @@ export function CollectionsCompact({
   const advance = Number(advanceDraft) || 0;
   const balance = outstandingBalance(feeAmount, advance, expenses, collected, isExecution);
   const hasOwed = (feeAmount != null && feeAmount > 0) || expenses > 0;
-  const totalToCollect = collected + balance;
-  const pct = totalToCollect > 0 ? Math.max(0, Math.min(100, Math.round((collected / totalToCollect) * 100))) : 0;
+  // Stable anchor: what the case is worth in total (agreed fee + office
+  // expenses). Deliberately NOT collected+balance — pre-execution only the
+  // advance is due, so that figure jumps at execution and is useless as a
+  // reference. `balance` above stays "due now"; this is the base it's measured
+  // against. Falls back to collected+balance when no fee is set/visible.
+  const totalAgreed = (feeAmount ?? 0) + expenses;
+  const progressBase = totalAgreed > 0 ? totalAgreed : collected + balance;
+  const pct =
+    progressBase > 0 ? Math.max(0, Math.min(100, Math.round((collected / progressBase) * 100))) : 0;
   const met = hasOwed && balance <= 0;
 
   return (
@@ -91,6 +98,11 @@ export function CollectionsCompact({
               <span className="font-semibold text-neutral-900 tabular-nums">
                 {formatCurrency(collected, locale)}
               </span>
+              {totalAgreed > 0 && (
+                <span className="text-neutral-400 tabular-nums">
+                  {t('block.outOf')} {formatCurrency(totalAgreed, locale)}
+                </span>
+              )}
               {hasOwed && (
                 <>
                   <span className="text-neutral-300" aria-hidden="true">
@@ -110,6 +122,25 @@ export function CollectionsCompact({
                 </span>
               )}
             </div>
+            {/* What the total is made of. Payments cover expenses first, so
+                seeing the two parts is what tells you whether any of the FEE
+                has actually come in yet. */}
+            {hasOwed && totalAgreed > 0 && (
+              <div className="mt-0.5 flex flex-wrap items-baseline gap-x-3 text-xs text-neutral-400">
+                {feeAmount != null && feeAmount > 0 && (
+                  <span>
+                    {t('block.agreedFee')}:{' '}
+                    <span className="tabular-nums">{formatCurrency(feeAmount, locale)}</span>
+                  </span>
+                )}
+                {expenses > 0 && (
+                  <span>
+                    {t('block.expenses')}:{' '}
+                    <span className="tabular-nums">{formatCurrency(expenses, locale)}</span>
+                  </span>
+                )}
+              </div>
+            )}
             {hasOwed && (
               <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-100">
                 <div

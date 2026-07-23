@@ -262,7 +262,9 @@
       "add": "הוסף תשלום",
       "paymentsCount": "{count} תשלומים",
       "advanceAgreed": "סוכם על מקדמה",
-      "advanceAmount": "מקדמה שסוכמה"
+      "advanceAmount": "מקדמה שסוכמה",
+      "outOf": "מתוך",
+      "expenses": "הוצאות משרד"
     },
     "status": {
       "not_started": "טרם נגבה",

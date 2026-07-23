@@ -262,7 +262,9 @@
       "add": "Add payment",
       "paymentsCount": "{count} payments",
       "advanceAgreed": "Advance agreed",
-      "advanceAmount": "Advance agreed (₪)"
+      "advanceAmount": "Advance agreed (₪)",
+      "outOf": "of",
+      "expenses": "Office expenses"
     },
     "status": {
       "not_started": "Not started",
