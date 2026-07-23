@@ -7,6 +7,10 @@ import { permanentDeleteCaseAction } from './permanent-delete-case';
 import { collectCaseFileRefs, eraseCaseFiles } from '../services/erase-case-files';
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+// The action defers file erasure via next/server's after(), which throws
+// (E468) outside a request scope. Run the callback inline so the "erases only
+// after a confirmed delete" assertion still exercises the real call.
+vi.mock('next/server', () => ({ after: (fn: () => unknown) => fn() }));
 vi.mock('@/lib/auth/permissions', () => ({ isCurrentUserAdmin: vi.fn() }));
 vi.mock('@/lib/supabase/server', () => ({ createClient: vi.fn() }));
 vi.mock('../services/erase-case-files', () => ({
