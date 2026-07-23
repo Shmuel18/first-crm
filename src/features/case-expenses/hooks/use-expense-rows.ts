@@ -55,9 +55,13 @@ export function useExpenseRows(
 
   const addRow = (): void => {
     const tempId = newTempId();
-    setRows((prev) => [...prev, emptyExpenseRow(tempId, caseId)]);
+    // Pre-fill the expense date to today (a transaction date), still editable.
+    // Computed at click time (not render) so there's no hydration concern, and
+    // in Israel time so it matches what the office sees near midnight.
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(new Date());
+    setRows((prev) => [...prev, emptyExpenseRow(tempId, caseId, today)]);
     beginOp();
-    const created = createEmptyExpenseAction(caseId)
+    const created = createEmptyExpenseAction(caseId, today)
       .then((result) => (result.ok ? result.expenseId : null))
       .catch(() => null);
     registerCreate(tempId, created);
