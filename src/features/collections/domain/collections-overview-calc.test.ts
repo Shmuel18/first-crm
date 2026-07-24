@@ -5,6 +5,7 @@ import {
   enrichCollectionRow,
   enrichCollectionRows,
   primaryBorrowerName,
+  rowDueNow,
   selectVisibleRows,
 } from './collections-overview-calc';
 import type { CollectionOverviewRow } from '../types';
@@ -135,6 +136,55 @@ describe('selectVisibleRows', () => {
     const before = rows.map((r) => r.caseId);
     selectVisibleRows(rows, 'all');
     expect(rows.map((r) => r.caseId)).toEqual(before);
+  });
+});
+
+describe('rowDueNow — only what is collectible now', () => {
+  it('pre-execution: expenses are due immediately, the fee is NOT', () => {
+    // fee 40000 agreed but the case is still collecting documents, no advance.
+    const r = enrichCollectionRow(row({ advanceAmount: null, expenses: 1200, collected: 0 }));
+    expect(r.feeBalance).toBe(0); // none of the 40000 is collectible yet
+    expect(rowDueNow(r)).toBe(1200); // expenses only
+  });
+
+  it('pre-execution: only the agreed advance of the fee is due', () => {
+    const r = enrichCollectionRow(row({ advanceAmount: 5000, expenses: 1000, collected: 0 }));
+    expect(rowDueNow(r)).toBe(6000); // 5000 advance + 1000 expenses, not 41000
+  });
+
+  it('at execution the whole fee becomes due', () => {
+    const r = enrichCollectionRow(row({ caseStatus: 'execution', collected: 0 }));
+    expect(rowDueNow(r)).toBe(41000); // 40000 fee + 1000 expenses
+  });
+
+  it('is 0 once everything currently due has been paid', () => {
+    // 6000 covers expenses(1000) + advance(5000); the rest of the fee is not due.
+    expect(rowDueNow(enrichCollectionRow(row({ collected: 6000 })))).toBe(0);
+  });
+
+  it('never counts a not-yet-collectible fee as debt', () => {
+    // The regression this guards: a documents-stage case must not show 36,200.
+    const r = enrichCollectionRow(
+      row({ feeAmount: 35000, advanceAmount: null, expenses: 1200, collected: 0 }),
+    );
+    expect(rowDueNow(r)).toBeLessThan(35000);
+    expect(rowDueNow(r)).toBe(1200);
+  });
+
+  it('agrees with the status badge, the row order and the open filter', () => {
+    const rows = enrichCollectionRows([
+      row({ caseId: 'exec', caseStatus: 'execution' }),
+      row({ caseId: 'docs', advanceAmount: null, expenses: 1200 }),
+      row({ caseId: 'paid', collected: 6000 }),
+    ]);
+    // "open" keeps exactly the rows with a positive due-now figure...
+    const open = selectVisibleRows(rows, 'open');
+    expect(open.map((r) => r.caseId)).toEqual(['exec', 'docs']);
+    expect(open.every((r) => rowDueNow(r) > 0)).toBe(true);
+    // ...ordered by it, and a zero due-now reads as "collected".
+    expect(open.map((r) => rowDueNow(r))).toEqual([41000, 1200]);
+    expect(rows.find((r) => r.caseId === 'paid')?.status).toBe('collected');
+    expect(rowDueNow(rows.find((r) => r.caseId === 'paid')!)).toBe(0);
   });
 });
 

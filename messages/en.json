@@ -341,7 +341,10 @@
       "lastPayment": "Last payment",
       "addTitle": "Record payment — {name}",
       "feeGross": "Agreed fee",
-      "toCollect": "Left to collect"
+      "toCollect": "Left to collect",
+      "feeDue": "Fee to collect",
+      "expensesDue": "Expenses to collect",
+      "dueNow": "Due now"
     }
   },
   "timeClock": {

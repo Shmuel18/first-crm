@@ -341,7 +341,10 @@
       "lastPayment": "תשלום אחרון",
       "addTitle": "רישום תשלום — {name}",
       "feeGross": "שכר טרחה",
-      "toCollect": "יתרה לגבות"
+      "toCollect": "יתרה לגבות",
+      "feeDue": "שכ״ט לגבייה",
+      "expensesDue": "הוצאות לגבייה",
+      "dueNow": "לגבייה עכשיו"
     }
   },
   "timeClock": {

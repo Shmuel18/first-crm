@@ -121,7 +121,23 @@ export function selectVisibleRows(
   )
     .slice()
     // Most outstanding overall first — highest collector priority at the top.
-    .sort((a, b) => (b.feeBalance + b.expenseBalance) - (a.feeBalance + a.expenseBalance));
+    .sort((a, b) => rowDueNow(b) - rowDueNow(a));
+}
+
+/**
+ * What this case owes RIGHT NOW: unpaid fee-due + unpaid office expenses.
+ *
+ * Deliberately not the lifetime total (fee + expenses − collected). Office
+ * expenses are collectible as soon as they are incurred, but the fee only
+ * becomes collectible at execution — pre-execution only the agreed advance is.
+ * Showing the full fee against a case still collecting documents presents money
+ * that is not owed yet as if it were, which is what the collector chases.
+ *
+ * This is the same quantity the status badge, the row order and the "open"
+ * filter use, so all four agree by construction.
+ */
+export function rowDueNow(r: Pick<EnrichedCollectionRow, 'feeBalance' | 'expenseBalance'>): number {
+  return r.feeBalance + r.expenseBalance;
 }
 
 /**

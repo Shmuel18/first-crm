@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { rowDueNow } from '../domain/collections-overview-calc';
 import type { EnrichedCollectionRow } from '../domain/collections-overview-calc';
 import type { CollectionStatus } from '../types';
 
@@ -35,10 +36,10 @@ export function CollectionsTable({ rows, canManage, show, fmtDate, onAddPayment 
         <thead>
           <tr className="border-b border-neutral-200 bg-neutral-50 text-xs text-neutral-500">
             <th className="sticky start-0 z-10 bg-neutral-50 px-3 py-2 text-start font-medium">{t('overview.client')}</th>
-            <th className="px-3 py-2 text-start font-medium">{t('overview.feeGross')}</th>
-            <th className="px-3 py-2 text-start font-medium">{t('overview.expenses')}</th>
+            <th className="px-3 py-2 text-start font-medium">{t('overview.feeDue')}</th>
+            <th className="px-3 py-2 text-start font-medium">{t('overview.expensesDue')}</th>
             <th className="px-3 py-2 text-start font-medium">{t('overview.collected')}</th>
-            <th className="px-3 py-2 text-start font-semibold text-neutral-700">{t('overview.toCollect')}</th>
+            <th className="px-3 py-2 text-start font-semibold text-neutral-700">{t('overview.dueNow')}</th>
             <th className="px-3 py-2 text-start font-medium">{t('overview.status')}</th>
             <th className="px-3 py-2 text-start font-medium">{t('overview.lastPayment')}</th>
             {canManage && <th className="px-3 py-2" />}
@@ -46,14 +47,22 @@ export function CollectionsTable({ rows, canManage, show, fmtDate, onAddPayment 
         </thead>
         <tbody>
           {rows.map((r) => {
-            // Four plain sums, not remainders: agreed fee, office expenses,
-            // what came in, what is still open. An earlier version showed
-            // three different "what's left" figures under names that read
-            // like totals ("שכ״ט לגבייה", "הוצאות משרד"), which was
-            // unreadable. Everything here is a straight amount and
-            // fee + expenses − collected = left to collect.
-            const rowBase = (r.feeAmount ?? 0) + r.expenses;
-            const left = rowBase - r.collected;
+            // Only what is collectible NOW, never the lifetime total. Office
+            // expenses are due as soon as they are incurred; the fee is not —
+            // pre-execution only the agreed advance is due, the rest becomes
+            // collectible at execution. Showing a full fee against a case that
+            // is still collecting documents puts money the client does not owe
+            // yet in front of the collector.
+            //
+            // So the two components are already-net figures and they simply
+            // add up: fee-due + expenses-due = due now. Each column says
+            // "לגבייה" so none of them reads as a lifetime total — that
+            // ambiguity is what made an earlier version unreadable.
+            const dueNow = rowDueNow(r);
+            // A green 0 means "money came in and cleared what was due". Gate it
+            // on an actual payment: a lead with an agreed fee also owes nothing
+            // YET, and marking that green would read as paid-in-full.
+            const settled = dueNow <= 0 && r.collected > 0;
 
             return (
               <tr key={r.caseId} className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50/60">
@@ -66,12 +75,14 @@ export function CollectionsTable({ rows, canManage, show, fmtDate, onAddPayment 
                   </Link>
                 </td>
                 <td className="whitespace-nowrap px-3 py-2 text-neutral-700 tabular-nums">
-                  {r.feeAmount != null && r.feeAmount > 0
-                    ? show(r.feeAmount)
+                  {r.feeBalance > 0
+                    ? show(r.feeBalance)
                     : <span className="text-neutral-300">—</span>}
                 </td>
                 <td className="whitespace-nowrap px-3 py-2 text-neutral-700 tabular-nums">
-                  {r.expenses > 0 ? show(r.expenses) : <span className="text-neutral-300">—</span>}
+                  {r.expenseBalance > 0
+                    ? show(r.expenseBalance)
+                    : <span className="text-neutral-300">—</span>}
                 </td>
                 <td className="whitespace-nowrap px-3 py-2 tabular-nums">
                   {r.collected > 0
@@ -79,12 +90,12 @@ export function CollectionsTable({ rows, canManage, show, fmtDate, onAddPayment 
                     : <span className="text-neutral-300">—</span>}
                 </td>
                 <td className="whitespace-nowrap px-3 py-2 tabular-nums">
-                  {rowBase <= 0 ? (
-                    <span className="text-neutral-300">—</span>
-                  ) : left > 0 ? (
-                    <span className="font-bold text-neutral-900">{show(left)}</span>
-                  ) : (
+                  {dueNow > 0 ? (
+                    <span className="font-bold text-neutral-900">{show(dueNow)}</span>
+                  ) : settled ? (
                     <span className="font-semibold text-emerald-600">{show(0)}</span>
+                  ) : (
+                    <span className="text-neutral-300">—</span>
                   )}
                 </td>
                 <td className="whitespace-nowrap px-3 py-2">
