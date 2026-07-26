@@ -32,6 +32,35 @@ export type InviteActionState =
 
 export const INVITE_ACTION_INITIAL: InviteActionState = { ok: false, error: 'idle' };
 
+export type UpdateMemberEmailActionState =
+  | {
+      ok: true;
+      email: string;
+      emailSent: boolean;
+      sessionsRevoked: boolean;
+    }
+  | {
+      ok: false;
+      error:
+        | 'idle'
+        | 'validation'
+        | 'unauthorized'
+        | 'not_found'
+        | 'self_change'
+        | 'unchanged'
+        | 'email_exists'
+        | 'rate_limited'
+        | 'out_of_sync'
+        | 'unknown';
+      fieldErrors?: Record<string, string>;
+      values?: Partial<Record<string, string>>;
+    };
+
+export const UPDATE_MEMBER_EMAIL_INITIAL: UpdateMemberEmailActionState = {
+  ok: false,
+  error: 'idle',
+};
+
 /** Result of re-issuing a set-password link for an existing member (called
  *  imperatively from a member row, not via a form). */
 export type ResendInviteResult =

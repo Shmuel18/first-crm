@@ -3119,7 +3119,8 @@
       "deactivate": "Deactivate",
       "reactivate": "Reactivate",
       "delete": "Delete",
-      "resend": "Resend invite"
+      "resend": "Resend invite",
+      "changeEmail": "Change email address"
     },
     "deactivateConfirm": {
       "title": "Deactivate this member?",
@@ -3144,6 +3145,35 @@
     },
     "resend": {
       "title": "New invite link"
+    },
+    "emailChange": {
+      "title": "Change email address",
+      "description": "The employee uses this address to sign in and receive system notifications.",
+      "currentEmail": "Current address",
+      "newEmail": "New address",
+      "warning": "After the change, the employee will be signed out and must sign in again with the new address. Their existing password will not change.",
+      "submit": "Change email address",
+      "toast": {
+        "updated": "The email address was updated and the employee was notified",
+        "updatedNoEmail": "The email address was updated. The employee was not emailed",
+        "updatedSessionWarning": "The email address was updated, but not all active sessions could be signed out"
+      },
+      "errors": {
+        "unauthorized": "Only an administrator can change an employee's email address.",
+        "notFound": "The employee account was not found.",
+        "selfChange": "You cannot change your own email address from the team screen.",
+        "unchanged": "Enter an email address different from the current address.",
+        "emailExists": "This email address is already assigned to another user.",
+        "rateLimited": "Too many changes were made recently. Try again in an hour.",
+        "outOfSync": "The account details are out of sync. No change was made; contact support.",
+        "generic": "The email address could not be updated. No change was made."
+      },
+      "mail": {
+        "subject": "Your sign-in email was updated — Kaufman Finance Group",
+        "heading": "Your sign-in email was updated",
+        "body": "Hello {name},\n\nThe email address you use to sign in has been changed to this address. Your password has not changed.\n\nIf you did not expect this change, contact your administrator.",
+        "cta": "Sign in"
+      }
     },
     "invite": {
       "title": "Add team member",

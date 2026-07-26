@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 
-import { Mail, Power, PowerOff, Send, Trash2 } from 'lucide-react';
+import { Mail, Pencil, Power, PowerOff, Send, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
@@ -25,6 +25,7 @@ import { resendInviteAction } from '../actions/resend-invite';
 import { setMemberActiveAction } from '../actions/set-member-active';
 import { updateMemberRoleAction } from '../actions/update-member-role';
 import { ResendLinkDialog } from './resend-link-dialog';
+import { UpdateMemberEmailDialog } from './update-member-email-dialog';
 import type { TeamMember, TeamRole } from '../types';
 
 type Props = {
@@ -40,6 +41,7 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
   const tLevel = useTranslations('settings.roles.levels');
   const [pending, startTransition] = useTransition();
   const [resendLink, setResendLink] = useState<string | null>(null);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
 
   const fullName =
     formatPersonName(member.first_name, member.last_name) || tc('noName');
@@ -155,6 +157,17 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
           ))}
         </NativeSelect>
 
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          disabled={pending || isSelf}
+          onClick={() => setEmailDialogOpen(true)}
+          aria-label={t('action.changeEmail')}
+          title={isSelf ? t('emailChange.errors.selfChange') : t('action.changeEmail')}
+        >
+          <Pencil className="size-4 text-neutral-600" />
+        </Button>
+
         {!isSelf && (
           <Button
             variant="ghost"
@@ -250,6 +263,13 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
       </div>
 
       <ResendLinkDialog link={resendLink} onClose={() => setResendLink(null)} />
+      {emailDialogOpen && (
+        <UpdateMemberEmailDialog
+          member={member}
+          open
+          onOpenChange={setEmailDialogOpen}
+        />
+      )}
     </div>
   );
 }

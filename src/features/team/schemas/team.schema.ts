@@ -37,3 +37,8 @@ export const SetActiveSchema = z.object({
 export const DeleteMemberSchema = z.object({
   userId: z.uuid(),
 });
+
+export const UpdateMemberEmailSchema = z.object({
+  user_id: z.uuid({ error: 'common.errors.required' }),
+  email: requiredEmail,
+});

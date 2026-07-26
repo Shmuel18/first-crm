@@ -1,13 +1,20 @@
 import { getTranslations } from 'next-intl/server';
 
 import { renderSystemEmail } from '@/features/templates/services/system-email-templates.service';
-import { isEmailConfigured } from '@/lib/env';
+import { env, isEmailConfigured } from '@/lib/env';
+import { escapeHtml, renderBrandedEmail } from '@/lib/email/render';
 import { sendEmail } from '@/lib/email/send';
 
 type InviteEmailInput = {
   to: string;
   firstName: string;
   inviteLink: string;
+  locale: 'he' | 'en';
+};
+
+type EmailChangedInput = {
+  to: string;
+  firstName: string;
   locale: 'he' | 'en';
 };
 
@@ -39,6 +46,34 @@ export async function sendInviteEmail({
     });
 
     const res = await sendEmail({ to, subject: email.subject, html: email.html });
+    return res.ok && !('skipped' in res && res.skipped);
+  } catch {
+    return false;
+  }
+}
+
+/** Best-effort security notice sent to the new login address. */
+export async function sendEmailChangedEmail({
+  to,
+  firstName,
+  locale,
+}: EmailChangedInput): Promise<boolean> {
+  if (!isEmailConfigured()) return false;
+
+  try {
+    const t = await getTranslations({ locale, namespace: 'team.emailChange.mail' });
+    const body = t('body', { name: firstName });
+    const html = renderBrandedEmail({
+      locale,
+      heading: t('heading'),
+      bodyHtml: `<p style="margin:0;">${escapeHtml(body).replace(/\n/g, '<br>')}</p>`,
+      cta: {
+        label: t('cta'),
+        url: `${env.NEXT_PUBLIC_APP_URL}/login`,
+      },
+      footer: await footer(locale),
+    });
+    const res = await sendEmail({ to, subject: t('subject'), html });
     return res.ok && !('skipped' in res && res.skipped);
   } catch {
     return false;
