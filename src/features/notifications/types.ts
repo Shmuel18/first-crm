@@ -54,8 +54,9 @@ export type NotificationDataTask = {
   actorName: string | null;
   priority?: string | null;
   assignmentKind?: 'assigned' | 'reassigned' | 'returned_to_creator' | null;
-  /** "#<case_number> · <client>" — context on task_completed so the assigner
-   *  recognizes the task without opening it (migration 181). */
+  /** "#<case_number> · <client>" — which client the task is about, so the
+   *  recipient recognizes it without opening it. task_completed since mig 181,
+   *  task_assigned + task_reminder since mig 222. Null for an office task. */
   caseLabel?: string | null;
   /** Task description, capped server-side at 200 chars (migration 181). */
   description?: string | null;
@@ -63,6 +64,8 @@ export type NotificationDataTask = {
 
 export type NotificationDataCaseStatusOverdue = {
   caseNumber: string;
+  /** "#<case_number> · <client>" — added mig 222; absent on older rows. */
+  caseLabel?: string | null;
   statusKey: string;
   statusNameHe: string;
   statusNameEn: string;
@@ -77,6 +80,9 @@ export type NotificationDataCaseMention = {
   preview: string;
   /** Comment id — kept for a future deep-link to the exact bubble. */
   commentId: string;
+  /** "#<case_number> · <client>" — which client the thread is about
+   *  (migration 222). Absent on rows created before it. */
+  caseLabel?: string | null;
 };
 
 export type NotificationDataTaskMention = NotificationDataCaseMention & {

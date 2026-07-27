@@ -1,3 +1,4 @@
+import { resolveCaseLabels } from '@/features/notifications/services/case-label.service';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { Database, Json } from '@/types/database';
 
@@ -40,6 +41,13 @@ export async function runTaskReminders(): Promise<TaskReminderResult> {
     .in('id', ids);
   if (resurfaceErr) throw new Error(`tasks resurface failed: ${resurfaceErr.message}`);
 
+  // "#<case_number> · <client>" so the reminder says WHICH client it's about
+  // (bell context line + email mirror) — a short title alone doesn't.
+  const caseLabels = await resolveCaseLabels(
+    supabase,
+    dueTasks.map((task) => task.case_id),
+  );
+
   const inserts: NotificationInsert[] = [];
   for (const task of dueTasks) {
     const recipient = task.assigned_to ?? task.created_by;
@@ -49,7 +57,11 @@ export async function runTaskReminders(): Promise<TaskReminderResult> {
       type: 'task_reminder',
       task_id: task.id,
       case_id: task.case_id,
-      data: { taskTitle: task.title, actorName: null } as Json,
+      data: {
+        taskTitle: task.title,
+        actorName: null,
+        caseLabel: task.case_id ? (caseLabels.get(task.case_id)?.label ?? null) : null,
+      } as Json,
     });
   }
 

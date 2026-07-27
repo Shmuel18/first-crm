@@ -2,10 +2,13 @@ import { getTranslations } from 'next-intl/server';
 
 import { renderSystemEmail } from '@/features/templates/services/system-email-templates.service';
 import { env, isEmailConfigured } from '@/lib/env';
+import { renderContextTable } from '@/lib/email/render';
 import { sendEmail } from '@/lib/email/send';
 import { createAdminClient } from '@/lib/supabase/admin';
 
+import { resolveCaseLabel } from './case-label.service';
 import { shouldEmailUser } from './preferences.service';
+import { withCaseInSubject } from '../domain/case-label';
 import type { NotificationType } from '../types';
 
 /** The kinds this mirror handles. Task assigned/completed email from their
@@ -66,16 +69,29 @@ export async function sendMirroredNotificationEmail(input: MirrorInput): Promise
         ? `${env.NEXT_PUBLIC_APP_URL}/cases/${input.caseId}`
         : `${env.NEXT_PUBLIC_APP_URL}/tasks`;
 
+    // WHICH client this is about — the mention/comment/reminder templates carry
+    // only the actor + a body preview, which with ~80 open cases leaves the
+    // recipient guessing. Resolved live from case_id (not the row snapshot) so
+    // it also works for notifications created before migration 222.
+    const caseLabel = await resolveCaseLabel(admin, input.caseId);
+
     const email = await renderSystemEmail({
       key: input.kind,
       locale,
       variables: params,
       ctaUrl: url,
+      afterBodyHtml: caseLabel
+        ? renderContextTable([[tEmail('taskContext.case'), caseLabel.label]])
+        : undefined,
       footer: tEmail('footer'),
     });
     if (!email.enabled) return false;
 
-    const res = await sendEmail({ to: recipient.email, subject: email.subject, html: email.html });
+    const res = await sendEmail({
+      to: recipient.email,
+      subject: withCaseInSubject(email.subject, caseLabel?.short),
+      html: email.html,
+    });
     return res.ok && !('skipped' in res && res.skipped);
   } catch {
     return false; // email is best-effort, never break the webhook

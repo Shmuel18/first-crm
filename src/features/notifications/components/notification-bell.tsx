@@ -220,14 +220,17 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
     }
   };
 
-  // Secondary line for task notifications: the linked client/case and a snippet
-  // of the description, so the assigner recognizes a completed task (or short
-  // generic title) without opening it. Populated for task_completed (mig 181);
-  // absent fields just collapse the line.
+  // Secondary line: WHICH client the notification is about ("#1042 · יעקב כהן"),
+  // plus a snippet of the description on task rows — the message alone (actor +
+  // task title + comment preview) doesn't identify the case. Every case-linked
+  // kind snapshots `caseLabel` (mig 181 task_completed, mig 222 the rest); rows
+  // created before that, and office tasks with no case, just collapse the line.
   const contextLine = (n: Notification): string | null => {
-    if (n.type !== 'task_completed' && n.type !== 'task_assigned') return null;
+    // Read-only peek at two optional fields shared by the data shapes — the
+    // union member doesn't matter here, missing fields are filtered out below.
     const d = n.data as Partial<NotificationDataTask>;
-    const parts = [d.caseLabel, d.description].filter(
+    const withDescription = n.type === 'task_completed' || n.type === 'task_assigned';
+    const parts = [d.caseLabel, withDescription ? d.description : null].filter(
       (x): x is string => typeof x === 'string' && x.trim().length > 0,
     );
     return parts.length > 0 ? parts.join(' — ') : null;

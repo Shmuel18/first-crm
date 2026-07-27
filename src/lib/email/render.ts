@@ -88,6 +88,24 @@ export function renderBrandedEmail({ locale, heading, bodyHtml, cta, footer }: R
 </body></html>`;
 }
 
+/**
+ * Small label/value table appended under an email body (pass as `afterBodyHtml`)
+ * — used for the "which client / what task" context lines. Escapes its own
+ * cells, so it satisfies the pre-escaped contract of `bodyHtml`.
+ */
+export function renderContextTable(rows: ReadonlyArray<readonly [string, string]>): string {
+  const cells = rows
+    .map(
+      ([label, value]) =>
+        `<tr>
+           <td style="padding:7px 14px;font-weight:700;color:${BLACK};white-space:nowrap;vertical-align:top;">${escapeHtml(label)}</td>
+           <td style="padding:7px 14px;color:#333333;">${escapeHtml(value)}</td>
+         </tr>`,
+    )
+    .join('');
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:16px;background:#FAF8F3;border-radius:10px;border-collapse:separate;">${cells}</table>`;
+}
+
 export function escapeHtml(s: string): string {
   return s
     .replace(/&/g, '&amp;')

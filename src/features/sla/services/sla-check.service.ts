@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 
+import { resolveCaseLabels } from '@/features/notifications/services/case-label.service';
 import { sanitizeThresholds } from '@/features/settings/services/sla.service';
 import type {
   SlaStatusKey,
@@ -254,7 +255,13 @@ export async function runSlaCheck(): Promise<SlaCheckResult> {
   }
 
   // 9) Fan out one row per (recipient, overdue case), filtering both
-  //    the TS-side dedupe and the active-recipient set.
+  //    the TS-side dedupe and the active-recipient set. Each row carries
+  //    "#<case_number> · <client>" so the bell + email name the client,
+  //    not just the case number.
+  const caseLabels = await resolveCaseLabels(
+    supabase,
+    overdue.map((row) => row.caseId),
+  );
   const inserts: NotifInsert[] = [];
   let skippedByTsDedupe = 0;
   for (const row of overdue) {
@@ -275,6 +282,7 @@ export async function runSlaCheck(): Promise<SlaCheckResult> {
         case_id: row.caseId,
         data: {
           caseNumber: row.caseNumber,
+          caseLabel: caseLabels.get(row.caseId)?.label ?? null,
           statusKey: row.statusKey,
           statusNameHe: row.statusNameHe,
           statusNameEn: row.statusNameEn,
