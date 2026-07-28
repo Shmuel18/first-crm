@@ -17,14 +17,20 @@ type Fingerprint = { activeCount: number; key: string };
  * including advisor assignment), and the associated-advisors row count
  * (that table has no realtime publication, so the poll is its only signal).
  * All queries are RLS-scoped, so the fingerprint is per-user stable.
+ *
+ * The count comes from count_active_cases() (migration 223) — the SAME
+ * function the bootstrap RPC uses for the tab badge, so the first-mount
+ * comparison against initialActiveCount can never disagree on what "active"
+ * means (a closed/on-hold case is not active).
  */
 async function readFingerprint(
   supabase: ReturnType<typeof createClient>,
 ): Promise<Fingerprint | null> {
-  const [casesRes, assocRes] = await Promise.all([
+  const [countRes, casesRes, assocRes] = await Promise.all([
+    supabase.rpc('count_active_cases'),
     supabase
       .from('cases')
-      .select('updated_at', { count: 'exact' })
+      .select('updated_at')
       .is('deleted_at', null)
       .eq('is_archived', false)
       .order('updated_at', { ascending: false })
@@ -35,12 +41,12 @@ async function readFingerprint(
       .from('case_associated_advisors')
       .select('case_id', { count: 'exact', head: true }),
   ]);
-  if (casesRes.error || assocRes.error) return null;
-  if (casesRes.count === null || assocRes.count === null) return null;
+  if (countRes.error || casesRes.error || assocRes.error) return null;
+  if (typeof countRes.data !== 'number' || assocRes.count === null) return null;
   const newestUpdatedAt = casesRes.data?.[0]?.updated_at ?? '';
   return {
-    activeCount: casesRes.count,
-    key: `${casesRes.count}:${newestUpdatedAt}:${assocRes.count}`,
+    activeCount: countRes.data,
+    key: `${countRes.data}:${newestUpdatedAt}:${assocRes.count}`,
   };
 }
 

@@ -5099,6 +5099,7 @@ export type Database = {
         Returns: boolean
       }
       convert_lead_to_case: { Args: { p_lead_id: string }; Returns: string }
+      count_active_cases: { Args: never; Returns: number }
       create_case_draft: {
         Args: { p_borrowers: Json; p_request_details: string }
         Returns: string
