@@ -9,10 +9,7 @@ import { FieldGroup } from '@/features/borrowers/components/borrower-compact-fie
 import { EditableField } from '@/features/borrowers/components/editable-field';
 
 import { useCaseDetailsState, type LocalCase } from '../hooks/use-case-details-state';
-import {
-  CASE_BLOCKER_VALUES,
-  INSURANCE_STATUS_VALUES,
-} from '../schemas/case.schema';
+import { INSURANCE_STATUS_VALUES } from '../schemas/case.schema';
 import type {
   AdvisorOption,
   StatusOption,
@@ -24,7 +21,7 @@ import { EditableStatusCell } from './editable-status-cell';
 /**
  * "פרטי התיק" sub-section of the admin block. 8 inline-editable fields in
  * a 4-column FieldGroup row (matches the property block density):
- *   status · blocker · primary bank · advisor ·
+ *   status · bank application no. · primary bank · advisor ·
  *   insurance · short note · referrer · agreed fee (manager only)
  *
  * Most fields route through the generic updateCaseFieldAction (same path
@@ -45,7 +42,8 @@ type Props = {
   associatedAdvisorIds: ReadonlyArray<string>;
   canManageAdvisors: boolean;
   /** General case-edit authority (can_edit_case). Gates the plain fields
-   *  (blocker / insurance / appraiser / target-date / referrer / note / fee). */
+   *  (bank request no. / insurance / appraiser / target-date / referrer /
+   *  note / fee). */
   canEdit: boolean;
   /** can_edit_case AND change_case_status — gates the inline status cell. */
   canChangeStatus: boolean;
@@ -72,7 +70,6 @@ export function CaseDetailsSection({
   initialFeeAmount,
 }: Props) {
   const tFields = useTranslations('case.fields');
-  const tBlocker = useTranslations('case.blocker');
   const tInsurance = useTranslations('case.insurance');
   const tc = useTranslations('common');
 
@@ -86,10 +83,6 @@ export function CaseDetailsSection({
     value: a.id,
     label:
       formatPersonName(a.first_name, a.last_name) || tc('noName'),
-  }));
-  const blockerOptions = CASE_BLOCKER_VALUES.map((v) => ({
-    value: v,
-    label: tBlocker(v),
   }));
   const insuranceOptions = INSURANCE_STATUS_VALUES.map((v) => ({
     value: v,
@@ -115,12 +108,14 @@ export function CaseDetailsSection({
           }))}
         />
       </LabeledCell>
+      {/* Bank application number (migration 224) — replaced the blocker
+          field per the office: it is how a branch finds the application,
+          crucial for foreign residents who have no local ID to search by. */}
       <EditableField
-        type="select"
-        label={tFields('blocker')}
-        value={localCase.case_blocker}
-        options={blockerOptions}
-        onSave={(v) => saveField('case_blocker', v)}
+        label={tFields('bankRequestNumber')}
+        value={localCase.bank_request_number}
+        onSave={(v) => saveField('bank_request_number', v)}
+        dir="ltr"
         canEdit={canEdit}
       />
       <EditableField

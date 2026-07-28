@@ -1416,6 +1416,7 @@
       "request_details": "פרטי הבקשה",
       "referrer_name": "שם הממליץ",
       "case_blocker": "גורם מעכב",
+      "bank_request_number": "מספר בקשה בבנק",
       "insurance_status": "סטטוס ביטוח",
       "version": "גרסה",
       "borrower_id": "לווה",
@@ -1668,7 +1669,7 @@
       "ltv": "LTV",
       "feeAmount": "שכ״ט סוכם",
       "expectedIncome": "הכנסה צפויה",
-      "blocker": "גורם מעכב",
+      "bankRequestNumber": "מספר בקשה",
       "insurance": "ביטוחים",
       "insuranceAgent": "שם סוכן ביטוח",
       "appraiser": "שם שמאי",
@@ -1706,7 +1707,7 @@
         "requestedMortgageAmount": "גובה משכנתא מבוקש (₪)",
         "equity": "הון עצמי (אופציונלי, ₪)",
         "feeAmount": "שכ״ט סוכם (₪)",
-        "blocker": "גורם מעכב",
+        "bankRequestNumber": "מספר בקשה בבנק",
         "insurance": "ביטוחים",
         "insuranceNotSpecified": "— לא צוין —",
         "referrer": "הופנה ע״י (שם המפנה)",
@@ -1761,14 +1762,6 @@
         "generic": "אירעה שגיאה בשמירת התיק. נסה שוב.",
         "noBorrowers": "יש להוסיף לפחות לווה אחד"
       }
-    },
-    "blocker": {
-      "none": "לא מעוכב",
-      "client": "לקוח",
-      "bank": "בנק",
-      "office": "משרד",
-      "appraiser": "שמאי",
-      "lawyer": "עו״ד"
     },
     "insurance": {
       "exists": "קיים",

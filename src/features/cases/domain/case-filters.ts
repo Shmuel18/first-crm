@@ -92,8 +92,8 @@ export function filterCases(
 /**
  * Free-text search shared by the dashboard search box and the export endpoint
  * (so a filtered export matches the on-screen list exactly). Matches client
- * name, national ID, case number, or borrower phone. Empty term → everything.
- * Pure.
+ * name, national ID, case number, bank application number, or borrower phone.
+ * Empty term → everything. Pure.
  */
 export function filterCasesByQuery(
   cases: ReadonlyArray<CaseWithRelations>,
@@ -107,6 +107,9 @@ export function filterCasesByQuery(
       getCaseClientLabel(c),
       getPrimaryBorrowerNationalId(c) ?? '',
       c.case_number ?? '',
+      // Bank application number (migration 224): the branch's own reference —
+      // often the only searchable handle on foreign-resident cases.
+      c.bank_request_number ?? '',
     ]
       .join(' ')
       .toLowerCase()

@@ -2461,6 +2461,7 @@ export type Database = {
         Row: {
           appraiser_name: string | null
           assigned_advisor_id: string | null
+          bank_request_number: string | null
           case_blocker: string | null
           case_number: string
           case_type_other_text: string | null
@@ -2492,6 +2493,7 @@ export type Database = {
         Insert: {
           appraiser_name?: string | null
           assigned_advisor_id?: string | null
+          bank_request_number?: string | null
           case_blocker?: string | null
           case_number?: string
           case_type_other_text?: string | null
@@ -2523,6 +2525,7 @@ export type Database = {
         Update: {
           appraiser_name?: string | null
           assigned_advisor_id?: string | null
+          bank_request_number?: string | null
           case_blocker?: string | null
           case_number?: string
           case_type_other_text?: string | null

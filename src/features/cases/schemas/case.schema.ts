@@ -14,9 +14,6 @@ import {
   SHORT_NOTE_MAX,
 } from '@/lib/validators/form-primitives';
 
-export const CASE_BLOCKER_VALUES = ['none', 'client', 'bank', 'office', 'appraiser', 'lawyer'] as const;
-export type CaseBlocker = (typeof CASE_BLOCKER_VALUES)[number];
-
 export const INSURANCE_STATUS_VALUES = ['exists', 'in_progress', 'missing'] as const;
 export type InsuranceStatus = (typeof INSURANCE_STATUS_VALUES)[number];
 
@@ -30,7 +27,9 @@ export const CaseFormShape = z.object({
   case_type_secondary_id: optionalUuid,
   status_id: optionalUuid,
   assigned_advisor_id: optionalUuid,
-  case_blocker: optionalEnum(CASE_BLOCKER_VALUES),
+  // The bank's application number (migration 224) — replaced case_blocker in
+  // the UI; that column is dormant in the DB, deliberately absent here.
+  bank_request_number: optionalShortString(NAME_MAX),
   insurance_status: optionalEnum(INSURANCE_STATUS_VALUES),
   insurance_agent_name: optionalShortString(NAME_MAX),
   appraiser_name: optionalShortString(NAME_MAX),

@@ -17,7 +17,6 @@ const ALLOWED_FIELDS = [
   'status_id',
   'assigned_advisor_id',
   'short_note',
-  'case_blocker',
   'insurance_status',
   'target_date',
   'referrer_name',
@@ -62,7 +61,7 @@ export async function quickUpdateCaseFieldAction(
 
   // Validate with the same per-field rule the full form uses — CaseFormShape is
   // exposed for exactly this. Bounds free text (short_note/referrer_name),
-  // checks the enums (case_blocker/insurance_status) and UUIDs. Closes the
+  // checks the enums (insurance_status) and UUIDs. Closes the
   // inline-edit validation gap (BE-2): these cells previously wrote straight to
   // the DB with no length/format check.
   const fieldSchema = CaseFormShape.shape[field];

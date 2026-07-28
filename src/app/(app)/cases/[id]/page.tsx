@@ -17,7 +17,7 @@ import { MarkCaseViewed } from '@/features/cases/components/mark-case-viewed';
 import { AddBorrowerButton } from '@/features/borrowers/components/add-borrower-button';
 import { CasePropertyBlock } from '@/features/cases/components/case-property-block';
 import { CaseRequestDetailsBlock } from '@/features/cases/components/case-request-details-block';
-import type { CaseBlocker, InsuranceStatus } from '@/features/cases/schemas/case.schema';
+import type { InsuranceStatus } from '@/features/cases/schemas/case.schema';
 import {
   listAdvisorOptions,
   listCaseStatusOptions,
@@ -263,12 +263,12 @@ export default async function CaseDetailPage({ params }: Props) {
             in the new product spec for the property card. The equity column
             stays in the DB as nullable so old data isn't dropped. */}
 
-        {/* Admin block owns the case-details fields (status / blocker /
-            primary bank / advisor / insurance / short note / referrer /
-            fee), the banks list, and the office-expenses table. Tasks
-            moved out to the action-bar popover so there's a single
-            top-level entry for the case's open tasks.
-            blocker/insurance are CHECK-constrained DB strings; narrow to unions. */}
+        {/* Admin block owns the case-details fields (status / bank
+            application no. / primary bank / advisor / insurance / short
+            note / referrer / fee), the banks list, and the office-expenses
+            table. Tasks moved out to the action-bar popover so there's a
+            single top-level entry for the case's open tasks.
+            insurance is a CHECK-constrained DB string; narrow to the union. */}
         <CaseAdminBlock
           caseId={caseData.id}
           statusId={caseData.status?.id ?? null}
@@ -279,7 +279,7 @@ export default async function CaseDetailPage({ params }: Props) {
           // field for a secretary even on an assigned case. The id resolves to
           // a name via the advisorOptions list (list_active_advisors RPC).
           assignedAdvisorId={caseData.assigned_advisor_id ?? null}
-          blocker={caseData.case_blocker as CaseBlocker | null}
+          bankRequestNumber={caseData.bank_request_number}
           insurance={caseData.insurance_status as InsuranceStatus | null}
           insuranceAgentName={caseData.insurance_agent_name}
           appraiserName={caseData.appraiser_name}

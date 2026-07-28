@@ -15,7 +15,7 @@ import { fieldDefault } from '@/lib/utils/form-defaults';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import { createCaseAction } from '../actions/create-case';
-import { CASE_BLOCKER_VALUES, INSURANCE_STATUS_VALUES } from '../schemas/case.schema';
+import { INSURANCE_STATUS_VALUES } from '../schemas/case.schema';
 import { updateCaseAction } from '../actions/update-case';
 import {
   CASE_ACTION_INITIAL,
@@ -155,13 +155,13 @@ export function CaseForm({
       )}
 
       <FormSection title={t('sections.admin')}>
-        <FormField label={t('fields.blocker')} error={fieldErrors.case_blocker}>
-          <NativeSelect name="case_blocker" defaultValue={value('case_blocker')}>
-            <option value="">— {tc('none')} —</option>
-            {CASE_BLOCKER_VALUES.map((v) => (
-              <option key={v} value={v}>{tCase(`blocker.${v}`)}</option>
-            ))}
-          </NativeSelect>
+        <FormField label={t('fields.bankRequestNumber')} error={fieldErrors.bank_request_number}>
+          <Input
+            name="bank_request_number"
+            defaultValue={value('bank_request_number')}
+            dir="ltr"
+            className="text-left"
+          />
         </FormField>
         <FormField label={t('fields.insurance')} error={fieldErrors.insurance_status}>
           <NativeSelect name="insurance_status" defaultValue={value('insurance_status')}>

@@ -1416,6 +1416,7 @@
       "request_details": "Request details",
       "referrer_name": "Referrer name",
       "case_blocker": "Blocker",
+      "bank_request_number": "Bank application number",
       "insurance_status": "Insurance status",
       "version": "Version",
       "borrower_id": "Borrower",
@@ -1668,7 +1669,7 @@
       "ltv": "LTV",
       "feeAmount": "Agreed fee",
       "expectedIncome": "Expected income",
-      "blocker": "Blocker",
+      "bankRequestNumber": "Application no.",
       "insurance": "Insurance",
       "insuranceAgent": "Insurance agent",
       "appraiser": "Appraiser",
@@ -1706,7 +1707,7 @@
         "requestedMortgageAmount": "Requested mortgage (₪)",
         "equity": "Down payment (optional, ₪)",
         "feeAmount": "Agreed fee (₪)",
-        "blocker": "Blocker",
+        "bankRequestNumber": "Bank application number",
         "insurance": "Insurance",
         "insuranceNotSpecified": "— Not specified —",
         "referrer": "Referred by (referrer name)",
@@ -1761,14 +1762,6 @@
         "generic": "Something went wrong while saving. Please try again.",
         "noBorrowers": "Add at least one borrower"
       }
-    },
-    "blocker": {
-      "none": "Not blocked",
-      "client": "Client",
-      "bank": "Bank",
-      "office": "Office",
-      "appraiser": "Appraiser",
-      "lawyer": "Lawyer"
     },
     "insurance": {
       "exists": "Exists",

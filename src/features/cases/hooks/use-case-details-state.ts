@@ -13,7 +13,7 @@ export type LocalCase = Pick<
   CaseRow,
   | 'status_id'
   | 'assigned_advisor_id'
-  | 'case_blocker'
+  | 'bank_request_number'
   | 'insurance_status'
   | 'insurance_agent_name'
   | 'appraiser_name'

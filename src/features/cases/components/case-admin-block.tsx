@@ -12,7 +12,7 @@ import type { Locale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
 import { formatDateShort } from '@/lib/utils/format-date';
 
-import type { CaseBlocker, InsuranceStatus } from '../schemas/case.schema';
+import type { InsuranceStatus } from '../schemas/case.schema';
 import type {
   AdvisorOption,
   StatusOption,
@@ -29,7 +29,8 @@ type Props = {
   statusName: string | null;
   statusColor: string | null;
   assignedAdvisorId: string | null;
-  blocker: CaseBlocker | null;
+  /** The bank's application number (migration 224) — replaced the blocker. */
+  bankRequestNumber: string | null;
   insurance: InsuranceStatus | null;
   insuranceAgentName: string | null;
   appraiserName: string | null;
@@ -64,8 +65,8 @@ type Props = {
  * Administrative case info block. Three sub-sections:
  *
  *   1. פרטי התיק (Case Details) — 8 inline-editable fields rendered by
- *      CaseDetailsSection (status / blocker / primary bank / advisor /
- *      insurance / short note / referrer / agreed fee).
+ *      CaseDetailsSection (status / bank application no. / primary bank /
+ *      advisor / insurance / short note / referrer / agreed fee).
  *   2. בנקים (Banks) — inline list of case_banks rows.
  *   3. הוצאות משרד (Office Expenses) — inline table backed by
  *      case_expenses (migration 081).
@@ -81,7 +82,7 @@ export async function CaseAdminBlock({
   statusName,
   statusColor,
   assignedAdvisorId,
-  blocker,
+  bankRequestNumber,
   insurance,
   insuranceAgentName,
   appraiserName,
@@ -129,7 +130,7 @@ export async function CaseAdminBlock({
         initial={{
           status_id: statusId,
           assigned_advisor_id: assignedAdvisorId,
-          case_blocker: blocker,
+          bank_request_number: bankRequestNumber,
           insurance_status: insurance,
           insurance_agent_name: insuranceAgentName,
           appraiser_name: appraiserName,
