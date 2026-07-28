@@ -28,6 +28,8 @@ import { Tooltip } from '@/components/ui/tooltip';
 import { deleteCaseAction } from '../actions/delete-case';
 import { toggleArchiveAction } from '../actions/toggle-archive';
 
+import { getDashboardReturnUrl } from './dashboard-url-memory';
+
 type Props = {
   caseId: string;
   isArchived: boolean;
@@ -73,8 +75,9 @@ export function CaseMoreMenu({
       const result = await deleteCaseAction(caseId);
       if (result.ok) {
         toast.success(t('deleteSuccess'));
-        // Hard-redirect — the current case page no longer exists for this user.
-        router.push('/cases');
+        // Hard-redirect — the current case page no longer exists for this
+        // user. Return to the remembered dashboard url (filters intact).
+        router.push(getDashboardReturnUrl());
       } else {
         toast.error(t(result.error === 'unauthorized' ? 'archiveUnauthorized' : 'archiveError'));
       }

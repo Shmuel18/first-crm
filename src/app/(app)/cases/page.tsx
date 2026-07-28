@@ -7,6 +7,7 @@ import { CasesSortControl } from '@/features/cases/components/cases-sort-control
 import { CasesTable } from '@/features/cases/components/cases-table';
 import { ClearFiltersButton } from '@/features/cases/components/clear-filters-button';
 import { DashboardFiltersBar } from '@/features/cases/components/dashboard-filters-bar';
+import { DashboardUrlMemory } from '@/features/cases/components/dashboard-url-memory';
 import { DashboardViewSelector } from '@/features/cases/components/dashboard-view-selector';
 import { DashboardWelcomeBanner } from '@/features/cases/components/dashboard-welcome-banner';
 import {
@@ -203,6 +204,9 @@ export default async function CasesListPage({ searchParams }: Props) {
   return (
     <div className="-m-4 sm:-m-6 bg-white">
       <CasesRealtimeRefresh initialActiveCount={counts.active} />
+      {/* Records the current filters-in-url so "back" from a case returns
+          here with the same filters instead of a reset dashboard. */}
+      <DashboardUrlMemory />
       <DashboardWelcomeBanner firstName={profile?.first_name ?? ''} />
       <DashboardViewSelector
         activeCount={counts.active}

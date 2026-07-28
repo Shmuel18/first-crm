@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { Calculator, Check, ClipboardList, Folder } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 
-import { BackArrow } from '@/components/shared/back-arrow';
 import { Tooltip } from '@/components/ui/tooltip';
 import { CaseActionTaskPopover } from '@/features/tasks/components/case-action-task-popover';
 import {
@@ -15,6 +14,7 @@ import { listRenderedTemplatesForCase } from '@/features/templates/services/temp
 import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
 
+import { CaseBackButton } from './case-back-button';
 import { CaseMoreMenu } from './case-more-menu';
 import { EditableStatusCell } from './editable-status-cell';
 import { GenerateBankPdfButton } from './generate-bank-pdf-button';
@@ -95,13 +95,11 @@ export async function CaseActionBar({
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <Tooltip content={tc('back')}>
-            <Link
-              href="/cases"
-              aria-label={tc('back')}
+            <CaseBackButton
+              ariaLabel={tc('back')}
+              locale={locale}
               className="tap-target inline-flex items-center justify-center size-7 border border-neutral-300 hover:border-brand-gold-text text-neutral-700 hover:text-brand-gold-text bg-white/60 rounded-md transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
-            >
-              <BackArrow locale={locale} className="size-3.5" aria-hidden="true" />
-            </Link>
+            />
           </Tooltip>
 
           <div className="flex items-center gap-2 flex-wrap min-w-0">

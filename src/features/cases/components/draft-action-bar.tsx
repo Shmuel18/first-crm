@@ -1,13 +1,12 @@
 'use client';
 
-import Link from 'next/link';
-
 import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { BackArrow } from '@/components/shared/back-arrow';
 import { Button } from '@/components/ui/button';
 import { Tooltip } from '@/components/ui/tooltip';
+
+import { CaseBackButton } from './case-back-button';
 
 import type { Locale } from '@/lib/i18n/direction';
 
@@ -46,13 +45,11 @@ export function DraftActionBar({
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <Tooltip content={tc('back')}>
-            <Link
-              href="/cases"
-              aria-label={tc('back')}
+            <CaseBackButton
+              ariaLabel={tc('back')}
+              locale={locale}
               className="inline-flex items-center justify-center size-7 border border-neutral-300 hover:border-brand-gold-text text-neutral-700 hover:text-brand-gold-text bg-white/60 rounded-md transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
-            >
-              <BackArrow locale={locale} className="size-3.5" aria-hidden="true" />
-            </Link>
+            />
           </Tooltip>
 
           <div className="flex items-center gap-2 flex-wrap min-w-0">
