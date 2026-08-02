@@ -101,11 +101,7 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
     const query = typeof sp.q === 'string' ? sp.q : '';
 
     const allCases = await listCases({ isArchived });
-    let cases = filterCases(
-      // The archive intentionally shows closed/frozen, so don't hide them there.
-      allCases,
-      isArchived ? { ...filters, hideClosedFrozen: false } : filters,
-    );
+    let cases = filterCases(allCases, filters);
     cases = filterCasesByQuery(cases, query);
     if (sort) {
       const { data: statuses } = await supabase.from('case_statuses').select('id, sort_order');

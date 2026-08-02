@@ -3,6 +3,11 @@
  * Kept in domain layer - no UI deps, no I/O.
  */
 
+/** Statuses that auto-archive their case (migrations 226/227). Selecting one
+ *  of these in the ACTIVE view's stage filter can only yield an empty list —
+ *  the dashboard prunes them from that picker. */
+export const AUTO_ARCHIVED_STATUS_KEYS = ['closed', 'on_hold', 'stuck'] as const;
+
 export function isStuckCase(c: { status: { key: string } | null }): boolean {
   return c.status?.key === 'stuck';
 }

@@ -2,7 +2,7 @@
 
 import { ChevronDown, X } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { parseAsBoolean, parseAsString, parseAsStringEnum, useQueryState } from 'nuqs';
+import { parseAsString, parseAsStringEnum, useQueryState } from 'nuqs';
 
 import {
   DropdownMenu,
@@ -30,9 +30,6 @@ type Props = {
   referrerOptions: ReadonlyArray<string>;
   /** Manager-only: the referrer filter shows only when true. */
   canFilterByReferrer: boolean;
-  // The archive intentionally shows closed/frozen cases, so the
-  // "hide closed & frozen" toggle is suppressed there.
-  isArchiveView?: boolean;
 };
 
 const ALL = '__all';
@@ -49,7 +46,6 @@ export function DashboardFiltersBar({
   canFilterByAdvisor,
   referrerOptions,
   canFilterByReferrer,
-  isArchiveView = false,
 }: Props) {
   const t = useTranslations('dashboard.filters');
   const locale = useLocale();
@@ -61,10 +57,6 @@ export function DashboardFiltersBar({
   const [targetDate, setTargetDate] = useQueryState(
     'targetDate',
     parseAsStringEnum([...TARGET_DATE_FILTER_VALUES]).withOptions(urlOpts),
-  );
-  const [hideClosedFrozen, setHide] = useQueryState(
-    'hideClosedFrozen',
-    parseAsBoolean.withDefault(true).withOptions(urlOpts),
   );
   // The free-text search input lives in the view-selector bar above and owns
   // its own `?q=` state — we deliberately don't read or clear it from here.
@@ -87,10 +79,6 @@ export function DashboardFiltersBar({
   const showAdvisor = canFilterByAdvisor && advisors.length > 0;
   const showReferrer = canFilterByReferrer && referrers.length > 0;
 
-  // The "hide completed & frozen" toggle is an independent display preference,
-  // not a filter the user "applied" — clearing the chips shouldn't reset it,
-  // and toggling it off shouldn't surface the clear button.
-  //
   // The free-text search lives in a sibling component (the view selector bar
   // above), so we deliberately leave `query` alone here — it would be a
   // surprise to wipe text the user typed in a different bar.
@@ -151,14 +139,6 @@ export function DashboardFiltersBar({
           <X className="size-3.5" aria-hidden="true" />
           {t('clear')}
         </button>
-      )}
-
-      {!isArchiveView && (
-        <HideClosedCheckbox
-          label={t('hideClosedFrozen')}
-          on={hideClosedFrozen}
-          onChange={(next) => setHide(next)}
-        />
       )}
 
       <div className="flex-1" />
@@ -226,27 +206,5 @@ function FilterSelect({
         </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-}
-
-function HideClosedCheckbox({
-  label,
-  on,
-  onChange,
-}: {
-  label: string;
-  on: boolean;
-  onChange: (next: boolean) => void;
-}) {
-  return (
-    <label className="inline-flex items-center gap-1.5 text-xs text-neutral-700 cursor-pointer select-none">
-      <input
-        type="checkbox"
-        checked={on}
-        onChange={(e) => onChange(e.target.checked)}
-        className="size-4 rounded accent-brand-gold-text cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
-      />
-      {label}
-    </label>
   );
 }

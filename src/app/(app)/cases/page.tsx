@@ -15,6 +15,7 @@ import {
   parseCaseView,
   parseDashboardFilters,
 } from '@/features/cases/domain/case-filters';
+import { AUTO_ARCHIVED_STATUS_KEYS } from '@/features/cases/domain/case-state';
 import { applySort, parseCaseSort } from '@/features/cases/domain/case-sort';
 import { getUnreadCaseIds } from '@/features/cases/services/case-review.service';
 import { getCasesDashboardBootstrap } from '@/features/cases/services/cases-dashboard-bootstrap.service';
@@ -124,16 +125,10 @@ export default async function CasesListPage({ searchParams }: Props) {
     // Manager-only unread stars (mig 219): [] for everyone else / when off.
     // Not in the archive view — stars are about the ACTIVE working set.
     const unreadCaseIds = isArchive ? [] : await getUnreadCaseIds(cases, isManager);
-    // In the archive, "hide closed & frozen" would hide exactly the cases that
-    // were archived (completed / on-hold), so don't apply it there.
-    //
-    // Derived filters (stuck, hideClosedFrozen), the column sort, and the
-    // header search box all operate over the full set fetched above.
-    const visible = applySort(
-      filterCases(cases, isArchive ? { ...filters, hideClosedFrozen: false } : filters),
-      sort,
-      statusOptions,
-    );
+    // The filters, the column sort, and the header search box all operate
+    // over the full set fetched above. Closed/frozen/stuck cases auto-archive
+    // (migrations 226/227), so the active fetch already excludes them.
+    const visible = applySort(filterCases(cases, filters), sort, statusOptions);
     // Distinct referrer names for the manager-only referrer filter. Derived
     // from the loaded set (no extra query); only built for managers.
     const referrerOptions = isManager
@@ -145,15 +140,22 @@ export default async function CasesListPage({ searchParams }: Props) {
           ),
         ].sort((a, b) => a.localeCompare(b, 'he'))
       : [];
+    // The ACTIVE view's stage filter drops the auto-archiving statuses —
+    // matching cases live in the archive, so selecting one there can only
+    // produce the empty state. The archive view keeps the full list.
+    const stageFilterOptions = isArchive
+      ? statusOptions
+      : statusOptions.filter(
+          (s) => !(AUTO_ARCHIVED_STATUS_KEYS as readonly string[]).includes(s.key),
+        );
     chrome = (
       <DashboardFiltersBar
-        statusOptions={statusOptions}
+        statusOptions={stageFilterOptions}
         bankOptions={bankOptions}
         advisorOptions={advisorOptions}
         canFilterByAdvisor={canViewAll}
         referrerOptions={referrerOptions}
         canFilterByReferrer={isManager}
-        isArchiveView={isArchive}
       />
     );
     scrollContent =

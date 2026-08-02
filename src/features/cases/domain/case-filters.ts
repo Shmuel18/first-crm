@@ -5,7 +5,6 @@
  */
 
 import { getCaseClientLabel, getPrimaryBorrowerNationalId } from './case-derivations';
-import { isFrozenCase } from './case-state';
 import {
   matchesTargetDateFilter,
   TARGET_DATE_FILTER_VALUES,
@@ -22,7 +21,6 @@ export type DashboardFilters = {
    *  gated in the UI), so non-managers never set it. */
   referrer: string | null;
   targetDate: TargetDateFilter | null;
-  hideClosedFrozen: boolean;
 };
 
 function first(v: string | string[] | undefined): string | null {
@@ -53,8 +51,9 @@ export function parseDashboardFilters(
     bank: first(sp.bank),
     referrer: first(sp.referrer),
     targetDate: parseTargetDateFilter(first(sp.targetDate)),
-    // Hiding done/frozen is the default view; only an explicit "false" disables it.
-    hideClosedFrozen: first(sp.hideClosedFrozen) !== 'false',
+    // No hide-closed/frozen field: closed/on_hold/stuck cases auto-archive
+    // (migrations 226/227), so the active list is already free of them
+    // server-side (is_archived = FALSE).
   };
 }
 
@@ -84,7 +83,6 @@ export function filterCases(
     }
     if (f.referrer && c.referrer_name !== f.referrer) return false;
     if (!matchesTargetDateFilter(c.target_date, f.targetDate, now)) return false;
-    if (f.hideClosedFrozen && isFrozenCase(c)) return false;
     return true;
   });
 }

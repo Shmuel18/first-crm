@@ -6,9 +6,9 @@ import { X } from 'lucide-react';
 
 /**
  * Resets the dashboard's filters + search on the zero-results state. Drops
- * every query param (advisor / stage / bank / hideClosedFrozen / q / page)
- * EXCEPT `view`, so the user stays on the same tab (active / leads / archive)
- * but sees the full, unfiltered list again.
+ * every query param (advisor / stage / bank / targetDate / q / page) EXCEPT
+ * `view`, so the user stays on the same tab (active / leads / archive) but
+ * sees the full, unfiltered list again.
  */
 export function ClearFiltersButton({ label }: { label: string }) {
   const router = useRouter();

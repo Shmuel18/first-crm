@@ -1,21 +1,24 @@
 -- =============================================================================
--- Migration 226: archive follows closed/frozen statuses (pgTAP)
+-- Migrations 226/227: archive follows closed/frozen/stuck statuses (pgTAP)
 -- =============================================================================
 -- Run with:  supabase test db   (needs a local stack: `supabase start`)
 --
--- Proves the sync trigger (closed/on_hold → archived, active stage → back out),
--- the INSERT one-way case, get_restore_target_status (last active stage from
--- history; case_opened fallback; NULL for an already-active case), and that an
--- archived case with an outstanding advance stays in collections_overview().
+-- Proves the sync trigger (closed/on_hold/stuck → archived, active stage →
+-- back out), the INSERT one-way case, get_restore_target_status (last active
+-- stage from history, skipping closed/frozen/stuck; case_opened fallback;
+-- NULL for an already-active case), and that an archived case with an
+-- outstanding advance stays in collections_overview().
 -- Whole file ROLLBACKs.
 -- =============================================================================
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
-SELECT plan(10);
+SELECT plan(14);
 
 \set manager '11111111-1111-1111-1111-111111111111'
+\set advisor '22222222-2222-2222-2222-222222222222'
 \set case_a  '55555555-5555-5555-5555-555555555555'
 \set case_b  '66666666-6666-6666-6666-666666666666'
+\set case_c  '77777777-7777-7777-7777-777777777777'
 
 CREATE FUNCTION pg_temp.mk_user(p_id uuid, p_email text, p_role_key text)
 RETURNS void LANGUAGE plpgsql AS $$
@@ -135,6 +138,47 @@ UPDATE public.cases SET short_note = 'note' WHERE id = :'case_a';
 SELECT is(
   (SELECT is_archived FROM public.cases WHERE id = :'case_a'), TRUE,
   'a non-status edit never rewrites is_archived');
+
+-- Migration 227: 'stuck' archives too, and restore skips it.
+UPDATE public.cases SET status_id = pg_temp.status_id('submitted_to_bank')
+ WHERE id = :'case_a';
+UPDATE public.cases SET status_id = pg_temp.status_id('stuck') WHERE id = :'case_a';
+SELECT is(
+  (SELECT is_archived FROM public.cases WHERE id = :'case_a'), TRUE,
+  'moving to stuck archives the case');
+
+-- Same single-transaction now() tie as above: make submitted_to_bank the
+-- unique latest stage so the restore target is deterministic.
+SELECT pg_temp.logout();
+UPDATE public.stage_durations
+   SET entered_at = entered_at - INTERVAL '1 day'
+ WHERE case_id = :'case_a'
+   AND status_id <> pg_temp.status_id('submitted_to_bank');
+SELECT pg_temp.login_as(:'manager');
+
+SELECT is(
+  (SELECT public.get_restore_target_status(:'case_a')),
+  pg_temp.status_id('submitted_to_bank'),
+  'restore target skips the stuck stage and picks the last active one');
+
+UPDATE public.cases SET status_id = pg_temp.status_id('submitted_to_bank')
+ WHERE id = :'case_a';
+SELECT is(
+  (SELECT is_archived FROM public.cases WHERE id = :'case_a'), FALSE,
+  'leaving stuck for an active stage pulls the case out of the archive');
+
+-- Migration 227 §7: a deleted member's STUCK (archived) case still moves to
+-- the acting admin — it is live work, not history.
+SELECT pg_temp.logout();
+SELECT pg_temp.mk_user(:'advisor', 'adv@test.local', 'junior_advisor');
+INSERT INTO public.cases (id, status_id, assigned_advisor_id, created_by, updated_by)
+VALUES (:'case_c', pg_temp.status_id('stuck'), :'advisor', :'manager', :'manager');
+SELECT pg_temp.login_as(:'manager');
+SELECT public.admin_delete_member(:'advisor');
+SELECT is(
+  (SELECT assigned_advisor_id FROM public.cases WHERE id = :'case_c'),
+  :'manager'::uuid,
+  'deleting a member reassigns their stuck (archived) case to the acting admin');
 
 SELECT * FROM finish();
 ROLLBACK;

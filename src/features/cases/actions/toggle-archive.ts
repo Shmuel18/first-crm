@@ -31,13 +31,13 @@ export async function toggleArchiveAction(
 
   const payload: CasesUpdate = { is_archived: archive };
   if (!archive) {
-    // Restoring a closed/frozen case must also return it to an active stage,
-    // or it leaves the archive yet stays hidden by the dashboard's
-    // closed/frozen filter (invisible in BOTH views — the exact limbo
-    // migration 226 exists to eliminate). The RPC resolves the last active
-    // stage from the case's history; NULL means the current status is already
-    // active. FAIL CLOSED on any obstacle: an aborted restore leaves the case
-    // safely findable in the archive, a half-restore loses it.
+    // Restoring a closed/frozen/stuck case must also return it to an active
+    // stage — un-archiving alone would plant a case with an auto-archiving
+    // status inside the active list, breaking the closed/on_hold/stuck ⇔
+    // archived invariant (migrations 226/227). The RPC resolves the last
+    // active stage from the case's history; NULL means the current status is
+    // already active. FAIL CLOSED on any obstacle: an aborted restore leaves
+    // the case safely findable in the archive, a half-restore corrupts state.
     const { data: revertStatusId, error: revertError } = await supabase.rpc(
       'get_restore_target_status',
       { p_case_id: caseId },

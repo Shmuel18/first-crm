@@ -50,7 +50,6 @@ const NO_FILTERS: DashboardFilters = {
   bank: null,
   referrer: null,
   targetDate: null,
-  hideClosedFrozen: false,
 };
 
 describe('parseCaseView', () => {
@@ -66,27 +65,23 @@ describe('parseCaseView', () => {
 });
 
 describe('parseDashboardFilters', () => {
-  it('uses safe defaults with hideClosedFrozen on', () => {
+  it('uses safe defaults', () => {
     expect(parseDashboardFilters({})).toEqual({
       advisor: null,
       stage: null,
       bank: null,
       referrer: null,
       targetDate: null,
-      hideClosedFrozen: true,
     });
   });
 
-  it('reads values and disables hideClosedFrozen only on explicit "false"', () => {
-    expect(
-      parseDashboardFilters({ advisor: 'a1', hideClosedFrozen: 'false' }),
-    ).toEqual({
+  it('reads values', () => {
+    expect(parseDashboardFilters({ advisor: 'a1' })).toEqual({
       advisor: 'a1',
       stage: null,
       bank: null,
       referrer: null,
       targetDate: null,
-      hideClosedFrozen: false,
     });
   });
 
@@ -134,15 +129,6 @@ describe('filterCases', () => {
     expect(
       filterCases([overdue, soon, none], { ...NO_FILTERS, targetDate: 'week' }, now),
     ).toEqual([soon]);
-  });
-
-  it('hides closed and frozen cases when hideClosedFrozen is on', () => {
-    const open = makeCase({ status: { id: 'o', key: 'open' } });
-    const onHold = makeCase({ status: { id: 'h', key: 'on_hold' } });
-    const closed = makeCase({ status: { id: 'c', key: 'closed' } });
-    expect(
-      filterCases([open, onHold, closed], { ...NO_FILTERS, hideClosedFrozen: true }),
-    ).toEqual([open]);
   });
 });
 
