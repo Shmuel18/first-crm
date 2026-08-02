@@ -176,7 +176,10 @@ export async function runSlaCheck(): Promise<SlaCheckResult> {
   const liveCases = new Map<string, { case_number: string; assigned_advisor_id: string | null }>();
   for (const c of caseRows ?? []) {
     if (c.deleted_at) continue;
-    if (c.is_archived) continue;
+    // Archived cases don't alert — EXCEPT the frozen threshold: freezing
+    // auto-archives the case (migration 226), so the archive is exactly where
+    // every long-frozen case lives and skipping it would kill the alert.
+    if (c.is_archived && overdueByCase.get(c.id)?.statusKey !== 'on_hold') continue;
     liveCases.set(c.id, {
       case_number: c.case_number,
       assigned_advisor_id: c.assigned_advisor_id,

@@ -5120,6 +5120,10 @@ export type Database = {
         Args: { p_case_id: string }
         Returns: Json
       }
+      get_restore_target_status: {
+        Args: { p_case_id: string }
+        Returns: string
+      }
       get_statistics_monthly_trend: {
         Args: { p_months?: number }
         Returns: Json

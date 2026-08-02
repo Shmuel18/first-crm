@@ -1,20 +1,14 @@
 import type { Locale } from '@/lib/i18n/direction';
 import type { MonthlyTrend, StatusSnapshot } from '../schemas/statistics.schema';
 
-/** Linear-flow statuses, in order, ending at the terminal 'closed'. */
-const PIPELINE_KEYS = [
-  'case_opened',
-  'document_collection',
-  'ready_for_submission',
-  'submitted_to_bank',
-  'pre_approved',
-  'collateral',
-  'execution',
-  'closed',
-] as const;
-
-/** Off-flow states surfaced separately from the pipeline. */
-const SIDE_KEYS = ['stuck', 'on_hold'] as const;
+/**
+ * Statuses surfaced as count chips beside the funnel instead of bars: the two
+ * paused states, plus the terminal 'closed' — its count is an ever-growing
+ * all-time total (archived cases included since migration 226) that would
+ * dwarf the live pipeline bars. Everything else — including admin-created
+ * stages — is a pipeline bar, ordered by sort_order.
+ */
+const SIDE_KEYS = ['closed', 'stuck', 'on_hold'] as const;
 
 export type StatusDirection = 'up' | 'down' | 'flat';
 export type Delta = { pct: number | null; direction: StatusDirection };
@@ -39,7 +33,7 @@ export function splitPipeline(snapshot: StatusSnapshot[]): {
   const ordered = [...snapshot].sort((a, b) => a.sort_order - b.sort_order);
   const isSide = (key: string): boolean => (SIDE_KEYS as readonly string[]).includes(key);
   return {
-    pipeline: ordered.filter((s) => PIPELINE_KEYS.includes(s.key as never) && !isSide(s.key)),
+    pipeline: ordered.filter((s) => !isSide(s.key)),
     side: ordered.filter((s) => isSide(s.key)),
   };
 }
