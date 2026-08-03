@@ -11,6 +11,7 @@ import { Topbar } from '@/components/layout/topbar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppBadgeSync } from '@/features/pwa/components/app-badge-sync';
 import { InstallBanner } from '@/features/pwa/components/install-banner';
+import { TaskNudge } from '@/features/tasks/components/task-nudge';
 import { isCurrentUserTimeTracked } from '@/features/time-clock/services/time-clock.service';
 import { getDirection, parseLocale } from '@/lib/i18n/direction';
 import { getLayoutBootstrap } from '@/lib/layout/bootstrap';
@@ -83,6 +84,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       />
       <InstallBanner />
       <AppBadgeSync count={bootstrap.pendingTasks} />
+      {/* "Moishy" nudge for stale tasks — streams its own query, never
+          blocks the shell. Shows at most once a day (capped client-side). */}
+      <Suspense fallback={null}>
+        <TaskNudge />
+      </Suspense>
       </div>
     </TooltipProvider>
   );
