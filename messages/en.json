@@ -2808,10 +2808,9 @@
     "nudge": {
       "title": "{name}, the tasks won't update themselves!",
       "titleNoName": "The tasks won't update themselves!",
-      "subtitle": "{count, plural, one {One task is waiting for your update} other {# tasks are waiting for your update}}",
+      "subtitle": "{count, plural, one {You have one open task waiting} other {You have # open tasks waiting}}",
       "cta": "Update tasks",
-      "later": "Later",
-      "imageAlt": "Moishy Kaufman"
+      "later": "Later"
     },
     "title": "Tasks",
     "openTitle": "Open tasks",

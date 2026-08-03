@@ -11,5 +11,5 @@ import { TaskNudgeDialog } from './task-nudge-dialog';
 export async function TaskNudge() {
   const data = await getTaskNudgeData();
   if (!data) return null;
-  return <TaskNudgeDialog firstName={data.firstName} staleCount={data.staleCount} />;
+  return <TaskNudgeDialog firstName={data.firstName} openCount={data.openCount} />;
 }

@@ -58,6 +58,24 @@ function israelOffsetMinutes(at: Date): number {
   return (Number(hours) * 60 + Number(minutes)) * (sign === '+' ? 1 : -1);
 }
 
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
+
+// Module-level formatter: israelWeekday runs inside hour-stepping loops
+// (business-hours math), and constructing Intl.DateTimeFormat per call is
+// the expensive part.
+const weekdayFormat = new Intl.DateTimeFormat('en-US', {
+  timeZone: ISRAEL_TZ,
+  weekday: 'short',
+});
+
+/**
+ * Day of week in Israel at a given instant: 0=Sunday … 6=Saturday (JS
+ * convention). The Israeli weekend is Friday (5) + Saturday (6).
+ */
+export function israelWeekday(now: Date = new Date()): number {
+  return (WEEKDAYS as readonly string[]).indexOf(weekdayFormat.format(now));
+}
+
 /**
  * The UTC instant at which a given Israel-local civil day began (00:00 local).
  *

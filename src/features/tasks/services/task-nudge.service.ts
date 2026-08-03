@@ -2,13 +2,15 @@ import { createClient } from '@/lib/supabase/server';
 
 import { countTasksAwaitingUpdate } from '../domain/task-nudge';
 
-export type TaskNudgeData = { firstName: string | null; staleCount: number };
+export type TaskNudgeData = { firstName: string | null; openCount: number };
 
 /**
- * Data for the "update your tasks" nudge dialog: how many of the CURRENT
- * user's pending tasks are overdue / stale, plus their first name for the
- * personalized headline. Returns null when there is nothing to nag about —
- * and on any error (the nudge is best-effort; it must never break the shell).
+ * Data for the "update your tasks" nudge dialog. The TRIGGER is staleness
+ * (at least one pending task overdue / untouched past the business-hours
+ * window), but the DISPLAYED count is ALL open tasks — Kaufman: seeing
+ * "1 task" while two sit open reads as a bug. Returns null when there is
+ * nothing to nag about — and on any error (the nudge is best-effort; it
+ * must never break the shell).
  */
 export async function getTaskNudgeData(): Promise<TaskNudgeData | null> {
   const supabase = await createClient();
@@ -26,8 +28,7 @@ export async function getTaskNudgeData(): Promise<TaskNudgeData | null> {
     return null;
   }
 
-  const staleCount = countTasksAwaitingUpdate(tasks);
-  if (staleCount === 0) return null;
+  if (countTasksAwaitingUpdate(tasks) === 0) return null;
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -35,5 +36,5 @@ export async function getTaskNudgeData(): Promise<TaskNudgeData | null> {
     .eq('id', userRes.user.id)
     .maybeSingle();
 
-  return { firstName: profile?.first_name ?? null, staleCount };
+  return { firstName: profile?.first_name ?? null, openCount: tasks.length };
 }
