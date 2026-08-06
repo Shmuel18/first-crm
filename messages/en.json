@@ -369,7 +369,11 @@
     "history": {
       "title": "Hours history",
       "empty": "No hours logged yet.",
-      "stillOpen": "Still on the clock"
+      "stillOpen": "Still on the clock",
+      "prevMonth": "Previous month",
+      "nextMonth": "Next month",
+      "monthTotal": "Month total",
+      "emptyMonth": "No hours logged this month."
     },
     "stale": {
       "title": "Still clocked in since {day}",

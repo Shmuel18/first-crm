@@ -11,8 +11,9 @@ import type { Locale } from '@/lib/i18n/direction';
 
 import { clockInAction } from '../actions/clock-in';
 import { clockOutAction } from '../actions/clock-out';
-import { earnings, entryMinutes, formatHm, groupByDay, israelDay, totalMinutes } from '../domain/hours';
+import { earnings, entryMinutes, formatHm, israelDay, totalMinutes } from '../domain/hours';
 import type { TimeEntry } from '../types';
+import { PunchHistory } from './punch-history';
 
 type Props = {
   initialOpen: TimeEntry | null;
@@ -61,7 +62,6 @@ export function ClockPunch({ initialOpen, initialEntries, hourlyRate, locale }: 
     nowMs,
   );
   const elapsed = open ? entryMinutes(open, nowMs) : 0;
-  const days = groupByDay(entries, nowMs);
   // Shift still open from a previous calendar day → probably a forgotten clock-out.
   const staleOpen = open != null && israelDay(open.clockIn) !== todayKey;
   const showMoney = hourlyRate != null && hourlyRate > 0;
@@ -157,36 +157,8 @@ export function ClockPunch({ initialOpen, initialEntries, hourlyRate, locale }: 
         </div>
       </div>
 
-      {/* History */}
-      <div>
-        <h2 className="mb-2 text-sm font-semibold text-neutral-900">{t('history.title')}</h2>
-        {days.length === 0 ? (
-          <p className="py-6 text-center text-sm text-neutral-400">{t('history.empty')}</p>
-        ) : (
-          <ul className="space-y-2">
-            {days.map((d) => (
-              <li key={d.day} className="rounded-xl border border-neutral-200 bg-white p-3">
-                <div className="mb-1 flex items-center justify-between">
-                  <span className="text-sm font-medium text-neutral-800">{fmtDay(d.day)}</span>
-                  <span className="text-sm font-semibold text-brand-gold-text tabular-nums">
-                    {formatHm(d.minutes)}
-                    {showMoney && <span className="text-neutral-400"> · {money(d.minutes)}</span>}
-                  </span>
-                </div>
-                <ul className="space-y-0.5 text-xs text-neutral-500">
-                  {d.entries.map((e) => (
-                    <li key={e.id} className="flex items-center gap-2 tabular-nums" dir="ltr">
-                      <span>{fmtTime(e.clockIn)}</span>
-                      <span aria-hidden="true">–</span>
-                      <span>{e.clockOut ? fmtTime(e.clockOut) : t('history.stillOpen')}</span>
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      {/* History — own hours, month by month (this month and back) */}
+      <PunchHistory currentMonth={entries} hourlyRate={hourlyRate} locale={locale} />
     </div>
   );
 }

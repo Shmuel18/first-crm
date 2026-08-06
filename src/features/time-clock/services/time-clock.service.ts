@@ -2,7 +2,8 @@ import { cache } from 'react';
 
 import { getCurrentUser, isCurrentUserAdmin } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
-import { israelMonthStartIso } from '@/lib/utils/israel-time';
+
+import { israelMonthRange } from '../domain/month-range';
 
 import type { BoardRow, ClockAccess, TimeEntry, TrackedEmployee } from '../types';
 
@@ -103,17 +104,22 @@ export async function getMyOpenEntry(): Promise<TimeEntry | null> {
   return data ? mapEntry(data as EntryRow) : null;
 }
 
-/** The current user's own shifts from the start of the Israel-local month (newest first). */
-export async function listMyEntries(): Promise<TimeEntry[]> {
+/**
+ * The current user's OWN shifts in [fromISO, toISO) (newest first).
+ *
+ * Always scoped to auth.uid() — an employee browsing their own history can
+ * never reach another employee's rows (RLS enforces the same, migration 213).
+ */
+export async function listMyEntriesForRange(fromISO: string, toISO: string): Promise<TimeEntry[]> {
   const user = await getCurrentUser();
   if (!user) return [];
-  const since = israelMonthStartIso();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('time_entries')
     .select(TIME_ENTRY_COLUMNS)
     .eq('user_id', user.id)
-    .gte('clock_in', since)
+    .gte('clock_in', fromISO)
+    .lt('clock_in', toISO)
     .is('deleted_at', null)
     .order('clock_in', { ascending: false });
   if (error) {
@@ -121,6 +127,12 @@ export async function listMyEntries(): Promise<TimeEntry[]> {
     return [];
   }
   return (data ?? []).map((r) => mapEntry(r as EntryRow));
+}
+
+/** The current user's own shifts in the current Israel-local month (newest first). */
+export async function listMyEntries(): Promise<TimeEntry[]> {
+  const { fromISO, toISO } = israelMonthRange(Date.now(), 0);
+  return listMyEntriesForRange(fromISO, toISO);
 }
 
 /** Manager: every hourly-tracked employee with their current open shift (the live board). */

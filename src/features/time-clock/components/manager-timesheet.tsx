@@ -11,19 +11,11 @@ import type { Locale } from '@/lib/i18n/direction';
 
 import { fetchManagerTimesheetAction } from '../actions/fetch-manager-timesheet';
 import { earnings, formatHm, groupByDay, totalMinutes } from '../domain/hours';
+import { israelMonthRange } from '../domain/month-range';
 import type { TimeEntry, TrackedEmployee } from '../types';
 import { EntryEditDialog } from './entry-edit-dialog';
 
 type Row = { employee: TrackedEmployee; entries: TimeEntry[] };
-
-/** [start, end) of the offset-th calendar month, in the browser's zone (Israel). */
-function monthRange(nowMs: number, offset: number): { fromISO: string; toISO: string } {
-  const now = new Date(nowMs);
-  return {
-    fromISO: new Date(now.getFullYear(), now.getMonth() + offset, 1).toISOString(),
-    toISO: new Date(now.getFullYear(), now.getMonth() + offset + 1, 1).toISOString(),
-  };
-}
 
 const fullName = (e: TrackedEmployee, fallback: string): string =>
   [e.firstName, e.lastName].filter(Boolean).join(' ').trim() || fallback;
@@ -43,7 +35,7 @@ export function ManagerTimesheet({ locale, refreshKey = 0 }: { locale: Locale; r
   const [exporting, setExporting] = useState(false);
 
   const doExport = async () => {
-    const { fromISO, toISO } = monthRange(nowMs, offset);
+    const { fromISO, toISO } = israelMonthRange(nowMs, offset);
     setExporting(true);
     try {
       const res = await fetch(
@@ -71,7 +63,7 @@ export function ManagerTimesheet({ locale, refreshKey = 0 }: { locale: Locale; r
   useEffect(() => {
     let alive = true;
     const key = `${offset}:${reloadKey}:${refreshKey}`;
-    const { fromISO, toISO } = monthRange(Date.now(), offset);
+    const { fromISO, toISO } = israelMonthRange(Date.now(), offset);
     fetchManagerTimesheetAction(fromISO, toISO).then((res) => {
       if (!alive) return;
       setRows(res.ok ? res.rows : []);
@@ -84,10 +76,10 @@ export function ManagerTimesheet({ locale, refreshKey = 0 }: { locale: Locale; r
   }, [offset, reloadKey, refreshKey]);
 
   const dLocale = locale === 'he' ? 'he-IL' : 'en-GB';
-  const base = new Date(nowMs);
-  const monthLabel = new Date(base.getFullYear(), base.getMonth() + offset, 1).toLocaleDateString(dLocale, {
+  const monthLabel = new Date(israelMonthRange(nowMs, offset).fromISO).toLocaleDateString(dLocale, {
     month: 'long',
     year: 'numeric',
+    timeZone: 'Asia/Jerusalem',
   });
   const fmtTime = (iso: string) =>
     new Date(iso).toLocaleTimeString(dLocale, { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' });
