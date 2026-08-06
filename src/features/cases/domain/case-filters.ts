@@ -20,6 +20,9 @@ export type DashboardFilters = {
   /** Exact match on cases.referrer_name. Manager-only filter (the picker is
    *  gated in the UI), so non-managers never set it. */
   referrer: string | null;
+  /** Exact match on cases.insurance_agent_name. Open to every dashboard
+   *  viewer — the picker is built from the cases RLS already let them see. */
+  insuranceAgent: string | null;
   targetDate: TargetDateFilter | null;
 };
 
@@ -50,6 +53,7 @@ export function parseDashboardFilters(
     stage: first(sp.stage),
     bank: first(sp.bank),
     referrer: first(sp.referrer),
+    insuranceAgent: first(sp.insuranceAgent),
     targetDate: parseTargetDateFilter(first(sp.targetDate)),
     // No hide-closed/frozen field: closed/on_hold/stuck cases auto-archive
     // (migrations 226/227), so the active list is already free of them
@@ -82,9 +86,23 @@ export function filterCases(
       return false;
     }
     if (f.referrer && c.referrer_name !== f.referrer) return false;
+    if (f.insuranceAgent && c.insurance_agent_name !== f.insuranceAgent) return false;
     if (!matchesTargetDateFilter(c.target_date, f.targetDate, now)) return false;
     return true;
   });
+}
+
+/**
+ * Distinct, Hebrew-sorted values of a free-text case column — the option list
+ * for an exact-match filter picker. Blank/whitespace values are dropped, so a
+ * cleared field never becomes a pickable option. Pure.
+ */
+export function distinctCaseValues(
+  cases: ReadonlyArray<CaseWithRelations>,
+  pick: (c: CaseWithRelations) => string | null,
+): string[] {
+  const values = cases.map(pick).filter((v): v is string => !!v && v.trim() !== '');
+  return [...new Set(values)].sort((a, b) => a.localeCompare(b, 'he'));
 }
 
 /**

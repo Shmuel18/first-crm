@@ -11,6 +11,7 @@ import { DashboardUrlMemory } from '@/features/cases/components/dashboard-url-me
 import { DashboardViewSelector } from '@/features/cases/components/dashboard-view-selector';
 import { DashboardWelcomeBanner } from '@/features/cases/components/dashboard-welcome-banner';
 import {
+  distinctCaseValues,
   filterCases,
   parseCaseView,
   parseDashboardFilters,
@@ -129,17 +130,13 @@ export default async function CasesListPage({ searchParams }: Props) {
     // over the full set fetched above. Closed/frozen/stuck cases auto-archive
     // (migrations 226/227), so the active fetch already excludes them.
     const visible = applySort(filterCases(cases, filters), sort, statusOptions);
-    // Distinct referrer names for the manager-only referrer filter. Derived
-    // from the loaded set (no extra query); only built for managers.
+    // Free-text picker options, derived from the loaded set (no extra query).
+    // Referrer stays manager-only; the insurance agent is open to everyone —
+    // the list can only contain agents from cases the viewer already sees.
     const referrerOptions = isManager
-      ? [
-          ...new Set(
-            cases
-              .map((c) => c.referrer_name)
-              .filter((r): r is string => !!r && r.trim() !== ''),
-          ),
-        ].sort((a, b) => a.localeCompare(b, 'he'))
+      ? distinctCaseValues(cases, (c) => c.referrer_name)
       : [];
+    const insuranceAgentOptions = distinctCaseValues(cases, (c) => c.insurance_agent_name);
     // The ACTIVE view's stage filter drops the auto-archiving statuses —
     // matching cases live in the archive, so selecting one there can only
     // produce the empty state. The archive view keeps the full list.
@@ -156,6 +153,7 @@ export default async function CasesListPage({ searchParams }: Props) {
         canFilterByAdvisor={canViewAll}
         referrerOptions={referrerOptions}
         canFilterByReferrer={isManager}
+        insuranceAgentOptions={insuranceAgentOptions}
       />
     );
     scrollContent =

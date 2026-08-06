@@ -1063,6 +1063,7 @@
       "stage": "Stage",
       "bank": "Bank",
       "referrer": "Referrer",
+      "insuranceAgent": "Insurance agent",
       "targetDate": {
         "label": "Target date",
         "overdue": "Overdue",

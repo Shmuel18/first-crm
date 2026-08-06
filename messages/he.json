@@ -1063,6 +1063,7 @@
       "stage": "שלב בתהליך",
       "bank": "בנק",
       "referrer": "מפנה",
+      "insuranceAgent": "סוכן ביטוח",
       "targetDate": {
         "label": "תאריך יעד",
         "overdue": "באיחור",

@@ -30,6 +30,10 @@ type Props = {
   referrerOptions: ReadonlyArray<string>;
   /** Manager-only: the referrer filter shows only when true. */
   canFilterByReferrer: boolean;
+  /** Distinct insurance-agent names (cases.insurance_agent_name). Not
+   *  role-gated — the caller derives them from the viewer's own visible
+   *  cases, so the picker is empty until they have one on a case. */
+  insuranceAgentOptions: ReadonlyArray<string>;
 };
 
 const ALL = '__all';
@@ -46,6 +50,7 @@ export function DashboardFiltersBar({
   canFilterByAdvisor,
   referrerOptions,
   canFilterByReferrer,
+  insuranceAgentOptions,
 }: Props) {
   const t = useTranslations('dashboard.filters');
   const locale = useLocale();
@@ -54,6 +59,10 @@ export function DashboardFiltersBar({
   const [stage, setStage] = useQueryState('stage', parseAsString.withOptions(urlOpts));
   const [bank, setBank] = useQueryState('bank', parseAsString.withOptions(urlOpts));
   const [referrer, setReferrer] = useQueryState('referrer', parseAsString.withOptions(urlOpts));
+  const [insuranceAgent, setInsuranceAgent] = useQueryState(
+    'insuranceAgent',
+    parseAsString.withOptions(urlOpts),
+  );
   const [targetDate, setTargetDate] = useQueryState(
     'targetDate',
     parseAsStringEnum([...TARGET_DATE_FILTER_VALUES]).withOptions(urlOpts),
@@ -73,11 +82,14 @@ export function DashboardFiltersBar({
     name: formatPersonName(a.first_name, a.last_name) || '—',
   }));
 
-  // Referrer values are free text — the id IS the name (exact-match filter).
+  // Referrer / insurance-agent values are free text — the id IS the name
+  // (exact-match filter).
   const referrers: Option[] = referrerOptions.map((r) => ({ id: r, name: r }));
+  const insuranceAgents: Option[] = insuranceAgentOptions.map((a) => ({ id: a, name: a }));
 
   const showAdvisor = canFilterByAdvisor && advisors.length > 0;
   const showReferrer = canFilterByReferrer && referrers.length > 0;
+  const showInsuranceAgent = insuranceAgents.length > 0;
 
   // The free-text search lives in a sibling component (the view selector bar
   // above), so we deliberately leave `query` alone here — it would be a
@@ -87,6 +99,7 @@ export function DashboardFiltersBar({
     stage !== null ||
     bank !== null ||
     referrer !== null ||
+    insuranceAgent !== null ||
     targetDate !== null;
 
   const clearAll = () => {
@@ -94,6 +107,7 @@ export function DashboardFiltersBar({
     setStage(null);
     setBank(null);
     setReferrer(null);
+    setInsuranceAgent(null);
     setTargetDate(null);
   };
 
@@ -120,6 +134,15 @@ export function DashboardFiltersBar({
           value={referrer}
           onChange={setReferrer}
           options={referrers}
+          allLabel={t('all')}
+        />
+      )}
+      {showInsuranceAgent && (
+        <FilterSelect
+          label={t('insuranceAgent')}
+          value={insuranceAgent}
+          onChange={setInsuranceAgent}
+          options={insuranceAgents}
           allLabel={t('all')}
         />
       )}

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  distinctCaseValues,
   filterCases,
   filterCasesByQuery,
   parseCaseView,
@@ -18,6 +19,8 @@ type TestCase = {
   case_banks: BankLink[];
   target_date: string | null;
   case_number: string | null;
+  referrer_name: string | null;
+  insurance_agent_name: string | null;
   case_borrowers: Array<{
     is_primary: boolean;
     borrower: {
@@ -40,6 +43,8 @@ function makeCase(o: Partial<TestCase> = {}): CaseWithRelations {
     case_banks: o.case_banks ?? [],
     target_date: o.target_date ?? null,
     case_number: o.case_number ?? null,
+    referrer_name: o.referrer_name ?? null,
+    insurance_agent_name: o.insurance_agent_name ?? null,
     case_borrowers: o.case_borrowers ?? [],
   } as unknown as CaseWithRelations;
 }
@@ -49,6 +54,7 @@ const NO_FILTERS: DashboardFilters = {
   stage: null,
   bank: null,
   referrer: null,
+  insuranceAgent: null,
   targetDate: null,
 };
 
@@ -71,6 +77,7 @@ describe('parseDashboardFilters', () => {
       stage: null,
       bank: null,
       referrer: null,
+      insuranceAgent: null,
       targetDate: null,
     });
   });
@@ -81,6 +88,7 @@ describe('parseDashboardFilters', () => {
       stage: null,
       bank: null,
       referrer: null,
+      insuranceAgent: null,
       targetDate: null,
     });
   });
@@ -94,6 +102,28 @@ describe('filterCases', () => {
   it('returns every case when no filters are active', () => {
     const cases = [makeCase(), makeCase()];
     expect(filterCases(cases, NO_FILTERS)).toHaveLength(2);
+  });
+
+  it('filters by insurance agent on an exact name match', () => {
+    const withAgent = makeCase({ insurance_agent_name: 'משה לוי' });
+    const otherAgent = makeCase({ insurance_agent_name: 'דנה כהן' });
+    const noAgent = makeCase();
+    const cases = [withAgent, otherAgent, noAgent];
+    expect(filterCases(cases, { ...NO_FILTERS, insuranceAgent: 'משה לוי' })).toEqual([withAgent]);
+    // A partial name is not a match — the picker only offers whole values.
+    expect(filterCases(cases, { ...NO_FILTERS, insuranceAgent: 'משה' })).toEqual([]);
+  });
+
+  it('combines the insurance-agent filter with the referrer filter', () => {
+    const both = makeCase({ insurance_agent_name: 'משה לוי', referrer_name: 'יוסי' });
+    const agentOnly = makeCase({ insurance_agent_name: 'משה לוי' });
+    expect(
+      filterCases([both, agentOnly], {
+        ...NO_FILTERS,
+        insuranceAgent: 'משה לוי',
+        referrer: 'יוסי',
+      }),
+    ).toEqual([both]);
   });
 
   it('filters by advisor — responsible or associated', () => {
@@ -178,5 +208,25 @@ describe('filterCasesByQuery', () => {
     expect(filterCasesByQuery([caseWithPhone, other], '+972-50-123-4567')).toEqual([
       caseWithPhone,
     ]);
+  });
+});
+
+describe('distinctCaseValues', () => {
+  it('dedupes, drops blanks, and sorts in Hebrew', () => {
+    const cases = [
+      makeCase({ insurance_agent_name: 'משה לוי' }),
+      makeCase({ insurance_agent_name: 'דנה כהן' }),
+      makeCase({ insurance_agent_name: 'משה לוי' }),
+      makeCase({ insurance_agent_name: '   ' }),
+      makeCase(),
+    ];
+    expect(distinctCaseValues(cases, (c) => c.insurance_agent_name)).toEqual([
+      'דנה כהן',
+      'משה לוי',
+    ]);
+  });
+
+  it('returns an empty list when nothing is filled in', () => {
+    expect(distinctCaseValues([makeCase(), makeCase()], (c) => c.referrer_name)).toEqual([]);
   });
 });
