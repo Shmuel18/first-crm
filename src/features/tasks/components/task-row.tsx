@@ -1,44 +1,27 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 
-import {
-  AlertTriangle,
-  Calendar,
-  Clock,
-  Lock,
-  MessageSquare,
-  User,
-  UserRoundCheck,
-} from 'lucide-react';
+import { AlertTriangle, Lock, MessageSquare } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import type { Locale } from '@/lib/i18n/direction';
-import { formatPersonName } from '@/lib/utils/person-name';
 
 import { changeTaskStatusAction } from '../actions/change-task-status';
 import { completeTaskAction } from '../actions/complete-task';
 import { reopenTaskAction } from '../actions/reopen-task';
 import {
-  formatDueDate,
-  formatSnoozeTime,
   isImmediateTask,
   isOverdue,
   priorityBadgeClass,
   priorityEdgeColor,
-  statusBadgeClass,
 } from '../domain/task-state';
 import { TaskActionsMenu } from './task-actions-menu';
+import { TaskRowMeta } from './task-row-meta';
+import { TaskStatusSelect } from './task-status-select';
 
 import type { TaskStatus, TaskWithRelations } from '../types';
 
@@ -48,17 +31,18 @@ type Props = {
   onEdit: (task: TaskWithRelations) => void;
   onReassign?: (task: TaskWithRelations) => void;
   onThread?: (task: TaskWithRelations) => void;
+  /**
+   * Rendered inside the case action-bar popover rather than the /tasks page.
+   * Drops the linked-case link (it's the case you're already on) and shows the
+   * description IN FULL — the popover is the office's read surface for a
+   * case's tasks, so truncating the body there hid the actual instruction.
+   */
   compact?: boolean;
 };
-
-// Statuses offered from the list's status dropdown (parity with the board
-// columns). Snooze isn't here — it has its own timed "remind me" control.
-const LIST_STATUSES: readonly TaskStatus[] = ['pending', 'in_progress', 'completed', 'cancelled'];
 
 export function TaskRow({ task, locale, onEdit, onReassign, onThread, compact = false }: Props) {
   const t = useTranslations('tasks');
   const tp = useTranslations('tasks.priority');
-  const ts = useTranslations('tasks.status');
   const tc = useTranslations('common');
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -70,12 +54,6 @@ export function TaskRow({ task, locale, onEdit, onReassign, onThread, compact = 
   const overdue = isOverdue(task);
   const immediate = isImmediateTask(task);
   const completed = task.status === 'completed';
-  const assigneeName =
-    formatPersonName(task.assignee?.first_name, task.assignee?.last_name) ||
-    t('unassigned');
-  const assignerName =
-    formatPersonName(task.assigner?.first_name, task.assigner?.last_name) ||
-    (task.assigned_by ? t('assignment.unknownPerson') : t('assignment.system'));
 
   const handleToggleComplete = async () => {
     if (toggleBusy) return;
@@ -148,32 +126,9 @@ export function TaskRow({ task, locale, onEdit, onReassign, onThread, compact = 
             )}
             {tp(task.priority)}
           </span>
-          {!compact && (
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <button
-                    type="button"
-                    aria-label={t('changeStatus')}
-                    className={[
-                      'inline-flex items-center gap-1.5 ps-1.5 pe-2 h-5 rounded-full text-xs font-medium border transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40',
-                      statusBadgeClass(task.status),
-                    ].join(' ')}
-                  />
-                }
-              >
-                <span className="size-1.5 rounded-full bg-current opacity-55" />
-                {ts(task.status)}
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="min-w-32">
-                {LIST_STATUSES.filter((s) => s !== task.status).map((s) => (
-                  <DropdownMenuItem key={s} onClick={() => handleStatus(s)}>
-                    {ts(s)}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+          {/* Status is part of "what is this task" — shown in the case popover
+              too, not only on /tasks. */}
+          <TaskStatusSelect status={task.status} onChange={handleStatus} />
           {overdue && (
             <span className="inline-flex items-center px-1.5 h-5 rounded-full text-xs font-medium bg-red-100 text-red-700 border border-red-200">
               {t('overdue')}
@@ -187,48 +142,23 @@ export function TaskRow({ task, locale, onEdit, onReassign, onThread, compact = 
           )}
         </div>
 
-        {task.description && !compact && (
-          <p className="text-xs text-neutral-600 mt-1 line-clamp-2">{task.description}</p>
+        {task.description && (
+          <p
+            className={[
+              // whitespace-pre-wrap: descriptions are typed with line breaks
+              // (checklists, "call X then Y"), and collapsing them turned a
+              // legible list into one run-on paragraph.
+              'text-xs text-neutral-600 mt-1 whitespace-pre-wrap break-words',
+              // /tasks is a scanning surface → keep it to two lines. The case
+              // popover is where the task is actually READ → show it all.
+              compact ? '' : 'line-clamp-2',
+            ].join(' ')}
+          >
+            {task.description}
+          </p>
         )}
 
-        <div className="flex items-center gap-3 mt-1.5 text-[11px] text-neutral-500 flex-wrap">
-          <span className="inline-flex items-center gap-1">
-            <User className="size-3" />
-            {assigneeName}
-          </span>
-          {task.assigned_to && (
-            <span className="inline-flex items-center gap-1" title={t('assignment.assignedBy', { name: assignerName })}>
-              <UserRoundCheck className="size-3" />
-              {t('assignment.assignedBy', { name: assignerName })}
-            </span>
-          )}
-          {task.due_date && (
-            <span
-              className={[
-                'inline-flex items-center gap-1',
-                overdue ? 'text-red-600 font-medium' : '',
-              ].join(' ')}
-            >
-              <Calendar className="size-3" />
-              {formatDueDate(task.due_date, locale)}
-            </span>
-          )}
-          {task.case && !compact && (
-            <Link
-              href={`/cases/${task.case.id}`}
-              className="hover:text-brand-gold-text hover:underline decoration-brand-gold underline-offset-2"
-            >
-              {task.case.clientName ?? `#${task.case.case_number}`}
-            </Link>
-          )}
-          {task.status === 'snoozed' && task.snoozed_until && (
-            <span className="inline-flex items-center gap-1 text-orange-600">
-              <Clock className="size-3" />
-              {t('snoozedUntil', { time: formatSnoozeTime(task.snoozed_until, locale) })}
-            </span>
-          )}
-        </div>
-
+        <TaskRowMeta task={task} locale={locale} overdue={overdue} hideCaseLink={compact} />
       </div>
 
       {onThread && (
