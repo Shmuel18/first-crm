@@ -7,7 +7,15 @@ export type CaseDriveMeta = {
 };
 
 export type DriveSyncOutcome =
-  | { ok: true; imported: number; updated: number; skipped: number; deleted: number }
+  | {
+      ok: true;
+      imported: number;
+      updated: number;
+      skipped: number;
+      deleted: number;
+      /** App-uploaded files whose failed Drive mirror was backfilled (pushed). */
+      pushed: number;
+    }
   | {
       ok: false;
       reason: 'not_connected' | 'case_not_found' | 'no_folder' | 'error';

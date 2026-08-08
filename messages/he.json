@@ -2629,6 +2629,7 @@
       "imported": "יובאו {count} קבצים חדשים מ-Drive",
       "updated": "עודכן מיקום ל-{count} קבצים שזזו ב-Drive",
       "deleted": "{count} קבצים שנמחקו ב-Drive הוסרו מהמערכת",
+      "pushed": "הועלו ל-Drive {count} קבצים שהיו חסרים שם",
       "nothingNew": "אין קבצים חדשים ב-Drive - הכל מסונכרן",
       "noFolderYet": "אין עדיין תיקייה ב-Drive לתיק זה. העלה מסמך ראשון מהאתר וזה ייווצר אוטומטית.",
       "errors": {

@@ -11,6 +11,7 @@ import {
 } from '../domain/drive-sync-types';
 
 import { getDriveClientIfConnected } from './drive-case-uploader';
+import { pushLocalOnlyFilesToDrive } from './drive-push-backfill';
 import { importOrUpdateDriveFile } from './drive-sync-importer';
 import { sweepVanishedDriveFiles } from './drive-sync-sweeper';
 import { type GoogleDriveClient } from './google-drive';
@@ -70,6 +71,8 @@ function readDriveMeta(raw: Json | null): CaseDriveMeta {
  *   advisor categorizes them from the UI)
  * - Files already linked by drive_file_id are skipped
  * - Files missing across a 48h grace window are soft-deleted (sweeper)
+ * - App-uploaded files whose after() Drive mirror failed are pushed to
+ *   Drive at the end of the pass (push backfill)
  */
 export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSyncOutcome> {
   const client = await getDriveClientIfConnected();
@@ -193,6 +196,10 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
     };
   }
 
+  // Push direction AFTER pull+sweep (ordering matters — see the helper's doc).
+  // Best-effort: a push failure never fails the sync.
+  const pushed = await pushLocalOnlyFilesToDrive(caseId);
+
   await persistLastSyncedAt(caseId);
   return {
     ok: true,
@@ -200,5 +207,6 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
     updated: state.updated,
     skipped: state.skipped,
     deleted: state.deleted,
+    pushed,
   };
 }

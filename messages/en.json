@@ -2629,6 +2629,7 @@
       "imported": "Imported {count} new files from Drive",
       "updated": "Updated location for {count} files moved in Drive",
       "deleted": "{count} files deleted in Drive were removed from the system",
+      "pushed": "Uploaded {count} files to Drive that were missing there",
       "nothingNew": "No new files in Drive - everything is synced",
       "noFolderYet": "No Drive folder yet for this case. Upload your first document from the app and it'll be created automatically.",
       "errors": {

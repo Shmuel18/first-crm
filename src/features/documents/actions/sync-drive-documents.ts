@@ -10,7 +10,14 @@ import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 
 type Result =
-  | { ok: true; imported: number; updated: number; skipped: number; deleted: number }
+  | {
+      ok: true;
+      imported: number;
+      updated: number;
+      skipped: number;
+      deleted: number;
+      pushed: number;
+    }
   | {
       ok: false;
       error:
@@ -66,5 +73,6 @@ export async function syncDriveDocumentsAction(caseId: string): Promise<Result> 
     updated: out.updated,
     skipped: out.skipped,
     deleted: out.deleted,
+    pushed: out.pushed,
   };
 }

@@ -173,7 +173,8 @@ export async function finalizeUploadAction(
   // of the bytes), which spun the upload button for seconds when Drive is connected.
   // Now the row is saved immediately; the mirror runs in the background via the admin
   // client (no request context inside after()) and stamps drive_file_id/url onto the
-  // row. A failed/skipped mirror is backfilled by the periodic Drive sync sweep.
+  // row. A failed/skipped mirror (drive_file_id still NULL) is backfilled by the next
+  // Drive sync's push pass (pushLocalOnlyFilesToDrive, after a 10-min grace).
   if (ctx.driveFolder) {
     const driveFolder = ctx.driveFolder;
     const caseNumber = ctx.caseNumber;

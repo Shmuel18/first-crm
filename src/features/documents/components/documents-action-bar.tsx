@@ -63,6 +63,7 @@ export function DocumentsActionBar({
         if (res.imported > 0) parts.push(tSync('imported', { count: res.imported }));
         if (res.updated > 0) parts.push(tSync('updated', { count: res.updated }));
         if (res.deleted > 0) parts.push(tSync('deleted', { count: res.deleted }));
+        if (res.pushed > 0) parts.push(tSync('pushed', { count: res.pushed }));
         if (parts.length === 0) {
           toast(tSync('nothingNew'));
         } else {

@@ -125,8 +125,9 @@ export async function uploadExpenseReceiptAction(
   // Storage + stamped on the row (the user's actual request), so these must not block
   // the paperclip button: the old-blob replace-remove and especially the Drive mirror
   // (a full-file HTTP round-trip) used to be awaited and spun the spinner for seconds.
-  // The Drive sync sweep backfills a missed mirror; the doc's "never blocks" contract
-  // is now actually honoured.
+  // A missed mirror (receipt_drive_id still NULL) is backfilled by the next Drive
+  // sync's push pass (pushLocalOnlyFilesToDrive, after a 10-min grace); the doc's
+  // "never blocks" contract is now actually honoured.
   const mime = sniffed.mime;
   after(async () => {
     if (oldPath && oldPath !== path) {
