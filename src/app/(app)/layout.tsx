@@ -34,7 +34,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <TooltipProvider>
-      <div className="h-dvh overflow-hidden bg-brand-surface">
+      <div className="h-full overflow-hidden bg-brand-surface">
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:start-2 focus:z-[100] focus:rounded-lg focus:bg-brand-black focus:px-4 focus:py-2 focus:text-sm focus:text-white focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-gold"
@@ -65,7 +65,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <main
         id="main-content"
         tabIndex={-1}
-        className="md:ms-16 h-[calc(100dvh-4rem)] overflow-hidden outline-none"
+        className="md:ms-16 h-[calc(100%-4rem)] overflow-hidden outline-none"
       >
         <div className="app-scrollbar app-scroll-viewport h-full overflow-y-auto p-4 sm:p-6 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
           <div dir={dir} className="min-w-0">

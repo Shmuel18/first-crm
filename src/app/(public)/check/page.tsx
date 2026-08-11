@@ -19,9 +19,10 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function CheckPage() {
   const t = await getTranslations('intake');
   return (
-    // The document itself is locked (globals.css: html,body overflow-hidden).
-    // Public pages opt back in by making their own root the scroll viewport.
-    <main className="intake-scroll h-dvh overflow-y-auto bg-brand-gold-soft">
+    // The document itself is locked (globals.css: the body is position:fixed +
+    // overflow-hidden so iOS can't drag it). Public pages opt back in by making
+    // their own root the scroll viewport.
+    <main className="intake-scroll h-full overflow-y-auto bg-brand-gold-soft">
       <IntakeHeader />
       {/* nuqs reads the URL via useSearchParams → needs a Suspense boundary. */}
       <Suspense fallback={null}>

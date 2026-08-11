@@ -21,7 +21,7 @@ export default async function SetPasswordPage() {
   const t = await getTranslations('auth.setPassword');
 
   return (
-    <div className="h-dvh overflow-y-auto scrollbar-thin flex items-center justify-center bg-brand-black p-4 relative">
+    <div className="h-full overflow-y-auto scrollbar-thin flex items-center justify-center bg-brand-black p-4 relative">
       <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-brand-gold opacity-5 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-brand-gold opacity-5 blur-3xl pointer-events-none" />
 

@@ -180,11 +180,24 @@
   }
   /* The (app) layout owns the scroll viewport — keep the document itself
      non-scrolling so the browser-chrome scrollbar never appears. Auth/public
-     pages opt back in via `overflow-auto` on their own root. */
+     pages opt back in via `overflow-auto` on their own root.
+
+     iOS (Safari and the installed PWA alike) still lets the user drag and
+     rubber-band the document even with `overflow: hidden` — the whole shell
+     slides off the screen and springs back. Pinning the body with
+     `position: fixed` is the only thing that actually stops it. `100dvh` made
+     it worse: it re-measures while the URL bar animates, so the shell resized
+     mid-drag. Every height below inherits from this pinned body via `100%`
+     instead — do not reintroduce `dvh` on the shell. */
   html,
   body {
-    height: 100dvh;
+    height: 100%;
     overflow: hidden;
+    overscroll-behavior: none;
+  }
+  body {
+    position: fixed;
+    inset: 0;
   }
   /* Number inputs: drop the native up/down spin arrows everywhere for a cleaner
      look (they clutter money fields and overlap RTL text). */
@@ -629,15 +642,19 @@
   }
 }
 
-/* Browser print: the app pins html/body to 100dvh + overflow:hidden (the inner
-   .app-scroll-viewport owns scrolling), which truncates Ctrl+P to one viewport.
-   Restore document flow for printing so a case page prints in full. The
-   dedicated PDF/Excel export remains the supported path for formatted output. */
+/* Browser print: the app pins the body (position:fixed + overflow:hidden, the
+   inner .app-scroll-viewport owns scrolling), which truncates Ctrl+P to one
+   viewport. Restore document flow for printing so a case page prints in full.
+   The dedicated PDF/Excel export remains the supported path for formatted
+   output. */
 @media print {
   html,
   body {
     height: auto;
     overflow: visible;
+  }
+  body {
+    position: static;
   }
   .app-scroll-viewport,
   main#main-content {
