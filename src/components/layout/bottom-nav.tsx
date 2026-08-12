@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useTaskBadge } from '@/features/tasks/components/task-badge-provider';
 
 import { isNavItemActive } from './is-nav-item-active';
 
@@ -58,8 +59,6 @@ const FINANCE_ITEMS: readonly FinanceItem[] = [
 ] as const;
 
 type Props = {
-  tasksBadge?: number;
-  criticalTasksBadge?: number;
   isManager?: boolean;
   canViewCollections?: boolean;
   canUseTimeClock?: boolean;
@@ -73,14 +72,14 @@ type Props = {
  * over at md+.
  */
 export function BottomNav({
-  tasksBadge,
-  criticalTasksBadge,
   isManager,
   canViewCollections,
   canUseTimeClock,
 }: Props): React.ReactElement {
   const pathname = usePathname();
   const t = useTranslations('nav');
+  // Live counts (TaskBadgeProvider) — see the note in the desktop Sidebar.
+  const { pending: tasksBadge, critical: criticalTasksBadge } = useTaskBadge();
 
   const finance = FINANCE_ITEMS.filter(
     (item) => (!item.adminOnly || isManager) && (!item.collectionsOnly || canViewCollections),

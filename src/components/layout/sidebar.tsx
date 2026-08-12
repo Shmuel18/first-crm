@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation';
 import { BarChart3, Calculator, CheckSquare, Clock, Coins, HandCoins, LayoutDashboard, Settings } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { useTaskBadge } from '@/features/tasks/components/task-badge-provider';
+
 import { isNavItemActive } from './is-nav-item-active';
 
 type NavItem = {
@@ -41,16 +43,18 @@ const BOTTOM_ITEMS: readonly NavItem[] = [
 ] as const;
 
 type SidebarProps = {
-  tasksBadge?: number;
-  criticalTasksBadge?: number;
   isManager?: boolean;
   canViewCollections?: boolean;
   canUseTimeClock?: boolean;
 };
 
-export function Sidebar({ tasksBadge, criticalTasksBadge, isManager, canViewCollections, canUseTimeClock }: SidebarProps) {
+export function Sidebar({ isManager, canViewCollections, canUseTimeClock }: SidebarProps) {
   const pathname = usePathname();
   const t = useTranslations('nav');
+  // Live counts (TaskBadgeProvider), NOT props: this rail lives in the layout,
+  // which a soft navigation never re-renders — props would freeze at whatever
+  // the count was on the last full page load.
+  const { pending: tasksBadge, critical: criticalTasksBadge } = useTaskBadge();
 
   const topItems = BASE_TOP_ITEMS.filter(
     (item) =>

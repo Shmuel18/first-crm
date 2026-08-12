@@ -39,6 +39,14 @@ export type TaskPriority = (typeof TASK_PRIORITY_VALUES)[number];
 export const TASK_VIEW_VALUES = ['mine', 'assigned-by-me', 'all'] as const;
 export type TaskView = (typeof TASK_VIEW_VALUES)[number];
 
+/** The two numbers behind the nav task badge (sidebar rail + phone tab bar).
+ *  Mirrors the layout_bootstrap RPC's definitions so the server-rendered seed
+ *  and the client's live re-check can never disagree. */
+export type TaskBadgeCounts = {
+  pending: number;
+  critical: number;
+};
+
 export type TaskAssignee = {
   id: string;
   first_name: string | null;

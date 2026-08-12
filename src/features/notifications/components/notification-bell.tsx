@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip } from '@/components/ui/tooltip';
+import { requestTaskBadgeRefresh } from '@/features/tasks/hooks/use-live-task-badge';
 import type { Locale } from '@/lib/i18n/direction';
 import { createClient } from '@/lib/supabase/client';
 
@@ -118,7 +119,12 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
             // shows in the list / badge live, not only after a manual refresh.
             // (The red state is derived from `items` below — hasUnreadCritical —
             // so it stays red as long as an unread critical task is present.)
-            if (isTaskNotification(notif.type)) requestTaskSurfacesRefresh();
+            if (isTaskNotification(notif.type)) {
+              requestTaskSurfacesRefresh();
+              // The rail's badge is client-owned (TaskBadgeProvider) and does
+              // NOT ride on the layout re-render above — poke it directly.
+              requestTaskBadgeRefresh();
+            }
           },
         )
         .subscribe();

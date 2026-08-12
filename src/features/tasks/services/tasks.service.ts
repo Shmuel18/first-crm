@@ -9,6 +9,7 @@ import { formatPersonName } from '@/lib/utils/person-name';
 import type { TaskListFilters } from '../schemas/task.schema';
 import type {
   TaskAssignee,
+  TaskBadgeCounts,
   TaskCaseOption,
   TaskPriority,
   TaskStatus,
@@ -179,6 +180,36 @@ export async function countPendingByView(view: TaskView): Promise<number> {
   const { count, error } = await query;
   if (error) return 0;
   return count ?? 0;
+}
+
+/**
+ * The nav badge's two counts in one round-trip. Same definitions the
+ * `layout_bootstrap` RPC uses for its seed values (mine + not deleted;
+ * pending for the number, critical-and-active for the red state), so the
+ * client's re-check can only ever agree with a fresh server render.
+ */
+export async function getMyTaskBadgeCounts(): Promise<TaskBadgeCounts> {
+  const supabase = await createClient();
+  const { data: userRes } = await supabase.auth.getUser();
+  if (!userRes.user) return { pending: 0, critical: 0 };
+  const userId = userRes.user.id;
+
+  const mine = () =>
+    supabase
+      .from('tasks')
+      .select('id', { count: 'exact', head: true })
+      .eq('assigned_to', userId)
+      .is('deleted_at', null);
+
+  const [pending, critical] = await Promise.all([
+    mine().eq('status', 'pending'),
+    mine().eq('priority', 'critical').in('status', ['pending', 'in_progress']),
+  ]);
+
+  return {
+    pending: pending.error ? 0 : pending.count ?? 0,
+    critical: critical.error ? 0 : critical.count ?? 0,
+  };
 }
 
 export async function listAssignableProfiles(): Promise<TaskAssignee[]> {

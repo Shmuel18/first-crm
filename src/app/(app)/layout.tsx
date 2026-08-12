@@ -9,8 +9,9 @@ import { RouteFocus } from '@/components/layout/route-focus';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Topbar } from '@/components/layout/topbar';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { AppBadgeSync } from '@/features/pwa/components/app-badge-sync';
 import { InstallBanner } from '@/features/pwa/components/install-banner';
+import { TaskBadgeAppSync } from '@/features/tasks/components/task-badge-app-sync';
+import { TaskBadgeProvider } from '@/features/tasks/components/task-badge-provider';
 import { TaskNudge } from '@/features/tasks/components/task-nudge';
 import { isCurrentUserTimeTracked } from '@/features/time-clock/services/time-clock.service';
 import { getDirection, parseLocale } from '@/lib/i18n/direction';
@@ -34,6 +35,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <TooltipProvider>
+      {/* The bootstrap counts SEED the badge; the provider keeps them honest
+          between server renders (a soft navigation reuses this layout, so a
+          task assigned by a colleague would otherwise never reach the rail). */}
+      <TaskBadgeProvider
+        seed={{ pending: bootstrap.pendingTasks, critical: bootstrap.criticalTasks }}
+      >
       <div className="h-full overflow-hidden bg-brand-surface">
         <a
           href="#main-content"
@@ -47,15 +54,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </Suspense>
         <Topbar />
         <Sidebar
-          tasksBadge={bootstrap.pendingTasks}
-          criticalTasksBadge={bootstrap.criticalTasks}
           isManager={bootstrap.isAdmin}
           canViewCollections={bootstrap.canViewCollections}
           canUseTimeClock={canUseTimeClock}
         />
         <BottomNav
-          tasksBadge={bootstrap.pendingTasks}
-          criticalTasksBadge={bootstrap.criticalTasks}
           isManager={bootstrap.isAdmin}
           canViewCollections={bootstrap.canViewCollections}
           canUseTimeClock={canUseTimeClock}
@@ -83,13 +86,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         richColors
       />
       <InstallBanner />
-      <AppBadgeSync count={bootstrap.pendingTasks} />
+      <TaskBadgeAppSync />
       {/* "Moishy" nudge for stale tasks — streams its own query, never
           blocks the shell. Shows at most once a day (capped client-side). */}
       <Suspense fallback={null}>
         <TaskNudge />
       </Suspense>
       </div>
+      </TaskBadgeProvider>
     </TooltipProvider>
   );
 }
