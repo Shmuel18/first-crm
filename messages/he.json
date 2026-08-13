@@ -2013,6 +2013,7 @@
   },
   "obligations": {
     "blockTitle": "התחייבויות",
+    "debtTotal": "סה״כ יתרות הלוואה",
     "grandTotal": "סה״כ החזר חודשי בתיק",
     "monthlyTotal": "החזר חודשי",
     "remainingTotal": "יתרת חוב",

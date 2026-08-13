@@ -2013,6 +2013,7 @@
   },
   "obligations": {
     "blockTitle": "Obligations",
+    "debtTotal": "Total outstanding debt",
     "grandTotal": "Case monthly repayment total",
     "monthlyTotal": "Monthly repayment",
     "remainingTotal": "Outstanding balance",

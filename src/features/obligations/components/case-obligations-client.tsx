@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl';
 import { CaseBlock } from '@/features/cases/components/case-block';
 import { formatCurrency } from '@/lib/utils/format-currency';
 
-import { sumMonthlyPayments } from '../domain/totals';
+import { sumMonthlyPayments, sumRemainingDebt } from '../domain/totals';
 import { useObligationRows } from '../hooks/use-obligation-rows';
 import { ObligationTableRow } from './obligation-table-row';
 import type { ObligationRow } from '../types';
@@ -47,6 +47,7 @@ export function CaseObligationsClient({
   );
 
   const monthlyTotal = useMemo(() => sumMonthlyPayments(rows), [rows]);
+  const debtTotal = useMemo(() => sumRemainingDebt(rows), [rows]);
 
   const canAdd = canEdit && primaryBorrowerId !== null;
   const hasRows = rows.length > 0;
@@ -58,13 +59,28 @@ export function CaseObligationsClient({
       fullWidth
       blockKey="obligations"
       rightSlot={
-        monthlyTotal > 0 && (
-          <span className="text-xs text-neutral-600">
-            {t('grandTotal')}:{' '}
-            <span className="font-semibold text-neutral-900">
-              {formatCurrency(monthlyTotal, locale)}
-            </span>
-          </span>
+        // Two independent totals: the outstanding debt (what the borrower
+        // still owes) and the monthly repayment burden. Each appears only
+        // once it has data, so a half-filled table doesn't show a ₪0 total.
+        (debtTotal > 0 || monthlyTotal > 0) && (
+          <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-0.5 text-xs text-neutral-600">
+            {debtTotal > 0 && (
+              <span>
+                {t('debtTotal')}:{' '}
+                <span className="font-semibold text-neutral-900">
+                  {formatCurrency(debtTotal, locale)}
+                </span>
+              </span>
+            )}
+            {monthlyTotal > 0 && (
+              <span>
+                {t('grandTotal')}:{' '}
+                <span className="font-semibold text-neutral-900">
+                  {formatCurrency(monthlyTotal, locale)}
+                </span>
+              </span>
+            )}
+          </div>
         )
       }
     >
