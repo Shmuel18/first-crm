@@ -17,7 +17,6 @@ import {
   parseDashboardFilters,
 } from '@/features/cases/domain/case-filters';
 import { AUTO_ARCHIVED_STATUS_KEYS } from '@/features/cases/domain/case-state';
-import { applySort, parseCaseSort } from '@/features/cases/domain/case-sort';
 import { getUnreadCaseIds } from '@/features/cases/services/case-review.service';
 import { getCasesDashboardBootstrap } from '@/features/cases/services/cases-dashboard-bootstrap.service';
 import { listCases } from '@/features/cases/services/cases.service';
@@ -41,7 +40,6 @@ export default async function CasesListPage({ searchParams }: Props) {
   const sp = await searchParams;
   const view = parseCaseView(sp);
   const filters = parseDashboardFilters(sp);
-  const sort = parseCaseSort(sp);
 
   const isArchive = view === 'archive';
   // Fetch the full active/archive set (no SQL pagination). At Kaufman scale
@@ -129,7 +127,14 @@ export default async function CasesListPage({ searchParams }: Props) {
     // The filters, the column sort, and the header search box all operate
     // over the full set fetched above. Closed/frozen/stuck cases auto-archive
     // (migrations 226/227), so the active fetch already excludes them.
-    const visible = applySort(filterCases(cases, filters), sort, statusOptions);
+    //
+    // Ordering is deliberately NOT applied here: the column sort is owned by
+    // the client (CasesTable / CasesCardList read the same sort/dir params via
+    // nuqs and reorder instantly, shallow). Sorting server-side too baked the
+    // sorted order into the rows, so cancelling the sort (3rd header click)
+    // left the list exactly as it was until a manual page refresh. The client
+    // reads the URL during SSR as well, so the first paint is still ordered.
+    const visible = filterCases(cases, filters);
     // Free-text picker options, derived from the loaded set (no extra query).
     // Referrer stays manager-only; the insurance agent is open to everyone —
     // the list can only contain agents from cases the viewer already sees.
