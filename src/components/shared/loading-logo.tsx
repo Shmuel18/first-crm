@@ -3,6 +3,8 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
+import { BRAND } from '@/lib/brand';
+
 /** Only reveal the mark once a load clearly outlasts a quick transition. */
 const REVEAL_DELAY_MS = 450;
 
@@ -33,7 +35,7 @@ export function LoadingLogo(): React.ReactElement | null {
       className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center"
     >
       <Image
-        src="/logo-coin-square.png"
+        src={BRAND.logoSquare}
         alt=""
         width={512}
         height={512}

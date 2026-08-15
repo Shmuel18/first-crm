@@ -1,3 +1,5 @@
+import { BRAND } from '@/lib/brand';
+
 type RenderInput = {
   locale: 'he' | 'en';
   heading: string;
@@ -17,11 +19,10 @@ type RenderInput = {
 // dangerous href if a future caller ever forwards user-controlled input.
 const SAFE_CTA_URL = /^(https?:\/\/|mailto:|tel:)/i;
 
-const BLACK = '#0A0A0A';
-const GOLD = '#C9A961';
-const GOLD_TEXT = '#8A6E2D';
+const BLACK = BRAND.colors.ink;
+const GOLD = BRAND.colors.gold;
+const GOLD_TEXT = BRAND.colors.goldText;
 const INK = '#3A3A3A';
-const LOGO_URL = 'https://kaufman-finance.com/assets/logo-coin-square.png';
 
 /**
  * Wraps email content in a brand-aligned HTML layout with inline styles
@@ -45,6 +46,18 @@ export function renderBrandedEmail({ locale, heading, bodyHtml, cta, footer }: R
        </td></tr>`
     : '';
 
+  const { phone, email, website } = BRAND.contact;
+  const contactHtml = [
+    phone &&
+      `<a href="tel:${escapeAttr(phone.replace(/-/g, ''))}" style="color:#767676;text-decoration:none;" dir="ltr">${escapeHtml(phone)}</a>`,
+    email &&
+      `<a href="mailto:${escapeAttr(email)}" style="color:#767676;text-decoration:none;">${escapeHtml(email)}</a>`,
+    website &&
+      `<a href="${escapeAttr(website)}" style="color:${GOLD_TEXT};text-decoration:none;font-weight:600;">${escapeHtml(website.replace(/^https?:\/\//, ''))}</a>`,
+  ]
+    .filter(Boolean)
+    .join('&nbsp;&middot;&nbsp;');
+
   return `<!DOCTYPE html>
 <html dir="${dir}" lang="${locale}">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -54,11 +67,15 @@ export function renderBrandedEmail({ locale, heading, bodyHtml, cta, footer }: R
       <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#FFFFFF;border:1px solid #E8E1D0;border-radius:18px;overflow:hidden;">
 
         <tr><td align="center" style="background:${BLACK};padding:34px 28px 26px;">
-          <img src="${LOGO_URL}" width="64" height="64" alt="Kaufman Finance Group" style="display:block;margin:0 auto;border:0;outline:none;">
-          <div style="color:#FFFFFF;font-size:22px;font-weight:700;letter-spacing:6px;font-family:Georgia,'Times New Roman',serif;margin-top:14px;">KAUFMAN</div>
-          <div style="color:${GOLD};font-size:10px;letter-spacing:5px;margin-top:6px;">FINANCE&nbsp;GROUP</div>
+          ${
+            BRAND.emailLogoUrl
+              ? `<img src="${BRAND.emailLogoUrl}" width="64" height="64" alt="${escapeAttr(BRAND.nameEn)}" style="display:block;margin:0 auto;border:0;outline:none;">`
+              : ''
+          }
+          <div style="color:#FFFFFF;font-size:22px;font-weight:700;letter-spacing:6px;font-family:Georgia,'Times New Roman',serif;margin-top:14px;">${escapeHtml(BRAND.emailWordmark.top)}</div>
+          <div style="color:${GOLD};font-size:10px;letter-spacing:5px;margin-top:6px;">${escapeHtml(BRAND.emailWordmark.bottom)}</div>
         </td></tr>
-        <tr><td style="height:3px;background:${GOLD};background-image:linear-gradient(90deg,#B8945A,#E8C77B,#B8945A);font-size:0;line-height:3px;">&nbsp;</td></tr>
+        <tr><td style="height:3px;background:${GOLD};background-image:linear-gradient(90deg,${BRAND.colors.goldDark},${BRAND.colors.goldLight},${BRAND.colors.goldDark});font-size:0;line-height:3px;">&nbsp;</td></tr>
 
         <tr><td dir="${dir}" align="${align}" style="padding:36px 34px;text-align:${align};">
           <h1 style="margin:0 0 10px;font-size:23px;line-height:1.3;color:${BLACK};font-family:Georgia,'Times New Roman',serif;font-weight:700;">${escapeHtml(heading)}</h1>
@@ -70,19 +87,13 @@ export function renderBrandedEmail({ locale, heading, bodyHtml, cta, footer }: R
         </td></tr>
 
         <tr><td dir="${dir}" align="${align}" style="background:#FAF8F3;border-top:1px solid #EFE7D5;padding:24px 34px;text-align:${align};">
-          <div style="font-size:15px;color:${GOLD_TEXT};font-weight:700;font-family:Georgia,'Times New Roman',serif;">Kaufman Finance Group</div>
-          <div style="font-size:12px;color:#767676;line-height:1.9;margin-top:4px;">
-            <a href="tel:+97225681681" style="color:#767676;text-decoration:none;" dir="ltr">02-568-1681</a>
-            &nbsp;&middot;&nbsp;
-            <a href="mailto:office@kaufman-finance.com" style="color:#767676;text-decoration:none;">office@kaufman-finance.com</a>
-            &nbsp;&middot;&nbsp;
-            <a href="https://kaufman-finance.com" style="color:${GOLD_TEXT};text-decoration:none;font-weight:600;">kaufman-finance.com</a>
-          </div>
+          <div style="font-size:15px;color:${GOLD_TEXT};font-weight:700;font-family:Georgia,'Times New Roman',serif;">${escapeHtml(BRAND.nameEn)}</div>
+          <div style="font-size:12px;color:#767676;line-height:1.9;margin-top:4px;">${contactHtml}</div>
           <div style="font-size:11px;color:#A8A29A;margin-top:8px;">${escapeHtml(footer)}</div>
         </td></tr>
 
       </table>
-      <div style="font-size:11px;color:#B5AD9E;margin-top:14px;">&copy; Kaufman Finance Group</div>
+      <div style="font-size:11px;color:#B5AD9E;margin-top:14px;">&copy; ${escapeHtml(BRAND.nameEn)}</div>
     </td></tr>
   </table>
 </body></html>`;

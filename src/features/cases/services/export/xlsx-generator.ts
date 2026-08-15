@@ -2,6 +2,8 @@ import ExcelJS from 'exceljs';
 
 import type { ExportRow } from './build-export-rows';
 
+import { BRAND } from '@/lib/brand';
+
 export type XlsxHeaders = {
   row: string;
   clientName: string;
@@ -37,7 +39,7 @@ export async function generateCasesXlsx(
   sheetName: string,
 ): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = 'Kaufman Finance Group';
+  workbook.creator = BRAND.nameEn;
   workbook.created = new Date();
 
   const sheet = workbook.addWorksheet(sheetName, {

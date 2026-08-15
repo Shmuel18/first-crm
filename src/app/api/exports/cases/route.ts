@@ -14,6 +14,7 @@ import { buildExportRows } from '@/features/cases/services/export/build-export-r
 import { listCases } from '@/features/cases/services/cases.service';
 import { generateCasesPdf } from '@/features/cases/services/export/pdf-generator';
 import { generateCasesXlsx } from '@/features/cases/services/export/xlsx-generator';
+import { BRAND } from '@/lib/brand';
 import { parseLocale } from '@/lib/i18n/direction';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
@@ -140,7 +141,7 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
         t('savedViews.xlsx.sheetName'),
       );
       mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-      filename = `kaufman-cases-${dateStamp()}.xlsx`;
+      filename = `${BRAND.key}-cases-${dateStamp()}.xlsx`;
     } else {
       const generatedAtLabel = new Date().toLocaleDateString(
         locale === 'he' ? 'he-IL' : 'en-GB',
@@ -159,7 +160,7 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
         shortNote: t('columns.shortNote'),
       });
       mimeType = 'application/pdf';
-      filename = `kaufman-cases-${dateStamp()}.pdf`;
+      filename = `${BRAND.key}-cases-${dateStamp()}.pdf`;
     }
 
     // Fire-and-forget audit; don't block the download on the audit insert.
@@ -173,7 +174,7 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
         'Content-Type': mimeType,
         'Content-Length': String(body.byteLength),
         // RFC 5987 filename* lets the browser preserve UTF-8 / Hebrew filenames.
-        // We always use ASCII (kaufman-cases-YYYY-MM-DD), but include the form
+        // We always use ASCII (<brand>-cases-YYYY-MM-DD), but include the form
         // anyway for future-proofing.
         'Content-Disposition': `attachment; filename="${filename}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
         'Cache-Control': 'no-store, max-age=0',

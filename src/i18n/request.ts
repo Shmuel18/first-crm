@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 
 import { getRequestConfig } from 'next-intl/server';
 
+import { brandizeMessages } from '@/lib/i18n/brandize';
 import { parseLocale } from '@/lib/i18n/direction';
 
 const LOCALE_COOKIE = 'NEXT_LOCALE';
@@ -22,5 +23,6 @@ export default getRequestConfig(async () => {
 
   const messages = (await import(`../../messages/${locale}.json`)).default;
 
-  return { locale, messages };
+  // White-label: substitute the active office's name into the catalog.
+  return { locale, messages: brandizeMessages(messages) };
 });

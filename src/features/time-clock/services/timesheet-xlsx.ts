@@ -3,6 +3,8 @@ import ExcelJS from 'exceljs';
 import { earnings, entryMinutes } from '../domain/hours';
 import type { TimeEntry, TrackedEmployee } from '../types';
 
+import { BRAND } from '@/lib/brand';
+
 const HEADER_BG = 'FF0A0A0A';
 const HEADER_FG = 'FFFFFFFF';
 const HEADER_BORDER = 'FFC9A961';
@@ -56,7 +58,7 @@ export async function generateTimesheetXlsx(
   const rtl = locale === 'he';
   const dloc = rtl ? 'he-IL' : 'en-GB';
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = 'Kaufman Finance Group';
+  workbook.creator = BRAND.nameEn;
   workbook.created = new Date(nowMs);
 
   const fullName = (e: TrackedEmployee): string =>

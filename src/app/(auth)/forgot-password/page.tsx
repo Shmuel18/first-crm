@@ -2,6 +2,8 @@ import Image from 'next/image';
 
 import { getTranslations } from 'next-intl/server';
 
+import { BRAND } from '@/lib/brand';
+
 import { ForgotPasswordForm } from './forgot-password-form';
 
 // See login/page.tsx — same edge-runtime trade-off applies here.
@@ -15,8 +17,8 @@ export default async function ForgotPasswordPage() {
       <div className="flex justify-center mb-10">
         <div className="relative h-40 w-full max-w-[280px]">
           <Image
-            src="/logo.png"
-            alt="Kaufman Finance Group"
+            src={BRAND.logoOnDark}
+            alt={BRAND.nameEn}
             fill
             priority
             sizes="280px"

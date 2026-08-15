@@ -1,3 +1,5 @@
+import { BRAND } from '@/lib/brand';
+
 export const SYSTEM_EMAIL_TEMPLATE_KEYS = [
   'invite',
   'password_reset',
@@ -44,14 +46,14 @@ export const SYSTEM_EMAIL_TEMPLATE_DEFINITIONS: Record<
     variables: ['name'],
     defaults: {
       he: {
-        subject: 'הוזמנת ל-Kaufman Finance Group',
-        heading: 'ברוך הבא ל-Kaufman Finance Group',
+        subject: `הוזמנת ל-${BRAND.nameEn}`,
+        heading: `ברוך הבא ל-${BRAND.nameEn}`,
         body: 'שלום {name},\n\nנוצר עבורך חשבון במערכת. לחץ על הכפתור כדי להפעיל את החשבון ולבחור סיסמה.\n\nהקישור חד-פעמי ופג תוקפו לאחר זמן מוגבל.',
         ctaLabel: 'הפעלת החשבון',
       },
       en: {
-        subject: "You've been invited to Kaufman Finance Group",
-        heading: 'Welcome to Kaufman Finance Group',
+        subject: `You've been invited to ${BRAND.nameEn}`,
+        heading: `Welcome to ${BRAND.nameEn}`,
         body: 'Hi {name},\n\nAn account was created for you. Click the button to activate it and choose your password.\n\nThis link is single-use and expires after a short time.',
         ctaLabel: 'Activate account',
       },
@@ -64,13 +66,13 @@ export const SYSTEM_EMAIL_TEMPLATE_DEFINITIONS: Record<
     variables: [],
     defaults: {
       he: {
-        subject: 'איפוס סיסמה — Kaufman Finance Group',
+        subject: `איפוס סיסמה — ${BRAND.nameEn}`,
         heading: 'איפוס סיסמה',
         body: 'קיבלנו בקשה לאיפוס הסיסמה לחשבונך. לחץ על הכפתור כדי לבחור סיסמה חדשה.\n\nהקישור חד-פעמי ופג תוקפו לאחר זמן מוגבל. אם לא ביקשת לאפס סיסמה — התעלם מהמייל הזה.',
         ctaLabel: 'בחירת סיסמה חדשה',
       },
       en: {
-        subject: 'Reset your password — Kaufman Finance Group',
+        subject: `Reset your password — ${BRAND.nameEn}`,
         heading: 'Reset password',
         body: "We received a request to reset your account password. Click the button to choose a new one.\n\nThis link is single-use and expires after a short time. If you didn't request a reset, ignore this email.",
         ctaLabel: 'Choose a new password',
@@ -84,13 +86,13 @@ export const SYSTEM_EMAIL_TEMPLATE_DEFINITIONS: Record<
     variables: ['name'],
     defaults: {
       he: {
-        subject: 'קיבלנו את הפנייה שלך — Kaufman Finance Group',
+        subject: `קיבלנו את הפנייה שלך — ${BRAND.nameEn}`,
         heading: 'תודה, {name} — הפנייה שלך התקבלה',
         body: 'השאלון שמילאת הגיע למשרדנו. יועץ משכנתאות יעבור על הפרטים וייצור איתך קשר עד יום העסקים הבא.\n\nמה הלאה?\n1. נעבור בעיון על הפרטים שמסרת\n2. ניצור איתך קשר לשיחת היכרות קצרה\n3. נבנה יחד את המסלול המשתלם ביותר עבורך\n\nיש שאלה כבר עכשיו? אפשר להשיב למייל הזה או לחייג 02-568-1681.',
         ctaLabel: 'דברו איתנו בוואטסאפ',
       },
       en: {
-        subject: 'We received your inquiry — Kaufman Finance Group',
+        subject: `We received your inquiry — ${BRAND.nameEn}`,
         heading: 'Thank you, {name} — we got your inquiry',
         body: 'Your questionnaire has reached our office. A mortgage advisor will review the details and contact you by the next business day.\n\nWhat happens next?\n1. We carefully review the details you provided\n2. We call you for a short introductory conversation\n3. Together we build the most cost-effective path for you\n\nHave a question already? Reply to this email or call +972-2-568-1681.',
         ctaLabel: 'Chat with us on WhatsApp',
@@ -264,13 +266,13 @@ export const SYSTEM_EMAIL_TEMPLATE_DEFINITIONS: Record<
     variables: ['detail'],
     defaults: {
       he: {
-        subject: 'Kaufman CRM — התראת גיבוי',
+        subject: `${BRAND.shortNameEn} CRM — התראת גיבוי`,
         heading: 'אין גיבוי תקין',
         body: 'לא בוצע גיבוי מוצלח ב-26 השעות האחרונות. {detail}\n\nבדוק את החיבור ל-Google Drive בהגדרות האינטגרציות.',
         ctaLabel: 'פתיחת הגדרות',
       },
       en: {
-        subject: 'Kaufman CRM — backup alert',
+        subject: `${BRAND.shortNameEn} CRM — backup alert`,
         heading: 'Backup is stale',
         body: 'No successful backup completed in the last 26 hours. {detail}\n\nCheck the Google Drive connection in integration settings.',
         ctaLabel: 'Open settings',
@@ -284,13 +286,13 @@ export const SYSTEM_EMAIL_TEMPLATE_DEFINITIONS: Record<
     variables: ['detail'],
     defaults: {
       he: {
-        subject: 'Kaufman CRM — התראת מחיקת קבצים',
+        subject: `${BRAND.shortNameEn} CRM — התראת מחיקת קבצים`,
         heading: 'מחיקת קבצים אינה רצה',
         body: 'לא בוצעה מחיקת קבצי PII מוצלחת ב-26 השעות האחרונות. {detail}\n\nבדוק את משימת ה-cron ואת החיבור ל-Google Drive בהגדרות האינטגרציות.',
         ctaLabel: 'פתיחת הגדרות',
       },
       en: {
-        subject: 'Kaufman CRM — file erasure alert',
+        subject: `${BRAND.shortNameEn} CRM — file erasure alert`,
         heading: 'File erasure is stale',
         body: 'No successful PII file erasure completed in the last 26 hours. {detail}\n\nCheck the cron task and Google Drive connection in integration settings.',
         ctaLabel: 'Open settings',

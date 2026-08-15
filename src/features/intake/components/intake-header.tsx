@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { switchLocaleAction } from '@/features/auth/actions/switch-locale';
+import { BRAND } from '@/lib/brand';
 import { cn } from '@/lib/utils';
 
 const LOCALES = ['he', 'en'] as const;
@@ -43,8 +44,8 @@ export function IntakeHeader() {
       <div className="mx-auto mb-3 flex justify-center">
         <div className="relative h-16 w-[200px]">
           <Image
-            src="/logo.png"
-            alt="Kaufman Finance Group"
+            src={BRAND.logoOnDark}
+            alt={BRAND.nameEn}
             fill
             priority
             sizes="200px"

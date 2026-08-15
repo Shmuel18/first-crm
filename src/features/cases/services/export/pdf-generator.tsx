@@ -13,6 +13,8 @@ import {
 } from '@react-pdf/renderer';
 import { type ReactElement } from 'react';
 
+import { BRAND } from '@/lib/brand';
+
 import type { ExportRow } from './build-export-rows';
 
 /**
@@ -38,22 +40,22 @@ async function ensureFontRegistered(): Promise<void> {
 /**
  * Load the brand medallion as a base64 data URL (same rationale as the
  * font: @react-pdf needs an inline src that survives the serverless cwd).
- * logo-coin-square.png is the circular black+gold KAUFMAN coin pre-cropped
+ * The brand square mark (BRAND.logoSquare) is pre-cropped
  * to a tight transparent square, so it sits cleanly as a round badge on
  * the white header. Cached per lambda instance.
  */
 let logoDataUrl: string | null = null;
 async function ensureLogoLoaded(): Promise<string> {
   if (logoDataUrl) return logoDataUrl;
-  const logoPath = path.join(process.cwd(), 'public', 'logo-coin-square.png');
+  const logoPath = path.join(process.cwd(), 'public', BRAND.logoSquare.replace(/^\//, ''));
   const buffer = await readFile(logoPath);
   logoDataUrl = `data:image/png;base64,${buffer.toString('base64')}`;
   return logoDataUrl;
 }
 
 const COLORS = {
-  black: '#0A0A0A',
-  gold: '#C9A961',
+  black: BRAND.colors.ink,
+  gold: BRAND.colors.gold,
   border: '#E5E5E5',
   muted: '#888888',
   white: '#FFFFFF',

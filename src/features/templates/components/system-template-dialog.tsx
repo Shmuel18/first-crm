@@ -7,6 +7,7 @@ import { Loader2, RotateCcw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { BRAND } from '@/lib/brand';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -214,7 +215,7 @@ export function SystemTemplateDialog({ open, onOpenChange, template, initialLoca
                   </div>
                 </div>
                 <div className="px-4 py-3 text-center text-[10px] text-neutral-500">
-                  Kaufman Finance Group
+                  {BRAND.nameEn}
                 </div>
               </div>
               <p className="mt-2 truncate text-[11px] text-neutral-500">

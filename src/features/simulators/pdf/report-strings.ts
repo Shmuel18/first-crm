@@ -1,3 +1,4 @@
+import { BRAND } from '@/lib/brand';
 import type { Locale } from '@/lib/i18n/direction';
 
 import type { PropertyKind, RepaymentType, ScenarioKind, TrackType } from '../types';
@@ -58,8 +59,8 @@ export function getReportStrings(locale: Locale): ReportStrings {
 }
 
 const STRINGS_HE: Strings = {
-  brandName: 'Kaufman Finance Group',
-  brandSub: 'קופמן ייעוץ משכנתאות',
+  brandName: BRAND.nameEn,
+  brandSub: BRAND.taglineHe,
   documentTitle: (title: string) => `דוח סימולציית משכנתא — ${title}`,
   meta: { date: 'תאריך', caseNumber: 'מספר תיק', advisor: 'יועץ' },
   kind: { mix: 'תמהיל משכנתא', comparison: 'השוואת תמהילים', scenario: 'תרחיש ריבית ומדד' },
@@ -109,15 +110,15 @@ const STRINGS_HE: Strings = {
     'מסמך זה הוא הדמיה להמחשה בלבד, מבוסס על נתונים שהוזנו ידנית ואינו מהווה הצעה או התחייבות של בנק כלשהו. הריביות והנתונים בפועל עשויים להשתנות.',
   propertyKinds: { first_home: 'דירה יחידה', replacement: 'משפר דיור', investment: 'השקעה' },
   footer: {
-    brandTagline: 'Kaufman Finance Group · דוח סימולציה ללקוח',
+    brandTagline: `${BRAND.nameEn} · דוח סימולציה ללקוח`,
     pageOfN: (page: number, total: number) => `עמוד ${page} מתוך ${total}`,
   },
   dash: '—',
 };
 
 const STRINGS_EN: Strings = {
-  brandName: 'Kaufman Finance Group',
-  brandSub: 'Kaufman mortgage advisors',
+  brandName: BRAND.nameEn,
+  brandSub: BRAND.taglineEn,
   documentTitle: (title: string) => `Mortgage simulation report — ${title}`,
   meta: { date: 'Date', caseNumber: 'Case number', advisor: 'Advisor' },
   kind: { mix: 'Mortgage mix', comparison: 'Mix comparison', scenario: 'Interest & index scenario' },
@@ -167,7 +168,7 @@ const STRINGS_EN: Strings = {
     'This document is an illustrative simulation based on manually entered data and does not constitute an offer or commitment by any bank. Actual rates and figures may vary.',
   propertyKinds: { first_home: 'Single home', replacement: 'Home upgrade', investment: 'Investment' },
   footer: {
-    brandTagline: 'Kaufman Finance Group · Client simulation report',
+    brandTagline: `${BRAND.nameEn} · Client simulation report`,
     pageOfN: (page: number, total: number) => `Page ${page} of ${total}`,
   },
   dash: '—',

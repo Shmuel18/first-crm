@@ -20,40 +20,26 @@
   --font-heading: var(--font-frank-ruhl), var(--font-heebo), serif;
   --font-display: var(--font-frank-ruhl), serif;
 
-  /* Brand colors */
-  --color-brand-black: #0A0A0A;
-  --color-brand-gold: #C9A961;
-  --color-brand-gold-light: #E8C77B;
-  --color-brand-gold-dark: #B8945A;
-  /* AA-safe gold for text/icons on light surfaces: 4.8:1 on white, 4.6:1 on
-     #FAFAFA — clears WCAG AA (4.5:1) for normal-size text. NOTE: the previous
-     value #A88840 was only 3.35:1 and FAILED AA, despite a comment that claimed
-     4.6:1. #C9A961 itself only hits 2.2:1, so reserve it for decorative fills,
-     gradients, and text-on-black. */
-  --color-brand-gold-text: #8A6E2D;
-  --color-brand-surface: #FAFAFA;
-  /* Warm gold-tint surface used as backgrounds for gold-themed sections
-     (invite link region, backup panel hero, etc.). Pairs well with
-     brand-gold borders + brand-gold-text body copy. */
-  --color-brand-gold-soft: #FAF8F3;
-  /* Brighter gold used as the hover/active state for solid brand-gold
-     surfaces (buttons, badges). Reads as a "lift" against brand-gold. */
-  --color-brand-gold-hover: #E8D5A2;
-  /* Pale gold "tint" — used as background for warning/info chips, settings
-     headers, view-tabs hover. Distinct from brand-gold-soft (warmer for
-     content surfaces); this one is the chip/badge variant. */
-  --color-brand-gold-tint: #FFF8E7;
-  /* Warm gold used as the row-hover state on the dashboard table + cards. */
-  --color-brand-row-hover: #FAF6EC;
-  /* Subtle warm-neutral for zebra striping the dashboard table — slightly
-     warmer than neutral-100 so the gold theme reads through. */
-  --color-brand-row-alt: #F4F4F2;
-  /* Slightly-lifted black for popovers/dropdowns on the dark sidebar/topbar.
-     Reads as a layer above brand-black without going pure neutral. */
-  --color-brand-black-soft: #1A1A1A;
-  /* Border for the dark surfaces (popovers, notification panel) — matches
-     the soft black. */
-  --color-brand-black-border: #333333;
+  /* Brand colors — the VALUES live in :root (and per-office overrides in the
+     [data-brand=...] blocks below) so the same build can render any office's
+     brand at runtime. `@theme inline` would bake a literal hex into every
+     generated utility; routing through var() keeps `bg-brand-gold` etc.
+     swappable via the data-brand attribute set on <html> from
+     NEXT_PUBLIC_BRAND. Token semantics (what each token is FOR) are
+     documented once, at the :root defaults. */
+  --color-brand-black: var(--brand-black);
+  --color-brand-gold: var(--brand-gold);
+  --color-brand-gold-light: var(--brand-gold-light);
+  --color-brand-gold-dark: var(--brand-gold-dark);
+  --color-brand-gold-text: var(--brand-gold-text);
+  --color-brand-surface: var(--brand-surface);
+  --color-brand-gold-soft: var(--brand-gold-soft);
+  --color-brand-gold-hover: var(--brand-gold-hover);
+  --color-brand-gold-tint: var(--brand-gold-tint);
+  --color-brand-row-hover: var(--brand-row-hover);
+  --color-brand-row-alt: var(--brand-row-alt);
+  --color-brand-black-soft: var(--brand-black-soft);
+  --color-brand-black-border: var(--brand-black-border);
   /* Status text colors — equivalent to text-red-800 / text-green-700 but
      named so semantic intent survives a Tailwind palette change. */
   --color-status-error-text: #991B1B;
@@ -125,6 +111,32 @@
 }
 
 :root {
+  /* ── Brand palette — Kaufman Finance Group (default brand) ─────────
+     brand-black       primary "ink"/dark surface (sidebar, topbar, buttons)
+     brand-gold        decorative fills, gradients, text-on-dark ONLY (2.2:1 on white)
+     brand-gold-text   AA-safe gold for text/icons on light surfaces
+                       (4.8:1 white / 4.6:1 #FAFAFA — clears WCAG AA 4.5:1)
+     brand-gold-soft   warm-tint content surface (invite region, backup hero)
+     brand-gold-hover  hover "lift" on solid gold buttons/badges
+     brand-gold-tint   pale chip/badge tint (warnings, settings headers)
+     brand-row-hover   dashboard table/card row hover
+     brand-row-alt     zebra stripe, slightly warmer than neutral-100
+     brand-black-soft  lifted layer above brand-black (popovers on dark)
+     brand-black-border border for those dark surfaces */
+  --brand-black: #0A0A0A;
+  --brand-gold: #C9A961;
+  --brand-gold-light: #E8C77B;
+  --brand-gold-dark: #B8945A;
+  --brand-gold-text: #8A6E2D;
+  --brand-surface: #FAFAFA;
+  --brand-gold-soft: #FAF8F3;
+  --brand-gold-hover: #E8D5A2;
+  --brand-gold-tint: #FFF8E7;
+  --brand-row-hover: #FAF6EC;
+  --brand-row-alt: #F4F4F2;
+  --brand-black-soft: #1A1A1A;
+  --brand-black-border: #333333;
+
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -157,6 +169,29 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+}
+
+/* ── Brand palette — Perlstein Mortgages ────────────────────────────
+   Activated by <html data-brand="perlstein"> (NEXT_PUBLIC_BRAND).
+   Navy replaces Kaufman's black as the ink/dark-surface color; gold is
+   sampled from the office's vector logo (docs/perlstein/brand/).
+   Contrast (validated): navy on white 12.2:1 · white on navy 12.2:1 ·
+   gold #D0A549 on navy 5.3:1 (decorative/text-on-dark) ·
+   gold-text #8C6C26 4.9:1 on white / 4.7:1 on #FAFAFA — clears AA. */
+[data-brand='perlstein'] {
+  --brand-black: #12375B;
+  --brand-gold: #D0A549;
+  --brand-gold-light: #E2C077;
+  --brand-gold-dark: #B98F3A;
+  --brand-gold-text: #8C6C26;
+  --brand-surface: #FAFAFA;
+  --brand-gold-soft: #FAF7F0;
+  --brand-gold-hover: #E4CD92;
+  --brand-gold-tint: #FDF6E3;
+  --brand-row-hover: #FAF5E9;
+  --brand-row-alt: #F3F4F2;
+  --brand-black-soft: #1C4570;
+  --brand-black-border: #35577D;
 }
 
 @layer base {
@@ -217,7 +252,7 @@
   .brand-logo {
     font-family: var(--font-frank-ruhl), serif;
     font-weight: 900;
-    background: linear-gradient(135deg, #C9A961 0%, #E8C77B 100%);
+    background: linear-gradient(135deg, var(--brand-gold) 0%, var(--brand-gold-light) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -226,22 +261,22 @@
 
   .brand-tagline {
     font-family: var(--font-frank-ruhl), serif;
-    color: #8A6E2D;
+    color: var(--brand-gold-text);
     letter-spacing: 0.25em;
     font-size: 0.625rem;
   }
 
   /* Gold gradient button */
   .btn-gold {
-    background: linear-gradient(135deg, #C9A961 0%, #B8945A 100%);
-    color: #0A0A0A;
+    background: linear-gradient(135deg, var(--brand-gold) 0%, var(--brand-gold-dark) 100%);
+    color: var(--brand-black);
     font-weight: 700;
     transition: all 0.2s;
   }
 
   .btn-gold:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(201, 169, 97, 0.4);
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--brand-gold) 40%, transparent);
   }
 
   /* Premium display heading */
@@ -257,13 +292,13 @@
     font-size: 1.25rem;
     font-weight: 600;
     margin: 0.75rem 0 0.5rem;
-    color: #0A0A0A;
+    color: var(--brand-black);
   }
   .tiptap-content h3 {
     font-size: 1.1rem;
     font-weight: 600;
     margin: 0.5rem 0 0.25rem;
-    color: #0A0A0A;
+    color: var(--brand-black);
   }
   .tiptap-content p {
     margin: 0.25rem 0;
@@ -283,7 +318,7 @@
     margin: 0.125rem 0;
   }
   .tiptap-content blockquote {
-    border-inline-start: 3px solid #C9A961;
+    border-inline-start: 3px solid var(--brand-gold);
     padding-inline-start: 0.75rem;
     margin: 0.5rem 0;
     color: #525252;
@@ -291,7 +326,7 @@
   }
   .tiptap-content strong {
     font-weight: 700;
-    color: #0A0A0A;
+    color: var(--brand-black);
   }
   .tiptap-content em {
     font-style: italic;

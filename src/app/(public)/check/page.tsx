@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 
+import { BRAND } from '@/lib/brand';
 import { IntakeHeader } from '@/features/intake/components/intake-header';
 import { IntakeWizard } from '@/features/intake/components/intake-wizard';
 import { ACCESSIBILITY_URL, PRIVACY_POLICY_URL } from '@/features/intake/constants';
@@ -51,7 +52,7 @@ export default async function CheckPage() {
         <span aria-hidden="true" className="text-neutral-300">
           ·
         </span>
-        <span>© Kaufman Finance Group</span>
+        <span>© {BRAND.nameEn}</span>
       </footer>
     </main>
   );

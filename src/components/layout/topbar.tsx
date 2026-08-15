@@ -6,6 +6,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 
 import { UserMenu } from '@/components/layout/user-menu';
 import { NotificationBell } from '@/features/notifications/components/notification-bell';
+import { BRAND } from '@/lib/brand';
 import { parseLocale } from '@/lib/i18n/direction';
 import { getLayoutBootstrap } from '@/lib/layout/bootstrap';
 import { formatPersonName } from '@/lib/utils/person-name';
@@ -43,11 +44,11 @@ export async function Topbar() {
         <Link
           href="/cases"
           className="shrink-0 -ms-4 flex h-full w-16 items-center justify-center overflow-hidden border-e border-neutral-900"
-          aria-label="Kaufman Finance Group"
+          aria-label={BRAND.nameEn}
         >
           <Image
-            src="/logo.png"
-            alt="Kaufman Finance Group"
+            src={BRAND.logoOnDark}
+            alt={BRAND.nameEn}
             width={1536}
             height={1024}
             priority

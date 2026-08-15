@@ -2,6 +2,8 @@ import Image from 'next/image';
 
 import { getTranslations } from 'next-intl/server';
 
+import { BRAND } from '@/lib/brand';
+
 import { LoginForm } from './login-form';
 
 // Edge runtime: this page is a pure render of getTranslations + JSX. The
@@ -44,8 +46,8 @@ export default async function LoginPage({ searchParams }: Props) {
       <div className="mb-3 flex justify-center sm:mb-4">
         <div className="relative h-20 w-full max-w-[190px] sm:h-24 sm:max-w-[220px] lg:h-28 lg:max-w-[250px]">
           <Image
-            src="/logo.png"
-            alt="Kaufman Finance Group"
+            src={BRAND.logoOnDark}
+            alt={BRAND.nameEn}
             fill
             priority
             sizes="280px"
