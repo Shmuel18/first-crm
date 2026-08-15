@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/apply-brand-icons.mjs && next build",
     "start": "next start",
     "lint": "eslint",
     "dev:documents": "node scripts/generate-dev-documents.mjs",
