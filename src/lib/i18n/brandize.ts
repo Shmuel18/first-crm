@@ -18,6 +18,11 @@ const REPLACEMENTS = {
   shortNameEn: BRAND.shortNameEn,
 } as const;
 
+/** Same catalog module in -> same branded object out. The dynamic import in
+ * i18n/request.ts caches the module per locale, so keying on it gives one
+ * brandize pass per locale per process instead of one per request. */
+const cache = new WeakMap<AbstractIntlMessages, AbstractIntlMessages>();
+
 /**
  * Substitutes the office name into the message catalog at load time.
  * The catalogs are authored with the default brand's (Kaufman's) names;
@@ -26,10 +31,14 @@ const REPLACEMENTS = {
  */
 export function brandizeMessages(messages: AbstractIntlMessages): AbstractIntlMessages {
   if (BRAND.key === 'kaufman') return messages;
+  const cached = cache.get(messages);
+  if (cached) return cached;
   let json = JSON.stringify(messages);
   for (const [pattern, key] of KAUFMAN_NAMES) {
     json = json.replaceAll(pattern, REPLACEMENTS[key]);
   }
   // Round-trip through the same shape we serialized — safe to assert.
-  return JSON.parse(json) as AbstractIntlMessages;
+  const branded = JSON.parse(json) as AbstractIntlMessages;
+  cache.set(messages, branded);
+  return branded;
 }
