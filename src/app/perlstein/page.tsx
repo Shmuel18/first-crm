@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft, Banknote, Building2, CheckCircle2, ClipboardCheck, FileCheck2, Handshake, Landmark, Mail, MapPin, MessageCircle, Phone, ShieldCheck, Sparkles, Target } from 'lucide-react';
 
 import styles from '../perlstein-landing.module.css';
+import GoalSelector from './goal-selector';
 
 export const metadata: Metadata = {
   title: 'פרלשטיין משכנתאות | הדרך הבטוחה למשכנתא נכונה',
@@ -50,6 +51,8 @@ export default function PerlsteinLandingPage() {
       <div className={styles.valueGrid}><article><FileCheck2 /><h3>סדר ובהירות</h3><p>יודעים בכל רגע איפה התיק עומד ומה הצעד הבא.</p></article><article><ShieldCheck /><h3>אחריות מלאה</h3><p>ליווי אישי מול הבנקים וכל בעלי המקצוע עד לסיום.</p></article><article><Target /><h3>דיוק בהחלטות</h3><p>בונים פתרון שמשרת את המטרות שלכם גם בעוד שנים.</p></article></div>
     </section>
 
+    <GoalSelector />
+
     <section id="services" className={styles.services}><div className={styles.sectionHeading}><div><span className={styles.sectionKicker}>המומחיות שלנו</span><h2>פתרונות מימון שמתאימים לעסקה שלכם</h2></div><p>כל תיק מתחיל בהקשבה וממשיך בעבודה מדויקת מול הגורמים הנכונים.</p></div>
       <div className={styles.serviceGrid}>{services.map(({ icon: Icon, title, text }, index) => <article key={title} className={styles.serviceCard}><span className={styles.serviceNumber}>0{index + 1}</span><Icon size={30} /><h3>{title}</h3><p>{text}</p><Link href="/check">בדיקת התאמה <ArrowLeft size={16} /></Link></article>)}</div>
     </section>
@@ -65,7 +68,11 @@ export default function PerlsteinLandingPage() {
 
     <section id="about" className={styles.about}><div className={styles.aboutImage}><Image src="/brands/perlstein/portrait-ai.png" alt="מנחם פרלשטיין" fill sizes="(max-width: 800px) 90vw, 430px" className={styles.aboutPortrait} /></div><div className={styles.aboutCopy}><span className={styles.sectionKicker}>מילה אישית</span><h2>יש לכם כתובת אחת לכל הדרך</h2><p className={styles.quote}>“המטרה שלי היא לא רק להשיג אישור — אלא לבנות עבורכם דרך נכונה, להסביר כל החלטה ולנהל את התהליך כאילו העסקה היא שלי.”</p><p>בפרלשטיין משכנתאות כל תיק מקבל חשיבה, ירידה לפרטים וליווי אישי. אנחנו משלבים היכרות עמוקה עם עולם הבנקאות והנדל״ן עם שירות זמין, מסודר וברור.</p><div className={styles.signature}><strong>מנחם פרלשטיין</strong><span>יועץ משכנתאות והשקעות נדל״ן</span></div></div></section>
 
+    <section className={styles.faq}><div><span className={styles.sectionKicker}>לפני שמתחילים</span><h2>שאלות שמגיעות כמעט בכל שיחה</h2></div><div className={styles.faqList}><details><summary>מתי נכון לפנות לייעוץ משכנתאות?</summary><p>כדאי לפני שמתחייבים לעסקה. כך אפשר להבין מראש את מסגרת התקציב, ההחזר והאפשרויות ולנהל את התהליך מתוך שליטה.</p></details><details><summary>כבר קיבלתי הצעה מהבנק — עדיין יש מה לבדוק?</summary><p>כן. הצעת הבנק היא נקודת פתיחה. חשוב לבדוק את מבנה המסלולים, הסיכונים וההתאמה לתוכניות שלכם לאורך זמן.</p></details><details><summary>מה צריך להכין לשיחה הראשונה?</summary><p>לא צריך להגיע עם תיק מסמכים מלא. מתחילים בשאלון קצר, ולאחריו תקבלו הכוונה מדויקת למסמכים ולצעדים הרלוונטיים.</p></details></div></section>
+
     <section className={styles.finalCta}><div><span className={styles.sectionKicker}>הצעד הראשון פשוט</span><h2>בואו נבדוק מה נכון עבורכם</h2><p>מלאו את השאלון הקצר ונחזור אליכם עם תמונת מצב ראשונית וכיוון ברור להמשך.</p></div><div className={styles.finalActions}><Link href="/check" className={styles.lightCta}>לשאלון ההתאמה <ArrowLeft size={20} /></Link><a href="https://wa.me/972533140442" className={styles.whatsappCta}><MessageCircle size={19} /> WhatsApp</a></div></section>
+
+    <a href="https://wa.me/972533140442" className={styles.floatingWhatsapp} aria-label="פתיחת שיחה עם פרלשטיין משכנתאות ב-WhatsApp"><MessageCircle size={24} /><span>דברו איתנו</span></a>
 
     <footer className={styles.footer}><div className={styles.footerTop}><Image src="/brands/perlstein/logo-on-dark.png" alt="פרלשטיין משכנתאות" width={230} height={72} className={styles.footerLogo} /><p>ייעוץ משכנתאות והשקעות נדל״ן — תכנון מדויק, ליווי אישי וניהול מלא עד לביצוע.</p><div className={styles.contactList}><a href="tel:0533140442"><Phone size={17} /> 053-314-0442</a><a href="mailto:M33140442@gmail.com"><Mail size={17} /> M33140442@gmail.com</a><span><MapPin size={17} /> פנינת חמד, שמגר 21, ירושלים</span></div></div><div className={styles.footerBottom}><span>© 2026 פרלשטיין משכנתאות. כל הזכויות שמורות.</span><div><Link href="/check">שאלון לקוח</Link><a href="https://wa.me/972533140442">WhatsApp</a></div></div></footer>
   </main>;
