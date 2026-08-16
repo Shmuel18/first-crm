@@ -35,7 +35,15 @@ export default function PerlsteinLandingPage() {
       <a className={styles.headerCta} href="tel:0533140442"><Phone size={16} /> 053-314-0442</a>
     </div></header>
 
-    <section id="content" tabIndex={-1} className={styles.hero}><div className={styles.heroInner}>
+    <section id="content" tabIndex={-1} className={styles.hero}>
+      <div className={styles.heroMedia} aria-hidden="true">
+        <Image src="/brands/perlstein/jerusalem-hero-poster.jpg" alt="" fill sizes="100vw" priority />
+        <video autoPlay muted loop playsInline preload="metadata" poster="/brands/perlstein/jerusalem-hero-poster.jpg">
+          <source src="/brands/perlstein/jerusalem-hero.mp4" type="video/mp4" />
+        </video>
+      </div>
+      <div className={styles.heroOverlay} aria-hidden="true" />
+      <div className={styles.heroInner}>
       <div className={styles.heroCopy}><span className={styles.eyebrow}><Sparkles size={16} /> ליווי אישי, מקצועי וברור</span>
         <h1>המשכנתא הנכונה מתחילה הרבה לפני <em>הריבית.</em></h1>
         <p>לפני שמתחייבים לשנים, בונים תמונה מלאה: כמה נכון לקחת, איך נכון להחזיר ומה ישאיר לכם אוויר גם בהמשך.</p>
