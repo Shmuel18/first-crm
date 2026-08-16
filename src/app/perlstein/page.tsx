@@ -6,6 +6,7 @@ import { ArrowLeft, BadgeCheck, Banknote, Check, CheckCircle2, ClipboardCheck, F
 import styles from './perlstein-v2.module.css';
 import AccessibilityTools from './accessibility-tools';
 import GoalSelector from './goal-selector';
+import MobileMenu from './mobile-menu';
 
 export const metadata: Metadata = {
   title: 'פרלשטיין משכנתאות | תכנון נכון. החלטה בטוחה.',
@@ -33,6 +34,7 @@ export default function PerlsteinLandingPage() {
       <Link href="/perlstein" aria-label="פרלשטיין משכנתאות — דף הבית"><Image src="/brands/perlstein/logo-on-dark.png" alt="פרלשטיין משכנתאות" width={218} height={68} className={styles.logo} priority /></Link>
       <nav className={styles.nav} aria-label="ניווט ראשי"><a href="#why">למה יועץ?</a><a href="#solutions">פתרונות</a><a href="#process">התהליך</a><a href="#about">אודות</a><a href="#questions">שאלות</a></nav>
       <a className={styles.headerCta} href="tel:0533140442"><Phone size={16} /> 053-314-0442</a>
+      <MobileMenu />
     </div></header>
 
     <section id="content" tabIndex={-1} className={styles.hero}>
