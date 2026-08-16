@@ -17,8 +17,8 @@ export default function GoalSelector() {
   const [active, setActive] = useState(goals[0]!);
   return <section className={styles.goalSection} aria-labelledby="goal-title">
     <div className={styles.goalHeading}><span className={styles.sectionKicker}>בואו נדבר עליכם</span><h2 id="goal-title">מה המטרה שלכם עכשיו?</h2><p>בחרו את הנושא שמעסיק אתכם וקבלו את הצעד הראשון המתאים.</p></div>
-    <div className={styles.goalLayout}><div className={styles.goalTabs} role="tablist" aria-label="בחירת מטרת הייעוץ">{goals.map((goal) => { const Icon = goal.icon; const selected = active.id === goal.id; return <button key={goal.id} type="button" role="tab" aria-selected={selected} className={selected ? styles.goalTabActive : styles.goalTab} onClick={() => setActive(goal)}><Icon size={22} /><span>{goal.label}</span></button>; })}</div>
-      <div className={styles.goalResult} role="tabpanel" key={active.id}><span className={styles.goalIndex}>פרלשטיין / {active.label}</span><h3>{active.title}</h3><p>{active.text}</p><Link href="/check">לבדיקת התאמה אישית <ArrowLeft size={18} /></Link></div>
+    <div className={styles.goalLayout}><div className={styles.goalTabs} role="group" aria-label="בחירת מטרת הייעוץ">{goals.map((goal) => { const Icon = goal.icon; const selected = active.id === goal.id; return <button key={goal.id} type="button" aria-pressed={selected} className={selected ? styles.goalTabActive : styles.goalTab} onClick={() => setActive(goal)}><Icon size={22} aria-hidden="true" /><span>{goal.label}</span></button>; })}</div>
+      <div className={styles.goalResult} aria-live="polite" key={active.id}><span className={styles.goalIndex}>פרלשטיין / {active.label}</span><h3>{active.title}</h3><p>{active.text}</p><Link href="/check">לבדיקת התאמה אישית <ArrowLeft size={18} aria-hidden="true" /></Link></div>
     </div>
   </section>;
 }

@@ -5,6 +5,7 @@ import { ArrowLeft, Banknote, Building2, CheckCircle2, ClipboardCheck, FileCheck
 
 import styles from '../perlstein-landing.module.css';
 import GoalSelector from './goal-selector';
+import AccessibilityTools from './accessibility-tools';
 
 export const metadata: Metadata = {
   title: 'פרלשטיין משכנתאות | הדרך הבטוחה למשכנתא נכונה',
@@ -27,14 +28,14 @@ const process = [
 ];
 
 export default function PerlsteinLandingPage() {
-  return <main className={styles.page}>
+  return <main className={styles.page}><a className={styles.skipLink} href="#main-content">דילוג לתוכן המרכזי</a>
     <header className={styles.header}><div className={styles.headerInner}>
       <Link href="/perlstein" className={styles.logoLink} aria-label="פרלשטיין משכנתאות — דף הבית"><Image src="/brands/perlstein/logo-on-dark.png" alt="פרלשטיין משכנתאות" width={245} height={76} className={styles.logo} priority /></Link>
       <nav className={styles.nav} aria-label="ניווט ראשי"><a href="#services">השירותים שלנו</a><a href="#process">איך זה עובד</a><a href="#about">מי אנחנו</a></nav>
       <div className={styles.headerActions}><a href="https://wa.me/972533140442" className={styles.loginLink}><MessageCircle size={16} /> דברו איתנו</a><Link href="/check" className={styles.headerCta}>מתחילים כאן</Link></div>
     </div></header>
 
-    <section className={styles.hero}><div className={styles.heroGlow} aria-hidden="true" /><div className={styles.heroInner}>
+    <section id="main-content" tabIndex={-1} className={styles.hero}><div className={styles.heroGlow} aria-hidden="true" /><div className={styles.heroInner}>
       <div className={styles.heroCopy}><div className={styles.eyebrow}><Sparkles size={17} /> ייעוץ משכנתאות • אסטרטגיית מימון • ליווי אישי</div>
         <h1>לא לוקחים משכנתא.<span>מתכננים עתיד.</span></h1>
         <p className={styles.heroLead}>החלטה של שנים צריכה יותר מהצעת ריבית. היא צריכה אדם שמבין את כל התמונה, בונה אסטרטגיה מדויקת ומנהל עבורכם את הדרך עד לביצוע.</p>
@@ -74,6 +75,7 @@ export default function PerlsteinLandingPage() {
 
     <a href="https://wa.me/972533140442" className={styles.floatingWhatsapp} aria-label="פתיחת שיחה עם פרלשטיין משכנתאות ב-WhatsApp"><MessageCircle size={24} /><span>דברו איתנו</span></a>
 
-    <footer className={styles.footer}><div className={styles.footerTop}><Image src="/brands/perlstein/logo-on-dark.png" alt="פרלשטיין משכנתאות" width={230} height={72} className={styles.footerLogo} /><p>ייעוץ משכנתאות והשקעות נדל״ן — תכנון מדויק, ליווי אישי וניהול מלא עד לביצוע.</p><div className={styles.contactList}><a href="tel:0533140442"><Phone size={17} /> 053-314-0442</a><a href="mailto:M33140442@gmail.com"><Mail size={17} /> M33140442@gmail.com</a><span><MapPin size={17} /> פנינת חמד, שמגר 21, ירושלים</span></div></div><div className={styles.footerBottom}><span>© 2026 פרלשטיין משכנתאות. כל הזכויות שמורות.</span><div><Link href="/check">שאלון לקוח</Link><a href="https://wa.me/972533140442">WhatsApp</a></div></div></footer>
+    <footer className={styles.footer}><div className={styles.footerTop}><Image src="/brands/perlstein/logo-on-dark.png" alt="פרלשטיין משכנתאות" width={230} height={72} className={styles.footerLogo} /><p>ייעוץ משכנתאות והשקעות נדל״ן — תכנון מדויק, ליווי אישי וניהול מלא עד לביצוע.</p><div className={styles.contactList}><a href="tel:0533140442"><Phone size={17} aria-hidden="true" /> 053-314-0442</a><a href="mailto:M33140442@gmail.com"><Mail size={17} aria-hidden="true" /> M33140442@gmail.com</a><span><MapPin size={17} aria-hidden="true" /> פנינת חמד, שמגר 21, ירושלים</span></div></div><div className={styles.footerBottom}><span>© 2026 פרלשטיין משכנתאות. כל הזכויות שמורות.</span><div><Link href="/check">שאלון לקוח</Link><Link href="/perlstein/accessibility">הצהרת נגישות</Link><a href="https://wa.me/972533140442">WhatsApp</a></div></div></footer>
+    <AccessibilityTools />
   </main>;
 }
