@@ -31,7 +31,7 @@ export default function PerlsteinLandingPage() {
     <div className={styles.topline}>ייעוץ אישי • תכנון מדויק • דרך ברורה מול הבנקים</div>
     <header className={styles.header}><div className={styles.headerInner}>
       <Link href="/perlstein" aria-label="פרלשטיין משכנתאות — דף הבית"><Image src="/brands/perlstein/logo-on-dark.png" alt="פרלשטיין משכנתאות" width={218} height={68} className={styles.logo} priority /></Link>
-      <nav className={styles.nav} aria-label="ניווט ראשי"><a href="#why">למה יועץ?</a><a href="#solutions">פתרונות</a><a href="#process">התהליך</a><a href="#about">מנחם פרלשטיין</a><a href="#questions">שאלות</a></nav>
+      <nav className={styles.nav} aria-label="ניווט ראשי"><a href="#why">למה יועץ?</a><a href="#solutions">פתרונות</a><a href="#process">התהליך</a><a href="#about">אודות</a><a href="#questions">שאלות</a></nav>
       <a className={styles.headerCta} href="tel:0533140442"><Phone size={16} /> 053-314-0442</a>
     </div></header>
 
