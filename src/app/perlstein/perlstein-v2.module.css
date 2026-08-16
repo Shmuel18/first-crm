@@ -4,3 +4,4 @@
 @media(max-width:420px){.hero h1{font-size:43px}.proofStrip{grid-template-columns:1fr}.goalTabs{grid-template-columns:1fr}.compareGrid article{padding:25px}.sectionIntro h2,.about h2,.questionnaire h2,.finalCta h2{font-size:40px}}
 @media(prefers-reduced-motion:reduce){.page{scroll-behavior:auto}.page *{animation:none!important;transition:none!important}}
 .page{height:100%;min-height:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain}
+.page .primary,.page .questionnaire a{color:#092740}.page .secondary{color:#fff}.page .darkButton{color:#fff}.page .outlineButton{color:#092b47}
