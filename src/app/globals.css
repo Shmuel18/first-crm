@@ -175,15 +175,17 @@
    Activated by <html data-brand="perlstein"> (NEXT_PUBLIC_BRAND).
    Navy replaces Kaufman's black as the ink/dark-surface color; gold is
    sampled from the office's vector logo (docs/perlstein/brand/).
-   The navy is deliberately desaturated (#0F2C47, not the logo's #12375B):
-   the saturated blue read as glaring on the large topbar/sidebar surfaces.
-   Contrast (validated): navy on white 14.3:1 · white on navy 14.3:1 ·
-   gold #D0A549 on navy 6.2:1 (decorative/text-on-dark) ·
+   Navy/gold are taken from the Perlstein LANDING page (src/app/perlstein,
+   --navy/--gold) rather than raw from the logo vector (#12375B/#D0A549):
+   the logo navy glares on the large topbar/sidebar surfaces, and matching
+   the landing keeps site + CRM + logo reading as one system.
+   Contrast (validated): navy on white 13.4:1 · white on navy 13.4:1 ·
+   gold #D4AA4E on navy 6.1:1 (decorative/text-on-dark) ·
    gold-text #8C6C26 4.9:1 on white / 4.7:1 on #FAFAFA — clears AA. */
 [data-brand='perlstein'] {
-  --brand-black: #0F2C47;
-  --brand-gold: #D0A549;
-  --brand-gold-light: #E2C077;
+  --brand-black: #0B3151;
+  --brand-gold: #D4AA4E;
+  --brand-gold-light: #E4C077;
   --brand-gold-dark: #B98F3A;
   --brand-gold-text: #8C6C26;
   --brand-surface: #FAFAFA;
@@ -192,8 +194,8 @@
   --brand-gold-tint: #FDF6E3;
   --brand-row-hover: #FAF5E9;
   --brand-row-alt: #F3F4F2;
-  --brand-black-soft: #17395A;
-  --brand-black-border: #2C4A68;
+  --brand-black-soft: #123E68;
+  --brand-black-border: #27506F;
 }
 
 @layer base {
