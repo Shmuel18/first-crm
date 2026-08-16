@@ -1037,3 +1037,4 @@ html[data-perlstein-reduce-motion] .page [data-reveal] { opacity: 1 !important; 
   .finalCta h2 { font-size: clamp(38px, 11vw, 48px) }
   .goalResult h3 { font-size: 30px }
 }
+.page{scrollbar-width:thin;scrollbar-color:rgba(184,148,90,.75) rgba(6,24,40,.08)}.page::-webkit-scrollbar{width:9px}.page::-webkit-scrollbar-track{background:rgba(6,24,40,.06)}.page::-webkit-scrollbar-thumb{background:rgba(184,148,90,.75)}.page::-webkit-scrollbar-thumb:hover{background:#b8945a}
