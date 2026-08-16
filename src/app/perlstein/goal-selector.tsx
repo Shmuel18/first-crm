@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft, Banknote, Building2, Home, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 
-import styles from '../perlstein-landing.module.css';
+import styles from './perlstein-v2.module.css';
 
 const goals = [
   { id: 'purchase', icon: Home, label: 'רכישת דירה', title: 'מתכננים רכישה בלי להשאיר מקום להפתעות', text: 'נבדוק הון עצמי, יכולת החזר ומבנה מימון — ונבנה מסלול שמאפשר להתקדם לעסקה בביטחון.' },

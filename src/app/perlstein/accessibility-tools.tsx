@@ -2,7 +2,7 @@
 
 import { Accessibility, Eye, Link2, Minus, Plus, RotateCcw, X, ZapOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import styles from '../perlstein-landing.module.css';
+import styles from './perlstein-v2.module.css';
 
 type Preferences = { scale: number; contrast: boolean; links: boolean; reduceMotion: boolean };
 const initial: Preferences = { scale: 100, contrast: false, links: false, reduceMotion: false };
