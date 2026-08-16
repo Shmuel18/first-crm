@@ -28,15 +28,15 @@ const process = [
 export default function PerlsteinLandingPage() {
   return <main className={styles.page}>
     <header className={styles.header}><div className={styles.headerInner}>
-      <Link href="/" className={styles.logoLink} aria-label="פרלשטיין משכנתאות — דף הבית"><Image src="/brands/perlstein/logo-on-dark.png" alt="פרלשטיין משכנתאות" width={245} height={76} className={styles.logo} priority /></Link>
+      <Link href="/perlstein" className={styles.logoLink} aria-label="פרלשטיין משכנתאות — דף הבית"><Image src="/brands/perlstein/logo-on-dark.png" alt="פרלשטיין משכנתאות" width={245} height={76} className={styles.logo} priority /></Link>
       <nav className={styles.nav} aria-label="ניווט ראשי"><a href="#services">השירותים שלנו</a><a href="#process">איך זה עובד</a><a href="#about">מי אנחנו</a></nav>
       <div className={styles.headerActions}><Link href="/login" className={styles.loginLink}>כניסה למערכת</Link><Link href="/check" className={styles.headerCta}>מתחילים כאן</Link></div>
     </div></header>
 
     <section className={styles.hero}><div className={styles.heroGlow} aria-hidden="true" /><div className={styles.heroInner}>
-      <div className={styles.heroCopy}><div className={styles.eyebrow}><Sparkles size={17} /> תכנון נכון. ליווי אישי. שקט בדרך.</div>
-        <h1>המשכנתא שלכם<span>צריכה לעבוד בשבילכם.</span></h1>
-        <p className={styles.heroLead}>אנחנו הופכים תהליך מורכב למסלול ברור — מהרעיון הראשון ועד לביצוע, עם אסטרטגיה מדויקת, ניהול מלא ושירות שרואה אתכם.</p>
+      <div className={styles.heroCopy}><div className={styles.eyebrow}><Sparkles size={17} /> ייעוץ משכנתאות • אסטרטגיית מימון • ליווי אישי</div>
+        <h1>לא לוקחים משכנתא.<span>מתכננים עתיד.</span></h1>
+        <p className={styles.heroLead}>החלטה של שנים צריכה יותר מהצעת ריבית. היא צריכה אדם שמבין את כל התמונה, בונה אסטרטגיה מדויקת ומנהל עבורכם את הדרך עד לביצוע.</p>
         <div className={styles.heroActions}><Link href="/check" className={styles.primaryCta}>לשאלון ההתאמה האישי <ArrowLeft size={20} /></Link><a href="tel:0533140442" className={styles.secondaryCta}><Phone size={18} /> 053-314-0442</a></div>
         <div className={styles.heroAssurance}><span><CheckCircle2 size={16} /> ללא התחייבות</span><span><CheckCircle2 size={16} /> מענה אישי</span><span><CheckCircle2 size={16} /> הנתונים נשמרים בצורה מאובטחת</span></div>
       </div>
@@ -44,7 +44,7 @@ export default function PerlsteinLandingPage() {
         <div className={`${styles.floatingCard} ${styles.cardTop}`}><ShieldCheck size={24} /><span><strong>ליווי מקצה לקצה</strong><small>לא משאירים אתכם לבד מול הבנק</small></span></div>
         <div className={`${styles.floatingCard} ${styles.cardBottom}`}><Target size={24} /><span><strong>תכנון לפי היעדים שלכם</strong><small>לא לפי תבנית קבועה</small></span></div>
       </div>
-    </div><div className={styles.heroStats}><div><strong>תמונה מלאה</strong><span>כל הנתונים לפני קבלת החלטה</span></div><div><strong>אסטרטגיה אישית</strong><span>תמהיל שמתאים לחיים שלכם</span></div><div><strong>ניהול מקצועי</strong><span>הבנקים, המסמכים והביצוע</span></div></div></section>
+    </div><div className={styles.heroStats}><div><strong>01 · אבחון</strong><span>מבינים את כל התמונה לפני שמתקדמים</span></div><div><strong>02 · אסטרטגיה</strong><span>בונים מהלך שמתאים לחיים שלכם</span></div><div><strong>03 · ביצוע</strong><span>מנהלים את הבנקים, המסמכים והדרך</span></div></div></section>
 
     <section className={styles.intro}><div className={styles.sectionKicker}>לא רק ריבית</div><h2>משכנתא טובה מתחילה בהבנת התמונה כולה</h2><p>המשפחה, ההכנסות, הנכסים, התוכניות לעתיד והעסקה עצמה — הכול מתחבר. אנחנו מסתכלים רחוק, מתכננים חכם ומנהלים כל שלב כדי שתוכלו להתקדם בביטחון.</p>
       <div className={styles.valueGrid}><article><FileCheck2 /><h3>סדר ובהירות</h3><p>יודעים בכל רגע איפה התיק עומד ומה הצעד הבא.</p></article><article><ShieldCheck /><h3>אחריות מלאה</h3><p>ליווי אישי מול הבנקים וכל בעלי המקצוע עד לסיום.</p></article><article><Target /><h3>דיוק בהחלטות</h3><p>בונים פתרון שמשרת את המטרות שלכם גם בעוד שנים.</p></article></div>
