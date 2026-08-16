@@ -147,7 +147,7 @@
   height: 100%;
   object-fit: cover;
   object-position: center;
-  filter: saturate(.72) contrast(1.06);
+  filter: saturate(.85) contrast(1.05);
 }
 .heroMedia video { z-index: 1 }
 .heroOverlay {
@@ -155,9 +155,9 @@
   inset: 0;
   z-index: 0;
   background:
-    linear-gradient(0deg, #061e33 0%, transparent 26%),
-    linear-gradient(90deg, rgba(4, 20, 34, .96) 0%, rgba(5, 26, 44, .85) 55%, rgba(6, 30, 51, .55) 100%),
-    linear-gradient(0deg, rgba(4, 21, 35, .65), transparent 40%);
+    linear-gradient(0deg, #061e33 0%, transparent 22%),
+    linear-gradient(90deg, rgba(4, 20, 34, .72) 0%, rgba(5, 26, 44, .52) 55%, rgba(6, 30, 51, .38) 100%),
+    linear-gradient(0deg, rgba(4, 21, 35, .45), transparent 34%);
 }
 .heroInner {
   position: relative;
@@ -196,10 +196,11 @@
   margin: 26px 0;
   max-width: 780px;
   text-wrap: balance;
+  text-shadow: 0 2px 26px rgba(4, 22, 37, .6);
 }
 .hero h1 em { display: block; color: #e8c77b; font-style: normal }
 .hero h1 em::before { content: ""; display: block; width: 120px; height: 1px; background: var(--gold); margin: 20px 0 12px }
-.heroCopy > p { max-width: 560px; color: #c3d0da; font-size: 18px; line-height: 1.9 }
+.heroCopy > p { max-width: 560px; color: #d4dfe8; font-size: 18px; line-height: 1.9; text-shadow: 0 1px 14px rgba(4, 22, 37, .55) }
 
 .actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 36px }
 .primary, .secondary, .darkButton, .outlineButton {
