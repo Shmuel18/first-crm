@@ -205,7 +205,7 @@ export function SystemTemplateDialog({ open, onOpenChange, template, initialLoca
                 className="overflow-hidden rounded-lg border border-neutral-200 bg-brand-gold-soft"
               >
                 <div className="bg-brand-black px-5 py-5 text-center text-brand-gold">
-                  <p className="text-[10px] tracking-[0.2em]">KAUFMAN</p>
+                  <p className="text-[10px] tracking-[0.2em]">{BRAND.emailWordmark.top}</p>
                 </div>
                 <div className="bg-white px-5 py-6">
                   <p className="mb-3 text-base font-semibold text-neutral-950">{heading}</p>

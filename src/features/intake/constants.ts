@@ -1,3 +1,6 @@
+import { BRAND } from '@/lib/brand';
+import { publicEnv } from '@/lib/public-env';
+
 /**
  * Privacy-policy version the /check consent records against. Bump this whenever
  * the published policy materially changes, so each lead's
@@ -8,8 +11,10 @@ export const PRIVACY_POLICY_VERSION = '2026-06';
 
 /**
  * Public marketing site clients return to after completing the questionnaire.
+ * Offices without their own marketing site fall back to the CRM's own origin,
+ * so the legal links below never point at another office's domain.
  */
-export const WEBSITE_URL = 'https://kaufman-finance.com';
+export const WEBSITE_URL = BRAND.contact.website ?? publicEnv.NEXT_PUBLIC_APP_URL;
 
 /**
  * Public URL of the privacy policy the /check consent checkbox links to.

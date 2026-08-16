@@ -6,6 +6,7 @@ import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
 
 import { getCurrentUser } from '@/lib/auth/permissions';
+import { BRAND } from '@/lib/brand';
 import { parseLocale } from '@/lib/i18n/direction';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { asCaseId } from '@/lib/types/branded';
@@ -65,7 +66,7 @@ export async function generateBankPdfAction(caseId: string): Promise<Result> {
     return {
       ok: true,
       base64,
-      filename: `kaufman_${safeCaseNumber}.pdf`,
+      filename: `${BRAND.key}_${safeCaseNumber}.pdf`,
     };
   } catch (err) {
     // Never ship the raw renderer error to the client — log it server-side and

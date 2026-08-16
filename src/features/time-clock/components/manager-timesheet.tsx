@@ -6,6 +6,7 @@ import { ChevronDown, ChevronLeft, ChevronRight, FileSpreadsheet, Loader2, Penci
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { BRAND } from '@/lib/brand';
 import { formatCurrency } from '@/lib/utils/format-currency';
 import type { Locale } from '@/lib/i18n/direction';
 
@@ -50,7 +51,7 @@ export function ManagerTimesheet({ locale, refreshKey = 0 }: { locale: Locale; r
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `kaufman-timesheet.xlsx`;
+      a.download = `${BRAND.key}-timesheet.xlsx`;
       a.click();
       URL.revokeObjectURL(url);
     } catch {

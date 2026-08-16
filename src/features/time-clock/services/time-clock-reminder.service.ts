@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 
+import { BRAND } from '@/lib/brand';
 import { env, isEmailConfigured } from '@/lib/env';
 import { escapeHtml } from '@/lib/email/render';
 import { sendEmail } from '@/lib/email/send';
@@ -68,12 +69,12 @@ export async function runTimeClockReminders(): Promise<{ checked: number; emaile
 }
 
 function buildHtml(greeting: string, body: string, cta: string, footer: string, url: string): string {
-  return `<div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#0A0A0A;">
-    <div style="background:#0A0A0A;color:#C9A961;text-align:center;padding:16px;border-radius:10px 10px 0 0;font-weight:700;letter-spacing:2px;">KAUFMAN</div>
+  return `<div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:${BRAND.colors.ink};">
+    <div style="background:${BRAND.colors.ink};color:${BRAND.colors.gold};text-align:center;padding:16px;border-radius:10px 10px 0 0;font-weight:700;letter-spacing:2px;">${BRAND.emailWordmark.top}</div>
     <div style="background:#ffffff;border:1px solid #E5E5E5;border-top:0;border-radius:0 0 10px 10px;padding:24px;">
       <p style="margin:0 0 12px;">${greeting}</p>
       <p style="margin:0 0 20px;color:#333333;">${body}</p>
-      <a href="${url}" style="display:inline-block;background:#C9A961;color:#0A0A0A;font-weight:700;text-decoration:none;padding:10px 20px;border-radius:999px;">${cta}</a>
+      <a href="${url}" style="display:inline-block;background:${BRAND.colors.gold};color:${BRAND.colors.ink};font-weight:700;text-decoration:none;padding:10px 20px;border-radius:999px;">${cta}</a>
       <p style="margin:20px 0 0;color:#999999;font-size:12px;">${footer}</p>
     </div>
   </div>`;

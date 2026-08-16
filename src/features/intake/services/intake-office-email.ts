@@ -1,14 +1,15 @@
 import { getTranslations } from 'next-intl/server';
 
 import { renderSystemEmail } from '@/features/templates/services/system-email-templates.service';
+import { BRAND } from '@/lib/brand';
 import { env, isEmailConfigured } from '@/lib/env';
 import { escapeHtml } from '@/lib/email/render';
 import { sendEmail } from '@/lib/email/send';
 
 import type { IntakeInput } from '../schemas/intake.schema';
 
-const OFFICE_EMAIL = 'office@kaufman-finance.com';
-const BLACK = '#0A0A0A';
+const OFFICE_EMAIL = BRAND.contact.email;
+const INK = BRAND.colors.ink;
 
 /** Standard purpose options stored as stable keys (mig 175 / step-composition). */
 const PURPOSE_KEYS = new Set(['purchase', 'refinance', 'equity_release', 'construction']);
@@ -62,6 +63,8 @@ export async function sendIntakeOfficeEmail(data: IntakeInput): Promise<boolean>
       footer: (await getTranslations({ locale: 'he', namespace: 'email' }))('footer'),
     });
     if (!email.enabled) return false;
+    // No office inbox configured for this brand — nowhere to notify.
+    if (!OFFICE_EMAIL) return false;
 
     const res = await sendEmail({
       to: OFFICE_EMAIL,
@@ -81,7 +84,7 @@ function summaryTable(rows: Array<[string, string | null | undefined]>): string 
     .map(
       ([label, value]) =>
         `<tr>
-           <td style="padding:7px 14px;font-weight:700;color:${BLACK};white-space:nowrap;vertical-align:top;">${escapeHtml(label)}</td>
+           <td style="padding:7px 14px;font-weight:700;color:${INK};white-space:nowrap;vertical-align:top;">${escapeHtml(label)}</td>
            <td style="padding:7px 14px;color:#333333;">${escapeHtml(value)}</td>
          </tr>`,
     )

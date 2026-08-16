@@ -45,7 +45,13 @@ export type Brand = {
   /** Absolute URL of the square mark for email clients; unset = text-only header. */
   emailLogoUrl?: string;
   /** Footer contact block for transactional emails; unset items are omitted. */
-  contact: { phone?: string; email?: string; website?: string };
+  contact: {
+    phone?: string;
+    email?: string;
+    website?: string;
+    /** wa.me link for client-facing CTAs; unset = no WhatsApp CTA. */
+    whatsapp?: string;
+  };
 };
 
 const BRANDS: Record<BrandKey, Brand> = {
@@ -74,6 +80,7 @@ const BRANDS: Record<BrandKey, Brand> = {
       phone: '02-568-1681',
       email: 'office@kaufman-finance.com',
       website: 'https://kaufman-finance.com',
+      whatsapp: 'https://wa.me/97225681681',
     },
   },
   perlstein: {
@@ -99,6 +106,7 @@ const BRANDS: Record<BrandKey, Brand> = {
     contact: {
       phone: '053-314-0442',
       email: 'M33140442@gmail.com',
+      whatsapp: 'https://wa.me/972533140442',
     },
   },
 };

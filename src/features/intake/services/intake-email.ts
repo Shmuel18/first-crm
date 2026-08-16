@@ -1,14 +1,16 @@
 import { getTranslations } from 'next-intl/server';
 
 import { renderSystemEmail } from '@/features/templates/services/system-email-templates.service';
+import { BRAND } from '@/lib/brand';
 import { sendEmail } from '@/lib/email/send';
 import { isEmailConfigured } from '@/lib/env';
 
 import { sendIntakeOfficeEmail } from './intake-office-email';
 import type { IntakeInput } from '../schemas/intake.schema';
 
-const OFFICE_EMAIL = 'office@kaufman-finance.com';
-const WHATSAPP_URL = 'https://wa.me/97225681681';
+const OFFICE_EMAIL = BRAND.contact.email;
+// Client-facing CTA: WhatsApp when the office publishes a number, else email.
+const CONTACT_CTA_URL = BRAND.contact.whatsapp ?? `mailto:${OFFICE_EMAIL ?? ''}`;
 type IntakeConfirmationInput = {
   to: string;
   firstName: string;
@@ -58,7 +60,7 @@ export async function sendIntakeConfirmationEmail({
       key: 'intake_confirmation',
       locale,
       variables: { name: firstName },
-      ctaUrl: WHATSAPP_URL,
+      ctaUrl: CONTACT_CTA_URL,
       footer: (await getTranslations({ locale, namespace: 'email' }))('footer'),
     });
     if (!email.enabled) return false;

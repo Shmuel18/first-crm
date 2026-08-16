@@ -1,5 +1,6 @@
 import { renderToBuffer } from '@react-pdf/renderer';
 
+import { BRAND } from '@/lib/brand';
 import { asMortgageScenarioId } from '@/lib/types/branded';
 
 import { loadScenarioReport } from './report-data.service';
@@ -25,5 +26,5 @@ export async function renderScenarioReportPdf(
   if (!data) return null;
   if (advisorConclusion !== undefined) data.meta.advisorConclusion = advisorConclusion;
   const buffer = await renderToBuffer(<ReportDocument data={data} locale={locale} />);
-  return { buffer, filename: `kaufman-simulation-${scenarioId.slice(0, 8)}.pdf` };
+  return { buffer, filename: `${BRAND.key}-simulation-${scenarioId.slice(0, 8)}.pdf` };
 }

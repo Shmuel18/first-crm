@@ -1,3 +1,4 @@
+import { BRAND } from '@/lib/brand';
 import { decryptWithKey } from '@/lib/crypto/secrets';
 import { env } from '@/lib/env';
 
@@ -95,5 +96,5 @@ export async function listBackups(
 export function backupFilename(now: Date = new Date()): string {
   const p = (n: number) => String(n).padStart(2, '0');
   const stamp = `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}_${p(now.getHours())}${p(now.getMinutes())}`;
-  return `kaufman-backup-${stamp}${BACKUP_EXTENSION}`;
+  return `${BRAND.key}-backup-${stamp}${BACKUP_EXTENSION}`;
 }
