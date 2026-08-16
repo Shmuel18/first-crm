@@ -1023,11 +1023,10 @@ html[data-perlstein-reduce-motion] .page [data-reveal] { opacity: 1 !important; 
   .floatingWhatsapp { left: 14px; padding: 13px }
   .accessibilityWidget { right: 14px }
   .accessibilityToggle { padding: 12px }
-  .heroMedia video { display: none }
   .heroOverlay {
     background:
-      linear-gradient(0deg, #061e33 0%, transparent 26%),
-      linear-gradient(90deg, rgba(4, 20, 34, .93), rgba(5, 26, 44, .8));
+      linear-gradient(0deg, #061e33 0%, transparent 24%),
+      linear-gradient(90deg, rgba(4, 20, 34, .68), rgba(5, 26, 44, .5));
   }
 }
 
