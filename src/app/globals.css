@@ -184,14 +184,33 @@
   --brand-gold-light: #E2C077;
   --brand-gold-dark: #B98F3A;
   --brand-gold-text: #8C6C26;
-  --brand-surface: #FAFAFA;
-  --brand-gold-soft: #FAF7F0;
+  --brand-surface: #F4F6F7;
+  --brand-gold-soft: #F7F4EC;
   --brand-gold-hover: #E4CD92;
   --brand-gold-tint: #FDF6E3;
-  --brand-row-hover: #FAF5E9;
-  --brand-row-alt: #F3F4F2;
+  --brand-row-hover: #F4EEDD;
+  --brand-row-alt: #F1F3F4;
   --brand-black-soft: #1C4570;
   --brand-black-border: #35577D;
+}
+
+/* Perlstein CRM: keep the navy/gold identity in the shell while softening the
+   high-area content surfaces. Pure white across a wide financial table creates
+   unnecessary glare; these warm-neutral layers preserve contrast and hierarchy. */
+[data-brand='perlstein'] .app-scroll-viewport .bg-white {
+  background-color: #FCFCFA;
+}
+[data-brand='perlstein'] .app-scroll-viewport .bg-neutral-50 {
+  background-color: #F7F8F8;
+}
+[data-brand='perlstein'] .app-scroll-viewport .bg-neutral-100 {
+  background-color: #EEF1F3;
+}
+[data-brand='perlstein'] .app-scroll-viewport .border-neutral-200 {
+  border-color: #DCE2E6;
+}
+[data-brand='perlstein'] .app-scroll-viewport .border-neutral-300 {
+  border-color: #CBD3D9;
 }
 
 @layer base {

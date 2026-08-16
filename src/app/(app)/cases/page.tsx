@@ -207,7 +207,7 @@ export default async function CasesListPage({ searchParams }: Props) {
   // just goes full-bleed by cancelling the layout's p-6 with -m-6. Sticky
   // bits (the table header) anchor to the layout's scroll container.
   return (
-    <div className="-m-4 sm:-m-6 bg-white">
+    <div className="-m-4 sm:-m-6 bg-brand-surface">
       <CasesRealtimeRefresh initialActiveCount={counts.active} />
       {/* Records the current filters-in-url so "back" from a case returns
           here with the same filters instead of a reset dashboard. */}
