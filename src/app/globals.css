@@ -175,11 +175,13 @@
    Activated by <html data-brand="perlstein"> (NEXT_PUBLIC_BRAND).
    Navy replaces Kaufman's black as the ink/dark-surface color; gold is
    sampled from the office's vector logo (docs/perlstein/brand/).
-   Contrast (validated): navy on white 12.2:1 · white on navy 12.2:1 ·
-   gold #D0A549 on navy 5.3:1 (decorative/text-on-dark) ·
+   The navy is deliberately desaturated (#0F2C47, not the logo's #12375B):
+   the saturated blue read as glaring on the large topbar/sidebar surfaces.
+   Contrast (validated): navy on white 14.3:1 · white on navy 14.3:1 ·
+   gold #D0A549 on navy 6.2:1 (decorative/text-on-dark) ·
    gold-text #8C6C26 4.9:1 on white / 4.7:1 on #FAFAFA — clears AA. */
 [data-brand='perlstein'] {
-  --brand-black: #12375B;
+  --brand-black: #0F2C47;
   --brand-gold: #D0A549;
   --brand-gold-light: #E2C077;
   --brand-gold-dark: #B98F3A;
@@ -190,8 +192,8 @@
   --brand-gold-tint: #FDF6E3;
   --brand-row-hover: #FAF5E9;
   --brand-row-alt: #F3F4F2;
-  --brand-black-soft: #1C4570;
-  --brand-black-border: #35577D;
+  --brand-black-soft: #17395A;
+  --brand-black-border: #2C4A68;
 }
 
 @layer base {

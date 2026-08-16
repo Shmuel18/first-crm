@@ -94,9 +94,9 @@ const BRANDS: Record<BrandKey, Brand> = {
     logo: '/brands/perlstein/logo.png',
     logoOnDark: '/brands/perlstein/logo-on-dark.png',
     logoSquare: '/brands/perlstein/mark.png',
-    themeColor: '#12375B',
+    themeColor: '#0F2C47',
     colors: {
-      ink: '#12375B',
+      ink: '#0F2C47',
       gold: '#D0A549',
       goldLight: '#E2C077',
       goldDark: '#B98F3A',
