@@ -14,6 +14,15 @@ import {
 type Format = 'xlsx' | 'pdf';
 
 /**
+ * Is this the installed app rather than a browser tab? `navigator.standalone`
+ * covers iOS (where the display-mode query is unreliable on older versions).
+ */
+function isStandaloneApp(): boolean {
+  const iosStandalone = (navigator as Navigator & { standalone?: boolean }).standalone === true;
+  return iosStandalone || window.matchMedia('(display-mode: standalone)').matches;
+}
+
+/**
  * Exports trigger the streaming Route Handler at /api/exports/cases?format=...
  * (batch 26). Successful responses arrive as binary with a Content-Disposition
  * header — we surface them via an in-page anchor click so the browser triggers
@@ -34,6 +43,25 @@ export function DashboardExportButtons() {
   const handleExport = (format: Format) => {
     if (isPending) return;
     setError(null);
+
+    const params = new URLSearchParams(window.location.search);
+    params.set('format', format);
+    const endpoint = `/api/exports/cases?${params.toString()}`;
+
+    // In an INSTALLED app (iOS standalone / display-mode: standalone) an
+    // `<a download>` pointed at a blob URL is ignored — the click does nothing
+    // and the file never lands, even though the server returned it. The audit
+    // log showed exactly that: five successful exports server-side, no file in
+    // the user's hands. There the browser must own the download, so open the
+    // endpoint directly and let Content-Disposition do its job.
+    //
+    // Deliberately not a fetch-then-navigate: that would spend two requests and
+    // two rate-limit slots per export.
+    if (isStandaloneApp()) {
+      window.open(endpoint, '_blank', 'noopener');
+      return;
+    }
+
     startTransition(async () => {
       // Two phases, reported separately. A single catch around both made every
       // outcome — server 500, gateway timeout, browser refusing the download —
@@ -41,11 +69,9 @@ export function DashboardExportButtons() {
       // screenshot. The status code / reason now travels in the message.
       let res: Response;
       try {
-        // Forward the dashboard's current filters / search / sort so the export
-        // matches what's on screen, not the whole book.
-        const params = new URLSearchParams(window.location.search);
-        params.set('format', format);
-        res = await fetch(`/api/exports/cases?${params.toString()}`, { method: 'GET' });
+        // `endpoint` already carries the dashboard's current filters / search /
+        // sort, so the export matches what's on screen, not the whole book.
+        res = await fetch(endpoint, { method: 'GET' });
       } catch (err) {
         console.error('[export] request failed', err);
         setError(t('exportFailedCode', { code: 'network' }));

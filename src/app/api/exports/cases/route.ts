@@ -67,13 +67,30 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return errorJson('unauthorized', 401);
 
-  const { data: canView } = await supabase.rpc('has_permission', {
-    perm_key: 'view_all_cases',
-  });
-  const { data: canViewOwn } = await supabase.rpc('has_permission', {
-    perm_key: 'view_own_cases',
-  });
-  if (canView !== true && canViewOwn !== true) {
+  // Both checks in one round-trip pair, and — importantly — the RPC ERROR is not
+  // discarded. It used to be: `const { data } = await rpc(...)` turned any
+  // failure (JWT expiry, pooler blip, statement timeout) into `undefined`, which
+  // then read as "permission denied" and shipped a 403. A 403 that really means
+  // "the check couldn't run" is unfalsifiable from the outside — it sent this
+  // investigation looking for a missing grant that was never missing.
+  const [allRes, ownRes] = await Promise.all([
+    supabase.rpc('has_permission', { perm_key: 'view_all_cases' }),
+    supabase.rpc('has_permission', { perm_key: 'view_own_cases' }),
+  ]);
+  if (allRes.error || ownRes.error) {
+    console.error('[exports] permission check failed to run', {
+      userId: userRes.user.id,
+      viewAllError: allRes.error?.code ?? null,
+      viewOwnError: ownRes.error?.code ?? null,
+    });
+    return errorJson('permission_check_failed', 503);
+  }
+  if (allRes.data !== true && ownRes.data !== true) {
+    console.error('[exports] permission denied', {
+      userId: userRes.user.id,
+      viewAll: allRes.data,
+      viewOwn: ownRes.data,
+    });
     return errorJson('unauthorized', 403);
   }
 
