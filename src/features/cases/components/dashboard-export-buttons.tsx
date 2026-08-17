@@ -14,12 +14,18 @@ import {
 type Format = 'xlsx' | 'pdf';
 
 /**
- * Is this the installed app rather than a browser tab? `navigator.standalone`
- * covers iOS (where the display-mode query is unreliable on older versions).
+ * Is this the installed app rather than a browser tab? There an `<a download>`
+ * pointed at a blob URL is ignored — the click does nothing and the file is
+ * lost even on a 200 — so the browser has to fetch the URL itself.
+ *
+ * Scoped to standalone deliberately. A wider "all of iOS" branch was tried and
+ * pulled back out: it is untestable from here, and `window.open` carries its own
+ * popup-blocker risk, so it is not worth applying to clients that have no
+ * demonstrated problem.
  */
-function isStandaloneApp(): boolean {
-  const iosStandalone = (navigator as Navigator & { standalone?: boolean }).standalone === true;
-  return iosStandalone || window.matchMedia('(display-mode: standalone)').matches;
+function needsBrowserDrivenDownload(): boolean {
+  const nav = navigator as Navigator & { standalone?: boolean };
+  return nav.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
 }
 
 /**
@@ -57,7 +63,7 @@ export function DashboardExportButtons() {
     //
     // Deliberately not a fetch-then-navigate: that would spend two requests and
     // two rate-limit slots per export.
-    if (isStandaloneApp()) {
+    if (needsBrowserDrivenDownload()) {
       window.open(endpoint, '_blank', 'noopener');
       return;
     }
@@ -71,7 +77,10 @@ export function DashboardExportButtons() {
       try {
         // `endpoint` already carries the dashboard's current filters / search /
         // sort, so the export matches what's on screen, not the whole book.
-        res = await fetch(endpoint, { method: 'GET' });
+        // cache: 'no-store' — bypass the HTTP cache and any service worker that
+        // might replay a stored response. A user stuck on a repeated error with
+        // nothing arriving in the server logs is the symptom this rules out.
+        res = await fetch(endpoint, { method: 'GET', cache: 'no-store' });
       } catch (err) {
         console.error('[export] request failed', err);
         setError(t('exportFailedCode', { code: 'network' }));

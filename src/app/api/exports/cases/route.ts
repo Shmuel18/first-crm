@@ -56,7 +56,15 @@ function isFormat(value: string | null): value is ExportFormat {
 }
 
 function errorJson(error: string, status: number): NextResponse {
-  return NextResponse.json({ ok: false, error }, { status });
+  // no-store on ERRORS too, not just on the success path. An error response with
+  // no cache directive can be held by an intermediary — a proxy, or a service
+  // worker from an older build — and replayed to the user forever, with no
+  // request ever reaching this handler again. That is indistinguishable from a
+  // live server rejection when you are reading it off a screenshot.
+  return NextResponse.json(
+    { ok: false, error },
+    { status, headers: { 'Cache-Control': 'no-store, max-age=0' } },
+  );
 }
 
 export async function GET(request: NextRequest): Promise<NextResponse | Response> {
