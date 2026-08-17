@@ -30,19 +30,23 @@ export function PropertyPage({
         <SummaryCell4
           label={strings.property.propertyValue}
           value={fmtCurrency(data.case.propertyValue, locale, dash)}
+          locale={locale}
         />
         <SummaryCell4
           label={strings.property.equity}
           value={fmtCurrency(data.case.equity, locale, dash)}
+          locale={locale}
         />
         <SummaryCell4
           label={strings.property.requestedAmount}
           value={fmtCurrency(data.case.requestedAmount, locale, dash)}
+          locale={locale}
         />
         <SummaryCell4
           label={strings.property.ltv}
           value={data.case.ltv === null ? dash : `${data.case.ltv.toFixed(1)}%`}
           last
+          locale={locale}
         />
       </View>
 

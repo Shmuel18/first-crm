@@ -66,6 +66,9 @@ export const styles = StyleSheet.create({
     gap: 16,
   },
   metaItem: { flexDirection: 'row-reverse', alignItems: 'baseline', gap: 4 },
+  // Holds a Hebrew label and its colon as separate Texts (see MetaItem) with no
+  // gap between them, so the colon reads as part of the word.
+  metaLabelGroup: { flexDirection: 'row-reverse', alignItems: 'baseline' },
   metaLabel: { fontSize: 8, color: COLOR_MUTED },
   metaValue: { fontSize: 9, color: COLOR_TEXT, fontWeight: 600 },
 

@@ -40,19 +40,23 @@ export function SummaryPage({
           <SummaryCell4
             label={strings.summary.borrowersIncome}
             value={fmtCurrency(data.totals.borrowersIncomeMonthly, locale, dash)}
+            locale={locale}
           />
           <SummaryCell4
             label={strings.summary.borrowersObligationsLT}
             value={fmtCurrency(data.totals.borrowersObligationsLongTermMonthly, locale, dash)}
+            locale={locale}
           />
           <SummaryCell4
             label={strings.summary.guarantorsIncome}
             value={fmtCurrency(data.totals.guarantorsIncomeMonthly, locale, dash)}
+            locale={locale}
           />
           <SummaryCell4
             label={strings.summary.guarantorsObligationsLT}
             value={fmtCurrency(data.totals.guarantorsObligationsLongTermMonthly, locale, dash)}
             last
+            locale={locale}
           />
         </View>
       </View>
