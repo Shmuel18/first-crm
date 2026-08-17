@@ -35,32 +35,43 @@ export function DashboardExportButtons() {
     if (isPending) return;
     setError(null);
     startTransition(async () => {
+      // Two phases, reported separately. A single catch around both made every
+      // outcome — server 500, gateway timeout, browser refusing the download —
+      // read as the same "export failed", which is undiagnosable from a user's
+      // screenshot. The status code / reason now travels in the message.
+      let res: Response;
       try {
         // Forward the dashboard's current filters / search / sort so the export
         // matches what's on screen, not the whole book.
         const params = new URLSearchParams(window.location.search);
         params.set('format', format);
-        const res = await fetch(`/api/exports/cases?${params.toString()}`, {
-          method: 'GET',
-        });
-        if (!res.ok) {
-          let errorKey = 'unknown';
-          try {
-            const body = (await res.json()) as { error?: string };
-            errorKey = body?.error ?? 'unknown';
-          } catch {
-            // Non-JSON error body (server crash). Fall through to generic message.
-          }
-          setError(
-            errorKey === 'empty'
-              ? t('exportEmpty')
-              : errorKey === 'rate_limited'
-                ? t('exportRateLimited')
-                : t('exportFailed'),
-          );
-          return;
-        }
+        res = await fetch(`/api/exports/cases?${params.toString()}`, { method: 'GET' });
+      } catch (err) {
+        console.error('[export] request failed', err);
+        setError(t('exportFailedCode', { code: 'network' }));
+        return;
+      }
 
+      if (!res.ok) {
+        let errorKey: string | null = null;
+        try {
+          const body = (await res.json()) as { error?: string };
+          errorKey = body?.error ?? null;
+        } catch {
+          // Non-JSON body — a gateway error (504/502) rather than our handler.
+        }
+        console.error('[export] server rejected', { status: res.status, errorKey });
+        setError(
+          errorKey === 'empty'
+            ? t('exportEmpty')
+            : errorKey === 'rate_limited'
+              ? t('exportRateLimited')
+              : t('exportFailedCode', { code: String(res.status) }),
+        );
+        return;
+      }
+
+      try {
         // Pull the filename from Content-Disposition; the server includes
         // both `filename=` and `filename*=UTF-8''...` for non-ASCII safety.
         const cd = res.headers.get('Content-Disposition') ?? '';
@@ -79,8 +90,12 @@ export function DashboardExportButtons() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-      } catch {
-        setError(t('exportFailed'));
+      } catch (err) {
+        // The file exists server-side; the browser wouldn't take it (an
+        // installed PWA / iOS standalone blocking `a.download`, or a blob the
+        // device can't hold). Say so — retrying the export won't help.
+        console.error('[export] download blocked by the browser', err);
+        setError(t('exportDownloadBlocked'));
       }
     });
   };

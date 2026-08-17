@@ -1093,7 +1093,8 @@
       "export": "Export",
       "formatExcel": "Excel",
       "formatPdf": "PDF",
-      "exportFailed": "Export failed",
+      "exportFailedCode": "Export failed ({code})",
+      "exportDownloadBlocked": "The file was generated but the browser blocked the download. Try a regular browser tab.",
       "exportEmpty": "No cases to export",
       "exportRateLimited": "Too many exports. Try again in an hour.",
       "pdf": {
@@ -2231,6 +2232,24 @@
       },
       "errors": {
         "generic": "Save failed. Please try again."
+      },
+      "bankPdfSignature": {
+        "title": "Bank summary signature",
+        "adminOnly": "Admin only",
+        "description": "Who signs off at the bottom of the bank summary PDF. The office details are the default, so an advisor's personal contact details never reach the bank and documents stay valid after an advisor leaves.",
+        "modeLabel": "Sign with",
+        "saved": "Setting saved",
+        "failed": "Update failed. Please try again.",
+        "modes": {
+          "office": "Office details",
+          "advisor": "Assigned advisor",
+          "none": "No name (signature line only)"
+        },
+        "hints": {
+          "office": "Prints the office name plus the main phone and email.",
+          "advisor": "Prints the assigned advisor's name, phone and email.",
+          "none": "Prints an empty signature line — no name, no contact details."
+        }
       }
     },
     "sla": {

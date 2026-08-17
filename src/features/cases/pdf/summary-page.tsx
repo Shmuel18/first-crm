@@ -91,15 +91,17 @@ export function SummaryPage({
       <Text style={[styles.thanksLine, { direction: locale === 'he' ? 'rtl' : 'ltr' }]}>
         {strings.summary.thanks}
       </Text>
+      {/* Who signs is office config, resolved in domain/bank-pdf-signature:
+          the office (default), the case's advisor, or nobody (migration 228). */}
       <View style={styles.signatureBlock}>
         <View style={styles.signatureLine} />
-        {data.advisorName && <Text style={styles.signatureName}>{data.advisorName}</Text>}
-        {(data.advisorPhone || data.advisorEmail) && (
-          <Text style={styles.signatureMeta}>
-            {[data.advisorPhone, data.advisorEmail].filter(Boolean).join(' · ')}
-          </Text>
+        {data.signature.name && (
+          <Text style={styles.signatureName}>{data.signature.name}</Text>
         )}
-        {!data.advisorName && (
+        {data.signature.contact && (
+          <Text style={styles.signatureMeta}>{data.signature.contact}</Text>
+        )}
+        {!data.signature.name && (
           <Text style={styles.signatureMeta}>{strings.summary.signatureFallback}</Text>
         )}
       </View>

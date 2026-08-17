@@ -3,7 +3,6 @@ import path from 'node:path';
 
 import {
   Document,
-  Font,
   Image,
   Page,
   StyleSheet,
@@ -13,41 +12,42 @@ import {
 } from '@react-pdf/renderer';
 import { type ReactElement } from 'react';
 
+import { ensureHebrewFontRegistered } from '@/features/cases/pdf/fonts';
+
 import type { ExportRow } from './build-export-rows';
 
 /**
- * Register the font lazily as a base64 data URL. @react-pdf/renderer's
- * `src` accepts a URL string and parses `data:` URLs by calling
- * `.substring()` on them - passing a Node Buffer (which TypeScript can be
- * cast past) crashes at runtime with "dataUrl.substring is not a function".
+ * Load the brand mark as a base64 data URL (@react-pdf needs an inline src:
+ * it branches on the string prefix, so a Buffer crashes and a Windows path
+ * trips its URL heuristics).
  *
- * data: URLs work in every environment - locally and on Vercel Serverless
- * where `process.cwd()` isn't necessarily the repo root. The font (~80kB
- * Heebo) is read once per lambda instance.
- */
-let fontRegistered = false;
-async function ensureFontRegistered(): Promise<void> {
-  if (fontRegistered) return;
-  const fontPath = path.join(process.cwd(), 'public', 'fonts', 'heebo-regular.ttf');
-  const buffer = await readFile(fontPath);
-  const dataUrl = `data:font/ttf;base64,${buffer.toString('base64')}`;
-  Font.register({ family: 'Heebo', src: dataUrl });
-  fontRegistered = true;
-}
-
-/**
- * Load the brand medallion as a base64 data URL (same rationale as the
- * font: @react-pdf needs an inline src that survives the serverless cwd).
- * logo-coin-square.png is the circular black+gold KAUFMAN coin pre-cropped
- * to a tight transparent square, so it sits cleanly as a round badge on
- * the white header. Cached per lambda instance.
+ * The file MUST live under a directory listed in `outputFileTracingIncludes`
+ * (next.config.ts). Vercel does not trace /public into a serverless function,
+ * so an untraced asset ENOENTs in production while working fine locally —
+ * that is exactly how this export broke: the header logo was added pointing
+ * at /public/logo-coin-square.png, which is served by the CDN but absent from
+ * the function's filesystem.
+ *
+ * public/pdf/logo-coin.png is the same mark downscaled to 240px (15 kB vs the
+ * 2.1 MB original) — it renders at 40pt, and the full-size file inflated every
+ * exported PDF to ~2.8 MB, uncomfortably close to Vercel's 4.5 MB response cap.
+ *
+ * Decorative, so it fails SOFT: a missing/unreadable logo must never turn a
+ * data export into a 500. Resolved once per lambda instance, failure included.
  */
 let logoDataUrl: string | null = null;
-async function ensureLogoLoaded(): Promise<string> {
-  if (logoDataUrl) return logoDataUrl;
-  const logoPath = path.join(process.cwd(), 'public', 'logo-coin-square.png');
-  const buffer = await readFile(logoPath);
-  logoDataUrl = `data:image/png;base64,${buffer.toString('base64')}`;
+let logoResolved = false;
+async function loadLogo(): Promise<string | null> {
+  if (logoResolved) return logoDataUrl;
+  logoResolved = true;
+  try {
+    const logoPath = path.join(process.cwd(), 'public', 'pdf', 'logo-coin.png');
+    const buffer = await readFile(logoPath);
+    logoDataUrl = `data:image/png;base64,${buffer.toString('base64')}`;
+  } catch (err) {
+    console.error('[exports] PDF header logo unavailable, rendering without it', err);
+    logoDataUrl = null;
+  }
   return logoDataUrl;
 }
 
@@ -149,15 +149,17 @@ function CasesDocument({
 }: {
   rows: ReadonlyArray<ExportRow>;
   h: PdfHeaders;
-  logoSrc: string;
+  logoSrc: string | null;
 }): ReactElement {
   return (
     <Document>
       <Page size="A4" orientation="landscape" style={styles.page}>
         <View style={styles.header} fixed>
           <View style={styles.brand}>
-            {/* eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf Image has no alt */}
-            <Image src={logoSrc} style={styles.logo} />
+            {logoSrc && (
+              // eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf Image has no alt
+              <Image src={logoSrc} style={styles.logo} />
+            )}
             <View style={styles.titleBlock}>
               <Text style={styles.title}>{h.title}</Text>
               <Text style={styles.subtitle}>{h.subtitle}</Text>
@@ -203,7 +205,7 @@ export async function generateCasesPdf(
   rows: ReadonlyArray<ExportRow>,
   headers: PdfHeaders,
 ): Promise<Buffer> {
-  await ensureFontRegistered();
-  const logoSrc = await ensureLogoLoaded();
+  ensureHebrewFontRegistered();
+  const logoSrc = await loadLogo();
   return await renderToBuffer(<CasesDocument rows={rows} h={headers} logoSrc={logoSrc} />);
 }

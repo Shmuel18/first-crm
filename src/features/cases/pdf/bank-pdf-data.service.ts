@@ -4,11 +4,16 @@ import { listIncomesForCase } from '@/features/incomes/services/incomes.service'
 import { listObligationsForCase } from '@/features/obligations/services/obligations.service';
 import { aggregateMix } from '@/features/simulators/domain/mix-aggregate';
 import { MixInputSchema } from '@/features/simulators/schemas/simulator.schema';
+import { getBankPdfSignatureSource } from '@/features/settings/services/settings.service';
 import { listScenariosForCase } from '@/features/simulators/services/scenarios.service';
 import type { RepaymentType, TrackType } from '@/features/simulators/types';
 import type { CaseId } from '@/lib/types/branded';
 import { formatPersonName } from '@/lib/utils/person-name';
 
+import {
+  resolveBankPdfSignature,
+  type BankPdfSignature,
+} from '../domain/bank-pdf-signature';
 import { calculateLtv } from '../domain/calculations';
 import {
   calculateAvailableIncome,
@@ -57,9 +62,12 @@ export type BankPdfData = {
     equity: number | null;
     ltv: number | null;
   };
+  /** Cover meta strip only, and only when the office signs with the advisor
+   *  (migration 228) — null keeps the advisor's identity off the submission. */
   advisorName: string | null;
-  advisorPhone: string | null;
-  advisorEmail: string | null;
+  /** Who the summary page signs off as. Resolved office-side, never in the
+   *  component (see domain/bank-pdf-signature). */
+  signature: BankPdfSignature;
   borrowers: Array<{
     id: string;
     fullName: string;
@@ -242,6 +250,9 @@ export async function loadCaseForBankPdf(caseId: CaseId): Promise<BankPdfData | 
   // Resolve advisor via the admin client — the cases→profiles embed is NULL for
   // a non-admin generating the PDF (profiles self-or-admin). See advisor-contact.
   const advisor = await getAdvisorContact(caseData.assigned_advisor_id);
+  // Who signs: office (default), the assigned advisor, or nobody (migration 228).
+  const signatureSource = await getBankPdfSignatureSource();
+  const signature = resolveBankPdfSignature(signatureSource.mode, advisor, signatureSource.office);
 
   return {
     case: {
@@ -253,9 +264,8 @@ export async function loadCaseForBankPdf(caseId: CaseId): Promise<BankPdfData | 
       equity: caseData.equity,
       ltv: calculateLtv(caseData.property_value, caseData.requested_mortgage_amount),
     },
-    advisorName: advisor.name,
-    advisorPhone: advisor.phone,
-    advisorEmail: advisor.email,
+    advisorName: signature.showAdvisorOnCover ? advisor.name : null,
+    signature,
     borrowers,
     totals: {
       borrowersIncomeMonthly,
