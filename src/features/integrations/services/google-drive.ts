@@ -211,6 +211,30 @@ export class GoogleDriveClient {
   }
 
   /** Download a file's raw text content (used to read a backup JSON back). */
+  /** Current display name of a file/folder, or null if it's gone (404). */
+  async getFileName(fileId: string): Promise<string | null> {
+    const res = await this.authedFetchRetry(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?fields=name,trashed`,
+    );
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`Drive file get failed: ${res.status}`);
+    const data = (await res.json()) as { name: string; trashed: boolean };
+    return data.trashed ? null : data.name;
+  }
+
+  /** Rename a file/folder in place — same id, same parents, same contents. */
+  async renameFile(fileId: string, name: string): Promise<void> {
+    const res = await this.authedFetch(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?fields=id`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      },
+    );
+    if (!res.ok) throw new Error(`Drive rename failed: ${res.status}`);
+  }
+
   async downloadFileText(fileId: string): Promise<string> {
     const res = await this.authedFetchRetry(
       `${DRIVE_API}/files/${encodeURIComponent(fileId)}?alt=media`,

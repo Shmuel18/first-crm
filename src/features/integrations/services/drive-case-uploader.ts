@@ -255,6 +255,43 @@ export async function provisionCaseDriveFolders(input: {
 }
 
 /**
+ * Rename an already-provisioned case folder to the current naming convention
+ * (the client's name). Only touches a folder we created and still track, only
+ * when the name actually differs, and never moves it or its contents — so
+ * whatever the office has already filed inside stays put.
+ *
+ * Returns 'renamed' | 'ok' (already correct) | 'skipped' (no folder tracked,
+ * or the folder is gone from Drive) | 'error'.
+ */
+export async function renameCaseDriveFolder(input: {
+  caseId: string;
+  admin?: boolean;
+}): Promise<'renamed' | 'ok' | 'skipped' | 'error'> {
+  const client = await getDriveClientIfConnected();
+  if (!client) return 'skipped';
+  try {
+    const supabase = await driveDb(input.admin === true);
+    const meta = await getCaseDriveMeta(input.caseId, supabase);
+    if (!meta.case_folder_id) return 'skipped';
+
+    const current = await client.getFileName(meta.case_folder_id);
+    if (current === null) return 'skipped';
+
+    const desired = caseFolderName(await resolveCaseClientName(input.caseId, supabase));
+    if (current === desired) return 'ok';
+
+    await client.renameFile(meta.case_folder_id, desired);
+    return 'renamed';
+  } catch (err) {
+    console.error('[renameCaseDriveFolder] rename failed', {
+      caseId: input.caseId,
+      message: err instanceof Error ? err.message : 'unknown',
+    });
+    return 'error';
+  }
+}
+
+/**
  * Best-effort erase of Drive targets — a case folder and/or individual files.
  * Resolves the Drive client ONCE (avoids re-auth per id) and reports which ids
  * were actually deleted, so callers can clear their stored references only for
