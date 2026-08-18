@@ -32,12 +32,15 @@ export const DRIVE_SUBFOLDER_NAMES: Record<string, string> = {
 };
 
 /**
- * Case folder name: "{case_number}_{familyName}". File-system-unsafe
- * characters in familyName are stripped (matches Drive's display-name
+ * Case folder name: the client's name (borrower names as shown in the app).
+ * File-system-unsafe characters are stripped (matches Drive's display-name
  * rules and prevents accidentally creating subfolders by smuggling a `/`
  * through). Empty/whitespace fallback to "Case".
+ *
+ * Note: two clients with the same name produce two same-named folders. That
+ * is safe — the folder is looked up by the `caseFolderId` appProperty (the
+ * case UUID), never by display name — but the office should expect it.
  */
-export function caseFolderName(caseNumber: string, familyName: string): string {
-  const safe = familyName.replace(/[\\/:*?"<>|]/g, '').trim() || 'Case';
-  return `${caseNumber}_${safe}`;
+export function caseFolderName(clientName: string): string {
+  return clientName.replace(/[\\/:*?"<>|]/g, '').trim() || 'Case';
 }

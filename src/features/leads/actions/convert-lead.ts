@@ -2,6 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { after } from 'next/server';
+
+import { provisionCaseDriveFolders } from '@/features/integrations/services/drive-case-uploader';
 
 import { userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
@@ -51,5 +54,8 @@ export async function convertLeadAction(leadId: string): Promise<ConvertLeadResu
   }
 
   revalidatePath('/cases');
+  // Same as a hand-created case: the client gets their central Drive folder
+  // tree as soon as the case exists (best-effort, off the response path).
+  after(() => provisionCaseDriveFolders({ caseId }));
   redirect(`/cases/${caseId}`);
 }

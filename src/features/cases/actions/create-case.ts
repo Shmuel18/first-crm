@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { after } from 'next/server';
 
+import { provisionCaseDriveFolders } from '@/features/integrations/services/drive-case-uploader';
 import { userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
@@ -99,5 +100,7 @@ export async function createCaseAction(
   // dashboard only needs to be fresh on the user's NEXT visit. Keeps the save
   // spinner from blocking 0.5-2s on the full-portfolio revalidation.
   after(() => revalidatePath('/cases'));
+  // Central Drive folder for the client, opened at save time (best-effort).
+  after(() => provisionCaseDriveFolders({ caseId: data.id }));
   redirect(`/cases/${data.id}`);
 }

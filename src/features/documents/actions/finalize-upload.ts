@@ -177,8 +177,6 @@ export async function finalizeUploadAction(
   // Drive sync's push pass (pushLocalOnlyFilesToDrive, after a 10-min grace).
   if (ctx.driveFolder) {
     const driveFolder = ctx.driveFolder;
-    const caseNumber = ctx.caseNumber;
-    const familyName = ctx.familyName;
     const mimeType = sniffed.mime;
     after(async () => {
       try {
@@ -187,8 +185,6 @@ export async function finalizeUploadAction(
         if (!blob) return;
         const out = await uploadCaseDocumentToDrive({
           caseId: input.caseId,
-          caseNumber,
-          familyName,
           driveFolder,
           file: { content: await blob.arrayBuffer(), name: safeFileName, mimeType },
         });

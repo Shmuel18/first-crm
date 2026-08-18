@@ -96,11 +96,7 @@ export default async function CaseDocumentsPage({ params }: Props) {
   // stored, "open in Drive" + sync light up and later visits skip this. Existing
   // cases get an empty tree to drag their current Drive files into.
   if (!driveFolderId) {
-    void provisionCaseDriveFolders({
-      caseId: caseData.id,
-      caseNumber: caseData.case_number,
-      familyName: borrowerNames || 'Case',
-    }).catch(() => undefined);
+    void provisionCaseDriveFolders({ caseId: caseData.id }).catch(() => undefined);
   }
 
   return (

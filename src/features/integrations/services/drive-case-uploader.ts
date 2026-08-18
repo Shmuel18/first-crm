@@ -1,5 +1,9 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
-import type { Json } from '@/types/database';
+import { formatPersonName } from '@/lib/utils/person-name';
+import type { Database, Json } from '@/types/database';
 
 import {
   DRIVE_SUBFOLDER_NAMES,
@@ -17,11 +21,20 @@ type CaseDriveMeta = {
 
 export type DriveCaseUploadInput = {
   caseId: string;
-  caseNumber: string;
-  familyName: string;
   driveFolder: string; // identity | income_il | income_abroad | insurance_collateral
   file: { content: ArrayBuffer | Uint8Array; name: string; mimeType: string };
 };
+
+/**
+ * Which Supabase client the Drive metadata reads/writes go through. Callers
+ * inside a request use the session client (RLS applies); the one-shot backfill
+ * route runs over the whole portfolio with the service-role client.
+ */
+type DriveDb = SupabaseClient<Database>;
+
+async function driveDb(admin: boolean): Promise<DriveDb> {
+  return admin ? createAdminClient() : await createClient();
+}
 
 export type DriveCaseUploadOutcome =
   | { ok: true; driveFileId: string; webViewLink: string }
@@ -34,8 +47,7 @@ export async function getDriveClientIfConnected(): Promise<GoogleDriveClient | n
   return new GoogleDriveClient(row);
 }
 
-async function getCaseDriveMeta(caseId: string): Promise<CaseDriveMeta> {
-  const supabase = await createClient();
+async function getCaseDriveMeta(caseId: string, supabase: DriveDb): Promise<CaseDriveMeta> {
   const { data, error } = await supabase
     .from('cases')
     .select('metadata')
@@ -57,8 +69,8 @@ async function getCaseDriveMeta(caseId: string): Promise<CaseDriveMeta> {
 async function patchCaseDriveMeta(
   caseId: string,
   patch: Partial<CaseDriveMeta>,
+  supabase: DriveDb,
 ): Promise<void> {
-  const supabase = await createClient();
   await supabase.rpc('update_case_drive_meta', {
     p_case_id: caseId,
     // Partial<CaseDriveMeta> is JSON-shaped; widen at the call boundary.
@@ -75,13 +87,38 @@ async function ensureRootFolder(client: GoogleDriveClient): Promise<string> {
   return id;
 }
 
+/**
+ * The case's Drive folder name: the client's name, exactly as the app shows it
+ * (family-name-first, borrowers joined by " & "). Resolved here — and only when
+ * a folder actually has to be created — so every caller produces the same name
+ * without threading it through the upload API. Falls back to "Case" for a case
+ * with no readable borrower.
+ */
+export async function resolveCaseClientName(
+  caseId: string,
+  supabase: DriveDb,
+): Promise<string> {
+  const { data } = await supabase
+    .from('case_borrowers')
+    .select('is_primary, borrower:borrowers(first_name, last_name, deleted_at)')
+    .eq('case_id', caseId)
+    .order('is_primary', { ascending: false });
+
+  const names = (data ?? [])
+    .map((row) => (Array.isArray(row.borrower) ? row.borrower[0] : row.borrower))
+    .filter((b) => b != null && b.deleted_at === null)
+    .map((b) => formatPersonName(b?.first_name, b?.last_name))
+    .filter(Boolean);
+
+  return names.join(' & ') || 'Case';
+}
+
 async function ensureCaseFolder(
   client: GoogleDriveClient,
   rootId: string,
   caseId: string,
-  caseNumber: string,
-  familyName: string,
   meta: CaseDriveMeta,
+  supabase: DriveDb,
 ): Promise<string> {
   if (meta.case_folder_id) return meta.case_folder_id;
 
@@ -94,7 +131,7 @@ async function ensureCaseFolder(
   let id = await client.findFolderByAppProperty('caseFolderId', caseId, rootId);
   if (!id) {
     id = await client.createFolder(
-      caseFolderName(caseNumber, familyName),
+      caseFolderName(await resolveCaseClientName(caseId, supabase)),
       rootId,
       { caseFolderId: caseId },
     );
@@ -104,7 +141,7 @@ async function ensureCaseFolder(
   await patchCaseDriveMeta(caseId, {
     case_folder_id: id,
     last_synced_at: nowIso,
-  });
+  }, supabase);
   meta.case_folder_id = id;
   meta.last_synced_at = nowIso;
   return id;
@@ -116,6 +153,7 @@ async function ensureSubfolder(
   caseFolderId: string,
   driveFolder: string,
   meta: CaseDriveMeta,
+  supabase: DriveDb,
 ): Promise<string | null> {
   const folderName = DRIVE_SUBFOLDER_NAMES[driveFolder];
   if (!folderName) return null;
@@ -127,7 +165,7 @@ async function ensureSubfolder(
   // subfolder key at the same instant (we're sending the whole subfolders
   // object). True per-key merge needs a deeper RPC; deferred since the
   // realistic concurrency for sub-folder creation is very low.
-  await patchCaseDriveMeta(caseId, { subfolders: newSubfolders });
+  await patchCaseDriveMeta(caseId, { subfolders: newSubfolders }, supabase);
   meta.subfolders = newSubfolders;
   return id;
 }
@@ -144,15 +182,15 @@ export async function uploadCaseDocumentToDrive(
   if (!client) return { ok: false, reason: 'not_connected' };
 
   try {
-    const meta = await getCaseDriveMeta(input.caseId);
+    const supabase = await driveDb(false);
+    const meta = await getCaseDriveMeta(input.caseId, supabase);
     const rootId = await ensureRootFolder(client);
     const caseFolderId = await ensureCaseFolder(
       client,
       rootId,
       input.caseId,
-      input.caseNumber,
-      input.familyName,
       meta,
+      supabase,
     );
     const subfolderId = await ensureSubfolder(
       client,
@@ -160,6 +198,7 @@ export async function uploadCaseDocumentToDrive(
       caseFolderId,
       input.driveFolder,
       meta,
+      supabase,
     );
     if (!subfolderId) return { ok: false, reason: 'no_subfolder_for_category' };
 
@@ -187,24 +226,25 @@ export async function uploadCaseDocumentToDrive(
  */
 export async function provisionCaseDriveFolders(input: {
   caseId: string;
-  caseNumber: string;
-  familyName: string;
+  /** Service-role path — for the one-shot backfill, which runs outside any
+   *  user session and must reach every case in the portfolio. */
+  admin?: boolean;
 }): Promise<void> {
   const client = await getDriveClientIfConnected();
   if (!client) return;
   try {
-    const meta = await getCaseDriveMeta(input.caseId);
+    const supabase = await driveDb(input.admin === true);
+    const meta = await getCaseDriveMeta(input.caseId, supabase);
     const rootId = await ensureRootFolder(client);
     const caseFolderId = await ensureCaseFolder(
       client,
       rootId,
       input.caseId,
-      input.caseNumber,
-      input.familyName,
       meta,
+      supabase,
     );
     for (const folder of Object.keys(DRIVE_SUBFOLDER_NAMES)) {
-      await ensureSubfolder(client, input.caseId, caseFolderId, folder, meta);
+      await ensureSubfolder(client, input.caseId, caseFolderId, folder, meta, supabase);
     }
   } catch (err) {
     console.error('[provisionCaseDriveFolders] best-effort provision failed', {

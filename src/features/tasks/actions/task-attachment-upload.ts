@@ -130,8 +130,7 @@ export async function finalizeTaskAttachmentUploadAction(
     return { ok: false, error: 'unauthorized' };
   }
 
-  const ctx = await resolveAttachmentContext(input.caseId);
-  if (!ctx) {
+  if (!(await caseIsVisible(input.caseId))) {
     await cleanupBlob(storagePath);
     return { ok: false, error: 'unauthorized' };
   }
@@ -168,8 +167,6 @@ export async function finalizeTaskAttachmentUploadAction(
   if (!dlErr && blob) {
     const out = await uploadCaseDocumentToDrive({
       caseId: input.caseId,
-      caseNumber: ctx.caseNumber,
-      familyName: ctx.familyName,
       driveFolder: TASK_ATTACHMENT_DRIVE_FOLDER,
       file: { content: await blob.arrayBuffer(), name: safeFileName, mimeType: sniffed.mime },
     });
@@ -226,24 +223,16 @@ async function taskBelongsToVisibleCase(taskId: string, caseId: string): Promise
   return Boolean(data);
 }
 
-async function resolveAttachmentContext(
-  caseId: string,
-): Promise<{ caseNumber: string; familyName: string } | null> {
+/** RLS-backed visibility gate: can this caller see the case at all? (Drive
+ *  folder naming is resolved inside the uploader, so nothing else is needed.) */
+async function caseIsVisible(caseId: string): Promise<boolean> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('cases')
-    .select('case_number, primary_borrower:primary_borrower_id(first_name, last_name)')
+    .select('id')
     .eq('id', caseId)
     .maybeSingle();
-  if (error || !data) return null;
-
-  const borrower = Array.isArray(data.primary_borrower)
-    ? data.primary_borrower[0]
-    : data.primary_borrower;
-  const familyName =
-    [borrower?.last_name, borrower?.first_name].filter(Boolean).join('_') || 'Case';
-
-  return { caseNumber: data.case_number, familyName };
+  return !error && data != null;
 }
 
 async function cleanupBlob(path: string): Promise<void> {

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { after } from 'next/server';
 
+import { provisionCaseDriveFolders } from '@/features/integrations/services/drive-case-uploader';
 import { userHasPermission } from '@/lib/auth/permissions';
 import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
@@ -95,5 +96,11 @@ export async function saveCaseDraftAction(
   // Defer the heavy dashboard rebuild to after the response — the dashboard
   // only needs to be fresh on the user's next visit there.
   after(() => revalidatePath('/cases'));
+
+  // Open the client's Drive folder tree the moment the case exists, so the
+  // office has ONE central folder per client to file into instead of hand-made
+  // ones. Best-effort and deferred: Drive is a secondary store and its API hop
+  // must never sit inside the save (never awaited, never throws).
+  after(() => provisionCaseDriveFolders({ caseId }));
   return { ok: true, caseId };
 }

@@ -16,28 +16,10 @@ export async function mirrorReceiptToDrive(
 ): Promise<void> {
   try {
     const supabase = await createClient();
-    const { data: caseRow } = await supabase
-      .from('cases')
-      .select('case_number, primary_borrower_id')
-      .eq('id', caseId)
-      .maybeSingle();
-    if (!caseRow) return;
-
-    let familyName = 'Case';
-    if (caseRow.primary_borrower_id) {
-      const { data: borrower } = await supabase
-        .from('borrowers')
-        .select('first_name, last_name')
-        .eq('id', caseRow.primary_borrower_id)
-        .maybeSingle();
-      familyName =
-        [borrower?.last_name, borrower?.first_name].filter(Boolean).join('_') || 'Case';
-    }
-
+    // Folder naming lives in the uploader now (it resolves the client name
+    // itself, and only when a folder actually has to be created).
     const out = await uploadCaseDocumentToDrive({
       caseId,
-      caseNumber: caseRow.case_number,
-      familyName,
       driveFolder: 'misc',
       file,
     });
