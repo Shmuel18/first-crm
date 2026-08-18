@@ -14,7 +14,12 @@ export const runtime = 'nodejs';
 export const maxDuration = 30;
 
 function errorJson(error: string, status: number): NextResponse {
-  return NextResponse.json({ ok: false, error }, { status });
+  // no-store on errors too: an error with no cache directive can be held by an
+  // intermediary and replayed, with no request ever reaching this handler again.
+  return NextResponse.json(
+    { ok: false, error },
+    { status, headers: { 'Cache-Control': 'no-store, max-age=0' } },
+  );
 }
 
 export async function GET(request: NextRequest): Promise<NextResponse | Response> {
@@ -70,10 +75,22 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
     );
 
     const filename = `kaufman-timesheet-${dateStamp()}.xlsx`;
+    const mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+    // Same escape hatch as /api/exports/cases: the office network runs behind a
+    // content filter that blocks any reply shaped like a file download and never
+    // lets the request reach us. base64 inside JSON passes. This export is
+    // manager-only — i.e. exactly the person sitting behind that filter.
+    if (request.nextUrl.searchParams.get('transport') === 'json') {
+      return NextResponse.json(
+        { ok: true, filename, mimeType, base64: body.toString('base64') },
+        { headers: { 'Cache-Control': 'no-store, max-age=0' } },
+      );
+    }
     return new Response(new Uint8Array(body), {
       status: 200,
       headers: {
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Type': mimeType,
         'Content-Length': String(body.byteLength),
         'Content-Disposition': `attachment; filename="${filename}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
         'Cache-Control': 'no-store, max-age=0',
