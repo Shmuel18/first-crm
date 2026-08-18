@@ -9,8 +9,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+
 import { useLocale, useTranslations } from 'next-intl';
 
+import { CHART_INITIAL_DIMENSION } from '@/components/shared/chart-initial-dimension';
 import { parseLocale } from '@/lib/i18n/direction';
 import { splitPipeline, statusName } from '../domain/metrics';
 import { formatInt } from '../utils/format';
@@ -47,7 +49,7 @@ export function PipelineFunnel({ snapshot }: Props) {
               the YAxis labels sit in their own clean left column (the Hebrew
               text itself still shapes RTL). */}
           <div className="h-80" dir="ltr">
-            <ResponsiveContainer width="100%" height="100%" minHeight={280}>
+            <ResponsiveContainer width="100%" height="100%" initialDimension={CHART_INITIAL_DIMENSION}>
               <BarChart layout="vertical" data={data} margin={{ top: 4, right: 16, bottom: 4, left: 8 }}>
                 <XAxis type="number" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} allowDecimals={false} />
                 <YAxis
