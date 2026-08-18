@@ -17,6 +17,12 @@ export const maxDuration = 300;
  *  maxDuration. Re-run until `remaining` comes back 0. */
 const BATCH_SIZE = 25;
 
+/** Rename checks are 1-2 API calls (read the name, PATCH only if it differs),
+ *  so the whole portfolio fits in one pass. It has to: the listing is ordered,
+ *  so a cap smaller than the portfolio would re-check the same head every run
+ *  and never reach the tail. Raise this if the office ever passes ~500 cases. */
+const RENAME_CHECK_LIMIT = 500;
+
 /**
  * One-shot backfill: give every existing, non-deleted case the same central
  * Drive folder tree that new cases now get at save time, and rename the
@@ -76,12 +82,10 @@ export async function GET(request: Request): Promise<Response> {
     await provisionCaseDriveFolders({ caseId: row.id, admin: true });
   }
 
-  // Rename budget is whatever the provision pass left of the batch — a rename
-  // is 1-2 API calls vs a provision's ~7, so the tail runs fast.
   let renamed = 0;
   let renameChecked = 0;
   for (const row of toRename) {
-    if (renameChecked >= BATCH_SIZE * 4) break;
+    if (renameChecked >= RENAME_CHECK_LIMIT) break;
     renameChecked += 1;
     if ((await renameCaseDriveFolder({ caseId: row.id, admin: true })) === 'renamed') {
       renamed += 1;
