@@ -44,8 +44,14 @@ export const runtime = 'nodejs';
 // stream incrementally.
 export const maxDuration = 30;
 
+/**
+ * Per-user hourly caps. PDF was 5, set when one export weighed 2.79 MB — the
+ * header logo alone was a 2.1 MB PNG. That export is now 33 KB, and a client on
+ * a filtered network spends TWO slots per download (the blocked attempt plus the
+ * json-transport retry), which made 5 read as "about two exports an hour".
+ */
 const RATE_LIMITS = {
-  pdf: { max: 5, action: 'export_cases_pdf' },
+  pdf: { max: 20, action: 'export_cases_pdf' },
   xlsx: { max: 10, action: 'export_cases_xlsx' },
 } as const;
 
@@ -143,7 +149,8 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
       cases.map((c) => c.assigned_advisor_id).filter((v): v is string => Boolean(v)),
     );
     const advisorNamesById = new Map<string, string>();
-    for (const [id, contact] of advisorContacts) if (contact.name) advisorNamesById.set(id, contact.name);
+    for (const [id, contact] of advisorContacts)
+      if (contact.name) advisorNamesById.set(id, contact.name);
     const rows = buildExportRows(cases, locale, advisorNamesById);
 
     let body: Buffer;
@@ -167,10 +174,11 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
       mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
       filename = `kaufman-cases-${dateStamp()}.xlsx`;
     } else {
-      const generatedAtLabel = new Date().toLocaleDateString(
-        locale === 'he' ? 'he-IL' : 'en-GB',
-        { day: 'numeric', month: 'long', year: 'numeric' },
-      );
+      const generatedAtLabel = new Date().toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-GB', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
       body = await generateCasesPdf(rows, {
         title: t('savedViews.pdf.title'),
         subtitle: t('savedViews.pdf.subtitle', { count: rows.length }),
@@ -188,9 +196,30 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
     }
 
     // Fire-and-forget audit; don't block the download on the audit insert.
-    void logCasesExport({ userId: userRes.user.id, format, count: cases.length }).catch(
-      (err) => console.error('[exports] audit log failed', err),
+    void logCasesExport({ userId: userRes.user.id, format, count: cases.length }).catch((err) =>
+      console.error('[exports] audit log failed', err),
     );
+
+    // ESCAPE HATCH for filtered networks (?transport=json).
+    //
+    // The office's connection runs through a content filter (Nativ). It blocks
+    // this endpoint's normal reply — a GET whose response is application/pdf
+    // with Content-Disposition: attachment reads as a file download — and
+    // answers with its own HTML block page carrying 403, a fake
+    // "Server: Microsoft IIS/5.0" banner and a 2012 date. The request never
+    // reaches Vercel, so nothing is wrong on our side and nothing is logged.
+    //
+    // The bank-summary PDF is unaffected because it travels as base64 inside a
+    // Server Action response: no file signature on the wire for a filter to
+    // match. This transport gives the export the same shape. Same bytes, same
+    // permissions, same rate limit — only the envelope changes, and the client
+    // rebuilds the file locally.
+    if (request.nextUrl.searchParams.get('transport') === 'json') {
+      return NextResponse.json(
+        { ok: true, filename, mimeType, base64: body.toString('base64') },
+        { headers: { 'Cache-Control': 'no-store, max-age=0' } },
+      );
+    }
 
     return new Response(new Uint8Array(body), {
       status: 200,

@@ -13,6 +13,59 @@ import {
 
 type Format = 'xlsx' | 'pdf';
 
+/** Hand a blob to the browser as a download. */
+function saveBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Second attempt for networks that block file downloads.
+ *
+ * The office runs behind a content filter (Nativ). It never lets the normal
+ * reply through — a GET answering with application/pdf + Content-Disposition:
+ * attachment reads as a file download — and substitutes its own HTML block
+ * page with a 403, a fake "Server: Microsoft IIS/5.0" banner and a 2012 date.
+ * The request never reaches our server, so nothing is logged and nothing is
+ * broken on our side.
+ *
+ * ?transport=json returns the identical bytes as base64 inside JSON — the same
+ * shape the bank-summary PDF uses, which passes that filter today. Only
+ * attempted when the failing response was NOT our JSON error contract, i.e.
+ * when something other than our handler answered.
+ */
+async function retryViaJsonTransport(endpoint: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${endpoint}&transport=json`, { cache: 'no-store' });
+    if (!res.ok) return false;
+    const data = (await res.json()) as {
+      ok?: boolean;
+      base64?: string;
+      filename?: string;
+      mimeType?: string;
+    };
+    if (data?.ok !== true || !data.base64) return false;
+    // base64 → bytes, copied char by char so the string is never treated as utf-8.
+    const binary = atob(data.base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    saveBlob(
+      new Blob([bytes], { type: data.mimeType ?? 'application/octet-stream' }),
+      data.filename ?? 'export',
+    );
+    return true;
+  } catch (err) {
+    console.error('[export] json-transport retry failed', err);
+    return false;
+  }
+}
+
 /**
  * Is this the installed app rather than a browser tab? There an `<a download>`
  * pointed at a blob URL is ignored — the click does nothing and the file is
@@ -96,6 +149,10 @@ export function DashboardExportButtons() {
           // Non-JSON body — a gateway error (504/502) rather than our handler.
         }
         console.error('[export] server rejected', { status: res.status, errorKey });
+        // errorKey === null means the body was not our JSON error contract, so
+        // this reply did not come from our handler — a network filter answered.
+        // Try the envelope that such filters let through before giving up.
+        if (errorKey === null && (await retryViaJsonTransport(endpoint))) return;
         setError(
           errorKey === 'empty'
             ? t('exportEmpty')
@@ -114,17 +171,9 @@ export function DashboardExportButtons() {
         const fromPlain = /filename="([^"]+)"/i.exec(cd);
         const filename = fromStar
           ? decodeURIComponent(fromStar[1] ?? '')
-          : fromPlain?.[1] ?? `cases.${format}`;
+          : (fromPlain?.[1] ?? `cases.${format}`);
 
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        saveBlob(await res.blob(), filename);
       } catch (err) {
         // The file exists server-side; the browser wouldn't take it (an
         // installed PWA / iOS standalone blocking `a.download`, or a blob the
@@ -136,7 +185,7 @@ export function DashboardExportButtons() {
   };
 
   return (
-    <div className="inline-flex items-center relative">
+    <div className="relative inline-flex items-center">
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
@@ -145,7 +194,7 @@ export function DashboardExportButtons() {
               disabled={isPending}
               aria-busy={isPending}
               aria-label={t('export')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 bg-white text-xs text-neutral-700 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 disabled:opacity-60 transition"
+              className="focus-visible:ring-brand-gold-text/40 inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs text-neutral-700 transition hover:bg-neutral-50 focus-visible:ring-2 focus-visible:outline-none disabled:opacity-60"
             >
               {isPending ? (
                 <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
@@ -162,17 +211,17 @@ export function DashboardExportButtons() {
             it can actually shrink down to the trigger. justify-center on
             each item centers the icon+label pair so the spare width sits
             symmetrically on both sides instead of all on one. */}
-        <DropdownMenuContent align="end" className="min-w-0 w-(--anchor-width)">
+        <DropdownMenuContent align="end" className="w-(--anchor-width) min-w-0">
           <DropdownMenuItem
             onClick={() => handleExport('xlsx')}
-            className="text-xs py-1 px-2.5 justify-center"
+            className="justify-center px-2.5 py-1 text-xs"
           >
             <FileSpreadsheet className="size-3.5" aria-hidden="true" />
             {t('formatExcel')}
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => handleExport('pdf')}
-            className="text-xs py-1 px-2.5 justify-center"
+            className="justify-center px-2.5 py-1 text-xs"
           >
             <FileText className="size-3.5" aria-hidden="true" />
             {t('formatPdf')}
@@ -183,7 +232,7 @@ export function DashboardExportButtons() {
       {error && (
         <span
           role="alert"
-          className="absolute top-full end-0 mt-1 text-xs text-red-700 whitespace-nowrap"
+          className="absolute end-0 top-full mt-1 text-xs whitespace-nowrap text-red-700"
         >
           {error}
         </span>
