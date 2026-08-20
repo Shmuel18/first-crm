@@ -6,7 +6,7 @@ import { MetaItem, SummaryCell4, labelDir } from './shared';
 /**
  * Guards the two RTL rules that are easy to "fix" back into bugs. Both were
  * found by extracting glyph positions from a rendered PDF (see
- * scripts/audit-pdf-rtl.js) and both fail silently in production — the text
+ * scripts/audit-pdf-rtl.cjs) and both fail silently in production — the text
  * either lands on the wrong side or disappears entirely — so a hermetic test
  * is the only thing that will catch a regression in review.
  */
