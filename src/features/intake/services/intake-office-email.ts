@@ -3,11 +3,11 @@ import { getTranslations } from 'next-intl/server';
 import { renderSystemEmail } from '@/features/templates/services/system-email-templates.service';
 import { env, isEmailConfigured } from '@/lib/env';
 import { escapeHtml } from '@/lib/email/render';
+import { OFFICE_EMAIL } from '@/lib/email/addresses';
 import { sendEmail } from '@/lib/email/send';
 
 import type { IntakeInput } from '../schemas/intake.schema';
 
-const OFFICE_EMAIL = 'office@kaufman-finance.com';
 const BLACK = '#0A0A0A';
 
 /** Standard purpose options stored as stable keys (mig 175 / step-composition). */

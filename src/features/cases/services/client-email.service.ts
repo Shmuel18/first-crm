@@ -1,12 +1,12 @@
 import { getTranslations } from 'next-intl/server';
 
 import { renderBrandedEmail } from '@/lib/email/render';
+import { OFFICE_EMAIL } from '@/lib/email/addresses';
 import { sendEmail } from '@/lib/email/send';
 import { sanitizeRichTextHtml } from '@/lib/utils/sanitize-html';
 
 import type { EmailAttachment } from '@/lib/email/send';
 
-const OFFICE_EMAIL = 'office@kaufman-finance.com';
 
 type BrandedClientEmailInput = {
   to: string;
