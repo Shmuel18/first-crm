@@ -8,6 +8,8 @@ import { FileText } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
+
 import { updateCaseFieldAction } from '../actions/update-case-field';
 
 import { CaseBlock } from './case-block';
@@ -80,12 +82,12 @@ export function CaseRequestDetailsBlock({ caseId, initialHtml, canEdit = true }:
       const previousHtml = savedHtmlRef.current;
       if (nextHtml === previousHtml) continue;
 
-      const result = await updateCaseFieldAction(
+      const result = await callAction(() => updateCaseFieldAction(
         caseId,
         'request_details',
         nextHtml || null,
         previousHtml === '' ? null : previousHtml,
-      );
+      ));
       if (result.ok) {
         savedHtmlRef.current = nextHtml;
         setSavedHtml(nextHtml);

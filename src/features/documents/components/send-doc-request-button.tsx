@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Tooltip } from '@/components/ui/tooltip';
 import { buildWhatsAppLink } from '@/features/borrowers/domain/contact-links';
+import { callAction } from '@/lib/actions/call-action';
 import { env } from '@/lib/env';
 import { parseLocale } from '@/lib/i18n/direction';
 
@@ -79,7 +80,7 @@ export function SendDocRequestButton({ caseId, title, borrower, checklist }: Pro
 
   const sendEmail = (subject: string, body: string, emailLocale: 'he' | 'en'): void => {
     startTransition(async () => {
-      const res = await sendDocumentRequestAction({ caseId, locale: emailLocale, subject, body });
+      const res = await callAction(() => sendDocumentRequestAction({ caseId, locale: emailLocale, subject, body }));
       if (res.ok) {
         toast.success(t('sent'));
         setDraft(null);

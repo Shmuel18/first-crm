@@ -6,6 +6,8 @@ import { Check, ChevronDown, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
+
 import { quickUpdateCaseFieldAction } from '../actions/quick-update-case';
 
 import { CaseStatusBadge } from './case-status-badge';
@@ -95,7 +97,7 @@ export function EditableStatusCell({
     setStatusColor(option.color);
 
     startTransition(async () => {
-      const result = await quickUpdateCaseFieldAction(caseId, 'status_id', option.id);
+      const result = await callAction(() => quickUpdateCaseFieldAction(caseId, 'status_id', option.id));
       if (!result.ok) {
         setStatusId(prevId);
         setStatusName(prevName);

@@ -6,6 +6,7 @@ import { Check, Lock, RotateCcw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
 import type { Locale } from '@/lib/i18n/direction';
 
 import { setUserPermissionAction } from '../actions/set-user-permission';
@@ -70,7 +71,7 @@ export function UserPermissionsEditor({ members, permissions, granted, overrides
     const prev = ov;
     setOv(optimistic);
     startTransition(async () => {
-      const res = await setUserPermissionAction(selectedUserId, permId, mode);
+      const res = await callAction(() => setUserPermissionAction(selectedUserId, permId, mode));
       if (!res.ok) {
         setOv(prev);
         toast.error(t(res.error === 'admin_locked' ? 'toast.adminLocked' : 'toast.failed'));

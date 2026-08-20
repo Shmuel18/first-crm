@@ -11,6 +11,8 @@ import {
   type BankPdfSignatureMode,
 } from '@/features/cases/domain/bank-pdf-signature';
 
+import { callAction } from '@/lib/actions/call-action';
+
 import { updateBankPdfSignatureAction } from '../actions/update-bank-pdf-signature';
 
 type Props = { initialMode: BankPdfSignatureMode };
@@ -31,7 +33,7 @@ export function BankPdfSignatureControl({ initialMode }: Props) {
 
     startTransition(async () => {
       try {
-        const result = await updateBankPdfSignatureAction(next);
+        const result = await callAction(() => updateBankPdfSignatureAction(next));
         if (result.ok) {
           toast.success(t('saved'));
           return;

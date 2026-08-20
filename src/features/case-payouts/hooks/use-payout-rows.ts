@@ -5,6 +5,7 @@ import { useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
 import { useInlineMutationSync } from '@/lib/hooks/use-inline-mutation-sync';
 import { useOptimisticIds } from '@/lib/hooks/use-optimistic-ids';
 import { useSyncedRows } from '@/lib/hooks/use-synced-rows';
@@ -81,7 +82,10 @@ export function usePayoutRows(
         realId = await resolveRealId(id);
         // Insert failed — addRow already removed the row and toasted once.
         if (!realId) return;
-        const result = await updatePayoutFieldAction(realId, caseId, field, value);
+        // `realId` is a `let`, so its non-null narrowing does not survive into
+        // the callback below — bind the proven value to a const first.
+        const resolvedId = realId;
+        const result = await callAction(() => updatePayoutFieldAction(resolvedId, caseId, field, value));
         if (!result.ok) {
           message = result.message;
           throw new Error(result.error);
@@ -109,7 +113,7 @@ export function usePayoutRows(
         const realId = await resolveRealId(id);
         // Never-inserted row: nothing to delete server-side, addRow toasted.
         if (realId) {
-          const result = await deletePayoutAction(realId, caseId);
+          const result = await callAction(() => deletePayoutAction(realId, caseId));
           if (!result.ok) throw new Error(result.error);
           refreshSoon();
         }

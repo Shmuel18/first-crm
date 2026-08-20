@@ -18,6 +18,7 @@ import { DraftRequestDetailsBlock } from './draft-request-details-block';
 
 import { saveCaseDraftAction } from '../actions/save-case-draft';
 
+import { callAction } from '@/lib/actions/call-action';
 import type { Locale } from '@/lib/i18n/direction';
 import { formatPersonName } from '@/lib/utils/person-name';
 
@@ -82,7 +83,7 @@ export function NewCasePageClient({ locale }: Props) {
     // programmatic push passes), so no stale prompt; on FAILURE isDirty stays
     // true and the unsaved-changes guard keeps protecting the entered data.
     startTransition(async () => {
-      const result = await saveCaseDraftAction(payload);
+      const result = await callAction(() => saveCaseDraftAction(payload));
       if (result.ok) {
         // Client-side navigation (instead of a server redirect inside the
         // action) lets /cases/[id]'s loading.tsx skeleton appear immediately

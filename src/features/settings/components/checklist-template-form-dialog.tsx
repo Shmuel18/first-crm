@@ -17,6 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { FormField, NativeSelect } from '@/components/shared/form-fields';
+import { callAction } from '@/lib/actions/call-action';
 
 import { createChecklistTemplateAction } from '../actions/create-checklist-template';
 import { updateChecklistTemplateAction } from '../actions/update-checklist-template';
@@ -74,8 +75,8 @@ export function ChecklistTemplateFormDialog({ open, onOpenChange, template }: Pr
 
     startTransition(async () => {
       const res = template
-        ? await updateChecklistTemplateAction({ ...payload, id: template.id })
-        : await createChecklistTemplateAction(payload);
+        ? await callAction(() => updateChecklistTemplateAction({ ...payload, id: template.id }))
+        : await callAction(() => createChecklistTemplateAction(payload));
       if (!res.ok) {
         toast.error(tc('saveFailed'));
         return;

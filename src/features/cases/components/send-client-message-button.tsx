@@ -16,6 +16,7 @@ import {
 import { Tooltip } from '@/components/ui/tooltip';
 import { buildWhatsAppLink } from '@/features/borrowers/domain/contact-links';
 import type { RenderedTemplate } from '@/features/templates/types';
+import { callAction } from '@/lib/actions/call-action';
 
 import { sendClientEmailAction } from '../actions/send-client-email';
 import { EmailAttachmentsField } from './email-attachments-field';
@@ -90,7 +91,7 @@ export function SendClientMessageButton({ caseId, title, borrower, templates }: 
       const uploads = attachments.flatMap((a) =>
         a.kind === 'upload' ? [{ path: a.path, fileName: a.fileName }] : [],
       );
-      const res = await sendClientEmailAction({ caseId, locale, subject, body, documentIds, uploads });
+      const res = await callAction(() => sendClientEmailAction({ caseId, locale, subject, body, documentIds, uploads }));
       if (res.ok) {
         toast.success(t('emailSent'));
         closeDialog();

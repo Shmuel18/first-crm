@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { ComposeEmailDialog } from '@/components/shared/compose-email-dialog';
+import { callAction } from '@/lib/actions/call-action';
 
 import { emailScenarioReportAction } from '../actions/email-scenario-report';
 import { generateReportPdfAction } from '../actions/generate-report-pdf';
@@ -43,7 +44,7 @@ export function ScenarioReportActions({ scenarioId, onEnsureSaved, conclusion, c
         toast.error(t('errors.unknown'));
         return;
       }
-      const result = await generateReportPdfAction({ scenarioId: id, advisorConclusion: conclusion.trim() || null });
+      const result = await callAction(() => generateReportPdfAction({ scenarioId: id, advisorConclusion: conclusion.trim() || null }));
       if (!result.ok) {
         toast.error(t(`errors.${result.error}`));
         return;
@@ -68,7 +69,7 @@ export function ScenarioReportActions({ scenarioId, onEnsureSaved, conclusion, c
         toast.error(t('errors.unknown'));
         return;
       }
-      const res = await emailScenarioReportAction({ scenarioId: id, locale, subject, body, advisorConclusion: conclusion.trim() || null });
+      const res = await callAction(() => emailScenarioReportAction({ scenarioId: id, locale, subject, body, advisorConclusion: conclusion.trim() || null }));
       if (res.ok) {
         toast.success(t('emailSent'));
         setDraft(null);

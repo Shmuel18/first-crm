@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { DateInputWithPicker } from '@/components/ui/date-input-with-picker';
+import { callAction } from '@/lib/actions/call-action';
 
 import { addMaaserEntryAction } from '../actions/add-maaser-entry';
 import type { MaaserEntryKind } from '../types';
@@ -34,12 +35,12 @@ export function MaaserEntryForm({ defaultDate }: Props) {
     if (!canSubmit) return;
     startTransition(async () => {
       try {
-        const res = await addMaaserEntryAction({
+        const res = await callAction(() => addMaaserEntryAction({
           entryDate,
           kind,
           amount: amountNum,
           description: description.trim() || null,
-        });
+        }));
         if (!res.ok) {
           toast.error(t(`errors.${res.error}`));
           return;

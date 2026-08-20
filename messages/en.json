@@ -125,7 +125,8 @@
       "consentRequired": "Please accept the privacy policy to continue.",
       "contactRequired": "Please provide a phone or email so we can reach you.",
       "rateLimited": "Too many requests from this address. Please try again in an hour.",
-      "unknown": "Something went wrong. Please try again."
+      "unknown": "Something went wrong. Please try again.",
+      "network": "The form was not submitted — you appear to be offline. Your answers are saved on this device; check your connection and send again."
     },
     "footer": {
       "privacy": "Privacy Policy",
@@ -205,6 +206,7 @@
     "done": "Done",
     "savedAgo": "Saved",
     "saveFailed": "Save failed. Try again.",
+    "noConnection": "No internet connection. The change was not saved — check your connection and try again.",
     "changedElsewhere": "Changed by someone else — reload to see the latest.",
     "noStatus": "No status",
     "comingSoon": "Coming soon",

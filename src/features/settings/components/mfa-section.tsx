@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { callAction } from '@/lib/actions/call-action';
 
 import { enrollMfaAction, verifyMfaEnrollmentAction } from '../actions/mfa';
 import { disableMfaAction, getMfaStatusAction } from '../actions/mfa-manage';
@@ -41,13 +42,13 @@ export function MfaSection() {
   }, []);
 
   async function refreshStatus(): Promise<void> {
-    const res = await getMfaStatusAction();
+    const res = await callAction(() => getMfaStatusAction());
     if (res.ok) setStatus({ enrolled: res.enrolled, factorId: res.factorId });
   }
 
   function handleStartEnroll(): void {
     startTransition(async () => {
-      const res = await enrollMfaAction();
+      const res = await callAction(() => enrollMfaAction());
       if (!res.ok) {
         toast.error(res.error === 'already_enrolled' ? t('errors.alreadyEnrolled') : t('errors.generic'));
         return;
@@ -62,7 +63,7 @@ export function MfaSection() {
     if (!enroll) return;
     setCodeError(null);
     startTransition(async () => {
-      const res = await verifyMfaEnrollmentAction(enroll.factorId, code);
+      const res = await callAction(() => verifyMfaEnrollmentAction(enroll.factorId, code));
       if (!res.ok) {
         setCodeError(res.error === 'invalid_code' ? t('errors.invalidCode') : t('errors.generic'));
         return;
@@ -78,7 +79,7 @@ export function MfaSection() {
     if (!status?.factorId) return;
     if (!confirm(t('confirmDisable'))) return;
     startTransition(async () => {
-      const res = await disableMfaAction(status.factorId!);
+      const res = await callAction(() => disableMfaAction(status.factorId!));
       if (!res.ok) {
         toast.error(t('errors.generic'));
         return;

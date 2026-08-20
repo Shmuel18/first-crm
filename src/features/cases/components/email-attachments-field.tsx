@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE_BYTES } from '@/features/documents/schemas/document.schema';
+import { callAction } from '@/lib/actions/call-action';
 
 import { listCaseDocumentsForEmailAction } from '../actions/list-case-documents-for-email';
 import { prepareEmailAttachmentAction } from '../actions/prepare-email-attachment';
@@ -89,12 +90,12 @@ export function EmailAttachmentsField({
     setUploading(true);
     onUploadingChange(true);
     try {
-      const prep = await prepareEmailAttachmentAction({
+      const prep = await callAction(() => prepareEmailAttachmentAction({
         caseId,
         fileName: file.name,
         fileSize: file.size,
         mimeType: file.type,
-      });
+      }));
       if (!prep.ok) return setError(t('uploadFailed'));
       const put = await fetch(prep.signedUrl, {
         method: 'PUT',
@@ -114,7 +115,7 @@ export function EmailAttachmentsField({
   async function loadDocs(): Promise<void> {
     if (docs !== null || loadingDocs) return;
     setLoadingDocs(true);
-    const res = await listCaseDocumentsForEmailAction(caseId);
+    const res = await callAction(() => listCaseDocumentsForEmailAction(caseId));
     setDocs(res.ok ? res.documents : []);
     setLoadingDocs(false);
   }

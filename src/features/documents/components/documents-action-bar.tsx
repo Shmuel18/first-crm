@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 
 import { BackLink } from '@/components/shared/back-link';
 import { Tooltip } from '@/components/ui/tooltip';
+import { callAction } from '@/lib/actions/call-action';
 import { parseLocale } from '@/lib/i18n/direction';
 
 import { syncDriveDocumentsAction } from '../actions/sync-drive-documents';
@@ -57,7 +58,7 @@ export function DocumentsActionBar({
 
   const handleSync = () =>
     startTransition(async () => {
-      const res = await syncDriveDocumentsAction(caseId);
+      const res = await callAction(() => syncDriveDocumentsAction(caseId));
       if (res.ok) {
         const parts: string[] = [];
         if (res.imported > 0) parts.push(tSync('imported', { count: res.imported }));

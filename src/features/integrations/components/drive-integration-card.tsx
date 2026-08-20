@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { callAction } from '@/lib/actions/call-action';
 
 import { disconnectGoogleDriveAction } from '../actions/disconnect-google-drive';
 import type { DriveIntegrationView } from '../types';
@@ -58,7 +59,7 @@ export function DriveIntegrationCard({
   const handleDisconnectConfirmed = () =>
     startTransition(async () => {
       setConfirmOpen(false);
-      await disconnectGoogleDriveAction();
+      await callAction(() => disconnectGoogleDriveAction());
     });
 
   const isConnected = view.status === 'connected';

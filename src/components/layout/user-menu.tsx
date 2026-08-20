@@ -34,6 +34,9 @@ export function UserMenu({ fullName, initials, roleName }: UserMenuProps) {
   const handleLogout = (): void => {
     startLogout(async () => {
       await cleanupPwaSession();
+      // Deliberately NOT wrapped in callAction: logoutAction returns void and
+      // ends in redirect(), so there is no result to inspect. A dropped
+      // connection here is self-evident — the user stays signed in, in place.
       await logoutAction();
     });
   };
@@ -68,6 +71,8 @@ export function UserMenu({ fullName, initials, roleName }: UserMenuProps) {
     if (locale === currentLocale || isPending) return;
     setPendingLocale(locale);
     startTransition(async () => {
+      // Same as logout above: returns void, and a failure shows itself (the
+      // interface simply stays in the previous language).
       await switchLocaleAction(locale);
       setPendingLocale(null);
       setOpen(false);

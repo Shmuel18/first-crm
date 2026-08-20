@@ -5,6 +5,7 @@ import { useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
 import { useInlineMutationSync } from '@/lib/hooks/use-inline-mutation-sync';
 import { useSyncedRows } from '@/lib/hooks/use-synced-rows';
 
@@ -49,7 +50,7 @@ export function useCaseProperties(caseId: string, initial: ReadonlyArray<CasePro
     beginOp();
     startAdd(async () => {
       try {
-        const res = await addCasePropertyAction(caseId);
+        const res = await callAction(() => addCasePropertyAction(caseId));
         if (!res.ok) {
           toast.error(t('addFailed'));
           refreshSoon();
@@ -68,7 +69,7 @@ export function useCaseProperties(caseId: string, initial: ReadonlyArray<CasePro
     setRows((r) => r.filter((p) => p.id !== id));
     beginOp();
     try {
-      const res = await removeCasePropertyAction(caseId, id);
+      const res = await callAction(() => removeCasePropertyAction(caseId, id));
       if (!res.ok) {
         setRows(prev);
         toast.error(t('removeFailed'));
@@ -94,7 +95,7 @@ export function useCaseProperties(caseId: string, initial: ReadonlyArray<CasePro
       setRows((r) => r.map((p) => (p.id === id ? { ...p, [field]: coerced as never } : p)));
       beginOp();
       try {
-        const res = await updateCasePropertyFieldAction(caseId, id, field, value);
+        const res = await callAction(() => updateCasePropertyFieldAction(caseId, id, field, value));
         if (!res.ok) {
           setRows(prev);
           return { ok: false };
@@ -120,8 +121,8 @@ export function useCaseProperties(caseId: string, initial: ReadonlyArray<CasePro
       );
       beginOp();
       try {
-        const r1 = await updateCasePropertyFieldAction(caseId, id, 'case_type_primary_id', primary);
-        const r2 = await updateCasePropertyFieldAction(caseId, id, 'case_type_other_text', other);
+        const r1 = await callAction(() => updateCasePropertyFieldAction(caseId, id, 'case_type_primary_id', primary));
+        const r2 = await callAction(() => updateCasePropertyFieldAction(caseId, id, 'case_type_other_text', other));
         if (!r1.ok || !r2.ok) {
           setRows(prev);
           toast.error(t('saveFailed'));

@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { callAction } from '@/lib/actions/call-action';
 import { parseLocale } from '@/lib/i18n/direction';
 import { formatDateShort } from '@/lib/utils/format-date';
 
@@ -101,7 +102,7 @@ export function DocumentPreviewModal({
         setError(tErr('unauthorized'));
         return;
       }
-      const res = await updateDocumentStatusAction(doc.id, caseId, next);
+      const res = await callAction(() => updateDocumentStatusAction(doc.id, caseId, next));
       if (!res.ok) {
         setError(res.error === 'unauthorized' ? tErr('unauthorized') : tErr('statusUpdateFailed'));
       } else {
@@ -117,7 +118,7 @@ export function DocumentPreviewModal({
         setError(tErr('unauthorized'));
         return;
       }
-      const res = await deleteDocumentAction(doc.id, caseId);
+      const res = await callAction(() => deleteDocumentAction(doc.id, caseId));
       if (!res.ok) {
         setError(res.error === 'unauthorized' ? tErr('unauthorized') : tErr('deleteFailed'));
       } else {

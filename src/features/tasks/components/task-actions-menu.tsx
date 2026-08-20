@@ -15,6 +15,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { callAction } from '@/lib/actions/call-action';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,7 +63,7 @@ export function TaskActionsMenu({ task, onEdit, onReassign, trigger }: Props) {
 
   const handleSnooze = (preset: 'hour' | 'threeHours' | 'day') => {
     startTransition(async () => {
-      const res = await snoozeTaskAction(task.id, preset);
+      const res = await callAction(() => snoozeTaskAction(task.id, preset));
       if (!res.ok) toast.error(t('toast.snoozeFailed'));
       else toast.success(t('toast.snoozed'));
     });
@@ -70,7 +71,7 @@ export function TaskActionsMenu({ task, onEdit, onReassign, trigger }: Props) {
 
   const handleDelete = () => {
     startTransition(async () => {
-      const res = await deleteTaskAction(task.id);
+      const res = await callAction(() => deleteTaskAction(task.id));
       if (!res.ok) toast.error(t('toast.deleteFailed'));
       else toast.success(t('toast.deleted'));
     });

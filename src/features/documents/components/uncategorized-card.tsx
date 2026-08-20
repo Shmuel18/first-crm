@@ -7,6 +7,8 @@ import { AlertCircle, FileType2, Image as ImageIcon, FileText, Loader2 } from 'l
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
+
 import { assignDocumentCategoryAction } from '../actions/assign-document-category';
 import type { DocumentCategoryRow, DocumentWithRelations } from '../types';
 
@@ -85,7 +87,7 @@ function UncategorizedRow({
   const handleChange = async (categoryId: string) => {
     if (!categoryId || busy) return;
     setBusy(true);
-    const res = await assignDocumentCategoryAction(doc.id, caseId, categoryId);
+    const res = await callAction(() => assignDocumentCategoryAction(doc.id, caseId, categoryId));
     setBusy(false);
     if (!res.ok) {
       toast.error(tc('saveFailed'));

@@ -6,6 +6,8 @@ import { Plus, Star } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
+
 import { setPrimaryScenarioAction } from '../actions/set-primary-scenario';
 import { MixCalculator } from './mix-calculator';
 
@@ -96,7 +98,7 @@ export function MixWorkspace({
       return next;
     });
     startPrimary(async () => {
-      const res = await setPrimaryScenarioAction({ scenarioId, caseId, isPrimary: include });
+      const res = await callAction(() => setPrimaryScenarioAction({ scenarioId, caseId, isPrimary: include }));
       if (!res.ok) {
         setIncludedIds(prev);
         toast.error(tPrimary('error'));

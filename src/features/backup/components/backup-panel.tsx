@@ -15,6 +15,8 @@ import {
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
+
 import { runBackupAction } from '../actions/run-backup';
 import type { BackupView } from '../types';
 
@@ -34,7 +36,7 @@ export function BackupPanel({ view }: Props) {
 
   const runBackup = () =>
     startTransition(async () => {
-      const res = await runBackupAction();
+      const res = await callAction(() => runBackupAction());
       if (res.ok) {
         toast.success(t('toast.done', { count: res.totalRows }));
         router.refresh();

@@ -6,6 +6,8 @@ import { Loader2, Save } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
+
 import { updateRegulatoryThresholdsAction } from '../../actions/update-regulatory-thresholds';
 import { NumberCell } from '../number-cell';
 
@@ -25,7 +27,7 @@ export function RegulatoryThresholdsForm({ thresholds }: Props) {
 
   const save = () => {
     startTransition(async () => {
-      const result = await updateRegulatoryThresholdsAction(draft);
+      const result = await callAction(() => updateRegulatoryThresholdsAction(draft));
       if (result.ok) toast.success(t('saved'));
       else toast.error(t(`errors.${result.error}`));
     });

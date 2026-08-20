@@ -8,6 +8,7 @@ import { Circle, Settings2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
 import type { Locale } from '@/lib/i18n/direction';
 
 import { setEmployeeTrackingAction } from '../actions/set-employee-tracking';
@@ -110,12 +111,12 @@ function StaffRow({ staff, label, onChanged }: { staff: TrackedEmployee; label: 
     setTracked(nextTracked);
     setAuto(nextAuto);
     start(async () => {
-      const res = await setEmployeeTrackingAction({
+      const res = await callAction(() => setEmployeeTrackingAction({
         userId: staff.id,
         timeTracked: nextTracked,
         autoClockIn: nextAuto,
         hourlyRate: nextRate,
-      });
+      }));
       if (!res.ok) {
         setTracked(prevT);
         setAuto(prevA);

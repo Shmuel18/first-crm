@@ -15,6 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { callAction } from '@/lib/actions/call-action';
 import type { Locale } from '@/lib/i18n/direction';
 
 import { addChecklistTemplateAction } from '../actions/add-checklist-template';
@@ -53,7 +54,7 @@ export function ChecklistTemplatePicker({ caseId, locale }: Props) {
 
   const pick = (templateKey: string) => {
     startTransition(async () => {
-      const res = await addChecklistTemplateAction({ caseId, templateKey });
+      const res = await callAction(() => addChecklistTemplateAction({ caseId, templateKey }));
       if (!res.ok) {
         toast.error(tc('saveFailed'));
         return;
