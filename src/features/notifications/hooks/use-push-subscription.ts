@@ -117,7 +117,14 @@ export function usePushSubscription(): PushSubscriptionState {
       if (sub) {
         const { endpoint } = sub;
         await sub.unsubscribe().catch(() => {});
-        await callAction(() => unsubscribePushAction(endpoint));
+        const res = await callAction(() => unsubscribePushAction(endpoint));
+        // Only report "off" once the server row is actually gone. This block
+        // sits in a try/FINALLY with no catch, so before callAction a dropped
+        // request threw straight past setSubscribed(false) — keep that. Nothing
+        // prunes a stale subscription server-side (there is no 410 handling in
+        // the dispatch path), so flipping the toggle on a failed call would
+        // hide a row that still exists.
+        if (!res.ok) return;
       }
       setSubscribed(false);
     } finally {
