@@ -13,6 +13,7 @@ import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
 
 import { InviteMemberSchema } from '../schemas/team.schema';
 import { sendInviteEmail } from '../services/team-email';
+import { findDeletedMemberByEmail } from '../services/team-lookup.service';
 import type { InviteActionState } from '../types';
 
 /**
@@ -53,6 +54,13 @@ export async function inviteMemberAction(
   if (!ok) return { ok: false, error: 'rate_limited', values };
 
   const { email, first_name, last_name, phone, role_id } = parsed.data;
+
+  // A removed member keeps their auth user, so generateLink would just say
+  // "already registered" with no way forward. Offer the restore instead.
+  const removed = await findDeletedMemberByEmail(supabase, email);
+  if (removed) {
+    return { ok: false, error: 'email_exists_deleted', deletedMember: removed, values };
+  }
 
   const admin = createAdminClient();
 

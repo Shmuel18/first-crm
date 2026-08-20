@@ -24,6 +24,13 @@ export const InviteMemberSchema = z.object({
 
 export type InviteMemberInput = z.infer<typeof InviteMemberSchema>;
 
+/** Restore = the invite form's details re-applied to an existing (removed)
+ *  profile, so it reuses the same field rules minus the email (which is what
+ *  identified the tombstone in the first place). */
+export const RestoreMemberSchema = InviteMemberSchema.omit({ email: true }).extend({
+  userId: z.uuid(),
+});
+
 export const UpdateRoleSchema = z.object({
   userId: z.uuid(),
   roleId: z.uuid(),

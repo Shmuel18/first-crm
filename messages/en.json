@@ -3245,6 +3245,18 @@
         "emailExists": "This email is already registered.",
         "rateLimited": "Too many invites sent recently. Please try again in an hour.",
         "generic": "Sending the invite failed. Please try again."
+      },
+      "restore": {
+        "title": "{name} was removed from the team",
+        "body": "The account for this address still exists, so a new one can't be created. You can restore them — their history is kept, and the details you just entered (name, phone, role) will be applied. Cases and tasks reassigned to a manager on removal do not come back automatically.",
+        "action": "Restore to team",
+        "restored": "{name} was restored to the team",
+        "restoredAndEmailed": "Member restored and a set-password link was emailed to them",
+        "restoredNeedsLink": "Member restored. Send them a sign-in link from their row in the list.",
+        "errors": {
+          "unauthorized": "Only a manager can restore team members.",
+          "generic": "Restoring the member failed. Please try again."
+        }
       }
     }
   }

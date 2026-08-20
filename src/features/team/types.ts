@@ -28,9 +28,28 @@ export type InviteActionState =
       fieldErrors?: Record<string, string>;
       values?: Partial<Record<string, string>>;
     }
+  | {
+      // The address belongs to a member who was REMOVED from the team. The auth
+      // user still exists, so a plain invite can't succeed — the dialog offers
+      // to restore them instead.
+      ok: false;
+      error: 'email_exists_deleted';
+      deletedMember: { id: string; name: string };
+      values?: Partial<Record<string, string>>;
+    }
   | { ok: false; error: 'idle' };
 
 export const INVITE_ACTION_INITIAL: InviteActionState = { ok: false, error: 'idle' };
+
+export type RestoreMemberResult =
+  | {
+      ok: true;
+      userId: string;
+      /** True when the member never completed onboarding — they need a fresh
+       *  set-password link (issued through the resend-invite path). */
+      needsInvite: boolean;
+    }
+  | { ok: false; error: 'unauthorized' | 'validation' | 'not_found' | 'unknown' };
 
 export type UpdateMemberEmailActionState =
   | {
