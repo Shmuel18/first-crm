@@ -10,13 +10,7 @@ import * as Sentry from '@sentry/nextjs';
  * OUTSIDE NextIntlClientProvider + globals.css — so the copy is static and the
  * styles are inline (Hebrew-primary, brand colors).
  */
-export default function GlobalError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function GlobalError({ error }: { error: Error & { digest?: string } }) {
   useEffect(() => {
     console.error(error);
     Sentry.captureException(error);
@@ -51,9 +45,16 @@ export default function GlobalError({
             ID: {error.digest}
           </p>
         )}
+        {/* A full reload, NOT the `reset` React hands this boundary. The most
+            likely way to reach the LAST-RESORT boundary is a chunk of the root
+            layout failing to load (an installed iOS PWA cold-starts while the
+            radio is still waking). `reset()` re-renders the same tree against
+            the same already-failed chunk, so it cannot recover from that —
+            only a fresh document fetch can. reload() keeps the current URL, so
+            the user lands back where they were. */}
         <button
           type="button"
-          onClick={reset}
+          onClick={() => window.location.reload()}
           style={{
             marginTop: '0.5rem',
             padding: '0.5rem 1.25rem',

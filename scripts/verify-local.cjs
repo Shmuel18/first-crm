@@ -27,6 +27,12 @@ const ROOT = join(__dirname, '..');
 
 /** @type {{name: string, cmd: string, blocking: boolean, note?: string}[]} */
 const STEPS = [
+  {
+    name: 'PWA syntax',
+    cmd: 'node --check public/sw.js && node --check public/offline.js',
+    blocking: true,
+    note: 'syntax ONLY — nothing here tests service-worker behaviour or an iOS cold start',
+  },
   { name: 'Typecheck', cmd: 'npx tsc --noEmit', blocking: true },
   { name: 'Lint', cmd: 'npm run lint', blocking: true },
   { name: 'Test', cmd: 'npm test', blocking: true },

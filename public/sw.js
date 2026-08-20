@@ -24,7 +24,31 @@ const PRECACHE = [OFFLINE_URL, '/offline.js', '/icons/icon-192.png'];
  * far more often, which is why the same code only bites hard on iPhone. */
 const RETRY_DELAYS_MS = [300, 800];
 
+/* Build assets get ONE short retry, not the navigation ladder above. Same
+ * cold-start race, one layer down: the document loads and a layout chunk does
+ * not, which surfaces as a ChunkLoadError in global-error.tsx. Deliberately
+ * conservative — a page pulls ~19 scripts, so the two-step ladder could mean
+ * up to 57 requests for a single load. Next 16.3 ships chunk retry by default
+ * for Turbopack; REVISIT THIS THEN, since two retry layers would stack their
+ * delays. */
+const STATIC_PREFIX = '/_next/static/';
+const STATIC_RETRY_DELAY_MS = 250;
+
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function fetchStaticWithOneRetry(request) {
+  try {
+    return await fetch(request);
+  } catch (err) {
+    // Only a network EXCEPTION reaches here. A 404/403/500 resolves normally
+    // and is passed straight through — retrying those would be pointless load.
+    if (self.navigator.onLine === false) throw err;
+    await wait(STATIC_RETRY_DELAY_MS);
+    // The original Request is reused so its `?dpl=` deployment tag (Vercel skew
+    // protection) and headers are preserved exactly. Nothing is cached.
+    return fetch(request);
+  }
+}
 
 async function fetchWithRetry(request) {
   let lastError;
@@ -69,9 +93,20 @@ self.addEventListener('fetch', (event) => {
   // The precached shell assets (offline page chrome) are served cache-first —
   // they are static, non-sensitive, and needed exactly when the network is
   // down. Scoped to PRECACHE only; nothing else is ever read from the cache.
-  const path = new URL(req.url).pathname;
+  const url = new URL(req.url);
+  const path = url.pathname;
+  const sameOrigin = url.origin === self.location.origin;
+
   if (req.mode !== 'navigate' && PRECACHE.includes(path)) {
     event.respondWith(caches.match(path).then((cached) => cached || fetch(req)));
+    return;
+  }
+
+  // Immutable build output only. Scoped this tightly on purpose: /api, RSC
+  // payloads and Server Action POSTs must NOT be retried here — a retried
+  // mutation is a duplicated one, and callAction already owns that failure.
+  if (req.mode !== 'navigate' && sameOrigin && path.startsWith(STATIC_PREFIX)) {
+    event.respondWith(fetchStaticWithOneRetry(req));
     return;
   }
 
