@@ -51,7 +51,11 @@ const cspDirectives = [
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
-  "frame-src 'self' https://*.supabase.co https://drive.google.com https://docs.google.com",
+  // blob: — the print path builds an off-screen iframe from a blob: URL of the
+  // document (Storage blobs are cross-origin, so an iframe pointed straight at
+  // the signed URL can't be told to print). Blob frames are same-origin and
+  // created only by our own code.
+  "frame-src 'self' blob: https://*.supabase.co https://drive.google.com https://docs.google.com",
   ...(shouldUpgradeInsecureRequests ? ['upgrade-insecure-requests'] : []),
 ];
 

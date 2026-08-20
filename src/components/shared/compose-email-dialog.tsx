@@ -33,6 +33,12 @@ type Props = {
   /** Optional extra fields rendered below the body (e.g. an attachments picker).
    *  Attachment state lives in the parent, which reads it in its own onSend. */
   extraFields?: ReactNode;
+  /** Optional fields rendered ABOVE the subject — for a free recipient field,
+   *  which has to read first when the address isn't implied by the context. */
+  headerFields?: ReactNode;
+  /** Disables Send while the parent knows the draft isn't sendable yet
+   *  (e.g. no recipient typed, an attachment still uploading). */
+  sendDisabled?: boolean;
 };
 
 const escapeHtml = (s: string): string =>
@@ -68,6 +74,8 @@ export function ComposeEmailDialog({
   pending,
   onSend,
   extraFields,
+  headerFields,
+  sendDisabled = false,
 }: Props) {
   const t = useTranslations('composeEmail');
   const uiLocale: EmailLocale = useLocale() === 'en' ? 'en' : 'he';
@@ -93,6 +101,7 @@ export function ComposeEmailDialog({
         </DialogHeader>
         <p className="text-sm text-neutral-600">{t('hint')}</p>
         <div className="space-y-3">
+          {headerFields}
           <div>
             <label
               htmlFor="compose-email-subject"
@@ -131,7 +140,7 @@ export function ComposeEmailDialog({
         <DialogFooter>
           <Button
             type="button"
-            disabled={pending || !subject.trim() || isHtmlEmpty(body)}
+            disabled={pending || sendDisabled || !subject.trim() || isHtmlEmpty(body)}
             onClick={() => onSend(subject, body, locale)}
             className="bg-brand-gold font-semibold text-brand-black hover:bg-brand-gold-hover"
           >

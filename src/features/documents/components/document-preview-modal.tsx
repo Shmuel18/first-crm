@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useTransition } from 'react';
 
-import { Download, ExternalLink } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import {
@@ -20,10 +19,16 @@ import { formatDateShort } from '@/lib/utils/format-date';
 import { deleteDocumentAction } from '../actions/delete-document';
 import { getDocumentPreviewUrlAction } from '../actions/get-document-preview-url';
 import { updateDocumentStatusAction } from '../actions/update-document-status';
+import { hasStorageBlob } from '../domain/attachable';
+import { readDriveMissing } from '../domain/drive-missing';
+import { isDirectlyPrintable } from '../domain/printable';
+import { usePrintDocument } from '../hooks/use-print-document';
 import type { DocumentStatus, DocumentWithRelations } from '../types';
 
 import { DocumentPreviewActions } from './document-preview-actions';
+import { SendDocumentsEmailDialog } from './send-documents-email-dialog';
 import { DocumentPreviewBody } from './document-preview-body';
+import { DocumentPreviewLinks } from './document-preview-links';
 import { DocumentStatusChip } from './document-status-chip';
 
 type Props = {
@@ -31,6 +36,11 @@ type Props = {
   caseId: string;
   canDeleteDocuments: boolean;
   canVerifyDocuments: boolean;
+  /** Enables "send by email" for this document; mirrors can_edit_case. */
+  canSendEmail: boolean;
+  /** Prefill for the email recipient (the client), freely overwritten. */
+  defaultEmailRecipient: string | null;
+  hasDriveFolder: boolean;
   onClose: () => void;
 };
 
@@ -39,9 +49,11 @@ export function DocumentPreviewModal({
   caseId,
   canDeleteDocuments,
   canVerifyDocuments,
+  canSendEmail,
+  defaultEmailRecipient,
+  hasDriveFolder,
   onClose,
 }: Props) {
-  const t = useTranslations('documents.previewModal');
   const tErr = useTranslations('documents.errors');
   const locale = parseLocale(useLocale());
   const [url, setUrl] = useState<string | null>(null);
@@ -54,6 +66,8 @@ export function DocumentPreviewModal({
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [emailOpen, setEmailOpen] = useState(false);
+  const { printing, failed: printFailed, print } = usePrintDocument();
 
   useEffect(() => {
     // Parent uses `key={doc?.id ?? 'none'}` so each preview mounts fresh -
@@ -82,6 +96,7 @@ export function DocumentPreviewModal({
   if (!doc) return null;
 
   const status = doc.status as DocumentStatus;
+  const driveMissing = readDriveMissing(doc.metadata);
   const uploadDate = formatDateShort(doc.upload_date, locale);
 
   const handleRetry = () => {
@@ -127,6 +142,18 @@ export function DocumentPreviewModal({
       }
     });
 
+  // Printable in-app only when we hold a signed Storage URL for a renderable
+  // type. Drive-only rows (no local blob) and Office files fall back to Drive's
+  // viewer, which prints them itself.
+  const canPrintInApp = Boolean(url) && isDirectlyPrintable(doc.mime_type);
+  const printFallbackUrl = doc.drive_file_url;
+  const handlePrint = () => {
+    if (canPrintInApp && url) print(url, doc.mime_type);
+    else if (printFallbackUrl) window.open(printFallbackUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const canEmailThisDoc = canSendEmail && hasStorageBlob(doc.metadata);
+
   const isImage = doc.mime_type?.startsWith('image/') ?? false;
   const isPdf = doc.mime_type === 'application/pdf';
   // Drive preview handles Word, Excel, PPT, PDF, images — everything.
@@ -159,32 +186,17 @@ export function DocumentPreviewModal({
           onRetry={handleRetry}
         />
 
-        {(url || doc.drive_file_url) && (
-          <div className="flex flex-wrap items-center gap-2">
-            <a
-              href={doc.drive_file_url ?? url ?? '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs text-neutral-700 hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 rounded transition"
-            >
-              <ExternalLink className="size-3" />
-              {t('openNewTab')}
-            </a>
-            {url && (
-              <>
-                <span className="text-neutral-300">·</span>
-                <a
-                  href={url}
-                  download={doc.file_name}
-                  className="inline-flex items-center gap-1.5 text-xs text-neutral-700 hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 rounded transition"
-                >
-                  <Download className="size-3" />
-                  {t('downloadOriginal')}
-                </a>
-              </>
-            )}
-          </div>
-        )}
+        <DocumentPreviewLinks
+          url={url}
+          driveFileUrl={doc.drive_file_url}
+          fileName={doc.file_name}
+          showPrint={canPrintInApp || Boolean(printFallbackUrl)}
+          printing={printing}
+          printFailed={printFailed}
+          showEmail={canEmailThisDoc}
+          onPrint={handlePrint}
+          onEmail={() => setEmailOpen(true)}
+        />
 
         <DocumentPreviewActions
           status={status}
@@ -195,7 +207,26 @@ export function DocumentPreviewModal({
           confirmDeleteOpen={confirmDelete}
           onConfirmDeleteOpenChange={setConfirmDelete}
           onDeleteConfirmed={handleDeleteConfirmed}
+          driveMissingHoursLeft={driveMissing?.hoursLeft ?? null}
         />
+
+        {emailOpen && (
+          <SendDocumentsEmailDialog
+            caseId={caseId}
+            open={emailOpen}
+            onOpenChange={setEmailOpen}
+            defaultRecipient={defaultEmailRecipient}
+            initialAttachments={[
+              {
+                kind: 'document',
+                id: doc.id,
+                fileName: doc.file_name,
+                fileSize: doc.file_size,
+              },
+            ]}
+            hasDriveFolder={hasDriveFolder}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

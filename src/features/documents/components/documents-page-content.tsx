@@ -244,6 +244,9 @@ export function DocumentsPageContent({
         caseId={caseId}
         canDeleteDocuments={canDeleteDocuments}
         canVerifyDocuments={canVerifyDocuments}
+        canSendEmail={canEdit}
+        defaultEmailRecipient={primaryBorrower?.email ?? null}
+        hasDriveFolder={Boolean(driveFolderId)}
         onClose={() => setPreviewDoc(null)}
       />
 

@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 
 import {
   ClipboardList,
   FolderOpen,
+  Mail,
   Loader2,
   RefreshCw,
   Upload,
@@ -21,6 +22,7 @@ import { parseLocale } from '@/lib/i18n/direction';
 import { syncDriveDocumentsAction } from '../actions/sync-drive-documents';
 import type { DocumentChecklistItem } from '../services/document-checklist.service';
 import { SendDocRequestButton } from './send-doc-request-button';
+import { SendDocumentsEmailDialog } from './send-documents-email-dialog';
 
 type Props = {
   caseId: string;
@@ -53,8 +55,10 @@ export function DocumentsActionBar({
   const tPage = useTranslations('documents');
   const tCase = useTranslations('case.actionBar');
   const tSync = useTranslations('documents.sync');
+  const tSend = useTranslations('documents.sendEmail');
   const locale = parseLocale(useLocale());
   const [isPending, startTransition] = useTransition();
+  const [emailOpen, setEmailOpen] = useState(false);
 
   const handleSync = () =>
     startTransition(async () => {
@@ -131,6 +135,15 @@ export function DocumentsActionBar({
                 )}
                 <span className="hidden lg:inline">{tSync('button')}</span>
               </button>
+              <button
+                type="button"
+                onClick={() => setEmailOpen(true)}
+                aria-label={tSend('button')}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-neutral-300 hover:border-brand-gold-text text-neutral-700 hover:text-brand-gold-text bg-white/60 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
+              >
+                <Mail className="size-3.5" aria-hidden="true" />
+                <span className="hidden lg:inline">{tSend('button')}</span>
+              </button>
               <SendDocRequestButton
                 caseId={caseId}
                 title={t('sendRequest')}
@@ -156,6 +169,18 @@ export function DocumentsActionBar({
           </Tooltip>
         </div>
       </div>
+
+      {/* Fresh mount per open so recipient / attachment state resets. */}
+      {emailOpen && (
+        <SendDocumentsEmailDialog
+          caseId={caseId}
+          open={emailOpen}
+          onOpenChange={setEmailOpen}
+          defaultRecipient={primaryBorrower?.email ?? null}
+          initialAttachments={[]}
+          hasDriveFolder={Boolean(driveFolderId)}
+        />
+      )}
     </div>
   );
 }
