@@ -2763,7 +2763,9 @@
       "downloadOriginal": "הורד מקור",
       "noPreview": "אין תצוגה מקדימה לסוג קובץ זה",
       "close": "סגור",
-      "deleteConfirm": "להסיר את המסמך מהתיק? הוא יישאר באחסון שמור למשך חלון השחזור שהוגדר."
+      "deleteConfirm": "להסיר את המסמך מהתיק? הוא יישאר באחסון שמור למשך חלון השחזור שהוגדר.",
+      "print": "הדפס",
+      "sendByEmail": "שלח במייל"
     },
     "card": {
       "documentCount": "{count} מסמכים",
@@ -2789,7 +2791,32 @@
       "unauthorized": "אין הרשאה",
       "uploadFailed": "ההעלאה נכשלה. נסה שוב.",
       "deleteFailed": "המחיקה נכשלה. נסה שוב.",
-      "statusUpdateFailed": "עדכון הסטטוס נכשל"
+      "statusUpdateFailed": "עדכון הסטטוס נכשל",
+      "printFailed": "ההדפסה נכשלה. נסה לפתוח את המסמך ולהדפיס משם."
+    },
+    "driveMissing": {
+      "pending": "נמחק מ‑Drive · יוסר בעוד {hours} שעות",
+      "pendingSoon": "נמחק מ‑Drive · יוסר בקרוב",
+      "explain": "הקובץ נמחק מ‑Drive. המסמך נשמר לזמן קצר כהגנה מפני מחיקה בטעות, ואז יוסר אוטומטית.",
+      "removeNow": "הסר עכשיו"
+    },
+    "sendEmail": {
+      "button": "שלח במייל",
+      "title": "שליחת מסמכים במייל",
+      "recipientLabel": "נמען",
+      "recipientPlaceholder": "banker@bank.co.il",
+      "recipientHint": "ניתן לשלוח לכל כתובת — בנקאי, שמאי או הלקוח.",
+      "defaultSubject": "מסמכים מצורפים",
+      "defaultBody": "שלום,\n\nמצורפים המסמכים.\n\nבברכה,",
+      "driveLinkOption": "הוסף קישור לתיקיית ה‑Drive של התיק (לחבילות גדולות מדי לצירוף)",
+      "driveLinkText": "לצפייה בכל מסמכי התיק ב‑Drive",
+      "sent": "המייל נשלח",
+      "errors": {
+        "unauthorized": "אין הרשאה לשלוח מסמכים מתיק זה",
+        "attachment": "צירוף המסמכים נכשל — בדוק את מספר הקבצים והגודל",
+        "noFolder": "אין עדיין תיקיית Drive לתיק זה",
+        "generic": "שליחת המייל נכשלה. נסה שוב."
+      }
     }
   },
   "richTextEditor": {

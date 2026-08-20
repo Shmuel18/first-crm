@@ -6,8 +6,10 @@ import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { formatPersonName } from '@/lib/utils/person-name';
 
+import { readDriveMissing } from '../domain/drive-missing';
 import type { DocumentStatus, DocumentWithRelations } from '../types';
 import { DocumentStatusChip } from './document-status-chip';
+import { DriveMissingBadge } from './drive-missing-badge';
 
 type Props = {
   doc: DocumentWithRelations;
@@ -33,6 +35,7 @@ function formatSize(bytes: number | null): string {
 
 export function DocumentRow({ doc, onClick }: Props) {
   const tc = useTranslations('documents.card');
+  const driveMissing = readDriveMissing(doc.metadata);
   const borrowerName = doc.borrower
     ? formatPersonName(doc.borrower.first_name, doc.borrower.last_name)
     : tc('borrowerGeneral');
@@ -73,6 +76,7 @@ export function DocumentRow({ doc, onClick }: Props) {
             {doc.file_name}
           </span>
         </div>
+        {driveMissing && <DriveMissingBadge hoursLeft={driveMissing.hoursLeft} className="mt-1" />}
       </div>
 
       <DocumentStatusChip status={doc.status as DocumentStatus} size="sm" />

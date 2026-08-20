@@ -2763,7 +2763,9 @@
       "downloadOriginal": "Download original",
       "noPreview": "No preview available for this file type",
       "close": "Close",
-      "deleteConfirm": "Remove this document from the case? It will stay in retention storage for the configured recovery window."
+      "deleteConfirm": "Remove this document from the case? It will stay in retention storage for the configured recovery window.",
+      "print": "Print",
+      "sendByEmail": "Send by email"
     },
     "card": {
       "documentCount": "{count} documents",
@@ -2789,7 +2791,32 @@
       "unauthorized": "Not authorized",
       "uploadFailed": "Upload failed. Please try again.",
       "deleteFailed": "Delete failed. Please try again.",
-      "statusUpdateFailed": "Status update failed"
+      "statusUpdateFailed": "Status update failed",
+      "printFailed": "Printing failed. Try opening the document and printing from there."
+    },
+    "driveMissing": {
+      "pending": "Deleted from Drive · removed in {hours}h",
+      "pendingSoon": "Deleted from Drive · removed shortly",
+      "explain": "The file was deleted from Drive. The document is kept briefly to guard against accidental deletion, then removed automatically.",
+      "removeNow": "Remove now"
+    },
+    "sendEmail": {
+      "button": "Send by email",
+      "title": "Send documents by email",
+      "recipientLabel": "Recipient",
+      "recipientPlaceholder": "banker@bank.co.il",
+      "recipientHint": "Any address — a banker, an appraiser, or the client.",
+      "defaultSubject": "Documents attached",
+      "defaultBody": "Hello,\n\nPlease find the documents attached.\n\nBest regards,",
+      "driveLinkOption": "Add a link to the case's Drive folder (for bundles too large to attach)",
+      "driveLinkText": "View all case documents in Drive",
+      "sent": "Email sent",
+      "errors": {
+        "unauthorized": "You are not allowed to send documents from this case",
+        "attachment": "Attaching the documents failed — check the file count and size",
+        "noFolder": "This case has no Drive folder yet",
+        "generic": "Sending the email failed. Please try again."
+      }
     }
   },
   "richTextEditor": {

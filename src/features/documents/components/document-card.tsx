@@ -2,8 +2,10 @@
 
 import { FileText, FileType2, Image as ImageIcon } from 'lucide-react';
 
+import { readDriveMissing } from '../domain/drive-missing';
 import type { DocumentStatus, DocumentWithRelations } from '../types';
 import { DocumentStatusChip } from './document-status-chip';
+import { DriveMissingBadge } from './drive-missing-badge';
 
 type Props = {
   doc: DocumentWithRelations;
@@ -35,6 +37,7 @@ export function DocumentCard({ doc, previewUrl, onClick }: Props) {
   const label = doc.category?.name_he ?? doc.file_name;
   const isImage = doc.mime_type?.startsWith('image/') ?? false;
   const isPdf = doc.mime_type === 'application/pdf';
+  const driveMissing = readDriveMissing(doc.metadata);
   const driveUrl = doc.drive_file_id
     ? `https://drive.google.com/file/d/${doc.drive_file_id}/preview`
     : null;
@@ -77,6 +80,9 @@ export function DocumentCard({ doc, previewUrl, onClick }: Props) {
       </div>
       <div className="px-2.5 py-2">
         <p className="truncate text-xs font-medium text-neutral-900">{label}</p>
+        {driveMissing && (
+          <DriveMissingBadge hoursLeft={driveMissing.hoursLeft} className="mt-1 max-w-full" />
+        )}
       </div>
       {/* Transparent click target over the whole tile — the preview is
           non-interactive, so clicking anywhere opens the full modal. */}
