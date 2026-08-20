@@ -28,13 +28,12 @@ export type CaseActivityResult = {
  * events (status moves, edits, uploads, bank submissions…), team comments and
  * logged client emails. Caller must have verified the case is viewable first
  * (e.g. getCaseById returning truthy) — the audit read is service-role.
+ * Manager-only financial history is gated inside listAuditEntriesForCase off
+ * the current user's view_case_fee, so callers cannot opt into it.
  */
-export async function listCaseActivity(
-  caseId: CaseId,
-  opts: { includeFinancials?: boolean } = {},
-): Promise<CaseActivityResult> {
+export async function listCaseActivity(caseId: CaseId): Promise<CaseActivityResult> {
   const [auditEntries, comments, emails, ctx] = await Promise.all([
-    listAuditEntriesForCase(caseId, undefined, opts),
+    listAuditEntriesForCase(caseId),
     listCaseComments(caseId),
     listClientEmailLog(caseId),
     fetchActivityContext(caseId),

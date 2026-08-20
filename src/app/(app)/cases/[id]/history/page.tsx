@@ -9,7 +9,6 @@ import { CaseActivityFeed } from '@/features/case-activity/components/case-activ
 import { CaseHistoryTabs } from '@/features/case-activity/components/case-history-tabs';
 import { listCaseActivity } from '@/features/case-activity/services/case-activity.service';
 import { getCaseById } from '@/features/cases/services/cases.service';
-import { userHasPermission } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
 import { formatPersonName } from '@/lib/utils/person-name';
@@ -33,12 +32,8 @@ export default async function CaseHistoryPage({ params, searchParams }: Props) {
 
   // Documents view: just this case's document audit (unchanged single table).
   // Full view: activity feed + raw audit log, both derived from ONE fetch —
-  // manager-only financials gated behind view_case_fee.
-  const activity = documentsOnly
-    ? null
-    : await listCaseActivity(caseId, {
-        includeFinancials: await userHasPermission('view_case_fee'),
-      });
+  // manager-only financials are gated on view_case_fee inside the service.
+  const activity = documentsOnly ? null : await listCaseActivity(caseId);
   const documentEntries = documentsOnly ? await listDocumentAuditForCase(caseId) : null;
 
   // Show the primary borrower's name in the header (more useful at a glance

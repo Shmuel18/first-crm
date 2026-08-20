@@ -22,7 +22,7 @@ import {
   optionalNationalId,
   optionalPastDate,
   optionalShortString,
-  REQUEST_DETAILS_MAX,
+  PUBLIC_REQUEST_DETAILS_MAX,
   requiredEmail,
   requiredShortString,
 } from '@/lib/validators/form-primitives';
@@ -80,7 +80,7 @@ export const IntakeSchema = z
     // Step 2 + 4 — one entry per borrower.
     borrowers: z.array(IntakeBorrowerSchema).min(1).max(MAX_INTAKE_BORROWERS),
     // Step 5 — the prospect's story.
-    request_details: optionalLongText(REQUEST_DETAILS_MAX),
+    request_details: optionalLongText(PUBLIC_REQUEST_DETAILS_MAX),
     // UI language the form was filled in (he/en) — recorded for the callback.
     locale: optionalEnum(PREFERRED_LANGUAGE_VALUES),
     // Privacy consent — must be explicitly checked.
