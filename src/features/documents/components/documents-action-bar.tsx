@@ -178,7 +178,6 @@ export function DocumentsActionBar({
           onOpenChange={setEmailOpen}
           defaultRecipient={primaryBorrower?.email ?? null}
           initialAttachments={[]}
-          hasDriveFolder={Boolean(driveFolderId)}
         />
       )}
     </div>

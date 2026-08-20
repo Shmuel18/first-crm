@@ -40,7 +40,6 @@ type Props = {
   canSendEmail: boolean;
   /** Prefill for the email recipient (the client), freely overwritten. */
   defaultEmailRecipient: string | null;
-  hasDriveFolder: boolean;
   onClose: () => void;
 };
 
@@ -51,7 +50,6 @@ export function DocumentPreviewModal({
   canVerifyDocuments,
   canSendEmail,
   defaultEmailRecipient,
-  hasDriveFolder,
   onClose,
 }: Props) {
   const tErr = useTranslations('documents.errors');
@@ -224,7 +222,6 @@ export function DocumentPreviewModal({
                 fileSize: doc.file_size,
               },
             ]}
-            hasDriveFolder={hasDriveFolder}
           />
         )}
       </DialogContent>

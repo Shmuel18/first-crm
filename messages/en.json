@@ -2808,13 +2808,10 @@
       "recipientHint": "Any address — a banker, an appraiser, or the client.",
       "defaultSubject": "Documents attached",
       "defaultBody": "Hello,\n\nPlease find the documents attached.\n\nBest regards,",
-      "driveLinkOption": "Add a link to the case's Drive folder (for bundles too large to attach)",
-      "driveLinkText": "View all case documents in Drive",
       "sent": "Email sent",
       "errors": {
         "unauthorized": "You are not allowed to send documents from this case",
         "attachment": "Attaching the documents failed — check the file count and size",
-        "noFolder": "This case has no Drive folder yet",
         "generic": "Sending the email failed. Please try again."
       }
     }

@@ -24,8 +24,6 @@ type Props = {
   defaultRecipient: string | null;
   /** Documents preselected by the caller (e.g. "send this one" from preview). */
   initialAttachments: ClientEmailAttachmentItem[];
-  /** Enables the "link the Drive folder instead" option. */
-  hasDriveFolder: boolean;
 };
 
 const isEmail = (value: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
@@ -34,7 +32,7 @@ const isEmail = (value: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(va
  * "Send documents by email" from the documents screen: pick files already
  * filed on the case, address it to anyone (banker, appraiser, client), review
  * the text, send. Same attachment pipeline and caps as the case-page client
- * email; over the cap, the Drive-folder link replaces the attachments.
+ * email.
  */
 export function SendDocumentsEmailDialog({
   caseId,
@@ -42,12 +40,10 @@ export function SendDocumentsEmailDialog({
   onOpenChange,
   defaultRecipient,
   initialAttachments,
-  hasDriveFolder,
 }: Props) {
   const t = useTranslations('documents.sendEmail');
   const [recipient, setRecipient] = useState(defaultRecipient ?? '');
   const [attachments, setAttachments] = useState<ClientEmailAttachmentItem[]>(initialAttachments);
-  const [includeDriveLink, setIncludeDriveLink] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -64,7 +60,6 @@ export function SendDocumentsEmailDialog({
           uploads: attachments.flatMap((a) =>
             a.kind === 'upload' ? [{ path: a.path, fileName: a.fileName }] : [],
           ),
-          includeDriveLink,
         }),
       );
       if (res.ok) {
@@ -77,9 +72,7 @@ export function SendDocumentsEmailDialog({
           ? 'errors.unauthorized'
           : res.error === 'attachment'
             ? 'errors.attachment'
-            : res.error === 'no_folder'
-              ? 'errors.noFolder'
-              : 'errors.generic';
+            : 'errors.generic';
       toast.error(t(key));
     });
   };
@@ -115,26 +108,13 @@ export function SendDocumentsEmailDialog({
         </div>
       }
       extraFields={
-        <div className="space-y-2">
-          <EmailAttachmentsField
-            caseId={caseId}
-            items={attachments}
-            onChange={setAttachments}
-            onUploadingChange={setUploading}
-            disabled={isPending}
-          />
-          {hasDriveFolder && (
-            <label className="flex items-start gap-2 text-xs text-neutral-700">
-              <input
-                type="checkbox"
-                checked={includeDriveLink}
-                onChange={(e) => setIncludeDriveLink(e.target.checked)}
-                className="mt-0.5 size-3.5 accent-brand-gold-dark"
-              />
-              <span>{t('driveLinkOption')}</span>
-            </label>
-          )}
-        </div>
+        <EmailAttachmentsField
+          caseId={caseId}
+          items={attachments}
+          onChange={setAttachments}
+          onUploadingChange={setUploading}
+          disabled={isPending}
+        />
       }
     />
   );
