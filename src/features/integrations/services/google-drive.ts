@@ -235,6 +235,26 @@ export class GoogleDriveClient {
     if (!res.ok) throw new Error(`Drive rename failed: ${res.status}`);
   }
 
+  /** Raw bytes of a Drive file — used to attach a file that only ever lived
+   *  in Drive (dropped into the folder, never uploaded through the app). */
+  async downloadFileBytes(fileId: string): Promise<Buffer> {
+    const res = await this.authedFetchRetry(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?alt=media`,
+    );
+    if (!res.ok) throw new Error(`Drive download failed: ${res.status}`);
+    return Buffer.from(await res.arrayBuffer());
+  }
+
+  /** Google-native files (Docs/Sheets/Slides) have no bytes to download —
+   *  they must be exported. PDF is the one format every recipient can open. */
+  async exportFileAsPdf(fileId: string): Promise<Buffer> {
+    const res = await this.authedFetchRetry(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}/export?mimeType=application%2Fpdf`,
+    );
+    if (!res.ok) throw new Error(`Drive export failed: ${res.status}`);
+    return Buffer.from(await res.arrayBuffer());
+  }
+
   async downloadFileText(fileId: string): Promise<string> {
     const res = await this.authedFetchRetry(
       `${DRIVE_API}/files/${encodeURIComponent(fileId)}?alt=media`,

@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { fileTypeFromBuffer } from 'file-type';
 
 import { ALLOWED_MIME_TYPES } from '@/features/documents/schemas/document.schema';
+import { getDriveClientIfConnected } from '@/features/integrations/services/drive-case-uploader';
 import { DOCUMENTS_BUCKET } from '@/features/documents/services/documents.service';
 import { sanitizeFilename } from '@/features/documents/domain/sanitize-filename';
 import { safeDbError } from '@/lib/supabase/db-error-log';
@@ -44,6 +45,37 @@ export type ResolveAttachmentsResult =
   | { ok: true; attachments: EmailAttachment[]; tempPaths: string[] }
   | { ok: false; error: 'too_many' | 'too_large' | 'not_found' | 'invalid' };
 
+/** Google-native mime prefix: these have no downloadable bytes, only exports. */
+const GOOGLE_NATIVE_PREFIX = 'application/vnd.google-apps.';
+
+/**
+ * Bytes of a document that exists only in Drive — dropped straight into the
+ * case folder and picked up by sync, so there is no Storage blob to read.
+ * Without this, exactly those files couldn't be emailed from the app, which is
+ * the workflow the office actually uses.
+ *
+ * The Drive client is resolved once per resolve() call by the caller and passed
+ * in, so attaching five Drive files doesn't mint five OAuth tokens.
+ */
+async function driveBytes(
+  client: Awaited<ReturnType<typeof getDriveClientIfConnected>>,
+  fileId: string,
+  mimeType: string | null,
+): Promise<Buffer | null> {
+  if (!client) return null;
+  try {
+    return mimeType?.startsWith(GOOGLE_NATIVE_PREFIX)
+      ? await client.exportFileAsPdf(fileId)
+      : await client.downloadFileBytes(fileId);
+  } catch (err) {
+    console.error('[emailAttachments] drive fetch failed', {
+      fileId,
+      message: err instanceof Error ? err.message : 'unknown',
+    });
+    return null;
+  }
+}
+
 async function downloadBytes(
   supabase: SupabaseServerClient,
   path: string,
@@ -73,12 +105,14 @@ export async function resolveClientEmailAttachments(
   const tempPaths: string[] = [];
   let total = 0;
   const addBytes = (n: number): boolean => (total += n) <= MAX_TOTAL_ATTACHMENT_BYTES;
+  /** Would this many more bytes still fit? (Doesn't consume the budget.) */
+  const fits = (n: number): boolean => total + n <= MAX_TOTAL_ATTACHMENT_BYTES;
 
   // ── Existing case documents ────────────────────────────────────────────
   if (documentIds.length > 0) {
     const { data: docs, error } = await supabase
       .from('documents')
-      .select('id, file_name, metadata')
+      .select('id, file_name, file_size, mime_type, drive_file_id, metadata')
       .in('id', documentIds)
       .eq('case_id', caseId)
       .is('deleted_at', null);
@@ -88,16 +122,33 @@ export async function resolveClientEmailAttachments(
     }
     if (!docs || docs.length !== documentIds.length) return { ok: false, error: 'not_found' };
 
+    // One Drive client for the whole batch, and only when something needs it.
+    let driveClient: Awaited<ReturnType<typeof getDriveClientIfConnected>> | undefined;
+
     for (const doc of docs) {
       const storagePath =
         doc.metadata && typeof doc.metadata === 'object' && 'storage_path' in doc.metadata
           ? (doc.metadata as { storage_path?: string }).storage_path
           : undefined;
-      if (!storagePath) return { ok: false, error: 'not_found' };
-      const buf = await downloadBytes(supabase, storagePath);
+      // Cheap pre-check: refuse an oversized file by its recorded size instead
+      // of pulling the bytes into memory first.
+      if (doc.file_size && !fits(doc.file_size)) return { ok: false, error: 'too_large' };
+
+      let buf: Buffer | null = null;
+      if (storagePath) {
+        buf = await downloadBytes(supabase, storagePath);
+      } else if (doc.drive_file_id) {
+        if (driveClient === undefined) driveClient = await getDriveClientIfConnected();
+        buf = await driveBytes(driveClient, doc.drive_file_id, doc.mime_type);
+      }
       if (!buf) return { ok: false, error: 'not_found' };
       if (!addBytes(buf.byteLength)) return { ok: false, error: 'too_large' };
-      attachments.push({ filename: doc.file_name, content: buf });
+      // A Google-native file left as bytes is a PDF now — say so in the name,
+      // or the recipient gets an extensionless attachment nothing opens.
+      const filename = doc.mime_type?.startsWith(GOOGLE_NATIVE_PREFIX)
+        ? `${doc.file_name.replace(/\.[^.]+$/, '')}.pdf`
+        : doc.file_name;
+      attachments.push({ filename, content: buf });
     }
   }
 

@@ -19,7 +19,7 @@ import { formatDateShort } from '@/lib/utils/format-date';
 import { deleteDocumentAction } from '../actions/delete-document';
 import { getDocumentPreviewUrlAction } from '../actions/get-document-preview-url';
 import { updateDocumentStatusAction } from '../actions/update-document-status';
-import { hasStorageBlob } from '../domain/attachable';
+import { isAttachable } from '../domain/attachable';
 import { isDirectlyPrintable } from '../domain/printable';
 import { usePrintDocument } from '../hooks/use-print-document';
 import type { DocumentStatus, DocumentWithRelations } from '../types';
@@ -148,7 +148,7 @@ export function DocumentPreviewModal({
     else if (printFallbackUrl) window.open(printFallbackUrl, '_blank', 'noopener,noreferrer');
   };
 
-  const canEmailThisDoc = canSendEmail && hasStorageBlob(doc.metadata);
+  const canEmailThisDoc = canSendEmail && isAttachable(doc);
 
   const isImage = doc.mime_type?.startsWith('image/') ?? false;
   const isPdf = doc.mime_type === 'application/pdf';
