@@ -6,8 +6,9 @@
     <title>אין חיבור · Kaufman Finance</title>
     <style>
       /* Fully self-contained: this page must render with no network (no external
-         CSS/JS/font chunks), so all styles are inline and fonts fall back to the
-         system stack. */
+         CSS/font chunks), so all styles are inline and fonts fall back to the
+         system stack. offline.js is the one external file — it is precached and
+         served cache-first by sw.js, so it loads offline too. */
       html, body { height: 100%; margin: 0; }
       body {
         display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -25,17 +26,49 @@
         text-decoration: none;
       }
       a.retry:active { background: #B8945A; }
+
+      .spinner {
+        width: 22px; height: 22px; border-radius: 50%;
+        border: 2px solid rgba(201, 169, 97, 0.25); border-top-color: #C9A961;
+        animation: spin 0.9s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      /* Respect the OS "reduce motion" setting — the spinner is decorative. */
+      @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+
+      /* Two states, one page. A failed request is NOT proof of "no internet":
+         on an installed iOS PWA the common cause is a cold start racing the
+         cellular radio. offline.js sets data-state and flips between them.
+         DEFAULT (no data-state, i.e. JS blocked/failed) shows the offline copy
+         plus the manual retry link — the pre-existing no-JS behaviour. */
+      [data-when] { display: none; }
+      body:not([data-state]) [data-when="offline"],
+      body[data-state="offline"] [data-when="offline"],
+      body[data-state="connecting"] [data-when="connecting"] { display: contents; }
     </style>
   </head>
   <body>
     <img src="/icons/icon-192.png" alt="Kaufman Finance" />
-    <h1>אין חיבור לאינטרנט</h1>
-    <p>נראה שאינך מחובר כרגע. בדוק את החיבור ונסה שוב. הנתונים נטענים בזמן אמת ואינם נשמרים על המכשיר.</p>
-    <p class="en" lang="en" dir="ltr">No internet connection. Check your connection and try again — data loads live and is not stored on the device.</p>
-    <!-- A link, not JS: a navigation retry needs no inline handler, so it works
-         under a strict CSP. href="" resolves to the CURRENT url — and the SW
-         serves this page in place at the original destination (e.g. /cases/123),
-         so clicking re-requests THAT url, not the home page. -->
+
+    <div data-when="connecting">
+      <div class="spinner" role="status" aria-live="polite" aria-label="מתחבר"></div>
+      <h1>מתחבר מחדש…</h1>
+      <p>החיבור נקטע לרגע. המערכת מנסה שוב אוטומטית — אין צורך לעשות דבר.</p>
+      <p class="en" lang="en" dir="ltr">Reconnecting — this retries automatically.</p>
+    </div>
+
+    <div data-when="offline">
+      <h1>אין חיבור לאינטרנט</h1>
+      <p>נראה שאינך מחובר כרגע. בדוק את החיבור — המערכת תמשיך לנסות ותיטען מעצמה. הנתונים נטענים בזמן אמת ואינם נשמרים על המכשיר.</p>
+      <p class="en" lang="en" dir="ltr">No internet connection. We keep retrying — data loads live and is not stored on the device.</p>
+    </div>
+
+    <!-- A link, not a JS handler: a navigation retry needs no inline script, so it
+         works under a strict CSP and with offline.js blocked. href="" resolves to
+         the CURRENT url — and the SW serves this page in place at the original
+         destination (e.g. /cases/123), so clicking re-requests THAT url. -->
     <a class="retry" href="" lang="he">נסה שוב · <span lang="en" dir="ltr">Retry</span></a>
+
+    <script src="/offline.js"></script>
   </body>
 </html>
