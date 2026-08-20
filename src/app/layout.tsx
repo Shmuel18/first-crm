@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
+import { KeyboardAwareFocus } from '@/components/layout/keyboard-aware-focus';
 import { PwaRegister } from '@/features/pwa/components/pwa-register';
 import { getDirection, parseLocale } from '@/lib/i18n/direction';
 
@@ -82,6 +83,7 @@ export default async function RootLayout({
           </NextIntlClientProvider>
         </NuqsAdapter>
         <PwaRegister />
+        <KeyboardAwareFocus />
       </body>
     </html>
   );

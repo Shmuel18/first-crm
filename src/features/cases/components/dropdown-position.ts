@@ -22,8 +22,17 @@ export function calcDropdownPos(trigger: HTMLElement | null): DropdownPosition |
   if (!trigger) return null;
   const rect = trigger.getBoundingClientRect();
 
-  const spaceBelow = window.innerHeight - rect.bottom;
-  const spaceAbove = rect.top;
+  // Measure available space against the VISUAL viewport, not the layout one.
+  // With an on-screen keyboard open (or the iOS URL bar expanded) the layout
+  // viewport keeps its full height while the lower part of it is covered, so
+  // window.innerHeight would claim room that the user cannot see and the panel
+  // would open straight under the keyboard. Falls back where unsupported.
+  const vv = typeof window !== 'undefined' ? window.visualViewport : null;
+  const visibleTop = vv ? vv.offsetTop : 0;
+  const visibleBottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
+
+  const spaceBelow = visibleBottom - rect.bottom;
+  const spaceAbove = rect.top - visibleTop;
   // Anchor to the trigger's right edge, but never so far right that the
   // panel's left edge would leave the viewport (clamps only on narrow screens).
   const right = Math.max(
@@ -37,6 +46,9 @@ export function calcDropdownPos(trigger: HTMLElement | null): DropdownPosition |
     spaceAbove > spaceBelow
   ) {
     return {
+      // NOTE: placement stays in LAYOUT coordinates on purpose — a
+      // position:fixed element resolves `bottom` against the layout viewport,
+      // not the visual one. Only the space *decision* above is visual.
       bottom: window.innerHeight - rect.top + GAP_PX,
       right,
     };
