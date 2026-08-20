@@ -21,7 +21,7 @@ A SaaS for **Kaufman Finance Group** - an Israeli mortgage advisor office. Repla
 - **Icons:** Lucide React (NEVER emojis in UI)
 - **Forms:** React Hook Form + **Zod 4**
 - **i18n:** next-intl 4
-- **Server state:** TanStack Query 5
+- **Server state:** Server Components + Server Actions (no client query cache — see Data Flow)
 - **URL state:** nuqs (type-safe URL search params)
 - **Animations:** Framer Motion 12 (subtle, professional)
 - **Env vars:** @t3-oss/env-nextjs (type-safe)
@@ -114,7 +114,11 @@ Every file lives in exactly one layer. Crossing layers requires going UP through
 - Components only do: rendering + simple event delegation
 
 ### Data Flow
-- Server state: TanStack Query
+- Server state: **Server Components fetch through feature `services/`**; mutations
+  go through Server Actions and invalidate with `revalidatePath` / `revalidateTag`
+  (or `router.refresh()` from the client). **TanStack Query is NOT installed** —
+  do not reach for `useQuery`; add the dependency deliberately if a case ever
+  genuinely needs a client cache.
 - Client state: useState/useReducer (minimal)
 - Form state: React Hook Form + Zod
 - URL state: **nuqs** (type-safe `useQueryState`) - critical for filters, sorting, pagination in tables
@@ -287,11 +291,11 @@ src/
 ├── types/
 │   └── database.ts                # Auto-generated from Supabase
 │
-├── messages/                      # i18n translations
-│   ├── he.json
-│   └── en.json
-│
 └── proxy.ts                       # Auth middleware (Next.js 16 — was middleware.ts)
+
+messages/                          # i18n translations — REPO ROOT, not src/
+├── he.json
+└── en.json
 ```
 
 ## Team onboarding flow (magic-link invite)
