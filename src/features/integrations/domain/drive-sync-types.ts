@@ -25,18 +25,6 @@ export type DriveSyncOutcome =
 /** Auto-sync on page load only if last sync was older than this. */
 export const MIN_AUTO_SYNC_INTERVAL_MS = 10_000;
 
-/**
- * Grace period before a vanished Drive file is soft-deleted from our DB.
- * If a file is missing across multiple syncs for less than this, we keep
- * the doc record and just stamp drive_missing_since on its metadata. After
- * the grace expires (still missing) → soft-delete. If the file reappears
- * within the window → clear the flag, no harm done.
- *
- * Protects against accidental drag-out / cloud sync hiccups that would
- * otherwise wipe real documents from the office's view in one cycle.
- */
-export const VANISHED_FILE_GRACE_PERIOD_MS = 48 * 60 * 60 * 1000;
-
 /** Reverse map: folder name (Hebrew) → drive_folder enum key. */
 export const NAME_TO_FOLDER_KEY: Record<string, string> = Object.fromEntries(
   Object.entries(DRIVE_SUBFOLDER_NAMES).map(([key, name]) => [name, key]),

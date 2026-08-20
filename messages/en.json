@@ -2794,12 +2794,6 @@
       "statusUpdateFailed": "Status update failed",
       "printFailed": "Printing failed. Try opening the document and printing from there."
     },
-    "driveMissing": {
-      "pending": "Deleted from Drive · removed in {hours}h",
-      "pendingSoon": "Deleted from Drive · removed shortly",
-      "explain": "The file was deleted from Drive. The document is kept briefly to guard against accidental deletion, then removed automatically.",
-      "removeNow": "Remove now"
-    },
     "sendEmail": {
       "button": "Send by email",
       "title": "Send documents by email",

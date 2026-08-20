@@ -16,8 +16,6 @@ import { Button } from '@/components/ui/button';
 
 import type { DocumentStatus } from '../types';
 
-import { DriveMissingBadge } from './drive-missing-badge';
-
 type Props = {
   status: DocumentStatus;
   /** Disables every button while a transition (status update / delete) is in
@@ -31,9 +29,6 @@ type Props = {
   confirmDeleteOpen: boolean;
   onConfirmDeleteOpenChange: (open: boolean) => void;
   onDeleteConfirmed: () => void;
-  /** Hours left before the sweeper auto-removes a doc whose Drive file was
-   *  deleted; null when the Drive file is still there. */
-  driveMissingHoursLeft: number | null;
 };
 
 /**
@@ -51,44 +46,15 @@ export function DocumentPreviewActions({
   confirmDeleteOpen,
   onConfirmDeleteOpenChange,
   onDeleteConfirmed,
-  driveMissingHoursLeft,
 }: Props) {
   const t = useTranslations('documents.previewModal');
-  const tMissing = useTranslations('documents.driveMissing');
   const tActions = useTranslations('documents.statusActions');
   const tCommon = useTranslations('common');
 
-  // The missing-from-Drive notice is the one thing a read-only viewer still
-  // needs to see, so it gates the early return too.
-  const showMissing = driveMissingHoursLeft !== null;
-  const showActionRow = canVerifyDocuments || canDeleteDocuments;
-  if (!showActionRow && !showMissing) return null;
+  if (!canVerifyDocuments && !canDeleteDocuments) return null;
 
   return (
     <>
-      {showMissing && (
-        <div className="flex flex-wrap items-center gap-2 rounded-md bg-amber-50 px-3 py-2 ring-1 ring-amber-200">
-          <DriveMissingBadge
-            hoursLeft={driveMissingHoursLeft}
-            variant="notice"
-            className="bg-transparent ring-0"
-          />
-          <span className="flex-1 text-xs text-amber-900">{tMissing('explain')}</span>
-          {canDeleteDocuments && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onConfirmDeleteOpenChange(true)}
-              disabled={pending}
-              className="h-8 border-amber-300 text-amber-900 hover:bg-amber-100"
-            >
-              {tMissing('removeNow')}
-            </Button>
-          )}
-        </div>
-      )}
-
-      {showActionRow && (
       <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-neutral-100">
         {canVerifyDocuments && (
           <>
@@ -145,7 +111,6 @@ export function DocumentPreviewActions({
           </Button>
         )}
       </div>
-      )}
 
       <AlertDialog open={confirmDeleteOpen} onOpenChange={onConfirmDeleteOpenChange}>
         <AlertDialogContent>

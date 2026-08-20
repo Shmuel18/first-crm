@@ -20,7 +20,6 @@ import { deleteDocumentAction } from '../actions/delete-document';
 import { getDocumentPreviewUrlAction } from '../actions/get-document-preview-url';
 import { updateDocumentStatusAction } from '../actions/update-document-status';
 import { hasStorageBlob } from '../domain/attachable';
-import { readDriveMissing } from '../domain/drive-missing';
 import { isDirectlyPrintable } from '../domain/printable';
 import { usePrintDocument } from '../hooks/use-print-document';
 import type { DocumentStatus, DocumentWithRelations } from '../types';
@@ -94,7 +93,6 @@ export function DocumentPreviewModal({
   if (!doc) return null;
 
   const status = doc.status as DocumentStatus;
-  const driveMissing = readDriveMissing(doc.metadata);
   const uploadDate = formatDateShort(doc.upload_date, locale);
 
   const handleRetry = () => {
@@ -205,7 +203,6 @@ export function DocumentPreviewModal({
           confirmDeleteOpen={confirmDelete}
           onConfirmDeleteOpenChange={setConfirmDelete}
           onDeleteConfirmed={handleDeleteConfirmed}
-          driveMissingHoursLeft={driveMissing?.hoursLeft ?? null}
         />
 
         {emailOpen && (
