@@ -18,6 +18,7 @@ import { formatDateShort } from '@/lib/utils/format-date';
 
 import { deleteDocumentAction } from '../actions/delete-document';
 import { getDocumentPreviewUrlAction } from '../actions/get-document-preview-url';
+import { getDocumentPrintBytesAction } from '../actions/get-document-print-bytes';
 import { updateDocumentStatusAction } from '../actions/update-document-status';
 import { isAttachable } from '../domain/attachable';
 import { isDirectlyPrintable } from '../domain/printable';
@@ -64,7 +65,7 @@ export function DocumentPreviewModal({
   const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
-  const { printing, failed: printFailed, print } = usePrintDocument();
+  const { printing, failed: printFailed, print, printBytes } = usePrintDocument();
 
   useEffect(() => {
     // Parent uses `key={doc?.id ?? 'none'}` so each preview mounts fresh -
@@ -138,14 +139,32 @@ export function DocumentPreviewModal({
       }
     });
 
-  // Printable in-app only when we hold a signed Storage URL for a renderable
-  // type. Drive-only rows (no local blob) and Office files fall back to Drive's
-  // viewer, which prints them itself.
-  const canPrintInApp = Boolean(url) && isDirectlyPrintable(doc.mime_type);
+  // A renderable type prints in-app wherever its bytes are: straight from the
+  // signed Storage URL, or pulled from Drive for a file that was dropped into
+  // the folder and never uploaded here. Office formats have no browser
+  // renderer and open in Drive, which prints them itself.
+  const renderable = isDirectlyPrintable(doc.mime_type);
+  const canPrintInApp = renderable && (Boolean(url) || Boolean(doc.drive_file_id));
   const printFallbackUrl = doc.drive_file_url;
+  const openInDrive = () => {
+    if (printFallbackUrl) window.open(printFallbackUrl, '_blank', 'noopener,noreferrer');
+  };
   const handlePrint = () => {
-    if (canPrintInApp && url) print(url, doc.mime_type);
-    else if (printFallbackUrl) window.open(printFallbackUrl, '_blank', 'noopener,noreferrer');
+    if (url && renderable) {
+      print(url, doc.mime_type);
+      return;
+    }
+    if (canPrintInApp) {
+      startTransition(async () => {
+        const res = await callAction(() => getDocumentPrintBytesAction(doc.id));
+        // Anything we can't render here (oversized, export-only, Drive down)
+        // still has a working answer: Drive's own viewer.
+        if (res.ok) printBytes(res.base64, res.mimeType);
+        else openInDrive();
+      });
+      return;
+    }
+    openInDrive();
   };
 
   const canEmailThisDoc = canSendEmail && isAttachable(doc);
@@ -187,7 +206,8 @@ export function DocumentPreviewModal({
           driveFileUrl={doc.drive_file_url}
           fileName={doc.file_name}
           showPrint={canPrintInApp || Boolean(printFallbackUrl)}
-          printing={printing}
+          // isPending covers the Drive round-trip before the dialog appears.
+          printing={printing || isPending}
           printFailed={printFailed}
           showEmail={canEmailThisDoc}
           onPrint={handlePrint}
