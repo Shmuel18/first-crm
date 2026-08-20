@@ -233,6 +233,45 @@ A feature is **NOT done** until ALL of these are true:
 - [ ] Works in both Hebrew (RTL) and English (LTR)
 - [ ] Permissions checked at server boundary
 - [ ] Code committed with conventional commit message
+- [ ] **`npm run verify` passes** — see below; it is the only gate left
+
+### Before pushing to `main` — ALWAYS run the gate
+
+`main` auto-deploys to **client production** (`crm.kaufman-finance.com`, real
+client data) the moment it is pushed. The GitHub Actions `verify` check is
+still listed as required, **but the Actions budget is exhausted so it can
+never run again**. Nothing on the server side is checking anything.
+
+```bash
+npm run verify && git push origin HEAD:main
+```
+
+`npm run verify` (`scripts/verify-local.cjs`) runs what CI used to —
+typecheck, lint, tests — plus two things CI never had:
+
+- **a production `npm run build`.** `tsc --noEmit` does NOT catch a client file
+  importing a *value* from a module that pulls in server-only code: it
+  typechecks clean and then fails the Turbopack build. That has broken this
+  repo before.
+- **`node --check` over `public/sw.js` and `public/offline.js`**, which no
+  other step touches. Syntax only — nothing local exercises service-worker
+  behaviour or an iOS cold start.
+
+Notes:
+- It needs `.env.local`. That file is gitignored, so a **worktree does not have
+  one** — copy it from the main checkout or the Build step fails on env
+  validation and looks like a code error.
+- `Bypassed rule violations` on every push is the **expected** state while the
+  budget is out. It is not a misconfiguration to "fix" — do **not** enable
+  `enforce_admins` on the branch protection: because `verify` can never pass,
+  it locks `main` completely, including rollbacks.
+- Other agents push to `main` concurrently. **Re-run the gate after rebasing**
+  onto their work, not just on your own diff — you have no way to know whether
+  they ran it.
+- After any `npm install`, confirm patch-package still applied:
+  `grep -c "if (!glyph || !position)" node_modules/@react-pdf/textkit/lib/textkit.js`
+  → `1` is good, `0` means run `npx patch-package`. Otherwise PDF generation
+  crashes and it looks like a framework regression.
 
 ### Commits
 - Conventional Commits: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`
