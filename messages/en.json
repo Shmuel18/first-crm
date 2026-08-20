@@ -167,7 +167,7 @@
       "fromCase": "From case documents",
       "loading": "Loading…",
       "noDocuments": "No documents to attach",
-      "tooMany": "Up to 5 files can be attached",
+      "tooMany": "Up to {count} files can be attached",
       "tooLarge": "Files are too large (15MB total max)",
       "fileTypeNotAllowed": "Unsupported file type",
       "uploadFailed": "File upload failed",

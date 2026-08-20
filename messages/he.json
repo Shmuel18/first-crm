@@ -167,7 +167,7 @@
       "fromCase": "ממסמכי התיק",
       "loading": "טוען…",
       "noDocuments": "אין מסמכים לצירוף",
-      "tooMany": "אפשר לצרף עד 5 קבצים",
+      "tooMany": "אפשר לצרף עד {count} קבצים",
       "tooLarge": "הקבצים גדולים מדי (עד 15MB סה״כ)",
       "fileTypeNotAllowed": "סוג קובץ לא נתמך",
       "uploadFailed": "העלאת הקובץ נכשלה",

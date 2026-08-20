@@ -83,7 +83,7 @@ export function EmailAttachmentsField({
 
   async function handleFile(file: File): Promise<void> {
     setError(null);
-    if (atCount) return setError(t('tooMany'));
+    if (atCount) return setError(t('tooMany', { count: MAX_ATTACHMENT_COUNT }));
     const invalid = validateFile(file);
     if (invalid) return setError(invalid);
 
@@ -122,7 +122,7 @@ export function EmailAttachmentsField({
 
   const addDoc = (doc: EmailDocumentOption): void => {
     setError(null);
-    if (atCount) return setError(t('tooMany'));
+    if (atCount) return setError(t('tooMany', { count: MAX_ATTACHMENT_COUNT }));
     if (items.some((i) => i.kind === 'document' && i.id === doc.id)) return;
     add({ kind: 'document', id: doc.id, fileName: doc.fileName, fileSize: doc.fileSize });
   };
