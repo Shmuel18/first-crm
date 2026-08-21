@@ -1,9 +1,15 @@
 import { notFound } from 'next/navigation';
+import { after } from 'next/server';
 
 import { getLocale } from 'next-intl/server';
 
 import { listBorrowersForCase } from '@/features/borrowers/services/borrowers.service';
 import { DocumentsPageContent } from '@/features/documents/components/documents-page-content';
+import {
+  hasCaseDriveFolderSnapshot,
+  readCaseDriveFolderTree,
+  readCaseDriveSubfolderIds,
+} from '@/features/documents/domain/drive-folder-tree';
 import { getCaseDocumentChecklist } from '@/features/documents/services/document-checklist.service';
 import {
   listDocumentCategories,
@@ -34,7 +40,7 @@ export default async function CaseDocumentsPage({ params }: Props) {
       listDocumentCategories(),
       listBorrowersForCase(caseId),
       getLocale().then(parseLocale),
-      userHasPermissions('delete_document', 'verify_document'),
+      userHasPermissions('delete_document', 'verify_document', 'upload_document'),
     ]);
 
   if (!caseData) notFound();
@@ -74,13 +80,19 @@ export default async function CaseDocumentsPage({ params }: Props) {
       ? ((caseData.metadata as { drive?: { case_folder_id?: string } }).drive?.case_folder_id ??
         null)
       : null;
+  const driveFolderTree = readCaseDriveFolderTree(caseData.metadata);
+  const hasDriveFolderSnapshot = hasCaseDriveFolderSnapshot(caseData.metadata);
+  const driveSubfolderIds = readCaseDriveSubfolderIds(caseData.metadata);
 
   // First time a case's documents are opened without a Drive folder yet,
   // provision its folder tree (best-effort, fire-and-forget). Once the id is
   // stored, "open in Drive" + sync light up and later visits skip this. Existing
   // cases get an empty tree to drag their current Drive files into.
-  if (!driveFolderId) {
-    void provisionCaseDriveFolders({ caseId: caseData.id }).catch(() => undefined);
+  if (!driveFolderId && canEdit && documentPermissions.upload_document === true) {
+    // `after` keeps the serverless invocation alive. The admin client avoids
+    // reading request cookies after the Server Component has finished, while
+    // the already-computed canEdit check remains the authorization boundary.
+    after(() => provisionCaseDriveFolders({ caseId: caseData.id, admin: true }));
   }
 
   return (
@@ -92,6 +104,9 @@ export default async function CaseDocumentsPage({ params }: Props) {
       categories={categories}
       borrowers={borrowerOptions}
       driveFolderId={driveFolderId}
+      driveFolderTree={driveFolderTree}
+      hasDriveFolderSnapshot={hasDriveFolderSnapshot}
+      driveSubfolderIds={driveSubfolderIds}
       checklist={checklist}
       primaryBorrower={primaryBorrower}
       locale={locale}

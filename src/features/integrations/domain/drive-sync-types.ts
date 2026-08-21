@@ -3,7 +3,19 @@ import { DRIVE_SUBFOLDER_NAMES } from './drive-folder-naming';
 export type CaseDriveMeta = {
   case_folder_id?: string;
   subfolders?: Partial<Record<string, string>>;
+  /** Complete descendant-folder snapshot from the last trusted sync pass. */
+  folder_tree?: DriveFolderSnapshotEntry[];
   last_synced_at?: string;
+};
+
+/** A Drive folder below the managed case folder. The case folder itself is
+ * intentionally omitted; its id already lives in `case_folder_id`. */
+export type DriveFolderSnapshotEntry = {
+  id: string;
+  parent_id: string;
+  name: string;
+  /** Display-name path from the case root to this folder, inclusive. */
+  relative_path: string[];
 };
 
 export type DriveSyncOutcome =
@@ -20,6 +32,8 @@ export type DriveSyncOutcome =
       ok: false;
       reason: 'not_connected' | 'case_not_found' | 'no_folder' | 'error';
       message?: string;
+      /** Some rows changed before a later fail-closed check failed. */
+      changed?: true;
     };
 
 /** Auto-sync on page load only if last sync was older than this. */
@@ -36,6 +50,9 @@ export const NAME_TO_FOLDER_KEY: Record<string, string> = Object.fromEntries(
 export type ExistingDocEntry = {
   docId: string;
   currentDriveFolder: string | null;
+  currentFileName: string;
+  currentFileSize: number | null;
+  currentMimeType: string | null;
   existingMetadata: Record<string, unknown>;
 };
 

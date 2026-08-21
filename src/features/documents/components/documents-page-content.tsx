@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import { callAction } from '@/lib/actions/call-action';
 import type { Locale } from '@/lib/i18n/direction';
 
+import { canonicalDriveFolderRoots, documentsInsideDriveFolder } from '../domain/drive-folder-tree';
 import {
   autoSyncDriveDocumentsAction,
   syncDriveDocumentsAction,
@@ -18,10 +19,12 @@ import {
   type DocumentCategoryRow,
   type DocumentWithRelations,
   type DriveFolder,
+  type DriveFolderNode,
 } from '../types';
 import { ChecklistManagerModal } from './checklist-manager-modal';
 import { DocumentsActionBar } from './documents-action-bar';
 import { DocumentPreviewModal } from './document-preview-modal';
+import { DriveFolderCard } from './drive-folder-card';
 import { FolderCard } from './folder-card';
 import { FolderDetail } from './folder-detail';
 import { UncategorizedCard } from './uncategorized-card';
@@ -29,8 +32,12 @@ import { UploadDocumentModal } from './upload-document-modal';
 
 type Borrower = { id: string; firstName: string | null; lastName: string | null };
 
-/** Grid view when null; otherwise the drill-in target. */
-type Selection = DriveFolder | 'uncategorized' | null;
+/** Grid view when null; otherwise the exact Drive drill-in target. */
+type Selection =
+  | { kind: 'category'; folder: DriveFolder }
+  | { kind: 'custom'; folderId: string }
+  | { kind: 'uncategorized' }
+  | null;
 
 type Props = {
   caseId: string;
@@ -40,6 +47,9 @@ type Props = {
   categories: DocumentCategoryRow[];
   borrowers: Borrower[];
   driveFolderId: string | null;
+  driveFolderTree: DriveFolderNode[];
+  hasDriveFolderSnapshot: boolean;
+  driveSubfolderIds: Partial<Record<DriveFolder, string>>;
   /** Required-docs checklist for the case's primary type — [] when no
    *  type is set or no requirements seeded. */
   checklist: ReadonlyArray<DocumentChecklistItem>;
@@ -67,6 +77,9 @@ export function DocumentsPageContent({
   categories,
   borrowers,
   driveFolderId,
+  driveFolderTree,
+  hasDriveFolderSnapshot,
+  driveSubfolderIds,
   checklist,
   primaryBorrower,
   locale,
@@ -84,6 +97,9 @@ export function DocumentsPageContent({
   const [selected, setSelected] = useState<Selection>(null);
   const autoSyncInFlight = useRef(false);
   const [, startAutoSyncTransition] = useTransition();
+  const activePreviewDoc = previewDoc
+    ? (documents.find((document) => document.id === previewDoc.id) ?? null)
+    : null;
 
   const runAutomaticSync = useCallback(
     (force: boolean) => {
@@ -129,7 +145,7 @@ export function DocumentsPageContent({
     };
   }, [runAutomaticSync]);
 
-  const { buckets, uncategorized } = useMemo(() => {
+  const { buckets, unlocated } = useMemo(() => {
     const result: Record<DriveFolder, DocumentWithRelations[]> = {
       identity: [],
       income_il: [],
@@ -143,8 +159,44 @@ export function DocumentsPageContent({
       if (f && (DRIVE_FOLDERS as readonly string[]).includes(f)) result[f].push(doc);
       else unc.push(doc);
     }
-    return { buckets: result, uncategorized: unc };
+    return { buckets: result, unlocated: unc };
   }, [documents]);
+
+  const canonicalRootByFolder = useMemo(() => {
+    const roots = canonicalDriveFolderRoots(driveFolderId, driveFolderTree, driveSubfolderIds);
+    const entries: Array<[DriveFolder, DriveFolderNode]> = [];
+    for (const folder of DRIVE_FOLDERS) {
+      const node = roots[folder];
+      if (node) entries.push([folder, node]);
+    }
+    return new Map(entries);
+  }, [driveFolderId, driveFolderTree, driveSubfolderIds]);
+
+  const customRootFolders = useMemo(() => {
+    if (!driveFolderId) return [];
+    const canonicalIds = new Set([...canonicalRootByFolder.values()].map((folder) => folder.id));
+    return driveFolderTree.filter(
+      (folder) => folder.parentId === driveFolderId && !canonicalIds.has(folder.id),
+    );
+  }, [canonicalRootByFolder, driveFolderId, driveFolderTree]);
+
+  const customDocumentsByFolder = useMemo(
+    () =>
+      new Map(
+        customRootFolders.map((folder) => [
+          folder.id,
+          documentsInsideDriveFolder(unlocated, folder, driveFolderTree),
+        ]),
+      ),
+    [customRootFolders, driveFolderTree, unlocated],
+  );
+
+  const uncategorized = useMemo(() => {
+    const insideCustomFolder = new Set(
+      [...customDocumentsByFolder.values()].flat().map((document) => document.id),
+    );
+    return unlocated.filter((document) => !insideCustomFolder.has(document.id));
+  }, [customDocumentsByFolder, unlocated]);
 
   // Required-doc checklist grouped by folder, so "what's still missing" lives
   // inside each folder's drill-in rather than a separate sidebar.
@@ -205,20 +257,35 @@ export function DocumentsPageContent({
           )}
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {DRIVE_FOLDERS.map((folder) => (
+            {DRIVE_FOLDERS.filter(
+              (folder) =>
+                !hasDriveFolderSnapshot ||
+                canonicalRootByFolder.has(folder) ||
+                buckets[folder].length > 0,
+            ).map((folder) => (
               <FolderCard
                 key={folder}
                 folder={folder}
+                title={canonicalRootByFolder.get(folder)?.name}
                 documentCount={buckets[folder].length}
                 missingCount={missingFor(folder)}
-                onOpen={setSelected}
+                onOpen={(target) => setSelected({ kind: 'category', folder: target })}
+              />
+            ))}
+
+            {customRootFolders.map((folder) => (
+              <DriveFolderCard
+                key={folder.id}
+                folder={folder}
+                documentCount={customDocumentsByFolder.get(folder.id)?.length ?? 0}
+                onOpen={(folderId) => setSelected({ kind: 'custom', folderId })}
               />
             ))}
 
             {uncategorized.length > 0 && (
               <button
                 type="button"
-                onClick={() => setSelected('uncategorized')}
+                onClick={() => setSelected({ kind: 'uncategorized' })}
                 className="group focus-visible:ring-brand-gold-text/50 w-full rounded-xl border border-amber-200 bg-amber-50/50 p-4 text-start shadow-sm transition hover:border-amber-300 hover:shadow-md focus-visible:ring-2 focus-visible:outline-none"
               >
                 <div className="flex items-start gap-3">
@@ -242,20 +309,77 @@ export function DocumentsPageContent({
         </>
       )}
 
-      {selected !== null && selected !== 'uncategorized' && (
-        <FolderDetail
-          folder={selected}
-          documents={buckets[selected]}
-          checklistItems={checklistByFolder[selected]}
-          locale={locale}
-          canEdit={canEdit}
-          onBack={() => setSelected(null)}
-          onUpload={handleUploadFromFolder}
-          onPreview={setPreviewDoc}
-        />
-      )}
+      {selected?.kind === 'category' &&
+        (hasDriveFolderSnapshot &&
+        !canonicalRootByFolder.has(selected.folder) &&
+        buckets[selected.folder].length === 0 ? (
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => setSelected(null)}
+              className="focus-visible:ring-brand-gold-text/40 inline-flex items-center gap-1 rounded text-sm text-neutral-600 hover:text-neutral-900 focus-visible:ring-2 focus-visible:outline-none"
+            >
+              <ChevronRight className="size-4 ltr:rotate-180" aria-hidden="true" />
+              {td('back')}
+            </button>
+            <p className="rounded-lg border border-neutral-100 bg-white py-10 text-center text-sm text-neutral-500">
+              {td('folderUnavailable')}
+            </p>
+          </div>
+        ) : (
+          <FolderDetail
+            key={`category-${selected.folder}-${canonicalRootByFolder.get(selected.folder)?.id ?? 'local'}`}
+            folder={selected.folder}
+            rootDriveFolder={canonicalRootByFolder.get(selected.folder) ?? null}
+            driveFolderTree={driveFolderTree}
+            documents={buckets[selected.folder]}
+            checklistItems={checklistByFolder[selected.folder]}
+            locale={locale}
+            canEdit={canEdit}
+            onBack={() => setSelected(null)}
+            onUpload={handleUploadFromFolder}
+            onPreview={setPreviewDoc}
+          />
+        ))}
 
-      {selected === 'uncategorized' && (
+      {selected?.kind === 'custom' &&
+        (() => {
+          const folder = customRootFolders.find(({ id }) => id === selected.folderId);
+          if (!folder) {
+            return (
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setSelected(null)}
+                  className="focus-visible:ring-brand-gold-text/40 inline-flex items-center gap-1 rounded text-sm text-neutral-600 hover:text-neutral-900 focus-visible:ring-2 focus-visible:outline-none"
+                >
+                  <ChevronRight className="size-4 ltr:rotate-180" aria-hidden="true" />
+                  {td('back')}
+                </button>
+                <p className="rounded-lg border border-neutral-100 bg-white py-10 text-center text-sm text-neutral-500">
+                  {td('folderUnavailable')}
+                </p>
+              </div>
+            );
+          }
+          return (
+            <FolderDetail
+              key={`custom-${folder.id}`}
+              folder={null}
+              title={folder.name}
+              rootDriveFolder={folder}
+              driveFolderTree={driveFolderTree}
+              documents={customDocumentsByFolder.get(folder.id) ?? []}
+              checklistItems={[]}
+              locale={locale}
+              canEdit={canEdit}
+              onBack={() => setSelected(null)}
+              onPreview={setPreviewDoc}
+            />
+          );
+        })()}
+
+      {selected?.kind === 'uncategorized' && (
         <div className="space-y-3">
           <button
             type="button"
@@ -290,8 +414,8 @@ export function DocumentsPageContent({
       {/* Same idea: switching docs (or closing) gives the modal a fresh
           mount so the URL fetch starts clean. */}
       <DocumentPreviewModal
-        key={`preview-${previewDoc?.id ?? 'none'}`}
-        doc={previewDoc}
+        key={`preview-${activePreviewDoc?.id ?? 'none'}`}
+        doc={activePreviewDoc}
         caseId={caseId}
         canDeleteDocuments={canDeleteDocuments}
         canVerifyDocuments={canVerifyDocuments}

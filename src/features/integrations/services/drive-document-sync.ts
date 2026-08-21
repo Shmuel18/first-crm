@@ -5,6 +5,7 @@ import {
   MIN_AUTO_SYNC_INTERVAL_MS,
   NAME_TO_FOLDER_KEY,
   type CaseDriveMeta,
+  type DriveFolderSnapshotEntry,
   type DriveSyncOutcome,
   type ExistingDocEntry,
   type SyncRunState,
@@ -20,7 +21,8 @@ export type { DriveSyncOutcome };
 export type { GoogleDriveClient };
 
 type DriveSyncOptions = {
-  /** Caller has delete_document; otherwise imports run but sweep is skipped. */
+  /** Production actions always enable exact reconciliation. Optional only so
+   * read-focused service tests can exercise traversal without an auth RPC. */
   deleteVanishedFiles?: boolean;
 };
 
@@ -53,18 +55,23 @@ export async function autoSyncIfStale(
  * (migration 026). Replaces the previous read-modify-write that could lose
  * concurrent writes to sibling drive.* keys.
  */
-async function persistLastSyncedAt(caseId: string): Promise<void> {
+async function persistDriveSnapshot(
+  caseId: string,
+  folderTree: DriveFolderSnapshotEntry[],
+  subfolders: Partial<Record<string, string>>,
+): Promise<void> {
   const supabase = await createClient();
   const { error } = await supabase.rpc('update_case_drive_meta', {
     p_case_id: caseId,
     // JSON-shaped literal; widen at the call boundary.
-    p_patch: { last_synced_at: new Date().toISOString() } as unknown as Json,
+    p_patch: {
+      folder_tree: folderTree,
+      subfolders,
+      last_synced_at: new Date().toISOString(),
+    } as unknown as Json,
   });
   if (error) {
-    console.error('[driveSync] failed to persist last_synced_at', {
-      caseId,
-      message: error.message,
-    });
+    throw new Error(`Drive sync could not persist its folder snapshot: ${error.message}`);
   }
 }
 
@@ -73,10 +80,92 @@ function readDriveMeta(raw: Json | null): CaseDriveMeta {
   return ((raw as { drive: CaseDriveMeta }).drive ?? {}) as CaseDriveMeta;
 }
 
+function normalizedFolderTree(raw: unknown): DriveFolderSnapshotEntry[] {
+  if (!Array.isArray(raw)) return [];
+  const entries = raw.filter((entry): entry is DriveFolderSnapshotEntry => {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return false;
+    const candidate = entry as Partial<DriveFolderSnapshotEntry>;
+    return (
+      typeof candidate.id === 'string' &&
+      typeof candidate.parent_id === 'string' &&
+      typeof candidate.name === 'string' &&
+      Array.isArray(candidate.relative_path) &&
+      candidate.relative_path.every((part) => typeof part === 'string')
+    );
+  });
+  return entries.toSorted((a, b) => {
+    const byPath = a.relative_path.join('\u0000').localeCompare(b.relative_path.join('\u0000'));
+    return byPath || a.id.localeCompare(b.id);
+  });
+}
+
+function folderTreesEqual(left: unknown, right: DriveFolderSnapshotEntry[]): boolean {
+  return JSON.stringify(normalizedFolderTree(left)) === JSON.stringify(normalizedFolderTree(right));
+}
+
+function normalizedSubfolders(raw: unknown): Record<string, string> {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  return Object.fromEntries(
+    Object.entries(raw)
+      .filter((entry): entry is [string, string] => typeof entry[1] === 'string')
+      .sort(([left], [right]) => left.localeCompare(right)),
+  );
+}
+
+const MAX_DRIVE_ANCESTORS_PER_FILE = 100;
+
+/**
+ * Prove that an unseen, still-live Drive file no longer descends from any
+ * folder observed in the trusted case-tree snapshot. Returning false means
+ * the files.list snapshot contradicted files.get, so the whole pass must fail
+ * closed rather than deleting a healthy document.
+ */
+async function proveFileOutsideManagedTree(
+  client: GoogleDriveClient,
+  fileId: string,
+  managedFolderIds: Set<string>,
+  placementCache: Map<string, Awaited<ReturnType<GoogleDriveClient['getFilePlacement']>>>,
+): Promise<boolean> {
+  const getPlacement = async (id: string) => {
+    if (placementCache.has(id)) return placementCache.get(id) ?? null;
+    const placement = await client.getFilePlacement(id);
+    placementCache.set(id, placement);
+    return placement;
+  };
+
+  const file = await getPlacement(fileId);
+  if (!file || file.trashed) return true;
+
+  const pendingParents = [...file.parents];
+  const checkedAncestors = new Set<string>();
+  while (pendingParents.length > 0) {
+    const parentId = pendingParents.shift();
+    if (!parentId) continue;
+    if (managedFolderIds.has(parentId)) return false;
+    if (checkedAncestors.has(parentId)) {
+      throw new Error('Drive ancestry was cyclic or ambiguous');
+    }
+    if (checkedAncestors.size >= MAX_DRIVE_ANCESTORS_PER_FILE) {
+      throw new Error('Drive ancestry exceeded the reconciliation safety limit');
+    }
+    checkedAncestors.add(parentId);
+
+    const parent = await getPlacement(parentId);
+    if (!parent) {
+      throw new Error('Drive could not verify a file ancestor');
+    }
+    if (parent.trashed) continue;
+    pendingParents.push(...parent.parents);
+  }
+
+  return true;
+}
+
 /**
  * Pull files from the case's Drive subfolders into the documents table.
- * - Lists subfolders dynamically (doesn't rely on cached metadata)
- * - Matches by Hebrew folder name to drive_folder enum
+ * - Recursively lists the entire managed case-folder tree
+ * - Matches the top-level Hebrew folder name to drive_folder enum and carries
+ *   that category through every nested descendant
  * - Files dropped at case-folder root land as "uncategorized" (the
  *   advisor categorizes them from the UI)
  * - Files already linked by drive_file_id are skipped
@@ -127,7 +216,9 @@ export async function syncDriveDocumentsForCase(
       .order('sort_order'),
     supabase
       .from('documents')
-      .select('id, drive_file_id, metadata, category:category_id(drive_folder)')
+      .select(
+        'id, drive_file_id, drive_file_url, file_name, file_size, mime_type, metadata, category:category_id(drive_folder)',
+      )
       .eq('case_id', caseId)
       .is('deleted_at', null)
       .not('drive_file_id', 'is', null),
@@ -164,6 +255,9 @@ export async function syncDriveDocumentsForCase(
     existingByDriveId.set(e.drive_file_id, {
       docId: e.id,
       currentDriveFolder: cat?.drive_folder ?? null,
+      currentFileName: e.file_name,
+      currentFileSize: e.file_size,
+      currentMimeType: e.mime_type,
       existingMetadata: meta,
     });
   }
@@ -178,6 +272,13 @@ export async function syncDriveDocumentsForCase(
     existingByDriveId,
     listingsComplete: true,
   };
+  const changedBeforeFailure = () => state.imported > 0 || state.updated > 0 || state.deleted > 0;
+  const failureAfterReconciliationStarted = (message: string): DriveSyncOutcome => ({
+    ok: false,
+    reason: 'error',
+    message,
+    ...(changedBeforeFailure() ? { changed: true as const } : {}),
+  });
 
   const recordListingFailure = (err: unknown) => {
     state.listingsComplete = false;
@@ -202,76 +303,143 @@ export async function syncDriveDocumentsForCase(
   };
 
   try {
-    // Subfolders scanned dynamically — matches even if our cache is stale.
-    const subfolders = await safeListSubfolders(drive.case_folder_id);
-    for (const sub of subfolders) {
-      const folderKey = NAME_TO_FOLDER_KEY[sub.name];
-      const files = await safeListFiles(sub.id);
-      const categoryId = folderKey ? firstCategoryPerFolder.get(folderKey) : undefined;
-      if (!folderKey || !categoryId) {
-        // A renamed/custom subfolder is still part of the complete Drive
-        // snapshot. Preserve already-known documents found there even though
-        // we cannot safely infer a category for new files in that folder.
-        for (const f of files) state.seenDriveIds.add(f.id);
-        state.skipped += files.length;
-        continue;
-      }
-      for (const f of files) {
-        await importOrUpdateDriveFile(caseId, f, categoryId, folderKey, state);
-      }
-    }
-
     // Files at the case-folder root land as uncategorized (category_id = null).
     const rootFiles = await safeListFiles(drive.case_folder_id);
     for (const f of rootFiles) {
-      await importOrUpdateDriveFile(caseId, f, null, null, state);
+      await importOrUpdateDriveFile(caseId, f, null, null, state, {
+        parentFolderId: drive.case_folder_id,
+        relativePath: [],
+      });
     }
 
-    // Folder listings tell us where files are, not whether an unseen file was
-    // actually deleted. Confirm every deletion candidate by id so a file moved
-    // into a nested/custom folder cannot be mistaken for a Drive deletion.
-    if (state.listingsComplete) {
-      for (const driveId of state.existingByDriveId.keys()) {
-        if (state.seenDriveIds.has(driveId)) continue;
-        try {
-          if (await client.isLiveFile(driveId)) {
-            state.seenDriveIds.add(driveId);
-            state.skipped += 1;
-          }
-        } catch (err) {
-          recordListingFailure(err);
-          break;
-        }
+    type PendingFolder = DriveFolderSnapshotEntry & {
+      categoryId: string | null;
+      driveFolder: string | null;
+    };
+    const pendingFolders: PendingFolder[] = [];
+    const topLevelFolders = await safeListSubfolders(drive.case_folder_id);
+    const topLevelById = new Map(topLevelFolders.map((folder) => [folder.id, folder]));
+    const resolvedSubfolders: Partial<Record<string, string>> = {};
+    for (const [folderName, folderKey] of Object.entries(NAME_TO_FOLDER_KEY)) {
+      const cachedId = drive.subfolders?.[folderKey];
+      if (cachedId && topLevelById.has(cachedId)) {
+        resolvedSubfolders[folderKey] = cachedId;
+        continue;
+      }
+      const nameMatches = topLevelFolders.filter((folder) => folder.name === folderName);
+      if (nameMatches.length === 1 && nameMatches[0]) {
+        resolvedSubfolders[folderKey] = nameMatches[0].id;
+      }
+    }
+    const resolvedFolderKeyById = new Map<string, string>();
+    for (const [folderKey, folderId] of Object.entries(resolvedSubfolders)) {
+      if (folderId) resolvedFolderKeyById.set(folderId, folderKey);
+    }
+    for (const folder of topLevelFolders) {
+      // Only resolved DIRECT children are canonical category roots. Stable
+      // cached ids survive renames; a stale/moved id is healed by one unique
+      // canonical-name match. Ambiguous duplicate names remain custom.
+      const matchedFolder = resolvedFolderKeyById.get(folder.id) ?? null;
+      const categoryId = matchedFolder ? (firstCategoryPerFolder.get(matchedFolder) ?? null) : null;
+      pendingFolders.push({
+        id: folder.id,
+        parent_id: drive.case_folder_id,
+        name: folder.name,
+        relative_path: [folder.name],
+        categoryId,
+        // A known Drive folder without an active DB category is treated as
+        // uncategorized so its files remain visible instead of disappearing.
+        driveFolder: categoryId ? matchedFolder : null,
+      });
+    }
+
+    const folderTree: DriveFolderSnapshotEntry[] = [];
+    const visitedFolderIds = new Set<string>([drive.case_folder_id]);
+    for (let index = 0; index < pendingFolders.length; index += 1) {
+      const folder = pendingFolders[index];
+      if (!folder) continue;
+      if (visitedFolderIds.has(folder.id)) continue;
+      visitedFolderIds.add(folder.id);
+      folderTree.push({
+        id: folder.id,
+        parent_id: folder.parent_id,
+        name: folder.name,
+        relative_path: folder.relative_path,
+      });
+
+      const files = await safeListFiles(folder.id);
+      for (const file of files) {
+        await importOrUpdateDriveFile(caseId, file, folder.categoryId, folder.driveFolder, state, {
+          parentFolderId: folder.id,
+          relativePath: folder.relative_path,
+        });
+      }
+
+      const children = await safeListSubfolders(folder.id);
+      for (const child of children) {
+        pendingFolders.push({
+          id: child.id,
+          parent_id: folder.id,
+          name: child.name,
+          relative_path: [...folder.relative_path, child.name],
+          categoryId: folder.categoryId,
+          driveFolder: folder.driveFolder,
+        });
       }
     }
 
-    // Never turn an incomplete Drive view into either deletions or a false
-    // "nothing new" success. Do not stamp last_synced_at so the next visit
-    // retries instead of being throttled by a pass that never completed.
+    const trustedFolderTree = normalizedFolderTree(folderTree);
+
+    // Once the recursive listing is complete, an unseen file is outside this
+    // managed case tree (or trashed). Drive is the source of truth, so it must
+    // disappear from the site even if the file id is still live elsewhere.
+    // Never infer this from a partial tree.
     if (!state.listingsComplete) {
-      return {
-        ok: false,
-        reason: 'error',
-        message: state.listingFailure ?? 'Drive listing incomplete',
-      };
+      return failureAfterReconciliationStarted(state.listingFailure ?? 'Drive listing incomplete');
+    }
+
+    // A successful list request can still (rarely) return an anomalously empty
+    // page. Before destructive reconciliation, independently inspect each
+    // unseen file and walk its parents. If it still reaches the case tree, the
+    // snapshot was inconsistent and the entire pass fails without sweeping.
+    const placementCache = new Map<
+      string,
+      Awaited<ReturnType<GoogleDriveClient['getFilePlacement']>>
+    >();
+    for (const driveId of state.existingByDriveId.keys()) {
+      if (state.seenDriveIds.has(driveId)) continue;
+      if (!(await proveFileOutsideManagedTree(client, driveId, visitedFolderIds, placementCache))) {
+        return failureAfterReconciliationStarted(
+          `Drive listing was inconsistent for file ${driveId}`,
+        );
+      }
     }
 
     if (options.deleteVanishedFiles) {
       await sweepVanishedDriveFiles(caseId, state);
     }
+
+    if (
+      !folderTreesEqual(drive.folder_tree, trustedFolderTree) ||
+      JSON.stringify(normalizedSubfolders(drive.subfolders)) !==
+        JSON.stringify(normalizedSubfolders(resolvedSubfolders))
+    ) {
+      // Reuse the existing changed counter so empty-folder create/rename/move
+      // refreshes the current documents view as well.
+      state.updated += 1;
+    }
+
+    // Persist only a complete snapshot. A failed RPC also fails the pass and
+    // leaves last_synced_at untouched so the next visit retries promptly.
+    await persistDriveSnapshot(caseId, trustedFolderTree, resolvedSubfolders);
   } catch (err) {
-    return {
-      ok: false,
-      reason: 'error',
-      message: err instanceof Error ? err.message : 'unknown',
-    };
+    return failureAfterReconciliationStarted(err instanceof Error ? err.message : 'unknown');
   }
 
   // Push direction AFTER pull+sweep (ordering matters — see the helper's doc).
   // Best-effort: a push failure never fails the sync.
   const pushed = await pushLocalOnlyFilesToDrive(caseId);
 
-  await persistLastSyncedAt(caseId);
   return {
     ok: true,
     imported: state.imported,

@@ -2777,6 +2777,9 @@
     },
     "detail": {
       "back": "All folders",
+      "backToParent": "Back to parent folder",
+      "foldersTitle": "Folders",
+      "folderUnavailable": "This folder was moved or removed in Drive",
       "uploadedTitle": "Uploaded documents",
       "requiredTitle": "Still required",
       "requiredEmpty": "Everything collected in this category",

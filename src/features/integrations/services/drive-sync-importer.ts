@@ -4,6 +4,26 @@ import type { Json } from '@/types/database';
 import type { DriveFileMeta } from '../domain/drive-folder-naming';
 import type { SyncRunState } from '../domain/drive-sync-types';
 
+export type DriveFileLocation = {
+  parentFolderId: string;
+  /** Display-name path from the managed case root to the direct parent. */
+  relativePath: string[];
+};
+
+function normalizedSize(size: string | undefined): number | null {
+  if (!size) return null;
+  const parsed = Number(size);
+  return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : null;
+}
+
+function stringArraysEqual(left: unknown, right: string[]): boolean {
+  return (
+    Array.isArray(left) &&
+    left.length === right.length &&
+    left.every((value, index) => value === right[index])
+  );
+}
+
 /**
  * Insert-or-update a single Drive file into the documents table for a case.
  * Mutates `state` (counters + existingByDriveId map) so the caller can keep
@@ -21,6 +41,7 @@ export async function importOrUpdateDriveFile(
   categoryId: string | null,
   driveFolder: string | null,
   state: SyncRunState,
+  location: DriveFileLocation,
 ): Promise<void> {
   if (state.tombstonedDriveIds.has(file.id)) {
     state.skipped += 1;
@@ -37,31 +58,59 @@ export async function importOrUpdateDriveFile(
     const wasMarkedMissing = 'drive_missing_since' in found.existingMetadata;
     const metaWithoutMissing: Record<string, unknown> = { ...found.existingMetadata };
     delete metaWithoutMissing.drive_missing_since;
+    const nextMetadata: Record<string, unknown> = {
+      ...metaWithoutMissing,
+      drive_parent_folder_id: location.parentFolderId,
+      drive_relative_path: [...location.relativePath],
+    };
+    const nextFileSize = normalizedSize(file.size);
+    const categoryChanged = found.currentDriveFolder !== driveFolder;
+    const locationChanged =
+      found.existingMetadata.drive_parent_folder_id !== location.parentFolderId ||
+      !stringArraysEqual(found.existingMetadata.drive_relative_path, location.relativePath);
+    const fileMetadataChanged =
+      found.currentFileName !== file.name ||
+      found.currentFileSize !== nextFileSize ||
+      found.currentMimeType !== file.mimeType;
 
-    if (found.currentDriveFolder !== driveFolder) {
-      // Move detected. Merge with existing metadata - replacing the whole
-      // JSONB would wipe storage_path (and any other keys) on app-uploaded
-      // files.
-      await supabase
+    if (categoryChanged || locationChanged || fileMetadataChanged || wasMarkedMissing) {
+      // Merge with existing metadata - replacing the whole JSONB would wipe
+      // storage_path (and any other app-owned keys) on mirrored uploads.
+      const { data: updated, error } = await supabase
         .from('documents')
         .update({
           category_id: categoryId,
-          metadata: { ...metaWithoutMissing, source: 'drive_sync' },
+          file_name: file.name,
+          file_size: nextFileSize,
+          mime_type: file.mimeType,
+          metadata: nextMetadata as unknown as Json,
         })
-        .eq('id', found.docId);
-      state.updated += 1;
+        .eq('id', found.docId)
+        .is('deleted_at', null)
+        .select('id')
+        .maybeSingle();
+      if (error) {
+        throw new Error(`Drive sync could not update document: ${error.message}`);
+      }
+      if (!updated) {
+        // A concurrent explicit delete/detach won. Do not overwrite its audit
+        // metadata or report an update that never reached an active row.
+        state.skipped += 1;
+        return;
+      }
+
+      if (categoryChanged || locationChanged || fileMetadataChanged) {
+        state.updated += 1;
+      } else {
+        // Clearing a legacy missing marker is bookkeeping, not a user-visible
+        // document change.
+        state.skipped += 1;
+      }
       found.currentDriveFolder = driveFolder;
-      found.existingMetadata = { ...metaWithoutMissing, source: 'drive_sync' };
-    } else if (wasMarkedMissing) {
-      // Same folder, but file is back. Clear the flag without bumping
-      // updated count (visually nothing changed for the advisor).
-      await supabase
-        .from('documents')
-        // Record<string, unknown> → Json widening at the boundary.
-        .update({ metadata: metaWithoutMissing as unknown as Json })
-        .eq('id', found.docId);
-      found.existingMetadata = metaWithoutMissing;
-      state.skipped += 1;
+      found.currentFileName = file.name;
+      found.currentFileSize = nextFileSize;
+      found.currentMimeType = file.mimeType;
+      found.existingMetadata = nextMetadata;
     } else {
       state.skipped += 1;
     }
@@ -74,12 +123,16 @@ export async function importOrUpdateDriveFile(
       case_id: caseId,
       category_id: categoryId,
       file_name: file.name,
-      file_size: file.size ? Number(file.size) : null,
+      file_size: normalizedSize(file.size),
       mime_type: file.mimeType,
       drive_file_id: file.id,
       drive_file_url: file.webViewLink,
       status: 'new',
-      metadata: { source: 'drive_sync' },
+      metadata: {
+        source: 'drive_sync',
+        drive_parent_folder_id: location.parentFolderId,
+        drive_relative_path: [...location.relativePath],
+      },
     })
     .select('id')
     .single();
@@ -88,7 +141,18 @@ export async function importOrUpdateDriveFile(
     state.existingByDriveId.set(file.id, {
       docId: inserted.id,
       currentDriveFolder: driveFolder,
-      existingMetadata: { source: 'drive_sync' },
+      currentFileName: file.name,
+      currentFileSize: normalizedSize(file.size),
+      currentMimeType: file.mimeType,
+      existingMetadata: {
+        source: 'drive_sync',
+        drive_parent_folder_id: location.parentFolderId,
+        drive_relative_path: [...location.relativePath],
+      },
     });
+  } else {
+    throw new Error(
+      `Drive sync could not import document: ${error?.message ?? 'insert returned no row'}`,
+    );
   }
 }

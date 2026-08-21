@@ -118,6 +118,140 @@ describe('GoogleDriveClient.isLiveFile', () => {
   });
 });
 
+describe('GoogleDriveClient.getFilePlacement', () => {
+  it('returns parents and trash state, and uses null only for a missing file', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        driveResponse(200, { id: 'file-1', trashed: false, parents: ['folder-1'] }),
+      )
+      .mockResolvedValueOnce(driveResponse(200, { id: 'file-1', trashed: true }))
+      .mockResolvedValueOnce(driveResponse(404));
+    const drive = client();
+
+    await expect(drive.getFilePlacement('file-1')).resolves.toEqual({
+      trashed: false,
+      parents: ['folder-1'],
+      name: null,
+      mimeType: null,
+    });
+    await expect(drive.getFilePlacement('file-1')).resolves.toEqual({
+      trashed: true,
+      parents: [],
+      name: null,
+      mimeType: null,
+    });
+    await expect(drive.getFilePlacement('file-1')).resolves.toBeNull();
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining('supportsAllDrives=true'),
+      expect.any(Object),
+    );
+  });
+
+  it('fails loudly when Drive cannot verify placement', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(driveResponse(503));
+
+    await expect(client().getFilePlacement('file-1')).rejects.toThrow(
+      'Drive file placement verification failed: 503',
+    );
+  });
+});
+
+describe('GoogleDriveClient.moveFile', () => {
+  it('replaces the current parent with the canonical target folder', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        driveResponse(200, {
+          id: 'file-1',
+          name: 'doc.pdf',
+          mimeType: 'application/pdf',
+          trashed: false,
+          parents: ['case-root'],
+        }),
+      )
+      .mockResolvedValueOnce(driveResponse(200, { id: 'file-1', parents: ['income-folder'] }));
+
+    await expect(client().moveFile('file-1', 'income-folder')).resolves.toEqual({
+      changed: true,
+      previousParents: ['case-root'],
+    });
+
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    const [url, init] = fetchSpy.mock.calls[1]!;
+    expect(url).toEqual(expect.stringContaining('addParents=income-folder'));
+    expect(url).toEqual(expect.stringContaining('removeParents=case-root'));
+    expect(url).toEqual(expect.stringContaining('supportsAllDrives=true'));
+    expect(init).toEqual(
+      expect.objectContaining({
+        method: 'PATCH',
+        body: '{}',
+      }),
+    );
+  });
+
+  it('does not mutate Drive when the file already has exactly the target parent', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      driveResponse(200, {
+        id: 'file-1',
+        trashed: false,
+        parents: ['income-folder'],
+      }),
+    );
+
+    await expect(client().moveFile('file-1', 'income-folder')).resolves.toEqual({
+      changed: false,
+      previousParents: ['income-folder'],
+    });
+    expect(fetchSpy).toHaveBeenCalledOnce();
+  });
+
+  it('fails closed for a missing or trashed file', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(driveResponse(404))
+      .mockResolvedValueOnce(driveResponse(200, { trashed: true, parents: ['case-root'] }));
+    const drive = client();
+
+    await expect(drive.moveFile('missing', 'income-folder')).rejects.toThrow(
+      'Drive file move failed: file is missing or trashed',
+    );
+    await expect(drive.moveFile('trashed', 'income-folder')).rejects.toThrow(
+      'Drive file move failed: file is missing or trashed',
+    );
+  });
+});
+
+describe('GoogleDriveClient.deleteFile', () => {
+  it('deletes Shared Drive files with supportsAllDrives enabled', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(driveResponse(204));
+
+    await client().deleteFile('file-1');
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining('/files/file-1?supportsAllDrives=true'),
+      expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
+});
+
+describe('GoogleDriveClient recursive listings', () => {
+  it('includes Shared Drive flags on file and subfolder list requests', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(async () => driveResponse(200, { files: [] }));
+    const drive = client();
+
+    await drive.listFolderFilesPaginated('folder-1');
+    await drive.listSubfolders('folder-1');
+
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    for (const [url] of fetchSpy.mock.calls) {
+      expect(url).toEqual(expect.stringContaining('supportsAllDrives=true'));
+      expect(url).toEqual(expect.stringContaining('includeItemsFromAllDrives=true'));
+    }
+  });
+});
+
 describe('GoogleDriveClient download responses', () => {
   it('leaves regular Drive bytes as a readable response stream', async () => {
     const fetchSpy = vi

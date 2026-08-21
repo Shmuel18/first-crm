@@ -2777,6 +2777,9 @@
     },
     "detail": {
       "back": "כל התיקיות",
+      "backToParent": "חזרה לתיקייה הקודמת",
+      "foldersTitle": "תיקיות",
+      "folderUnavailable": "התיקייה הועברה או הוסרה ב-Drive",
       "uploadedTitle": "מסמכים שהועלו",
       "requiredTitle": "עדיין נדרש",
       "requiredEmpty": "הכול נאסף בקטגוריה זו",

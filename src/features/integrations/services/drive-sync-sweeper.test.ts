@@ -1,10 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 
 import type { SyncRunState } from '../domain/drive-sync-types';
 import { sweepVanishedDriveFiles } from './drive-sync-sweeper';
 
+vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: vi.fn() }));
 vi.mock('@/lib/supabase/server', () => ({ createClient: vi.fn() }));
 
 const CASE_ID = '10000000-0000-4000-8000-000000000001';
@@ -24,17 +26,19 @@ function makeState(overrides: Partial<SyncRunState> = {}): SyncRunState {
   };
 }
 
-function mockDeleteRpc(error: { message: string } | null = null) {
+function mockDeleteRpc(error: { message: string } | null = null, removed = true) {
   const getUser = vi.fn(async () => ({
     data: { user: { id: USER_ID } },
     error: null,
   }));
-  const rpc = vi.fn(async () => ({ error }));
+  const rpc = vi.fn(async () => ({ data: removed, error }));
 
   vi.mocked(createClient).mockResolvedValue({
     auth: { getUser },
-    rpc,
   } as unknown as Awaited<ReturnType<typeof createClient>>);
+  vi.mocked(createAdminClient).mockReturnValue({ rpc } as unknown as ReturnType<
+    typeof createAdminClient
+  >);
 
   return { getUser, rpc };
 }
@@ -48,7 +52,7 @@ afterEach(() => {
 });
 
 describe('sweepVanishedDriveFiles', () => {
-  it('soft-deletes and tombstones an unseen Drive document on the first complete pass', async () => {
+  it('soft-deletes and detaches an unseen Drive document without a tombstone', async () => {
     const db = mockDeleteRpc();
     const state = makeState({
       existingByDriveId: new Map([
@@ -57,6 +61,9 @@ describe('sweepVanishedDriveFiles', () => {
           {
             docId: 'document-1',
             currentDriveFolder: 'income',
+            currentFileName: 'income.pdf',
+            currentFileSize: 100,
+            currentMimeType: 'application/pdf',
             existingMetadata: { source: 'drive_sync' },
           },
         ],
@@ -65,7 +72,7 @@ describe('sweepVanishedDriveFiles', () => {
 
     await sweepVanishedDriveFiles(CASE_ID, state);
 
-    expect(db.rpc).toHaveBeenCalledWith('soft_delete_document_with_tombstone', {
+    expect(db.rpc).toHaveBeenCalledWith('soft_delete_drive_document_without_tombstone', {
       p_document_id: 'document-1',
       p_case_id: CASE_ID,
       p_user_id: USER_ID,
@@ -82,6 +89,9 @@ describe('sweepVanishedDriveFiles', () => {
           {
             docId: 'document-1',
             currentDriveFolder: null,
+            currentFileName: 'legacy.pdf',
+            currentFileSize: null,
+            currentMimeType: 'application/pdf',
             existingMetadata: {
               source: 'drive_sync',
               drive_missing_since: '2026-08-21T09:29:59.000Z',
@@ -107,6 +117,9 @@ describe('sweepVanishedDriveFiles', () => {
           {
             docId: 'document-1',
             currentDriveFolder: 'identity',
+            currentFileName: 'identity.pdf',
+            currentFileSize: 200,
+            currentMimeType: 'application/pdf',
             existingMetadata: { source: 'drive_sync' },
           },
         ],
@@ -128,6 +141,9 @@ describe('sweepVanishedDriveFiles', () => {
           {
             docId: 'document-1',
             currentDriveFolder: 'identity',
+            currentFileName: 'identity.pdf',
+            currentFileSize: 200,
+            currentMimeType: 'application/pdf',
             existingMetadata: { source: 'drive_sync' },
           },
         ],
@@ -149,6 +165,9 @@ describe('sweepVanishedDriveFiles', () => {
           {
             docId: 'document-1',
             currentDriveFolder: 'income',
+            currentFileName: 'income.pdf',
+            currentFileSize: 100,
+            currentMimeType: 'application/pdf',
             existingMetadata: { source: 'drive_sync' },
           },
         ],
@@ -178,6 +197,9 @@ describe('sweepVanishedDriveFiles', () => {
           {
             docId: 'document-1',
             currentDriveFolder: 'income',
+            currentFileName: 'income.pdf',
+            currentFileSize: 100,
+            currentMimeType: 'application/pdf',
             existingMetadata: { source: 'drive_sync' },
           },
         ],
@@ -187,7 +209,30 @@ describe('sweepVanishedDriveFiles', () => {
     await expect(sweepVanishedDriveFiles(CASE_ID, state)).rejects.toThrow(
       'Drive sync could not authorize document removal',
     );
+    expect(createAdminClient).not.toHaveBeenCalled();
     expect(rpc).not.toHaveBeenCalled();
+    expect(state.deleted).toBe(0);
+  });
+
+  it('treats a concurrent already-gone row as an idempotent no-op', async () => {
+    mockDeleteRpc(null, false);
+    const state = makeState({
+      existingByDriveId: new Map([
+        [
+          'drive-file-1',
+          {
+            docId: 'document-1',
+            currentDriveFolder: 'income',
+            currentFileName: 'income.pdf',
+            currentFileSize: 100,
+            currentMimeType: 'application/pdf',
+            existingMetadata: { source: 'drive_sync' },
+          },
+        ],
+      ]),
+    });
+
+    await expect(sweepVanishedDriveFiles(CASE_ID, state)).resolves.toBeUndefined();
     expect(state.deleted).toBe(0);
   });
 });

@@ -18,6 +18,13 @@ import { markIntegrationDisconnected, persistRefreshedAccessToken } from './inte
 export { DRIVE_SUBFOLDER_NAMES, caseFolderName };
 export type { DriveFileMeta, DriveUploadResult };
 
+export type DriveFilePlacement = {
+  trashed: boolean;
+  parents: string[];
+  name: string | null;
+  mimeType: string | null;
+};
+
 const DRIVE_API = 'https://www.googleapis.com/drive/v3';
 const DRIVE_UPLOAD = 'https://www.googleapis.com/upload/drive/v3';
 const FOLDER_MIME = 'application/vnd.google-apps.folder';
@@ -230,8 +237,9 @@ export class GoogleDriveClient {
    */
   async isManagedCaseFolder(fileId: string, caseId: string): Promise<boolean> {
     const fields = 'id,mimeType,trashed,appProperties';
+    const params = new URLSearchParams({ fields, supportsAllDrives: 'true' });
     const res = await this.authedFetchRetry(
-      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?fields=${encodeURIComponent(fields)}`,
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?${params.toString()}`,
     );
     if (res.status === 404) return false;
     if (!res.ok) throw new Error(`Drive case folder verification failed: ${res.status}`);
@@ -261,6 +269,78 @@ export class GoogleDriveClient {
     if (!res.ok) throw new Error(`Drive file verification failed: ${res.status}`);
     const data = (await res.json()) as { trashed?: boolean };
     return data.trashed !== true;
+  }
+
+  /**
+   * Read a file/folder's current parents for exact-mirror reconciliation.
+   * `null` means Drive returned 404. Callers must treat every other failure as
+   * unknown (fail closed), never as proof that a file left a managed tree.
+   */
+  async getFilePlacement(fileId: string): Promise<DriveFilePlacement | null> {
+    const fields = 'id,name,mimeType,trashed,parents';
+    const params = new URLSearchParams({ fields, supportsAllDrives: 'true' });
+    const res = await this.authedFetchRetry(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?${params.toString()}`,
+    );
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`Drive file placement verification failed: ${res.status}`);
+    const data = (await res.json()) as {
+      name?: unknown;
+      mimeType?: unknown;
+      trashed?: boolean;
+      parents?: unknown;
+    };
+    return {
+      trashed: data.trashed === true,
+      parents: Array.isArray(data.parents)
+        ? data.parents.filter((parent): parent is string => typeof parent === 'string')
+        : [],
+      name: typeof data.name === 'string' ? data.name : null,
+      mimeType: typeof data.mimeType === 'string' ? data.mimeType : null,
+    };
+  }
+
+  /**
+   * Move a live Drive file to one exact parent folder. Google Drive v3 only
+   * supports parent changes through addParents/removeParents, so first read
+   * the authoritative parent and then PATCH the delta. Mutations are not
+   * retried: an ambiguous timeout must be reconciled by a later Drive sync.
+   */
+  async moveFile(
+    fileId: string,
+    targetParentId: string,
+  ): Promise<{ changed: boolean; previousParents: string[] }> {
+    const placement = await this.getFilePlacement(fileId);
+    if (!placement || placement.trashed) {
+      throw new Error('Drive file move failed: file is missing or trashed');
+    }
+
+    const previousParents = [...placement.parents];
+    const alreadyExact = previousParents.length === 1 && previousParents[0] === targetParentId;
+    if (alreadyExact) return { changed: false, previousParents };
+
+    const params = new URLSearchParams({
+      fields: 'id,parents',
+      supportsAllDrives: 'true',
+    });
+    if (!previousParents.includes(targetParentId)) {
+      params.set('addParents', targetParentId);
+    }
+    const removeParents = previousParents.filter((parent) => parent !== targetParentId);
+    if (removeParents.length > 0) {
+      params.set('removeParents', removeParents.join(','));
+    }
+
+    const res = await this.authedFetch(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?${params.toString()}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+      },
+    );
+    if (!res.ok) throw new Error(`Drive file move failed: ${res.status}`);
+    return { changed: true, previousParents };
   }
 
   /** Rename a file/folder in place — same id, same parents, same contents. */
@@ -324,9 +404,11 @@ export class GoogleDriveClient {
   }
 
   async deleteFile(fileId: string): Promise<void> {
-    const res = await this.authedFetch(`${DRIVE_API}/files/${encodeURIComponent(fileId)}`, {
-      method: 'DELETE',
-    });
+    const params = new URLSearchParams({ supportsAllDrives: 'true' });
+    const res = await this.authedFetch(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?${params.toString()}`,
+      { method: 'DELETE' },
+    );
     if (!res.ok && res.status !== 404) {
       throw new Error(`Drive delete failed: ${res.status}`);
     }
@@ -335,7 +417,15 @@ export class GoogleDriveClient {
   async listFolderFiles(folderId: string): Promise<DriveFileMeta[]> {
     const q = `'${folderId}' in parents and trashed = false and mimeType != '${FOLDER_MIME}'`;
     const fields = 'files(id,name,mimeType,size,webViewLink,modifiedTime,createdTime)';
-    const url = `${DRIVE_API}/files?q=${encodeURIComponent(q)}&fields=${encodeURIComponent(fields)}&pageSize=200&spaces=drive`;
+    const params = new URLSearchParams({
+      q,
+      fields,
+      pageSize: '200',
+      spaces: 'drive',
+      supportsAllDrives: 'true',
+      includeItemsFromAllDrives: 'true',
+    });
+    const url = `${DRIVE_API}/files?${params.toString()}`;
     const res = await this.authedFetchRetry(url);
     if (!res.ok) throw new Error(`Drive list folder failed: ${res.status}`);
     const data = (await res.json()) as { files: DriveFileMeta[] };
@@ -360,6 +450,8 @@ export class GoogleDriveClient {
         fields,
         pageSize: '1000',
         spaces: 'drive',
+        supportsAllDrives: 'true',
+        includeItemsFromAllDrives: 'true',
       });
       if (pageToken) params.set('pageToken', pageToken);
       const res = await this.authedFetchRetry(`${DRIVE_API}/files?${params.toString()}`);
@@ -388,7 +480,14 @@ export class GoogleDriveClient {
     const out: { id: string; name: string }[] = [];
     let pageToken: string | undefined;
     do {
-      const params = new URLSearchParams({ q, fields, pageSize: '1000', spaces: 'drive' });
+      const params = new URLSearchParams({
+        q,
+        fields,
+        pageSize: '1000',
+        spaces: 'drive',
+        supportsAllDrives: 'true',
+        includeItemsFromAllDrives: 'true',
+      });
       if (pageToken) params.set('pageToken', pageToken);
       const res = await this.authedFetchRetry(`${DRIVE_API}/files?${params.toString()}`);
       if (!res.ok) throw new Error(`Drive list subfolders failed: ${res.status}`);

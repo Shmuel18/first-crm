@@ -3,10 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { refresh, revalidatePath } from 'next/cache';
 
 import { userCanEditCase, userHasPermissions } from '@/lib/auth/permissions';
-import { autoSyncIfStale } from '@/features/integrations/services/drive-document-sync';
+import {
+  autoSyncIfStale,
+  syncDriveDocumentsForCase,
+} from '@/features/integrations/services/drive-document-sync';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 
-import { autoSyncDriveDocumentsAction } from './sync-drive-documents';
+import { autoSyncDriveDocumentsAction, syncDriveDocumentsAction } from './sync-drive-documents';
 
 vi.mock('next/cache', () => ({ refresh: vi.fn(), revalidatePath: vi.fn() }));
 vi.mock('@/features/integrations/services/drive-document-sync', () => ({
@@ -32,9 +36,9 @@ function authorize() {
   vi.mocked(userHasPermissions).mockResolvedValue({
     view_case_documents: true,
     upload_document: true,
-    delete_document: true,
   });
   vi.mocked(userCanEditCase).mockResolvedValue(true);
+  vi.mocked(checkRateLimit).mockResolvedValue(true);
 }
 
 beforeEach(authorize);
@@ -42,6 +46,28 @@ beforeEach(authorize);
 afterEach(() => {
   vi.restoreAllMocks();
   vi.clearAllMocks();
+});
+
+describe('syncDriveDocumentsAction', () => {
+  it('refreshes truthful partial changes when a later manual-sync check fails', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(syncDriveDocumentsForCase).mockResolvedValue({
+      ok: false,
+      reason: 'error',
+      message: 'Drive listing incomplete',
+      changed: true,
+    });
+
+    const result = await syncDriveDocumentsAction(CASE_ID);
+
+    expect(result).toEqual({ ok: false, error: 'unknown' });
+    expect(syncDriveDocumentsForCase).toHaveBeenCalledWith(CASE_ID, {
+      deleteVanishedFiles: true,
+    });
+    expect(revalidatePath).toHaveBeenCalledWith(`/cases/${CASE_ID}/documents`);
+    expect(revalidatePath).toHaveBeenCalledWith(`/cases/${CASE_ID}`);
+    expect(refresh).toHaveBeenCalledOnce();
+  });
 });
 
 describe('autoSyncDriveDocumentsAction', () => {
@@ -92,11 +118,10 @@ describe('autoSyncDriveDocumentsAction', () => {
     expect(autoSyncIfStale).not.toHaveBeenCalled();
   });
 
-  it('imports for an editor without granting Drive reconciliation delete rights', async () => {
+  it('runs system reconciliation for an editor without UI delete permission', async () => {
     vi.mocked(userHasPermissions).mockResolvedValue({
       view_case_documents: true,
       upload_document: true,
-      delete_document: false,
     });
     vi.mocked(autoSyncIfStale).mockResolvedValue({
       ok: true,
@@ -110,7 +135,7 @@ describe('autoSyncDriveDocumentsAction', () => {
     await autoSyncDriveDocumentsAction(CASE_ID);
 
     expect(autoSyncIfStale).toHaveBeenCalledWith(CASE_ID, {
-      deleteVanishedFiles: false,
+      deleteVanishedFiles: true,
     });
   });
 
@@ -126,5 +151,22 @@ describe('autoSyncDriveDocumentsAction', () => {
 
     expect(result).toEqual({ ok: false, error: 'unknown' });
     expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it('refreshes truthful partial changes when a later safety check fails', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(autoSyncIfStale).mockResolvedValue({
+      ok: false,
+      reason: 'error',
+      message: 'Drive listing incomplete',
+      changed: true,
+    });
+
+    const result = await autoSyncDriveDocumentsAction(CASE_ID);
+
+    expect(result).toEqual({ ok: false, error: 'unknown' });
+    expect(revalidatePath).toHaveBeenCalledWith(`/cases/${CASE_ID}/documents`);
+    expect(revalidatePath).toHaveBeenCalledWith(`/cases/${CASE_ID}`);
+    expect(refresh).toHaveBeenCalledOnce();
   });
 });

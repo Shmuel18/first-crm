@@ -1,6 +1,13 @@
 import { DOCUMENTS_BUCKET } from '@/features/documents/services/documents.service';
 import { isRetentionPurgeEnabled } from '@/features/documents/services/erasure-freshness.service';
-import { eraseDriveTargets } from '@/features/integrations/services/drive-case-uploader';
+import {
+  eraseDriveTargets,
+  getDriveClientIfConnected,
+} from '@/features/integrations/services/drive-case-uploader';
+import {
+  classifyDriveFileAncestry,
+  type DrivePlacementCache,
+} from '@/features/integrations/services/drive-file-ancestry';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { Json } from '@/types/database';
 
@@ -111,6 +118,14 @@ function readStoragePath(metadata: Json | null): string | null {
   return typeof raw === 'string' && raw.length > 0 ? raw : null;
 }
 
+function readCaseFolderId(metadata: Json | null): string | null {
+  if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) return null;
+  const drive = (metadata as Record<string, unknown>).drive;
+  if (!drive || typeof drive !== 'object' || Array.isArray(drive)) return null;
+  const raw = (drive as Record<string, unknown>).case_folder_id;
+  return typeof raw === 'string' && raw.length > 0 ? raw : null;
+}
+
 async function eraseDocumentFiles(
   admin: Admin,
   cutoff: string,
@@ -118,37 +133,48 @@ async function eraseDocumentFiles(
 ): Promise<EraseSection | null> {
   const direct = await admin
     .from('documents')
-    .select('id, metadata, drive_file_id')
+    .select('id, case_id, metadata, drive_file_id')
     .not('deleted_at', 'is', null)
     .lt('deleted_at', cutoff)
     .or(DOC_FILE_FILTER)
     .order('id', { ascending: true })
     .limit(BATCH_SIZE);
   if (direct.error) {
-    console.error('[retention-eraser] documents direct select failed', { message: direct.error.message });
+    console.error('[retention-eraser] documents direct select failed', {
+      message: direct.error.message,
+    });
     return null;
   }
   let cascade: NonNullable<typeof direct.data> = [];
   if (deadCaseIds.length > 0) {
     const c = await admin
       .from('documents')
-      .select('id, metadata, drive_file_id')
+      .select('id, case_id, metadata, drive_file_id')
       .in('case_id', deadCaseIds)
       .or(DOC_FILE_FILTER)
       .order('id', { ascending: true })
       .limit(BATCH_SIZE);
     if (c.error) {
-      console.error('[retention-eraser] documents cascade select failed', { message: c.error.message });
+      console.error('[retention-eraser] documents cascade select failed', {
+        message: c.error.message,
+      });
       return null;
     }
     cascade = c.data ?? [];
   }
   const rows = mergeRows(direct.data ?? [], cascade);
 
-  type Cand = { id: string; path: string | null; driveId: string | null; metadata: Json | null };
+  type Cand = {
+    id: string;
+    caseId: string;
+    path: string | null;
+    driveId: string | null;
+    metadata: Json | null;
+  };
   const cands: Cand[] = rows
     .map((r) => ({
       id: r.id,
+      caseId: r.case_id,
       path: readStoragePath(r.metadata),
       driveId:
         typeof r.drive_file_id === 'string' && r.drive_file_id.length > 0 ? r.drive_file_id : null,
@@ -156,14 +182,23 @@ async function eraseDocumentFiles(
     }))
     .filter((c) => c.path || c.driveId);
 
-  const section: EraseSection = { scanned: rows.length, blobsRemoved: 0, driveDeleted: 0, driveDisconnected: false };
+  const section: EraseSection = {
+    scanned: rows.length,
+    blobsRemoved: 0,
+    driveDeleted: 0,
+    driveDisconnected: false,
+  };
 
   // --- Storage blobs ---
   const withPath = cands.filter((c): c is Cand & { path: string } => c.path !== null);
   if (withPath.length > 0) {
-    const { error } = await admin.storage.from(DOCUMENTS_BUCKET).remove(withPath.map((c) => c.path));
+    const { error } = await admin.storage
+      .from(DOCUMENTS_BUCKET)
+      .remove(withPath.map((c) => c.path));
     if (error) {
-      console.error('[retention-eraser] documents storage.remove failed', { message: error.message });
+      console.error('[retention-eraser] documents storage.remove failed', {
+        message: error.message,
+      });
       return null;
     }
     // No error ⇒ every requested path is gone (deleted or already absent). Null
@@ -180,7 +215,10 @@ async function eraseDocumentFiles(
         .update({ metadata: cleared as unknown as Json })
         .eq('id', c.id);
       if (updErr) {
-        console.error('[retention-eraser] documents pointer clear failed', { id: c.id, message: updErr.message });
+        console.error('[retention-eraser] documents pointer clear failed', {
+          id: c.id,
+          message: updErr.message,
+        });
         continue;
       }
       section.blobsRemoved += 1;
@@ -188,21 +226,117 @@ async function eraseDocumentFiles(
   }
 
   // --- Drive copies (best-effort; bounded by the SQL backstop) ---
+  // A retained row can be stale while its Drive file has been moved elsewhere.
+  // Never erase a live copy until its current ancestry is proven to reach this
+  // row's original case folder. Outside copies are detached only; ambiguous
+  // placement keeps the pointer so a later run can retry safely.
   const withDrive = cands.filter((c): c is Cand & { driveId: string } => c.driveId !== null);
   if (withDrive.length > 0) {
-    const res = await eraseDriveTargets({ fileIds: withDrive.map((c) => c.driveId) });
-    if (!res.connected) {
+    const caseIds = [...new Set(withDrive.map((c) => c.caseId))];
+    const { data: caseRows, error: caseMetaErr } = await admin
+      .from('cases')
+      .select('id, metadata')
+      .in('id', caseIds);
+    if (caseMetaErr) {
+      console.error('[retention-eraser] document case metadata select failed', {
+        message: caseMetaErr.message,
+      });
+      return null;
+    }
+    const caseFolderById = new Map(
+      (caseRows ?? []).map((row) => [row.id, readCaseFolderId(row.metadata)]),
+    );
+
+    let client: Awaited<ReturnType<typeof getDriveClientIfConnected>>;
+    try {
+      client = await getDriveClientIfConnected();
+    } catch (error) {
+      console.error('[retention-eraser] Drive connection lookup failed; document copies left', {
+        message: error instanceof Error ? error.message : String(error),
+      });
+      return section;
+    }
+    if (!client) {
       section.driveDisconnected = true;
-      console.warn('[retention-eraser] Drive not connected — document Drive copies left', { count: withDrive.length });
+      console.warn('[retention-eraser] Drive not connected — document Drive copies left', {
+        count: withDrive.length,
+      });
     } else {
-      const deleted = new Set(res.deleted);
-      const clearIds = withDrive.filter((c) => deleted.has(c.driveId)).map((c) => c.id);
-      if (clearIds.length > 0) {
-        const { error: updErr } = await admin.from('documents').update({ drive_file_id: null }).in('id', clearIds);
+      const managedFolderValidity = new Map<string, boolean>();
+      for (const c of withDrive) {
+        const caseFolderId = caseFolderById.get(c.caseId);
+        if (!caseFolderId) {
+          console.error('[retention-eraser] document case folder is unknown; Drive copy left', {
+            id: c.id,
+            caseId: c.caseId,
+          });
+          continue;
+        }
+
+        let managedFolder = managedFolderValidity.get(c.caseId);
+        if (managedFolder === undefined) {
+          try {
+            managedFolder = await client.isManagedCaseFolder(caseFolderId, c.caseId);
+            managedFolderValidity.set(c.caseId, managedFolder);
+          } catch (error) {
+            console.error(
+              '[retention-eraser] managed case folder verification failed; Drive copy left',
+              {
+                id: c.id,
+                caseId: c.caseId,
+                message: error instanceof Error ? error.message : String(error),
+              },
+            );
+            continue;
+          }
+        }
+        if (!managedFolder) {
+          console.error('[retention-eraser] case folder ownership mismatch; Drive copy left', {
+            id: c.id,
+            caseId: c.caseId,
+          });
+          continue;
+        }
+
+        let ancestry: Awaited<ReturnType<typeof classifyDriveFileAncestry>>;
+        try {
+          // Never share ancestry across targets: a folder can be moved between
+          // two documents in this batch. Each irreversible delete must be
+          // based on a fresh walk immediately before deleteFile().
+          const placementCache: DrivePlacementCache = new Map();
+          ancestry = await classifyDriveFileAncestry(
+            client,
+            c.driveId,
+            caseFolderId,
+            placementCache,
+          );
+          if (ancestry === 'inside') await client.deleteFile(c.driveId);
+        } catch (error) {
+          console.error(
+            '[retention-eraser] document Drive verification/delete failed; pointer left',
+            {
+              id: c.id,
+              message: error instanceof Error ? error.message : String(error),
+            },
+          );
+          continue;
+        }
+
+        const { data: clearedRows, error: updErr } = await admin
+          .from('documents')
+          .update({ drive_file_id: null, drive_file_url: null })
+          .eq('id', c.id)
+          .eq('drive_file_id', c.driveId)
+          .select('id');
         if (updErr) {
-          console.error('[retention-eraser] documents drive_file_id clear failed', { message: updErr.message });
-        } else {
-          section.driveDeleted = clearIds.length;
+          console.error('[retention-eraser] documents Drive pointer clear failed', {
+            id: c.id,
+            message: updErr.message,
+          });
+          continue;
+        }
+        if (ancestry === 'inside' && (clearedRows?.length ?? 0) > 0) {
+          section.driveDeleted += 1;
         }
       }
     }
@@ -225,7 +359,9 @@ async function eraseExpenseFiles(
     .order('id', { ascending: true })
     .limit(BATCH_SIZE);
   if (direct.error) {
-    console.error('[retention-eraser] expenses direct select failed', { message: direct.error.message });
+    console.error('[retention-eraser] expenses direct select failed', {
+      message: direct.error.message,
+    });
     return null;
   }
   let cascade: NonNullable<typeof direct.data> = [];
@@ -238,7 +374,9 @@ async function eraseExpenseFiles(
       .order('id', { ascending: true })
       .limit(BATCH_SIZE);
     if (c.error) {
-      console.error('[retention-eraser] expenses cascade select failed', { message: c.error.message });
+      console.error('[retention-eraser] expenses cascade select failed', {
+        message: c.error.message,
+      });
       return null;
     }
     cascade = c.data ?? [];
@@ -251,24 +389,40 @@ async function eraseExpenseFiles(
       id: r.id,
       path: typeof r.receipt_path === 'string' && r.receipt_path.length > 0 ? r.receipt_path : null,
       driveId:
-        typeof r.receipt_drive_id === 'string' && r.receipt_drive_id.length > 0 ? r.receipt_drive_id : null,
+        typeof r.receipt_drive_id === 'string' && r.receipt_drive_id.length > 0
+          ? r.receipt_drive_id
+          : null,
     }))
     .filter((c) => c.path || c.driveId);
 
-  const section: EraseSection = { scanned: rows.length, blobsRemoved: 0, driveDeleted: 0, driveDisconnected: false };
+  const section: EraseSection = {
+    scanned: rows.length,
+    blobsRemoved: 0,
+    driveDeleted: 0,
+    driveDisconnected: false,
+  };
 
   // --- Storage blobs (receipt_path is a column → bulk-null) ---
   const withPath = cands.filter((c): c is Cand & { path: string } => c.path !== null);
   if (withPath.length > 0) {
-    const { error } = await admin.storage.from(DOCUMENTS_BUCKET).remove(withPath.map((c) => c.path));
+    const { error } = await admin.storage
+      .from(DOCUMENTS_BUCKET)
+      .remove(withPath.map((c) => c.path));
     if (error) {
-      console.error('[retention-eraser] expenses storage.remove failed', { message: error.message });
+      console.error('[retention-eraser] expenses storage.remove failed', {
+        message: error.message,
+      });
       return null;
     }
     const ids = withPath.map((c) => c.id);
-    const { error: updErr } = await admin.from('case_expenses').update({ receipt_path: null }).in('id', ids);
+    const { error: updErr } = await admin
+      .from('case_expenses')
+      .update({ receipt_path: null })
+      .in('id', ids);
     if (updErr) {
-      console.error('[retention-eraser] expenses receipt_path clear failed', { message: updErr.message });
+      console.error('[retention-eraser] expenses receipt_path clear failed', {
+        message: updErr.message,
+      });
     } else {
       section.blobsRemoved = ids.length;
     }
@@ -280,7 +434,9 @@ async function eraseExpenseFiles(
     const res = await eraseDriveTargets({ fileIds: withDrive.map((c) => c.driveId) });
     if (!res.connected) {
       section.driveDisconnected = true;
-      console.warn('[retention-eraser] Drive not connected — expense Drive copies left', { count: withDrive.length });
+      console.warn('[retention-eraser] Drive not connected — expense Drive copies left', {
+        count: withDrive.length,
+      });
     } else {
       const deleted = new Set(res.deleted);
       const clearIds = withDrive.filter((c) => deleted.has(c.driveId)).map((c) => c.id);
@@ -290,7 +446,9 @@ async function eraseExpenseFiles(
           .update({ receipt_drive_id: null })
           .in('id', clearIds);
         if (updErr) {
-          console.error('[retention-eraser] expenses receipt_drive_id clear failed', { message: updErr.message });
+          console.error('[retention-eraser] expenses receipt_drive_id clear failed', {
+            message: updErr.message,
+          });
         } else {
           section.driveDeleted = clearIds.length;
         }

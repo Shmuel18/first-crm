@@ -34,25 +34,19 @@ type Result =
 
 const SyncDriveDocumentsSchema = z.string().uuid();
 
-type AuthorizedSyncUser = { userId: string; canDelete: boolean };
+type AuthorizedSyncUser = { userId: string };
 
 async function authorizedSyncUser(caseId: string): Promise<AuthorizedSyncUser | null> {
   const supabase = await createClient();
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return null;
 
-  const permissions = await userHasPermissions(
-    'view_case_documents',
-    'upload_document',
-    'delete_document',
-  );
+  const permissions = await userHasPermissions('view_case_documents', 'upload_document');
   const allowed =
     permissions.view_case_documents === true &&
     permissions.upload_document === true &&
     (await userCanEditCase(caseId));
-  return allowed
-    ? { userId: userRes.user.id, canDelete: permissions.delete_document === true }
-    : null;
+  return allowed ? { userId: userRes.user.id } : null;
 }
 
 function refreshDocumentViews(caseId: string) {
@@ -80,9 +74,19 @@ export async function syncDriveDocumentsAction(caseId: string): Promise<Result> 
   if (!allowed) return { ok: false, error: 'rate_limited' };
 
   const out = await syncDriveDocumentsForCase(parsed.data, {
-    deleteVanishedFiles: actor.canDelete,
+    // This is system reconciliation, not a discretionary UI delete. The
+    // service-only detach RPC makes Drive exact even for editors who do not
+    // hold delete_document, while remaining unreachable from browser clients.
+    deleteVanishedFiles: true,
   });
   if (!out.ok) {
+    if (out.changed) {
+      // Drive and database calls cannot share one transaction. If an early
+      // import/update succeeded before a later fail-closed check, show that
+      // truthful partial state while the unstamped sync retries next time.
+      refreshDocumentViews(parsed.data);
+      refresh();
+    }
     const error = out.reason === 'error' ? 'unknown' : out.reason;
     if (out.message) console.error('[syncDriveDocuments]', out.reason, out.message);
     return { ok: false, error };
@@ -118,10 +122,14 @@ export async function autoSyncDriveDocumentsAction(caseId: string): Promise<Auto
   if (!actor) return { ok: false, error: 'unauthorized' };
 
   const out = await autoSyncIfStale(parsed.data, {
-    deleteVanishedFiles: actor.canDelete,
+    deleteVanishedFiles: true,
   });
   if (!out) return { ok: true, changed: false };
   if (!out.ok) {
+    if (out.changed) {
+      refreshDocumentViews(parsed.data);
+      refresh();
+    }
     if (out.message) console.error('[autoSyncDriveDocuments]', out.reason, out.message);
     return {
       ok: false,

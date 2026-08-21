@@ -15,6 +15,8 @@ import type { DriveFolder } from '../types';
 
 type Props = {
   folder: DriveFolder;
+  /** Current Drive display name; falls back to the localized category title. */
+  title?: string;
   documentCount: number;
   missingCount: number;
   onOpen: (folder: DriveFolder) => void;
@@ -50,7 +52,7 @@ export const FOLDER_ICON_TINT: Record<DriveFolder, string> = {
  * Clicking drills into the folder — files are never listed here ("not from
  * outside"); they appear inside FolderDetail.
  */
-export function FolderCard({ folder, documentCount, missingCount, onOpen }: Props) {
+export function FolderCard({ folder, title, documentCount, missingCount, onOpen }: Props) {
   const t = useTranslations('documents.folders');
   const tc = useTranslations('documents.card');
 
@@ -60,21 +62,21 @@ export function FolderCard({ folder, documentCount, missingCount, onOpen }: Prop
     <button
       type="button"
       onClick={() => onOpen(folder)}
-      className={`group relative w-full text-start rounded-xl border bg-white p-4 shadow-sm transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50 ${FOLDER_ACCENT[folder]}`}
+      className={`group focus-visible:ring-brand-gold-text/50 relative w-full rounded-xl border bg-white p-4 text-start shadow-sm transition hover:shadow-md focus-visible:ring-2 focus-visible:outline-none ${FOLDER_ACCENT[folder]}`}
     >
       <div className="flex items-start gap-3">
-        <div className={`p-2.5 rounded-lg ${FOLDER_ICON_TINT[folder]}`}>
+        <div className={`rounded-lg p-2.5 ${FOLDER_ICON_TINT[folder]}`}>
           <Icon className="size-6" />
         </div>
-        <div className="flex-1 min-w-0">
-          <h2 className="font-display text-sm font-semibold text-neutral-950 leading-tight">
-            {t(`${folder}.title`)}
+        <div className="min-w-0 flex-1">
+          <h2 className="font-display text-sm leading-tight font-semibold text-neutral-950">
+            {title ?? t(`${folder}.title`)}
           </h2>
-          <p className="text-xs text-neutral-500 mt-0.5 line-clamp-2">{t(`${folder}.subtitle`)}</p>
+          <p className="mt-0.5 line-clamp-2 text-xs text-neutral-500">{t(`${folder}.subtitle`)}</p>
         </div>
         <ChevronLeft
           aria-hidden="true"
-          className="size-4 text-neutral-400 shrink-0 transition group-hover:text-neutral-600 rtl:rotate-0 ltr:rotate-180"
+          className="size-4 shrink-0 text-neutral-400 transition group-hover:text-neutral-600 ltr:rotate-180 rtl:rotate-0"
         />
       </div>
 
@@ -84,7 +86,7 @@ export function FolderCard({ folder, documentCount, missingCount, onOpen }: Prop
           {tc('documentCount', { count: documentCount })}
         </span>
         {missingCount > 0 && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full border border-rose-200 bg-rose-50 text-rose-700 font-medium">
+          <span className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 font-medium text-rose-700">
             {tc('missingCount', { count: missingCount })}
           </span>
         )}
