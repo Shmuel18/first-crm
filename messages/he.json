@@ -1648,7 +1648,7 @@
       "requestDetailsEmpty": "טרם נכתבו פרטי בקשה מלאים.",
       "documents": "מסמכים",
       "documentsComingSoon": "ניהול מסמכים + סנכרון Google Drive יתווסף בקרוב",
-      "documentsHint": "לחץ על 'פתח מסמכים' לעמוד הניהול - העלאה, צ׳ק-ליסט, אימות וסטטוסים.",
+      "documentsHint": "לחץ על 'פתח מסמכים' לעמוד הניהול — העלאה, צ׳ק-ליסט וסנכרון מלא עם Drive.",
       "openDocuments": "פתח מסמכים"
     },
     "property": {
@@ -2614,11 +2614,6 @@
       "uploadCta": "העלאה",
       "dueAtStage": "דרוש בשלב {stage}",
       "uploadedCount": "{count, plural, =1 {1 קובץ הועלה} other {# קבצים הועלו}}",
-      "chip": {
-        "missing": "{count, plural, =1 {חסר 1} other {# חסרים}}",
-        "pending": "{count, plural, =1 {1 ממתין לאימות} other {# ממתינים לאימות}}",
-        "verified": "{count, plural, =1 {1 אומת} other {# אומתו}}"
-      },
       "manage": {
         "open": "ניהול",
         "title": "צ׳ק-ליסט מסמכים",
@@ -2648,6 +2643,8 @@
     },
     "sync": {
       "button": "סנכרן מ-Drive",
+      "syncing": "מסנכרן עם Drive…",
+      "complete": "הסנכרון עם Drive הושלם",
       "imported": "יובאו {count} קבצים חדשים מ-Drive",
       "updated": "עודכן מיקום ל-{count} קבצים שזזו ב-Drive",
       "deleted": "{count} קבצים שנמחקו ב-Drive הוסרו מהמערכת",
@@ -2690,8 +2687,6 @@
       "progressLabel": "הושלם",
       "progressAria": "התקדמות איסוף מסמכים {percent} אחוז",
       "total": "סך הכל {count} מסמכים",
-      "verified": "{count} מאומתים",
-      "pending": "{count} ממתינים לבדיקה",
       "missing": "{count} חסרים",
       "empty": "אין עדיין מסמכים בתיק"
     },
@@ -2722,20 +2717,6 @@
         "subtitle": "חשבוניות · מסמכים נוספים"
       }
     },
-    "status": {
-      "missing": "חסר",
-      "new": "ממתין לבדיקה",
-      "verified": "תקין",
-      "rejected": "נדחה",
-      "expired": "פג תוקף",
-      "not_relevant": "לא רלוונטי"
-    },
-    "statusActions": {
-      "markVerified": "סמן כתקין",
-      "markRejected": "החזר לבדיקה",
-      "markNew": "סמן כממתין",
-      "markNotRelevant": "סמן כלא רלוונטי"
-    },
     "uploadModal": {
       "title": "העלאת מסמך חדש",
       "fileLabel": "קובץ (PDF / תמונה / DOC, עד 20MB)",
@@ -2753,7 +2734,6 @@
       "title": "תצוגה מקדימה",
       "uploadedBy": "הועלה ע״י",
       "uploadedAt": "תאריך העלאה",
-      "verifiedBy": "אומת ע״י",
       "size": "גודל",
       "category": "סוג",
       "borrower": "לווה",
@@ -2778,6 +2758,8 @@
     "detail": {
       "back": "כל התיקיות",
       "backToParent": "חזרה לתיקייה הקודמת",
+      "breadcrumbLabel": "נתיב התיקייה",
+      "folderOpened": "נפתחה התיקייה {name}",
       "foldersTitle": "תיקיות",
       "folderUnavailable": "התיקייה הועברה או הוסרה ב-Drive",
       "uploadedTitle": "מסמכים שהועלו",
@@ -2795,7 +2777,6 @@
       "unauthorized": "אין הרשאה",
       "uploadFailed": "ההעלאה נכשלה. נסה שוב.",
       "deleteFailed": "המחיקה נכשלה. נסה שוב.",
-      "statusUpdateFailed": "עדכון הסטטוס נכשל",
       "printFailed": "ההדפסה נכשלה. נסה לפתוח את המסמך ולהדפיס משם.",
       "downloadFailed": "ההורדה נכשלה. נסה לפתוח את המסמך בלשונית חדשה ולהוריד משם."
     },

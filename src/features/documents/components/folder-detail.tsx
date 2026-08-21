@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   ChevronLeft,
@@ -16,6 +16,7 @@ import { useTranslations } from 'next-intl';
 import type { Locale } from '@/lib/i18n/direction';
 
 import { useDocumentPreviews } from '../hooks/use-document-previews';
+import { driveFolderBreadcrumb } from '../domain/drive-folder-breadcrumb';
 import {
   descendantFolderIds,
   documentsDirectlyInDriveFolder,
@@ -36,8 +37,8 @@ type Props = {
   /** Checklist items belonging to this folder (already filtered by caller). */
   checklistItems: ReadonlyArray<DocumentChecklistItem>;
   locale: Locale;
-  /** Gate the upload affordances for view-only users (C-036). */
-  canEdit: boolean;
+  /** Exact capability required by every upload affordance. */
+  canUploadDocuments: boolean;
   onBack: () => void;
   onUpload?: (folder: DriveFolder) => void;
   onPreview: (doc: DocumentWithRelations) => void;
@@ -57,7 +58,7 @@ export function FolderDetail({
   documents,
   checklistItems,
   locale,
-  canEdit,
+  canUploadDocuments,
   onBack,
   onUpload,
   onPreview,
@@ -94,6 +95,16 @@ export function FolderDetail({
   );
   const currentFolder = folderById.get(currentFolderId) ?? root;
   const atRoot = currentFolder.id === root.id;
+  const breadcrumb = useMemo(
+    () => driveFolderBreadcrumb(root, currentFolder.id, driveFolderTree),
+    [currentFolder.id, driveFolderTree, root],
+  );
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const currentCrumbRef = useRef<HTMLLIElement>(null);
+  useEffect(() => {
+    headingRef.current?.focus({ preventScroll: true });
+    currentCrumbRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }, [currentFolder.id]);
   const childFolders = useMemo(
     () => driveFolderTree.filter((node) => node.parentId === currentFolder.id),
     [currentFolder.id, driveFolderTree],
@@ -112,7 +123,8 @@ export function FolderDetail({
   const iconTint = folder ? FOLDER_ICON_TINT[folder] : 'bg-slate-100 text-slate-700';
   const missing = checklistItems.filter((i) => i.status === 'missing');
   // Inline thumbnails for this folder's files — fetched once the folder opens.
-  const previews = useDocumentPreviews(documents);
+  const previews = useDocumentPreviews(directDocuments);
+  const currentTitle = atRoot ? rootTitle : currentFolder.name;
 
   return (
     <section className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
@@ -123,21 +135,56 @@ export function FolderDetail({
             if (atRoot) onBack();
             else setCurrentFolderId(currentFolder.parentId);
           }}
-          className="focus-visible:ring-brand-gold-text/40 inline-flex items-center gap-1 rounded text-sm text-neutral-600 hover:text-neutral-900 focus-visible:ring-2 focus-visible:outline-none"
+          aria-label={atRoot ? td('back') : td('backToParent')}
+          className="focus-visible:ring-brand-gold-text/40 inline-flex min-h-9 shrink-0 items-center gap-1 rounded px-1 text-sm text-neutral-600 hover:text-neutral-900 focus-visible:ring-2 focus-visible:outline-none"
         >
           <ChevronRight className="size-4 ltr:rotate-180" aria-hidden="true" />
-          {atRoot ? td('back') : td('backToParent')}
+          <span className="hidden sm:inline">{atRoot ? td('back') : td('backToParent')}</span>
         </button>
-        <span className="text-neutral-300" aria-hidden="true">
-          /
+        <span className={`shrink-0 rounded-md p-1.5 ${iconTint}`}>
+          <Icon className="size-4" aria-hidden="true" />
         </span>
-        <span className={`rounded-md p-1.5 ${iconTint}`}>
-          <Icon className="size-4" />
-        </span>
-        <h2 className="font-display min-w-0 flex-1 truncate text-sm font-semibold text-neutral-950">
-          {atRoot ? rootTitle : currentFolder.name}
-        </h2>
-        {canEdit && atRoot && folder && onUpload && (
+        <nav aria-label={td('breadcrumbLabel')} className="min-w-0 flex-1 overflow-x-auto">
+          <ol className="flex min-w-max items-center gap-1 text-sm">
+            {breadcrumb.map((crumb, index) => {
+              const isCurrent = index === breadcrumb.length - 1;
+              const name = crumb.id === root.id ? rootTitle : crumb.name;
+              return (
+                <li
+                  key={crumb.id}
+                  ref={isCurrent ? currentCrumbRef : undefined}
+                  className="flex min-w-0 items-center gap-1"
+                >
+                  {index > 0 && (
+                    <ChevronLeft
+                      className="size-3.5 shrink-0 text-neutral-300 ltr:rotate-180"
+                      aria-hidden="true"
+                    />
+                  )}
+                  {isCurrent ? (
+                    <h2
+                      ref={headingRef}
+                      tabIndex={-1}
+                      aria-current="page"
+                      className="font-display focus-visible:ring-brand-gold-text/40 max-w-56 truncate rounded-sm font-semibold text-neutral-950 focus-visible:ring-2 focus-visible:outline-none"
+                    >
+                      {name}
+                    </h2>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setCurrentFolderId(crumb.id)}
+                      className="focus-visible:ring-brand-gold-text/40 max-w-40 truncate rounded-sm px-0.5 text-neutral-600 hover:text-neutral-950 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+                    >
+                      {name}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        </nav>
+        {canUploadDocuments && atRoot && folder && onUpload && (
           <button
             type="button"
             onClick={() => onUpload(folder)}
@@ -148,6 +195,10 @@ export function FolderDetail({
           </button>
         )}
       </header>
+
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {td('folderOpened', { name: currentTitle })}
+      </p>
 
       <div className="space-y-5 p-4">
         {childFolders.length > 0 && (
@@ -227,7 +278,7 @@ export function FolderDetail({
                   <span className="min-w-0 flex-1 truncate text-sm text-neutral-900">
                     {locale === 'he' ? item.nameHe : item.nameEn}
                   </span>
-                  {canEdit && folder && onUpload && (
+                  {canUploadDocuments && folder && onUpload && (
                     <button
                       type="button"
                       onClick={() => onUpload(folder)}

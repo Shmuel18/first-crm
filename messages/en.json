@@ -1648,7 +1648,7 @@
       "requestDetailsEmpty": "No detailed request written yet.",
       "documents": "Documents",
       "documentsComingSoon": "Document management + Google Drive sync coming soon",
-      "documentsHint": "Click 'Open documents' for the management page — upload, checklist, verify and statuses.",
+      "documentsHint": "Click 'Open documents' for uploads, the checklist, and full Drive synchronization.",
       "openDocuments": "Open documents"
     },
     "property": {
@@ -2614,11 +2614,6 @@
       "uploadCta": "Upload",
       "dueAtStage": "Due by {stage}",
       "uploadedCount": "{count, plural, =1 {1 file uploaded} other {# files uploaded}}",
-      "chip": {
-        "missing": "{count, plural, =1 {1 missing} other {# missing}}",
-        "pending": "{count, plural, =1 {1 pending review} other {# pending review}}",
-        "verified": "{count, plural, =1 {1 verified} other {# verified}}"
-      },
       "manage": {
         "open": "Manage",
         "title": "Document checklist",
@@ -2648,6 +2643,8 @@
     },
     "sync": {
       "button": "Sync from Drive",
+      "syncing": "Syncing with Drive…",
+      "complete": "Drive sync complete",
       "imported": "Imported {count} new files from Drive",
       "updated": "Updated location for {count} files moved in Drive",
       "deleted": "{count} files deleted in Drive were removed from the system",
@@ -2690,8 +2687,6 @@
       "progressLabel": "Complete",
       "progressAria": "Document collection progress {percent} percent",
       "total": "{count} documents total",
-      "verified": "{count} verified",
-      "pending": "{count} pending review",
       "missing": "{count} missing",
       "empty": "No documents uploaded yet"
     },
@@ -2722,20 +2717,6 @@
         "subtitle": "Invoices · other documents"
       }
     },
-    "status": {
-      "missing": "Missing",
-      "new": "Pending review",
-      "verified": "Verified",
-      "rejected": "Rejected",
-      "expired": "Expired",
-      "not_relevant": "Not relevant"
-    },
-    "statusActions": {
-      "markVerified": "Mark as verified",
-      "markRejected": "Return to review",
-      "markNew": "Mark pending",
-      "markNotRelevant": "Mark not relevant"
-    },
     "uploadModal": {
       "title": "Upload new document",
       "fileLabel": "File (PDF / image / DOC, up to 20MB)",
@@ -2753,7 +2734,6 @@
       "title": "Preview",
       "uploadedBy": "Uploaded by",
       "uploadedAt": "Uploaded on",
-      "verifiedBy": "Verified by",
       "size": "Size",
       "category": "Type",
       "borrower": "Borrower",
@@ -2778,6 +2758,8 @@
     "detail": {
       "back": "All folders",
       "backToParent": "Back to parent folder",
+      "breadcrumbLabel": "Folder path",
+      "folderOpened": "Opened folder {name}",
       "foldersTitle": "Folders",
       "folderUnavailable": "This folder was moved or removed in Drive",
       "uploadedTitle": "Uploaded documents",
@@ -2795,7 +2777,6 @@
       "unauthorized": "Not authorized",
       "uploadFailed": "Upload failed. Please try again.",
       "deleteFailed": "Delete failed. Please try again.",
-      "statusUpdateFailed": "Status update failed",
       "printFailed": "Printing failed. Try opening the document and printing from there.",
       "downloadFailed": "Download failed. Try opening the document in a new tab and downloading it there."
     },

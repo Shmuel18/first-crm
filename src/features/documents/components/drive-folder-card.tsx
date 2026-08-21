@@ -6,17 +6,19 @@ import { useTranslations } from 'next-intl';
 import type { DriveFolderNode } from '../types';
 
 type Props = {
+  buttonId?: string;
   folder: DriveFolderNode;
   documentCount: number;
   onOpen: (folderId: string) => void;
 };
 
 /** A custom top-level Drive folder, including an empty one. */
-export function DriveFolderCard({ folder, documentCount, onOpen }: Props) {
+export function DriveFolderCard({ buttonId, folder, documentCount, onOpen }: Props) {
   const tc = useTranslations('documents.card');
 
   return (
     <button
+      id={buttonId}
       type="button"
       onClick={() => onOpen(folder.id)}
       className="group focus-visible:ring-brand-gold-text/50 w-full rounded-xl border border-slate-100 bg-slate-50/40 p-4 text-start shadow-sm transition hover:border-slate-300 hover:shadow-md focus-visible:ring-2 focus-visible:outline-none"

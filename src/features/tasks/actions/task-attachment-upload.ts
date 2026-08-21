@@ -186,7 +186,9 @@ export async function finalizeTaskAttachmentUploadAction(
     mime_type: sniffed.mime,
     notes: null,
     uploaded_by: userRes.user.id,
-    status: 'new',
+    // Task attachments share the documents table and follow the same
+    // no-review contract as every other case document.
+    status: 'verified',
     metadata: {
       storage_path: storagePath,
       source: 'task_attachment',

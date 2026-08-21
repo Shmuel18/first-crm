@@ -206,6 +206,7 @@ describe('importOrUpdateDriveFile', () => {
         case_id: CASE_ID,
         category_id: 'income-category',
         drive_file_id: 'drive-file-1',
+        status: 'verified',
         metadata: {
           source: 'drive_sync',
           drive_parent_folder_id: 'year-folder',

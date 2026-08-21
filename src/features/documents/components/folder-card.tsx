@@ -14,6 +14,7 @@ import { useTranslations } from 'next-intl';
 import type { DriveFolder } from '../types';
 
 type Props = {
+  buttonId?: string;
   folder: DriveFolder;
   /** Current Drive display name; falls back to the localized category title. */
   title?: string;
@@ -52,7 +53,7 @@ export const FOLDER_ICON_TINT: Record<DriveFolder, string> = {
  * Clicking drills into the folder — files are never listed here ("not from
  * outside"); they appear inside FolderDetail.
  */
-export function FolderCard({ folder, title, documentCount, missingCount, onOpen }: Props) {
+export function FolderCard({ buttonId, folder, title, documentCount, missingCount, onOpen }: Props) {
   const t = useTranslations('documents.folders');
   const tc = useTranslations('documents.card');
 
@@ -60,6 +61,7 @@ export function FolderCard({ folder, title, documentCount, missingCount, onOpen 
 
   return (
     <button
+      id={buttonId}
       type="button"
       onClick={() => onOpen(folder)}
       className={`group focus-visible:ring-brand-gold-text/50 relative w-full rounded-xl border bg-white p-4 text-start shadow-sm transition hover:shadow-md focus-visible:ring-2 focus-visible:outline-none ${FOLDER_ACCENT[folder]}`}

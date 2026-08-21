@@ -7,7 +7,7 @@ import {
   restoreCaseDocumentDriveParent,
   type DriveCaseMoveOutcome,
 } from '@/features/integrations/services/drive-case-uploader';
-import { userCanEditCase, userHasPermissions } from '@/lib/auth/permissions';
+import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import { safeDbError } from '@/lib/supabase/db-error-log';
 import type { Database, Json } from '@/types/database';
@@ -43,11 +43,10 @@ export async function assignDocumentCategoryAction(
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
 
-  // Same permission gate the other doc actions use: verifying a doc
-  // (including re-categorizing) requires verify_document or upload_document.
-  const permissions = await userHasPermissions('verify_document', 'upload_document');
+  // Categorization is filing, not verification. The manual review workflow is
+  // retired, so upload_document is the single document-write capability.
   if (
-    (permissions.verify_document !== true && permissions.upload_document !== true) ||
+    !(await userHasPermission('upload_document')) ||
     !(await userCanEditCase(parsed.data.caseId))
   ) {
     return { ok: false, error: 'unauthorized' };

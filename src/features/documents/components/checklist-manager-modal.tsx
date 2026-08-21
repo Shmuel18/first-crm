@@ -50,7 +50,7 @@ type Props = {
   locale: Locale;
 };
 
-const isDone = (i: DocumentChecklistItem): boolean => i.isDone || i.verifiedCount > 0;
+const isDone = (i: DocumentChecklistItem): boolean => i.isDone || i.validDocumentCount > 0;
 
 /**
  * Editable checklist manager (the modal in the mockup): tick rows received,

@@ -20,24 +20,21 @@ import { formatDateShort } from '@/lib/utils/format-date';
 import { deleteDocumentAction } from '../actions/delete-document';
 import { getDocumentPreviewUrlAction } from '../actions/get-document-preview-url';
 import { getDocumentPrintBytesAction } from '../actions/get-document-print-bytes';
-import { updateDocumentStatusAction } from '../actions/update-document-status';
 import { isAttachable } from '../domain/attachable';
 import { isDirectlyPrintable } from '../domain/printable';
 import { sanitizeFilename } from '../domain/sanitize-filename';
 import { usePrintDocument } from '../hooks/use-print-document';
-import type { DocumentStatus, DocumentWithRelations } from '../types';
+import type { DocumentWithRelations } from '../types';
 
 import { DocumentPreviewActions } from './document-preview-actions';
 import { SendDocumentsEmailDialog } from './send-documents-email-dialog';
 import { DocumentPreviewBody } from './document-preview-body';
 import { DocumentPreviewLinks } from './document-preview-links';
-import { DocumentStatusChip } from './document-status-chip';
 
 type Props = {
   doc: DocumentWithRelations | null;
   caseId: string;
   canDeleteDocuments: boolean;
-  canVerifyDocuments: boolean;
   /** Enables "send by email" for this document; mirrors can_edit_case. */
   canSendEmail: boolean;
   /** Prefill for the email recipient (the client), freely overwritten. */
@@ -57,7 +54,6 @@ export function DocumentPreviewModal({
   doc,
   caseId,
   canDeleteDocuments,
-  canVerifyDocuments,
   canSendEmail,
   defaultEmailRecipient,
   onClose,
@@ -105,7 +101,6 @@ export function DocumentPreviewModal({
 
   if (!doc) return null;
 
-  const status = doc.status as DocumentStatus;
   const uploadDate = formatDateShort(doc.upload_date, locale);
 
   const handleRetry = () => {
@@ -119,21 +114,6 @@ export function DocumentPreviewModal({
       })
       .finally(() => setLoading(false));
   };
-
-  const updateStatus = (next: DocumentStatus) =>
-    startTransition(async () => {
-      if (!canVerifyDocuments) {
-        setError(tErr('unauthorized'));
-        return;
-      }
-      const res = await callAction(() => updateDocumentStatusAction(doc.id, caseId, next));
-      if (!res.ok) {
-        setError(res.error === 'unauthorized' ? tErr('unauthorized') : tErr('statusUpdateFailed'));
-      } else {
-        onClose();
-        router.refresh(); // action no longer re-renders the heavy grid into the response
-      }
-    });
 
   const handleDeleteConfirmed = () =>
     startTransition(async () => {
@@ -214,7 +194,6 @@ export function DocumentPreviewModal({
         <DialogHeader>
           <DialogTitle>{doc.file_name}</DialogTitle>
           <DialogDescription className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1">
-            <DocumentStatusChip status={status} size="sm" />
             {doc.category && <span>{doc.category.name_he}</span>}
             <span className="text-neutral-400">·</span>
             <span>{uploadDate}</span>
@@ -249,11 +228,8 @@ export function DocumentPreviewModal({
         />
 
         <DocumentPreviewActions
-          status={status}
           pending={isPending}
           canDeleteDocuments={canDeleteDocuments}
-          canVerifyDocuments={canVerifyDocuments}
-          onUpdateStatus={updateStatus}
           confirmDeleteOpen={confirmDelete}
           onConfirmDeleteOpenChange={setConfirmDelete}
           onDeleteConfirmed={handleDeleteConfirmed}

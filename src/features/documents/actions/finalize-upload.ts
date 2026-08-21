@@ -156,7 +156,10 @@ export async function finalizeUploadAction(
     notes: metaParsed.data.notes ?? null,
     expiry_date: metaParsed.data.expiry_date ?? null,
     uploaded_by: userRes.user.id,
-    status: 'new',
+    // Kaufman does not use a manual document-review queue. A successfully
+    // validated upload is accepted immediately; migration 230 enforces the
+    // same invariant for direct/legacy writers at the database boundary.
+    status: 'verified',
     metadata: { storage_path: storagePath },
     drive_file_id: null,
     drive_file_url: null,

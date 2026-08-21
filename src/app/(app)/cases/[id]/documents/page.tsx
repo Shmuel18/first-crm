@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import { after } from 'next/server';
 
 import { getLocale } from 'next-intl/server';
 
@@ -40,7 +39,7 @@ export default async function CaseDocumentsPage({ params }: Props) {
       listDocumentCategories(),
       listBorrowersForCase(caseId),
       getLocale().then(parseLocale),
-      userHasPermissions('delete_document', 'verify_document', 'upload_document'),
+      userHasPermissions('delete_document', 'upload_document', 'view_case_documents'),
     ]);
 
   if (!caseData) notFound();
@@ -75,25 +74,25 @@ export default async function CaseDocumentsPage({ params }: Props) {
       }
     : null;
 
-  const driveFolderId =
-    caseData.metadata && typeof caseData.metadata === 'object' && 'drive' in caseData.metadata
-      ? ((caseData.metadata as { drive?: { case_folder_id?: string } }).drive?.case_folder_id ??
-        null)
-      : null;
-  const driveFolderTree = readCaseDriveFolderTree(caseData.metadata);
-  const hasDriveFolderSnapshot = hasCaseDriveFolderSnapshot(caseData.metadata);
-  const driveSubfolderIds = readCaseDriveSubfolderIds(caseData.metadata);
+  let driveMetadata = caseData.metadata;
+  let driveFolderId = readCaseDriveFolderId(driveMetadata);
 
   // First time a case's documents are opened without a Drive folder yet,
-  // provision its folder tree (best-effort, fire-and-forget). Once the id is
-  // stored, "open in Drive" + sync light up and later visits skip this. Existing
-  // cases get an empty tree to drag their current Drive files into.
+  // finish provisioning before rendering and reload the persisted snapshot.
+  // This one-time wait means "open in Drive" and sync work on the first visit,
+  // instead of presenting disabled controls that require a manual refresh.
   if (!driveFolderId && canEdit && documentPermissions.upload_document === true) {
-    // `after` keeps the serverless invocation alive. The admin client avoids
-    // reading request cookies after the Server Component has finished, while
-    // the already-computed canEdit check remains the authorization boundary.
-    after(() => provisionCaseDriveFolders({ caseId: caseData.id, admin: true }));
+    await provisionCaseDriveFolders({ caseId: caseData.id, admin: true });
+    const provisionedCase = await getCaseById(caseId);
+    if (provisionedCase) {
+      driveMetadata = provisionedCase.metadata;
+      driveFolderId = readCaseDriveFolderId(driveMetadata);
+    }
   }
+
+  const driveFolderTree = readCaseDriveFolderTree(driveMetadata);
+  const hasDriveFolderSnapshot = hasCaseDriveFolderSnapshot(driveMetadata);
+  const driveSubfolderIds = readCaseDriveSubfolderIds(driveMetadata);
 
   return (
     <DocumentsPageContent
@@ -111,8 +110,19 @@ export default async function CaseDocumentsPage({ params }: Props) {
       primaryBorrower={primaryBorrower}
       locale={locale}
       canEdit={canEdit}
+      canUploadDocuments={documentPermissions.upload_document === true && canEdit}
+      canSyncDrive={
+        documentPermissions.upload_document === true &&
+        documentPermissions.view_case_documents === true &&
+        canEdit
+      }
       canDeleteDocuments={documentPermissions.delete_document === true && canEdit}
-      canVerifyDocuments={documentPermissions.verify_document === true && canEdit}
     />
   );
+}
+
+function readCaseDriveFolderId(metadata: unknown): string | null {
+  if (!metadata || typeof metadata !== 'object' || !('drive' in metadata)) return null;
+  const id = (metadata as { drive?: { case_folder_id?: unknown } }).drive?.case_folder_id;
+  return typeof id === 'string' && id.length > 0 ? id : null;
 }

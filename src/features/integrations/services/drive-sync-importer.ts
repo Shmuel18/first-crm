@@ -127,7 +127,10 @@ export async function importOrUpdateDriveFile(
       mime_type: file.mimeType,
       drive_file_id: file.id,
       drive_file_url: file.webViewLink,
-      status: 'new',
+      // A complete, trusted Drive listing is the validation boundary. Kaufman
+      // has no separate human-review queue, so imported files are immediately
+      // accepted just like uploads made through the site.
+      status: 'verified',
       metadata: {
         source: 'drive_sync',
         drive_parent_folder_id: location.parentFolderId,

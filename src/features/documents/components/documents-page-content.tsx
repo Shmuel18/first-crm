@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 
 import { AlertCircle, ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
 import { callAction } from '@/lib/actions/call-action';
 import type { Locale } from '@/lib/i18n/direction';
@@ -62,11 +63,14 @@ type Props = {
     phone: string | null;
   } | null;
   locale: Locale;
-  /** Whether the viewer can edit this case (can_edit_case). Gates every write
-   *  affordance — upload, sync, request, checklist-manage, recategorize. */
+  /** Whether the viewer can edit this case (can_edit_case). */
   canEdit: boolean;
+  /** Upload permission layered on top of case edit authority. Uploads and
+   * recategorization require this exact capability. */
+  canUploadDocuments: boolean;
+  /** Drive reconciliation additionally requires document-view permission. */
+  canSyncDrive: boolean;
   canDeleteDocuments: boolean;
-  canVerifyDocuments: boolean;
 };
 
 export function DocumentsPageContent({
@@ -84,35 +88,75 @@ export function DocumentsPageContent({
   primaryBorrower,
   locale,
   canEdit,
+  canUploadDocuments,
+  canSyncDrive,
   canDeleteDocuments,
-  canVerifyDocuments,
 }: Props) {
   const t = useTranslations('documents.checklist');
   const td = useTranslations('documents.detail');
+  const tSync = useTranslations('documents.sync');
   const tu = useTranslations('documents.uncategorized');
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploadFolder, setUploadFolder] = useState<DriveFolder | null>(null);
   const [previewDoc, setPreviewDoc] = useState<DocumentWithRelations | null>(null);
   const [manageOpen, setManageOpen] = useState(false);
   const [selected, setSelected] = useState<Selection>(null);
-  const autoSyncInFlight = useRef(false);
-  const [, startAutoSyncTransition] = useTransition();
+  const syncInFlight = useRef(false);
+  const returnFocusId = useRef<string | null>(null);
+  const [syncPending, startSyncTransition] = useTransition();
+  const [syncStatus, setSyncStatus] = useState('');
   const activePreviewDoc = previewDoc
     ? (documents.find((document) => document.id === previewDoc.id) ?? null)
     : null;
 
-  const runAutomaticSync = useCallback(
-    (force: boolean) => {
-      if (!canEdit || !driveFolderId || autoSyncInFlight.current) return;
-      autoSyncInFlight.current = true;
+  const runDriveSync = useCallback(
+    (trigger: 'stale' | 'focus' | 'manual') => {
+      if (!canSyncDrive || !driveFolderId || syncInFlight.current) return;
+      syncInFlight.current = true;
+      setSyncStatus(tSync('syncing'));
 
-      startAutoSyncTransition(async () => {
+      startSyncTransition(async () => {
         try {
+          const force = trigger !== 'stale';
           const result = force
             ? await callAction(() => syncDriveDocumentsAction(caseId))
             : await callAction(() => autoSyncDriveDocumentsAction(caseId));
-          if (
-            !result.ok &&
+
+          if (result.ok) {
+            const parts: string[] = [];
+            if ('imported' in result) {
+              if (result.imported > 0) parts.push(tSync('imported', { count: result.imported }));
+              if (result.updated > 0) parts.push(tSync('updated', { count: result.updated }));
+              if (result.deleted > 0) parts.push(tSync('deleted', { count: result.deleted }));
+              if (result.pushed > 0) parts.push(tSync('pushed', { count: result.pushed }));
+            }
+            const message =
+              parts.length > 0
+                ? parts.join(' · ')
+                : trigger === 'manual'
+                  ? tSync('nothingNew')
+                  : tSync('complete');
+            setSyncStatus(message);
+            if (trigger === 'manual') {
+              if (parts.length > 0) toast.success(message);
+              else toast(message);
+            }
+            return;
+          }
+
+          const message =
+            result.error === 'no_folder'
+              ? tSync('noFolderYet')
+              : result.error === 'not_connected'
+                ? tSync('errors.notConnected')
+                : result.error === 'rate_limited'
+                  ? tSync('errors.rateLimited')
+                  : tSync('errors.generic');
+          setSyncStatus(message);
+          if (trigger === 'manual') {
+            if (result.error === 'no_folder') toast(message);
+            else toast.error(message);
+          } else if (
             result.error !== 'unauthorized' &&
             result.error !== 'not_connected' &&
             result.error !== 'rate_limited'
@@ -120,22 +164,22 @@ export function DocumentsPageContent({
             console.warn('[documents] automatic Drive sync failed', { error: result.error });
           }
         } finally {
-          autoSyncInFlight.current = false;
+          syncInFlight.current = false;
         }
       });
     },
-    [canEdit, caseId, driveFolderId, startAutoSyncTransition],
+    [canSyncDrive, caseId, driveFolderId, startSyncTransition, tSync],
   );
 
   useEffect(() => {
-    runAutomaticSync(false);
+    runDriveSync('stale');
 
     // The common workflow is: open Drive in a new tab, delete there, then
     // return to this already-open page. Reconcile on return so no extra click
     // or second navigation is needed.
-    const syncOnFocus = () => runAutomaticSync(true);
+    const syncOnFocus = () => runDriveSync('focus');
     const syncOnVisible = () => {
-      if (document.visibilityState === 'visible') runAutomaticSync(true);
+      if (document.visibilityState === 'visible') runDriveSync('focus');
     };
     window.addEventListener('focus', syncOnFocus);
     document.addEventListener('visibilitychange', syncOnVisible);
@@ -143,7 +187,13 @@ export function DocumentsPageContent({
       window.removeEventListener('focus', syncOnFocus);
       document.removeEventListener('visibilitychange', syncOnVisible);
     };
-  }, [runAutomaticSync]);
+  }, [runDriveSync]);
+
+  useEffect(() => {
+    if (selected !== null || !returnFocusId.current) return;
+    document.getElementById(returnFocusId.current)?.focus({ preventScroll: true });
+    returnFocusId.current = null;
+  }, [selected]);
 
   const { buckets, unlocated } = useMemo(() => {
     const result: Record<DriveFolder, DocumentWithRelations[]> = {
@@ -228,6 +278,8 @@ export function DocumentsPageContent({
   const missingFor = (folder: DriveFolder): number =>
     checklistByFolder[folder].filter((i) => i.status === 'missing').length;
 
+  const returnToFolderGrid = () => setSelected(null);
+
   return (
     <div className="-mt-6 space-y-4">
       <DocumentsActionBar
@@ -239,6 +291,11 @@ export function DocumentsPageContent({
         primaryBorrower={primaryBorrower}
         checklist={checklist}
         canEdit={canEdit}
+        canUploadDocuments={canUploadDocuments}
+        canSyncDrive={canSyncDrive}
+        onSync={() => runDriveSync('manual')}
+        syncPending={syncPending}
+        syncStatus={syncStatus}
       />
 
       {selected === null && (
@@ -265,27 +322,39 @@ export function DocumentsPageContent({
             ).map((folder) => (
               <FolderCard
                 key={folder}
+                buttonId={`documents-folder-${folder}`}
                 folder={folder}
                 title={canonicalRootByFolder.get(folder)?.name}
                 documentCount={buckets[folder].length}
                 missingCount={missingFor(folder)}
-                onOpen={(target) => setSelected({ kind: 'category', folder: target })}
+                onOpen={(target) => {
+                  returnFocusId.current = `documents-folder-${target}`;
+                  setSelected({ kind: 'category', folder: target });
+                }}
               />
             ))}
 
             {customRootFolders.map((folder) => (
               <DriveFolderCard
                 key={folder.id}
+                buttonId={`documents-drive-folder-${folder.id}`}
                 folder={folder}
                 documentCount={customDocumentsByFolder.get(folder.id)?.length ?? 0}
-                onOpen={(folderId) => setSelected({ kind: 'custom', folderId })}
+                onOpen={(folderId) => {
+                  returnFocusId.current = `documents-drive-folder-${folderId}`;
+                  setSelected({ kind: 'custom', folderId });
+                }}
               />
             ))}
 
             {uncategorized.length > 0 && (
               <button
+                id="documents-folder-uncategorized"
                 type="button"
-                onClick={() => setSelected({ kind: 'uncategorized' })}
+                onClick={() => {
+                  returnFocusId.current = 'documents-folder-uncategorized';
+                  setSelected({ kind: 'uncategorized' });
+                }}
                 className="group focus-visible:ring-brand-gold-text/50 w-full rounded-xl border border-amber-200 bg-amber-50/50 p-4 text-start shadow-sm transition hover:border-amber-300 hover:shadow-md focus-visible:ring-2 focus-visible:outline-none"
               >
                 <div className="flex items-start gap-3">
@@ -316,7 +385,7 @@ export function DocumentsPageContent({
           <div className="space-y-3">
             <button
               type="button"
-              onClick={() => setSelected(null)}
+              onClick={returnToFolderGrid}
               className="focus-visible:ring-brand-gold-text/40 inline-flex items-center gap-1 rounded text-sm text-neutral-600 hover:text-neutral-900 focus-visible:ring-2 focus-visible:outline-none"
             >
               <ChevronRight className="size-4 ltr:rotate-180" aria-hidden="true" />
@@ -335,8 +404,8 @@ export function DocumentsPageContent({
             documents={buckets[selected.folder]}
             checklistItems={checklistByFolder[selected.folder]}
             locale={locale}
-            canEdit={canEdit}
-            onBack={() => setSelected(null)}
+            canUploadDocuments={canUploadDocuments}
+            onBack={returnToFolderGrid}
             onUpload={handleUploadFromFolder}
             onPreview={setPreviewDoc}
           />
@@ -350,7 +419,7 @@ export function DocumentsPageContent({
               <div className="space-y-3">
                 <button
                   type="button"
-                  onClick={() => setSelected(null)}
+                  onClick={returnToFolderGrid}
                   className="focus-visible:ring-brand-gold-text/40 inline-flex items-center gap-1 rounded text-sm text-neutral-600 hover:text-neutral-900 focus-visible:ring-2 focus-visible:outline-none"
                 >
                   <ChevronRight className="size-4 ltr:rotate-180" aria-hidden="true" />
@@ -372,8 +441,8 @@ export function DocumentsPageContent({
               documents={customDocumentsByFolder.get(folder.id) ?? []}
               checklistItems={[]}
               locale={locale}
-              canEdit={canEdit}
-              onBack={() => setSelected(null)}
+              canUploadDocuments={canUploadDocuments}
+              onBack={returnToFolderGrid}
               onPreview={setPreviewDoc}
             />
           );
@@ -383,7 +452,7 @@ export function DocumentsPageContent({
         <div className="space-y-3">
           <button
             type="button"
-            onClick={() => setSelected(null)}
+            onClick={returnToFolderGrid}
             className="focus-visible:ring-brand-gold-text/40 inline-flex items-center gap-1 rounded text-sm text-neutral-600 hover:text-neutral-900 focus-visible:ring-2 focus-visible:outline-none"
           >
             <ChevronRight className="size-4 ltr:rotate-180" aria-hidden="true" />
@@ -393,7 +462,7 @@ export function DocumentsPageContent({
             documents={uncategorized}
             categories={categories}
             caseId={caseId}
-            canEdit={canEdit}
+            canEdit={canUploadDocuments}
             onPreview={setPreviewDoc}
           />
         </div>
@@ -418,7 +487,6 @@ export function DocumentsPageContent({
         doc={activePreviewDoc}
         caseId={caseId}
         canDeleteDocuments={canDeleteDocuments}
-        canVerifyDocuments={canVerifyDocuments}
         canSendEmail={canEdit}
         defaultEmailRecipient={primaryBorrower?.email ?? null}
         onClose={() => setPreviewDoc(null)}

@@ -4,7 +4,7 @@ import {
   moveCaseDocumentToDriveFolder,
   restoreCaseDocumentDriveParent,
 } from '@/features/integrations/services/drive-case-uploader';
-import { userCanEditCase, userHasPermissions } from '@/lib/auth/permissions';
+import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
 import { assignDocumentCategoryAction } from './assign-document-category';
@@ -15,7 +15,7 @@ vi.mock('@/features/integrations/services/drive-case-uploader', () => ({
 }));
 vi.mock('@/lib/auth/permissions', () => ({
   userCanEditCase: vi.fn(),
-  userHasPermissions: vi.fn(),
+  userHasPermission: vi.fn(),
 }));
 vi.mock('@/lib/supabase/server', () => ({ createClient: vi.fn() }));
 
@@ -81,10 +81,7 @@ function mockDb(options?: {
 }
 
 beforeEach(() => {
-  vi.mocked(userHasPermissions).mockResolvedValue({
-    verify_document: true,
-    upload_document: false,
-  });
+  vi.mocked(userHasPermission).mockResolvedValue(true);
   vi.mocked(userCanEditCase).mockResolvedValue(true);
   vi.mocked(moveCaseDocumentToDriveFolder).mockResolvedValue({
     ok: true,
@@ -194,6 +191,19 @@ describe('assignDocumentCategoryAction', () => {
 
   it('checks case edit authority before reading or moving the document', async () => {
     vi.mocked(userCanEditCase).mockResolvedValue(false);
+    const { documentsTable } = mockDb();
+
+    await expect(assignDocumentCategoryAction(DOCUMENT_ID, CASE_ID, CATEGORY_ID)).resolves.toEqual({
+      ok: false,
+      error: 'unauthorized',
+    });
+
+    expect(documentsTable.select).not.toHaveBeenCalled();
+    expect(moveCaseDocumentToDriveFolder).not.toHaveBeenCalled();
+  });
+
+  it('requires upload permission now that document verification is not a workflow', async () => {
+    vi.mocked(userHasPermission).mockResolvedValue(false);
     const { documentsTable } = mockDb();
 
     await expect(assignDocumentCategoryAction(DOCUMENT_ID, CASE_ID, CATEGORY_ID)).resolves.toEqual({

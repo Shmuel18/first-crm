@@ -27,20 +27,20 @@ const supabase = createClient(
 );
 
 const fixturePlan = [
-  { category: 'id_card', file: '01-זיהוי-וקשר/תעודת-זהות-דמה.pdf', status: 'verified' },
-  { category: 'driver_license', file: '01-זיהוי-וקשר/רשיון-נהיגה-דמה.jpg', status: 'verified' },
-  { category: 'passport', file: '01-זיהוי-וקשר/דרכון-דמה.png', status: 'new' },
-  { category: 'payslip', file: '02-תעסוקה-והכנסות/תלוש-שכר-ינואר-דמה.pdf', status: 'verified' },
-  { category: 'form_106', file: '02-תעסוקה-והכנסות/טופס-106-דמה.pdf', status: 'new' },
-  { category: 'employer_letter', file: '02-תעסוקה-והכנסות/אישור-מעסיק-דמה.pdf', status: 'rejected' },
-  { category: 'tax_assessment', file: '02-תעסוקה-והכנסות/שומת-מס-דמה.png', status: 'new' },
-  { category: 'foreign_payslip', file: '03-הכנסות-מחול/תלוש-זר-דמה.pdf', status: 'verified' },
-  { category: 'foreign_bank_statement', file: '03-הכנסות-מחול/תדפיס-בנק-זר-דמה.pdf', status: 'new' },
-  { category: 'property_deed', file: '04-אישורים-וביטחונות/נסח-טאבו-דמה.pdf', status: 'verified' },
-  { category: 'appraisal', file: '04-אישורים-וביטחונות/שמאות-דמה.pdf', status: 'new' },
-  { category: 'purchase_contract', file: '04-אישורים-וביטחונות/חוזה-רכישה-דמה.pdf', status: 'verified' },
-  { category: 'life_insurance_quote', file: '04-אישורים-וביטחונות/אישור-ביטוח-חיים-דמה.jpg', status: 'new' },
-  { category: 'property_insurance', file: '04-אישורים-וביטחונות/ביטוח-נכס-דמה.png', status: 'verified' },
+  { category: 'id_card', file: '01-זיהוי-וקשר/תעודת-זהות-דמה.pdf' },
+  { category: 'driver_license', file: '01-זיהוי-וקשר/רשיון-נהיגה-דמה.jpg' },
+  { category: 'passport', file: '01-זיהוי-וקשר/דרכון-דמה.png' },
+  { category: 'payslip', file: '02-תעסוקה-והכנסות/תלוש-שכר-ינואר-דמה.pdf' },
+  { category: 'form_106', file: '02-תעסוקה-והכנסות/טופס-106-דמה.pdf' },
+  { category: 'employer_letter', file: '02-תעסוקה-והכנסות/אישור-מעסיק-דמה.pdf' },
+  { category: 'tax_assessment', file: '02-תעסוקה-והכנסות/שומת-מס-דמה.png' },
+  { category: 'foreign_payslip', file: '03-הכנסות-מחול/תלוש-זר-דמה.pdf' },
+  { category: 'foreign_bank_statement', file: '03-הכנסות-מחול/תדפיס-בנק-זר-דמה.pdf' },
+  { category: 'property_deed', file: '04-אישורים-וביטחונות/נסח-טאבו-דמה.pdf' },
+  { category: 'appraisal', file: '04-אישורים-וביטחונות/שמאות-דמה.pdf' },
+  { category: 'purchase_contract', file: '04-אישורים-וביטחונות/חוזה-רכישה-דמה.pdf' },
+  { category: 'life_insurance_quote', file: '04-אישורים-וביטחונות/אישור-ביטוח-חיים-דמה.jpg' },
+  { category: 'property_insurance', file: '04-אישורים-וביטחונות/ביטוח-נכס-דמה.png' },
 ];
 
 async function main() {
@@ -102,8 +102,6 @@ async function main() {
       const size = (await stat(path.join(root, item.file))).size;
       const now = new Date();
       const uploadDate = new Date(now.getTime() - (caseIndex + uploaded + 1) * 86_400_000).toISOString();
-      const verifiedAt = item.status === 'verified' ? new Date(now.getTime() - uploaded * 3_600_000).toISOString() : null;
-
       rows.push({
         id,
         case_id: caseRow.id,
@@ -114,9 +112,9 @@ async function main() {
         mime_type: sniffed.mime,
         upload_date: uploadDate,
         uploaded_by: uploadUser.id,
-        status: item.status,
-        verified_by: item.status === 'verified' ? uploadUser.id : null,
-        verified_at: verifiedAt,
+        status: 'verified',
+        verified_by: null,
+        verified_at: null,
         notes: 'מסמך דמה לפיתוח ובדיקות',
         metadata: {
           seed_batch: BATCH,
