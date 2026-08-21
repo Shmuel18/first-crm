@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { callAction } from '@/lib/actions/call-action';
 import { parseLocale } from '@/lib/i18n/direction';
+import { saveBlob } from '@/lib/utils/file-download';
 import { formatDateShort } from '@/lib/utils/format-date';
 
 import { deleteDocumentAction } from '../actions/delete-document';
@@ -22,6 +23,7 @@ import { getDocumentPrintBytesAction } from '../actions/get-document-print-bytes
 import { updateDocumentStatusAction } from '../actions/update-document-status';
 import { isAttachable } from '../domain/attachable';
 import { isDirectlyPrintable } from '../domain/printable';
+import { sanitizeFilename } from '../domain/sanitize-filename';
 import { usePrintDocument } from '../hooks/use-print-document';
 import type { DocumentStatus, DocumentWithRelations } from '../types';
 
@@ -42,6 +44,14 @@ type Props = {
   defaultEmailRecipient: string | null;
   onClose: () => void;
 };
+
+const GOOGLE_NATIVE_PREFIX = 'application/vnd.google-apps.';
+
+function downloadName(fileName: string, mimeType: string | null): string {
+  const safe = sanitizeFilename(fileName) ?? 'document';
+  if (!mimeType?.startsWith(GOOGLE_NATIVE_PREFIX)) return safe;
+  return `${safe.replace(/\.[^.]+$/, '') || 'document'}.pdf`;
+}
 
 export function DocumentPreviewModal({
   doc,
@@ -65,6 +75,8 @@ export function DocumentPreviewModal({
   const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadFailed, setDownloadFailed] = useState(false);
   const { printing, failed: printFailed, print, printBytes } = usePrintDocument();
 
   useEffect(() => {
@@ -167,7 +179,26 @@ export function DocumentPreviewModal({
     openInDrive();
   };
 
+  const handleDownload = async () => {
+    if (downloading) return;
+    setDownloading(true);
+    setDownloadFailed(false);
+    try {
+      const response = await fetch(`/api/documents/${encodeURIComponent(doc.id)}/download`, {
+        cache: 'no-store',
+      });
+      if (!response.ok) throw new Error(`download ${response.status}`);
+      saveBlob(await response.blob(), downloadName(doc.file_name, doc.mime_type));
+    } catch (err) {
+      console.error('[documentDownload] failed', err);
+      setDownloadFailed(true);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   const canEmailThisDoc = canSendEmail && isAttachable(doc);
+  const canDownloadThisDoc = isAttachable(doc);
 
   const isImage = doc.mime_type?.startsWith('image/') ?? false;
   const isPdf = doc.mime_type === 'application/pdf';
@@ -204,13 +235,16 @@ export function DocumentPreviewModal({
         <DocumentPreviewLinks
           url={url}
           driveFileUrl={doc.drive_file_url}
-          fileName={doc.file_name}
           showPrint={canPrintInApp || Boolean(printFallbackUrl)}
           // isPending covers the Drive round-trip before the dialog appears.
           printing={printing || isPending}
           printFailed={printFailed}
+          showDownload={canDownloadThisDoc}
+          downloading={downloading}
+          downloadFailed={downloadFailed}
           showEmail={canEmailThisDoc}
           onPrint={handlePrint}
+          onDownload={() => void handleDownload()}
           onEmail={() => setEmailOpen(true)}
         />
 

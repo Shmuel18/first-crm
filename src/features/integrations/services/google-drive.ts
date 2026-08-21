@@ -21,6 +21,7 @@ export type { DriveFileMeta, DriveUploadResult };
 const DRIVE_API = 'https://www.googleapis.com/drive/v3';
 const DRIVE_UPLOAD = 'https://www.googleapis.com/upload/drive/v3';
 const FOLDER_MIME = 'application/vnd.google-apps.folder';
+const STREAM_DOWNLOAD_TIMEOUT_MS = 55_000;
 
 /** Escape a value for use inside the Drive query DSL (`name = '...'`).
  *  Order matters: backslashes first, then quotes — otherwise the second
@@ -275,8 +276,18 @@ export class GoogleDriveClient {
     if (!res.ok) throw new Error(`Drive rename failed: ${res.status}`);
   }
 
-  /** Raw bytes of a Drive file — used to attach a file that only ever lived
-   *  in Drive (dropped into the folder, never uploaded through the app). */
+  /** Keep the upstream body streaming for browser downloads larger than a
+   *  serverless function's buffered-response limit. */
+  async downloadFileResponse(fileId: string): Promise<Response> {
+    const res = await this.authedFetchRetry(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?alt=media`,
+      { signal: timeoutSignal(STREAM_DOWNLOAD_TIMEOUT_MS) },
+    );
+    if (!res.ok) throw new Error(`Drive download failed: ${res.status}`);
+    return res;
+  }
+
+  /** Raw bytes of a Drive file — used for email attachments and printing. */
   async downloadFileBytes(fileId: string): Promise<Buffer> {
     const res = await this.authedFetchRetry(
       `${DRIVE_API}/files/${encodeURIComponent(fileId)}?alt=media`,
@@ -287,6 +298,15 @@ export class GoogleDriveClient {
 
   /** Google-native files (Docs/Sheets/Slides) have no bytes to download —
    *  they must be exported. PDF is the one format every recipient can open. */
+  async exportFileAsPdfResponse(fileId: string): Promise<Response> {
+    const res = await this.authedFetchRetry(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}/export?mimeType=application%2Fpdf`,
+      { signal: timeoutSignal(STREAM_DOWNLOAD_TIMEOUT_MS) },
+    );
+    if (!res.ok) throw new Error(`Drive export failed: ${res.status}`);
+    return res;
+  }
+
   async exportFileAsPdf(fileId: string): Promise<Buffer> {
     const res = await this.authedFetchRetry(
       `${DRIVE_API}/files/${encodeURIComponent(fileId)}/export?mimeType=application%2Fpdf`,

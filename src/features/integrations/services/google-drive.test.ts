@@ -13,6 +13,9 @@ vi.mock('./integrations.service', () => ({
   markIntegrationDisconnected: vi.fn(),
   persistRefreshedAccessToken: vi.fn(),
 }));
+vi.mock('@/lib/http/with-timeout', () => ({
+  timeoutSignal: vi.fn(() => new AbortController().signal),
+}));
 
 const CASE_ID = '11111111-1111-4111-8111-111111111111';
 const FOLDER_MIME = 'application/vnd.google-apps.folder';
@@ -111,6 +114,40 @@ describe('GoogleDriveClient.isLiveFile', () => {
 
     await expect(client().isLiveFile('file-1')).rejects.toThrow(
       'Drive file verification failed: 500',
+    );
+  });
+});
+
+describe('GoogleDriveClient download responses', () => {
+  it('leaves regular Drive bytes as a readable response stream', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response('drive-bytes', { status: 200 }));
+
+    const response = await client().downloadFileResponse('file-1');
+
+    await expect(response.text()).resolves.toBe('drive-bytes');
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining('/files/file-1?alt=media'),
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bearer access-token' }),
+      }),
+    );
+  });
+
+  it('leaves a Google-native PDF export as a readable response stream', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response('pdf-export', { status: 200 }));
+
+    const response = await client().exportFileAsPdfResponse('google-doc-1');
+
+    await expect(response.text()).resolves.toBe('pdf-export');
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining('/files/google-doc-1/export?mimeType=application%2Fpdf'),
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bearer access-token' }),
+      }),
     );
   });
 });

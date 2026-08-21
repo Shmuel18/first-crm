@@ -2760,7 +2760,8 @@
       "expiry": "Expires on",
       "openNewTab": "Open in new tab",
       "openInDrive": "Open in Drive",
-      "downloadOriginal": "Download original",
+      "downloadOriginal": "Download",
+      "downloading": "Downloading...",
       "noPreview": "No preview available for this file type",
       "close": "Close",
       "deleteConfirm": "Remove this document from the case? It will stay in retention storage for the configured recovery window.",
@@ -2792,7 +2793,8 @@
       "uploadFailed": "Upload failed. Please try again.",
       "deleteFailed": "Delete failed. Please try again.",
       "statusUpdateFailed": "Status update failed",
-      "printFailed": "Printing failed. Try opening the document and printing from there."
+      "printFailed": "Printing failed. Try opening the document and printing from there.",
+      "downloadFailed": "Download failed. Try opening the document in a new tab and downloading it there."
     },
     "sendEmail": {
       "button": "Send by email",
