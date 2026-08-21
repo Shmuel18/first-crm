@@ -150,29 +150,67 @@ describe('GET /api/documents/[id]/download', () => {
     expect(downloadFileResponse).toHaveBeenCalledWith('drive-file-1');
   });
 
-  it('exports a Google-native document as a streamed PDF', async () => {
+  it.each([
+    [
+      'document',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'docx-export',
+    ],
+    [
+      'spreadsheet',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'xlsx-export',
+    ],
+    [
+      'presentation',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'pptx-export',
+    ],
+    ['drawing', 'application/pdf', 'pdf-export'],
+  ])(
+    'exports a Google-native %s as its configured streamed format',
+    async (googleType, targetMime, body) => {
+      const doc = {
+        ...BASE_DOC,
+        metadata: {},
+        drive_file_id: `google-${googleType}-1`,
+        mime_type: `application/vnd.google-apps.${googleType}`,
+        file_size: null,
+      };
+      setupSupabase({ doc });
+      const exportFileResponse = vi.fn(async () => new Response(body));
+      const downloadFileResponse = vi.fn();
+      vi.mocked(getDriveClientIfConnected).mockResolvedValue({
+        exportFileResponse,
+        downloadFileResponse,
+      } as never);
+
+      const response = await callRoute();
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get('Content-Type')).toBe(targetMime);
+      expect(response.headers.get('Content-Disposition')).toBeNull();
+      await expect(response.text()).resolves.toBe(body);
+      expect(exportFileResponse).toHaveBeenCalledWith(`google-${googleType}-1`, targetMime);
+      expect(downloadFileResponse).not.toHaveBeenCalled();
+    },
+  );
+
+  it('rejects an unsupported Google-native type without making a Drive request', async () => {
     const doc = {
       ...BASE_DOC,
       metadata: {},
-      drive_file_id: 'google-doc-1',
-      mime_type: 'application/vnd.google-apps.document',
+      drive_file_id: 'google-form-1',
+      mime_type: 'application/vnd.google-apps.form',
       file_size: null,
     };
     setupSupabase({ doc });
-    const exportFileAsPdfResponse = vi.fn(async () => new Response('pdf-export'));
-    const downloadFileResponse = vi.fn();
-    vi.mocked(getDriveClientIfConnected).mockResolvedValue({
-      exportFileAsPdfResponse,
-      downloadFileResponse,
-    } as never);
 
     const response = await callRoute();
 
-    expect(response.status).toBe(200);
-    expect(response.headers.get('Content-Type')).toBe('application/pdf');
-    await expect(response.text()).resolves.toBe('pdf-export');
-    expect(exportFileAsPdfResponse).toHaveBeenCalledWith('google-doc-1');
-    expect(downloadFileResponse).not.toHaveBeenCalled();
+    expect(response.status).toBe(415);
+    await expect(response.json()).resolves.toMatchObject({ ok: false, error: 'unsupported' });
+    expect(getDriveClientIfConnected).not.toHaveBeenCalled();
   });
 
   it('neutralizes an active-content MIME type supplied by Drive', async () => {

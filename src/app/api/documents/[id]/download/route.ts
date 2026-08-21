@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+import {
+  googleNativeDownloadExport,
+  isGoogleNativeMime,
+} from '@/features/documents/domain/google-native-download';
 import { DOCUMENTS_BUCKET } from '@/features/documents/services/documents.service';
 import { getDriveClientIfConnected } from '@/features/integrations/services/drive-case-uploader';
 import { userHasPermission } from '@/lib/auth/permissions';
@@ -9,7 +13,6 @@ import { createClient } from '@/lib/supabase/server';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
-const GOOGLE_NATIVE_PREFIX = 'application/vnd.google-apps.';
 const MAX_DOWNLOAD_BYTES = 20 * 1024 * 1024;
 const SAFE_INLINE_MIME_TYPES = new Set([
   'application/pdf',
@@ -22,6 +25,8 @@ const SAFE_INLINE_MIME_TYPES = new Set([
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/vnd.ms-excel',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
 ]);
 
 type Context = { params: Promise<{ id: string }> };
@@ -105,13 +110,17 @@ export async function GET(_request: Request, { params }: Context): Promise<Respo
     return errorJson('too_large', 413);
   }
 
+  const nativeExport = googleNativeDownloadExport(doc.mime_type);
+  if (isGoogleNativeMime(doc.mime_type) && !nativeExport) {
+    return errorJson('unsupported', 415);
+  }
+
   try {
     const client = await getDriveClientIfConnected();
     if (!client) return errorJson('drive_unavailable', 503);
 
-    const isGoogleNative = doc.mime_type?.startsWith(GOOGLE_NATIVE_PREFIX) ?? false;
-    const upstream = isGoogleNative
-      ? await client.exportFileAsPdfResponse(doc.drive_file_id)
+    const upstream = nativeExport
+      ? await client.exportFileResponse(doc.drive_file_id, nativeExport.mimeType)
       : await client.downloadFileResponse(doc.drive_file_id);
     const contentLengthHeader = upstream.headers.get('Content-Length');
     const contentLength = contentLengthHeader === null ? null : Number(contentLengthHeader);
@@ -126,7 +135,7 @@ export async function GET(_request: Request, { params }: Context): Promise<Respo
     if (!upstream.body) return errorJson('unknown', 502);
 
     const headers = new Headers({
-      'Content-Type': safeInlineMimeType(isGoogleNative ? 'application/pdf' : doc.mime_type),
+      'Content-Type': safeInlineMimeType(nativeExport?.mimeType ?? doc.mime_type),
       'Cache-Control': 'private, no-store, max-age=0',
       // Drive MIME metadata is attacker-controlled. These headers ensure a
       // direct navigation to this same-origin route cannot execute HTML/SVG.

@@ -376,15 +376,20 @@ export class GoogleDriveClient {
     return Buffer.from(await res.arrayBuffer());
   }
 
-  /** Google-native files (Docs/Sheets/Slides) have no bytes to download —
-   *  they must be exported. PDF is the one format every recipient can open. */
-  async exportFileAsPdfResponse(fileId: string): Promise<Response> {
+  /** Stream a Google-native file in an explicit export format. */
+  async exportFileResponse(fileId: string, mimeType: string): Promise<Response> {
+    const params = new URLSearchParams({ mimeType });
     const res = await this.authedFetchRetry(
-      `${DRIVE_API}/files/${encodeURIComponent(fileId)}/export?mimeType=application%2Fpdf`,
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}/export?${params.toString()}`,
       { signal: timeoutSignal(STREAM_DOWNLOAD_TIMEOUT_MS) },
     );
     if (!res.ok) throw new Error(`Drive export failed: ${res.status}`);
     return res;
+  }
+
+  /** PDF remains the portable format used by printing and email attachments. */
+  async exportFileAsPdfResponse(fileId: string): Promise<Response> {
+    return this.exportFileResponse(fileId, 'application/pdf');
   }
 
   async exportFileAsPdf(fileId: string): Promise<Buffer> {

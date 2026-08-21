@@ -269,7 +269,28 @@ describe('GoogleDriveClient download responses', () => {
     );
   });
 
-  it('leaves a Google-native PDF export as a readable response stream', async () => {
+  it('streams a Google-native export using the requested encoded MIME type', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response('office-export', { status: 200 }));
+
+    const response = await client().exportFileResponse(
+      'google-sheet-1',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+
+    await expect(response.text()).resolves.toBe('office-export');
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        '/files/google-sheet-1/export?mimeType=application%2Fvnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      ),
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bearer access-token' }),
+      }),
+    );
+  });
+
+  it('keeps the PDF response wrapper for printing and email callers', async () => {
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
       .mockResolvedValue(new Response('pdf-export', { status: 200 }));
@@ -279,9 +300,7 @@ describe('GoogleDriveClient download responses', () => {
     await expect(response.text()).resolves.toBe('pdf-export');
     expect(fetchSpy).toHaveBeenCalledWith(
       expect.stringContaining('/files/google-doc-1/export?mimeType=application%2Fpdf'),
-      expect.objectContaining({
-        headers: expect.objectContaining({ Authorization: 'Bearer access-token' }),
-      }),
+      expect.any(Object),
     );
   });
 });

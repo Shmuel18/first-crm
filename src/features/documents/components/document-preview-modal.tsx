@@ -21,8 +21,8 @@ import { deleteDocumentAction } from '../actions/delete-document';
 import { getDocumentPreviewUrlAction } from '../actions/get-document-preview-url';
 import { getDocumentPrintBytesAction } from '../actions/get-document-print-bytes';
 import { isAttachable } from '../domain/attachable';
+import { documentDownloadName, isDocumentDownloadable } from '../domain/google-native-download';
 import { isDirectlyPrintable } from '../domain/printable';
-import { sanitizeFilename } from '../domain/sanitize-filename';
 import { usePrintDocument } from '../hooks/use-print-document';
 import type { DocumentWithRelations } from '../types';
 
@@ -41,14 +41,6 @@ type Props = {
   defaultEmailRecipient: string | null;
   onClose: () => void;
 };
-
-const GOOGLE_NATIVE_PREFIX = 'application/vnd.google-apps.';
-
-function downloadName(fileName: string, mimeType: string | null): string {
-  const safe = sanitizeFilename(fileName) ?? 'document';
-  if (!mimeType?.startsWith(GOOGLE_NATIVE_PREFIX)) return safe;
-  return `${safe.replace(/\.[^.]+$/, '') || 'document'}.pdf`;
-}
 
 export function DocumentPreviewModal({
   doc,
@@ -168,7 +160,7 @@ export function DocumentPreviewModal({
         cache: 'no-store',
       });
       if (!response.ok) throw new Error(`download ${response.status}`);
-      saveBlob(await response.blob(), downloadName(doc.file_name, doc.mime_type));
+      saveBlob(await response.blob(), documentDownloadName(doc.file_name, doc.mime_type));
     } catch (err) {
       console.error('[documentDownload] failed', err);
       setDownloadFailed(true);
@@ -178,7 +170,7 @@ export function DocumentPreviewModal({
   };
 
   const canEmailThisDoc = canSendEmail && isAttachable(doc);
-  const canDownloadThisDoc = isAttachable(doc);
+  const canDownloadThisDoc = isDocumentDownloadable(doc);
 
   const isImage = doc.mime_type?.startsWith('image/') ?? false;
   const isPdf = doc.mime_type === 'application/pdf';
