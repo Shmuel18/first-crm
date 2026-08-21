@@ -10,10 +10,7 @@ import type { IntegrationProvider, IntegrationRow } from '../types';
 
 import { buildMultipartUploadBody } from './google-drive-multipart';
 import { refreshAccessToken, RefreshTokenError } from './google-oauth';
-import {
-  markIntegrationDisconnected,
-  persistRefreshedAccessToken,
-} from './integrations.service';
+import { markIntegrationDisconnected, persistRefreshedAccessToken } from './integrations.service';
 
 // Re-export domain types/constants for backward compatibility with the prior
 // `from './google-drive'` import shape used by sync, uploader, and backup
@@ -74,9 +71,7 @@ export class GoogleDriveClient {
           await markIntegrationDisconnected(
             this.integration.provider as IntegrationProvider,
             err.message,
-          ).catch((markErr) =>
-            console.error('failed to mark integration disconnected', markErr),
-          );
+          ).catch((markErr) => console.error('failed to mark integration disconnected', markErr));
         }
         throw err;
       }
@@ -109,7 +104,11 @@ export class GoogleDriveClient {
    * exponential backoff. Honors Retry-After header when present. Read-only
    * methods (GET) opt in; mutations bypass retry to stay idempotent.
    */
-  private async authedFetchRetry(url: string, init: RequestInit = {}, retries = 2): Promise<Response> {
+  private async authedFetchRetry(
+    url: string,
+    init: RequestInit = {},
+    retries = 2,
+  ): Promise<Response> {
     for (let attempt = 0; attempt <= retries; attempt++) {
       const res = await this.authedFetch(url, init);
       const transient = res.status === 429 || res.status === 502 || res.status === 503;
@@ -220,6 +219,47 @@ export class GoogleDriveClient {
     if (!res.ok) throw new Error(`Drive file get failed: ${res.status}`);
     const data = (await res.json()) as { name: string; trashed: boolean };
     return data.trashed ? null : data.name;
+  }
+
+  /**
+   * Prove that a cached case_folder_id still points at the folder this app
+   * created for the same case. A files.list query can legally return 200 + []
+   * for a wrong/inaccessible parent, which must never be interpreted as
+   * "every document was deleted" by the reconciliation sweep.
+   */
+  async isManagedCaseFolder(fileId: string, caseId: string): Promise<boolean> {
+    const fields = 'id,mimeType,trashed,appProperties';
+    const res = await this.authedFetchRetry(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?fields=${encodeURIComponent(fields)}`,
+    );
+    if (res.status === 404) return false;
+    if (!res.ok) throw new Error(`Drive case folder verification failed: ${res.status}`);
+    const data = (await res.json()) as {
+      mimeType?: string;
+      trashed?: boolean;
+      appProperties?: Record<string, string>;
+    };
+    return (
+      data.trashed !== true &&
+      data.mimeType === FOLDER_MIME &&
+      data.appProperties?.caseFolderId === caseId
+    );
+  }
+
+  /**
+   * Confirm a file that was absent from the folder snapshot is truly gone.
+   * A live file may simply have been moved into a nested/custom folder; only
+   * 404 or Drive trash should be reconciled as a deletion on the site.
+   */
+  async isLiveFile(fileId: string): Promise<boolean> {
+    const fields = 'id,trashed';
+    const res = await this.authedFetchRetry(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?fields=${encodeURIComponent(fields)}`,
+    );
+    if (res.status === 404) return false;
+    if (!res.ok) throw new Error(`Drive file verification failed: ${res.status}`);
+    const data = (await res.json()) as { trashed?: boolean };
+    return data.trashed !== true;
   }
 
   /** Rename a file/folder in place — same id, same parents, same contents. */

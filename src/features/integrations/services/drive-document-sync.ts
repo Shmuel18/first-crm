@@ -19,29 +19,33 @@ import { type GoogleDriveClient } from './google-drive';
 export type { DriveSyncOutcome };
 export type { GoogleDriveClient };
 
-/** Best-effort auto-sync: skips if recently synced or Drive isn't connected. */
-export async function autoSyncIfStale(caseId: string): Promise<void> {
+type DriveSyncOptions = {
+  /** Caller has delete_document; otherwise imports run but sweep is skipped. */
+  deleteVanishedFiles?: boolean;
+};
+
+/** Best-effort auto-sync: returns null when no Drive pass was needed. */
+export async function autoSyncIfStale(
+  caseId: string,
+  options: DriveSyncOptions = {},
+): Promise<DriveSyncOutcome | null> {
   const supabase = await createClient();
-  const { data: caseRow } = await supabase
+  const { data: caseRow, error } = await supabase
     .from('cases')
     .select('metadata')
     .eq('id', caseId)
     .maybeSingle();
-  if (!caseRow) return;
+  if (error) return { ok: false, reason: 'error', message: error.message };
+  if (!caseRow) return null;
 
   const drive = readDriveMeta(caseRow.metadata);
-  if (!drive.case_folder_id) return; // never uploaded - nothing to sync
+  if (!drive.case_folder_id) return null; // never uploaded - nothing to sync
   if (drive.last_synced_at) {
     const ageMs = Date.now() - new Date(drive.last_synced_at).getTime();
-    if (ageMs < MIN_AUTO_SYNC_INTERVAL_MS) return;
+    if (ageMs < MIN_AUTO_SYNC_INTERVAL_MS) return null;
   }
 
-  await syncDriveDocumentsForCase(caseId).catch((err) => {
-    // Auto-sync is best-effort but silent failure hides real problems
-    // (expired refresh, scope revoked, Drive outage). Log so it shows up
-    // in server logs / Sentry instead of vanishing.
-    console.error('drive auto-sync failed', { caseId, err });
-  });
+  return syncDriveDocumentsForCase(caseId, options);
 }
 
 /**
@@ -51,11 +55,17 @@ export async function autoSyncIfStale(caseId: string): Promise<void> {
  */
 async function persistLastSyncedAt(caseId: string): Promise<void> {
   const supabase = await createClient();
-  await supabase.rpc('update_case_drive_meta', {
+  const { error } = await supabase.rpc('update_case_drive_meta', {
     p_case_id: caseId,
     // JSON-shaped literal; widen at the call boundary.
     p_patch: { last_synced_at: new Date().toISOString() } as unknown as Json,
   });
+  if (error) {
+    console.error('[driveSync] failed to persist last_synced_at', {
+      caseId,
+      message: error.message,
+    });
+  }
 }
 
 function readDriveMeta(raw: Json | null): CaseDriveMeta {
@@ -70,11 +80,14 @@ function readDriveMeta(raw: Json | null): CaseDriveMeta {
  * - Files dropped at case-folder root land as "uncategorized" (the
  *   advisor categorizes them from the UI)
  * - Files already linked by drive_file_id are skipped
- * - Files missing across a 48h grace window are soft-deleted (sweeper)
+ * - Files missing from a complete Drive listing are soft-deleted immediately
  * - App-uploaded files whose after() Drive mirror failed are pushed to
  *   Drive at the end of the pass (push backfill)
  */
-export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSyncOutcome> {
+export async function syncDriveDocumentsForCase(
+  caseId: string,
+  options: DriveSyncOptions = {},
+): Promise<DriveSyncOutcome> {
   const client = await getDriveClientIfConnected();
   if (!client) return { ok: false, reason: 'not_connected' };
 
@@ -89,6 +102,22 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
 
   const drive = readDriveMeta(caseRow.metadata);
   if (!drive.case_folder_id) return { ok: false, reason: 'no_folder' };
+
+  try {
+    if (!(await client.isManagedCaseFolder(drive.case_folder_id, caseId))) {
+      return {
+        ok: false,
+        reason: 'error',
+        message: 'Case Drive folder is missing or does not belong to this case',
+      };
+    }
+  } catch (err) {
+    return {
+      ok: false,
+      reason: 'error',
+      message: err instanceof Error ? err.message : 'Drive case folder verification failed',
+    };
+  }
 
   const [categoriesRes, existingRes, tombstonesRes] = await Promise.all([
     supabase
@@ -150,19 +179,24 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
     listingsComplete: true,
   };
 
+  const recordListingFailure = (err: unknown) => {
+    state.listingsComplete = false;
+    state.listingFailure ??= err instanceof Error ? err.message : 'Drive listing failed';
+  };
+
   const safeListFiles = async (folderId: string) => {
     try {
       return await client.listFolderFilesPaginated(folderId);
-    } catch {
-      state.listingsComplete = false;
+    } catch (err) {
+      recordListingFailure(err);
       return [];
     }
   };
   const safeListSubfolders = async (folderId: string) => {
     try {
       return await client.listSubfolders(folderId);
-    } catch {
-      state.listingsComplete = false;
+    } catch (err) {
+      recordListingFailure(err);
       return [];
     }
   };
@@ -172,10 +206,16 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
     const subfolders = await safeListSubfolders(drive.case_folder_id);
     for (const sub of subfolders) {
       const folderKey = NAME_TO_FOLDER_KEY[sub.name];
-      if (!folderKey) continue;
-      const categoryId = firstCategoryPerFolder.get(folderKey);
-      if (!categoryId) continue;
       const files = await safeListFiles(sub.id);
+      const categoryId = folderKey ? firstCategoryPerFolder.get(folderKey) : undefined;
+      if (!folderKey || !categoryId) {
+        // A renamed/custom subfolder is still part of the complete Drive
+        // snapshot. Preserve already-known documents found there even though
+        // we cannot safely infer a category for new files in that folder.
+        for (const f of files) state.seenDriveIds.add(f.id);
+        state.skipped += files.length;
+        continue;
+      }
       for (const f of files) {
         await importOrUpdateDriveFile(caseId, f, categoryId, folderKey, state);
       }
@@ -187,7 +227,38 @@ export async function syncDriveDocumentsForCase(caseId: string): Promise<DriveSy
       await importOrUpdateDriveFile(caseId, f, null, null, state);
     }
 
-    await sweepVanishedDriveFiles(state);
+    // Folder listings tell us where files are, not whether an unseen file was
+    // actually deleted. Confirm every deletion candidate by id so a file moved
+    // into a nested/custom folder cannot be mistaken for a Drive deletion.
+    if (state.listingsComplete) {
+      for (const driveId of state.existingByDriveId.keys()) {
+        if (state.seenDriveIds.has(driveId)) continue;
+        try {
+          if (await client.isLiveFile(driveId)) {
+            state.seenDriveIds.add(driveId);
+            state.skipped += 1;
+          }
+        } catch (err) {
+          recordListingFailure(err);
+          break;
+        }
+      }
+    }
+
+    // Never turn an incomplete Drive view into either deletions or a false
+    // "nothing new" success. Do not stamp last_synced_at so the next visit
+    // retries instead of being throttled by a pass that never completed.
+    if (!state.listingsComplete) {
+      return {
+        ok: false,
+        reason: 'error',
+        message: state.listingFailure ?? 'Drive listing incomplete',
+      };
+    }
+
+    if (options.deleteVanishedFiles) {
+      await sweepVanishedDriveFiles(caseId, state);
+    }
   } catch (err) {
     return {
       ok: false,

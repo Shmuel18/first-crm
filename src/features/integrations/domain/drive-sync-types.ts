@@ -54,4 +54,6 @@ export type SyncRunState = {
   existingByDriveId: Map<string, ExistingDocEntry>;
   /** False if any list call failed — sweeper bails to avoid wrongful deletes. */
   listingsComplete: boolean;
+  /** First Drive listing failure, surfaced instead of reporting a false success. */
+  listingFailure?: string;
 };

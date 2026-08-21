@@ -1,11 +1,14 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { refresh, revalidatePath } from 'next/cache';
 
 import { z } from 'zod';
 
-import { syncDriveDocumentsForCase } from '@/features/integrations/services/drive-document-sync';
-import { userCanEditCase, userHasAllPermissions } from '@/lib/auth/permissions';
+import {
+  autoSyncIfStale,
+  syncDriveDocumentsForCase,
+} from '@/features/integrations/services/drive-document-sync';
+import { userCanEditCase, userHasPermissions } from '@/lib/auth/permissions';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 
@@ -31,42 +34,64 @@ type Result =
 
 const SyncDriveDocumentsSchema = z.string().uuid();
 
+type AuthorizedSyncUser = { userId: string; canDelete: boolean };
+
+async function authorizedSyncUser(caseId: string): Promise<AuthorizedSyncUser | null> {
+  const supabase = await createClient();
+  const { data: userRes } = await supabase.auth.getUser();
+  if (!userRes.user) return null;
+
+  const permissions = await userHasPermissions(
+    'view_case_documents',
+    'upload_document',
+    'delete_document',
+  );
+  const allowed =
+    permissions.view_case_documents === true &&
+    permissions.upload_document === true &&
+    (await userCanEditCase(caseId));
+  return allowed
+    ? { userId: userRes.user.id, canDelete: permissions.delete_document === true }
+    : null;
+}
+
+function refreshDocumentViews(caseId: string) {
+  revalidatePath(`/cases/${caseId}/documents`);
+  revalidatePath(`/cases/${caseId}`);
+}
+
 export async function syncDriveDocumentsAction(caseId: string): Promise<Result> {
   const parsed = SyncDriveDocumentsSchema.safeParse(caseId);
   if (!parsed.success) return { ok: false, error: 'case_not_found' };
 
-  const supabase = await createClient();
-  const { data: userRes } = await supabase.auth.getUser();
-  if (!userRes.user) return { ok: false, error: 'unauthorized' };
-
-  if (
-    !(await userHasAllPermissions('view_case_documents', 'upload_document')) ||
-    !(await userCanEditCase(parsed.data))
-  ) {
-    return { ok: false, error: 'unauthorized' };
-  }
+  const actor = await authorizedSyncUser(parsed.data);
+  if (!actor) return { ok: false, error: 'unauthorized' };
 
   // Drive sync hits Google API quotas and runs an N+1 over folder contents.
   // 1 per 30s per (user, case) is far more than legitimate use needs, and
   // catches runaway polling from a buggy client or open browser tab.
   const allowed = await checkRateLimit({
     action: 'sync_drive_documents',
-    subject: `user:${userRes.user.id}:case:${parsed.data}`,
+    subject: `user:${actor.userId}:case:${parsed.data}`,
     max: 1,
     windowSeconds: 30,
     failMode: 'closed',
   });
   if (!allowed) return { ok: false, error: 'rate_limited' };
 
-  const out = await syncDriveDocumentsForCase(parsed.data);
+  const out = await syncDriveDocumentsForCase(parsed.data, {
+    deleteVanishedFiles: actor.canDelete,
+  });
   if (!out.ok) {
     const error = out.reason === 'error' ? 'unknown' : out.reason;
     if (out.message) console.error('[syncDriveDocuments]', out.reason, out.message);
     return { ok: false, error };
   }
 
-  revalidatePath(`/cases/${parsed.data}/documents`);
-  revalidatePath(`/cases/${parsed.data}`);
+  refreshDocumentViews(parsed.data);
+  if (out.imported > 0 || out.updated > 0 || out.deleted > 0 || out.pushed > 0) {
+    refresh();
+  }
   return {
     ok: true,
     imported: out.imported,
@@ -75,4 +100,41 @@ export async function syncDriveDocumentsAction(caseId: string): Promise<Result> 
     deleted: out.deleted,
     pushed: out.pushed,
   };
+}
+
+type AutoSyncResult =
+  | { ok: true; changed: boolean }
+  | { ok: false; error: 'unauthorized' | 'not_connected' | 'unknown' };
+
+/**
+ * Client-on-mount freshness pass. Unlike the old unawaited Server Component
+ * promise, this request is owned by the browser and refreshes the current UI
+ * when Drive changed. The service-level timestamp keeps repeat mounts cheap.
+ */
+export async function autoSyncDriveDocumentsAction(caseId: string): Promise<AutoSyncResult> {
+  const parsed = SyncDriveDocumentsSchema.safeParse(caseId);
+  if (!parsed.success) return { ok: false, error: 'unknown' };
+  const actor = await authorizedSyncUser(parsed.data);
+  if (!actor) return { ok: false, error: 'unauthorized' };
+
+  const out = await autoSyncIfStale(parsed.data, {
+    deleteVanishedFiles: actor.canDelete,
+  });
+  if (!out) return { ok: true, changed: false };
+  if (!out.ok) {
+    if (out.message) console.error('[autoSyncDriveDocuments]', out.reason, out.message);
+    return {
+      ok: false,
+      error: out.reason === 'not_connected' ? 'not_connected' : 'unknown',
+    };
+  }
+
+  const changed = out.imported > 0 || out.updated > 0 || out.deleted > 0 || out.pushed > 0;
+  if (changed) {
+    refreshDocumentViews(parsed.data);
+    // Server Actions can return the refreshed React tree in this roundtrip.
+    // This makes a Drive deletion disappear during the current visit.
+    refresh();
+  }
+  return { ok: true, changed };
 }

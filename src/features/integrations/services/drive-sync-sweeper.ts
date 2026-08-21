@@ -9,23 +9,30 @@ import { type SyncRunState } from '../domain/drive-sync-types';
  *
  * The one safety left is `listingsComplete`: if ANY Drive list call failed
  * this pass, a healthy file can look missing, so the sweep is skipped
- * entirely rather than acting on a partial picture. Deletes are soft
- * (deleted_at + tombstone semantics downstream), so a wrongful one is
- * recoverable inside the retention window.
+ * entirely rather than acting on a partial picture. Deletes go through the
+ * same permission-checked RPC as an explicit UI delete so the Drive tombstone
+ * is written atomically and a deleted file cannot be re-imported later.
  */
-export async function sweepVanishedDriveFiles(state: SyncRunState): Promise<void> {
+export async function sweepVanishedDriveFiles(caseId: string, state: SyncRunState): Promise<void> {
   if (!state.listingsComplete) return;
   const supabase = await createClient();
-  const nowIso = new Date().toISOString();
+  const { data: userRes, error: authError } = await supabase.auth.getUser();
+  if (authError || !userRes.user) {
+    throw new Error('Drive sync could not authorize document removal');
+  }
 
   for (const [driveId, entry] of state.existingByDriveId) {
     if (state.seenDriveIds.has(driveId)) continue;
     if (!entry.docId) continue;
 
-    const { error } = await supabase
-      .from('documents')
-      .update({ deleted_at: nowIso })
-      .eq('id', entry.docId);
-    if (!error) state.deleted += 1;
+    const { error } = await supabase.rpc('soft_delete_document_with_tombstone', {
+      p_document_id: entry.docId,
+      p_case_id: caseId,
+      p_user_id: userRes.user.id,
+    });
+    if (error) {
+      throw new Error(`Drive sync could not remove document: ${error.message}`);
+    }
+    state.deleted += 1;
   }
 }

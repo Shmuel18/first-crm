@@ -1,12 +1,17 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 
 import { AlertCircle, ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { callAction } from '@/lib/actions/call-action';
 import type { Locale } from '@/lib/i18n/direction';
 
+import {
+  autoSyncDriveDocumentsAction,
+  syncDriveDocumentsAction,
+} from '../actions/sync-drive-documents';
 import type { DocumentChecklistItem } from '../services/document-checklist.service';
 import {
   DRIVE_FOLDERS,
@@ -77,6 +82,52 @@ export function DocumentsPageContent({
   const [previewDoc, setPreviewDoc] = useState<DocumentWithRelations | null>(null);
   const [manageOpen, setManageOpen] = useState(false);
   const [selected, setSelected] = useState<Selection>(null);
+  const autoSyncInFlight = useRef(false);
+  const [, startAutoSyncTransition] = useTransition();
+
+  const runAutomaticSync = useCallback(
+    (force: boolean) => {
+      if (!canEdit || !driveFolderId || autoSyncInFlight.current) return;
+      autoSyncInFlight.current = true;
+
+      startAutoSyncTransition(async () => {
+        try {
+          const result = force
+            ? await callAction(() => syncDriveDocumentsAction(caseId))
+            : await callAction(() => autoSyncDriveDocumentsAction(caseId));
+          if (
+            !result.ok &&
+            result.error !== 'unauthorized' &&
+            result.error !== 'not_connected' &&
+            result.error !== 'rate_limited'
+          ) {
+            console.warn('[documents] automatic Drive sync failed', { error: result.error });
+          }
+        } finally {
+          autoSyncInFlight.current = false;
+        }
+      });
+    },
+    [canEdit, caseId, driveFolderId, startAutoSyncTransition],
+  );
+
+  useEffect(() => {
+    runAutomaticSync(false);
+
+    // The common workflow is: open Drive in a new tab, delete there, then
+    // return to this already-open page. Reconcile on return so no extra click
+    // or second navigation is needed.
+    const syncOnFocus = () => runAutomaticSync(true);
+    const syncOnVisible = () => {
+      if (document.visibilityState === 'visible') runAutomaticSync(true);
+    };
+    window.addEventListener('focus', syncOnFocus);
+    document.addEventListener('visibilitychange', syncOnVisible);
+    return () => {
+      window.removeEventListener('focus', syncOnFocus);
+      document.removeEventListener('visibilitychange', syncOnVisible);
+    };
+  }, [runAutomaticSync]);
 
   const { buckets, uncategorized } = useMemo(() => {
     const result: Record<DriveFolder, DocumentWithRelations[]> = {
@@ -126,7 +177,7 @@ export function DocumentsPageContent({
     checklistByFolder[folder].filter((i) => i.status === 'missing').length;
 
   return (
-    <div className="space-y-4 -mt-6">
+    <div className="-mt-6 space-y-4">
       <DocumentsActionBar
         caseId={caseId}
         caseNumber={caseNumber}
@@ -145,7 +196,7 @@ export function DocumentsPageContent({
               <button
                 type="button"
                 onClick={() => setManageOpen(true)}
-                className="inline-flex items-center gap-1.5 text-xs text-brand-gold-text hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+                className="text-brand-gold-text focus-visible:ring-brand-gold-text/40 inline-flex items-center gap-1.5 rounded text-xs hover:underline focus-visible:ring-2 focus-visible:outline-none"
               >
                 <Pencil className="size-3.5" aria-hidden="true" />
                 {td('manage')}
@@ -153,7 +204,7 @@ export function DocumentsPageContent({
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {DRIVE_FOLDERS.map((folder) => (
               <FolderCard
                 key={folder}
@@ -168,21 +219,21 @@ export function DocumentsPageContent({
               <button
                 type="button"
                 onClick={() => setSelected('uncategorized')}
-                className="group w-full text-start rounded-xl border border-amber-200 bg-amber-50/50 p-4 shadow-sm transition hover:border-amber-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
+                className="group focus-visible:ring-brand-gold-text/50 w-full rounded-xl border border-amber-200 bg-amber-50/50 p-4 text-start shadow-sm transition hover:border-amber-300 hover:shadow-md focus-visible:ring-2 focus-visible:outline-none"
               >
                 <div className="flex items-start gap-3">
-                  <div className="p-2.5 rounded-lg bg-amber-100 text-amber-700">
+                  <div className="rounded-lg bg-amber-100 p-2.5 text-amber-700">
                     <AlertCircle className="size-6" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h2 className="font-display text-sm font-semibold text-neutral-950 leading-tight">
+                  <div className="min-w-0 flex-1">
+                    <h2 className="font-display text-sm leading-tight font-semibold text-neutral-950">
                       {tu('title', { count: uncategorized.length })}
                     </h2>
-                    <p className="text-xs text-neutral-500 mt-0.5 line-clamp-2">{tu('subtitle')}</p>
+                    <p className="mt-0.5 line-clamp-2 text-xs text-neutral-500">{tu('subtitle')}</p>
                   </div>
                   <ChevronLeft
                     aria-hidden="true"
-                    className="size-4 text-neutral-400 shrink-0 ltr:rotate-180"
+                    className="size-4 shrink-0 text-neutral-400 ltr:rotate-180"
                   />
                 </div>
               </button>
@@ -209,7 +260,7 @@ export function DocumentsPageContent({
           <button
             type="button"
             onClick={() => setSelected(null)}
-            className="inline-flex items-center gap-1 text-sm text-neutral-600 hover:text-neutral-900 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
+            className="focus-visible:ring-brand-gold-text/40 inline-flex items-center gap-1 rounded text-sm text-neutral-600 hover:text-neutral-900 focus-visible:ring-2 focus-visible:outline-none"
           >
             <ChevronRight className="size-4 ltr:rotate-180" aria-hidden="true" />
             {td('back')}
