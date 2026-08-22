@@ -36,16 +36,16 @@ type SetupOptions = {
   user?: { id: string } | null;
   doc?: TestDoc | null;
   docError?: unknown;
-  signedUrl?: string | null;
-  signedUrlError?: unknown;
+  storageBytes?: string | null;
+  storageError?: unknown;
 };
 
 function setupSupabase({
   user = { id: USER_ID },
   doc = BASE_DOC,
   docError = null,
-  signedUrl = 'https://storage.example/signed',
-  signedUrlError = null,
+  storageBytes = 'storage-bytes',
+  storageError = null,
 }: SetupOptions = {}) {
   const query = {
     select: vi.fn(),
@@ -57,11 +57,13 @@ function setupSupabase({
   query.eq.mockReturnValue(query);
   query.is.mockReturnValue(query);
 
-  const createSignedUrl = vi.fn(async () => ({
-    data: signedUrl ? { signedUrl } : null,
-    error: signedUrlError,
+  // The route reads the object itself and answers from our own origin — a
+  // redirect to supabase.co is what the office content filter blocked.
+  const download = vi.fn(async () => ({
+    data: storageBytes === null ? null : new Blob([storageBytes]),
+    error: storageError,
   }));
-  const storageFrom = vi.fn(() => ({ createSignedUrl }));
+  const storageFrom = vi.fn(() => ({ download }));
   const supabase = {
     auth: { getUser: vi.fn(async () => ({ data: { user } })) },
     from: vi.fn(() => query),
@@ -71,7 +73,13 @@ function setupSupabase({
     supabase as unknown as Awaited<ReturnType<typeof createClient>>,
   );
 
-  return { createSignedUrl, query, storageFrom };
+  return { download, query, storageFrom };
+}
+
+function callRouteJson(id = DOCUMENT_ID) {
+  return GET(new Request(`http://localhost/api/documents/${id}/download?transport=json`), {
+    params: Promise.resolve({ id }),
+  });
 }
 
 function callRoute(id = DOCUMENT_ID) {
@@ -115,18 +123,33 @@ describe('GET /api/documents/[id]/download', () => {
     expect((await callRoute()).status).toBe(404);
   });
 
-  it('redirects a Storage-backed document to a short-lived signed URL', async () => {
+  it('serves a Storage-backed document from our own origin', async () => {
     const doc = { ...BASE_DOC, drive_file_id: 'drive-copy-1' };
-    const { createSignedUrl, storageFrom } = setupSupabase({ doc });
+    const { download, storageFrom } = setupSupabase({ doc });
 
     const response = await callRoute();
 
-    expect(response.status).toBe(307);
-    expect(response.headers.get('Location')).toBe('https://storage.example/signed');
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Location')).toBeNull();
+    expect(response.headers.get('Content-Disposition')).toBeNull();
     expect(response.headers.get('Cache-Control')).toContain('no-store');
+    await expect(response.text()).resolves.toBe('storage-bytes');
     expect(storageFrom).toHaveBeenCalledWith('case-documents');
-    expect(createSignedUrl).toHaveBeenCalledWith(`${DOCUMENT_ID}/document.pdf`, 60);
+    expect(download).toHaveBeenCalledWith(`${DOCUMENT_ID}/document.pdf`);
     expect(getDriveClientIfConnected).not.toHaveBeenCalled();
+  });
+
+  it('answers the json transport with base64 for the blocked-download path', async () => {
+    setupSupabase({ doc: { ...BASE_DOC } });
+
+    const response = await callRouteJson();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Content-Type')).toContain('application/json');
+    await expect(response.json()).resolves.toMatchObject({
+      ok: true,
+      base64: Buffer.from('storage-bytes').toString('base64'),
+    });
   });
 
   it('streams a Drive-only file inline without an attachment header', async () => {
@@ -234,10 +257,10 @@ describe('GET /api/documents/[id]/download', () => {
     expect(response.headers.get('Content-Disposition')).toBeNull();
   });
 
-  it('falls back to Drive when signing the Storage path fails', async () => {
+  it('falls back to Drive when reading the Storage object fails', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const doc = { ...BASE_DOC, drive_file_id: 'drive-file-1' };
-    setupSupabase({ doc, signedUrl: null, signedUrlError: { statusCode: 500 } });
+    setupSupabase({ doc, storageBytes: null, storageError: { statusCode: 500 } });
     const downloadFileResponse = vi.fn(async () => new Response('fallback'));
     vi.mocked(getDriveClientIfConnected).mockResolvedValue({ downloadFileResponse } as never);
 

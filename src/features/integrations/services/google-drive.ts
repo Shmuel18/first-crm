@@ -408,6 +408,27 @@ export class GoogleDriveClient {
     return res.text();
   }
 
+  /**
+   * Move a file to Drive's bin. Used when the advisor deletes a document in
+   * the app: the office expects the two sides to match, but a delete driven
+   * from a UI click should stay recoverable — Drive keeps a binned file for 30
+   * days. Permanent removal is retention's job (deleteFile).
+   */
+  async trashFile(fileId: string): Promise<void> {
+    const params = new URLSearchParams({ supportsAllDrives: 'true' });
+    const res = await this.authedFetch(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?${params.toString()}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trashed: true }),
+      },
+    );
+    if (!res.ok && res.status !== 404) {
+      throw new Error(`Drive trash failed: ${res.status}`);
+    }
+  }
+
   async deleteFile(fileId: string): Promise<void> {
     const params = new URLSearchParams({ supportsAllDrives: 'true' });
     const res = await this.authedFetch(

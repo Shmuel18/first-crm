@@ -44,6 +44,36 @@ function storagePathFrom(metadata: unknown): string | null {
   return typeof value === 'string' && value.length > 0 ? value : null;
 }
 
+/**
+ * One response shape for both transports: raw inline bytes, or the same bytes
+ * base64-wrapped in JSON for clients behind the download-blocking filter.
+ * Never sets Content-Disposition — that header is what the filter matches on.
+ */
+function bytesResponse(
+  buf: Buffer,
+  mimeType: string,
+  wantsJson: boolean,
+  fileName: string,
+): Response {
+  if (wantsJson) {
+    return Response.json(
+      { ok: true, base64: buf.toString('base64'), filename: fileName, mimeType },
+      { headers: { 'Cache-Control': 'private, no-store, max-age=0' } },
+    );
+  }
+  return new Response(new Uint8Array(buf), {
+    headers: {
+      'Content-Type': mimeType,
+      'Content-Length': String(buf.byteLength),
+      'Cache-Control': 'private, no-store, max-age=0',
+      // Drive MIME metadata is attacker-controlled. These headers ensure a
+      // direct navigation to this same-origin route cannot execute HTML/SVG.
+      'X-Content-Type-Options': 'nosniff',
+      'Content-Security-Policy': "sandbox; default-src 'none'",
+    },
+  });
+}
+
 function safeInlineMimeType(mimeType: string | null): string {
   return mimeType && SAFE_INLINE_MIME_TYPES.has(mimeType) ? mimeType : 'application/octet-stream';
 }
@@ -54,9 +84,15 @@ function safeInlineMimeType(mimeType: string | null): string {
  * while inline bytes pass. The client turns the response into a local blob and
  * supplies the original filename to the browser's download API.
  *
- * Storage-backed documents redirect to their short-lived signed object URL.
- * Drive-only documents stream through this handler, avoiding Vercel's buffered
- * response limit and avoiding base64's 33% size overhead.
+ * Everything is served from THIS origin — a Storage-backed document is streamed
+ * through here rather than redirected to its signed supabase.co URL. The
+ * redirect was the download failure in the office: the filter sees a raw binary
+ * response from a third-party host and substitutes its block page, so the fetch
+ * fails with no server-side trace.
+ *
+ * `?transport=json` returns the same bytes base64-wrapped in JSON — the
+ * established escape hatch for that filter (see lib/utils/file-download). The
+ * client retries through it when the direct response isn't ours.
  */
 export async function GET(_request: Request, { params }: Context): Promise<Response> {
   const { id } = await params;
@@ -72,7 +108,7 @@ export async function GET(_request: Request, { params }: Context): Promise<Respo
   // documents_select RLS is the case-level authorization boundary.
   const { data: doc, error } = await supabase
     .from('documents')
-    .select('id, file_size, mime_type, drive_file_id, metadata')
+    .select('id, file_name, file_size, mime_type, drive_file_id, metadata')
     .eq('id', id)
     .is('deleted_at', null)
     .maybeSingle();
@@ -83,24 +119,21 @@ export async function GET(_request: Request, { params }: Context): Promise<Respo
   }
   if (!doc) return errorJson('not_found', 404);
 
+  const wantsJson = new URL(_request.url).searchParams.get('transport') === 'json';
   const storagePath = storagePathFrom(doc.metadata);
   if (storagePath) {
-    const { data, error: urlError } = await supabase.storage
+    const { data, error: blobError } = await supabase.storage
       .from(DOCUMENTS_BUCKET)
-      .createSignedUrl(storagePath, 60);
-    if (data?.signedUrl) {
-      return new Response(null, {
-        status: 307,
-        headers: {
-          Location: data.signedUrl,
-          'Cache-Control': 'no-store, max-age=0',
-        },
-      });
+      .download(storagePath);
+    if (data) {
+      const buf = Buffer.from(await data.arrayBuffer());
+      if (buf.byteLength > MAX_DOWNLOAD_BYTES) return errorJson('too_large', 413);
+      return bytesResponse(buf, safeInlineMimeType(doc.mime_type), wantsJson, doc.file_name);
     }
     // The Drive copy may still be healthy, so continue to it before failing.
-    console.error('[documentDownload] signed URL failed', {
-      statusCode: urlError
-        ? String((urlError as { statusCode?: unknown }).statusCode ?? 'unknown')
+    console.error('[documentDownload] storage download failed', {
+      statusCode: blobError
+        ? String((blobError as { statusCode?: unknown }).statusCode ?? 'unknown')
         : 'unknown',
     });
   }
@@ -133,6 +166,19 @@ export async function GET(_request: Request, { params }: Context): Promise<Respo
       return errorJson('too_large', 413);
     }
     if (!upstream.body) return errorJson('unknown', 502);
+
+    // The JSON envelope has to hold the whole file, so that transport buffers;
+    // the streaming path stays a stream (it's the one that carries big files).
+    if (wantsJson) {
+      const buf = Buffer.from(await upstream.arrayBuffer());
+      if (buf.byteLength > MAX_DOWNLOAD_BYTES) return errorJson('too_large', 413);
+      return bytesResponse(
+        buf,
+        safeInlineMimeType(nativeExport?.mimeType ?? doc.mime_type),
+        true,
+        doc.file_name,
+      );
+    }
 
     const headers = new Headers({
       'Content-Type': safeInlineMimeType(nativeExport?.mimeType ?? doc.mime_type),

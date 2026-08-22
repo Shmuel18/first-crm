@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { callAction } from '@/lib/actions/call-action';
 import { parseLocale } from '@/lib/i18n/direction';
-import { saveBlob } from '@/lib/utils/file-download';
+import { retryViaJsonTransport, saveBlob } from '@/lib/utils/file-download';
 import { formatDateShort } from '@/lib/utils/format-date';
 
 import { deleteDocumentAction } from '../actions/delete-document';
@@ -155,14 +155,21 @@ export function DocumentPreviewModal({
     if (downloading) return;
     setDownloading(true);
     setDownloadFailed(false);
+    const endpoint = `/api/documents/${encodeURIComponent(doc.id)}/download`;
     try {
-      const response = await fetch(`/api/documents/${encodeURIComponent(doc.id)}/download`, {
-        cache: 'no-store',
-      });
-      if (!response.ok) throw new Error(`download ${response.status}`);
-      saveBlob(await response.blob(), documentDownloadName(doc.file_name, doc.mime_type));
+      const response = await fetch(endpoint, { cache: 'no-store' });
+      if (response.ok) {
+        saveBlob(await response.blob(), documentDownloadName(doc.file_name, doc.mime_type));
+        return;
+      }
+      // Our handler answers errors as JSON; anything else is the office content
+      // filter's block page, which the base64 envelope gets past.
+      const fromUs = response.headers.get('Content-Type')?.includes('application/json') === true;
+      if (!fromUs && (await retryViaJsonTransport(endpoint))) return;
+      throw new Error(`download ${response.status}`);
     } catch (err) {
       console.error('[documentDownload] failed', err);
+      if (await retryViaJsonTransport(endpoint)) return;
       setDownloadFailed(true);
     } finally {
       setDownloading(false);
