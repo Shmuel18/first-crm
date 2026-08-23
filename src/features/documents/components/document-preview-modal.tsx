@@ -30,6 +30,7 @@ import { DocumentPreviewActions } from './document-preview-actions';
 import { SendDocumentsEmailDialog } from './send-documents-email-dialog';
 import { DocumentPreviewBody } from './document-preview-body';
 import { DocumentPreviewLinks } from './document-preview-links';
+import { DocumentTitleEditor } from './document-title-editor';
 
 type Props = {
   doc: DocumentWithRelations | null;
@@ -63,6 +64,9 @@ export function DocumentPreviewModal({
   const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
+  // Local so a rename shows immediately; the action revalidates the case page
+  // behind it. Seeded per mount (the parent keys this modal by document id).
+  const [fileName, setFileName] = useState(doc?.file_name ?? '');
   const [downloading, setDownloading] = useState(false);
   const [downloadFailed, setDownloadFailed] = useState(false);
   const { printing, failed: printFailed, print, printBytes } = usePrintDocument();
@@ -159,7 +163,7 @@ export function DocumentPreviewModal({
     try {
       const response = await fetch(endpoint, { cache: 'no-store' });
       if (response.ok) {
-        saveBlob(await response.blob(), documentDownloadName(doc.file_name, doc.mime_type));
+        saveBlob(await response.blob(), documentDownloadName(fileName, doc.mime_type));
         return;
       }
       // Our handler answers errors as JSON; anything else is the office content
@@ -191,12 +195,19 @@ export function DocumentPreviewModal({
     <Dialog open={Boolean(doc)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>{doc.file_name}</DialogTitle>
-          <DialogDescription className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1">
-            {doc.category && <span>{doc.category.name_he}</span>}
-            <span className="text-neutral-400">·</span>
-            <span>{uploadDate}</span>
-          </DialogDescription>
+          <DialogTitle>
+            <DocumentTitleEditor
+              documentId={doc.id}
+              caseId={caseId}
+              fileName={fileName}
+              canRename={canSendEmail}
+              onRenamed={setFileName}
+            />
+          </DialogTitle>
+          {/* The category used to sit here next to the file name, which read as
+              the document having two different names. The folder already says
+              which category this is. */}
+          <DialogDescription className="pt-1">{uploadDate}</DialogDescription>
         </DialogHeader>
 
         <DocumentPreviewBody
@@ -204,7 +215,7 @@ export function DocumentPreviewModal({
           error={error}
           drivePreviewUrl={drivePreviewUrl}
           url={url}
-          fileName={doc.file_name}
+          fileName={fileName}
           isImage={isImage}
           isPdf={isPdf}
           onRetry={handleRetry}
@@ -244,7 +255,7 @@ export function DocumentPreviewModal({
               {
                 kind: 'document',
                 id: doc.id,
-                fileName: doc.file_name,
+                fileName,
                 fileSize: doc.file_size,
               },
             ]}

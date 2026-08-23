@@ -2,6 +2,7 @@
 
 import { FileText, FileType2, Image as ImageIcon } from 'lucide-react';
 
+import { documentDisplayName } from '../domain/document-name';
 import type { DocumentWithRelations } from '../types';
 
 type Props = {
@@ -31,7 +32,10 @@ function FileTypeIcon({ mime, className }: { mime: string | null; className?: st
  * clickable to open the full modal.
  */
 export function DocumentCard({ doc, previewUrl, onClick }: Props) {
-  const label = doc.category?.name_he ?? doc.file_name;
+  // The file's own name, not its category: the office names each file
+  // deliberately ("חוזה רכישה"), and a whole folder of cards reading the same
+  // category name told them nothing apart.
+  const label = documentDisplayName(doc.file_name);
   const isImage = doc.mime_type?.startsWith('image/') ?? false;
   const isPdf = doc.mime_type === 'application/pdf';
   const driveUrl = doc.drive_file_id
