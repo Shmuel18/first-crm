@@ -96,6 +96,28 @@ const SECURITY_HEADERS = [
   },
 ];
 
+/** The one route whose responses our own pages put in an <iframe>. */
+const DOCUMENT_BYTES_PATH = '/api/documents/:id/download';
+/** Everything except that route — the catch-all can't overlap it, because the
+ *  first matching entry does not win: overlapping entries both apply and the
+ *  stricter framing headers would come back. */
+const EVERYTHING_ELSE = '/((?!api/documents/[^/]+/download).*)';
+
+const DOCUMENT_BYTES_HEADERS = [
+  ...SECURITY_HEADERS.filter(
+    (h) => h.key !== 'X-Frame-Options' && h.key !== 'Content-Security-Policy',
+  ),
+  { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+  {
+    // No sandbox: it blocks the browser's built-in PDF viewer, and it isn't
+    // what keeps this safe — the route serves only an allowlisted set of
+    // Content-Types (PDF, images, Office), so a document here is never HTML or
+    // SVG and cannot run script of its own.
+    key: 'Content-Security-Policy',
+    value: "default-src 'none'; frame-ancestors 'self'; object-src 'none'",
+  },
+];
+
 const nextConfig: NextConfig = {
   deploymentId: process.env.NEXT_DEPLOYMENT_ID,
   // react-pdf reads two assets off disk at render time:
@@ -147,7 +169,16 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
-    return [{ source: '/:path*', headers: SECURITY_HEADERS }];
+    return [
+      // The document-bytes route is framed BY OUR OWN PAGES (the preview modal
+      // and the folder-grid thumbnails). The global clickjacking rule would
+      // refuse that — frame-ancestors 'none' and XFO DENY block same-origin
+      // framing too — and a config header wins over anything a route handler
+      // sets, so this exemption has to live here. It stays narrow: only this
+      // path, only 'self' as an ancestor, everything else unchanged.
+      { source: DOCUMENT_BYTES_PATH, headers: DOCUMENT_BYTES_HEADERS },
+      { source: EVERYTHING_ELSE, headers: SECURITY_HEADERS },
+    ];
   },
 };
 

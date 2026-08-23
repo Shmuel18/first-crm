@@ -1,5 +1,5 @@
 -- =============================================================================
--- Migration 232: document_classifications (Epic 1 of ai-v2-spec.md)
+-- Migration 233: document_classifications (Epic 1 of ai-v2-spec.md)
 -- =============================================================================
 -- One row per AI classification run over a document: what the model thinks the
 -- document is, which borrower it belongs to, its period, validity flags, and
@@ -177,4 +177,4 @@ $$;
 REVOKE ALL ON FUNCTION public.restore_backup_snapshot(jsonb) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.restore_backup_snapshot(jsonb) TO authenticated;
 
-INSERT INTO public.schema_version (version) VALUES (232) ON CONFLICT DO NOTHING;
+INSERT INTO public.schema_version (version) VALUES (233) ON CONFLICT DO NOTHING;

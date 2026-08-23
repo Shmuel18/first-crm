@@ -11,9 +11,9 @@ import { useCallback, useState } from 'react';
  * file) can't be told to print. PDFs go into the frame directly (Chrome's
  * viewer prints them); images get a one-page HTML shell so they scale.
  *
- * Two entry points because a document lives in one of two places: `print` for
- * a file we can fetch by URL (our Storage), `printBytes` for one only Drive
- * has, whose bytes come back base64 through a server action.
+ * Two entry points, both taking bytes the caller already holds: `printBlob`
+ * for a normal fetch of our download route, `printBytes` for the base64
+ * envelope used when a network filter eats the binary response.
  *
  * `blob:` is allowed in frame-src (see next.config.ts) exactly for this.
  */
@@ -23,12 +23,22 @@ type PrintState = {
    *  message. Reported as state rather than a callback so the hook needs no
    *  memoized argument from the component. */
   failed: boolean;
-  print: (url: string, mimeType: string | null) => void;
+  /** Print bytes the caller already fetched (our own download route). */
+  printBlob: (blob: Blob, mimeType: string | null) => void;
+  /** Print bytes handed over base64-wrapped — the path that survives a network
+   *  filter which eats binary responses. */
   printBytes: (base64: string, mimeType: string) => void;
+  /** Report a failure the caller detected (e.g. every transport was blocked),
+   *  so the one error message lives in one place. */
+  markFailed: () => void;
 };
 
 /** Give the print dialog time to take the frame's contents before teardown. */
 const CLEANUP_DELAY_MS = 60_000;
+
+/** If the frame never loads (corrupt bytes, a type the viewer refuses), report
+ *  a failure instead of leaving the button spinning forever. */
+const LOAD_TIMEOUT_MS = 20_000;
 
 function imageShell(blobUrl: string): string {
   return `<!doctype html><html><head><meta charset="utf-8">
@@ -38,7 +48,7 @@ img{max-width:100%;max-height:100%;object-fit:contain;display:block;margin:0 aut
 }
 
 /** Frame the blob off-screen and raise the print dialog. */
-function printBlob(
+function printBlobInFrame(
   blob: Blob,
   mimeType: string | null,
   done: (failed: boolean) => void,
@@ -57,7 +67,26 @@ function printBlob(
   const frame = document.createElement('iframe');
   frame.setAttribute('aria-hidden', 'true');
   frame.style.cssText = 'position:fixed;right:-10000px;width:1px;height:1px;border:0';
+  let settled = false;
+  const loadWatchdog = window.setTimeout(() => {
+    if (settled) return;
+    settled = true;
+    done(true);
+    frame.remove();
+    revokables.forEach((u) => URL.revokeObjectURL(u));
+  }, LOAD_TIMEOUT_MS);
+  frame.onerror = () => {
+    if (settled) return;
+    settled = true;
+    window.clearTimeout(loadWatchdog);
+    done(true);
+    frame.remove();
+    revokables.forEach((u) => URL.revokeObjectURL(u));
+  };
   frame.onload = () => {
+    if (settled) return;
+    settled = true;
+    window.clearTimeout(loadWatchdog);
     let failed = false;
     try {
       frame.contentWindow?.focus();
@@ -94,19 +123,15 @@ export function usePrintDocument(): PrintState {
     if (didFail) setFailed(true);
   }, []);
 
-  const print = useCallback(
-    (url: string, mimeType: string | null) => {
+  const printFetched = useCallback(
+    (blob: Blob, mimeType: string | null) => {
       setPrinting(true);
       setFailed(false);
-      void (async () => {
-        try {
-          const res = await fetch(url);
-          if (!res.ok) throw new Error(`fetch ${res.status}`);
-          printBlob(await res.blob(), mimeType, finish);
-        } catch {
-          finish(true);
-        }
-      })();
+      try {
+        printBlobInFrame(blob, mimeType, finish);
+      } catch {
+        finish(true);
+      }
     },
     [finish],
   );
@@ -116,7 +141,7 @@ export function usePrintDocument(): PrintState {
       setPrinting(true);
       setFailed(false);
       try {
-        printBlob(base64ToBlob(base64, mimeType), mimeType, finish);
+        printBlobInFrame(base64ToBlob(base64, mimeType), mimeType, finish);
       } catch {
         finish(true);
       }
@@ -124,5 +149,10 @@ export function usePrintDocument(): PrintState {
     [finish],
   );
 
-  return { printing, failed, print, printBytes };
+  const markFailed = useCallback(() => {
+    setPrinting(false);
+    setFailed(true);
+  }, []);
+
+  return { printing, failed, printBlob: printFetched, printBytes, markFailed };
 }

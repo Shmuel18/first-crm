@@ -1,11 +1,11 @@
 -- =============================================================================
--- Migration 234: AI assistant + NL-query permission keys (ai-v2-spec.md §8.2)
+-- Migration 235: AI assistant + NL-query permission keys (ai-v2-spec.md §8.2)
 -- =============================================================================
 -- Two configurable permission keys for the Epic-3/4 surfaces:
 --   use_ai_assistant — case briefing + AI message drafting (Epic 3)
 --   use_ai_queries   — free-language dashboard queries (Epic 4)
 -- (The spec's dotted names ai.assistant / ai.queries map to snake_case per
--- the DB convention, like view_ai_inbox in mig 233.)
+-- the DB convention, like view_ai_inbox in mig 234.)
 --
 -- App-level enforcement only (has_permission RPC in the API routes) — no new
 -- tables/RLS here. Admin gets both automatically
@@ -21,4 +21,4 @@ ON CONFLICT (key) DO UPDATE
       name_en = EXCLUDED.name_en,
       category = EXCLUDED.category;
 
-INSERT INTO public.schema_version (version) VALUES (234) ON CONFLICT DO NOTHING;
+INSERT INTO public.schema_version (version) VALUES (235) ON CONFLICT DO NOTHING;

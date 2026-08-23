@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 /**
  * The deterministic, snapshotted form of a scheduled free-form question
- * (mig 236). Translated ONCE at subscription time under the user's live
+ * (mig 237). Translated ONCE at subscription time under the user's live
  * session; the hourly cron re-executes ONLY this shape — free text never
  * runs headless. Single source of truth: the nl-query proposal, the
  * confirm-action validation, and the fire-time engine all import this.

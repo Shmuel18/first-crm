@@ -402,6 +402,7 @@ export function DocumentsPageContent({
             rootDriveFolder={canonicalRootByFolder.get(selected.folder) ?? null}
             driveFolderTree={driveFolderTree}
             documents={buckets[selected.folder]}
+            caseId={caseId}
             checklistItems={checklistByFolder[selected.folder]}
             locale={locale}
             canUploadDocuments={canUploadDocuments}
@@ -439,6 +440,7 @@ export function DocumentsPageContent({
               rootDriveFolder={folder}
               driveFolderTree={driveFolderTree}
               documents={customDocumentsByFolder.get(folder.id) ?? []}
+              caseId={caseId}
               checklistItems={[]}
               locale={locale}
               canUploadDocuments={canUploadDocuments}

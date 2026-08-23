@@ -15,7 +15,6 @@ import { useTranslations } from 'next-intl';
 
 import type { Locale } from '@/lib/i18n/direction';
 
-import { useDocumentPreviews } from '../hooks/use-document-previews';
 import { driveFolderBreadcrumb } from '../domain/drive-folder-breadcrumb';
 import {
   descendantFolderIds,
@@ -34,10 +33,12 @@ type Props = {
   rootDriveFolder: DriveFolderNode | null;
   driveFolderTree: ReadonlyArray<DriveFolderNode>;
   documents: DocumentWithRelations[];
+  caseId: string;
   /** Checklist items belonging to this folder (already filtered by caller). */
   checklistItems: ReadonlyArray<DocumentChecklistItem>;
   locale: Locale;
-  /** Exact capability required by every upload affordance. */
+  /** Exact capability required by every upload affordance. Renaming a filed
+   *  document rides the same capability (both write to the case's files). */
   canUploadDocuments: boolean;
   onBack: () => void;
   onUpload?: (folder: DriveFolder) => void;
@@ -56,6 +57,7 @@ export function FolderDetail({
   rootDriveFolder,
   driveFolderTree,
   documents,
+  caseId,
   checklistItems,
   locale,
   canUploadDocuments,
@@ -123,7 +125,6 @@ export function FolderDetail({
   const iconTint = folder ? FOLDER_ICON_TINT[folder] : 'bg-slate-100 text-slate-700';
   const missing = checklistItems.filter((i) => i.status === 'missing');
   // Inline thumbnails for this folder's files — fetched once the folder opens.
-  const previews = useDocumentPreviews(directDocuments);
   const currentTitle = atRoot ? rootTitle : currentFolder.name;
 
   return (
@@ -255,7 +256,8 @@ export function FolderDetail({
                 <DocumentCard
                   key={doc.id}
                   doc={doc}
-                  previewUrl={previews.get(doc.id) ?? null}
+                  caseId={caseId}
+                  canRename={canUploadDocuments}
                   onClick={onPreview}
                 />
               ))}

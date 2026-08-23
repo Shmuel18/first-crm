@@ -19,10 +19,9 @@ import { formatDateShort } from '@/lib/utils/format-date';
 
 import { deleteDocumentAction } from '../actions/delete-document';
 import { getDocumentPreviewUrlAction } from '../actions/get-document-preview-url';
-import { getDocumentPrintBytesAction } from '../actions/get-document-print-bytes';
 import { isAttachable } from '../domain/attachable';
 import { documentDownloadName, isDocumentDownloadable } from '../domain/google-native-download';
-import { isDirectlyPrintable } from '../domain/printable';
+import { isInlineRenderable } from '../domain/inline-renderable';
 import { usePrintDocument } from '../hooks/use-print-document';
 import type { DocumentWithRelations } from '../types';
 
@@ -30,6 +29,7 @@ import { DocumentPreviewActions } from './document-preview-actions';
 import { SendDocumentsEmailDialog } from './send-documents-email-dialog';
 import { DocumentPreviewBody } from './document-preview-body';
 import { DocumentPreviewLinks } from './document-preview-links';
+import { DocumentTitleEditor } from './document-title-editor';
 
 type Props = {
   doc: DocumentWithRelations | null;
@@ -63,9 +63,12 @@ export function DocumentPreviewModal({
   const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
+  // Local so a rename shows immediately; the action revalidates the case page
+  // behind it. Seeded per mount (the parent keys this modal by document id).
+  const [fileName, setFileName] = useState(doc?.file_name ?? '');
   const [downloading, setDownloading] = useState(false);
   const [downloadFailed, setDownloadFailed] = useState(false);
-  const { printing, failed: printFailed, print, printBytes } = usePrintDocument();
+  const { printing, failed: printFailed, printBlob, printBytes, markFailed } = usePrintDocument();
 
   useEffect(() => {
     // Parent uses `key={doc?.id ?? 'none'}` so each preview mounts fresh -
@@ -123,32 +126,56 @@ export function DocumentPreviewModal({
       }
     });
 
-  // A renderable type prints in-app wherever its bytes are: straight from the
-  // signed Storage URL, or pulled from Drive for a file that was dropped into
-  // the folder and never uploaded here. Office formats have no browser
-  // renderer and open in Drive, which prints them itself.
-  const renderable = isDirectlyPrintable(doc.mime_type);
-  const canPrintInApp = renderable && (Boolean(url) || Boolean(doc.drive_file_id));
+  // Printing pulls the bytes from OUR route, whichever side holds them. The
+  // signed Storage URL used to be the fast path, but it is a third-party
+  // request: in the office it is slow or eaten by the content filter, which is
+  // what made printing take several clicks to do anything. Office formats have
+  // no browser renderer and still open in Drive, which prints them itself.
+  // What the route will actually serve inline — not merely "is a PDF/image".
+  // An image type outside that allowlist comes back as octet-stream, which an
+  // <img>/<iframe> renders as a broken tile.
+  const renderable = isInlineRenderable(doc.mime_type);
+  // Print reads through the route, which resolves Storage or Drive by itself,
+  // so it no longer depends on the signed URL having arrived.
+  const canPrintInApp = renderable;
   const printFallbackUrl = doc.drive_file_url;
   const openInDrive = () => {
     if (printFallbackUrl) window.open(printFallbackUrl, '_blank', 'noopener,noreferrer');
   };
   const handlePrint = () => {
-    if (url && renderable) {
-      print(url, doc.mime_type);
+    if (!canPrintInApp) {
+      openInDrive();
       return;
     }
-    if (canPrintInApp) {
-      startTransition(async () => {
-        const res = await callAction(() => getDocumentPrintBytesAction(doc.id));
-        // Anything we can't render here (oversized, export-only, Drive down)
-        // still has a working answer: Drive's own viewer.
-        if (res.ok) printBytes(res.base64, res.mimeType);
-        else openInDrive();
-      });
-      return;
-    }
-    openInDrive();
+    startTransition(async () => {
+      const endpoint = `/api/documents/${encodeURIComponent(doc.id)}/download`;
+      try {
+        const res = await fetch(endpoint, { cache: 'no-store' });
+        if (res.ok) {
+          printBlob(await res.blob(), doc.mime_type);
+          return;
+        }
+      } catch (err) {
+        console.error('[documentPrint] direct fetch failed', err);
+      }
+      // Blocked or unavailable → the same route through the base64 envelope
+      // (the shape the office filter lets through), then Drive's viewer.
+      try {
+        const res = await fetch(`${endpoint}?transport=json`, { cache: 'no-store' });
+        const body = res.ok ? ((await res.json()) as { ok?: boolean; base64?: string; mimeType?: string }) : null;
+        if (body?.ok && body.base64) {
+          // The document's own mime decides how the frame renders it; the
+          // envelope's is only a transport detail.
+          printBytes(body.base64, doc.mime_type ?? body.mimeType ?? 'application/pdf');
+          return;
+        }
+      } catch (err) {
+        console.error('[documentPrint] json transport failed', err);
+      }
+      // Nothing left to try: say so rather than looking like a dead button.
+      if (printFallbackUrl) openInDrive();
+      else markFailed();
+    });
   };
 
   const handleDownload = async () => {
@@ -159,7 +186,7 @@ export function DocumentPreviewModal({
     try {
       const response = await fetch(endpoint, { cache: 'no-store' });
       if (response.ok) {
-        saveBlob(await response.blob(), documentDownloadName(doc.file_name, doc.mime_type));
+        saveBlob(await response.blob(), documentDownloadName(fileName, doc.mime_type));
         return;
       }
       // Our handler answers errors as JSON; anything else is the office content
@@ -183,6 +210,13 @@ export function DocumentPreviewModal({
   const isPdf = doc.mime_type === 'application/pdf';
   // Drive preview handles Word, Excel, PPT, PDF, images — everything.
   // Falls back to Supabase signed URL for files not in Drive yet.
+  // Anything the browser renders itself is previewed from OUR origin — the
+  // download route streams it, whether the bytes live in Storage or in Drive.
+  // Embedding Drive's viewer needs third-party cookies, which Safari blocks
+  // outright: on an iPhone the preview was a Google "allow cookies" wall that
+  // the user cannot get past. Office formats have no in-browser renderer, so
+  // they still fall back to Drive's viewer.
+  const ownPreviewUrl = renderable ? `/api/documents/${encodeURIComponent(doc.id)}/download` : null;
   const drivePreviewUrl = doc.drive_file_id
     ? `https://drive.google.com/file/d/${doc.drive_file_id}/preview`
     : null;
@@ -191,20 +225,29 @@ export function DocumentPreviewModal({
     <Dialog open={Boolean(doc)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>{doc.file_name}</DialogTitle>
-          <DialogDescription className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1">
-            {doc.category && <span>{doc.category.name_he}</span>}
-            <span className="text-neutral-400">·</span>
-            <span>{uploadDate}</span>
-          </DialogDescription>
+          <DialogTitle>
+            <DocumentTitleEditor
+              documentId={doc.id}
+              caseId={caseId}
+              fileName={fileName}
+              canRename={canSendEmail}
+              onRenamed={setFileName}
+            />
+          </DialogTitle>
+          {/* The category used to sit here next to the file name, which read as
+              the document having two different names. The folder already says
+              which category this is. */}
+          <DialogDescription className="pt-1">{uploadDate}</DialogDescription>
         </DialogHeader>
 
         <DocumentPreviewBody
-          loading={loading}
-          error={error}
-          drivePreviewUrl={drivePreviewUrl}
-          url={url}
-          fileName={doc.file_name}
+          // Our own preview needs no signed URL, so it must not wait on that
+          // fetch — nor be hidden when it fails (it only feeds print/download).
+          loading={ownPreviewUrl ? false : loading}
+          error={ownPreviewUrl ? null : error}
+          drivePreviewUrl={ownPreviewUrl ? null : drivePreviewUrl}
+          url={ownPreviewUrl ?? url}
+          fileName={fileName}
           isImage={isImage}
           isPdf={isPdf}
           onRetry={handleRetry}
@@ -244,7 +287,7 @@ export function DocumentPreviewModal({
               {
                 kind: 'document',
                 id: doc.id,
-                fileName: doc.file_name,
+                fileName,
                 fileSize: doc.file_size,
               },
             ]}

@@ -2938,6 +2938,18 @@
         "attachment": "Attaching the documents failed — check the file count and size",
         "generic": "Sending the email failed. Please try again."
       }
+    },
+    "rename": {
+      "action": "Rename",
+      "save": "Save",
+      "cancel": "Cancel",
+      "renamed": "Renamed here and in Drive",
+      "errors": {
+        "drive": "Renaming in Drive failed — the name was left unchanged so the next sync can't revert it.",
+        "unauthorized": "You are not allowed to rename documents on this case",
+        "validation": "Invalid name",
+        "generic": "Renaming failed. Please try again."
+      }
     }
   },
   "richTextEditor": {

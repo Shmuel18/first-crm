@@ -1,5 +1,5 @@
 -- =============================================================================
--- Migration 231: AI infrastructure (Epic 0 of ai-v2-spec.md)
+-- Migration 232: AI infrastructure (Epic 0 of ai-v2-spec.md)
 -- =============================================================================
 -- Foundation for the V2 AI features (doc classification, email triage,
 -- assistant, NL queries). This migration ships NO behavior: with the default
@@ -84,4 +84,4 @@ CREATE POLICY ai_usage_log_select_admin ON public.ai_usage_log
 
 -- 3. Register ----------------------------------------------------------------
 
-INSERT INTO public.schema_version (version) VALUES (231) ON CONFLICT DO NOTHING;
+INSERT INTO public.schema_version (version) VALUES (232) ON CONFLICT DO NOTHING;

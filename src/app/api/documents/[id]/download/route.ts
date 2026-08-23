@@ -58,18 +58,22 @@ function bytesResponse(
   if (wantsJson) {
     return Response.json(
       { ok: true, base64: buf.toString('base64'), filename: fileName, mimeType },
-      { headers: { 'Cache-Control': 'private, no-store, max-age=0' } },
+      { headers: { 'Cache-Control': 'private, max-age=300, must-revalidate' } },
     );
   }
   return new Response(new Uint8Array(buf), {
     headers: {
       'Content-Type': mimeType,
       'Content-Length': String(buf.byteLength),
-      'Cache-Control': 'private, no-store, max-age=0',
-      // Drive MIME metadata is attacker-controlled. These headers ensure a
-      // direct navigation to this same-origin route cannot execute HTML/SVG.
+      // Private + short-lived: the folder grid renders one request per tile and
+      // re-renders on every navigation back, so without this the same bytes are
+      // pulled through the function again and again. The frame/CSP headers for
+      // this path come from next.config (a route handler cannot set them —
+      // config wins), so they are deliberately absent here.
+      'Cache-Control': 'private, max-age=300, must-revalidate',
+      // Drive MIME metadata is attacker-controlled. nosniff plus the
+      // Content-Type allowlist keep a document from being read as HTML/SVG.
       'X-Content-Type-Options': 'nosniff',
-      'Content-Security-Policy': "sandbox; default-src 'none'",
     },
   });
 }
@@ -182,11 +186,8 @@ export async function GET(_request: Request, { params }: Context): Promise<Respo
 
     const headers = new Headers({
       'Content-Type': safeInlineMimeType(nativeExport?.mimeType ?? doc.mime_type),
-      'Cache-Control': 'private, no-store, max-age=0',
-      // Drive MIME metadata is attacker-controlled. These headers ensure a
-      // direct navigation to this same-origin route cannot execute HTML/SVG.
+      'Cache-Control': 'private, max-age=300, must-revalidate',
       'X-Content-Type-Options': 'nosniff',
-      'Content-Security-Policy': "sandbox; default-src 'none'",
     });
     if (contentLength !== null && Number.isFinite(contentLength) && contentLength >= 0) {
       headers.set('Content-Length', String(contentLength));

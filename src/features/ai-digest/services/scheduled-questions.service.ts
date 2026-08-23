@@ -19,7 +19,7 @@ const MAX_NAMES = 6;
 export type ScheduledQuestionsRunResult = { due: number; sent: number; skipped: number };
 
 /**
- * Hourly sweep of free-form scheduled questions (mig 236). Each row carries a
+ * Hourly sweep of free-form scheduled questions (mig 237). Each row carries a
  * RESOLVED deterministic form snapshotted at subscription time under the
  * user's live session — this engine only re-executes that form: a dashboard
  * filter count scoped to the user's responsibility (assigned/associated;

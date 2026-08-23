@@ -8,11 +8,13 @@ import { Button } from '@/components/ui/button';
 type Props = {
   loading: boolean;
   error: string | null;
-  /** Drive's hosted preview URL (handles Word/Excel/PDF/images uniformly).
-   *  Takes precedence over the Supabase signed URL when both are available. */
+  /** Drive's hosted viewer. Only for formats no browser can render (Word,
+   *  Excel) — it needs third-party cookies, which Safari refuses, so it is a
+   *  last resort rather than the default it used to be. */
   drivePreviewUrl: string | null;
-  /** Supabase Storage signed URL fallback. Used when there's no Drive file
-   *  (manual upload not yet mirrored) or for in-app inline image preview. */
+  /** Same-origin bytes from /api/documents/[id]/download for anything the
+   *  browser renders itself; the signed Storage URL only when the caller has
+   *  nothing better. */
   url: string | null;
   fileName: string;
   isImage: boolean;
@@ -23,10 +25,11 @@ type Props = {
 };
 
 /**
- * The visual preview slot inside <DocumentPreviewModal>. Picks the right
- * renderer (Drive iframe → image → PDF iframe → "no preview" notice) based
- * on what the parent has resolved. Separate component so the modal file
- * stays under the size limit and so the renderer matrix is testable.
+ * The visual preview slot inside <DocumentPreviewModal>. Picks the renderer
+ * from what the parent resolved: our own bytes for images and PDFs, Drive's
+ * viewer only for Office formats, and a "no preview" notice otherwise.
+ * Separate component so the modal file stays under the size limit and so the
+ * renderer matrix is testable.
  */
 export function DocumentPreviewBody({
   loading,

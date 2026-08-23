@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { formatPersonName } from '@/lib/utils/person-name';
 
+import { documentDisplayName } from '../domain/document-name';
 import type { DocumentWithRelations } from '../types';
 import { AiFlagsBadge } from './ai-classification-chip';
 
@@ -54,7 +55,7 @@ export function DocumentRow({ doc, onClick }: Props) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-neutral-950 truncate">
-            {doc.category?.name_he ?? doc.file_name}
+            {documentDisplayName(doc.file_name)}
           </span>
           {/* AI validity flags (stale / name mismatch / ...) — quiet amber
               triangle, details in the title tooltip (ai-v2-spec.md §2.6). */}
