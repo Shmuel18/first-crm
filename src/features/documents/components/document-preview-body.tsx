@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 
+import { PdfPageViewer } from './pdf-page-viewer';
+
 type Props = {
   loading: boolean;
   error: string | null;
@@ -73,7 +75,7 @@ export function DocumentPreviewBody({
         <img src={url} alt={fileName} className="max-h-[58vh] object-contain" />
       )}
       {!loading && !error && !drivePreviewUrl && url && isPdf && (
-        <iframe src={url} title={fileName} className="w-full h-[58vh]" />
+        <PdfPageViewer src={url} fileName={fileName} />
       )}
       {!loading && !error && !drivePreviewUrl && url && !isImage && !isPdf && (
         <div className="text-center text-neutral-500 px-4 py-12">

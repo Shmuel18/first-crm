@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 
 import { documentDisplayName } from '../domain/document-name';
 import { MAX_THUMBNAIL_BYTES, isInlineRenderable } from '../domain/inline-renderable';
+import { PdfPageCanvas } from './pdf-page-canvas';
 import { RenameDocumentDialog } from './rename-document-dialog';
 import type { DocumentWithRelations } from '../types';
 
@@ -76,12 +77,10 @@ export function DocumentCard({ doc, caseId, canRename, onClick }: Props) {
             className="absolute inset-0 size-full object-cover"
           />
         ) : thumbUrl && isPdf ? (
-          <iframe
+          <PdfPageCanvas
             src={thumbUrl}
-            title={doc.file_name}
-            loading="lazy"
-            tabIndex={-1}
-            className="pointer-events-none absolute inset-0 size-full border-0"
+            width={320}
+            className="pointer-events-none absolute inset-0 size-full overflow-hidden [&>canvas]:size-full [&>canvas]:object-cover"
           />
         ) : (
           <div className="flex size-full items-center justify-center">

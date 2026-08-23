@@ -2890,7 +2890,10 @@
       "close": "Close",
       "deleteConfirm": "Remove this document from the case? It will stay in retention storage for the configured recovery window.",
       "print": "Print",
-      "sendByEmail": "Send by email"
+      "sendByEmail": "Send by email",
+      "pageOf": "Page {page} of {total}",
+      "previousPage": "Previous page",
+      "nextPage": "Next page"
     },
     "card": {
       "documentCount": "{count} documents",

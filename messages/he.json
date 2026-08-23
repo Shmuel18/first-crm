@@ -2890,7 +2890,10 @@
       "close": "סגור",
       "deleteConfirm": "להסיר את המסמך מהתיק? הוא יישאר באחסון שמור למשך חלון השחזור שהוגדר.",
       "print": "הדפס",
-      "sendByEmail": "שלח במייל"
+      "sendByEmail": "שלח במייל",
+      "pageOf": "דף {page} מתוך {total}",
+      "previousPage": "העמוד הקודם",
+      "nextPage": "העמוד הבא"
     },
     "card": {
       "documentCount": "{count} מסמכים",
