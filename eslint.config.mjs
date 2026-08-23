@@ -19,10 +19,16 @@ const eslintConfig = defineConfig([
     // the Next app graph — require() is correct there, so don't apply the app
     // rules (no-require-imports) to them.
     "scripts/**/*.cjs",
+
     // The AI bridge is a separate Node service with its own package.json +
     // node_modules (the Agent SDK), deployed only to the demo host — not part
     // of the Next app graph.
     "scripts/ai-bridge/**",
+
+    // Vendored pdf.js worker + font data copied verbatim from pdfjs-dist so the
+    // browser loads them from our own origin (CSP blocks a blob: worker, and
+    // fonts must not come from a CDN). Minified third-party build output.
+    "public/pdfjs/**",
   ]),
 ]);
 
