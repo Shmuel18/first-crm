@@ -7,6 +7,13 @@ import type { SyncRunState } from '../domain/drive-sync-types';
 import { importOrUpdateDriveFile } from './drive-sync-importer';
 
 vi.mock('@/lib/supabase/server', () => ({ createClient: vi.fn() }));
+// The AI classification hook pulls the server-only/admin-client import chain
+// the vitest node env can't load (same pattern as create-lead.test.ts). The
+// importer only fire-and-forgets it via after(); stub both.
+vi.mock('@/features/documents/services/ai-classification.service', () => ({
+  classifyDocumentInBackground: vi.fn(),
+}));
+vi.mock('next/server', () => ({ after: vi.fn() }));
 
 const CASE_ID = '10000000-0000-4000-8000-000000000001';
 
