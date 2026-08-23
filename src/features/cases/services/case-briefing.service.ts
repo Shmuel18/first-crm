@@ -104,6 +104,109 @@ function describeEvent(e: ActivityEvent): string {
   }
 }
 
+/**
+ * Rich, RLS-safe fact sheet for free-text case Q&A (ai-v2-spec.md §5 — case
+ * questions). Everything the advisor might ask about ONE case: status, target
+ * date, each borrower's role + contact + children + birth date, banks, missing
+ * docs, open tasks, recent activity. Runs under the CALLER's client, so a case
+ * they can't see returns null. Financial figures (fees, expected income) are
+ * deliberately EXCLUDED — the assistant answers operational facts, not money.
+ * Returns a Hebrew text block the model answers FROM (never invents).
+ */
+export async function assembleCaseFactSheet(caseId: string): Promise<{ label: string; sheet: string } | null> {
+  const supabase = await createClient();
+  const branded = asCaseId(caseId);
+
+  const { data: caseRow } = await supabase
+    .from('cases')
+    .select('id, case_number, target_date, insurance_agent_name, referrer_name, status:case_statuses(name_he)')
+    .eq('id', caseId)
+    .is('deleted_at', null)
+    .maybeSingle();
+  if (!caseRow) return null;
+
+  const [{ data: caseBorrowers }, { data: caseBanks }, documents, tasks, activity] =
+    await Promise.all([
+      supabase
+        .from('case_borrowers')
+        .select(
+          'is_primary, role_in_case, borrower:borrowers(first_name, last_name, email, phone, landline_phone, children_count, birth_date, address, national_id)',
+        )
+        .eq('case_id', caseId),
+      supabase
+        .from('case_banks')
+        .select('is_primary, bank:banks(name_he)')
+        .eq('case_id', caseId)
+        .is('deleted_at', null),
+      listDocumentsForCase(branded),
+      listTasksForCase(branded),
+      listCaseActivity(branded),
+    ]);
+
+  const checklist = await getCaseDocumentChecklist(branded, documents);
+  const status = caseRow.status as unknown as { name_he: string } | null;
+  const label = String(caseRow.case_number ?? caseId);
+
+  const borrowerLines = (caseBorrowers ?? []).map((row) => {
+    const b = row.borrower as unknown as {
+      first_name: string | null;
+      last_name: string | null;
+      email: string | null;
+      phone: string | null;
+      landline_phone: string | null;
+      children_count: number | null;
+      birth_date: string | null;
+      address: string | null;
+      national_id: string | null;
+    } | null;
+    if (!b) return '';
+    const name = [b.first_name, b.last_name].filter(Boolean).join(' ') || '(ללא שם)';
+    const parts = [
+      `${row.is_primary ? 'לווה ראשי' : 'לווה'}${row.role_in_case ? ` (${row.role_in_case})` : ''}: ${name}`,
+    ];
+    if (b.email) parts.push(`אימייל ${b.email}`);
+    if (b.phone) parts.push(`טלפון ${b.phone}`);
+    if (b.landline_phone) parts.push(`טלפון קווי ${b.landline_phone}`);
+    if (b.children_count !== null) parts.push(`ילדים: ${b.children_count}`);
+    if (b.birth_date) parts.push(`תאריך לידה ${b.birth_date}`);
+    if (b.address) parts.push(`כתובת ${b.address}`);
+    if (b.national_id) parts.push(`ת"ז ${b.national_id}`);
+    return `- ${parts.join(' · ')}`;
+  }).filter(Boolean);
+
+  const bankLines = (caseBanks ?? [])
+    .map((row) => (row.bank as unknown as { name_he: string } | null)?.name_he)
+    .filter((n): n is string => Boolean(n));
+
+  const missingDocs = checklist.filter((i) => i.status === 'missing').map((i) => i.nameHe);
+
+  const sheet = [
+    `תיק מספר ${label}`,
+    `סטטוס: ${status?.name_he ?? 'לא ידוע'}`,
+    `תאריך יעד: ${caseRow.target_date ?? 'לא נקבע'}`,
+    caseRow.insurance_agent_name ? `סוכן ביטוח: ${caseRow.insurance_agent_name}` : '',
+    caseRow.referrer_name ? `מפנה: ${caseRow.referrer_name}` : '',
+    '',
+    'לווים:',
+    ...(borrowerLines.length > 0 ? borrowerLines : ['- אין']),
+    '',
+    `בנקים: ${bankLines.length > 0 ? bankLines.join(', ') : 'אין'}`,
+    '',
+    'מסמכים חסרים:',
+    ...(missingDocs.length > 0 ? missingDocs.map((d) => `- ${d}`) : ['- אין']),
+    '',
+    'משימות פתוחות:',
+    ...(tasks.length > 0 ? tasks.slice(0, 10).map((t) => `- ${t.title}${t.due_date ? ` (עד ${t.due_date})` : ''}`) : ['- אין']),
+    '',
+    'פעילות אחרונה:',
+    ...(activity.events.slice(0, 8).map(describeEvent).filter((s) => s.length > 0)),
+  ]
+    .filter((line) => line !== null && line !== undefined)
+    .join('\n');
+
+  return { label, sheet };
+}
+
 /** The context block the route feeds the model. */
 export function formatBriefingContext(ctx: BriefingContext): string {
   return [

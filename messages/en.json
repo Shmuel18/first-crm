@@ -1151,11 +1151,7 @@
         "week": "This week",
         "none": "No target"
       },
-      "detail": {
-        "missingDocs": "Missing documents",
-        "nothingMissing": "No missing documents",
-        "openTasks": "Open tasks"
-      }
+      "openCase": "Open case {label}"
     },
     "density": {
       "label": "Row density",

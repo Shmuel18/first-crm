@@ -23,6 +23,11 @@ export function buildNlQuerySchema(statusKeys: readonly string[]) {
     target_date: z.enum(['overdue', 'week', 'none']).nullable(),
     /** Free-text client/case search (name, ID, case number, phone). */
     client_search: z.string().max(120).nullable(),
+    /** True when the question asks about the DETAILS of ONE specific case
+     *  ("what's missing in X's case", "the wife's email", "how many children",
+     *  "when is the target date") rather than counting/filtering the portfolio.
+     *  Routes to the free-text case answer instead of the filter result. */
+    is_case_question: z.boolean(),
     /** Set ONLY when the question cannot map to these filters — everything
      *  else null. One short Hebrew sentence for the user. */
     unmappable_reason: z.string().max(200).nullable(),

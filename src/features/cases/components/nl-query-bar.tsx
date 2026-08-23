@@ -22,6 +22,9 @@ export function NlQueryBar() {
   const [question, setQuestion] = useState('');
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<NlQueryResponse | null>(null);
+  // The case we last answered about — sent with the next question so follow-ups
+  // ("how many children?", "the wife's email?") resolve without re-naming it.
+  const [currentCase, setCurrentCase] = useState<{ id: string; label: string } | null>(null);
 
   const ask = async (): Promise<void> => {
     const q = question.trim();
@@ -31,13 +34,18 @@ export function NlQueryBar() {
       const res = await fetch('/api/ai/nl-query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: q }),
+        body: JSON.stringify({ question: q, currentCaseId: currentCase?.id ?? null }),
       });
       if (!res.ok) {
         toast.error(res.status === 429 ? t('rateLimited') : t('failed'));
         return;
       }
-      setResult((await res.json()) as NlQueryResponse);
+      const data = (await res.json()) as NlQueryResponse;
+      setResult(data);
+      // Remember the case in play for the next follow-up.
+      if (data.answerable && data.caseId) {
+        setCurrentCase({ id: data.caseId, label: data.caseLabel ?? '' });
+      }
     } catch {
       toast.error(t('failed'));
     } finally {
@@ -70,7 +78,32 @@ export function NlQueryBar() {
 
       {result && (
         <div className="mt-2 rounded-lg border border-brand-gold/30 bg-brand-gold-soft/50 p-3">
-          {result.answerable ? (
+          {result.answerable && result.answer ? (
+            // Free-text case answer ("what's missing", "the wife's email", ...).
+            <>
+              <div className="flex items-start justify-between gap-3">
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-900">
+                  {result.answer}
+                </p>
+                <button
+                  type="button"
+                  aria-label={t('clear')}
+                  onClick={() => setResult(null)}
+                  className="flex size-6 shrink-0 items-center justify-center rounded text-neutral-400 hover:bg-white hover:text-neutral-700"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
+              {result.caseId && (
+                <Link
+                  href={`/cases/${result.caseId}`}
+                  className="mt-2 inline-block text-xs font-medium text-brand-gold-text hover:underline"
+                >
+                  {t('openCase', { label: result.caseLabel ?? '' })}
+                </Link>
+              )}
+            </>
+          ) : result.answerable ? (
             <>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-display text-2xl font-bold tabular-nums text-neutral-950">
@@ -116,7 +149,7 @@ export function NlQueryBar() {
                   })}
                 </p>
               )}
-              {(result.intent === 'list' || result.detail) && result.rows.length > 0 && (
+              {result.intent === 'list' && result.rows.length > 0 && (
                 <ul className="mt-2 space-y-0.5">
                   {result.rows.map((row) => (
                     <li key={row.id}>
@@ -130,27 +163,6 @@ export function NlQueryBar() {
                     </li>
                   ))}
                 </ul>
-              )}
-              {/* Single-case detail: what's actually missing, from the DB. */}
-              {result.detail && (
-                <div className="mt-2 space-y-1.5 border-t border-brand-gold/20 pt-2 text-xs">
-                  <div>
-                    <span className="font-semibold text-neutral-700">{t('detail.missingDocs')}: </span>
-                    {result.detail.missingDocs.length > 0 ? (
-                      <span className="text-neutral-700">{result.detail.missingDocs.join(' · ')}</span>
-                    ) : (
-                      <span className="text-emerald-700">{t('detail.nothingMissing')}</span>
-                    )}
-                  </div>
-                  {result.detail.openTasks.length > 0 && (
-                    <div>
-                      <span className="font-semibold text-neutral-700">{t('detail.openTasks')}: </span>
-                      <span className="text-neutral-700">
-                        {result.detail.openTasks.map((task) => task.title).join(' · ')}
-                      </span>
-                    </div>
-                  )}
-                </div>
               )}
             </>
           ) : (

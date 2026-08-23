@@ -28,6 +28,7 @@ const base: NlQueryOutput = {
   bank_name: null,
   target_date: null,
   client_search: null,
+  is_case_question: false,
   unmappable_reason: null,
 };
 
