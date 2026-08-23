@@ -150,6 +150,23 @@
     "backHome": "Back to cases"
   },
   "composeEmail": {
+    "ai": {
+      "label": "Draft with AI",
+      "purposeLabel": "Message goal",
+      "purposes": {
+        "missing_docs": "Missing documents reminder",
+        "status_update": "Status update",
+        "custom": "Free instruction"
+      },
+      "instructionPlaceholder": "What should the message say?",
+      "instructionRequired": "Write a short instruction first",
+      "generate": "Draft",
+      "writing": "Writing…",
+      "useDraft": "Use draft",
+      "clear": "Clear",
+      "failed": "Drafting failed, try again",
+      "rateLimited": "Hourly drafting quota reached — try later"
+    },
     "hint": "You can edit the message before sending. It will be sent in the office's branded layout.",
     "subjectLabel": "Subject",
     "bodyLabel": "Message body",
@@ -1230,6 +1247,14 @@
       "submit": "Create lead"
     },
     "details": {
+      "aiTriage": {
+        "title": "AI triage",
+        "heat": {
+          "hot": "Hot",
+          "warm": "Warm",
+          "cold": "Cold"
+        }
+      },
       "view": "View details",
       "contact": "Contact",
       "phone": "Phone",
@@ -1587,6 +1612,16 @@
       "backToCase": "Back to case",
       "truncatedNote": "Showing the last 200 entries. Older entries are available via the full audit log export."
     },
+    "briefing": {
+      "title": "Pre-call briefing",
+      "thinking": "Reading the case…",
+      "regenerate": "Refresh",
+      "copy": "Copy",
+      "copied": "Copied",
+      "failed": "Briefing failed, try again",
+      "rateLimited": "Hourly briefing quota for this case reached — try later",
+      "disclaimer": "AI-generated from case data — review before relying on it"
+    },
     "actionBar": {
       "backTooltip": "Back",
       "caseLabel": "Case",
@@ -1594,6 +1629,7 @@
       "openedAtTooltip": "Case opening date",
       "withBorrowers": "(Borrowers to be added)",
       "actions": {
+        "briefing": "Pre-call briefing",
         "calculator": "Calculations (LTV, DTI)",
         "history": "History / Audit Log",
         "documents": "Documents",

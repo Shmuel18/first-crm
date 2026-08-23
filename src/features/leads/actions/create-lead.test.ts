@@ -8,6 +8,11 @@ import { LEAD_ACTION_INITIAL } from '../types';
 
 vi.mock('@/lib/auth/permissions', () => ({ userHasPermission: vi.fn() }));
 vi.mock('@/lib/supabase/server', () => ({ createClient: vi.fn() }));
+// The AI triage hook pulls the server-only/admin-client import chain the
+// vitest node env can't load (same reason rate-limit.test mocks the admin
+// client). The action only fire-and-forgets it via after(); stub both.
+vi.mock('../services/lead-triage.service', () => ({ triageLeadInBackground: vi.fn() }));
+vi.mock('next/server', () => ({ after: vi.fn() }));
 
 // Valid v4 UUIDs (Zod 4's z.uuid() checks the version/variant nibbles).
 const USER_ID = '11111111-1111-4111-8111-111111111111';

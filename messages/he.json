@@ -150,6 +150,23 @@
     "backHome": "חזרה לתיקים"
   },
   "composeEmail": {
+    "ai": {
+      "label": "נסח עם AI",
+      "purposeLabel": "מטרת ההודעה",
+      "purposes": {
+        "missing_docs": "תזכורת מסמכים חסרים",
+        "status_update": "עדכון סטטוס",
+        "custom": "הנחיה חופשית"
+      },
+      "instructionPlaceholder": "מה ההודעה צריכה להגיד?",
+      "instructionRequired": "כתוב הנחיה קצרה קודם",
+      "generate": "נסח",
+      "writing": "כותב…",
+      "useDraft": "השתמש בטיוטה",
+      "clear": "נקה",
+      "failed": "הניסוח נכשל, נסה שוב",
+      "rateLimited": "הגעת למכסת הניסוחים לשעה — נסה מאוחר יותר"
+    },
     "hint": "אפשר לערוך את ההודעה לפני השליחה. היא תישלח בעיצוב הממותג של המשרד.",
     "subjectLabel": "נושא",
     "bodyLabel": "תוכן ההודעה",
@@ -1230,6 +1247,14 @@
       "submit": "צור ליד"
     },
     "details": {
+      "aiTriage": {
+        "title": "טריאז' AI",
+        "heat": {
+          "hot": "לוהט",
+          "warm": "פושר",
+          "cold": "קר"
+        }
+      },
       "view": "צפייה בפרטים",
       "contact": "פרטי קשר",
       "phone": "טלפון",
@@ -1587,6 +1612,16 @@
       "backToCase": "חזרה לתיק",
       "truncatedNote": "מוצגות 200 הרשומות האחרונות. רשומות ישנות יותר זמינות באמצעות ייצוא יומן השינויים המלא."
     },
+    "briefing": {
+      "title": "תדריך לפני שיחה",
+      "thinking": "קורא את התיק…",
+      "regenerate": "רענן",
+      "copy": "העתק",
+      "copied": "הועתק",
+      "failed": "התדריך נכשל, נסה שוב",
+      "rateLimited": "הגעת למכסת התדריכים לתיק הזה — נסה בעוד שעה",
+      "disclaimer": "נוצר ע\"י AI מנתוני התיק — לבדיקתך"
+    },
     "actionBar": {
       "backTooltip": "חזרה",
       "caseLabel": "תיק",
@@ -1594,6 +1629,7 @@
       "openedAtTooltip": "תאריך פתיחת התיק",
       "withBorrowers": "(לווים יתווספו)",
       "actions": {
+        "briefing": "תדריך לפני שיחה",
         "calculator": "חישובים (LTV, יחס החזר)",
         "history": "היסטוריה / Audit Log",
         "documents": "מסמכים",

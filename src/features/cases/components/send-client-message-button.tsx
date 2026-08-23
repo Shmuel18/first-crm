@@ -38,6 +38,9 @@ type Props = {
   /** Active message templates, merge fields already substituted server-side.
    *  Empty array hides the templates section. */
   templates: ReadonlyArray<RenderedTemplate>;
+  /** Flag+permission-gated by the server action bar: shows the AI draft strip
+   *  inside the compose dialog (ai-v2-spec.md §4.2). */
+  aiDraftEnabled?: boolean;
 };
 
 type Draft = { subject: string; body: string };
@@ -49,7 +52,7 @@ type Draft = { subject: string; body: string };
  * wa.me composer prefilled (the advisor reviews + sends inside WhatsApp). Each
  * item is disabled when the matching contact field is empty.
  */
-export function SendClientMessageButton({ caseId, title, borrower, templates }: Props) {
+export function SendClientMessageButton({ caseId, title, borrower, templates, aiDraftEnabled }: Props) {
   const t = useTranslations('case.actionBar.sendMessageMenu');
   const [draft, setDraft] = useState<Draft | null>(null);
   const [attachments, setAttachments] = useState<ClientEmailAttachmentItem[]>([]);
@@ -186,6 +189,7 @@ export function SendClientMessageButton({ caseId, title, borrower, templates }: 
         initialBody={draft?.body ?? ''}
         pending={isPending || isUploading}
         onSend={send}
+        aiDraftCaseId={aiDraftEnabled ? caseId : undefined}
         extraFields={
           <EmailAttachmentsField
             caseId={caseId}

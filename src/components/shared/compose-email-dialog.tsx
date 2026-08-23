@@ -16,6 +16,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 
+import { AiDraftAssist } from './ai-draft-assist';
+
 type EmailLocale = 'he' | 'en';
 
 type Props = {
@@ -33,6 +35,10 @@ type Props = {
   /** Optional extra fields rendered below the body (e.g. an attachments picker).
    *  Attachment state lives in the parent, which reads it in its own onSend. */
   extraFields?: ReactNode;
+  /** When set, renders the "draft with AI" strip (ai-v2-spec.md §4.2): the
+   *  draft streams into a preview and lands in this editor for review —
+   *  the send path itself never changes. */
+  aiDraftCaseId?: string;
 };
 
 const escapeHtml = (s: string): string =>
@@ -68,6 +74,7 @@ export function ComposeEmailDialog({
   pending,
   onSend,
   extraFields,
+  aiDraftCaseId,
 }: Props) {
   const t = useTranslations('composeEmail');
   const uiLocale: EmailLocale = useLocale() === 'en' ? 'en' : 'he';
@@ -107,6 +114,13 @@ export function ComposeEmailDialog({
               maxLength={200}
             />
           </div>
+          {aiDraftCaseId && (
+            <AiDraftAssist
+              caseId={aiDraftCaseId}
+              language={locale}
+              onUseDraft={(text) => setBody(plainTextToHtml(text))}
+            />
+          )}
           <div>
             <div className="mb-1 flex items-center justify-between">
               <span className="text-xs font-medium text-neutral-600">{t('bodyLabel')}</span>

@@ -1,5 +1,7 @@
 'use server';
 
+import { after } from 'next/server';
+
 import { userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
@@ -8,6 +10,7 @@ import type { Json } from '@/types/database';
 
 import { buildLeadMetadata } from '../domain/lead-details';
 import { LeadFormSchema } from '../schemas/lead.schema';
+import { triageLeadInBackground } from '../services/lead-triage.service';
 import type { LeadActionState } from '../types';
 
 export async function createLeadAction(
@@ -75,6 +78,12 @@ export async function createLeadAction(
     console.error('[createLead] insert failed', { code: error?.code });
     return { ok: false, error: 'unknown', values };
   }
+
+  // AI lead triage (ai-v2-spec.md §4.3) — background, fail-soft, no-op when
+  // the lead_triage flag is off. The create never waits on the model.
+  after(async () => {
+    await triageLeadInBackground(data.id);
+  });
 
   return { ok: true, leadId: data.id };
 }
