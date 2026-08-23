@@ -22,7 +22,7 @@ type NavItem = {
   /** Gated on the view_collections permission (not the admin flag) so the
    *  manager can delegate גבייה to a non-admin "collections officer". */
   collectionsOnly?: boolean;
-  /** Gated on view_ai_inbox — the smart mail-triage queue (mig 233). */
+  /** Gated on view_ai_inbox — the smart mail-triage queue (mig 234). */
   inboxOnly?: boolean;
 };
 

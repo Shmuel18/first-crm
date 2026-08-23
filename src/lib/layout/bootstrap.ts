@@ -13,7 +13,7 @@ export type LayoutBootstrap = {
   /** Gates the collections (גבייה) nav item — view_collections, NOT is_admin,
    *  so an appointed "collections officer" sees it without being an admin. */
   canViewCollections: boolean;
-  /** Gates the smart-inbox nav item — view_ai_inbox (mig 233), same
+  /** Gates the smart-inbox nav item — view_ai_inbox (mig 234), same
    *  delegation logic: the manager can hand mail triage to the secretary. */
   canViewInbox: boolean;
   pendingTasks: number;

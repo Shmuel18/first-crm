@@ -1,68 +1,54 @@
 -- =============================================================================
--- Migration 235: scheduled AI digests ("סכם לי כל יום בשעה 8")
+-- Migration 237: free-form scheduled questions ("עדכן אותי כל יום ב-14 כמה...")
 -- =============================================================================
--- The assistant can now be asked for a recurring daily summary. This adds:
---   1. ai_digest_subscriptions — one row per user: enabled + Israel wall-clock
---      hour + last_sent_date (the hourly cron's idempotency claim).
---   2. notifications type CHECK re-stated with 'ai_digest' (bell delivery).
---   3. restore_backup_snapshot recreated with the new table (mirrors
---      BACKUP_TABLES — the allowlist test enforces lockstep).
+-- Generalizes the fixed daily digest (mig 236): a user can schedule ANY
+-- question the assistant's router can translate. The question is translated
+-- ONCE at subscription time — under the user's LIVE session — and the
+-- resolved, deterministic form (dashboard filter params / a target case id)
+-- is snapshotted here. The hourly cron re-executes only the deterministic
+-- form, scoped to the user's responsibility; no free-text ever runs headless
+-- and no RLS is re-implemented.
 --
--- The digest CONTENT is never stored here — it lives in the notification row's
--- data snapshot like every other bell kind. Feature-flagged via
--- office_settings.ai_features.modes.scheduled_digest (TS-owned key, no enum —
--- mig 231 note), fail-closed.
+-- Multiple rows per user (a digest at 8 AND an email count at 14). The fixed
+-- daily digest keeps its own table (235) — different lifecycle, one per user.
 -- =============================================================================
 
--- 1) Per-user digest subscription -------------------------------------------
-CREATE TABLE public.ai_digest_subscriptions (
-  user_id UUID PRIMARY KEY REFERENCES public.profiles(id) ON DELETE CASCADE,
-  enabled BOOLEAN NOT NULL DEFAULT true,
-  -- Israel wall-clock hour (the cron converts UTC → Asia/Jerusalem, DST-safe).
+CREATE TABLE public.ai_scheduled_questions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  -- The question as the user phrased it (shown back in the delivery).
+  question TEXT NOT NULL CHECK (char_length(question) BETWEEN 1 AND 300),
+  -- The router's resolved form, snapshotted at subscription time:
+  --   { kind: 'portfolio', params: {view,stage,advisor,bank,targetDate,q} }
+  --   { kind: 'case', caseId: uuid }
+  -- Executed deterministically at fire time; shape owned by the TS layer.
+  resolved JSONB NOT NULL,
+  -- Israel wall-clock hour (the cron converts UTC → Asia/Jerusalem).
   hour SMALLINT NOT NULL CHECK (hour BETWEEN 0 AND 23),
-  -- Israel calendar date of the last delivered digest — the hourly cron's
-  -- send-once-per-day claim (optimistic UPDATE ... WHERE guards races).
+  enabled BOOLEAN NOT NULL DEFAULT true,
+  -- Israel calendar date of the last delivery — the once-a-day claim.
   last_sent_date DATE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-ALTER TABLE public.ai_digest_subscriptions ENABLE ROW LEVEL SECURITY;
+CREATE INDEX idx_ai_scheduled_questions_user ON public.ai_scheduled_questions(user_id);
 
--- Self-manage: each user sees + edits only their own subscription. The cron
--- reads/writes through the service role (bypasses RLS).
-CREATE POLICY ai_digest_select_own ON public.ai_digest_subscriptions
+ALTER TABLE public.ai_scheduled_questions ENABLE ROW LEVEL SECURITY;
+
+-- Self-manage; the cron runs through the service role (bypasses RLS).
+CREATE POLICY ai_sched_q_select_own ON public.ai_scheduled_questions
   FOR SELECT USING (user_id = auth.uid() OR public.is_admin());
-CREATE POLICY ai_digest_insert_own ON public.ai_digest_subscriptions
+CREATE POLICY ai_sched_q_insert_own ON public.ai_scheduled_questions
   FOR INSERT WITH CHECK (user_id = auth.uid());
-CREATE POLICY ai_digest_update_own ON public.ai_digest_subscriptions
+CREATE POLICY ai_sched_q_update_own ON public.ai_scheduled_questions
   FOR UPDATE USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
-CREATE POLICY ai_digest_delete_own ON public.ai_digest_subscriptions
+CREATE POLICY ai_sched_q_delete_own ON public.ai_scheduled_questions
   FOR DELETE USING (user_id = auth.uid());
 
--- 2) Allow the new bell kind (re-state the FULL current set from mig 185). ---
-ALTER TABLE public.notifications
-  DROP CONSTRAINT IF EXISTS notifications_type_check;
-ALTER TABLE public.notifications
-  ADD CONSTRAINT notifications_type_check
-  CHECK (type IN (
-    'task_assigned',
-    'task_completed',
-    'case_status_overdue',
-    'task_reminder',
-    'case_mention',
-    'task_mention',
-    'backup_stale',
-    'erasure_stale',
-    'web_lead',
-    'task_comment',
-    'ai_digest'
-  ));
-
--- 3) Include ai_digest_subscriptions in disaster-recovery backup/restore -----
--- (mirrors BACKUP_TABLES). Recreates restore_backup_snapshot (mig 232 body)
--- with ai_digest_subscriptions added to v_tables after profiles (its only FK
--- target). Not soft-deleted → not in the deleted_at strip.
+-- Include in disaster-recovery backup/restore (mirrors BACKUP_TABLES).
+-- Recreates restore_backup_snapshot (mig 236 body) with ai_scheduled_questions
+-- added after ai_digest_subscriptions (FK target: profiles, restored earlier).
 CREATE OR REPLACE FUNCTION public.restore_backup_snapshot(p_snapshot jsonb)
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -73,7 +59,7 @@ DECLARE
   v_tables text[] := ARRAY[
     'roles', 'permissions', 'banks', 'case_bank_statuses', 'case_statuses', 'case_types',
     'document_categories', 'income_types', 'holidays', 'profiles', 'office_settings',
-    'role_permissions', 'user_permission_overrides', 'ai_digest_subscriptions', 'borrowers', 'cases', 'leads',
+    'role_permissions', 'user_permission_overrides', 'ai_digest_subscriptions', 'ai_scheduled_questions', 'borrowers', 'cases', 'leads',
     'case_borrowers', 'case_banks', 'case_financials', 'case_type_documents', 'documents',
     'case_checklist_items', 'document_classifications', 'case_expenses', 'case_fee_payments',
     'case_associated_advisors', 'case_comments', 'case_properties', 'case_payouts',
@@ -131,4 +117,4 @@ BEGIN
 END;
 $$;
 
-INSERT INTO public.schema_version (version) VALUES (235) ON CONFLICT DO NOTHING;
+INSERT INTO public.schema_version (version) VALUES (237) ON CONFLICT DO NOTHING;
