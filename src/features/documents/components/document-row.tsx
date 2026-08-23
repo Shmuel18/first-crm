@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import type { DocumentStatus, DocumentWithRelations } from '../types';
+import { AiFlagsBadge } from './ai-classification-chip';
 import { DocumentStatusChip } from './document-status-chip';
 
 type Props = {
@@ -56,6 +57,9 @@ export function DocumentRow({ doc, onClick }: Props) {
           <span className="text-sm font-semibold text-neutral-950 truncate">
             {doc.category?.name_he ?? doc.file_name}
           </span>
+          {/* AI validity flags (stale / name mismatch / ...) — quiet amber
+              triangle, details in the title tooltip (ai-v2-spec.md §2.6). */}
+          <AiFlagsBadge doc={doc} />
         </div>
         <div className="flex items-center gap-2 text-[11px] text-neutral-500 mt-0.5">
           <span className="inline-flex items-center gap-1">

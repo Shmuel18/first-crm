@@ -13,6 +13,7 @@ import { createClient } from '@/lib/supabase/server';
 import { sanitizeFilename } from '../domain/sanitize-filename';
 import { ALLOWED_MIME_TYPES } from '../schemas/document.schema';
 import { DocumentMetadataSchema } from '../schemas/document.schema';
+import { classifyDocumentInBackground } from '../services/ai-classification.service';
 import { resolveUploadContext, storagePathFor } from '../services/documents.service';
 
 const BUCKET = 'case-documents';
@@ -199,6 +200,15 @@ export async function finalizeUploadAction(
       }
     });
   }
+
+  // AI classification (ai-v2-spec.md §2) — background, AFTER the response, and
+  // fail-soft: with the flag off (or no API key) this is a no-op, and any
+  // failure leaves the document exactly as the advisor saved it. The advisor
+  // picked a category here, so this pass only VALIDATES (flags: stale / name
+  // mismatch / category disagreement) — it never overrides a human choice.
+  after(async () => {
+    await classifyDocumentInBackground(input.documentId);
+  });
 
   // No revalidatePath: the heavy /cases/[id]/documents + /cases/[id] re-render into
   // the POST response spun the upload button. The modal calls router.refresh() after

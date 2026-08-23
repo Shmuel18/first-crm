@@ -2698,6 +2698,20 @@
       "subtitle": "Files in the case's Drive folder without a category subfolder. Pick a category for each file.",
       "pickCategory": "Categorize..."
     },
+    "ai": {
+      "suggests": "Detected: {category} ({confidence}%)",
+      "accept": "Accept classification",
+      "reject": "Reject classification",
+      "resolveFailed": "Saving the verdict failed, try again",
+      "flags": {
+        "stale": "Document is outdated",
+        "name_mismatch": "Name doesn't match a borrower",
+        "unreadable": "Hard to read",
+        "missing_pages": "Pages appear missing",
+        "warning_notes": "Warning notes on the deed",
+        "category_mismatch": "Category may be wrong"
+      }
+    },
     "folders": {
       "identity": {
         "title": "Identity & contact",

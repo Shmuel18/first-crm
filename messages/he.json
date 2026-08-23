@@ -2698,6 +2698,20 @@
       "subtitle": "קבצים בתיקיית התיק ב-Drive ללא תת-תיקיית קטגוריה. בחר קטגוריה לכל קובץ.",
       "pickCategory": "סווג ל..."
     },
+    "ai": {
+      "suggests": "זוהה: {category} ({confidence}%)",
+      "accept": "אשר סיווג",
+      "reject": "דחה סיווג",
+      "resolveFailed": "שמירת ההחלטה נכשלה, נסה שוב",
+      "flags": {
+        "stale": "מסמך לא עדכני",
+        "name_mismatch": "השם לא תואם ללווה",
+        "unreadable": "קשה לקריאה",
+        "missing_pages": "חסרים עמודים",
+        "warning_notes": "הערות אזהרה בנסח",
+        "category_mismatch": "ייתכן שהקטגוריה שגויה"
+      }
+    },
     "folders": {
       "identity": {
         "title": "זיהוי וקשר",

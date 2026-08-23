@@ -2819,6 +2819,102 @@ export type Database = {
         }
         Relationships: []
       }
+      document_classifications: {
+        Row: {
+          borrower_name_on_doc: string | null
+          case_id: string
+          confidence: number
+          created_at: string
+          decision: string
+          document_id: string
+          flags: Json
+          id: string
+          matched_borrower_id: string | null
+          model: string
+          period: string | null
+          reason: string | null
+          resolution: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          suggested_category_id: string | null
+          suggested_category_key: string | null
+        }
+        Insert: {
+          borrower_name_on_doc?: string | null
+          case_id: string
+          confidence: number
+          created_at?: string
+          decision: string
+          document_id: string
+          flags?: Json
+          id?: string
+          matched_borrower_id?: string | null
+          model: string
+          period?: string | null
+          reason?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          suggested_category_id?: string | null
+          suggested_category_key?: string | null
+        }
+        Update: {
+          borrower_name_on_doc?: string | null
+          case_id?: string
+          confidence?: number
+          created_at?: string
+          decision?: string
+          document_id?: string
+          flags?: Json
+          id?: string
+          matched_borrower_id?: string | null
+          model?: string
+          period?: string | null
+          reason?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          suggested_category_id?: string | null
+          suggested_category_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_classifications_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_classifications_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_classifications_matched_borrower_id_fkey"
+            columns: ["matched_borrower_id"]
+            isOneToOne: false
+            referencedRelation: "borrowers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_classifications_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_classifications_suggested_category_id_fkey"
+            columns: ["suggested_category_id"]
+            isOneToOne: false
+            referencedRelation: "document_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_drive_tombstones: {
         Row: {
           case_id: string

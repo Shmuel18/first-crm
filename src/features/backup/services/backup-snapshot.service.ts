@@ -35,6 +35,7 @@ const BACKUP_TABLES = [
   'checklist_templates',
   'documents',
   'case_checklist_items',
+  'document_classifications',
   'borrower_incomes',
   'borrower_obligations',
   'income_types',
