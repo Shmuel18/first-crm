@@ -1,12 +1,19 @@
 'use client';
 
-import { FileText, FileType2, Image as ImageIcon } from 'lucide-react';
+import { useState } from 'react';
+
+import { FileText, FileType2, Image as ImageIcon, Pencil } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { documentDisplayName } from '../domain/document-name';
+import { RenameDocumentDialog } from './rename-document-dialog';
 import type { DocumentWithRelations } from '../types';
 
 type Props = {
   doc: DocumentWithRelations;
+  caseId: string;
+  /** Renaming is an edit; hidden for view-only viewers. */
+  canRename: boolean;
   /** Supabase Storage signed URL for an inline thumbnail. Preferred over the
    *  Drive iframe when present — it works for every permitted user without a
    *  Google session. Resolved by useDocumentPreviews for image/PDF docs. */
@@ -31,7 +38,9 @@ function FileTypeIcon({ mime, className }: { mime: string | null; className?: st
  * The preview is non-interactive; a transparent overlay keeps the whole tile
  * clickable to open the full modal.
  */
-export function DocumentCard({ doc, previewUrl, onClick }: Props) {
+export function DocumentCard({ doc, caseId, canRename, previewUrl, onClick }: Props) {
+  const t = useTranslations('documents.rename');
+  const [renameOpen, setRenameOpen] = useState(false);
   // The file's own name, not its category: the office names each file
   // deliberately ("חוזה רכישה"), and a whole folder of cards reading the same
   // category name told them nothing apart.
@@ -87,6 +96,28 @@ export function DocumentCard({ doc, previewUrl, onClick }: Props) {
         aria-label={label}
         className="absolute inset-0 z-20 focus:outline-none"
       />
+      {/* Above the tile-wide click target (z-20) so the pencil doesn't just
+          open the preview. */}
+      {canRename && (
+        <button
+          type="button"
+          onClick={() => setRenameOpen(true)}
+          aria-label={t('action')}
+          title={t('action')}
+          className="absolute bottom-1.5 end-1.5 z-30 rounded-md bg-white/90 p-1 text-neutral-500 opacity-0 shadow-sm transition hover:text-brand-gold-text focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 group-hover:opacity-100"
+        >
+          <Pencil className="size-3.5" aria-hidden="true" />
+        </button>
+      )}
+      {renameOpen && (
+        <RenameDocumentDialog
+          open={renameOpen}
+          onOpenChange={setRenameOpen}
+          documentId={doc.id}
+          caseId={caseId}
+          fileName={doc.file_name}
+        />
+      )}
     </div>
   );
 }

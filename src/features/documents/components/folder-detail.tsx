@@ -34,10 +34,12 @@ type Props = {
   rootDriveFolder: DriveFolderNode | null;
   driveFolderTree: ReadonlyArray<DriveFolderNode>;
   documents: DocumentWithRelations[];
+  caseId: string;
   /** Checklist items belonging to this folder (already filtered by caller). */
   checklistItems: ReadonlyArray<DocumentChecklistItem>;
   locale: Locale;
-  /** Exact capability required by every upload affordance. */
+  /** Exact capability required by every upload affordance. Renaming a filed
+   *  document rides the same capability (both write to the case's files). */
   canUploadDocuments: boolean;
   onBack: () => void;
   onUpload?: (folder: DriveFolder) => void;
@@ -56,6 +58,7 @@ export function FolderDetail({
   rootDriveFolder,
   driveFolderTree,
   documents,
+  caseId,
   checklistItems,
   locale,
   canUploadDocuments,
@@ -255,6 +258,8 @@ export function FolderDetail({
                 <DocumentCard
                   key={doc.id}
                   doc={doc}
+                  caseId={caseId}
+                  canRename={canUploadDocuments}
                   previewUrl={previews.get(doc.id) ?? null}
                   onClick={onPreview}
                 />

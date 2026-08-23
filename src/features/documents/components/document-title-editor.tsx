@@ -11,6 +11,7 @@ import { callAction } from '@/lib/actions/call-action';
 
 import { renameDocumentAction } from '../actions/rename-document';
 import { documentDisplayName } from '../domain/document-name';
+import { renameErrorKey } from '../domain/rename-error';
 
 type Props = {
   documentId: string;
@@ -50,15 +51,7 @@ export function DocumentTitleEditor({
     startTransition(async () => {
       const res = await callAction(() => renameDocumentAction({ documentId, caseId, name: typed }));
       if (!res.ok) {
-        const key =
-          res.error === 'drive_failed'
-            ? 'errors.drive'
-            : res.error === 'unauthorized'
-              ? 'errors.unauthorized'
-              : res.error === 'validation'
-                ? 'errors.validation'
-                : 'errors.generic';
-        toast.error(t(key));
+        toast.error(t(renameErrorKey(res.error)));
         return;
       }
       toast.success(t('renamed'));
