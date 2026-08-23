@@ -40,6 +40,8 @@ const base: NlQueryOutput = {
   action_task_title: null,
   action_target_date: null,
   action_advisor_name: null,
+  action_digest_hour: null,
+  action_digest_cancel: false,
   unmappable_reason: null,
 };
 

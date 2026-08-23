@@ -22,6 +22,7 @@ const AiModesSchema = z
     message_drafting: AiModeSchema,
     lead_triage: AiModeSchema,
     nl_queries: AiModeSchema,
+    scheduled_digest: AiModeSchema,
   })
   .catch({
     doc_classification: 'off',
@@ -30,6 +31,7 @@ const AiModesSchema = z
     message_drafting: 'off',
     lead_triage: 'off',
     nl_queries: 'off',
+    scheduled_digest: 'off',
   });
 
 export const AiFeatureSettingsSchema = z
@@ -47,6 +49,7 @@ export const AiFeatureSettingsSchema = z
       message_drafting: 'off',
       lead_triage: 'off',
       nl_queries: 'off',
+      scheduled_digest: 'off',
     },
   });
 

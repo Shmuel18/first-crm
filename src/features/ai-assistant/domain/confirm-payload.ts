@@ -10,7 +10,8 @@ export type ConfirmPayload =
   | { kind: 'change_status'; caseId: string; statusId: string }
   | { kind: 'create_task'; caseId: string; title: string }
   | { kind: 'set_target_date'; caseId: string; targetDate: string }
-  | { kind: 'assign_advisor'; caseId: string; advisorId: string };
+  | { kind: 'assign_advisor'; caseId: string; advisorId: string }
+  | { kind: 'schedule_digest'; hour: number; cancel: boolean };
 
 export function buildConfirmPayload(a: ProposedAction): ConfirmPayload {
   switch (a.kind) {
@@ -22,5 +23,7 @@ export function buildConfirmPayload(a: ProposedAction): ConfirmPayload {
       return { kind: a.kind, caseId: a.caseId, targetDate: a.targetDate };
     case 'assign_advisor':
       return { kind: a.kind, caseId: a.caseId, advisorId: a.advisorId };
+    case 'schedule_digest':
+      return { kind: a.kind, hour: a.hour, cancel: a.cancel };
   }
 }

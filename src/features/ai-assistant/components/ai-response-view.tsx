@@ -146,7 +146,9 @@ export function AiResponseView({
                   onClick={onNavigate}
                   className="text-xs text-neutral-700 hover:text-brand-gold-text hover:underline"
                 >
-                  #{row.caseNumber} · {row.label || t('noName')}
+                  {/* Names only — the case number appears solely for a case
+                      with no named client yet (user's call). */}
+                  {row.label || `#${row.caseNumber}`}
                   {row.statusName ? ` · ${row.statusName}` : ''}
                 </Link>
               </li>

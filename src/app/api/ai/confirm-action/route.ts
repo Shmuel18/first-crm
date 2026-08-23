@@ -48,8 +48,44 @@ export async function POST(request: Request): Promise<Response> {
     title?: unknown;
     targetDate?: unknown;
     advisorId?: unknown;
+    hour?: unknown;
+    cancel?: unknown;
   } | null;
   const kind = body?.kind;
+
+  // ── schedule_digest: user-scoped (no case) — upsert the CALLER's own row.
+  // RLS allows only user_id = auth.uid(), so this can't touch anyone else.
+  if (kind === 'schedule_digest') {
+    if (body?.cancel === true) {
+      const { error } = await supabase
+        .from('ai_digest_subscriptions')
+        .update({ enabled: false, updated_at: new Date().toISOString() })
+        .eq('user_id', userRes.user.id);
+      if (error) {
+        console.error('[ai-confirm] digest cancel failed', error);
+        return NextResponse.json({ error: 'unknown' }, { status: 500 });
+      }
+      return NextResponse.json({ ok: true });
+    }
+    const hour = typeof body?.hour === 'number' && Number.isInteger(body.hour) ? body.hour : NaN;
+    if (hour < 0 || hour > 23 || Number.isNaN(hour)) {
+      return NextResponse.json({ error: 'validation' }, { status: 400 });
+    }
+    // last_sent_date reset re-arms today's delivery when the hour is ahead.
+    const { error } = await supabase.from('ai_digest_subscriptions').upsert({
+      user_id: userRes.user.id,
+      enabled: true,
+      hour,
+      last_sent_date: null,
+      updated_at: new Date().toISOString(),
+    });
+    if (error) {
+      console.error('[ai-confirm] digest subscribe failed', error);
+      return NextResponse.json({ error: 'unknown' }, { status: 500 });
+    }
+    return NextResponse.json({ ok: true });
+  }
+
   const caseId = typeof body?.caseId === 'string' ? body.caseId : '';
   if (!caseId) return NextResponse.json({ error: 'validation' }, { status: 400 });
 

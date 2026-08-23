@@ -18,6 +18,7 @@ export const AI_FEATURES = [
   'message_drafting',
   'lead_triage',
   'nl_queries',
+  'scheduled_digest',
 ] as const;
 
 export type AiFeature = (typeof AI_FEATURES)[number];

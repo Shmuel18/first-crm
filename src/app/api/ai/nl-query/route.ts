@@ -57,7 +57,9 @@ export type ProposedAction =
   | { kind: 'change_status'; caseId: string; caseLabel: string; statusId: string; summary: string }
   | { kind: 'create_task'; caseId: string; caseLabel: string; title: string; summary: string }
   | { kind: 'set_target_date'; caseId: string; caseLabel: string; targetDate: string; summary: string }
-  | { kind: 'assign_advisor'; caseId: string; caseLabel: string; advisorId: string; summary: string };
+  | { kind: 'assign_advisor'; caseId: string; caseLabel: string; advisorId: string; summary: string }
+  /** User-scoped (no case): subscribe to / cancel the scheduled daily digest. */
+  | { kind: 'schedule_digest'; hour: number; cancel: boolean; summary: string };
 
 /**
  * Free-language dashboard query (ai-v2-spec.md §5): the model translates the
@@ -131,6 +133,38 @@ export async function POST(request: Request): Promise<Response> {
   if (result.data.unmappable_reason) {
     const payload: NlQueryResponse = { answerable: false, reason: result.data.unmappable_reason };
     return NextResponse.json(payload);
+  }
+
+  // ── Scheduled digest (user-scoped, no case) ─────────────────────────────────
+  // "סכם לי כל יום ב-8" → propose the subscription; "בטל את הסיכום היומי" →
+  // propose the cancel. Confirmation upserts the caller's own row (RLS-gated).
+  if (result.data.action_kind === 'schedule_digest') {
+    if (resolveAiMode(settings, 'scheduled_digest') === 'off') {
+      return NextResponse.json(refusal('הסיכומים המתוזמנים כבויים כרגע במערכת.'));
+    }
+    const cancel = result.data.action_digest_cancel === true;
+    const hour = result.data.action_digest_hour ?? 8;
+    const hh = `${String(hour).padStart(2, '0')}:00`;
+    return NextResponse.json({
+      answerable: true,
+      intent: 'list',
+      count: 0,
+      url: '/cases',
+      chips: [],
+      unresolved: [],
+      rows: [],
+      answer: null,
+      caseId: null,
+      caseLabel: null,
+      proposedAction: cancel
+        ? { kind: 'schedule_digest', hour, cancel: true, summary: 'לבטל את הסיכום היומי המתוזמן?' }
+        : {
+            kind: 'schedule_digest',
+            hour,
+            cancel: false,
+            summary: `לקבוע סיכום יומי אוטומטי כל בוקר בשעה ${hh} (שעון ישראל)?`,
+          },
+    } satisfies NlQueryResponse);
   }
 
   const resolved = resolveNlQuery(result.data, lookups);
@@ -457,11 +491,14 @@ function buildSystemPrompt(lookups: {
     '- is_briefing_request: true אם מבקשים סיכום/תדריך על התיק כולו ("סכם", "תן סיכום", "תדריך", "מה המצב של התיק"). במקרה כזה גם is_case_question=true. לשאלה נקודתית (מייל, כמה ילדים, תאריך יעד) — false.',
     '',
     'פעולות (בקשה לבצע, לא לשאול):',
-    '- action_kind: change_status (שינוי סטטוס) / create_task (הוספת משימה) / set_target_date (קביעת תאריך יעד) / assign_advisor (שיוך יועץ); אחרת none.',
+    '- action_kind: change_status (שינוי סטטוס) / create_task (הוספת משימה) / set_target_date (קביעת תאריך יעד) / assign_advisor (שיוך יועץ) / schedule_digest (סיכום יומי מתוזמן: "סכם לי כל יום/בוקר בשעה X", "שלח לי סיכום יומי", וגם ביטול שלו); אחרת none.',
     '- action_status_key: עבור change_status — מפתח השלב היעד מהרשימה למעלה אם צוין שם שלב מפורש. לבקשה יחסית ("לשלב הבא", "קדם", "תקדם אותו", "השלב הבא") השתמש ב-__next__; ל"לשלב הקודם", "אחורה", "החזר שלב" השתמש ב-__prev__. אחרת __none__.',
     '- action_task_title: עבור create_task — כותרת המשימה בעברית (למשל "להתקשר ללקוח"); אחרת null.',
     '- action_target_date: עבור set_target_date — התאריך בפורמט YYYY-MM-DD (פענח "יום ראשון הבא", "עוד שבוע" וכו\' לתאריך מלא); אחרת null.',
     '- action_advisor_name: עבור assign_advisor — שם היועץ כפי שנכתב; אחרת null.',
+    '- action_digest_hour: עבור schedule_digest — השעה שביקשו (0-23, שעון ישראל; "בבוקר" בלי שעה = null); אחרת null.',
+    '- action_digest_cancel: true רק אם מבקשים לבטל/להפסיק את הסיכום היומי; אחרת false.',
+    '- schedule_digest הוא פעולה על המשתמש עצמו — לא צריך תיק, לא לשאול "על איזה תיק".',
     '- פעלי ציווי כמו "שנה", "עדכן", "קבע", "שייך", "הוסף", "צור", "קדם", "תקדם" = פעולה (action_kind מתאים), לא שאלה. במקרה כזה is_case_question=false. "עדכן/שנה/קדם את הסטטוס ... לשלב הבא" = change_status עם action_status_key=__next__.',
     '- פעולה תמיד מתייחסת לתיק ספציפי (בשם או בהקשר). זו בקשה לבצע — לא unmappable, וגם לא unmappable_reason.',
     '',

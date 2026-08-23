@@ -38,15 +38,17 @@ export function buildNlQuerySchema(statusKeys: readonly string[]) {
      *  (same as the pre-call briefing) instead of a one-fact answer. Implies
      *  is_case_question. */
     is_briefing_request: z.boolean(),
-    /** An ACTION the user is asking to perform on a case ("change status to
-     *  submitted", "add a task", "set target date", "assign to David").
-     *  'none' = a question, not an action. Always PROPOSED for confirm. */
+    /** An ACTION the user is asking to perform ("change status to submitted",
+     *  "add a task", "set target date", "assign to David", "send me a daily
+     *  summary at 8"). 'none' = a question, not an action. Always PROPOSED
+     *  for confirm. schedule_digest is user-scoped (no case). */
     action_kind: z.enum([
       'none',
       'change_status',
       'create_task',
       'set_target_date',
       'assign_advisor',
+      'schedule_digest',
     ]),
     /** For change_status: the target stage — a concrete status key, OR
      *  '__next__' / '__prev__' for a relative move ("advance to the next
@@ -59,6 +61,12 @@ export function buildNlQuerySchema(statusKeys: readonly string[]) {
     action_target_date: z.string().max(10).nullable(),
     /** For assign_advisor: the advisor's name as written (resolved in code). */
     action_advisor_name: z.string().max(80).nullable(),
+    /** For schedule_digest: the requested Israel wall-clock hour (0-23);
+     *  null when no hour was given (the code defaults to 8). */
+    action_digest_hour: z.number().int().min(0).max(23).nullable(),
+    /** For schedule_digest: true when the user asks to CANCEL the daily
+     *  summary ("בטל את הסיכום היומי"). */
+    action_digest_cancel: z.boolean(),
     /** Set ONLY when the question cannot map to these filters — everything
      *  else null. One short Hebrew sentence for the user. */
     unmappable_reason: z.string().max(200).nullable(),

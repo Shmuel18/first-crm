@@ -57,15 +57,19 @@ export async function assembleBriefingContext(caseId: string): Promise<BriefingC
   // PostgREST to-one embed typing gap.
   const status = caseRow.status as unknown as { name_he: string } | null;
 
+  const borrowerNames = (caseBorrowers ?? [])
+    .map((row) => row.borrower as unknown as { first_name: string | null; last_name: string | null } | null)
+    .filter((b): b is NonNullable<typeof b> => b !== null)
+    .map((b) => [b.first_name, b.last_name].filter(Boolean).join(' '))
+    .filter((name) => name.length > 0);
+
   return {
-    caseLabel: String(caseRow.case_number ?? caseId),
+    // Client name as the label (user's call: names, never case numbers);
+    // number only when the case has no named borrower yet.
+    caseLabel: borrowerNames[0] ?? `#${String(caseRow.case_number ?? caseId)}`,
     statusName: status?.name_he ?? null,
     targetDate: caseRow.target_date,
-    borrowers: (caseBorrowers ?? [])
-      .map((row) => row.borrower as unknown as { first_name: string | null; last_name: string | null } | null)
-      .filter((b): b is NonNullable<typeof b> => b !== null)
-      .map((b) => [b.first_name, b.last_name].filter(Boolean).join(' '))
-      .filter((name) => name.length > 0),
+    borrowers: borrowerNames,
     openTasks: tasks.slice(0, 8).map((t) => ({ title: t.title, due: t.due_date })),
     missingDocs: checklist
       .filter((item) => item.status === 'missing')
@@ -151,7 +155,17 @@ export async function assembleCaseFactSheet(caseId: string): Promise<{ label: st
 
   const checklist = await getCaseDocumentChecklist(branded, documents);
   const status = caseRow.status as unknown as { name_he: string } | null;
-  const label = String(caseRow.case_number ?? caseId);
+  // The label the assistant SHOWS is the client's name (user's call: names,
+  // never case numbers). Primary borrower first; number only when nameless.
+  const borrowerNames = (caseBorrowers ?? [])
+    .slice()
+    .sort((a, b) => Number(b.is_primary) - Number(a.is_primary))
+    .map((row) => {
+      const b = row.borrower as unknown as { first_name: string | null; last_name: string | null } | null;
+      return b ? [b.first_name, b.last_name].filter(Boolean).join(' ') : '';
+    })
+    .filter((n) => n.length > 0);
+  const label = borrowerNames[0] ?? `#${String(caseRow.case_number ?? caseId)}`;
 
   const borrowerLines = (caseBorrowers ?? []).map((row) => {
     const b = row.borrower as unknown as {
@@ -187,7 +201,10 @@ export async function assembleCaseFactSheet(caseId: string): Promise<{ label: st
   const missingDocs = checklist.filter((i) => i.status === 'missing').map((i) => i.nameHe);
 
   const sheet = [
-    `תיק מספר ${label}`,
+    // Name-first header; the number stays available as a plain data line so
+    // "מה מספר התיק?" is still answerable — it's just never the label.
+    `תיק של ${label}`,
+    `מספר תיק: ${String(caseRow.case_number ?? '')}`,
     `סטטוס: ${status?.name_he ?? 'לא ידוע'}`,
     `תאריך יעד: ${caseRow.target_date ?? 'לא נקבע'}`,
     caseRow.insurance_agent_name ? `סוכן ביטוח: ${caseRow.insurance_agent_name}` : '',
@@ -240,7 +257,7 @@ export const BRIEFING_SYSTEM_PROMPT = [
 /** The context block the route feeds the model. */
 export function formatBriefingContext(ctx: BriefingContext): string {
   return [
-    `תיק ${ctx.caseLabel} · סטטוס: ${ctx.statusName ?? 'לא ידוע'}${ctx.targetDate ? ` · תאריך יעד: ${ctx.targetDate}` : ''}`,
+    `תיק של ${ctx.caseLabel} · סטטוס: ${ctx.statusName ?? 'לא ידוע'}${ctx.targetDate ? ` · תאריך יעד: ${ctx.targetDate}` : ''}`,
     `לווים: ${ctx.borrowers.join(', ') || '—'}`,
     '',
     'מסמכים חסרים:',
