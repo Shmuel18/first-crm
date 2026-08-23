@@ -1,5 +1,5 @@
 -- =============================================================================
--- Migration 231: email_inbox — the smart-mail triage queue (Epic 2, ai-v2-spec §3)
+-- Migration 233: email_inbox — the smart-mail triage queue (Epic 2, ai-v2-spec §3)
 -- =============================================================================
 -- One row per email the intake cron saw in the office's MAIN inbox (product
 -- decision 2026-08-23: the engine reads EVERY incoming email; unclear context
@@ -113,4 +113,4 @@ CREATE POLICY email_inbox_update ON public.email_inbox
 
 -- No INSERT/DELETE policies: rows come from the service-role intake pipeline.
 
-INSERT INTO public.schema_version (version) VALUES (231) ON CONFLICT DO NOTHING;
+INSERT INTO public.schema_version (version) VALUES (233) ON CONFLICT DO NOTHING;
