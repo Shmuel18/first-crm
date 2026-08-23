@@ -9,6 +9,7 @@ import {
   type NlChip,
 } from '@/features/cases/domain/nl-query-resolve';
 import { buildNlQuerySchema } from '@/features/cases/schemas/nl-query.schema';
+import { assembleBriefingContext } from '@/features/cases/services/case-briefing.service';
 import { listAdvisorOptions } from '@/features/cases/services/case-lookups.service';
 import { listCases } from '@/features/cases/services/cases.service';
 import { runAiTask } from '@/lib/ai/client';
@@ -29,6 +30,14 @@ export type NlQueryResponse =
       chips: NlChip[];
       unresolved: Array<{ kind: string; value: string }>;
       rows: Array<{ id: string; caseNumber: string; label: string; statusName: string | null }>;
+      /** When the question resolves to ONE case, its per-case detail —
+       *  missing checklist docs + open tasks, computed from the DB (not the
+       *  model). Answers "what's missing in X's case" inline. */
+      detail?: {
+        caseId: string;
+        missingDocs: string[];
+        openTasks: Array<{ title: string; due: string | null }>;
+      } | null;
     }
   | { answerable: false; reason: string };
 
@@ -112,6 +121,11 @@ export async function POST(request: Request): Promise<Response> {
     resolved.params.q ?? '',
   );
 
+  // Single-case match → answer "what's missing in X's case" inline, from the
+  // DB (reuses the briefing context assembly; runs under the caller's RLS).
+  const single =
+    matched.length === 1 ? await assembleBriefingContext(matched[0]!.id) : null;
+
   const payload: NlQueryResponse = {
     answerable: true,
     intent: result.data.intent,
@@ -125,6 +139,9 @@ export async function POST(request: Request): Promise<Response> {
       label: getCaseClientLabel(c),
       statusName: c.status?.name_he ?? null,
     })),
+    detail: single
+      ? { caseId: matched[0]!.id, missingDocs: single.missingDocs, openTasks: single.openTasks }
+      : null,
   };
   return NextResponse.json(payload);
 }

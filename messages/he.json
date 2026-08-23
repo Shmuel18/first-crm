@@ -1150,6 +1150,11 @@
         "overdue": "עבר היעד",
         "week": "השבוע",
         "none": "ללא יעד"
+      },
+      "detail": {
+        "missingDocs": "מסמכים חסרים",
+        "nothingMissing": "אין מסמכים חסרים",
+        "openTasks": "משימות פתוחות"
       }
     },
     "density": {

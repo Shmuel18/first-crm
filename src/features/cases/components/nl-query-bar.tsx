@@ -116,7 +116,7 @@ export function NlQueryBar() {
                   })}
                 </p>
               )}
-              {result.intent === 'list' && result.rows.length > 0 && (
+              {(result.intent === 'list' || result.detail) && result.rows.length > 0 && (
                 <ul className="mt-2 space-y-0.5">
                   {result.rows.map((row) => (
                     <li key={row.id}>
@@ -130,6 +130,27 @@ export function NlQueryBar() {
                     </li>
                   ))}
                 </ul>
+              )}
+              {/* Single-case detail: what's actually missing, from the DB. */}
+              {result.detail && (
+                <div className="mt-2 space-y-1.5 border-t border-brand-gold/20 pt-2 text-xs">
+                  <div>
+                    <span className="font-semibold text-neutral-700">{t('detail.missingDocs')}: </span>
+                    {result.detail.missingDocs.length > 0 ? (
+                      <span className="text-neutral-700">{result.detail.missingDocs.join(' · ')}</span>
+                    ) : (
+                      <span className="text-emerald-700">{t('detail.nothingMissing')}</span>
+                    )}
+                  </div>
+                  {result.detail.openTasks.length > 0 && (
+                    <div>
+                      <span className="font-semibold text-neutral-700">{t('detail.openTasks')}: </span>
+                      <span className="text-neutral-700">
+                        {result.detail.openTasks.map((task) => task.title).join(' · ')}
+                      </span>
+                    </div>
+                  )}
+                </div>
               )}
             </>
           ) : (
