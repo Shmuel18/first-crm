@@ -9,6 +9,69 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_usage_log: {
+        Row: {
+          cache_read_tokens: number
+          cache_write_tokens: number
+          case_id: string | null
+          created_at: string
+          created_by: string | null
+          error_code: string | null
+          feature: string
+          id: number
+          input_tokens: number
+          latency_ms: number
+          model: string
+          ok: boolean
+          output_tokens: number
+        }
+        Insert: {
+          cache_read_tokens?: number
+          cache_write_tokens?: number
+          case_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_code?: string | null
+          feature: string
+          id?: never
+          input_tokens?: number
+          latency_ms?: number
+          model: string
+          ok: boolean
+          output_tokens?: number
+        }
+        Update: {
+          cache_read_tokens?: number
+          cache_write_tokens?: number
+          case_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_code?: string | null
+          feature?: string
+          id?: never
+          input_tokens?: number
+          latency_ms?: number
+          model?: string
+          ok?: boolean
+          output_tokens?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_usage_log_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_usage_log_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       approval_rulesets: {
         Row: {
           bank_id: string | null
@@ -3928,6 +3991,7 @@ export type Database = {
           address_city: string | null
           address_postal_code: string | null
           address_street: string | null
+          ai_features: Json
           audit_log_retention_days: number
           bank_account_bank: string | null
           bank_account_branch: string | null
@@ -3974,6 +4038,7 @@ export type Database = {
           address_city?: string | null
           address_postal_code?: string | null
           address_street?: string | null
+          ai_features?: Json
           audit_log_retention_days?: number
           bank_account_bank?: string | null
           bank_account_branch?: string | null
@@ -4020,6 +4085,7 @@ export type Database = {
           address_city?: string | null
           address_postal_code?: string | null
           address_street?: string | null
+          ai_features?: Json
           audit_log_retention_days?: number
           bank_account_bank?: string | null
           bank_account_branch?: string | null

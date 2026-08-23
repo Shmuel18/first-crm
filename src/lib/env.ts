@@ -37,6 +37,12 @@ export const env = createEnv({
     // dependent flows (task emails, team invite emails) fall back gracefully.
     RESEND_API_KEY: z.string().optional(),
     EMAIL_FROM: z.string().optional(),
+    // Anthropic API key for the AI features (ai-v2-spec.md §1.4/§1.5).
+    // OPTIONAL BY DESIGN: production runs without it until "connect day" —
+    // every AI call then returns { ok:false, error:'not_configured' } and the
+    // system behaves exactly as if the feature flags were off. Billed to the
+    // client's own Anthropic account, never the developer's subscription.
+    ANTHROPIC_API_KEY: z.string().min(20).optional(),
     // Secret for the nightly backup cron. OPTIONAL: when unset, the cron route
     // rejects every call, so the endpoint can't be triggered by anyone. When
     // set, require ≥32 chars so a stub value (`CRON_SECRET=test`) can't make
@@ -123,6 +129,7 @@ export const env = createEnv({
     GOOGLE_OAUTH_ALLOWED_DOMAIN: process.env.GOOGLE_OAUTH_ALLOWED_DOMAIN,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     EMAIL_FROM: process.env.EMAIL_FROM,
+    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
     CRON_SECRET: process.env.CRON_SECRET,
     INTEGRATION_ENCRYPTION_KEY: process.env.INTEGRATION_ENCRYPTION_KEY,
     BACKUP_ENCRYPTION_KEY: process.env.BACKUP_ENCRYPTION_KEY,
@@ -155,6 +162,15 @@ export function isGoogleOAuthConfigured(): boolean {
       env.GOOGLE_OAUTH_CLIENT_SECRET &&
       env.GOOGLE_OAUTH_REDIRECT_URI,
   );
+}
+
+/**
+ * Returns true if the Anthropic API key is set. When false, every AI feature
+ * degrades to "not configured" (settings UI shows it; runAiTask fails soft).
+ * Deliberately unset in production until AI "connect day" — see ai-v2-spec.md.
+ */
+export function isAiConfigured(): boolean {
+  return Boolean(env.ANTHROPIC_API_KEY);
 }
 
 /**
