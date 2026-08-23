@@ -14,10 +14,6 @@ type Props = {
   caseId: string;
   /** Renaming is an edit; hidden for view-only viewers. */
   canRename: boolean;
-  /** Supabase Storage signed URL for an inline thumbnail. Preferred over the
-   *  Drive iframe when present — it works for every permitted user without a
-   *  Google session. Resolved by useDocumentPreviews for image/PDF docs. */
-  previewUrl?: string | null;
   onClick: (doc: DocumentWithRelations) => void;
 };
 
@@ -38,7 +34,7 @@ function FileTypeIcon({ mime, className }: { mime: string | null; className?: st
  * The preview is non-interactive; a transparent overlay keeps the whole tile
  * clickable to open the full modal.
  */
-export function DocumentCard({ doc, caseId, canRename, previewUrl, onClick }: Props) {
+export function DocumentCard({ doc, caseId, canRename, onClick }: Props) {
   const t = useTranslations('documents.rename');
   const [renameOpen, setRenameOpen] = useState(false);
   // The file's own name, not its category: the office names each file
@@ -47,32 +43,28 @@ export function DocumentCard({ doc, caseId, canRename, previewUrl, onClick }: Pr
   const label = documentDisplayName(doc.file_name);
   const isImage = doc.mime_type?.startsWith('image/') ?? false;
   const isPdf = doc.mime_type === 'application/pdf';
-  const driveUrl = doc.drive_file_id
-    ? `https://drive.google.com/file/d/${doc.drive_file_id}/preview`
-    : null;
+  // Thumbnails come from OUR origin, for both sources of bytes. The signed
+  // Storage URL and the Drive viewer are both third-party requests, and both
+  // fail in the office: Safari blocks Drive's cookies outright, and the
+  // network filter eats raw file responses from other hosts — which is what
+  // turned a folder of documents into a grid of broken-image icons.
+  const thumbUrl =
+    isImage || isPdf ? `/api/documents/${encodeURIComponent(doc.id)}/download` : null;
 
   return (
     <div className="group relative overflow-hidden rounded-lg border border-neutral-200 bg-white transition hover:border-brand-gold-text hover:shadow-md focus-within:ring-2 focus-within:ring-brand-gold-text/50">
       <div className="relative aspect-[4/3] overflow-hidden border-b border-neutral-100 bg-neutral-50">
-        {previewUrl && isImage ? (
+        {thumbUrl && isImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={previewUrl}
+            src={thumbUrl}
             alt={label}
             loading="lazy"
             className="absolute inset-0 size-full object-cover"
           />
-        ) : previewUrl && isPdf ? (
+        ) : thumbUrl && isPdf ? (
           <iframe
-            src={previewUrl}
-            title={doc.file_name}
-            loading="lazy"
-            tabIndex={-1}
-            className="pointer-events-none absolute inset-0 size-full border-0"
-          />
-        ) : driveUrl ? (
-          <iframe
-            src={driveUrl}
+            src={thumbUrl}
             title={doc.file_name}
             loading="lazy"
             tabIndex={-1}

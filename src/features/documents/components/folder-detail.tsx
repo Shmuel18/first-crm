@@ -15,7 +15,6 @@ import { useTranslations } from 'next-intl';
 
 import type { Locale } from '@/lib/i18n/direction';
 
-import { useDocumentPreviews } from '../hooks/use-document-previews';
 import { driveFolderBreadcrumb } from '../domain/drive-folder-breadcrumb';
 import {
   descendantFolderIds,
@@ -126,7 +125,6 @@ export function FolderDetail({
   const iconTint = folder ? FOLDER_ICON_TINT[folder] : 'bg-slate-100 text-slate-700';
   const missing = checklistItems.filter((i) => i.status === 'missing');
   // Inline thumbnails for this folder's files — fetched once the folder opens.
-  const previews = useDocumentPreviews(directDocuments);
   const currentTitle = atRoot ? rootTitle : currentFolder.name;
 
   return (
@@ -260,7 +258,6 @@ export function FolderDetail({
                   doc={doc}
                   caseId={caseId}
                   canRename={canUploadDocuments}
-                  previewUrl={previews.get(doc.id) ?? null}
                   onClick={onPreview}
                 />
               ))}

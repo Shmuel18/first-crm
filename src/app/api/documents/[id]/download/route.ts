@@ -69,9 +69,26 @@ function bytesResponse(
       // Drive MIME metadata is attacker-controlled. These headers ensure a
       // direct navigation to this same-origin route cannot execute HTML/SVG.
       'X-Content-Type-Options': 'nosniff',
-      'Content-Security-Policy': "sandbox; default-src 'none'",
+      'Content-Security-Policy': framePolicyFor(mimeType),
     },
   });
+}
+
+/**
+ * Frame policy for the bytes we serve.
+ *
+ * The response is also what the in-app preview frames now (previously the
+ * preview embedded Drive's own viewer, which needs third-party cookies and so
+ * is dead on an iPhone). A bare `sandbox` blocks the browser's PDF viewer,
+ * which needs scripting, so PDFs get `allow-scripts` — in an opaque origin, so
+ * a document still can't touch our cookies or DOM. Everything else keeps the
+ * strictest form. Note the Content-Type is allowlisted below: HTML and SVG are
+ * never served as themselves, so no document here can run page script.
+ */
+function framePolicyFor(mimeType: string): string {
+  return mimeType === 'application/pdf'
+    ? "sandbox allow-scripts; default-src 'none'"
+    : "sandbox; default-src 'none'";
 }
 
 function safeInlineMimeType(mimeType: string | null): string {
@@ -186,7 +203,7 @@ export async function GET(_request: Request, { params }: Context): Promise<Respo
       // Drive MIME metadata is attacker-controlled. These headers ensure a
       // direct navigation to this same-origin route cannot execute HTML/SVG.
       'X-Content-Type-Options': 'nosniff',
-      'Content-Security-Policy': "sandbox; default-src 'none'",
+      'Content-Security-Policy': framePolicyFor(safeInlineMimeType(nativeExport?.mimeType ?? doc.mime_type)),
     });
     if (contentLength !== null && Number.isFinite(contentLength) && contentLength >= 0) {
       headers.set('Content-Length', String(contentLength));
