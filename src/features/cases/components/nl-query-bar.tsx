@@ -1,20 +1,22 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { Loader2, Search, Sparkles, X } from 'lucide-react';
+import { Loader2, Search, Sparkles } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+
+import { AiResponseView } from '@/features/ai-assistant/components/ai-response-view';
+import { buildConfirmPayload } from '@/features/ai-assistant/domain/confirm-payload';
 
 import type { NlQueryResponse } from '@/app/api/ai/nl-query/route';
 
 /**
- * "Ask the system" (ai-v2-spec.md §5): the model picks dashboard filters; the
- * number comes from the same pipeline as the table. Transparency is the
- * feature — the applied filters render as chips, and one click opens the
- * exact same result in the table (URL params → nuqs).
+ * "Ask the system" (ai-v2-spec.md §5): the model picks dashboard filters,
+ * answers a single-case question, or proposes an action to confirm. The
+ * response rendering is shared with the global assistant bubble via
+ * AiResponseView, so the branch logic lives in exactly one place.
  */
 export function NlQueryBar() {
   const t = useTranslations('dashboard.nlQuery');
@@ -25,26 +27,16 @@ export function NlQueryBar() {
   // The case we last answered about — sent with the next question so follow-ups
   // ("how many children?", "the wife's email?") resolve without re-naming it.
   const [currentCase, setCurrentCase] = useState<{ id: string; label: string } | null>(null);
-
   const [confirming, setConfirming] = useState(false);
 
   const confirmAction = async (): Promise<void> => {
     if (!result?.answerable || !result.proposedAction || confirming) return;
-    const a = result.proposedAction;
     setConfirming(true);
     try {
-      const payload =
-        a.kind === 'change_status'
-          ? { kind: a.kind, caseId: a.caseId, statusId: a.statusId }
-          : a.kind === 'create_task'
-            ? { kind: a.kind, caseId: a.caseId, title: a.title }
-            : a.kind === 'set_target_date'
-              ? { kind: a.kind, caseId: a.caseId, targetDate: a.targetDate }
-              : { kind: a.kind, caseId: a.caseId, advisorId: a.advisorId };
       const res = await fetch('/api/ai/confirm-action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(buildConfirmPayload(result.proposedAction)),
       });
       if (!res.ok) {
         toast.error(res.status === 403 ? t('actionUnauthorized') : t('actionFailed'));
@@ -105,152 +97,25 @@ export function NlQueryBar() {
           disabled={busy || question.trim().length === 0}
           className="inline-flex h-8 items-center gap-1.5 rounded-md bg-brand-black px-3 text-xs font-medium text-white disabled:opacity-50"
         >
-          {busy ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : <Search className="size-3.5" aria-hidden="true" />}
+          {busy ? (
+            <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+          ) : (
+            <Search className="size-3.5" aria-hidden="true" />
+          )}
           {t('ask')}
         </button>
       </div>
 
       {result && (
         <div className="mt-2 rounded-lg border border-brand-gold/30 bg-brand-gold-soft/50 p-3">
-          {result.answerable && result.proposedAction ? (
-            // Proposed action awaiting confirm — the AI framed it, the human commits.
-            <>
-              <div className="flex items-start justify-between gap-3">
-                <p className="text-sm font-medium leading-relaxed text-neutral-900">
-                  {result.proposedAction.summary}
-                </p>
-                <button
-                  type="button"
-                  aria-label={t('clear')}
-                  onClick={() => setResult(null)}
-                  className="flex size-6 shrink-0 items-center justify-center rounded text-neutral-400 hover:bg-white hover:text-neutral-700"
-                >
-                  <X className="size-3.5" />
-                </button>
-              </div>
-              <div className="mt-2 flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => void confirmAction()}
-                  disabled={confirming}
-                  className="inline-flex items-center gap-1.5 rounded-md bg-brand-gold px-3 py-1 text-xs font-semibold text-brand-black hover:bg-brand-gold-hover disabled:opacity-60"
-                >
-                  {confirming ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : null}
-                  {t('confirmAction')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setResult(null)}
-                  disabled={confirming}
-                  className="rounded-md border border-neutral-300 px-3 py-1 text-xs text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
-                >
-                  {t('cancelAction')}
-                </button>
-              </div>
-            </>
-          ) : result.answerable && result.answer ? (
-            // Free-text case answer ("what's missing", "the wife's email", ...).
-            <>
-              <div className="flex items-start justify-between gap-3">
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-900">
-                  {result.answer}
-                </p>
-                <button
-                  type="button"
-                  aria-label={t('clear')}
-                  onClick={() => setResult(null)}
-                  className="flex size-6 shrink-0 items-center justify-center rounded text-neutral-400 hover:bg-white hover:text-neutral-700"
-                >
-                  <X className="size-3.5" />
-                </button>
-              </div>
-              {result.caseId && (
-                <Link
-                  href={`/cases/${result.caseId}`}
-                  className="mt-2 inline-block text-xs font-medium text-brand-gold-text hover:underline"
-                >
-                  {t('openCase', { label: result.caseLabel ?? '' })}
-                </Link>
-              )}
-            </>
-          ) : result.answerable ? (
-            <>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="font-display text-2xl font-bold tabular-nums text-neutral-950">
-                  {result.count}
-                </span>
-                <span className="text-sm text-neutral-600">{t('matches')}</span>
-                {result.chips.map((chip, i) => (
-                  <span
-                    key={i}
-                    className="rounded-full border border-brand-gold/40 bg-white px-2 py-0.5 text-[11px] text-neutral-700"
-                  >
-                    {t(`chips.${chip.kind}`)}
-                    {': '}
-                    {chip.kind === 'targetDate'
-                      ? t(`targetDateValues.${chip.value}`)
-                      : chip.kind === 'view'
-                        ? t('archiveValue')
-                        : chip.value}
-                  </span>
-                ))}
-                <span className="ms-auto flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => router.push(result.url)}
-                    className="rounded-md bg-brand-gold px-2.5 py-1 text-xs font-semibold text-brand-black hover:bg-brand-gold-hover"
-                  >
-                    {t('showInTable')}
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={t('clear')}
-                    onClick={() => setResult(null)}
-                    className="flex size-6 items-center justify-center rounded text-neutral-400 hover:bg-white hover:text-neutral-700"
-                  >
-                    <X className="size-3.5" />
-                  </button>
-                </span>
-              </div>
-              {result.unresolved.length > 0 && (
-                <p className="mt-1 text-[11px] text-amber-700">
-                  {t('unresolved', {
-                    names: result.unresolved.map((u) => u.value).join(', '),
-                  })}
-                </p>
-              )}
-              {result.intent === 'list' && result.rows.length > 0 && (
-                <ul className="mt-2 space-y-0.5">
-                  {result.rows.map((row) => (
-                    <li key={row.id}>
-                      <Link
-                        href={`/cases/${row.id}`}
-                        className="text-xs text-neutral-700 hover:text-brand-gold-text hover:underline"
-                      >
-                        #{row.caseNumber} · {row.label || t('noName')}
-                        {row.statusName ? ` · ${row.statusName}` : ''}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </>
-          ) : (
-            <div className="flex items-start justify-between gap-3">
-              <p className="text-sm text-neutral-700">
-                {result.reason}
-                <span className="block text-[11px] text-neutral-500">{t('tryExamples')}</span>
-              </p>
-              <button
-                type="button"
-                aria-label={t('clear')}
-                onClick={() => setResult(null)}
-                className="flex size-6 shrink-0 items-center justify-center rounded text-neutral-400 hover:bg-white hover:text-neutral-700"
-              >
-                <X className="size-3.5" />
-              </button>
-            </div>
-          )}
+          <AiResponseView
+            response={result}
+            confirming={confirming}
+            onConfirm={
+              result.answerable && result.proposedAction ? () => void confirmAction() : undefined
+            }
+            onDismiss={() => setResult(null)}
+          />
         </div>
       )}
     </div>

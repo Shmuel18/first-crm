@@ -9,6 +9,7 @@ import { RouteFocus } from '@/components/layout/route-focus';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Topbar } from '@/components/layout/topbar';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { AiAssistantGate } from '@/features/ai-assistant';
 import { InstallBanner } from '@/features/pwa/components/install-banner';
 import { TaskBadgeAppSync } from '@/features/tasks/components/task-badge-app-sync';
 import { TaskBadgeProvider } from '@/features/tasks/components/task-badge-provider';
@@ -93,6 +94,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           blocks the shell. Shows at most once a day (capped client-side). */}
       <Suspense fallback={null}>
         <TaskNudge />
+      </Suspense>
+      {/* Global AI assistant — self-gates on permission + AI flags, streams
+          its own checks under Suspense so it never delays the shell. */}
+      <Suspense fallback={null}>
+        <AiAssistantGate />
       </Suspense>
       </div>
       </TaskBadgeProvider>

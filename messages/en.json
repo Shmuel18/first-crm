@@ -1,4 +1,19 @@
 {
+  "assistant": {
+    "title": "Assistant",
+    "open": "Open assistant",
+    "close": "Close",
+    "clearChat": "Clear conversation",
+    "greeting": "Ask me anything about your cases — count, search, check details, or take an action like changing a status or adding a task.",
+    "placeholder": "Type a message…",
+    "thinking": "Thinking…",
+    "send": "Send",
+    "examples": {
+      "ex1": "How many stuck cases?",
+      "ex2": "Which cases are past their target date?",
+      "ex3": "Cases awaiting pre-approval"
+    }
+  },
   "intake": {
     "title": "Check my case",
     "subtitle": "Professional mortgage advice · we'll get back to you within 24 hours",
