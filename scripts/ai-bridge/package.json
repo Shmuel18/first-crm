@@ -1,0 +1,14 @@
+{
+  "name": "first-crm-ai-bridge",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Localhost bridge that runs the Claude Agent SDK on a Max subscription for the first-crm AI features (DEMO transport). See README.md.",
+  "bin": { "first-crm-ai-bridge": "server.mjs" },
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.1.0"
+  }
+}

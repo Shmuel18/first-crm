@@ -43,6 +43,15 @@ export const env = createEnv({
     // system behaves exactly as if the feature flags were off. Billed to the
     // client's own Anthropic account, never the developer's subscription.
     ANTHROPIC_API_KEY: z.string().min(20).optional(),
+    // AI-BRIDGE transport (DEMO ONLY): when set, the AI layer routes through a
+    // localhost bridge that runs the official Claude Agent SDK on a Max
+    // subscription instead of calling the API with a key. Lets the Perlstein
+    // demo run on the subscription (permitted — the Agent SDK draws from the
+    // subscription pool as of 2026-06). Takes PRECEDENCE over ANTHROPIC_API_KEY
+    // when present. Bridge is bound to 127.0.0.1; the shared token is a
+    // belt-and-suspenders guard, not the security boundary.
+    AI_BRIDGE_URL: z.string().url().optional(),
+    AI_BRIDGE_TOKEN: z.string().min(16).optional(),
     // Secret for the nightly backup cron. OPTIONAL: when unset, the cron route
     // rejects every call, so the endpoint can't be triggered by anyone. When
     // set, require ≥32 chars so a stub value (`CRON_SECRET=test`) can't make
@@ -130,6 +139,8 @@ export const env = createEnv({
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     EMAIL_FROM: process.env.EMAIL_FROM,
     ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+    AI_BRIDGE_URL: process.env.AI_BRIDGE_URL,
+    AI_BRIDGE_TOKEN: process.env.AI_BRIDGE_TOKEN,
     CRON_SECRET: process.env.CRON_SECRET,
     INTEGRATION_ENCRYPTION_KEY: process.env.INTEGRATION_ENCRYPTION_KEY,
     BACKUP_ENCRYPTION_KEY: process.env.BACKUP_ENCRYPTION_KEY,
@@ -170,7 +181,13 @@ export function isGoogleOAuthConfigured(): boolean {
  * Deliberately unset in production until AI "connect day" — see ai-v2-spec.md.
  */
 export function isAiConfigured(): boolean {
-  return Boolean(env.ANTHROPIC_API_KEY);
+  return Boolean(env.ANTHROPIC_API_KEY) || Boolean(env.AI_BRIDGE_URL);
+}
+
+/** True when the AI layer should route through the subscription bridge rather
+ *  than the Anthropic API. Bridge wins when both are set (demo takes over). */
+export function isAiBridgeEnabled(): boolean {
+  return Boolean(env.AI_BRIDGE_URL);
 }
 
 /**

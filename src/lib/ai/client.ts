@@ -5,6 +5,7 @@ import type { z } from 'zod';
 
 import { env } from '@/lib/env';
 
+import { bridgeTask, stripJsonFence, withSchemaInstruction } from './bridge';
 import { toStructuredOutputSchema } from './json-schema';
 import { AI_MAX_TOKENS_DEFAULT, AI_MODELS } from './models';
 import { logAiUsage } from './usage-log';
@@ -105,6 +106,50 @@ export async function runAiTask<T>(input: RunAiTaskInput<T>): Promise<AiResult<T
     return { ok: false, error };
   };
 
+  const jsonSchema = toStructuredOutputSchema(input.schema);
+
+  // ── Bridge transport (demo, subscription-backed) ───────────────────────────
+  // No native Structured Outputs: fold the schema into the system prompt, parse
+  // + Zod-validate the text reply. Telemetry is recorded with the same shape as
+  // the API path (token counts unknown over the bridge → 0).
+  if (env.AI_BRIDGE_URL) {
+    const bridged = await bridgeTask({
+      system: withSchemaInstruction(input.system, jsonSchema),
+      messages: input.messages,
+      maxTokens: input.maxTokens ?? AI_MAX_TOKENS_DEFAULT,
+      model,
+    });
+    if (!bridged.ok) return fail(bridged.error);
+
+    let bridgedJson: unknown;
+    try {
+      bridgedJson = JSON.parse(stripJsonFence(bridged.text));
+    } catch {
+      return fail('invalid_output');
+    }
+    const bridgedParsed = input.schema.safeParse(bridgedJson);
+    if (!bridgedParsed.success) {
+      console.error(`[ai] ${input.feature} bridge output failed schema validation`, bridgedParsed.error.issues);
+      return fail('invalid_output');
+    }
+    const bridgedUsage: AiUsage = {
+      inputTokens: 0,
+      outputTokens: 0,
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
+      latencyMs: Date.now() - started,
+    };
+    await logAiUsage({
+      feature: input.feature,
+      model,
+      ok: true,
+      latencyMs: bridgedUsage.latencyMs,
+      caseId: input.caseId,
+      createdBy: input.createdBy,
+    });
+    return { ok: true, data: bridgedParsed.data, usage: bridgedUsage };
+  }
+
   if (!env.ANTHROPIC_API_KEY) return fail('not_configured');
 
   let response: Anthropic.Message;
@@ -123,7 +168,7 @@ export async function runAiTask<T>(input: RunAiTaskInput<T>): Promise<AiResult<T
       output_config: {
         format: {
           type: 'json_schema',
-          schema: toStructuredOutputSchema(input.schema),
+          schema: jsonSchema,
         },
       },
     });

@@ -4,6 +4,7 @@ import Anthropic from '@anthropic-ai/sdk';
 
 import { env } from '@/lib/env';
 
+import { bridgeStream } from './bridge';
 import { AI_MODELS } from './models';
 import { logAiUsage } from './usage-log';
 
@@ -38,11 +39,45 @@ function getSdk(apiKey: string): Anthropic {
 }
 
 export async function streamAiText(input: StreamAiTextInput): Promise<StreamAiTextResult> {
-  if (!env.ANTHROPIC_API_KEY) return { ok: false, error: 'not_configured' };
-
   const started = Date.now();
   const model = AI_MODELS[input.role ?? 'default'];
   const encoder = new TextEncoder();
+
+  // Bridge transport (demo, subscription-backed): proxy the bridge's text
+  // stream straight through. Usage tokens are unknown over the bridge; log a
+  // single ok row when the stream is handed off (the API path logs richer
+  // token detail on completion).
+  if (env.AI_BRIDGE_URL) {
+    const bridged = await bridgeStream({
+      system: input.system,
+      prompt: input.prompt,
+      maxTokens: input.maxTokens ?? 1500,
+      model,
+    });
+    if (!bridged.ok) {
+      void logAiUsage({
+        feature: input.feature,
+        model,
+        ok: false,
+        errorCode: bridged.error,
+        latencyMs: Date.now() - started,
+        caseId: input.caseId,
+        createdBy: input.createdBy,
+      });
+      return bridged;
+    }
+    void logAiUsage({
+      feature: input.feature,
+      model,
+      ok: true,
+      latencyMs: Date.now() - started,
+      caseId: input.caseId,
+      createdBy: input.createdBy,
+    });
+    return { ok: true, stream: bridged.stream };
+  }
+
+  if (!env.ANTHROPIC_API_KEY) return { ok: false, error: 'not_configured' };
 
   const messageStream = getSdk(env.ANTHROPIC_API_KEY).messages.stream({
     model,
