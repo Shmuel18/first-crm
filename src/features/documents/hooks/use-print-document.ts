@@ -28,10 +28,17 @@ type PrintState = {
   /** Print bytes handed over base64-wrapped — the path that survives a network
    *  filter which eats binary responses. */
   printBytes: (base64: string, mimeType: string) => void;
+  /** Report a failure the caller detected (e.g. every transport was blocked),
+   *  so the one error message lives in one place. */
+  markFailed: () => void;
 };
 
 /** Give the print dialog time to take the frame's contents before teardown. */
 const CLEANUP_DELAY_MS = 60_000;
+
+/** If the frame never loads (corrupt bytes, a type the viewer refuses), report
+ *  a failure instead of leaving the button spinning forever. */
+const LOAD_TIMEOUT_MS = 20_000;
 
 function imageShell(blobUrl: string): string {
   return `<!doctype html><html><head><meta charset="utf-8">
@@ -60,7 +67,26 @@ function printBlobInFrame(
   const frame = document.createElement('iframe');
   frame.setAttribute('aria-hidden', 'true');
   frame.style.cssText = 'position:fixed;right:-10000px;width:1px;height:1px;border:0';
+  let settled = false;
+  const loadWatchdog = window.setTimeout(() => {
+    if (settled) return;
+    settled = true;
+    done(true);
+    frame.remove();
+    revokables.forEach((u) => URL.revokeObjectURL(u));
+  }, LOAD_TIMEOUT_MS);
+  frame.onerror = () => {
+    if (settled) return;
+    settled = true;
+    window.clearTimeout(loadWatchdog);
+    done(true);
+    frame.remove();
+    revokables.forEach((u) => URL.revokeObjectURL(u));
+  };
   frame.onload = () => {
+    if (settled) return;
+    settled = true;
+    window.clearTimeout(loadWatchdog);
     let failed = false;
     try {
       frame.contentWindow?.focus();
@@ -123,5 +149,10 @@ export function usePrintDocument(): PrintState {
     [finish],
   );
 
-  return { printing, failed, printBlob: printFetched, printBytes };
+  const markFailed = useCallback(() => {
+    setPrinting(false);
+    setFailed(true);
+  }, []);
+
+  return { printing, failed, printBlob: printFetched, printBytes, markFailed };
 }

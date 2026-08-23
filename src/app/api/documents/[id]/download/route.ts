@@ -58,37 +58,24 @@ function bytesResponse(
   if (wantsJson) {
     return Response.json(
       { ok: true, base64: buf.toString('base64'), filename: fileName, mimeType },
-      { headers: { 'Cache-Control': 'private, no-store, max-age=0' } },
+      { headers: { 'Cache-Control': 'private, max-age=300, must-revalidate' } },
     );
   }
   return new Response(new Uint8Array(buf), {
     headers: {
       'Content-Type': mimeType,
       'Content-Length': String(buf.byteLength),
-      'Cache-Control': 'private, no-store, max-age=0',
-      // Drive MIME metadata is attacker-controlled. These headers ensure a
-      // direct navigation to this same-origin route cannot execute HTML/SVG.
+      // Private + short-lived: the folder grid renders one request per tile and
+      // re-renders on every navigation back, so without this the same bytes are
+      // pulled through the function again and again. The frame/CSP headers for
+      // this path come from next.config (a route handler cannot set them —
+      // config wins), so they are deliberately absent here.
+      'Cache-Control': 'private, max-age=300, must-revalidate',
+      // Drive MIME metadata is attacker-controlled. nosniff plus the
+      // Content-Type allowlist keep a document from being read as HTML/SVG.
       'X-Content-Type-Options': 'nosniff',
-      'Content-Security-Policy': framePolicyFor(mimeType),
     },
   });
-}
-
-/**
- * Frame policy for the bytes we serve.
- *
- * The response is also what the in-app preview frames now (previously the
- * preview embedded Drive's own viewer, which needs third-party cookies and so
- * is dead on an iPhone). A bare `sandbox` blocks the browser's PDF viewer,
- * which needs scripting, so PDFs get `allow-scripts` — in an opaque origin, so
- * a document still can't touch our cookies or DOM. Everything else keeps the
- * strictest form. Note the Content-Type is allowlisted below: HTML and SVG are
- * never served as themselves, so no document here can run page script.
- */
-function framePolicyFor(mimeType: string): string {
-  return mimeType === 'application/pdf'
-    ? "sandbox allow-scripts; default-src 'none'"
-    : "sandbox; default-src 'none'";
 }
 
 function safeInlineMimeType(mimeType: string | null): string {
@@ -199,11 +186,8 @@ export async function GET(_request: Request, { params }: Context): Promise<Respo
 
     const headers = new Headers({
       'Content-Type': safeInlineMimeType(nativeExport?.mimeType ?? doc.mime_type),
-      'Cache-Control': 'private, no-store, max-age=0',
-      // Drive MIME metadata is attacker-controlled. These headers ensure a
-      // direct navigation to this same-origin route cannot execute HTML/SVG.
+      'Cache-Control': 'private, max-age=300, must-revalidate',
       'X-Content-Type-Options': 'nosniff',
-      'Content-Security-Policy': framePolicyFor(safeInlineMimeType(nativeExport?.mimeType ?? doc.mime_type)),
     });
     if (contentLength !== null && Number.isFinite(contentLength) && contentLength >= 0) {
       headers.set('Content-Length', String(contentLength));

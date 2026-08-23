@@ -21,7 +21,7 @@ import { deleteDocumentAction } from '../actions/delete-document';
 import { getDocumentPreviewUrlAction } from '../actions/get-document-preview-url';
 import { isAttachable } from '../domain/attachable';
 import { documentDownloadName, isDocumentDownloadable } from '../domain/google-native-download';
-import { isDirectlyPrintable } from '../domain/printable';
+import { isInlineRenderable } from '../domain/inline-renderable';
 import { usePrintDocument } from '../hooks/use-print-document';
 import type { DocumentWithRelations } from '../types';
 
@@ -68,7 +68,7 @@ export function DocumentPreviewModal({
   const [fileName, setFileName] = useState(doc?.file_name ?? '');
   const [downloading, setDownloading] = useState(false);
   const [downloadFailed, setDownloadFailed] = useState(false);
-  const { printing, failed: printFailed, printBlob, printBytes } = usePrintDocument();
+  const { printing, failed: printFailed, printBlob, printBytes, markFailed } = usePrintDocument();
 
   useEffect(() => {
     // Parent uses `key={doc?.id ?? 'none'}` so each preview mounts fresh -
@@ -131,8 +131,13 @@ export function DocumentPreviewModal({
   // request: in the office it is slow or eaten by the content filter, which is
   // what made printing take several clicks to do anything. Office formats have
   // no browser renderer and still open in Drive, which prints them itself.
-  const renderable = isDirectlyPrintable(doc.mime_type);
-  const canPrintInApp = renderable && (Boolean(url) || Boolean(doc.drive_file_id));
+  // What the route will actually serve inline — not merely "is a PDF/image".
+  // An image type outside that allowlist comes back as octet-stream, which an
+  // <img>/<iframe> renders as a broken tile.
+  const renderable = isInlineRenderable(doc.mime_type);
+  // Print reads through the route, which resolves Storage or Drive by itself,
+  // so it no longer depends on the signed URL having arrived.
+  const canPrintInApp = renderable;
   const printFallbackUrl = doc.drive_file_url;
   const openInDrive = () => {
     if (printFallbackUrl) window.open(printFallbackUrl, '_blank', 'noopener,noreferrer');
@@ -159,13 +164,17 @@ export function DocumentPreviewModal({
         const res = await fetch(`${endpoint}?transport=json`, { cache: 'no-store' });
         const body = res.ok ? ((await res.json()) as { ok?: boolean; base64?: string; mimeType?: string }) : null;
         if (body?.ok && body.base64) {
-          printBytes(body.base64, body.mimeType ?? doc.mime_type ?? 'application/pdf');
+          // The document's own mime decides how the frame renders it; the
+          // envelope's is only a transport detail.
+          printBytes(body.base64, doc.mime_type ?? body.mimeType ?? 'application/pdf');
           return;
         }
       } catch (err) {
         console.error('[documentPrint] json transport failed', err);
       }
-      openInDrive();
+      // Nothing left to try: say so rather than looking like a dead button.
+      if (printFallbackUrl) openInDrive();
+      else markFailed();
     });
   };
 

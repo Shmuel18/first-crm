@@ -132,7 +132,10 @@ describe('GET /api/documents/[id]/download', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('Location')).toBeNull();
     expect(response.headers.get('Content-Disposition')).toBeNull();
-    expect(response.headers.get('Cache-Control')).toContain('no-store');
+    // Private + short-lived, not no-store: the folder grid re-requests the
+    // same tile on every render, and the browser must be allowed to reuse it.
+    expect(response.headers.get('Cache-Control')).toContain('private');
+    expect(response.headers.get('Cache-Control')).toContain('max-age=300');
     await expect(response.text()).resolves.toBe('storage-bytes');
     expect(storageFrom).toHaveBeenCalledWith('case-documents');
     expect(download).toHaveBeenCalledWith(`${DOCUMENT_ID}/document.pdf`);
@@ -253,7 +256,11 @@ describe('GET /api/documents/[id]/download', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('Content-Type')).toBe('application/octet-stream');
     expect(response.headers.get('X-Content-Type-Options')).toBe('nosniff');
-    expect(response.headers.get('Content-Security-Policy')).toBe("sandbox; default-src 'none'");
+    // The CSP for this path is set in next.config (a route handler's own
+    // security headers are discarded by the config entry), so the handler
+    // deliberately no longer emits one — nosniff plus the Content-Type
+    // allowlist above are what neutralize the payload here.
+    expect(response.headers.get('Content-Security-Policy')).toBeNull();
     expect(response.headers.get('Content-Disposition')).toBeNull();
   });
 

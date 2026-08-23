@@ -6,6 +6,7 @@ import { FileText, FileType2, Image as ImageIcon, Pencil } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { documentDisplayName } from '../domain/document-name';
+import { MAX_THUMBNAIL_BYTES, isInlineRenderable } from '../domain/inline-renderable';
 import { RenameDocumentDialog } from './rename-document-dialog';
 import type { DocumentWithRelations } from '../types';
 
@@ -25,12 +26,14 @@ function FileTypeIcon({ mime, className }: { mime: string | null; className?: st
 
 /**
  * Drive-style document tile with an inline preview so the file is recognizable
- * without opening it. Renderer precedence:
- *   1. Supabase signed URL (image → <img>, PDF → <iframe>) — the reliable path
- *      for uploaded docs; identical to what the preview modal shows.
- *   2. Google Drive `/preview` iframe — for files only mirrored to Drive
- *      (e.g. Office docs found by sync) with no local blob to sign.
- *   3. File-type icon — nothing to preview yet.
+ * without opening it. Two tiers only:
+ *   1. Our own /api/documents/[id]/download bytes — image → <img>, PDF →
+ *      <iframe> — for the types the route serves inline and files small enough
+ *      to be worth streaming for a tile.
+ *   2. File-type icon — everything else: Office formats (no browser renders
+ *      them), oversized files, and anything the route would hand back as
+ *      octet-stream. Office tiles used to come from a Drive iframe; that
+ *      viewer needs third-party cookies and is dead on iOS.
  * The preview is non-interactive; a transparent overlay keeps the whole tile
  * clickable to open the full modal.
  */
@@ -41,15 +44,25 @@ export function DocumentCard({ doc, caseId, canRename, onClick }: Props) {
   // deliberately ("חוזה רכישה"), and a whole folder of cards reading the same
   // category name told them nothing apart.
   const label = documentDisplayName(doc.file_name);
-  const isImage = doc.mime_type?.startsWith('image/') ?? false;
   const isPdf = doc.mime_type === 'application/pdf';
+  const isImage = !isPdf && isInlineRenderable(doc.mime_type);
   // Thumbnails come from OUR origin, for both sources of bytes. The signed
   // Storage URL and the Drive viewer are both third-party requests, and both
   // fail in the office: Safari blocks Drive's cookies outright, and the
   // network filter eats raw file responses from other hosts — which is what
   // turned a folder of documents into a grid of broken-image icons.
+  //
+  // Two limits keep that honest. Only types the route actually serves inline
+  // get a tile (anything else comes back as octet-stream and would render as a
+  // broken image), and a large file is not streamed through the server just to
+  // fill a 200px tile — it shows its file-type icon and still previews in full
+  // when opened. Office files lost their Drive-iframe tile with them: that
+  // iframe is unusable on iOS, which is the reason for this whole change.
+  const tooBigForTile = (doc.file_size ?? 0) > MAX_THUMBNAIL_BYTES;
   const thumbUrl =
-    isImage || isPdf ? `/api/documents/${encodeURIComponent(doc.id)}/download` : null;
+    (isImage || isPdf) && !tooBigForTile
+      ? `/api/documents/${encodeURIComponent(doc.id)}/download`
+      : null;
 
   return (
     <div className="group relative overflow-hidden rounded-lg border border-neutral-200 bg-white transition hover:border-brand-gold-text hover:shadow-md focus-within:ring-2 focus-within:ring-brand-gold-text/50">
