@@ -42,6 +42,7 @@ const base: NlQueryOutput = {
   action_advisor_name: null,
   action_digest_hour: null,
   action_digest_cancel: false,
+  is_email_count: false,
   unmappable_reason: null,
 };
 

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { filterCases, filterCasesByQuery } from '@/features/cases/domain/case-filters';
 import { getCaseClientLabel } from '@/features/cases/domain/case-derivations';
+import type { ScheduledResolved } from '@/features/ai-digest/schemas/scheduled-question.schema';
 import {
   adjacentStatus,
   buildDashboardUrl,
@@ -59,7 +60,19 @@ export type ProposedAction =
   | { kind: 'set_target_date'; caseId: string; caseLabel: string; targetDate: string; summary: string }
   | { kind: 'assign_advisor'; caseId: string; caseLabel: string; advisorId: string; summary: string }
   /** User-scoped (no case): subscribe to / cancel the scheduled daily digest. */
-  | { kind: 'schedule_digest'; hour: number; cancel: boolean; summary: string };
+  | { kind: 'schedule_digest'; hour: number; cancel: boolean; summary: string }
+  /** User-scoped: a free-form question re-delivered daily at a chosen hour.
+   *  `resolved` is the deterministic snapshot the cron re-executes — free
+   *  text never runs headless (tampering can't escalate: execution is scoped
+   *  to the user's responsibility at fire time, and re-validated by Zod). */
+  | {
+      kind: 'schedule_question';
+      question: string;
+      hour: number;
+      cancel: boolean;
+      resolved: ScheduledResolved;
+      summary: string;
+    };
 
 /**
  * Free-language dashboard query (ai-v2-spec.md §5): the model translates the
@@ -168,6 +181,55 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const resolved = resolveNlQuery(result.data, lookups);
+
+  // ── Free-form scheduled question (user-scoped) ──────────────────────────────
+  // "עדכן אותי כל יום ב-14 כמה תיקים תקועים" — the question is translated HERE,
+  // once, under the caller's live session; only the deterministic snapshot is
+  // stored and re-executed by the cron. Case-specific questions can't be
+  // scheduled yet (headless fact-sheets are a later step) — say so honestly.
+  if (result.data.action_kind === 'schedule_question') {
+    if (resolveAiMode(settings, 'scheduled_digest') === 'off') {
+      return NextResponse.json(refusal('העדכונים המתוזמנים כבויים כרגע במערכת.'));
+    }
+    if (result.data.action_digest_cancel === true) {
+      return NextResponse.json(scheduleQuestionPayload({
+        kind: 'schedule_question',
+        question,
+        hour: 0,
+        cancel: true,
+        resolved: { kind: 'email_count' },
+        summary: 'לבטל את כל העדכונים המתוזמנים שלך?',
+      }));
+    }
+    const hour = result.data.action_digest_hour ?? 8;
+    const hh = `${String(hour).padStart(2, '0')}:00`;
+    if (result.data.is_email_count) {
+      if (!(await userHasPermission('view_ai_inbox'))) {
+        return NextResponse.json(refusal('אין לך הרשאה לצפות בתיבת המיילים של המשרד.'));
+      }
+      return NextResponse.json(scheduleQuestionPayload({
+        kind: 'schedule_question',
+        question,
+        hour,
+        cancel: false,
+        resolved: { kind: 'email_count' },
+        summary: `לתזמן עדכון יומי בשעה ${hh}: כמה מיילים התקבלו בתיבת המשרד?`,
+      }));
+    }
+    if (result.data.is_case_question) {
+      return NextResponse.json(
+        refusal('תזמון של שאלה על תיק ספציפי עוד לא נתמך — שאלות ספירה/סינון אפשר לתזמן ("כמה תיקים תקועים", "מי עבר את תאריך היעד").'),
+      );
+    }
+    return NextResponse.json(scheduleQuestionPayload({
+      kind: 'schedule_question',
+      question,
+      hour,
+      cancel: false,
+      resolved: { kind: 'portfolio', params: resolved.params },
+      summary: `לתזמן עדכון יומי בשעה ${hh}: "${question}"?`,
+    }));
+  }
 
   // Execute with the dashboard's own pipeline — the count is the table's count.
   const cases = await listCases({
@@ -409,6 +471,23 @@ function actionPayload(
   };
 }
 
+/** A user-scoped proposed action (scheduled question) — no case context. */
+function scheduleQuestionPayload(action: ProposedAction): NlQueryResponse {
+  return {
+    answerable: true,
+    intent: 'list',
+    count: 0,
+    url: '/cases',
+    chips: [],
+    unresolved: [],
+    rows: [],
+    answer: null,
+    caseId: null,
+    caseLabel: null,
+    proposedAction: action,
+  };
+}
+
 /** A free-text single-case answer (briefing or fact-sheet), carrying the case
  *  as follow-up context. */
 function caseAnswerPayload(caseId: string, caseLabel: string, answer: string): NlQueryResponse {
@@ -491,14 +570,15 @@ function buildSystemPrompt(lookups: {
     '- is_briefing_request: true אם מבקשים סיכום/תדריך על התיק כולו ("סכם", "תן סיכום", "תדריך", "מה המצב של התיק"). במקרה כזה גם is_case_question=true. לשאלה נקודתית (מייל, כמה ילדים, תאריך יעד) — false.',
     '',
     'פעולות (בקשה לבצע, לא לשאול):',
-    '- action_kind: change_status (שינוי סטטוס) / create_task (הוספת משימה) / set_target_date (קביעת תאריך יעד) / assign_advisor (שיוך יועץ) / schedule_digest (סיכום יומי מתוזמן: "סכם לי כל יום/בוקר בשעה X", "שלח לי סיכום יומי", וגם ביטול שלו); אחרת none.',
+    '- action_kind: change_status (שינוי סטטוס) / create_task (הוספת משימה) / set_target_date (קביעת תאריך יעד) / assign_advisor (שיוך יועץ) / schedule_digest (סיכום יומי כללי: "סכם לי כל יום/בוקר בשעה X", וגם ביטולו) / schedule_question (עדכון יומי על שאלה מסוימת: "עדכן אותי כל יום ב-14 כמה תיקים תקועים", "שלח לי כל בוקר כמה מיילים התקבלו"; מלא גם את הפילטרים של השאלה עצמה); אחרת none.',
     '- action_status_key: עבור change_status — מפתח השלב היעד מהרשימה למעלה אם צוין שם שלב מפורש. לבקשה יחסית ("לשלב הבא", "קדם", "תקדם אותו", "השלב הבא") השתמש ב-__next__; ל"לשלב הקודם", "אחורה", "החזר שלב" השתמש ב-__prev__. אחרת __none__.',
     '- action_task_title: עבור create_task — כותרת המשימה בעברית (למשל "להתקשר ללקוח"); אחרת null.',
     '- action_target_date: עבור set_target_date — התאריך בפורמט YYYY-MM-DD (פענח "יום ראשון הבא", "עוד שבוע" וכו\' לתאריך מלא); אחרת null.',
     '- action_advisor_name: עבור assign_advisor — שם היועץ כפי שנכתב; אחרת null.',
-    '- action_digest_hour: עבור schedule_digest — השעה שביקשו (0-23, שעון ישראל; "בבוקר" בלי שעה = null); אחרת null.',
-    '- action_digest_cancel: true רק אם מבקשים לבטל/להפסיק את הסיכום היומי; אחרת false.',
-    '- schedule_digest הוא פעולה על המשתמש עצמו — לא צריך תיק, לא לשאול "על איזה תיק".',
+    '- action_digest_hour: עבור schedule_digest/schedule_question — השעה שביקשו (0-23, שעון ישראל; "בבוקר" בלי שעה = null, "2 בצהריים" = 14); אחרת null.',
+    '- action_digest_cancel: true רק אם מבקשים לבטל/להפסיק סיכום או עדכונים מתוזמנים; אחרת false.',
+    '- is_email_count: true אם השאלה (או השאלה המתוזמנת) היא כמה מיילים התקבלו במשרד; אחרת false.',
+    '- schedule_digest ו-schedule_question הן פעולות על המשתמש עצמו — לא צריך תיק, לא לשאול "על איזה תיק".',
     '- פעלי ציווי כמו "שנה", "עדכן", "קבע", "שייך", "הוסף", "צור", "קדם", "תקדם" = פעולה (action_kind מתאים), לא שאלה. במקרה כזה is_case_question=false. "עדכן/שנה/קדם את הסטטוס ... לשלב הבא" = change_status עם action_status_key=__next__.',
     '- פעולה תמיד מתייחסת לתיק ספציפי (בשם או בהקשר). זו בקשה לבצע — לא unmappable, וגם לא unmappable_reason.',
     '',

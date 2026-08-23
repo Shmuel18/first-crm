@@ -49,6 +49,7 @@ export function buildNlQuerySchema(statusKeys: readonly string[]) {
       'set_target_date',
       'assign_advisor',
       'schedule_digest',
+      'schedule_question',
     ]),
     /** For change_status: the target stage — a concrete status key, OR
      *  '__next__' / '__prev__' for a relative move ("advance to the next
@@ -65,8 +66,12 @@ export function buildNlQuerySchema(statusKeys: readonly string[]) {
      *  null when no hour was given (the code defaults to 8). */
     action_digest_hour: z.number().int().min(0).max(23).nullable(),
     /** For schedule_digest: true when the user asks to CANCEL the daily
-     *  summary ("בטל את הסיכום היומי"). */
+     *  summary ("בטל את הסיכום היומי"). For schedule_question: cancel ALL
+     *  the user's scheduled questions. */
     action_digest_cancel: z.boolean(),
+    /** True when the question asks how many EMAILS were received (the office
+     *  inbox) — a scheduled-question kind that isn't a dashboard filter. */
+    is_email_count: z.boolean(),
     /** Set ONLY when the question cannot map to these filters — everything
      *  else null. One short Hebrew sentence for the user. */
     unmappable_reason: z.string().max(200).nullable(),

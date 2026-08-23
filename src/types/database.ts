@@ -44,6 +44,50 @@ export type Database = {
           },
         ]
       }
+      ai_scheduled_questions: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          hour: number
+          id: string
+          last_sent_date: string | null
+          question: string
+          resolved: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          hour: number
+          id?: string
+          last_sent_date?: string | null
+          question: string
+          resolved: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          hour?: number
+          id?: string
+          last_sent_date?: string | null
+          question?: string
+          resolved?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_scheduled_questions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_usage_log: {
         Row: {
           cache_read_tokens: number

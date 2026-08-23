@@ -26,3 +26,23 @@ export function israelDateString(instant: Date): string {
     day: '2-digit',
   }).format(instant);
 }
+
+/**
+ * The UTC instant of Israel midnight for the given instant's Israel date —
+ * "received today" boundaries without hardcoding a UTC offset (DST-safe:
+ * derived by subtracting the Israel wall-clock time-of-day from the instant).
+ */
+export function israelStartOfDay(instant: Date): Date {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Jerusalem',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(instant);
+  const get = (type: string): number =>
+    Number.parseInt(parts.find((p) => p.type === type)?.value ?? '0', 10);
+  const sinceMidnightMs =
+    ((get('hour') * 60 + get('minute')) * 60 + get('second')) * 1000 + instant.getMilliseconds();
+  return new Date(instant.getTime() - sinceMidnightMs);
+}

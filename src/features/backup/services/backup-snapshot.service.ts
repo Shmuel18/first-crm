@@ -51,6 +51,7 @@ const BACKUP_TABLES = [
   'role_permissions',
   'user_permission_overrides',
   'ai_digest_subscriptions',
+  'ai_scheduled_questions',
   'profiles',
   'office_settings',
   'message_templates',

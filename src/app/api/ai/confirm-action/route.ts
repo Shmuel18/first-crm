@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { ScheduledResolvedSchema } from '@/features/ai-digest/schemas/scheduled-question.schema';
 import { quickUpdateCaseFieldAction } from '@/features/cases/actions/quick-update-case';
 import { createTaskAction } from '@/features/tasks/actions/create-task';
 import { TASK_ACTION_INITIAL } from '@/features/tasks/types';
@@ -50,8 +51,45 @@ export async function POST(request: Request): Promise<Response> {
     advisorId?: unknown;
     hour?: unknown;
     cancel?: unknown;
+    question?: unknown;
+    resolved?: unknown;
   } | null;
   const kind = body?.kind;
+
+  // ── schedule_question: free-form scheduled update (user-scoped, no case).
+  // The resolved snapshot is re-validated here (Zod) and inserted under the
+  // CALLER's session — RLS pins user_id to auth.uid(). Tampering can't
+  // escalate: fire-time execution is scoped to the user's responsibility.
+  if (kind === 'schedule_question') {
+    if (body?.cancel === true) {
+      const { error } = await supabase
+        .from('ai_scheduled_questions')
+        .update({ enabled: false, updated_at: new Date().toISOString() })
+        .eq('user_id', userRes.user.id);
+      if (error) {
+        console.error('[ai-confirm] scheduled-question cancel failed', error);
+        return NextResponse.json({ error: 'unknown' }, { status: 500 });
+      }
+      return NextResponse.json({ ok: true });
+    }
+    const hour = typeof body?.hour === 'number' && Number.isInteger(body.hour) ? body.hour : NaN;
+    const questionText = typeof body?.question === 'string' ? body.question.trim().slice(0, 300) : '';
+    const resolvedParse = ScheduledResolvedSchema.safeParse(body?.resolved);
+    if (hour < 0 || hour > 23 || Number.isNaN(hour) || !questionText || !resolvedParse.success) {
+      return NextResponse.json({ error: 'validation' }, { status: 400 });
+    }
+    const { error } = await supabase.from('ai_scheduled_questions').insert({
+      user_id: userRes.user.id,
+      question: questionText,
+      resolved: resolvedParse.data,
+      hour,
+    });
+    if (error) {
+      console.error('[ai-confirm] scheduled-question subscribe failed', error);
+      return NextResponse.json({ error: 'unknown' }, { status: 500 });
+    }
+    return NextResponse.json({ ok: true });
+  }
 
   // ── schedule_digest: user-scoped (no case) — upsert the CALLER's own row.
   // RLS allows only user_id = auth.uid(), so this can't touch anyone else.

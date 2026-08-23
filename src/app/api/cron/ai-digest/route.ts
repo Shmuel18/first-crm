@@ -3,6 +3,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 
 import { runAiDigests } from '@/features/ai-digest/services/digest.service';
+import { runScheduledQuestions } from '@/features/ai-digest/services/scheduled-questions.service';
 import { env } from '@/lib/env';
 
 export const maxDuration = 300;
@@ -24,8 +25,20 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   try {
-    const result = await runAiDigests();
-    return NextResponse.json({ ok: true, ...result });
+    // Same hour, one instant: the fixed daily digest + free-form scheduled
+    // questions. One failing sweep must not silence the other.
+    const [digests, questions] = await Promise.allSettled([
+      runAiDigests(),
+      runScheduledQuestions(),
+    ]);
+    if (digests.status === 'rejected' && questions.status === 'rejected') {
+      throw new Error(String(digests.reason));
+    }
+    return NextResponse.json({
+      ok: true,
+      digest: digests.status === 'fulfilled' ? digests.value : { error: true },
+      questions: questions.status === 'fulfilled' ? questions.value : { error: true },
+    });
   } catch (err) {
     console.error('[cron/ai-digest] failed', {
       message: err instanceof Error ? err.message : 'unknown',
