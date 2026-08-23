@@ -233,6 +233,7 @@
     "cases": "תיקים",
     "tasks": "משימות",
     "simulators": "סימולטורים",
+    "inbox": "דואר נכנס",
     "statistics": "סטטיסטיקות",
     "collections": "גבייה",
     "finance": "כספים",
@@ -246,6 +247,36 @@
     "sidebar": "סרגל צד",
     "skipToContent": "דלג לתוכן הראשי",
     "unreadTasks": "{count, plural, =1 {משימה אחת פתוחה} other {# משימות פתוחות}}"
+  },
+  "inbox": {
+    "eyebrow": "עוזר חכם",
+    "title": "דואר נכנס",
+    "subtitle": "כל מייל שנכנס למשרד מסווג אוטומטית. מה שלא ברור — מחכה כאן להחלטה שלך.",
+    "tabsLabel": "סינון דואר",
+    "tabs": {
+      "attention": "דורש טיפול",
+      "all": "הכל",
+      "handled": "טופל"
+    },
+    "empty": "אין פריטים להצגה — הכל נקי.",
+    "noSubject": "(ללא נושא)",
+    "openInGmail": "פתח ב-Gmail",
+    "caseLink": "תיק {number}",
+    "linkToCase": "שייך לתיק",
+    "caseNumberPlaceholder": "מס׳ תיק",
+    "linkConfirm": "שייך",
+    "caseNotFound": "לא נמצא תיק פעיל עם המספר הזה",
+    "acknowledge": "טופל",
+    "dismiss": "לא רלוונטי",
+    "categories": {
+      "client_documents": "מסמכי לקוח",
+      "client_message": "הודעת לקוח",
+      "probable_client": "כנראה לקוח",
+      "bank": "בנק",
+      "vendor_or_marketing": "ספקים ופרסום",
+      "internal": "פנימי",
+      "unclear": "לא ברור"
+    }
   },
   "collections": {
     "eyebrow": "כספים",

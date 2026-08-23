@@ -13,6 +13,9 @@ export type LayoutBootstrap = {
   /** Gates the collections (גבייה) nav item — view_collections, NOT is_admin,
    *  so an appointed "collections officer" sees it without being an admin. */
   canViewCollections: boolean;
+  /** Gates the smart-inbox nav item — view_ai_inbox (mig 231), same
+   *  delegation logic: the manager can hand mail triage to the secretary. */
+  canViewInbox: boolean;
   pendingTasks: number;
   criticalTasks: number;
   unreadNotifications: number;
@@ -43,6 +46,7 @@ const UNAUTHED: LayoutBootstrap = {
   isAdmin: false,
   canCreateCase: false,
   canViewCollections: false,
+  canViewInbox: false,
   pendingTasks: 0,
   criticalTasks: 0,
   unreadNotifications: 0,
@@ -81,9 +85,10 @@ export const getLayoutBootstrap = cache(async (): Promise<LayoutBootstrap> => {
   // in lockstep with the server guard so a non-permitted user never sees it.
   // Collections nav visibility rides the same per-permission check (not the
   // admin flag), so the manager can delegate גבייה to a non-admin.
-  const [canCreateCase, canViewCollections] = await Promise.all([
+  const [canCreateCase, canViewCollections, canViewInbox] = await Promise.all([
     userHasPermission('create_case'),
     userHasPermission('view_collections'),
+    userHasPermission('view_ai_inbox'),
   ]);
 
   const profile = envelope.profile as Record<string, unknown> | null;
@@ -97,6 +102,7 @@ export const getLayoutBootstrap = cache(async (): Promise<LayoutBootstrap> => {
     isAdmin: envelope.is_admin === true,
     canCreateCase,
     canViewCollections,
+    canViewInbox,
     pendingTasks: Number(envelope.pending_tasks ?? 0),
     criticalTasks: Number(envelope.critical_tasks ?? 0),
     unreadNotifications: Number(envelope.unread_notifications ?? 0),

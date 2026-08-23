@@ -3059,6 +3059,84 @@ export type Database = {
           },
         ]
       }
+      email_inbox: {
+        Row: {
+          attachments_count: number
+          case_id: string | null
+          category: string
+          confidence: number | null
+          created_at: string
+          from_email: string
+          from_name: string | null
+          gmail_message_id: string
+          gmail_thread_id: string | null
+          id: string
+          ingested_document_ids: Json
+          received_at: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          subject: string | null
+          summary_he: string | null
+          triage_mode: string
+        }
+        Insert: {
+          attachments_count?: number
+          case_id?: string | null
+          category: string
+          confidence?: number | null
+          created_at?: string
+          from_email: string
+          from_name?: string | null
+          gmail_message_id: string
+          gmail_thread_id?: string | null
+          id?: string
+          ingested_document_ids?: Json
+          received_at?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status: string
+          subject?: string | null
+          summary_he?: string | null
+          triage_mode: string
+        }
+        Update: {
+          attachments_count?: number
+          case_id?: string | null
+          category?: string
+          confidence?: number | null
+          created_at?: string
+          from_email?: string
+          from_name?: string | null
+          gmail_message_id?: string
+          gmail_thread_id?: string | null
+          id?: string
+          ingested_document_ids?: Json
+          received_at?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          subject?: string | null
+          summary_he?: string | null
+          triage_mode?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_inbox_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_inbox_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       erasure_orphan_log: {
         Row: {
           deleted_at: string | null

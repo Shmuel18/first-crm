@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { BarChart3, Calculator, CheckSquare, Clock, Coins, HandCoins, LayoutDashboard, Settings } from 'lucide-react';
+import { BarChart3, Calculator, CheckSquare, Clock, Coins, HandCoins, Inbox, LayoutDashboard, Settings } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useTaskBadge } from '@/features/tasks/components/task-badge-provider';
@@ -12,7 +12,7 @@ import { isNavItemActive } from './is-nav-item-active';
 
 type NavItem = {
   href: string;
-  labelKey: 'cases' | 'tasks' | 'simulators' | 'statistics' | 'maaser' | 'collections' | 'timeClock' | 'settings';
+  labelKey: 'cases' | 'tasks' | 'inbox' | 'simulators' | 'statistics' | 'maaser' | 'collections' | 'timeClock' | 'settings';
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
   criticalBadge?: number;
@@ -22,6 +22,8 @@ type NavItem = {
   /** Gated on the view_collections permission (not the admin flag) so the
    *  manager can delegate גבייה to a non-admin "collections officer". */
   collectionsOnly?: boolean;
+  /** Gated on view_ai_inbox — the smart mail-triage queue (mig 231). */
+  inboxOnly?: boolean;
 };
 
 // Team / Templates / Audit Log used to live here as top-level admin items.
@@ -31,6 +33,7 @@ type NavItem = {
 const BASE_TOP_ITEMS: readonly NavItem[] = [
   { href: '/cases', labelKey: 'cases', icon: LayoutDashboard },
   { href: '/tasks', labelKey: 'tasks', icon: CheckSquare },
+  { href: '/inbox', labelKey: 'inbox', icon: Inbox, inboxOnly: true },
   { href: '/simulators', labelKey: 'simulators', icon: Calculator },
   { href: '/statistics', labelKey: 'statistics', icon: BarChart3, adminOnly: true },
   { href: '/collections', labelKey: 'collections', icon: Coins, collectionsOnly: true },
@@ -46,9 +49,10 @@ type SidebarProps = {
   isManager?: boolean;
   canViewCollections?: boolean;
   canUseTimeClock?: boolean;
+  canViewInbox?: boolean;
 };
 
-export function Sidebar({ isManager, canViewCollections, canUseTimeClock }: SidebarProps) {
+export function Sidebar({ isManager, canViewCollections, canUseTimeClock, canViewInbox }: SidebarProps) {
   const pathname = usePathname();
   const t = useTranslations('nav');
   // Live counts (TaskBadgeProvider), NOT props: this rail lives in the layout,
@@ -60,7 +64,8 @@ export function Sidebar({ isManager, canViewCollections, canUseTimeClock }: Side
     (item) =>
       (!item.adminOnly || isManager) &&
       (!item.collectionsOnly || canViewCollections) &&
-      (!item.timeClockOnly || canUseTimeClock),
+      (!item.timeClockOnly || canUseTimeClock) &&
+      (!item.inboxOnly || canViewInbox),
   ).map((item) =>
     item.labelKey === 'tasks'
       ? { ...item, badge: tasksBadge, criticalBadge: criticalTasksBadge }

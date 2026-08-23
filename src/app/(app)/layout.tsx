@@ -57,11 +57,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           isManager={bootstrap.isAdmin}
           canViewCollections={bootstrap.canViewCollections}
           canUseTimeClock={canUseTimeClock}
+          canViewInbox={bootstrap.canViewInbox}
         />
         <BottomNav
           isManager={bootstrap.isAdmin}
           canViewCollections={bootstrap.canViewCollections}
           canUseTimeClock={canUseTimeClock}
+          canViewInbox={bootstrap.canViewInbox}
         />
       {/* The inner viewport owns scrolling. Sticky subheaders compensate for
           viewport padding so they pin flush under the fixed topbar. */}

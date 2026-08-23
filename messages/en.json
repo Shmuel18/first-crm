@@ -233,6 +233,7 @@
     "cases": "Cases",
     "tasks": "Tasks",
     "simulators": "Simulators",
+    "inbox": "Inbox",
     "statistics": "Statistics",
     "collections": "Collections",
     "finance": "Finances",
@@ -246,6 +247,36 @@
     "sidebar": "Sidebar",
     "skipToContent": "Skip to main content",
     "unreadTasks": "{count, plural, =1 {1 open task} other {# open tasks}}"
+  },
+  "inbox": {
+    "eyebrow": "Smart assistant",
+    "title": "Inbox",
+    "subtitle": "Every incoming office email is triaged automatically. Anything unclear waits here for your call.",
+    "tabsLabel": "Mail filter",
+    "tabs": {
+      "attention": "Needs attention",
+      "all": "All",
+      "handled": "Handled"
+    },
+    "empty": "Nothing to show — all clear.",
+    "noSubject": "(no subject)",
+    "openInGmail": "Open in Gmail",
+    "caseLink": "Case {number}",
+    "linkToCase": "Link to case",
+    "caseNumberPlaceholder": "Case #",
+    "linkConfirm": "Link",
+    "caseNotFound": "No active case with that number",
+    "acknowledge": "Handled",
+    "dismiss": "Not relevant",
+    "categories": {
+      "client_documents": "Client documents",
+      "client_message": "Client message",
+      "probable_client": "Probably a client",
+      "bank": "Bank",
+      "vendor_or_marketing": "Vendors & marketing",
+      "internal": "Internal",
+      "unclear": "Unclear"
+    }
   },
   "collections": {
     "eyebrow": "Finances",

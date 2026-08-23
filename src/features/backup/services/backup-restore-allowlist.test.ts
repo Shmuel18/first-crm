@@ -81,6 +81,7 @@ const EXCLUDED_FROM_BACKUP: Record<string, string> = {
   // ephemeral / logs / meta — regenerated, not durable business data
   audit_log: 'append-only audit log',
   ai_usage_log: 'AI cost/latency telemetry (mig 229) — no business data, no content',
+  email_inbox: 'AI mail-triage queue (mig 231) — re-derivable from Gmail, no bodies stored',
   audit_log_default: 'audit_log partition',
   notifications: 'ephemeral bell feed',
   client_email_log: 'email send log',
