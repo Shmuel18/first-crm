@@ -2872,7 +2872,8 @@
       "notesLabel": "Notes",
       "submit": "Upload",
       "submitting": "Uploading...",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "categoryPlaceholder": "— choose a document type —"
     },
     "previewModal": {
       "title": "Preview",

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FileQuestion } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { PdfPageCanvas } from './pdf-page-canvas';
@@ -35,6 +35,12 @@ export function PdfPageViewer({ src, fileName }: Props) {
           pageNumber={page}
           width={900}
           onPageCount={setPageCount}
+          fallback={
+            <div className="px-4 py-12 text-center text-neutral-500">
+              <FileQuestion className="mx-auto mb-3 size-10 text-neutral-300" aria-hidden="true" />
+              <p className="text-sm">{t('noPreview')}</p>
+            </div>
+          }
           className="min-h-[240px] w-full"
         />
       </div>

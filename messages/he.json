@@ -2872,7 +2872,8 @@
       "notesLabel": "הערות",
       "submit": "העלה",
       "submitting": "מעלה...",
-      "cancel": "ביטול"
+      "cancel": "ביטול",
+      "categoryPlaceholder": "— בחר סוג מסמך —"
     },
     "previewModal": {
       "title": "תצוגה מקדימה",

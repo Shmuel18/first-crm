@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 import { Loader2 } from 'lucide-react';
 
@@ -32,11 +32,14 @@ type Props = {
   className?: string;
   /** Reports the document's page count once known. */
   onPageCount?: (pages: number) => void;
+  /** Shown when rendering fails (worker blocked, corrupt file). Without it a
+   *  failure looked exactly like loading — a spinner that never ends. */
+  fallback?: ReactNode;
 };
 
 type RenderState = 'idle' | 'done' | 'failed';
 
-export function PdfPageCanvas({ src, pageNumber = 1, width, className, onPageCount }: Props) {
+export function PdfPageCanvas({ src, pageNumber = 1, width, className, onPageCount, fallback }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [state, setState] = useState<RenderState>('idle');
 
@@ -49,7 +52,10 @@ export function PdfPageCanvas({ src, pageNumber = 1, width, className, onPageCou
     void (async () => {
       try {
         const pdfjs = await import('pdfjs-dist');
-        pdfjs.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.mjs';
+        // Same file as the .mjs pdfjs-dist ships, copied with a .js name: the
+        // office network filter tolerates the .js the app already loads MBs of,
+        // and an .mjs fetch is the kind of odd request such filters eat.
+        pdfjs.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.js';
 
         const task = pdfjs.getDocument({
           url: src,
@@ -101,10 +107,13 @@ export function PdfPageCanvas({ src, pageNumber = 1, width, className, onPageCou
 
   return (
     <div className={className}>
-      {state !== 'done' && (
+      {state === 'idle' && (
         <div className="flex size-full items-center justify-center">
           <Loader2 className="size-5 animate-spin text-neutral-300" aria-hidden="true" />
         </div>
+      )}
+      {state === 'failed' && (
+        <div className="flex size-full items-center justify-center">{fallback ?? null}</div>
       )}
       <canvas
         ref={canvasRef}

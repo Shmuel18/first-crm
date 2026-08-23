@@ -80,6 +80,7 @@ export function DocumentCard({ doc, caseId, canRename, onClick }: Props) {
           <PdfPageCanvas
             src={thumbUrl}
             width={320}
+            fallback={<FileTypeIcon mime={doc.mime_type} className="size-10 text-neutral-300" />}
             className="pointer-events-none absolute inset-0 size-full overflow-hidden [&>canvas]:size-full [&>canvas]:object-cover"
           />
         ) : (

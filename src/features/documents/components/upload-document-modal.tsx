@@ -113,6 +113,14 @@ export function UploadDocumentModal({
 
     const formData = new FormData(form);
     const categoryId = String(formData.get('category_id') ?? '');
+    if (!categoryId) {
+      // The form is noValidate, so the empty "choose a type" option has to be
+      // rejected here. A silent default used to file everything under the
+      // FIRST category (תעודת זהות) — documents the office meant for שונות
+      // landed in זהות וקשר, in Drive too, and read as a filing crash.
+      setGenericError(tErr('categoryRequired'));
+      return;
+    }
     const borrowerIdRaw = String(formData.get('borrower_id') ?? '');
     const expiryRaw = String(formData.get('expiry_date') ?? '');
     const notesRaw = String(formData.get('notes') ?? '');
@@ -186,7 +194,10 @@ export function UploadDocumentModal({
     ? categories.filter((c) => c.drive_folder === defaultFolder)
     : categories;
 
-  const defaultCategoryId = filteredCategories[0]?.id ?? '';
+  // Opened from inside a folder → that folder's first category is what the
+  // user means. Opened globally → NO default: the wrong silent default files
+  // the document (and its Drive copy) under a category the user never chose.
+  const defaultCategoryId = defaultFolder ? (filteredCategories[0]?.id ?? '') : '';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -256,6 +267,7 @@ export function UploadDocumentModal({
 
           <FormField label={t('categoryLabel')} required>
             <NativeSelect name="category_id" defaultValue={defaultCategoryId} required>
+              {!defaultFolder && <option value="">{t('categoryPlaceholder')}</option>}
               {filteredCategories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name_he}
