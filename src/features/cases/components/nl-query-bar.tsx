@@ -26,6 +26,36 @@ export function NlQueryBar() {
   // ("how many children?", "the wife's email?") resolve without re-naming it.
   const [currentCase, setCurrentCase] = useState<{ id: string; label: string } | null>(null);
 
+  const [confirming, setConfirming] = useState(false);
+
+  const confirmAction = async (): Promise<void> => {
+    if (!result?.answerable || !result.proposedAction || confirming) return;
+    const a = result.proposedAction;
+    setConfirming(true);
+    try {
+      const payload =
+        a.kind === 'change_status'
+          ? { kind: a.kind, caseId: a.caseId, statusId: a.statusId }
+          : { kind: a.kind, caseId: a.caseId, title: a.title };
+      const res = await fetch('/api/ai/confirm-action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        toast.error(res.status === 403 ? t('actionUnauthorized') : t('actionFailed'));
+        return;
+      }
+      toast.success(t('actionDone'));
+      setResult(null);
+      router.refresh();
+    } catch {
+      toast.error(t('actionFailed'));
+    } finally {
+      setConfirming(false);
+    }
+  };
+
   const ask = async (): Promise<void> => {
     const q = question.trim();
     if (!q || busy) return;
@@ -78,7 +108,43 @@ export function NlQueryBar() {
 
       {result && (
         <div className="mt-2 rounded-lg border border-brand-gold/30 bg-brand-gold-soft/50 p-3">
-          {result.answerable && result.answer ? (
+          {result.answerable && result.proposedAction ? (
+            // Proposed action awaiting confirm — the AI framed it, the human commits.
+            <>
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-sm font-medium leading-relaxed text-neutral-900">
+                  {result.proposedAction.summary}
+                </p>
+                <button
+                  type="button"
+                  aria-label={t('clear')}
+                  onClick={() => setResult(null)}
+                  className="flex size-6 shrink-0 items-center justify-center rounded text-neutral-400 hover:bg-white hover:text-neutral-700"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
+              <div className="mt-2 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => void confirmAction()}
+                  disabled={confirming}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-brand-gold px-3 py-1 text-xs font-semibold text-brand-black hover:bg-brand-gold-hover disabled:opacity-60"
+                >
+                  {confirming ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : null}
+                  {t('confirmAction')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setResult(null)}
+                  disabled={confirming}
+                  className="rounded-md border border-neutral-300 px-3 py-1 text-xs text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
+                >
+                  {t('cancelAction')}
+                </button>
+              </div>
+            </>
+          ) : result.answerable && result.answer ? (
             // Free-text case answer ("what's missing", "the wife's email", ...).
             <>
               <div className="flex items-start justify-between gap-3">

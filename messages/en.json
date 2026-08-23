@@ -1151,7 +1151,12 @@
         "week": "This week",
         "none": "No target"
       },
-      "openCase": "Open case {label}"
+      "openCase": "Open case {label}",
+      "confirmAction": "Confirm",
+      "cancelAction": "Cancel",
+      "actionDone": "Done",
+      "actionFailed": "Action failed, try again",
+      "actionUnauthorized": "You don't have permission for this action"
     },
     "density": {
       "label": "Row density",

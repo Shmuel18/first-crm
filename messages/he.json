@@ -1151,7 +1151,12 @@
         "week": "השבוע",
         "none": "ללא יעד"
       },
-      "openCase": "פתח את תיק {label}"
+      "openCase": "פתח את תיק {label}",
+      "confirmAction": "אשר",
+      "cancelAction": "ביטול",
+      "actionDone": "בוצע",
+      "actionFailed": "הפעולה נכשלה, נסה שוב",
+      "actionUnauthorized": "אין לך הרשאה לפעולה זו"
     },
     "density": {
       "label": "צפיפות שורות",

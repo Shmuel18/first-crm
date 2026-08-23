@@ -29,6 +29,9 @@ const base: NlQueryOutput = {
   target_date: null,
   client_search: null,
   is_case_question: false,
+  action_kind: 'none',
+  action_status_key: null,
+  action_task_title: null,
   unmappable_reason: null,
 };
 

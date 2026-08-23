@@ -28,6 +28,15 @@ export function buildNlQuerySchema(statusKeys: readonly string[]) {
      *  "when is the target date") rather than counting/filtering the portfolio.
      *  Routes to the free-text case answer instead of the filter result. */
     is_case_question: z.boolean(),
+    /** An ACTION the user is asking to perform on a case ("change status to
+     *  submitted", "add a task to call the client"). 'none' = a question, not
+     *  an action. The action is PROPOSED for human confirm, never auto-run. */
+    action_kind: z.enum(['none', 'change_status', 'create_task']),
+    /** For change_status: the target stage key (one of the status keys), or
+     *  '__none__' when not a status action. */
+    action_status_key: z.enum(keys as [string, ...string[]]).nullable(),
+    /** For create_task: the task title, phrased in Hebrew. */
+    action_task_title: z.string().max(200).nullable(),
     /** Set ONLY when the question cannot map to these filters — everything
      *  else null. One short Hebrew sentence for the user. */
     unmappable_reason: z.string().max(200).nullable(),

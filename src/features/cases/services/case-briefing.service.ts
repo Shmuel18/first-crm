@@ -3,6 +3,7 @@ import 'server-only';
 import { listCaseActivity } from '@/features/case-activity/services/case-activity.service';
 import { getCaseDocumentChecklist } from '@/features/documents/services/document-checklist.service';
 import { listDocumentsForCase } from '@/features/documents/services/documents.service';
+import { getCaseFinancials } from '@/features/cases/services/case-lookups.service';
 import { listTasksForCase } from '@/features/tasks/services/tasks.service';
 import { createClient } from '@/lib/supabase/server';
 import { asCaseId } from '@/lib/types/branded';
@@ -125,7 +126,7 @@ export async function assembleCaseFactSheet(caseId: string): Promise<{ label: st
     .maybeSingle();
   if (!caseRow) return null;
 
-  const [{ data: caseBorrowers }, { data: caseBanks }, documents, tasks, activity] =
+  const [{ data: caseBorrowers }, { data: caseBanks }, documents, tasks, activity, financials] =
     await Promise.all([
       supabase
         .from('case_borrowers')
@@ -141,6 +142,11 @@ export async function assembleCaseFactSheet(caseId: string): Promise<{ label: st
       listDocumentsForCase(branded),
       listTasksForCase(branded),
       listCaseActivity(branded),
+      // Fees: getCaseFinancials returns null unless the caller has view_case_fee
+      // AND can see this case (case_financials RLS, mig 200). So including it
+      // here is automatically permission-gated — a non-manager's fact sheet
+      // simply has no fee line (user's "open financials, each per permission").
+      getCaseFinancials(branded),
     ]);
 
   const checklist = await getCaseDocumentChecklist(branded, documents);
@@ -191,6 +197,10 @@ export async function assembleCaseFactSheet(caseId: string): Promise<{ label: st
     ...(borrowerLines.length > 0 ? borrowerLines : ['- אין']),
     '',
     `בנקים: ${bankLines.length > 0 ? bankLines.join(', ') : 'אין'}`,
+    // Fee line only when permission-gated getCaseFinancials returned a value.
+    financials && financials.fee_amount !== null
+      ? `שכר טרחה שסוכם: ${financials.fee_amount} ₪`
+      : '',
     '',
     'מסמכים חסרים:',
     ...(missingDocs.length > 0 ? missingDocs.map((d) => `- ${d}`) : ['- אין']),
