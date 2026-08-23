@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 
 import { AiResponseView } from '@/features/ai-assistant/components/ai-response-view';
 import { buildConfirmPayload } from '@/features/ai-assistant/domain/confirm-payload';
+import { fetchCaseAnswer } from '@/features/ai-assistant/lib/fetch-case-answer';
 
 import type { NlQueryResponse } from '@/app/api/ai/nl-query/route';
 
@@ -66,7 +67,26 @@ export function NlQueryBar() {
         toast.error(res.status === 429 ? t('rateLimited') : t('failed'));
         return;
       }
-      const data = (await res.json()) as NlQueryResponse;
+      let data = (await res.json()) as NlQueryResponse;
+      // Single-case answer arrives as a stream directive — drain it silently
+      // and show the whole answer at once (busy spinner covers the wait).
+      if (data.answerable && data.stream && data.caseId) {
+        const answer = await fetchCaseAnswer({
+          caseId: data.caseId,
+          question: q,
+          briefing: data.stream.briefing,
+        });
+        if (!answer.ok) {
+          toast.error(answer.status === 429 ? t('rateLimited') : t('failed'));
+          return;
+        }
+        data = {
+          ...data,
+          answer: answer.text.length > 0 ? answer.text : t('failed'),
+          caseLabel: data.caseLabel ?? answer.label,
+          stream: null,
+        };
+      }
       setResult(data);
       // Remember the case in play for the next follow-up.
       if (data.answerable && data.caseId) {

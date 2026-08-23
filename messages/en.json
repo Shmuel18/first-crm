@@ -8,6 +8,17 @@
     "placeholder": "Type a message…",
     "thinking": "Thinking…",
     "send": "Send",
+    "contextLabel": "Context:",
+    "contextCase": "Current case",
+    "clearContext": "Clear context",
+    "listening": "Listening… speak now",
+    "startVoice": "Voice input",
+    "stopVoice": "Stop recording",
+    "followUps": {
+      "f1": "What's missing in the case?",
+      "f2": "Give me a short summary",
+      "f3": "Advance to the next stage"
+    },
     "examples": {
       "ex1": "How many stuck cases?",
       "ex2": "Which cases are past their target date?",

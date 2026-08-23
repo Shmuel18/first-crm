@@ -2,18 +2,30 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { Send, Sparkles, Trash2, X } from 'lucide-react';
+import { Sparkles, Trash2, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { ThinkingDots } from '@/components/shared/thinking-dots';
 
-import { useAiAssistant } from '../hooks/use-ai-assistant';
+import { useAiAssistant, type AssistantTurn } from '../hooks/use-ai-assistant';
 
+import { AiComposer } from './ai-composer';
 import { AiResponseView } from './ai-response-view';
 
 const EXAMPLE_KEYS = ['ex1', 'ex2', 'ex3'] as const;
-/** Tallest the input grows before it starts scrolling (px). */
-const INPUT_MAX_PX = 160;
+const FOLLOW_UP_KEYS = ['f1', 'f2', 'f3'] as const;
+
+/** Follow-up chips appear after a case ANSWER — the moment a next step is
+ *  natural ("what's missing", "summarize", "advance the stage"). */
+function isCaseAnswer(turn: AssistantTurn | undefined): boolean {
+  return (
+    turn?.role === 'assistant' &&
+    turn.response.answerable &&
+    turn.response.caseId !== null &&
+    turn.response.answer !== null &&
+    !turn.response.proposedAction
+  );
+}
 
 /**
  * The unified AI assistant (ai-v2-spec "the assistant"): a floating, global,
@@ -21,50 +33,34 @@ const INPUT_MAX_PX = 160;
  * (/api/ai/nl-query + /api/ai/confirm-action) — so everything is
  * permission-gated and audited server-side. On a case page it answers about
  * THAT case without re-naming it; anywhere it counts/searches/answers or
- * proposes an action for the human to confirm. The panel is a FIXED size so it
- * never jumps as messages arrive; only the input grows (to a cap).
+ * proposes an action for the human to confirm. The panel is a FIXED size so
+ * it never jumps as messages arrive; only the composer's input grows.
  */
 export function AiAssistantBubble() {
   const t = useTranslations('assistant');
   const [open, setOpen] = useState(false);
-  const [input, setInput] = useState('');
-  const { turns, busy, confirmingId, ask, confirm, dismiss, clear, onCasePage } = useAiAssistant();
+  const {
+    turns,
+    busy,
+    confirmingId,
+    ask,
+    confirm,
+    dismiss,
+    clear,
+    onCasePage,
+    contextCase,
+    clearContext,
+  } = useAiAssistant();
   // Inside a case, offer case suggestions ("summarize", "what's missing");
   // elsewhere, portfolio ones ("how many stuck cases").
   const exampleNs = onCasePage ? 'examplesCase' : 'examples';
 
   const listRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-
   useEffect(() => {
     if (open) listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
   }, [turns, busy, open]);
 
-  useEffect(() => {
-    if (open) inputRef.current?.focus();
-  }, [open]);
-
-  // Grow the textarea to fit its content, up to a cap (then it scrolls) — so a
-  // long message is fully visible while the panel itself stays a fixed size.
-  const grow = (): void => {
-    const el = inputRef.current;
-    if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = `${Math.min(el.scrollHeight, INPUT_MAX_PX)}px`;
-  };
-
-  const send = (): void => {
-    const q = input.trim();
-    if (!q || busy) return;
-    void ask(q);
-    setInput('');
-    if (inputRef.current) inputRef.current.style.height = 'auto';
-  };
-
-  const runExample = (text: string): void => {
-    if (busy) return;
-    void ask(text);
-  };
+  const showFollowUps = !busy && isCaseAnswer(turns[turns.length - 1]);
 
   const iconButton =
     'flex size-7 items-center justify-center rounded text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700';
@@ -87,6 +83,7 @@ export function AiAssistantBubble() {
         <div
           role="dialog"
           aria-label={t('title')}
+          onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
           className="fixed inset-x-0 bottom-0 z-40 flex h-[75vh] flex-col rounded-t-2xl border border-neutral-200 bg-white shadow-2xl md:inset-x-auto md:bottom-24 md:end-6 md:h-[32rem] md:max-h-[85vh] md:w-96 md:rounded-2xl"
         >
           <div className="flex items-center gap-2 border-b border-neutral-100 px-4 py-3">
@@ -113,7 +110,7 @@ export function AiAssistantBubble() {
                     <button
                       key={k}
                       type="button"
-                      onClick={() => runExample(t(`${exampleNs}.${k}`))}
+                      onClick={() => !busy && void ask(t(`${exampleNs}.${k}`))}
                       className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-start text-xs text-neutral-700 hover:border-brand-gold/50 hover:bg-brand-gold-soft"
                     >
                       {t(`${exampleNs}.${k}`)}
@@ -155,6 +152,22 @@ export function AiAssistantBubble() {
               );
             })}
 
+            {/* Natural next steps after a case answer — one tap, no typing. */}
+            {showFollowUps && (
+              <div className="flex flex-wrap gap-1.5">
+                {FOLLOW_UP_KEYS.map((k) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => void ask(t(`followUps.${k}`))}
+                    className="rounded-full border border-brand-gold/40 bg-white px-2.5 py-1 text-[11px] text-neutral-700 hover:border-brand-gold hover:bg-brand-gold-soft"
+                  >
+                    {t(`followUps.${k}`)}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {busy && (
               <div className="w-fit rounded-lg border border-brand-gold/30 bg-brand-gold-soft/50 px-3 py-2.5">
                 <ThinkingDots />
@@ -162,35 +175,12 @@ export function AiAssistantBubble() {
             )}
           </div>
 
-          <div className="flex items-end gap-2 border-t border-neutral-100 p-3">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                grow();
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  send();
-                }
-              }}
-              rows={1}
-              placeholder={t('placeholder')}
-              aria-label={t('placeholder')}
-              className="app-scrollbar max-h-40 flex-1 resize-none rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm leading-relaxed focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-gold"
-            />
-            <button
-              type="button"
-              onClick={send}
-              disabled={busy || input.trim().length === 0}
-              aria-label={t('send')}
-              className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-gold text-brand-black hover:bg-brand-gold-hover disabled:opacity-50"
-            >
-              <Send className="size-4" />
-            </button>
-          </div>
+          <AiComposer
+            busy={busy}
+            onSend={(text) => void ask(text)}
+            contextChip={contextCase && !onCasePage ? (contextCase.label ?? '') : null}
+            onClearContext={clearContext}
+          />
         </div>
       )}
     </>
