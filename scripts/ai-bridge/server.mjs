@@ -49,11 +49,24 @@ const IMAGE_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'
  * contract — rather than internal assistant-block shapes. Tools stay OFF unless
  * a PDF block forces the Read tool (harness reads the file from a temp dir).
  */
-async function runCompletion({ system, blocks, prompt, model, maxTokens }) {
+async function runCompletion({ system, blocks, prompt, model, maxTokens, onDelta }) {
   const promptBlocks = [];
   let tempDir = null;
   const disallow = ['Bash', 'Write', 'Edit', 'WebSearch', 'WebFetch', 'Task', 'Glob', 'Grep'];
   const allow = [];
+
+  // CRITICAL: fold the system prompt IN-BAND. The Agent SDK's `systemPrompt`
+  // option does NOT reliably replace Claude Code's built-in coding-agent
+  // persona in this SDK version — the model answered "I help with code, not
+  // mortgages" and dropped our instructions. Prepending the instructions as
+  // the first user text makes them govern regardless of SDK/version quirks.
+  const sys = typeof system === 'string' ? system.trim() : '';
+  if (sys) {
+    promptBlocks.push({
+      type: 'text',
+      text: `${sys}\n\n--- להלן הקלט. פעל לפי ההוראות שלמעלה בלבד. ---`,
+    });
+  }
 
   if (typeof prompt === 'string') {
     promptBlocks.push({ type: 'text', text: prompt });
@@ -85,17 +98,36 @@ async function runCompletion({ system, blocks, prompt, model, maxTokens }) {
   const options = {
     model,
     maxTurns: allow.length > 0 ? 4 : 1,
+    // Kept as a secondary channel; the in-band prepend above is what actually
+    // governs. Explicitly load NO filesystem settings so a stray CLAUDE.md on
+    // the host can't reintroduce the coding-agent persona.
     systemPrompt: system,
+    settingSources: [],
     permissionMode: 'bypassPermissions',
     maxTokens,
     disallowedTools: disallow,
     ...(allow.length > 0 ? { allowedTools: allow } : { allowedTools: [] }),
+    // Ask the SDK for partial messages so /stream can emit text as it's
+    // generated (real typing effect). Ignored by SDK versions that don't
+    // support it — we fall back to the final `result` text below.
+    ...(onDelta ? { includePartialMessages: true } : {}),
   };
 
   let text = '';
+  let streamed = 0;
   let refused = false;
   try {
     for await (const message of query({ prompt: input(), options })) {
+      // Partial text deltas (shape is version-sensitive — probe defensively).
+      if (onDelta && message.type === 'stream_event') {
+        const ev = message.event ?? message.data ?? message;
+        const delta =
+          ev?.delta?.text ?? (ev?.type === 'content_block_delta' ? ev?.delta?.text : undefined);
+        if (typeof delta === 'string' && delta.length > 0) {
+          streamed += delta.length;
+          onDelta(delta);
+        }
+      }
       if (message.type === 'result') {
         if (message.subtype === 'success' && typeof message.result === 'string') {
           text = message.result;
@@ -109,8 +141,8 @@ async function runCompletion({ system, blocks, prompt, model, maxTokens }) {
   }
 
   if (refused) return { ok: false, error: 'refused' };
-  if (!text) return { ok: false, error: 'api_error' };
-  return { ok: true, text };
+  if (!text && streamed === 0) return { ok: false, error: 'api_error' };
+  return { ok: true, text, streamed };
 }
 
 // ── HTTP plumbing ────────────────────────────────────────────────────────────
@@ -173,14 +205,36 @@ const server = createServer(async (req, res) => {
 
     if (req.method === 'POST' && req.url === '/stream') {
       const { system, prompt, model, maxTokens } = JSON.parse(await readBody(req));
-      // The Agent SDK's partial-message shape is version-sensitive; for a
-      // reliable demo the bridge computes the full text then writes it as one
-      // chunk. The app already renders progressively as bytes arrive, so a
-      // single late chunk degrades gracefully to "appears when ready".
-      const out = await runCompletion({ system, prompt, model, maxTokens: maxTokens ?? 1500 });
-      if (!out.ok) return json(res, 502, out);
-      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' });
-      res.end(out.text);
+      // Stream text as the model generates it (typing effect). Headers are
+      // written lazily on the first delta so a pre-output error can still be a
+      // clean JSON 502. If the SDK version yields no partials, we write the
+      // final buffered text in one chunk (graceful fallback).
+      const ensureHead = () => {
+        if (!res.headersSent) {
+          res.writeHead(200, {
+            'Content-Type': 'text/plain; charset=utf-8',
+            'Cache-Control': 'no-store',
+            'X-Accel-Buffering': 'no',
+          });
+        }
+      };
+      const out = await runCompletion({
+        system,
+        prompt,
+        model,
+        maxTokens: maxTokens ?? 1500,
+        onDelta: (t) => {
+          ensureHead();
+          res.write(t);
+        },
+      });
+      if (!out.ok) {
+        if (!res.headersSent) return json(res, 502, out);
+        return res.end(); // already streaming — just close
+      }
+      ensureHead();
+      // Buffered fallback: nothing streamed → write the whole text now.
+      res.end(out.streamed > 0 ? '' : out.text);
       return;
     }
 

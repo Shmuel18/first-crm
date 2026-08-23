@@ -9,6 +9,22 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip } from '@/components/ui/tooltip';
 
+/** Three gold dots that pulse in sequence — a lightweight "thinking" cue
+ *  shown while we wait for the bridge's first token (ai-v2-spec.md §7.2). */
+function ThinkingDots() {
+  return (
+    <span className="inline-flex gap-1" aria-hidden="true">
+      {[0, 150, 300].map((delay) => (
+        <span
+          key={delay}
+          className="size-1.5 rounded-full bg-brand-gold-dark motion-safe:animate-bounce"
+          style={{ animationDelay: `${delay}ms` }}
+        />
+      ))}
+    </span>
+  );
+}
+
 /**
  * Pre-call briefing (ai-v2-spec.md §4.1): opens a dialog and STREAMS the
  * briefing text as the model writes it — flow, not a spinner (§7.2). The
@@ -87,12 +103,18 @@ export function CaseBriefingButton({ caseId, title }: { caseId: string; title: s
           </DialogHeader>
 
           <div className="min-h-32 whitespace-pre-wrap rounded-lg border border-brand-gold/30 bg-brand-gold-soft/60 p-3 text-sm leading-relaxed text-neutral-900">
-            {text}
-            {phase === 'streaming' && (
-              <span className="ms-0.5 inline-block h-4 w-0.5 animate-pulse bg-brand-gold-dark align-middle" aria-hidden="true" />
-            )}
-            {phase === 'streaming' && text.length === 0 && (
-              <span className="text-neutral-500">{t('thinking')}</span>
+            {phase === 'streaming' && text.length === 0 ? (
+              <span className="inline-flex items-center gap-2 text-neutral-500">
+                {t('thinking')}
+                <ThinkingDots />
+              </span>
+            ) : (
+              <>
+                {text}
+                {phase === 'streaming' && (
+                  <span className="ms-0.5 inline-block h-4 w-0.5 animate-pulse bg-brand-gold-dark align-middle" aria-hidden="true" />
+                )}
+              </>
             )}
             {phase === 'error' && text.length === 0 && (
               <span className="text-neutral-500">{t('failed')}</span>
