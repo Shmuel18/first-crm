@@ -46,8 +46,10 @@ export async function assembleBriefingContext(caseId: string): Promise<BriefingC
       .eq('case_id', caseId),
     listDocumentsForCase(branded),
     listTasksForCase(branded),
-    // Financial diffs stay out of the AI context regardless of who asks.
-    listCaseActivity(branded, { includeFinancials: false }),
+    // Financial safety: describeEvent below formats only non-financial event
+    // kinds (field-level diffs are dropped entirely), so fee data never
+    // reaches the AI context regardless of the caller's permissions.
+    listCaseActivity(branded),
   ]);
 
   const checklist = await getCaseDocumentChecklist(branded, documents);
@@ -65,7 +67,7 @@ export async function assembleBriefingContext(caseId: string): Promise<BriefingC
       .filter((name) => name.length > 0),
     openTasks: tasks.slice(0, 8).map((t) => ({ title: t.title, due: t.due_date })),
     missingDocs: checklist
-      .filter((item) => item.status === 'missing' || item.status === 'rejected')
+      .filter((item) => item.status === 'missing')
       .map((item) => item.nameHe),
     recentActivity: activity.events.slice(0, 10).map(describeEvent).filter((s) => s.length > 0),
   };
