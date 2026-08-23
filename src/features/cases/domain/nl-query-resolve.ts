@@ -101,6 +101,26 @@ export function resolveNlQuery(out: NlQueryOutput, lookups: NlLookups): NlResolv
   return { params, chips, unresolved };
 }
 
+/**
+ * The stage adjacent to the case's CURRENT one, in the office's own order
+ * (the statuses array is pre-sorted by sort_order). Powers "advance to the
+ * next stage" / "back a stage": the model can't know the current status at
+ * translation time, so it emits a direction and this resolves the concrete
+ * target. Null at the boundary (already first/last) or when the current
+ * status isn't found — the caller turns that into a helpful message.
+ */
+export function adjacentStatus(
+  statuses: NlLookups['statuses'],
+  currentId: string | null,
+  direction: 'next' | 'prev',
+): { id: string; name_he: string } | null {
+  if (!currentId) return null;
+  const idx = statuses.findIndex((s) => s.id === currentId);
+  if (idx < 0) return null;
+  const target = statuses[direction === 'next' ? idx + 1 : idx - 1];
+  return target ? { id: target.id, name_he: target.name_he } : null;
+}
+
 /** The dashboard URL that applies exactly these filters (nuqs-compatible). */
 export function buildDashboardUrl(params: NlResolved['params']): string {
   const sp = new URLSearchParams();

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { filterCases, filterCasesByQuery } from '@/features/cases/domain/case-filters';
 import { getCaseClientLabel } from '@/features/cases/domain/case-derivations';
 import {
+  adjacentStatus,
   buildDashboardUrl,
   resolveNlQuery,
   toDashboardFilters,
@@ -156,20 +157,31 @@ export async function POST(request: Request): Promise<Response> {
     const canEdit = fact !== null && (await userCanEditCase(actionCaseId));
 
     if (result.data.action_kind === 'change_status') {
-      const status = lookups.statuses.find(
-        (s) => s.key === result.data.action_status_key && s.key !== '__none__',
+      const target = await resolveTargetStatus(
+        supabase,
+        actionCaseId,
+        result.data.action_status_key,
+        lookups.statuses,
       );
       const allowed = canEdit && (await userHasPermission('change_case_status'));
-      if (status && allowed) {
+      if (target && allowed) {
         return NextResponse.json(actionPayload(actionCaseId, caseLabel, {
           kind: 'change_status',
           caseId: actionCaseId,
           caseLabel,
-          statusId: status.id,
-          summary: `לעדכן את סטטוס תיק ${caseLabel} ל"${status.name_he}"?`,
+          statusId: target.id,
+          summary: `לעדכן את סטטוס תיק ${caseLabel} ל"${target.name_he}"?`,
         }));
       }
-      if (status && !allowed) return NextResponse.json(refusal('אין לך הרשאה לשנות סטטוס בתיק זה.'));
+      if (target && !allowed) return NextResponse.json(refusal('אין לך הרשאה לשנות סטטוס בתיק זה.'));
+      // An action was clearly requested but we couldn't pin the target stage
+      // (e.g. already at the last stage, or an unclear name) — say so, don't
+      // silently fall through to a filter card (that was the confusing bug).
+      if (!target && canEdit) {
+        return NextResponse.json(
+          refusal(`לא הצלחתי לזהות לאיזה שלב לעדכן את תיק ${caseLabel}. נסה לציין את שם השלב, או "לשלב הבא".`),
+        );
+      }
     }
 
     if (result.data.action_kind === 'create_task') {
@@ -286,6 +298,29 @@ export async function POST(request: Request): Promise<Response> {
   return NextResponse.json(payload);
 }
 
+/**
+ * The concrete target stage for a change_status action: a named stage matched
+ * by key, or — for a relative move ('__next__' / '__prev__') — the neighbor of
+ * the case's CURRENT stage in the office's stage order. The current status is
+ * read under the caller's RLS (the case is already known-visible here).
+ */
+async function resolveTargetStatus(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  caseId: string,
+  key: string | null,
+  statuses: ReadonlyArray<{ id: string; key: string; name_he: string }>,
+): Promise<{ id: string; name_he: string } | null> {
+  if (key === '__next__' || key === '__prev__') {
+    const { data } = await supabase.from('cases').select('status_id').eq('id', caseId).maybeSingle();
+    return adjacentStatus(statuses, data?.status_id ?? null, key === '__next__' ? 'next' : 'prev');
+  }
+  if (key && key !== '__none__') {
+    const s = statuses.find((x) => x.key === key);
+    return s ? { id: s.id, name_he: s.name_he } : null;
+  }
+  return null;
+}
+
 /** Unique normalized-substring advisor match (else null — never guess). */
 function matchAdvisor(
   advisors: ReadonlyArray<{ id: string; name: string }>,
@@ -386,11 +421,11 @@ function buildSystemPrompt(lookups: {
     '',
     'פעולות (בקשה לבצע, לא לשאול):',
     '- action_kind: change_status (שינוי סטטוס) / create_task (הוספת משימה) / set_target_date (קביעת תאריך יעד) / assign_advisor (שיוך יועץ); אחרת none.',
-    '- action_status_key: עבור change_status — מפתח השלב היעד מהרשימה למעלה; אחרת __none__.',
+    '- action_status_key: עבור change_status — מפתח השלב היעד מהרשימה למעלה אם צוין שם שלב מפורש. לבקשה יחסית ("לשלב הבא", "קדם", "תקדם אותו", "השלב הבא") השתמש ב-__next__; ל"לשלב הקודם", "אחורה", "החזר שלב" השתמש ב-__prev__. אחרת __none__.',
     '- action_task_title: עבור create_task — כותרת המשימה בעברית (למשל "להתקשר ללקוח"); אחרת null.',
     '- action_target_date: עבור set_target_date — התאריך בפורמט YYYY-MM-DD (פענח "יום ראשון הבא", "עוד שבוע" וכו\' לתאריך מלא); אחרת null.',
     '- action_advisor_name: עבור assign_advisor — שם היועץ כפי שנכתב; אחרת null.',
-    '- פעלי ציווי כמו "שנה", "עדכן", "קבע", "שייך", "הוסף", "צור" = פעולה (action_kind מתאים), לא שאלה. במקרה כזה is_case_question=false.',
+    '- פעלי ציווי כמו "שנה", "עדכן", "קבע", "שייך", "הוסף", "צור", "קדם", "תקדם" = פעולה (action_kind מתאים), לא שאלה. במקרה כזה is_case_question=false. "עדכן/שנה/קדם את הסטטוס ... לשלב הבא" = change_status עם action_status_key=__next__.',
     '- פעולה תמיד מתייחסת לתיק ספציפי (בשם או בהקשר). זו בקשה לבצע — לא unmappable, וגם לא unmappable_reason.',
     '',
     'כללים:',

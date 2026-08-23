@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildDashboardUrl, resolveNlQuery, type NlLookups } from './nl-query-resolve';
+import {
+  adjacentStatus,
+  buildDashboardUrl,
+  resolveNlQuery,
+  type NlLookups,
+} from './nl-query-resolve';
 
 import type { NlQueryOutput } from '../schemas/nl-query.schema';
 
@@ -72,6 +77,36 @@ describe('resolveNlQuery — names resolve deterministically, never by guess', (
     expect(r.params.q).toBe('לוי');
     expect(r.chips).toContainEqual({ kind: 'view', value: 'archive' });
     expect(r.chips).toContainEqual({ kind: 'q', value: 'לוי' });
+  });
+});
+
+describe('adjacentStatus — "next/previous stage" resolves from the current one', () => {
+  // Ordered as the office orders stages (sort_order) — index order IS the flow.
+  const ordered: NlLookups['statuses'] = [
+    { id: 's-1', key: 'lead', name_he: 'ליד' },
+    { id: 's-2', key: 'submitted', name_he: 'הוגש לבנק' },
+    { id: 's-3', key: 'approved', name_he: 'אושר עקרונית' },
+  ];
+
+  it('next of a middle stage is the following stage', () => {
+    expect(adjacentStatus(ordered, 's-2', 'next')).toEqual({ id: 's-3', name_he: 'אושר עקרונית' });
+  });
+
+  it('previous of a middle stage is the preceding stage', () => {
+    expect(adjacentStatus(ordered, 's-2', 'prev')).toEqual({ id: 's-1', name_he: 'ליד' });
+  });
+
+  it('next of the last stage is null (boundary)', () => {
+    expect(adjacentStatus(ordered, 's-3', 'next')).toBeNull();
+  });
+
+  it('previous of the first stage is null (boundary)', () => {
+    expect(adjacentStatus(ordered, 's-1', 'prev')).toBeNull();
+  });
+
+  it('unknown or missing current status is null, never a guess', () => {
+    expect(adjacentStatus(ordered, 'nope', 'next')).toBeNull();
+    expect(adjacentStatus(ordered, null, 'next')).toBeNull();
   });
 });
 

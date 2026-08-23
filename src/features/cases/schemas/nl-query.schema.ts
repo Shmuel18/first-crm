@@ -12,6 +12,11 @@ import { z } from 'zod';
  */
 export function buildNlQuerySchema(statusKeys: readonly string[]) {
   const keys = [...new Set(['__none__', ...statusKeys])];
+  // The status action may target a stage by NAME or RELATIVELY ("the next
+  // stage", "back one stage"). The relative sentinels resolve to a concrete
+  // stage server-side, from the case's CURRENT status — which the model can't
+  // know at translation time.
+  const actionKeys = [...new Set(['__none__', '__next__', '__prev__', ...statusKeys])];
   return z.object({
     intent: z.enum(['count', 'list']),
     /** null = the default active view. */
@@ -38,9 +43,11 @@ export function buildNlQuerySchema(statusKeys: readonly string[]) {
       'set_target_date',
       'assign_advisor',
     ]),
-    /** For change_status: the target stage key (one of the status keys), or
+    /** For change_status: the target stage — a concrete status key, OR
+     *  '__next__' / '__prev__' for a relative move ("advance to the next
+     *  stage" / "back a stage"), resolved to a concrete stage server-side.
      *  '__none__' when not a status action. */
-    action_status_key: z.enum(keys as [string, ...string[]]).nullable(),
+    action_status_key: z.enum(actionKeys as [string, ...string[]]).nullable(),
     /** For create_task: the task title, phrased in Hebrew. */
     action_task_title: z.string().max(200).nullable(),
     /** For set_target_date: the date as YYYY-MM-DD (resolve "next Sunday" etc.). */
