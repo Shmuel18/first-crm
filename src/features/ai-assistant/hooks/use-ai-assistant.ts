@@ -111,5 +111,7 @@ export function useAiAssistant() {
 
   const clear = useCallback((): void => setTurns([]), []);
 
-  return { turns, busy, confirmingId, ask, confirm, dismiss, clear };
+  // True on a /cases/:id page — lets the UI offer case-relevant suggestions
+  // ("summarize", "what's missing") instead of portfolio ones.
+  return { turns, busy, confirmingId, ask, confirm, dismiss, clear, onCasePage: pageCaseId !== null };
 }

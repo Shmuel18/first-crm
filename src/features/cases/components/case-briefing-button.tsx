@@ -6,24 +6,9 @@ import { Check, Copy, Sparkles } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { ThinkingDots } from '@/components/shared/thinking-dots';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip } from '@/components/ui/tooltip';
-
-/** Three gold dots that pulse in sequence — a lightweight "thinking" cue
- *  shown while we wait for the bridge's first token (ai-v2-spec.md §7.2). */
-function ThinkingDots() {
-  return (
-    <span className="inline-flex gap-1" aria-hidden="true">
-      {[0, 150, 300].map((delay) => (
-        <span
-          key={delay}
-          className="size-1.5 rounded-full bg-brand-gold-dark motion-safe:animate-bounce"
-          style={{ animationDelay: `${delay}ms` }}
-        />
-      ))}
-    </span>
-  );
-}
 
 /**
  * Pre-call briefing (ai-v2-spec.md §4.1): opens a dialog and STREAMS the

@@ -12,6 +12,11 @@
       "ex1": "How many stuck cases?",
       "ex2": "Which cases are past their target date?",
       "ex3": "Cases awaiting pre-approval"
+    },
+    "examplesCase": {
+      "ex1": "Give me a short case summary",
+      "ex2": "What's missing to move forward?",
+      "ex3": "When is the target date?"
     }
   },
   "intake": {
