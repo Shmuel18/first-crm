@@ -33,7 +33,11 @@ import { join } from 'node:path';
 import { query } from '@anthropic-ai/claude-agent-sdk';
 
 const PORT = Number(process.env.AI_BRIDGE_PORT ?? '8790');
-const HOST = '127.0.0.1';
+// 127.0.0.1 by default (safest). Set AI_BRIDGE_HOST to the Docker bridge
+// gateway (e.g. 172.17.0.1) so the first-crm CONTAINER can reach the bridge —
+// that IP is reachable only from containers on the default bridge + the host,
+// never the public internet, and the AI_BRIDGE_TOKEN is a second latch.
+const HOST = process.env.AI_BRIDGE_HOST ?? '127.0.0.1';
 const TOKEN = process.env.AI_BRIDGE_TOKEN ?? '';
 const MAX_BODY_BYTES = 25 * 1024 * 1024; // room for a base64 PDF/scan
 
