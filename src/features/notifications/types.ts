@@ -13,6 +13,7 @@ export const NOTIFICATION_TYPE_VALUES = [
   'backup_stale',
   'erasure_stale',
   'web_lead',
+  'ai_digest',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPE_VALUES)[number];
 
@@ -104,6 +105,13 @@ export type NotificationDataWebLead = {
   leadName: string | null;
 };
 
+export type NotificationDataAiDigest = {
+  /** The digest text (AI-phrased, or the deterministic fallback). */
+  digest: string;
+  /** Israel calendar date the digest covers (YYYY-MM-DD). */
+  date: string;
+};
+
 /**
  * Discriminated union over `notification.type`. Index by type to get the
  * exact shape — `NotificationDataByType['case_status_overdue']` is the
@@ -120,6 +128,7 @@ export type NotificationDataByType = {
   backup_stale: NotificationDataBackupStale;
   erasure_stale: NotificationDataErasureStale;
   web_lead: NotificationDataWebLead;
+  ai_digest: NotificationDataAiDigest;
 };
 
 /**
@@ -136,6 +145,7 @@ export type NotificationData =
   | NotificationDataBackupStale
   | NotificationDataErasureStale
   | NotificationDataWebLead
+  | NotificationDataAiDigest
   | Record<string, never>;
 
 export type Notification = Omit<NotificationRow, 'data' | 'type'> & {

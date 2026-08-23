@@ -1,4 +1,35 @@
 {
+  "assistant": {
+    "title": "Assistant",
+    "open": "Open assistant",
+    "close": "Close",
+    "clearChat": "Clear conversation",
+    "greeting": "Ask me anything about your cases — count, search, check details, or take an action like changing a status or adding a task.",
+    "placeholder": "Type a message…",
+    "thinking": "Thinking…",
+    "send": "Send",
+    "contextLabel": "Context:",
+    "contextCase": "Current case",
+    "clearContext": "Clear context",
+    "listening": "Listening… speak now",
+    "startVoice": "Voice input",
+    "stopVoice": "Stop recording",
+    "followUps": {
+      "f1": "What's missing in the case?",
+      "f2": "Give me a short summary",
+      "f3": "Advance to the next stage"
+    },
+    "examples": {
+      "ex1": "How many stuck cases?",
+      "ex2": "Which cases are past their target date?",
+      "ex3": "Cases awaiting pre-approval"
+    },
+    "examplesCase": {
+      "ex1": "Give me a short case summary",
+      "ex2": "What's missing to move forward?",
+      "ex3": "When is the target date?"
+    }
+  },
   "intake": {
     "title": "Check my case",
     "subtitle": "Professional mortgage advice · we'll get back to you within 24 hours",
@@ -151,6 +182,23 @@
     "backHome": "Back to cases"
   },
   "composeEmail": {
+    "ai": {
+      "label": "Draft with AI",
+      "purposeLabel": "Message goal",
+      "purposes": {
+        "missing_docs": "Missing documents reminder",
+        "status_update": "Status update",
+        "custom": "Free instruction"
+      },
+      "instructionPlaceholder": "What should the message say?",
+      "instructionRequired": "Write a short instruction first",
+      "generate": "Draft",
+      "writing": "Writing…",
+      "useDraft": "Use draft",
+      "clear": "Clear",
+      "failed": "Drafting failed, try again",
+      "rateLimited": "Hourly drafting quota reached — try later"
+    },
     "hint": "You can edit the message before sending. It will be sent in the office's branded layout.",
     "subjectLabel": "Subject",
     "bodyLabel": "Message body",
@@ -235,6 +283,7 @@
     "cases": "Cases",
     "tasks": "Tasks",
     "simulators": "Simulators",
+    "inbox": "Inbox",
     "statistics": "Statistics",
     "collections": "Collections",
     "finance": "Finances",
@@ -248,6 +297,36 @@
     "sidebar": "Sidebar",
     "skipToContent": "Skip to main content",
     "unreadTasks": "{count, plural, =1 {1 open task} other {# open tasks}}"
+  },
+  "inbox": {
+    "eyebrow": "Smart assistant",
+    "title": "Inbox",
+    "subtitle": "Every incoming office email is triaged automatically. Anything unclear waits here for your call.",
+    "tabsLabel": "Mail filter",
+    "tabs": {
+      "attention": "Needs attention",
+      "all": "All",
+      "handled": "Handled"
+    },
+    "empty": "Nothing to show — all clear.",
+    "noSubject": "(no subject)",
+    "openInGmail": "Open in Gmail",
+    "caseLink": "Case {number}",
+    "linkToCase": "Link to case",
+    "caseNumberPlaceholder": "Case #",
+    "linkConfirm": "Link",
+    "caseNotFound": "No active case with that number",
+    "acknowledge": "Handled",
+    "dismiss": "Not relevant",
+    "categories": {
+      "client_documents": "Client documents",
+      "client_message": "Client message",
+      "probable_client": "Probably a client",
+      "bank": "Bank",
+      "vendor_or_marketing": "Vendors & marketing",
+      "internal": "Internal",
+      "unclear": "Unclear"
+    }
   },
   "collections": {
     "eyebrow": "Finances",
@@ -1078,6 +1157,38 @@
       "noMatches": "No cases match the current filters",
       "tableCaption": "Cases table — {count, plural, =1 {1 case} other {# cases}}"
     },
+    "nlQuery": {
+      "placeholder": "Ask the system: how many stuck cases? Which of David's cases await the bank?",
+      "ask": "Ask",
+      "matches": "matching cases",
+      "showInTable": "Show in table",
+      "clear": "Clear",
+      "failed": "Query failed, try again",
+      "rateLimited": "Hourly query quota reached",
+      "noName": "(no name)",
+      "tryExamples": "Try e.g. \"How many cases await pre-approval?\" or \"Leumi cases past their target date\"",
+      "unresolved": "Couldn't uniquely identify: {names} — the filter ran without them",
+      "archiveValue": "Archive",
+      "chips": {
+        "view": "View",
+        "stage": "Stage",
+        "advisor": "Advisor",
+        "bank": "Bank",
+        "targetDate": "Target date",
+        "q": "Search"
+      },
+      "targetDateValues": {
+        "overdue": "Overdue",
+        "week": "This week",
+        "none": "No target"
+      },
+      "openCase": "Open case {label}",
+      "confirmAction": "Confirm",
+      "cancelAction": "Cancel",
+      "actionDone": "Done",
+      "actionFailed": "Action failed, try again",
+      "actionUnauthorized": "You don't have permission for this action"
+    },
     "density": {
       "label": "Row density",
       "compact": "Compact",
@@ -1201,6 +1312,14 @@
       "submit": "Create lead"
     },
     "details": {
+      "aiTriage": {
+        "title": "AI triage",
+        "heat": {
+          "hot": "Hot",
+          "warm": "Warm",
+          "cold": "Cold"
+        }
+      },
       "view": "View details",
       "contact": "Contact",
       "phone": "Phone",
@@ -1558,6 +1677,16 @@
       "backToCase": "Back to case",
       "truncatedNote": "Showing the last 200 entries. Older entries are available via the full audit log export."
     },
+    "briefing": {
+      "title": "Pre-call briefing",
+      "thinking": "Reading the case…",
+      "regenerate": "Refresh",
+      "copy": "Copy",
+      "copied": "Copied",
+      "failed": "Briefing failed, try again",
+      "rateLimited": "Hourly briefing quota for this case reached — try later",
+      "disclaimer": "AI-generated from case data — review before relying on it"
+    },
     "actionBar": {
       "backTooltip": "Back",
       "caseLabel": "Case",
@@ -1565,6 +1694,7 @@
       "openedAtTooltip": "Case opening date",
       "withBorrowers": "(Borrowers to be added)",
       "actions": {
+        "briefing": "Pre-call briefing",
         "calculator": "Calculations (LTV, DTI)",
         "history": "History / Audit Log",
         "documents": "Documents",
@@ -2695,6 +2825,20 @@
       "subtitle": "Files in the case's Drive folder without a category subfolder. Pick a category for each file.",
       "pickCategory": "Categorize..."
     },
+    "ai": {
+      "suggests": "Detected: {category} ({confidence}%)",
+      "accept": "Accept classification",
+      "reject": "Reject classification",
+      "resolveFailed": "Saving the verdict failed, try again",
+      "flags": {
+        "stale": "Document is outdated",
+        "name_mismatch": "Name doesn't match a borrower",
+        "unreadable": "Hard to read",
+        "missing_pages": "Pages appear missing",
+        "warning_notes": "Warning notes on the deed",
+        "category_mismatch": "Category may be wrong"
+      }
+    },
     "folders": {
       "identity": {
         "title": "Identity & contact",
@@ -3056,6 +3200,7 @@
       "backup_stale": "No recent backup — check the Google Drive connection (Settings → Integrations)",
       "erasure_stale": "File erasure isn't running — check the cleanup job and the Google Drive connection (Settings → Integrations)",
       "web_lead": "New website lead: {name}",
+      "ai_digest": "Your daily digest is ready",
       "unknown": "New notification"
     }
   },

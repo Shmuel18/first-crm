@@ -17,15 +17,19 @@ import {
   parseDashboardFilters,
 } from '@/features/cases/domain/case-filters';
 import { AUTO_ARCHIVED_STATUS_KEYS } from '@/features/cases/domain/case-state';
+import { NlQueryBar } from '@/features/cases/components/nl-query-bar';
 import { getUnreadCaseIds } from '@/features/cases/services/case-review.service';
 import { getCasesDashboardBootstrap } from '@/features/cases/services/cases-dashboard-bootstrap.service';
 import { listCases } from '@/features/cases/services/cases.service';
+import { isAiFeatureActive } from '@/lib/ai/flags';
+import { getAiFeatureSettings } from '@/lib/ai/flags.server';
+import { createClient } from '@/lib/supabase/server';
 import { LeadsCardList } from '@/features/leads/components/leads-card-list';
 import { LeadsTable } from '@/features/leads/components/leads-table';
 import { LeadsToolbar } from '@/features/leads/components/leads-toolbar';
 import { listLeads } from '@/features/leads/services/leads.service';
 import type { CaseEditGate } from '@/features/cases/domain/case-edit-gate';
-import { getCurrentUser, isCurrentUserAdmin, userHasPermissions } from '@/lib/auth/permissions';
+import { getCurrentUser, isCurrentUserAdmin, userHasPermission, userHasPermissions } from '@/lib/auth/permissions';
 import { timeAsync } from '@/lib/perf/timing';
 
 type Props = {
@@ -68,14 +72,20 @@ export default async function CasesListPage({ searchParams }: Props) {
   const leadsPromise =
     view === 'leads' ? timeAsync('cases.page.listLeads', () => listLeads(), { view }) : null;
 
-  const [bootstrap, t, leads, isManager, editPerms, currentUser] = await Promise.all([
-    timeAsync('cases.page.bootstrap', () => getCasesDashboardBootstrap(), { view }),
-    getTranslations('dashboard'),
-    leadsPromise,
-    isCurrentUserAdmin(),
-    userHasPermissions('edit_any_case', 'edit_own_case', 'change_case_status', 'assign_case_to_user'),
-    getCurrentUser(),
-  ]);
+  const [bootstrap, t, leads, isManager, editPerms, currentUser, aiSettings, canUseNlQueries] =
+    await Promise.all([
+      timeAsync('cases.page.bootstrap', () => getCasesDashboardBootstrap(), { view }),
+      getTranslations('dashboard'),
+      leadsPromise,
+      isCurrentUserAdmin(),
+      userHasPermissions('edit_any_case', 'edit_own_case', 'change_case_status', 'assign_case_to_user'),
+      getCurrentUser(),
+      createClient().then(getAiFeatureSettings),
+      userHasPermission('use_ai_queries'),
+    ]);
+  // "Ask the system" (ai-v2-spec.md §5) — flag+permission gated; off means
+  // the dashboard renders pixel-identical to today (§0.1).
+  const showNlQuery = canUseNlQueries && isAiFeatureActive(aiSettings, 'nl_queries');
 
   const {
     profile,
@@ -151,15 +161,18 @@ export default async function CasesListPage({ searchParams }: Props) {
           (s) => !(AUTO_ARCHIVED_STATUS_KEYS as readonly string[]).includes(s.key),
         );
     chrome = (
-      <DashboardFiltersBar
-        statusOptions={stageFilterOptions}
-        bankOptions={bankOptions}
-        advisorOptions={advisorOptions}
-        canFilterByAdvisor={canViewAll}
-        referrerOptions={referrerOptions}
-        canFilterByReferrer={isManager}
-        insuranceAgentOptions={insuranceAgentOptions}
-      />
+      <>
+        {showNlQuery && <NlQueryBar />}
+        <DashboardFiltersBar
+          statusOptions={stageFilterOptions}
+          bankOptions={bankOptions}
+          advisorOptions={advisorOptions}
+          canFilterByAdvisor={canViewAll}
+          referrerOptions={referrerOptions}
+          canFilterByReferrer={isManager}
+          insuranceAgentOptions={insuranceAgentOptions}
+        />
+      </>
     );
     scrollContent =
       cases.length === 0 ? (
@@ -207,7 +220,7 @@ export default async function CasesListPage({ searchParams }: Props) {
   // just goes full-bleed by cancelling the layout's p-6 with -m-6. Sticky
   // bits (the table header) anchor to the layout's scroll container.
   return (
-    <div className="-m-4 sm:-m-6 bg-white">
+    <div className="-m-4 sm:-m-6 bg-brand-surface">
       <CasesRealtimeRefresh initialActiveCount={counts.active} />
       {/* Records the current filters-in-url so "back" from a case returns
           here with the same filters instead of a reset dashboard. */}

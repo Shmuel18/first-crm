@@ -19,7 +19,8 @@ const DOCUMENT_SELECT = `
   ${DOCUMENT_FULL_COLUMNS},
   category:document_categories(id, key, name_he, name_en, drive_folder),
   uploader:uploaded_by(id, first_name, last_name),
-  borrower:borrower_id(id, first_name, last_name)
+  borrower:borrower_id(id, first_name, last_name),
+  ai_classifications:document_classifications(id, decision, resolution, confidence, flags, reason, suggested_category_id, suggested_category_key, period, created_at)
 ` as const;
 
 export async function listDocumentsForCase(
@@ -31,7 +32,10 @@ export async function listDocumentsForCase(
     .select(DOCUMENT_SELECT)
     .eq('case_id', caseId)
     .is('deleted_at', null)
-    .order('upload_date', { ascending: false });
+    .order('upload_date', { ascending: false })
+    // Only the LATEST classification run rides along (re-runs keep history).
+    .order('created_at', { referencedTable: 'document_classifications', ascending: false })
+    .limit(1, { referencedTable: 'document_classifications' });
 
   if (error) throw error;
   // PostgREST embedded-relation typing gap; shape per DOCUMENT_SELECT.

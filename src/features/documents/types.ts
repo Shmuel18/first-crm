@@ -20,10 +20,30 @@ export const DRIVE_FOLDERS: readonly DriveFolder[] = [
   'misc',
 ] as const;
 
+export type DocumentClassificationRow =
+  Database['public']['Tables']['document_classifications']['Row'];
+
+/** The latest AI classification attached to a document row (ai-v2-spec.md §2.6). */
+export type DocumentAiClassification = Pick<
+  DocumentClassificationRow,
+  | 'id'
+  | 'decision'
+  | 'resolution'
+  | 'confidence'
+  | 'flags'
+  | 'reason'
+  | 'suggested_category_id'
+  | 'suggested_category_key'
+  | 'period'
+  | 'created_at'
+>;
+
 export type DocumentWithRelations = DocumentRow & {
   category: Pick<DocumentCategoryRow, 'id' | 'key' | 'name_he' | 'name_en' | 'drive_folder'> | null;
   uploader: { id: string; first_name: string | null; last_name: string | null } | null;
   borrower: { id: string; first_name: string | null; last_name: string | null } | null;
+  /** Latest classification run only (ordered/limited in the service select). */
+  ai_classifications?: DocumentAiClassification[];
 };
 
 export type DocumentsByFolder = Record<DriveFolder, DocumentWithRelations[]>;

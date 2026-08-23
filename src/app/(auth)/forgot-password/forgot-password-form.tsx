@@ -89,7 +89,7 @@ export function ForgotPasswordForm() {
             aria-invalid={inputError || undefined}
             aria-describedby={inputError || systemError ? 'forgot-error' : undefined}
             className="ps-10 h-12 text-base bg-neutral-50 border-neutral-200 focus:border-brand-gold-text focus-visible:border-brand-gold-text focus-visible:ring-brand-gold-text/40"
-            placeholder="moshe@kaufman.co.il"
+            placeholder="name@example.com"
           />
         </div>
       </div>

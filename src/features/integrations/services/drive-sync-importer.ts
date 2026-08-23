@@ -1,3 +1,6 @@
+import { after } from 'next/server';
+
+import { classifyDocumentInBackground } from '@/features/documents/services/ai-classification.service';
 import { createClient } from '@/lib/supabase/server';
 import type { Json } from '@/types/database';
 
@@ -153,6 +156,15 @@ export async function importOrUpdateDriveFile(
         drive_relative_path: [...location.relativePath],
       },
     });
+    // AI classification for files that landed WITHOUT a category (unmapped
+    // Drive folder) — the exact population the exceptions queue exists for.
+    // Background via after(), fail-soft, no-op when the flag is off. Files
+    // with a folder-derived category are validated on upload paths instead.
+    if (categoryId === null) {
+      after(async () => {
+        await classifyDocumentInBackground(inserted.id);
+      });
+    }
   } else {
     throw new Error(
       `Drive sync could not import document: ${error?.message ?? 'insert returned no row'}`,

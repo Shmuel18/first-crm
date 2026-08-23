@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 
 import { getTranslations } from 'next-intl/server';
 
+import { BRAND } from '@/lib/brand';
 import { createClient } from '@/lib/supabase/server';
 
 import { SetPasswordForm } from './set-password-form';
@@ -29,8 +30,8 @@ export default async function SetPasswordPage() {
         <div className="flex justify-center mb-10">
           <div className="relative h-40 w-full max-w-[280px]">
             <Image
-              src="/logo.png"
-              alt="Kaufman Finance Group"
+              src={BRAND.logoOnDark}
+              alt={BRAND.nameEn}
               fill
               priority
               sizes="280px"

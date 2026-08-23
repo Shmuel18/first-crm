@@ -1,5 +1,7 @@
 import { StyleSheet } from '@react-pdf/renderer';
 
+import { BRAND } from '@/lib/brand';
+
 /**
  * Brand colours + shared StyleSheet for the bank-submission PDF.
  *
@@ -9,17 +11,17 @@ import { StyleSheet } from '@react-pdf/renderer';
  * those rows.
  */
 
-export const COLOR_TEXT = '#0A0A0A';
+export const COLOR_TEXT = BRAND.colors.ink;
 export const COLOR_MUTED = '#525252';
 export const COLOR_LINE = '#E5E5E5';
 export const COLOR_LINE_DARK = '#D4D4D4';
-export const COLOR_BRAND = '#C9A961';
-export const COLOR_BRAND_LIGHT = '#E8C77B';
+export const COLOR_BRAND = BRAND.colors.gold;
+export const COLOR_BRAND_LIGHT = BRAND.colors.goldLight;
 export const COLOR_BRAND_DARK = '#A88840';
 export const COLOR_SECTION_BG = '#FAF8F3';
 export const COLOR_HIGHLIGHT_BG = '#FFF8E7';
 export const COLOR_HEADER_BG = '#525252';
-export const COLOR_BLACK = '#0A0A0A';
+export const COLOR_BLACK = BRAND.colors.ink;
 export const COLOR_BLACK_SOFT = '#1C1C1C';
 
 export const styles = StyleSheet.create({

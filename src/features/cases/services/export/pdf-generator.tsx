@@ -13,6 +13,7 @@ import {
 import { type ReactElement } from 'react';
 
 import { ensureHebrewFontRegistered } from '@/features/cases/pdf/fonts';
+import { BRAND } from '@/lib/brand';
 
 import type { ExportRow } from './build-export-rows';
 
@@ -32,6 +33,11 @@ import type { ExportRow } from './build-export-rows';
  * 2.1 MB original) — it renders at 40pt, and the full-size file inflated every
  * exported PDF to ~2.8 MB, uncomfortably close to Vercel's 4.5 MB response cap.
  *
+ * WHITE-LABEL: the default (Kaufman) brand keeps that traced, downscaled copy;
+ * other brands use their own BRAND.logoSquare mark — non-default brands deploy
+ * via Docker (full /public present), and the soft-fail below covers a missing
+ * file on any host.
+ *
  * Decorative, so it fails SOFT: a missing/unreadable logo must never turn a
  * data export into a 500. Resolved once per lambda instance, failure included.
  */
@@ -41,7 +47,11 @@ async function loadLogo(): Promise<string | null> {
   if (logoResolved) return logoDataUrl;
   logoResolved = true;
   try {
-    const logoPath = path.join(process.cwd(), 'public', 'pdf', 'logo-coin.png');
+    const relative =
+      BRAND.key === 'kaufman'
+        ? path.join('pdf', 'logo-coin.png')
+        : BRAND.logoSquare.replace(/^\//, '');
+    const logoPath = path.join(process.cwd(), 'public', relative);
     const buffer = await readFile(logoPath);
     logoDataUrl = `data:image/png;base64,${buffer.toString('base64')}`;
   } catch (err) {
@@ -52,8 +62,8 @@ async function loadLogo(): Promise<string | null> {
 }
 
 const COLORS = {
-  black: '#0A0A0A',
-  gold: '#C9A961',
+  black: BRAND.colors.ink,
+  gold: BRAND.colors.gold,
   border: '#E5E5E5',
   muted: '#888888',
   white: '#FFFFFF',

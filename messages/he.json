@@ -1,4 +1,35 @@
 {
+  "assistant": {
+    "title": "העוזר",
+    "open": "פתח את העוזר",
+    "close": "סגור",
+    "clearChat": "נקה שיחה",
+    "greeting": "שאל אותי כל דבר על התיקים — לספור, לחפש, לבדוק פרטים, או לבצע פעולה כמו שינוי סטטוס או פתיחת משימה.",
+    "placeholder": "כתוב הודעה…",
+    "thinking": "חושב…",
+    "send": "שלח",
+    "contextLabel": "בהקשר:",
+    "contextCase": "התיק הנוכחי",
+    "clearContext": "נקה הקשר",
+    "listening": "מקשיב… דבר עכשיו",
+    "startVoice": "הקלטה קולית",
+    "stopVoice": "עצור הקלטה",
+    "followUps": {
+      "f1": "מה חסר בתיק?",
+      "f2": "תן סיכום קצר",
+      "f3": "קדם לשלב הבא"
+    },
+    "examples": {
+      "ex1": "כמה תיקים תקועים?",
+      "ex2": "אילו תיקים עברו את תאריך היעד?",
+      "ex3": "תיקים בהמתנה לאישור עקרוני"
+    },
+    "examplesCase": {
+      "ex1": "תן סיכום קצר על התיק",
+      "ex2": "מה חסר כדי להתקדם?",
+      "ex3": "מתי תאריך היעד?"
+    }
+  },
   "intake": {
     "title": "בדיקת התיק שלי",
     "subtitle": "ייעוץ משכנתאות מקצועי · נחזור אליך תוך 24 שעות",
@@ -151,6 +182,23 @@
     "backHome": "חזרה לתיקים"
   },
   "composeEmail": {
+    "ai": {
+      "label": "נסח עם AI",
+      "purposeLabel": "מטרת ההודעה",
+      "purposes": {
+        "missing_docs": "תזכורת מסמכים חסרים",
+        "status_update": "עדכון סטטוס",
+        "custom": "הנחיה חופשית"
+      },
+      "instructionPlaceholder": "מה ההודעה צריכה להגיד?",
+      "instructionRequired": "כתוב הנחיה קצרה קודם",
+      "generate": "נסח",
+      "writing": "כותב…",
+      "useDraft": "השתמש בטיוטה",
+      "clear": "נקה",
+      "failed": "הניסוח נכשל, נסה שוב",
+      "rateLimited": "הגעת למכסת הניסוחים לשעה — נסה מאוחר יותר"
+    },
     "hint": "אפשר לערוך את ההודעה לפני השליחה. היא תישלח בעיצוב הממותג של המשרד.",
     "subjectLabel": "נושא",
     "bodyLabel": "תוכן ההודעה",
@@ -235,6 +283,7 @@
     "cases": "תיקים",
     "tasks": "משימות",
     "simulators": "סימולטורים",
+    "inbox": "דואר נכנס",
     "statistics": "סטטיסטיקות",
     "collections": "גבייה",
     "finance": "כספים",
@@ -248,6 +297,36 @@
     "sidebar": "סרגל צד",
     "skipToContent": "דלג לתוכן הראשי",
     "unreadTasks": "{count, plural, =1 {משימה אחת פתוחה} other {# משימות פתוחות}}"
+  },
+  "inbox": {
+    "eyebrow": "עוזר חכם",
+    "title": "דואר נכנס",
+    "subtitle": "כל מייל שנכנס למשרד מסווג אוטומטית. מה שלא ברור — מחכה כאן להחלטה שלך.",
+    "tabsLabel": "סינון דואר",
+    "tabs": {
+      "attention": "דורש טיפול",
+      "all": "הכל",
+      "handled": "טופל"
+    },
+    "empty": "אין פריטים להצגה — הכל נקי.",
+    "noSubject": "(ללא נושא)",
+    "openInGmail": "פתח ב-Gmail",
+    "caseLink": "תיק {number}",
+    "linkToCase": "שייך לתיק",
+    "caseNumberPlaceholder": "מס׳ תיק",
+    "linkConfirm": "שייך",
+    "caseNotFound": "לא נמצא תיק פעיל עם המספר הזה",
+    "acknowledge": "טופל",
+    "dismiss": "לא רלוונטי",
+    "categories": {
+      "client_documents": "מסמכי לקוח",
+      "client_message": "הודעת לקוח",
+      "probable_client": "כנראה לקוח",
+      "bank": "בנק",
+      "vendor_or_marketing": "ספקים ופרסום",
+      "internal": "פנימי",
+      "unclear": "לא ברור"
+    }
   },
   "collections": {
     "eyebrow": "כספים",
@@ -1078,6 +1157,38 @@
       "noMatches": "לא נמצאו תיקים התואמים את הסינון",
       "tableCaption": "טבלת תיקים — {count, plural, =1 {תיק אחד} other {# תיקים}}"
     },
+    "nlQuery": {
+      "placeholder": "שאל את המערכת: כמה תיקים תקועים? אילו תיקים של דוד ממתינים לבנק?",
+      "ask": "שאל",
+      "matches": "תיקים תואמים",
+      "showInTable": "הצג בטבלה",
+      "clear": "נקה",
+      "failed": "השאילתה נכשלה, נסה שוב",
+      "rateLimited": "הגעת למכסת השאילתות לשעה",
+      "noName": "(ללא שם)",
+      "tryExamples": "נסה למשל: \"כמה תיקים בהמתנה לאישור עקרוני?\" או \"תיקים של לאומי שעברו את תאריך היעד\"",
+      "unresolved": "לא זיהיתי באופן חד-משמעי: {names} — הסינון רץ בלעדיהם",
+      "archiveValue": "ארכיון",
+      "chips": {
+        "view": "תצוגה",
+        "stage": "שלב",
+        "advisor": "יועץ",
+        "bank": "בנק",
+        "targetDate": "תאריך יעד",
+        "q": "חיפוש"
+      },
+      "targetDateValues": {
+        "overdue": "עבר היעד",
+        "week": "השבוע",
+        "none": "ללא יעד"
+      },
+      "openCase": "פתח את תיק {label}",
+      "confirmAction": "אשר",
+      "cancelAction": "ביטול",
+      "actionDone": "בוצע",
+      "actionFailed": "הפעולה נכשלה, נסה שוב",
+      "actionUnauthorized": "אין לך הרשאה לפעולה זו"
+    },
     "density": {
       "label": "צפיפות שורות",
       "compact": "צפוף",
@@ -1201,6 +1312,14 @@
       "submit": "צור ליד"
     },
     "details": {
+      "aiTriage": {
+        "title": "טריאז' AI",
+        "heat": {
+          "hot": "לוהט",
+          "warm": "פושר",
+          "cold": "קר"
+        }
+      },
       "view": "צפייה בפרטים",
       "contact": "פרטי קשר",
       "phone": "טלפון",
@@ -1558,6 +1677,16 @@
       "backToCase": "חזרה לתיק",
       "truncatedNote": "מוצגות 200 הרשומות האחרונות. רשומות ישנות יותר זמינות באמצעות ייצוא יומן השינויים המלא."
     },
+    "briefing": {
+      "title": "תדריך לפני שיחה",
+      "thinking": "קורא את התיק…",
+      "regenerate": "רענן",
+      "copy": "העתק",
+      "copied": "הועתק",
+      "failed": "התדריך נכשל, נסה שוב",
+      "rateLimited": "הגעת למכסת התדריכים לתיק הזה — נסה בעוד שעה",
+      "disclaimer": "נוצר ע\"י AI מנתוני התיק — לבדיקתך"
+    },
     "actionBar": {
       "backTooltip": "חזרה",
       "caseLabel": "תיק",
@@ -1565,6 +1694,7 @@
       "openedAtTooltip": "תאריך פתיחת התיק",
       "withBorrowers": "(לווים יתווספו)",
       "actions": {
+        "briefing": "תדריך לפני שיחה",
         "calculator": "חישובים (LTV, יחס החזר)",
         "history": "היסטוריה / Audit Log",
         "documents": "מסמכים",
@@ -2695,6 +2825,20 @@
       "subtitle": "קבצים בתיקיית התיק ב-Drive ללא תת-תיקיית קטגוריה. בחר קטגוריה לכל קובץ.",
       "pickCategory": "סווג ל..."
     },
+    "ai": {
+      "suggests": "זוהה: {category} ({confidence}%)",
+      "accept": "אשר סיווג",
+      "reject": "דחה סיווג",
+      "resolveFailed": "שמירת ההחלטה נכשלה, נסה שוב",
+      "flags": {
+        "stale": "מסמך לא עדכני",
+        "name_mismatch": "השם לא תואם ללווה",
+        "unreadable": "קשה לקריאה",
+        "missing_pages": "חסרים עמודים",
+        "warning_notes": "הערות אזהרה בנסח",
+        "category_mismatch": "ייתכן שהקטגוריה שגויה"
+      }
+    },
     "folders": {
       "identity": {
         "title": "זיהוי וקשר",
@@ -3056,6 +3200,7 @@
       "backup_stale": "אין גיבוי תקין — בדוק את החיבור ל-Google Drive (הגדרות → אינטגרציות)",
       "erasure_stale": "מחיקת קבצים אינה רצה — בדוק את משימת הניקוי ואת החיבור ל-Google Drive (הגדרות → אינטגרציות)",
       "web_lead": "ליד חדש מהאתר: {name}",
+      "ai_digest": "הסיכום היומי שלך מוכן",
       "unknown": "התראה חדשה"
     }
   },

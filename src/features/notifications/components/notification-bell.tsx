@@ -25,6 +25,7 @@ import { formatRelativeTime } from '../domain/format';
 import type {
   Notification,
   NotificationData,
+  NotificationDataAiDigest,
   NotificationDataCaseMention,
   NotificationDataCaseStatusOverdue,
   NotificationDataTask,
@@ -216,6 +217,12 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
         const d = n.data as Partial<NotificationDataWebLead>;
         return t('message.web_lead', { name: d.leadName?.trim() || t('aLead') });
       }
+      case 'ai_digest': {
+        // The digest text IS the message — AI-phrased (or the deterministic
+        // fallback), snapshot in the row like every other bell kind.
+        const d = n.data as Partial<NotificationDataAiDigest>;
+        return d.digest?.trim() || t('message.ai_digest');
+      }
       default: {
         // Exhaustiveness check — TS errors here when a new
         // NotificationType is added without a render branch.
@@ -263,11 +270,13 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
     const href =
       n.type === 'web_lead'
         ? '/cases?view=leads'
-        : n.type === 'backup_stale' || n.type === 'erasure_stale'
-          ? '/settings/integrations'
-          : isCaseNotification && n.case_id
-            ? `/cases/${n.case_id}`
-            : '/tasks';
+        : n.type === 'ai_digest'
+          ? '/cases'
+          : n.type === 'backup_stale' || n.type === 'erasure_stale'
+            ? '/settings/integrations'
+            : isCaseNotification && n.case_id
+              ? `/cases/${n.case_id}`
+              : '/tasks';
     router.push(href);
   };
 

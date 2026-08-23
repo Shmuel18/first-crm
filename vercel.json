@@ -25,8 +25,16 @@
       "schedule": "*/15 * * * *"
     },
     {
+      "path": "/api/cron/email-intake",
+      "schedule": "*/5 * * * *"
+    },
+    {
       "path": "/api/cron/time-clock-reminder",
       "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/ai-digest",
+      "schedule": "0 * * * *"
     }
   ]
 }

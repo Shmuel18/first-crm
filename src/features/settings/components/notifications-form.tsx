@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useId, useState } from 'react';
+import { useActionState, useEffect, useId, useRef, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 
 import { Loader2 } from 'lucide-react';
@@ -80,7 +80,14 @@ export function NotificationsForm({ preferences, thresholds, statuses, showSla, 
   // Refresh after a successful save: the action skips revalidatePath, so
   // without this the router cache keeps serving the pre-save payload.
   const router = useRouter();
+  // One-shot per action result: `t`/`router` get new identities after every
+  // router.refresh() (the refreshed RSC payload recreates the messages
+  // object), so an unguarded effect re-fires with the same successful state
+  // and loops toast -> refresh -> toast forever.
+  const handledState = useRef<typeof state | null>(null);
   useEffect(() => {
+    if (handledState.current === state) return;
+    handledState.current = state;
     if (state.ok === true) {
       toast.success(t('saved'));
       router.refresh();

@@ -75,7 +75,7 @@ export function LoginForm({ next }: LoginFormProps) {
             aria-invalid={hasError || undefined}
             aria-describedby={hasError ? 'login-error' : undefined}
             className="h-11 bg-neutral-50 ps-10 text-base border-neutral-200 focus:border-brand-gold-text focus-visible:border-brand-gold-text focus-visible:ring-brand-gold-text/40"
-            placeholder="moshe@kaufman.co.il"
+            placeholder="name@example.com"
           />
         </div>
       </div>

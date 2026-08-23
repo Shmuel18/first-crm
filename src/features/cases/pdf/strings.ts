@@ -1,3 +1,4 @@
+import { BRAND } from '@/lib/brand';
 import type { Locale } from '@/lib/i18n/direction';
 
 /**
@@ -95,8 +96,8 @@ export function getPdfStrings(locale: Locale): PdfStrings {
 }
 
 const STRINGS_HE: Strings = {
-  brandName: 'Kaufman Finance Group',
-  brandSub: 'קופמן ייעוץ משכנתאות',
+  brandName: BRAND.nameEn,
+  brandSub: BRAND.taglineHe,
   documentTitle: (caseNumber: string) => `בקשה למשכנתא — תיק ${caseNumber}`,
   cover: {
     titleConnector: ' ו',
@@ -204,8 +205,8 @@ const STRINGS_HE: Strings = {
 };
 
 const STRINGS_EN: Strings = {
-  brandName: 'Kaufman Finance Group',
-  brandSub: 'Kaufman mortgage advisors',
+  brandName: BRAND.nameEn,
+  brandSub: BRAND.taglineEn,
   documentTitle: (caseNumber: string) => `Mortgage application — case ${caseNumber}`,
   cover: {
     titleConnector: ' & ',

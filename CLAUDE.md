@@ -55,6 +55,28 @@ tokens are declared in `src/app/globals.css` `@theme` and generate every
 utility variant (text/bg/border/ring/.../opacity) automatically. Any new
 `[#hex]` literal in a class is an auto-reject in code review.
 
+### White-label (multi-office)
+
+The codebase serves multiple advisor offices; `NEXT_PUBLIC_BRAND`
+(`kaufman` default | `perlstein`) selects the active brand per deployment.
+The moving parts — extend ALL of them when onboarding a new office:
+
+- **`src/lib/brand.ts`** — brand registry: names, taglines, logo asset
+  paths, PWA theme color, email wordmark/contact, and a mirror of the CSS
+  palette for surfaces stylesheets can't reach (email HTML, PDF renderers).
+- **`globals.css`** — brand token VALUES live on `:root` (Kaufman) with a
+  `[data-brand='<key>']` override block per office; `@theme inline` maps
+  `--color-brand-*` through `var()` so utilities stay runtime-swappable.
+  `<html data-brand>` is set in the root layout.
+- **`src/lib/i18n/brandize.ts`** — message catalogs are authored with
+  Kaufman's names; this substitutes the active office's names at load time.
+- **`public/brands/<key>/`** — logo.png (light bg), logo-on-dark.png,
+  mark.png (square).
+
+Components must never hardcode an office's name, logo path, or brand hex —
+use `BRAND` / the tokens. New brand colors need WCAG-AA validation like the
+existing palettes (see the contrast notes in globals.css).
+
 ## Architecture - Layer Responsibilities
 
 Every file lives in exactly one layer. Crossing layers requires going UP through a port (hook/action), never sideways or down.

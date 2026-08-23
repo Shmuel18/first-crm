@@ -7,6 +7,7 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 import { KeyboardAwareFocus } from '@/components/layout/keyboard-aware-focus';
 import { PwaRegister } from '@/features/pwa/components/pwa-register';
+import { BRAND } from '@/lib/brand';
 import { getDirection, parseLocale } from '@/lib/i18n/direction';
 
 import './globals.css';
@@ -27,8 +28,8 @@ const frankRuhl = Frank_Ruhl_Libre({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Kaufman Finance Group',
-    template: '%s · Kaufman Finance Group',
+    default: BRAND.nameEn,
+    template: `%s · ${BRAND.nameEn}`,
   },
   description: 'מערכת ניהול תיקי משכנתא',
   // PWA: Next auto-links the manifest (src/app/manifest.ts). These add the
@@ -36,12 +37,12 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Kaufman',
+    title: BRAND.shortNameEn,
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: '#0A0A0A',
+  themeColor: BRAND.themeColor,
   viewportFit: 'cover',
 };
 
@@ -58,6 +59,7 @@ export default async function RootLayout({
     <html
       lang={locale}
       dir={dir}
+      data-brand={BRAND.key}
       className={`${heebo.variable} ${frankRuhl.variable} h-full antialiased`}
     >
       <body className="min-h-full font-sans">

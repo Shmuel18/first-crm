@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 
 import { getManagerTimesheet } from '@/features/time-clock/services/time-clock.service';
 import { generateTimesheetXlsx } from '@/features/time-clock/services/timesheet-xlsx';
+import { BRAND } from '@/lib/brand';
 import { parseLocale } from '@/lib/i18n/direction';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
@@ -74,7 +75,9 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
       locale,
     );
 
-    const filename = `kaufman-timesheet-${dateStamp()}.xlsx`;
+    // Brand-aware filename (white-label layer) + the content-filter JSON
+    // escape hatch from main — both survive the merge.
+    const filename = `${BRAND.key}-timesheet-${dateStamp()}.xlsx`;
     const mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
     // Same escape hatch as /api/exports/cases: the office network runs behind a

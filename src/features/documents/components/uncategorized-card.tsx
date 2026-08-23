@@ -11,6 +11,7 @@ import { callAction } from '@/lib/actions/call-action';
 
 import { assignDocumentCategoryAction } from '../actions/assign-document-category';
 import type { DocumentCategoryRow, DocumentWithRelations } from '../types';
+import { AiSuggestionChip } from './ai-classification-chip';
 
 type Props = {
   documents: DocumentWithRelations[];
@@ -100,7 +101,7 @@ function UncategorizedRow({
   if (hidden) return null;
 
   return (
-    <div className="flex items-center gap-3 px-3 py-2 rounded-md bg-white border border-amber-100">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-3 py-2 rounded-md bg-white border border-amber-100">
       <button
         type="button"
         onClick={() => onPreview(doc)}
@@ -109,6 +110,19 @@ function UncategorizedRow({
         <FileTypeIcon mime={doc.mime_type} className="size-4 text-neutral-400 shrink-0" />
         <span className="text-sm text-neutral-900 truncate">{doc.file_name}</span>
       </button>
+
+      {/* AI suggestion (ai-v2-spec.md §2.6): one click applies the proposed
+          category through the same action as a manual pick; reject records
+          the verdict for calibration. Accepting hides the row like a manual
+          categorization does. */}
+      <AiSuggestionChip
+        doc={doc}
+        categories={categories}
+        canEdit={canEdit}
+        onResolved={(verdict) => {
+          if (verdict === 'accepted') setHidden(true);
+        }}
+      />
 
       <div className="flex items-center gap-1.5 shrink-0">
         <select

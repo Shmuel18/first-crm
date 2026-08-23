@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 
 import { Loader2 } from 'lucide-react';
@@ -52,7 +52,11 @@ export function ProfileForm({ profile, roleName }: Props) {
     setValues(seed(profile));
   }
 
+  // One-shot per action result — see office-form.tsx for the loop this guards.
+  const handledState = useRef<typeof state | null>(null);
   useEffect(() => {
+    if (handledState.current === state) return;
+    handledState.current = state;
     if (state.ok === true) toast.success(t('saved'));
   }, [state, t]);
 

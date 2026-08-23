@@ -25,7 +25,16 @@ export const GOOGLE_DRIVE_SCOPES = [
   'openid',
   'email',
   'https://www.googleapis.com/auth/drive',
+  // Gmail READ-ONLY for the AI mail-triage engine (ai-v2-spec.md §3.1).
+  // Read-only by design: the system never sends/deletes/labels mail; the
+  // processed-tracking lives in email_inbox, not in the mailbox. Existing
+  // connections predating this scope keep working for Drive — the intake
+  // cron detects the missing grant (integration.scopes) and skips politely
+  // until the admin reconnects once (Settings shows the reconnect banner).
+  'https://www.googleapis.com/auth/gmail.readonly',
 ] as const;
+
+export const GMAIL_SCOPE = 'https://www.googleapis.com/auth/gmail.readonly';
 
 const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';

@@ -85,6 +85,9 @@ MAILTO=""
 */15 * * * * root /usr/local/bin/first-crm-cron.sh task-reminders
 0 6 * * *    root /usr/local/bin/first-crm-cron.sh backup-watchdog
 30 6 * * *   root /usr/local/bin/first-crm-cron.sh erasure-watchdog
+*/5 * * * *  root /usr/local/bin/first-crm-cron.sh email-intake
+0 4 * * *    root /usr/local/bin/first-crm-cron.sh time-clock-reminder
+0 * * * *    root /usr/local/bin/first-crm-cron.sh ai-digest
 CRONEOF
 chmod 0644 "$CRONFILE"
 
@@ -92,5 +95,5 @@ chmod 0644 "$CRONFILE"
 systemctl reload cron 2>/dev/null || systemctl reload crond 2>/dev/null || service cron reload 2>/dev/null || true
 
 echo "✓ installed $WRAPPER"
-echo "✓ installed $CRONFILE (UTC; backup 02:00, cleanup 03:30, sla 05:00, reminders */15m, backup-watchdog 06:00, erasure-watchdog 06:30)"
+echo "✓ installed $CRONFILE (UTC; backup 02:00, cleanup 03:30, sla 05:00, reminders */15m, backup-watchdog 06:00, erasure-watchdog 06:30, ai-digest hourly)"
 echo "  test now:   $WRAPPER backup   &&  tail -n 3 /var/log/first-crm-cron.log"

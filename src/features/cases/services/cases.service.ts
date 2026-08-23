@@ -10,7 +10,10 @@ import type { CaseRow, CaseWithRelations } from '../types';
 const CASE_FULL_COLUMNS =
   'id, case_number, status_id, assigned_advisor_id, primary_borrower_id, case_type_primary_id, case_type_secondary_id, case_type_other_text, property_value, equity, requested_mortgage_amount, request_details, short_note, referrer_name, city, gush_helka, case_blocker, bank_request_number, insurance_status, insurance_agent_name, appraiser_name, target_date, is_archived, metadata, version, deleted_at, created_at, created_by, updated_at, updated_by' as const;
 
-const CASE_SELECT_WITH_RELATIONS = `
+// Exported for the scheduled-questions engine (features/ai-digest), which
+// re-runs the dashboard pipeline headlessly with an admin client + explicit
+// responsibility scoping — the SAME select keeps the counts identical.
+export const CASE_SELECT_WITH_RELATIONS = `
   ${CASE_FULL_COLUMNS},
   status:case_statuses(id, key, name_he, name_en, color),
   case_type_primary:case_types!cases_case_type_primary_id_fkey(id, key, name_he, name_en),

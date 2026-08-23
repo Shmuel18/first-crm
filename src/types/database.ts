@@ -9,6 +9,148 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_digest_subscriptions: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          hour: number
+          last_sent_date: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          hour: number
+          last_sent_date?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          hour?: number
+          last_sent_date?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_digest_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_scheduled_questions: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          hour: number
+          id: string
+          last_sent_date: string | null
+          question: string
+          resolved: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          hour: number
+          id?: string
+          last_sent_date?: string | null
+          question: string
+          resolved: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          hour?: number
+          id?: string
+          last_sent_date?: string | null
+          question?: string
+          resolved?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_scheduled_questions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_usage_log: {
+        Row: {
+          cache_read_tokens: number
+          cache_write_tokens: number
+          case_id: string | null
+          created_at: string
+          created_by: string | null
+          error_code: string | null
+          feature: string
+          id: number
+          input_tokens: number
+          latency_ms: number
+          model: string
+          ok: boolean
+          output_tokens: number
+        }
+        Insert: {
+          cache_read_tokens?: number
+          cache_write_tokens?: number
+          case_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_code?: string | null
+          feature: string
+          id?: never
+          input_tokens?: number
+          latency_ms?: number
+          model: string
+          ok: boolean
+          output_tokens?: number
+        }
+        Update: {
+          cache_read_tokens?: number
+          cache_write_tokens?: number
+          case_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_code?: string | null
+          feature?: string
+          id?: never
+          input_tokens?: number
+          latency_ms?: number
+          model?: string
+          ok?: boolean
+          output_tokens?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_usage_log_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_usage_log_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       approval_rulesets: {
         Row: {
           bank_id: string | null
@@ -2756,6 +2898,102 @@ export type Database = {
         }
         Relationships: []
       }
+      document_classifications: {
+        Row: {
+          borrower_name_on_doc: string | null
+          case_id: string
+          confidence: number
+          created_at: string
+          decision: string
+          document_id: string
+          flags: Json
+          id: string
+          matched_borrower_id: string | null
+          model: string
+          period: string | null
+          reason: string | null
+          resolution: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          suggested_category_id: string | null
+          suggested_category_key: string | null
+        }
+        Insert: {
+          borrower_name_on_doc?: string | null
+          case_id: string
+          confidence: number
+          created_at?: string
+          decision: string
+          document_id: string
+          flags?: Json
+          id?: string
+          matched_borrower_id?: string | null
+          model: string
+          period?: string | null
+          reason?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          suggested_category_id?: string | null
+          suggested_category_key?: string | null
+        }
+        Update: {
+          borrower_name_on_doc?: string | null
+          case_id?: string
+          confidence?: number
+          created_at?: string
+          decision?: string
+          document_id?: string
+          flags?: Json
+          id?: string
+          matched_borrower_id?: string | null
+          model?: string
+          period?: string | null
+          reason?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          suggested_category_id?: string | null
+          suggested_category_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_classifications_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_classifications_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_classifications_matched_borrower_id_fkey"
+            columns: ["matched_borrower_id"]
+            isOneToOne: false
+            referencedRelation: "borrowers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_classifications_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_classifications_suggested_category_id_fkey"
+            columns: ["suggested_category_id"]
+            isOneToOne: false
+            referencedRelation: "document_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_drive_tombstones: {
         Row: {
           case_id: string
@@ -2894,6 +3132,84 @@ export type Database = {
           {
             foreignKeyName: "documents_verified_by_fkey"
             columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_inbox: {
+        Row: {
+          attachments_count: number
+          case_id: string | null
+          category: string
+          confidence: number | null
+          created_at: string
+          from_email: string
+          from_name: string | null
+          gmail_message_id: string
+          gmail_thread_id: string | null
+          id: string
+          ingested_document_ids: Json
+          received_at: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          subject: string | null
+          summary_he: string | null
+          triage_mode: string
+        }
+        Insert: {
+          attachments_count?: number
+          case_id?: string | null
+          category: string
+          confidence?: number | null
+          created_at?: string
+          from_email: string
+          from_name?: string | null
+          gmail_message_id: string
+          gmail_thread_id?: string | null
+          id?: string
+          ingested_document_ids?: Json
+          received_at?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status: string
+          subject?: string | null
+          summary_he?: string | null
+          triage_mode: string
+        }
+        Update: {
+          attachments_count?: number
+          case_id?: string | null
+          category?: string
+          confidence?: number | null
+          created_at?: string
+          from_email?: string
+          from_name?: string | null
+          gmail_message_id?: string
+          gmail_thread_id?: string | null
+          id?: string
+          ingested_document_ids?: Json
+          received_at?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          subject?: string | null
+          summary_he?: string | null
+          triage_mode?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_inbox_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_inbox_resolved_by_fkey"
+            columns: ["resolved_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -3928,6 +4244,7 @@ export type Database = {
           address_city: string | null
           address_postal_code: string | null
           address_street: string | null
+          ai_features: Json
           audit_log_retention_days: number
           bank_account_bank: string | null
           bank_account_branch: string | null
@@ -3974,6 +4291,7 @@ export type Database = {
           address_city?: string | null
           address_postal_code?: string | null
           address_street?: string | null
+          ai_features?: Json
           audit_log_retention_days?: number
           bank_account_bank?: string | null
           bank_account_branch?: string | null
@@ -4020,6 +4338,7 @@ export type Database = {
           address_city?: string | null
           address_postal_code?: string | null
           address_street?: string | null
+          ai_features?: Json
           audit_log_retention_days?: number
           bank_account_bank?: string | null
           bank_account_branch?: string | null
