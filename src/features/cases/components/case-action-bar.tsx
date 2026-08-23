@@ -19,7 +19,6 @@ import { createClient } from '@/lib/supabase/server';
 import { asCaseId } from '@/lib/types/branded';
 
 import { CaseBackButton } from './case-back-button';
-import { CaseBriefingButton } from './case-briefing-button';
 import { CaseMoreMenu } from './case-more-menu';
 import { EditableStatusCell } from './editable-status-cell';
 import { GenerateBankPdfButton } from './generate-bank-pdf-button';
@@ -97,9 +96,9 @@ export async function CaseActionBar({
       createClient().then(getAiFeatureSettings),
       userHasPermission('use_ai_assistant'),
     ]);
-  // Briefing appears only when the flag is on AND the caller may use it —
-  // an off switch leaves the action bar pixel-identical to today (§0.1).
-  const showBriefing = canUseAiAssistant && isAiFeatureActive(aiSettings, 'case_briefing');
+  // Case briefing now lives in the global assistant bubble ("summarize this
+  // case" → the same rich briefing), so the standalone button was removed. AI
+  // draft-assist inside the compose dialog stays flag+permission gated.
   const showAiDraft = canUseAiAssistant && isAiFeatureActive(aiSettings, 'message_drafting');
 
   return (
@@ -147,7 +146,6 @@ export async function CaseActionBar({
         </div>
 
         <div className="flex items-center gap-0.5 shrink-0">
-          {showBriefing && <CaseBriefingButton caseId={caseId} title={t('actions.briefing')} />}
           <ActionIcon icon={Calculator} title={t('actions.calculator')} href={`/cases/${caseId}/simulators/mix`} />
           <ActionIcon
             icon={ClipboardList}

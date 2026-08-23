@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import {
   assembleBriefingContext,
+  BRIEFING_SYSTEM_PROMPT,
   formatBriefingContext,
 } from '@/features/cases/services/case-briefing.service';
 import { resolveAiMode } from '@/lib/ai/flags';
@@ -67,17 +68,3 @@ export async function POST(request: Request): Promise<Response> {
     },
   });
 }
-
-const BRIEFING_SYSTEM_PROMPT = [
-  'אתה עוזר תפעולי ליועץ משכנתאות, כותב תדריך קצר לפני שיחה עם לקוח.',
-  'תקבל תמצית נתונים של תיק. כתוב תדריך בעברית, עד 6 שורות, בפורמט:',
-  '• איפה התיק עומד (סטטוס ומה זה אומר בפועל)',
-  '• מה תקוע או ממתין (מסמכים חסרים / משימות פתוחות)',
-  '• מה קרה לאחרונה (כולל תקשורת אחרונה עם הלקוח אם הייתה)',
-  '• מה כדאי להגיד או לבקש בשיחה עכשיו',
-  '',
-  'כללים קשיחים:',
-  '1. עובדות מהנתונים בלבד — אסור להמציא פרטים שלא מופיעים.',
-  '2. אין ייעוץ פיננסי: לא המלצות מסלולים, לא ריביות, לא "כדאי לקחת". תפעול בלבד.',
-  '3. שפה ישירה וקצרה, בלי פתיחים ("הנה התדריך") ובלי סיכומים.',
-].join('\n');

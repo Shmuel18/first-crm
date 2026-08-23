@@ -11,7 +11,10 @@ import {
 } from '@/features/cases/domain/nl-query-resolve';
 import { buildNlQuerySchema } from '@/features/cases/schemas/nl-query.schema';
 import {
+  assembleBriefingContext,
   assembleCaseFactSheet,
+  BRIEFING_SYSTEM_PROMPT,
+  formatBriefingContext,
 } from '@/features/cases/services/case-briefing.service';
 import { listAdvisorOptions } from '@/features/cases/services/case-lookups.service';
 import { listCases } from '@/features/cases/services/cases.service';
@@ -245,8 +248,36 @@ export async function POST(request: Request): Promise<Response> {
   // "how many children", "the target date"). Resolve the target case from the
   // named client (single match) or the client's current-case context, assemble
   // the RLS-safe fact sheet, and let the model phrase the answer FROM it.
-  const targetCaseId = result.data.is_case_question ? (namedCaseId ?? currentCaseId) : null;
+  const wantsBriefing = result.data.is_briefing_request === true;
+  const targetCaseId =
+    result.data.is_case_question || wantsBriefing ? (namedCaseId ?? currentCaseId) : null;
   if (targetCaseId) {
+    // "Summarize the case" → the SAME rich briefing as the standalone pre-call
+    // briefing, but only when that feature is on for this user (use_ai_assistant
+    // + case_briefing). Otherwise fall through to the lighter fact-sheet answer.
+    if (wantsBriefing) {
+      const briefingOn =
+        resolveAiMode(settings, 'case_briefing') !== 'off' &&
+        (await userHasPermission('use_ai_assistant'));
+      if (briefingOn) {
+        const ctx = await assembleBriefingContext(targetCaseId);
+        if (ctx) {
+          const drafted = await streamAiText({
+            feature: 'case_briefing',
+            system: BRIEFING_SYSTEM_PROMPT,
+            prompt: `${formatBriefingContext(ctx)}\n\nכתוב את התדריך.`,
+            maxTokens: 700,
+            caseId: targetCaseId,
+            createdBy: userRes.user.id,
+          });
+          const briefing = drafted.ok ? await drainStream(drafted.stream) : '';
+          if (briefing.trim().length > 0) {
+            return NextResponse.json(caseAnswerPayload(targetCaseId, ctx.caseLabel, briefing.trim()));
+          }
+        }
+      }
+    }
+
     const fact = await assembleCaseFactSheet(targetCaseId);
     if (fact) {
       const drafted = await streamAiText({
@@ -260,19 +291,7 @@ export async function POST(request: Request): Promise<Response> {
       });
       const answer = drafted.ok ? await drainStream(drafted.stream) : '';
       if (answer.trim().length > 0) {
-        const payload: NlQueryResponse = {
-          answerable: true,
-          intent: 'list',
-          count: 1,
-          url: `/cases/${targetCaseId}`,
-          chips: [],
-          unresolved: [],
-          rows: [],
-          answer: answer.trim(),
-          caseId: targetCaseId,
-          caseLabel: fact.label,
-        };
-        return NextResponse.json(payload);
+        return NextResponse.json(caseAnswerPayload(targetCaseId, fact.label, answer.trim()));
       }
     }
   }
@@ -356,6 +375,23 @@ function actionPayload(
   };
 }
 
+/** A free-text single-case answer (briefing or fact-sheet), carrying the case
+ *  as follow-up context. */
+function caseAnswerPayload(caseId: string, caseLabel: string, answer: string): NlQueryResponse {
+  return {
+    answerable: true,
+    intent: 'list',
+    count: 1,
+    url: `/cases/${caseId}`,
+    chips: [],
+    unresolved: [],
+    rows: [],
+    answer,
+    caseId,
+    caseLabel,
+  };
+}
+
 /** A plain-text answerable payload (e.g. a permission refusal for an action). */
 function refusal(text: string): NlQueryResponse {
   return {
@@ -418,6 +454,7 @@ function buildSystemPrompt(lookups: {
     '- target_date: overdue (עבר תאריך היעד) / week (יעד השבוע) / none (בלי תאריך יעד).',
     '- client_search: שם לקוח, ת"ז, מספר תיק או טלפון שהוזכרו בשאלה.',
     '- is_case_question: true אם השאלה על פרטים או סיכום של תיק ספציפי אחד (מה חסר בתיק, "סכם/תן סיכום/מה המצב של התיק", המייל של הלווה/האשה, כמה ילדים, תאריך היעד, סטטוס, פרטי קשר) ולא ספירה/סינון של תיקים. אחרת false.',
+    '- is_briefing_request: true אם מבקשים סיכום/תדריך על התיק כולו ("סכם", "תן סיכום", "תדריך", "מה המצב של התיק"). במקרה כזה גם is_case_question=true. לשאלה נקודתית (מייל, כמה ילדים, תאריך יעד) — false.',
     '',
     'פעולות (בקשה לבצע, לא לשאול):',
     '- action_kind: change_status (שינוי סטטוס) / create_task (הוספת משימה) / set_target_date (קביעת תאריך יעד) / assign_advisor (שיוך יועץ); אחרת none.',

@@ -217,6 +217,26 @@ export async function assembleCaseFactSheet(caseId: string): Promise<{ label: st
   return { label, sheet };
 }
 
+/**
+ * The briefing instruction, shared by the standalone /api/ai/case-briefing
+ * endpoint AND the assistant bubble (a "summarize the case" request routes
+ * here so the bubble gives the SAME rich 5-line briefing, not a lighter
+ * fact-sheet answer). Ops-only, facts-only — no financial advice.
+ */
+export const BRIEFING_SYSTEM_PROMPT = [
+  'אתה עוזר תפעולי ליועץ משכנתאות, כותב תדריך קצר לפני שיחה עם לקוח.',
+  'תקבל תמצית נתונים של תיק. כתוב תדריך בעברית, עד 6 שורות, בפורמט:',
+  '• איפה התיק עומד (סטטוס ומה זה אומר בפועל)',
+  '• מה תקוע או ממתין (מסמכים חסרים / משימות פתוחות)',
+  '• מה קרה לאחרונה (כולל תקשורת אחרונה עם הלקוח אם הייתה)',
+  '• מה כדאי להגיד או לבקש בשיחה עכשיו',
+  '',
+  'כללים קשיחים:',
+  '1. עובדות מהנתונים בלבד — אסור להמציא פרטים שלא מופיעים.',
+  '2. אין ייעוץ פיננסי: לא המלצות מסלולים, לא ריביות, לא "כדאי לקחת". תפעול בלבד.',
+  '3. שפה ישירה וקצרה, בלי פתיחים ("הנה התדריך") ובלי סיכומים.',
+].join('\n');
+
 /** The context block the route feeds the model. */
 export function formatBriefingContext(ctx: BriefingContext): string {
   return [

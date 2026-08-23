@@ -33,6 +33,11 @@ export function buildNlQuerySchema(statusKeys: readonly string[]) {
      *  "when is the target date") rather than counting/filtering the portfolio.
      *  Routes to the free-text case answer instead of the filter result. */
     is_case_question: z.boolean(),
+    /** True when the user asks to SUMMARIZE / brief the whole case ("סכם",
+     *  "תן סיכום", "תדריך", "מה המצב של התיק") — routes to the rich briefing
+     *  (same as the pre-call briefing) instead of a one-fact answer. Implies
+     *  is_case_question. */
+    is_briefing_request: z.boolean(),
     /** An ACTION the user is asking to perform on a case ("change status to
      *  submitted", "add a task", "set target date", "assign to David").
      *  'none' = a question, not an action. Always PROPOSED for confirm. */
