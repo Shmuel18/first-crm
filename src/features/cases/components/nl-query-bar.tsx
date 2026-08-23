@@ -36,7 +36,11 @@ export function NlQueryBar() {
       const payload =
         a.kind === 'change_status'
           ? { kind: a.kind, caseId: a.caseId, statusId: a.statusId }
-          : { kind: a.kind, caseId: a.caseId, title: a.title };
+          : a.kind === 'create_task'
+            ? { kind: a.kind, caseId: a.caseId, title: a.title }
+            : a.kind === 'set_target_date'
+              ? { kind: a.kind, caseId: a.caseId, targetDate: a.targetDate }
+              : { kind: a.kind, caseId: a.caseId, advisorId: a.advisorId };
       const res = await fetch('/api/ai/confirm-action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

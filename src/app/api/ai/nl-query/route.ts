@@ -51,7 +51,9 @@ export type NlQueryResponse =
 
 export type ProposedAction =
   | { kind: 'change_status'; caseId: string; caseLabel: string; statusId: string; summary: string }
-  | { kind: 'create_task'; caseId: string; caseLabel: string; title: string; summary: string };
+  | { kind: 'create_task'; caseId: string; caseLabel: string; title: string; summary: string }
+  | { kind: 'set_target_date'; caseId: string; caseLabel: string; targetDate: string; summary: string }
+  | { kind: 'assign_advisor'; caseId: string; caseLabel: string; advisorId: string; summary: string };
 
 /**
  * Free-language dashboard query (ai-v2-spec.md §5): the model translates the
@@ -183,8 +185,47 @@ export async function POST(request: Request): Promise<Response> {
       }
       if (title && !canEdit) return NextResponse.json(refusal('אין לך הרשאה להוסיף משימה בתיק זה.'));
     }
+
+    if (result.data.action_kind === 'set_target_date') {
+      const date = result.data.action_target_date?.trim();
+      const validDate = date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null;
+      if (validDate && canEdit) {
+        return NextResponse.json(actionPayload(actionCaseId, caseLabel, {
+          kind: 'set_target_date',
+          caseId: actionCaseId,
+          caseLabel,
+          targetDate: validDate,
+          summary: `לקבוע לתיק ${caseLabel} תאריך יעד ${validDate}?`,
+        }));
+      }
+      if (validDate && !canEdit) return NextResponse.json(refusal('אין לך הרשאה לערוך תיק זה.'));
+    }
+
+    if (result.data.action_kind === 'assign_advisor') {
+      const advisor = matchAdvisor(lookups.advisors, result.data.action_advisor_name);
+      const allowed = canEdit && (await userHasPermission('assign_case_to_user'));
+      if (advisor && allowed) {
+        return NextResponse.json(actionPayload(actionCaseId, caseLabel, {
+          kind: 'assign_advisor',
+          caseId: actionCaseId,
+          caseLabel,
+          advisorId: advisor.id,
+          summary: `לשייך את תיק ${caseLabel} ליועץ ${advisor.name}?`,
+        }));
+      }
+      if (advisor && !allowed) return NextResponse.json(refusal('אין לך הרשאה לשייך יועץ לתיק זה.'));
+      if (!advisor && result.data.action_advisor_name) {
+        return NextResponse.json(refusal(`לא זיהיתי יועץ בשם "${result.data.action_advisor_name}".`));
+      }
+    }
     // Action couldn't be formed (no target/permission/params) → fall through to
     // the question path so the user still gets a useful answer.
+  } else if (result.data.action_kind !== 'none') {
+    // An action was requested but no case is in context — ask which one rather
+    // than silently answering (this is what produced the confusing refusal).
+    return NextResponse.json(
+      refusal('על איזה תיק לבצע את הפעולה? ציין את שם הלקוח, או פתח את התיק ושאל שוב.'),
+    );
   }
 
   // ── Case question → free-text answer from the fact sheet ────────────────────
@@ -243,6 +284,20 @@ export async function POST(request: Request): Promise<Response> {
     caseLabel: namedCaseId ? getCaseClientLabel(matched[0]!) : null,
   };
   return NextResponse.json(payload);
+}
+
+/** Unique normalized-substring advisor match (else null — never guess). */
+function matchAdvisor(
+  advisors: ReadonlyArray<{ id: string; name: string }>,
+  raw: string | null,
+): { id: string; name: string } | null {
+  const needle = raw?.trim().toLowerCase();
+  if (!needle) return null;
+  const hits = advisors.filter((a) => {
+    const hay = a.name.toLowerCase();
+    return hay === needle || hay.includes(needle) || needle.includes(hay);
+  });
+  return hits.length === 1 ? hits[0]! : null;
 }
 
 /** A single-case answerable payload carrying a proposed action. */
@@ -330,10 +385,13 @@ function buildSystemPrompt(lookups: {
     '- is_case_question: true אם השאלה על פרטים של תיק ספציפי אחד (מה חסר בתיק, המייל של הלווה/האשה, כמה ילדים, תאריך היעד, סטטוס, פרטי קשר) ולא ספירה/סינון של תיקים. אחרת false.',
     '',
     'פעולות (בקשה לבצע, לא לשאול):',
-    '- action_kind: change_status אם מבקשים לשנות סטטוס תיק; create_task אם מבקשים להוסיף/ליצור משימה; אחרת none.',
+    '- action_kind: change_status (שינוי סטטוס) / create_task (הוספת משימה) / set_target_date (קביעת תאריך יעד) / assign_advisor (שיוך יועץ); אחרת none.',
     '- action_status_key: עבור change_status — מפתח השלב היעד מהרשימה למעלה; אחרת __none__.',
     '- action_task_title: עבור create_task — כותרת המשימה בעברית (למשל "להתקשר ללקוח"); אחרת null.',
-    '- פעולה תמיד מתייחסת לתיק ספציפי (בשם או בהקשר). זו בקשה לבצע — לא unmappable.',
+    '- action_target_date: עבור set_target_date — התאריך בפורמט YYYY-MM-DD (פענח "יום ראשון הבא", "עוד שבוע" וכו\' לתאריך מלא); אחרת null.',
+    '- action_advisor_name: עבור assign_advisor — שם היועץ כפי שנכתב; אחרת null.',
+    '- פעלי ציווי כמו "שנה", "עדכן", "קבע", "שייך", "הוסף", "צור" = פעולה (action_kind מתאים), לא שאלה. במקרה כזה is_case_question=false.',
+    '- פעולה תמיד מתייחסת לתיק ספציפי (בשם או בהקשר). זו בקשה לבצע — לא unmappable, וגם לא unmappable_reason.',
     '',
     'כללים:',
     '1. אל תמציא פילטר שלא קיים. שאלת סינון/ספירה שלא ניתנת למיפוי → unmappable_reason קצר וכל השאר null. אבל שאלה על פרטי תיק בודד היא is_case_question=true (גם בלי פילטר) — לא unmappable.',

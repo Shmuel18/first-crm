@@ -32,6 +32,8 @@ const base: NlQueryOutput = {
   action_kind: 'none',
   action_status_key: null,
   action_task_title: null,
+  action_target_date: null,
+  action_advisor_name: null,
   unmappable_reason: null,
 };
 

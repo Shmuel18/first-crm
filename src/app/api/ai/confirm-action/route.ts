@@ -46,17 +46,22 @@ export async function POST(request: Request): Promise<Response> {
     caseId?: unknown;
     statusId?: unknown;
     title?: unknown;
+    targetDate?: unknown;
+    advisorId?: unknown;
   } | null;
   const kind = body?.kind;
   const caseId = typeof body?.caseId === 'string' ? body.caseId : '';
   if (!caseId) return NextResponse.json({ error: 'validation' }, { status: 400 });
 
-  if (kind === 'change_status') {
-    const statusId = typeof body?.statusId === 'string' ? body.statusId : '';
-    if (!statusId) return NextResponse.json({ error: 'validation' }, { status: 400 });
-    // Delegates ALL authz (userCanEditCase + change_case_status), validation,
-    // and audit to the same action the inline status cell uses.
-    const res = await quickUpdateCaseFieldAction(caseId, 'status_id', statusId);
+  // All field updates delegate ALL authz (userCanEditCase + the per-field
+  // permission), validation, and audit to quickUpdateCaseFieldAction — the same
+  // action the inline dashboard cells use.
+  const fieldUpdate = async (
+    field: 'status_id' | 'target_date' | 'assigned_advisor_id',
+    value: string,
+  ): Promise<Response> => {
+    if (!value) return NextResponse.json({ error: 'validation' }, { status: 400 });
+    const res = await quickUpdateCaseFieldAction(caseId, field, value);
     if (!res.ok) {
       return NextResponse.json(
         { error: res.error === 'unauthorized' ? 'unauthorized' : 'unknown' },
@@ -64,6 +69,19 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
     return NextResponse.json({ ok: true });
+  };
+
+  if (kind === 'change_status') {
+    return fieldUpdate('status_id', typeof body?.statusId === 'string' ? body.statusId : '');
+  }
+  if (kind === 'set_target_date') {
+    return fieldUpdate('target_date', typeof body?.targetDate === 'string' ? body.targetDate : '');
+  }
+  if (kind === 'assign_advisor') {
+    return fieldUpdate(
+      'assigned_advisor_id',
+      typeof body?.advisorId === 'string' ? body.advisorId : '',
+    );
   }
 
   if (kind === 'create_task') {
