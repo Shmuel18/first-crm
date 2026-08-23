@@ -1,25 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { useTransition } from 'react';
+import { useState } from 'react';
 
-import {
-  ClipboardList,
-  FolderOpen,
-  Loader2,
-  RefreshCw,
-  Upload,
-} from 'lucide-react';
+import { ClipboardList, FolderOpen, Mail, Loader2, RefreshCw, Upload } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { toast } from 'sonner';
 
 import { BackLink } from '@/components/shared/back-link';
 import { Tooltip } from '@/components/ui/tooltip';
 import { parseLocale } from '@/lib/i18n/direction';
 
-import { syncDriveDocumentsAction } from '../actions/sync-drive-documents';
 import type { DocumentChecklistItem } from '../services/document-checklist.service';
 import { SendDocRequestButton } from './send-doc-request-button';
+import { SendDocumentsEmailDialog } from './send-documents-email-dialog';
 
 type Props = {
   caseId: string;
@@ -34,8 +27,16 @@ type Props = {
     phone: string | null;
   } | null;
   checklist: ReadonlyArray<DocumentChecklistItem>;
-  /** Gate the write affordances (upload / sync / request) for view-only users. */
+  /** Case-level edit authority for requests/email. */
   canEdit: boolean;
+  /** Exact capability required by document uploads. */
+  canUploadDocuments: boolean;
+  /** Sync additionally requires permission to read case documents. */
+  canSyncDrive: boolean;
+  /** Shared sync controller owned by DocumentsPageContent. */
+  onSync: () => void;
+  syncPending: boolean;
+  syncStatus: string;
 };
 
 export function DocumentsActionBar({
@@ -47,88 +48,84 @@ export function DocumentsActionBar({
   primaryBorrower,
   checklist,
   canEdit,
+  canUploadDocuments,
+  canSyncDrive,
+  onSync,
+  syncPending,
+  syncStatus,
 }: Props) {
   const t = useTranslations('documents.actions');
   const tPage = useTranslations('documents');
   const tCase = useTranslations('case.actionBar');
   const tSync = useTranslations('documents.sync');
+  const tSend = useTranslations('documents.sendEmail');
   const locale = parseLocale(useLocale());
-  const [isPending, startTransition] = useTransition();
-
-  const handleSync = () =>
-    startTransition(async () => {
-      const res = await syncDriveDocumentsAction(caseId);
-      if (res.ok) {
-        const parts: string[] = [];
-        if (res.imported > 0) parts.push(tSync('imported', { count: res.imported }));
-        if (res.updated > 0) parts.push(tSync('updated', { count: res.updated }));
-        if (res.deleted > 0) parts.push(tSync('deleted', { count: res.deleted }));
-        if (res.pushed > 0) parts.push(tSync('pushed', { count: res.pushed }));
-        if (parts.length === 0) {
-          toast(tSync('nothingNew'));
-        } else {
-          toast.success(parts.join(' · '));
-        }
-        return;
-      }
-      if (res.error === 'no_folder') {
-        toast(tSync('noFolderYet'));
-        return;
-      }
-      if (res.error === 'not_connected') {
-        toast.error(tSync('errors.notConnected'));
-        return;
-      }
-      if (res.error === 'rate_limited') {
-        toast.error(tSync('errors.rateLimited'));
-        return;
-      }
-      toast.error(tSync('errors.generic'));
-    });
+  const [emailOpen, setEmailOpen] = useState(false);
 
   return (
-    <div className="bg-brand-gold-soft text-neutral-900 sticky top-[-1rem] sm:top-[-1.5rem] z-20 shadow-sm -mx-4 px-4 sm:-mx-6 sm:px-6 py-3 border-b border-brand-gold/20">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <BackLink href={`/cases/${caseId}`} label={tPage('backToCase')} locale={locale} className="shrink-0" />
-          <div className="flex items-center gap-2 flex-wrap min-w-0">
-            <span className="font-display text-base font-semibold truncate max-w-md">
+    <div className="bg-brand-gold-soft border-brand-gold/20 sticky top-[-1rem] z-20 -mx-4 border-b px-4 py-3 text-neutral-900 shadow-sm sm:top-[-1.5rem] sm:-mx-6 sm:px-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <BackLink
+            href={`/cases/${caseId}`}
+            label={tPage('backToCase')}
+            locale={locale}
+            className="shrink-0"
+          />
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <span className="font-display max-w-md truncate text-base font-semibold">
               {borrowerNames || tCase('withBorrowers')}
             </span>
             <span className="sr-only">
               {tCase('caseLabel')} {caseNumber}
             </span>
-            <span className="hidden md:inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full bg-brand-gold-soft border border-brand-gold/40 text-brand-gold-text">
+            <span className="bg-brand-gold-soft border-brand-gold/40 text-brand-gold-text hidden items-center rounded-full border px-2.5 py-0.5 text-xs font-medium md:inline-flex">
               {tPage('pageTitle')}
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-0.5 shrink-0">
+        <div className="flex shrink-0 items-center gap-0.5">
+          {canUploadDocuments && (
+            <button
+              type="button"
+              onClick={onUpload}
+              className="bg-brand-gold hover:bg-brand-gold-dark text-brand-black focus-visible:ring-brand-gold-text inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition focus-visible:ring-2 focus-visible:outline-none"
+            >
+              <Upload className="size-3.5" aria-hidden="true" />
+              {t('upload')}
+            </button>
+          )}
+          {canSyncDrive && (
+            <button
+              type="button"
+              onClick={onSync}
+              disabled={syncPending || !driveFolderId}
+              aria-busy={syncPending}
+              aria-describedby="drive-sync-status"
+              aria-label={syncPending ? tSync('syncing') : tSync('button')}
+              className="hover:border-brand-gold-text hover:text-brand-gold-text focus-visible:ring-brand-gold-text/50 inline-flex items-center gap-1.5 rounded-md border border-neutral-300 bg-white/60 px-2.5 py-1.5 text-xs text-neutral-700 transition focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
+            >
+              {syncPending ? (
+                <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <RefreshCw className="size-3.5" aria-hidden="true" />
+              )}
+              <span className="hidden lg:inline">
+                {syncPending ? tSync('syncing') : tSync('button')}
+              </span>
+            </button>
+          )}
           {canEdit && (
             <>
               <button
                 type="button"
-                onClick={onUpload}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-brand-gold hover:bg-brand-gold-dark text-brand-black font-medium text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text"
+                onClick={() => setEmailOpen(true)}
+                aria-label={tSend('button')}
+                className="hover:border-brand-gold-text hover:text-brand-gold-text focus-visible:ring-brand-gold-text/50 inline-flex items-center gap-1.5 rounded-md border border-neutral-300 bg-white/60 px-2.5 py-1.5 text-xs text-neutral-700 transition focus-visible:ring-2 focus-visible:outline-none"
               >
-                <Upload className="size-3.5" aria-hidden="true" />
-                {t('upload')}
-              </button>
-              <button
-                type="button"
-                onClick={handleSync}
-                disabled={isPending}
-                aria-busy={isPending}
-                aria-label={tSync('button')}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-neutral-300 hover:border-brand-gold-text text-neutral-700 hover:text-brand-gold-text bg-white/60 text-xs transition disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
-              >
-                {isPending ? (
-                  <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-                ) : (
-                  <RefreshCw className="size-3.5" aria-hidden="true" />
-                )}
-                <span className="hidden lg:inline">{tSync('button')}</span>
+                <Mail className="size-3.5" aria-hidden="true" />
+                <span className="hidden lg:inline">{tSend('button')}</span>
               </button>
               <SendDocRequestButton
                 caseId={caseId}
@@ -141,20 +138,43 @@ export function DocumentsActionBar({
           <BarIcon
             icon={FolderOpen}
             title={t('openDrive')}
-            href={driveFolderId ? `https://drive.google.com/drive/folders/${driveFolderId}` : undefined}
+            href={
+              driveFolderId ? `https://drive.google.com/drive/folders/${driveFolderId}` : undefined
+            }
             disabled={!driveFolderId}
           />
           <Tooltip content={t('history')}>
             <Link
               href={`/cases/${caseId}/history?scope=documents`}
               aria-label={t('history')}
-              className="flex size-8 items-center justify-center rounded-md text-neutral-700 transition hover:bg-white hover:text-brand-gold-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/50"
+              className="hover:text-brand-gold-text focus-visible:ring-brand-gold-text/50 flex size-8 items-center justify-center rounded-md text-neutral-700 transition hover:bg-white focus-visible:ring-2 focus-visible:outline-none"
             >
               <ClipboardList className="size-3.5" aria-hidden="true" />
             </Link>
           </Tooltip>
         </div>
       </div>
+
+      <span
+        id="drive-sync-status"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {syncStatus}
+      </span>
+
+      {/* Fresh mount per open so recipient / attachment state resets. */}
+      {emailOpen && (
+        <SendDocumentsEmailDialog
+          caseId={caseId}
+          open={emailOpen}
+          onOpenChange={setEmailOpen}
+          defaultRecipient={primaryBorrower?.email ?? null}
+          initialAttachments={[]}
+        />
+      )}
     </div>
   );
 }

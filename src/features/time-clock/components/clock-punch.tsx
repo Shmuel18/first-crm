@@ -6,6 +6,7 @@ import { AlertTriangle, Loader2, LogIn, LogOut } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
 import { formatCurrency } from '@/lib/utils/format-currency';
 import type { Locale } from '@/lib/i18n/direction';
 
@@ -48,7 +49,7 @@ export function ClockPunch({ initialOpen, initialEntries, hourlyRate, locale }: 
 
   const punch = () =>
     start(async () => {
-      const res = open ? await clockOutAction() : await clockInAction();
+      const res = open ? await callAction(() => clockOutAction()) : await callAction(() => clockInAction());
       if (!res.ok) toast.error(t(`errors.${res.error}`));
       else toast.success(open ? t('punch.outDone') : t('punch.inDone'));
     });

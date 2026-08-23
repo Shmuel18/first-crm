@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { DateInputWithPicker } from '@/components/ui/date-input-with-picker';
+import { callAction } from '@/lib/actions/call-action';
 
 import { addFeePaymentAction } from '../actions/add-fee-payment';
 import { PAYMENT_METHODS } from '../domain/payment-methods';
@@ -48,13 +49,13 @@ export function FeePaymentForm({ caseId, defaultDate, onAdded, onMutateStart, on
       let ok = false;
       try {
         const paymentMethod = method ? (method as (typeof PAYMENT_METHODS)[number]) : null;
-        const res = await addFeePaymentAction({
+        const res = await callAction(() => addFeePaymentAction({
           caseId,
           paidOn: paidOn || null,
           amount: amountNum,
           paymentMethod,
           note: note.trim() || null,
-        });
+        }));
         if (!res.ok) {
           toast.error(t(`errors.${res.error}`));
           return;

@@ -18,9 +18,10 @@ type Result =
 /**
  * Lists the case's attachable documents for the "attach from case" picker in
  * the client-email dialog. Lazy-loaded when the picker opens (keeps the doc
- * query off every case-page render). Only documents with a Storage blob are
- * returned — Drive-only rows have nothing to attach. Auth mirrors the send
- * action (must be able to edit the case).
+ * query off every case-page render). Includes documents that live only in
+ * Drive (dropped into the case folder rather than uploaded here) — the send
+ * path fetches their bytes from Drive. Auth mirrors the send action (must be
+ * able to edit the case).
  */
 export async function listCaseDocumentsForEmailAction(caseId: string): Promise<Result> {
   if (typeof caseId !== 'string' || caseId.length === 0) {
@@ -34,7 +35,7 @@ export async function listCaseDocumentsForEmailAction(caseId: string): Promise<R
 
   const { data, error } = await supabase
     .from('documents')
-    .select('id, file_name, mime_type, file_size, metadata')
+    .select('id, file_name, mime_type, file_size, drive_file_id, metadata')
     .eq('case_id', caseId)
     .is('deleted_at', null)
     .order('upload_date', { ascending: false });
@@ -43,13 +44,17 @@ export async function listCaseDocumentsForEmailAction(caseId: string): Promise<R
     return { ok: false, error: 'unknown' };
   }
 
+  // Attachable = we can get bytes from somewhere: our Storage bucket, or Drive.
   const documents: EmailDocumentOption[] = (data ?? [])
     .filter(
       (d) =>
-        d.metadata &&
-        typeof d.metadata === 'object' &&
-        'storage_path' in d.metadata &&
-        Boolean((d.metadata as { storage_path?: string }).storage_path),
+        Boolean(d.drive_file_id) ||
+        Boolean(
+          d.metadata &&
+            typeof d.metadata === 'object' &&
+            'storage_path' in d.metadata &&
+            (d.metadata as { storage_path?: string }).storage_path,
+        ),
     )
     .map((d) => ({
       id: d.id,

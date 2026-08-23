@@ -23,8 +23,8 @@ type Props = {
  * Reordering uses dnd-kit's pointer-based sortable so it works on touch
  * (mobile) as well as mouse — drag is initiated only from the grip handle.
  *
- * Completion = manual tick OR a verified document; the tick writes only the
- * manual flag.
+ * Completion = manual tick OR a filed document; the tick writes only the
+ * manual flag. Documents need no separate review in Kaufman's workflow.
  */
 export function ChecklistManagerRow({ item, locale, busy, onToggle, onRemove }: Props) {
   const t = useTranslations('documents.checklist');
@@ -33,12 +33,10 @@ export function ChecklistManagerRow({ item, locale, busy, onToggle, onRemove }: 
   });
 
   const name = (locale === 'he' ? item.nameHe : item.nameEn) || item.nameHe;
-  // Equivalent to status === 'verified' upstream, but recomputed from the
-  // optimistic isDone flag so a tick reflects instantly before revalidation.
-  const done = item.isDone || item.verifiedCount > 0;
-  // A verified document forces completion even without the manual tick;
+  const done = item.isDone || item.validDocumentCount > 0;
+  // A filed document forces completion even without the manual tick;
   // surface that so the user understands why it can't simply be unticked.
-  const lockedByDoc = !item.isDone && item.verifiedCount > 0;
+  const lockedByDoc = !item.isDone && item.validDocumentCount > 0;
 
   return (
     <li

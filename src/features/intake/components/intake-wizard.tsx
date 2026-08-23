@@ -14,7 +14,11 @@ import { StepStory } from './steps/step-story';
 import { StepSuccess } from './steps/step-success';
 
 const STEP_KEYS = ['composition', 'personal', 'property', 'income', 'story'] as const;
-const SUBMIT_ERROR_KEY = { rate_limited: 'rateLimited', unknown: 'unknown' } as const;
+const SUBMIT_ERROR_KEY = {
+  rate_limited: 'rateLimited',
+  unknown: 'unknown',
+  network: 'network',
+} as const;
 
 export function IntakeWizard() {
   const locale = useLocale();

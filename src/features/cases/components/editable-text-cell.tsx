@@ -6,6 +6,8 @@ import { Check, Loader2, Pencil } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
+
 import { quickUpdateCaseFieldAction } from '../actions/quick-update-case';
 
 type EditableTextCellProps = {
@@ -95,12 +97,12 @@ export function EditableTextCell({
     setEditing(false);
 
     startTransition(async () => {
-      const result = await quickUpdateCaseFieldAction(
+      const result = await callAction(() => quickUpdateCaseFieldAction(
         caseId,
         field,
         newValue || null,
         previousSaved || null,
-      );
+      ));
       if (result.ok) {
         setShowSaved(true);
       } else {

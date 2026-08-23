@@ -21,7 +21,7 @@ A SaaS for **Kaufman Finance Group** - an Israeli mortgage advisor office. Repla
 - **Icons:** Lucide React (NEVER emojis in UI)
 - **Forms:** React Hook Form + **Zod 4**
 - **i18n:** next-intl 4
-- **Server state:** TanStack Query 5
+- **Server state:** Server Components + Server Actions (no client query cache — see Data Flow)
 - **URL state:** nuqs (type-safe URL search params)
 - **Animations:** Framer Motion 12 (subtle, professional)
 - **Env vars:** @t3-oss/env-nextjs (type-safe)
@@ -114,7 +114,11 @@ Every file lives in exactly one layer. Crossing layers requires going UP through
 - Components only do: rendering + simple event delegation
 
 ### Data Flow
-- Server state: TanStack Query
+- Server state: **Server Components fetch through feature `services/`**; mutations
+  go through Server Actions and invalidate with `revalidatePath` / `revalidateTag`
+  (or `router.refresh()` from the client). **TanStack Query is NOT installed** —
+  do not reach for `useQuery`; add the dependency deliberately if a case ever
+  genuinely needs a client cache.
 - Client state: useState/useReducer (minimal)
 - Form state: React Hook Form + Zod
 - URL state: **nuqs** (type-safe `useQueryState`) - critical for filters, sorting, pagination in tables
@@ -229,6 +233,45 @@ A feature is **NOT done** until ALL of these are true:
 - [ ] Works in both Hebrew (RTL) and English (LTR)
 - [ ] Permissions checked at server boundary
 - [ ] Code committed with conventional commit message
+- [ ] **`npm run verify` passes** — see below; it is the only gate left
+
+### Before pushing to `main` — ALWAYS run the gate
+
+`main` auto-deploys to **client production** (`crm.kaufman-finance.com`, real
+client data) the moment it is pushed. The GitHub Actions `verify` check is
+still listed as required, **but the Actions budget is exhausted so it can
+never run again**. Nothing on the server side is checking anything.
+
+```bash
+npm run verify && git push origin HEAD:main
+```
+
+`npm run verify` (`scripts/verify-local.cjs`) runs what CI used to —
+typecheck, lint, tests — plus two things CI never had:
+
+- **a production `npm run build`.** `tsc --noEmit` does NOT catch a client file
+  importing a *value* from a module that pulls in server-only code: it
+  typechecks clean and then fails the Turbopack build. That has broken this
+  repo before.
+- **`node --check` over `public/sw.js` and `public/offline.js`**, which no
+  other step touches. Syntax only — nothing local exercises service-worker
+  behaviour or an iOS cold start.
+
+Notes:
+- It needs `.env.local`. That file is gitignored, so a **worktree does not have
+  one** — copy it from the main checkout or the Build step fails on env
+  validation and looks like a code error.
+- `Bypassed rule violations` on every push is the **expected** state while the
+  budget is out. It is not a misconfiguration to "fix" — do **not** enable
+  `enforce_admins` on the branch protection: because `verify` can never pass,
+  it locks `main` completely, including rollbacks.
+- Other agents push to `main` concurrently. **Re-run the gate after rebasing**
+  onto their work, not just on your own diff — you have no way to know whether
+  they ran it.
+- After any `npm install`, confirm patch-package still applied:
+  `grep -c "if (!glyph || !position)" node_modules/@react-pdf/textkit/lib/textkit.js`
+  → `1` is good, `0` means run `npx patch-package`. Otherwise PDF generation
+  crashes and it looks like a framework regression.
 
 ### Commits
 - Conventional Commits: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`
@@ -287,11 +330,11 @@ src/
 ├── types/
 │   └── database.ts                # Auto-generated from Supabase
 │
-├── messages/                      # i18n translations
-│   ├── he.json
-│   └── en.json
-│
 └── proxy.ts                       # Auth middleware (Next.js 16 — was middleware.ts)
+
+messages/                          # i18n translations — REPO ROOT, not src/
+├── he.json
+└── en.json
 ```
 
 ## Team onboarding flow (magic-link invite)

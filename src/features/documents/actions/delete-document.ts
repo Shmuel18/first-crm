@@ -1,12 +1,16 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 
 import { z } from 'zod';
 
 import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
+
+import { trashDriveCopy } from '../services/drive-document-removal.service';
+import { softDeleteDocumentWithTombstone } from '../services/soft-delete-document.service';
 
 type Result =
   | { ok: true }
@@ -60,9 +64,11 @@ export async function deleteDocumentAction(
   }
 
   // Defense-in-depth: doc must belong to the supplied case + still exist.
+  // drive_file_id is read here, before the delete clears it, so the Drive copy
+  // can be binned afterwards.
   const { data: doc, error: fetchErr } = await supabase
     .from('documents')
-    .select('id')
+    .select('id, drive_file_id')
     .eq('id', parsed.data.documentId)
     .eq('case_id', parsed.data.caseId)
     .is('deleted_at', null)
@@ -80,40 +86,30 @@ export async function deleteDocumentAction(
     return { ok: true };
   }
 
-  // soft_delete_document_with_tombstone (migration 027) is on the remote
-  // DB but not surfaced by `supabase gen types` — narrow the call instead
-  // of casting through unknown at the use-site of `error`.
-  const rpc = supabase.rpc.bind(supabase) as unknown as (
-    fn: 'soft_delete_document_with_tombstone',
-    args: { p_document_id: string; p_case_id: string; p_user_id: string },
-  ) => Promise<{ error: { message: string } | null }>;
-
-  const { error: deleteErr } = await rpc('soft_delete_document_with_tombstone', {
-    p_document_id: parsed.data.documentId,
-    p_case_id: parsed.data.caseId,
-    p_user_id: userRes.user.id,
+  const outcome = await softDeleteDocumentWithTombstone(supabase, {
+    documentId: parsed.data.documentId,
+    caseId: parsed.data.caseId,
+    userId: userRes.user.id,
   });
+  if (outcome === 'failed') return { ok: false, error: 'unknown' };
+  if (outcome === 'raced') {
+    // Already gone by another path; the UI just needs fresh data.
+    refreshDocumentViews(parsed.data.caseId);
+    return { ok: true };
+  }
 
-  if (deleteErr) {
-    console.error('[deleteDocument] rpc failed', safeDbError(deleteErr));
-    const { data: activeDoc, error: refetchErr } = await supabase
-      .from('documents')
-      .select('id')
-      .eq('id', parsed.data.documentId)
-      .eq('case_id', parsed.data.caseId)
-      .is('deleted_at', null)
-      .maybeSingle();
-
-    if (refetchErr) {
-      console.error('[deleteDocument] refetch after rpc failure failed', safeDbError(refetchErr));
-    } else if (!activeDoc) {
-      // Treat delete races as success. The desired state (not visible in the
-      // active documents list) already happened; the UI just needs fresh data.
-      refreshDocumentViews(parsed.data.caseId);
-      return { ok: true };
-    }
-
-    return { ok: false, error: 'unknown' };
+  // Mirror the delete into Drive so the folder matches what the app shows.
+  // after() because it's an external HTTP call: the dialog must not wait on
+  // Drive, and a Drive failure must not fail a delete that already committed.
+  if (doc.drive_file_id) {
+    after(async () => {
+      const trashed = await trashDriveCopy(doc.drive_file_id);
+      if (!trashed) {
+        console.error('[deleteDocument] Drive copy not binned', {
+          documentId: parsed.data.documentId,
+        });
+      }
+    });
   }
 
   refreshDocumentViews(parsed.data.caseId);

@@ -8,6 +8,8 @@ import { Pencil, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
+
 import { deleteBankAction } from '../actions/delete-bank';
 import type { Bank } from '../banks.constants';
 
@@ -21,7 +23,7 @@ export function BankRow({ bank, onEdit }: Props) {
   const handleDelete = () => {
     if (!window.confirm(t('row.deleteConfirm', { name: bank.name_he }))) return;
     startTransition(async () => {
-      const res = await deleteBankAction(bank.id);
+      const res = await callAction(() => deleteBankAction(bank.id));
       if (res.ok) toast.success(t('toast.deleted'));
       else if (res.error === 'in_use') toast.error(t('toast.inUse'));
       else if (res.error === 'system') toast.error(t('toast.system'));

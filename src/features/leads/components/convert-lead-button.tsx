@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { callAction } from '@/lib/actions/call-action';
 
 import { convertLeadAction } from '../actions/convert-lead';
 
@@ -30,7 +31,7 @@ export function ConvertLeadButton({ leadId }: Props) {
   const confirmConvert = () =>
     startTransition(async () => {
       setOpen(false);
-      const res = await convertLeadAction(leadId);
+      const res = await callAction(() => convertLeadAction(leadId));
       // On success the action redirects to the new case; only failures return.
       if (res.error === 'already_converted') {
         toast.error(t('toast.alreadyConverted'));

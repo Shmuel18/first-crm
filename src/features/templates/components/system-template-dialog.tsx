@@ -18,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { FormField } from '@/components/shared/form-fields';
+import { callAction } from '@/lib/actions/call-action';
 
 import { resetSystemEmailTemplateAction } from '../actions/reset-system-email-template';
 import { updateSystemEmailTemplateAction } from '../actions/update-system-email-template';
@@ -86,7 +87,7 @@ export function SystemTemplateDialog({ open, onOpenChange, template, initialLoca
   const reset = () => {
     if (!window.confirm(t('resetConfirm'))) return;
     startReset(async () => {
-      const result = await resetSystemEmailTemplateAction(template.key, locale);
+      const result = await callAction(() => resetSystemEmailTemplateAction(template.key, locale));
       if (result.ok) {
         toast.success(t('resetDone'));
         onOpenChange(false);

@@ -12,6 +12,7 @@ import {
   Settings2,
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
 import {
   AlertDialog,
@@ -23,6 +24,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { callAction } from '@/lib/actions/call-action';
 
 import { disconnectGoogleDriveAction } from '../actions/disconnect-google-drive';
 import type { DriveIntegrationView } from '../types';
@@ -58,7 +60,14 @@ export function DriveIntegrationCard({
   const handleDisconnectConfirmed = () =>
     startTransition(async () => {
       setConfirmOpen(false);
-      await disconnectGoogleDriveAction();
+      // The result was already discarded here before callAction, but a rejected
+      // request at least surfaced. Say it out loud instead: on failure the card
+      // correctly still reads "connected", which without a message looks like
+      // the click did nothing.
+      const res = await callAction(() => disconnectGoogleDriveAction());
+      if (!res.ok) {
+        toast.error(res.error === 'network' ? tCommon('noConnection') : tCommon('saveFailed'));
+      }
     });
 
   const isConnected = view.status === 'connected';

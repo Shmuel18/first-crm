@@ -125,7 +125,8 @@
       "consentRequired": "יש לאשר את מדיניות הפרטיות כדי להמשיך.",
       "contactRequired": "יש להזין טלפון או דוא\"ל ליצירת קשר.",
       "rateLimited": "נשלחו יותר מדי פניות מכתובת זו. נסה/י שוב בעוד שעה.",
-      "unknown": "אירעה שגיאה בשליחה. נסה/י שוב."
+      "unknown": "אירעה שגיאה בשליחה. נסה/י שוב.",
+      "network": "השליחה לא הושלמה — נראה שאין חיבור לאינטרנט. התשובות שמילאת נשמרו במכשיר; בדוק/י את החיבור ונסה/י לשלוח שוב."
     },
     "footer": {
       "privacy": "מדיניות הפרטיות",
@@ -183,7 +184,7 @@
       "fromCase": "ממסמכי התיק",
       "loading": "טוען…",
       "noDocuments": "אין מסמכים לצירוף",
-      "tooMany": "אפשר לצרף עד 5 קבצים",
+      "tooMany": "אפשר לצרף עד {count} קבצים",
       "tooLarge": "הקבצים גדולים מדי (עד 15MB סה״כ)",
       "fileTypeNotAllowed": "סוג קובץ לא נתמך",
       "uploadFailed": "העלאת הקובץ נכשלה",
@@ -222,6 +223,7 @@
     "done": "סיום",
     "savedAgo": "נשמר",
     "saveFailed": "השמירה נכשלה. נסה שוב.",
+    "noConnection": "אין חיבור לאינטרנט. השינוי לא נשמר — בדוק את החיבור ונסה שוב.",
     "changedElsewhere": "השדה עודכן על ידי משתמש אחר. רענן כדי לראות את הגרסה העדכנית.",
     "noStatus": "ללא סטטוס",
     "comingSoon": "בקרוב",
@@ -1739,7 +1741,7 @@
       "requestDetailsEmpty": "טרם נכתבו פרטי בקשה מלאים.",
       "documents": "מסמכים",
       "documentsComingSoon": "ניהול מסמכים + סנכרון Google Drive יתווסף בקרוב",
-      "documentsHint": "לחץ על 'פתח מסמכים' לעמוד הניהול - העלאה, צ׳ק-ליסט, אימות וסטטוסים.",
+      "documentsHint": "לחץ על 'פתח מסמכים' לעמוד הניהול — העלאה, צ׳ק-ליסט וסנכרון מלא עם Drive.",
       "openDocuments": "פתח מסמכים"
     },
     "property": {
@@ -2705,11 +2707,6 @@
       "uploadCta": "העלאה",
       "dueAtStage": "דרוש בשלב {stage}",
       "uploadedCount": "{count, plural, =1 {1 קובץ הועלה} other {# קבצים הועלו}}",
-      "chip": {
-        "missing": "{count, plural, =1 {חסר 1} other {# חסרים}}",
-        "pending": "{count, plural, =1 {1 ממתין לאימות} other {# ממתינים לאימות}}",
-        "verified": "{count, plural, =1 {1 אומת} other {# אומתו}}"
-      },
       "manage": {
         "open": "ניהול",
         "title": "צ׳ק-ליסט מסמכים",
@@ -2739,6 +2736,8 @@
     },
     "sync": {
       "button": "סנכרן מ-Drive",
+      "syncing": "מסנכרן עם Drive…",
+      "complete": "הסנכרון עם Drive הושלם",
       "imported": "יובאו {count} קבצים חדשים מ-Drive",
       "updated": "עודכן מיקום ל-{count} קבצים שזזו ב-Drive",
       "deleted": "{count} קבצים שנמחקו ב-Drive הוסרו מהמערכת",
@@ -2781,8 +2780,6 @@
       "progressLabel": "הושלם",
       "progressAria": "התקדמות איסוף מסמכים {percent} אחוז",
       "total": "סך הכל {count} מסמכים",
-      "verified": "{count} מאומתים",
-      "pending": "{count} ממתינים לבדיקה",
       "missing": "{count} חסרים",
       "empty": "אין עדיין מסמכים בתיק"
     },
@@ -2827,20 +2824,6 @@
         "subtitle": "חשבוניות · מסמכים נוספים"
       }
     },
-    "status": {
-      "missing": "חסר",
-      "new": "ממתין לבדיקה",
-      "verified": "תקין",
-      "rejected": "נדחה",
-      "expired": "פג תוקף",
-      "not_relevant": "לא רלוונטי"
-    },
-    "statusActions": {
-      "markVerified": "סמן כתקין",
-      "markRejected": "החזר לבדיקה",
-      "markNew": "סמן כממתין",
-      "markNotRelevant": "סמן כלא רלוונטי"
-    },
     "uploadModal": {
       "title": "העלאת מסמך חדש",
       "fileLabel": "קובץ (PDF / תמונה / DOC, עד 20MB)",
@@ -2858,17 +2841,19 @@
       "title": "תצוגה מקדימה",
       "uploadedBy": "הועלה ע״י",
       "uploadedAt": "תאריך העלאה",
-      "verifiedBy": "אומת ע״י",
       "size": "גודל",
       "category": "סוג",
       "borrower": "לווה",
       "expiry": "תוקף עד",
       "openNewTab": "פתח בלשונית חדשה",
       "openInDrive": "פתח ב-Drive",
-      "downloadOriginal": "הורד מקור",
+      "downloadOriginal": "הורדה",
+      "downloading": "מוריד...",
       "noPreview": "אין תצוגה מקדימה לסוג קובץ זה",
       "close": "סגור",
-      "deleteConfirm": "להסיר את המסמך מהתיק? הוא יישאר באחסון שמור למשך חלון השחזור שהוגדר."
+      "deleteConfirm": "להסיר את המסמך מהתיק? הוא יישאר באחסון שמור למשך חלון השחזור שהוגדר.",
+      "print": "הדפס",
+      "sendByEmail": "שלח במייל"
     },
     "card": {
       "documentCount": "{count} מסמכים",
@@ -2879,6 +2864,11 @@
     },
     "detail": {
       "back": "כל התיקיות",
+      "backToParent": "חזרה לתיקייה הקודמת",
+      "breadcrumbLabel": "נתיב התיקייה",
+      "folderOpened": "נפתחה התיקייה {name}",
+      "foldersTitle": "תיקיות",
+      "folderUnavailable": "התיקייה הועברה או הוסרה ב-Drive",
       "uploadedTitle": "מסמכים שהועלו",
       "requiredTitle": "עדיין נדרש",
       "requiredEmpty": "הכול נאסף בקטגוריה זו",
@@ -2894,7 +2884,23 @@
       "unauthorized": "אין הרשאה",
       "uploadFailed": "ההעלאה נכשלה. נסה שוב.",
       "deleteFailed": "המחיקה נכשלה. נסה שוב.",
-      "statusUpdateFailed": "עדכון הסטטוס נכשל"
+      "printFailed": "ההדפסה נכשלה. נסה לפתוח את המסמך ולהדפיס משם.",
+      "downloadFailed": "ההורדה נכשלה. נסה לפתוח את המסמך בלשונית חדשה ולהוריד משם."
+    },
+    "sendEmail": {
+      "button": "שלח במייל",
+      "title": "שליחת מסמכים במייל",
+      "recipientLabel": "נמען",
+      "recipientPlaceholder": "banker@bank.co.il",
+      "recipientHint": "ניתן לשלוח לכל כתובת — בנקאי, שמאי או הלקוח.",
+      "defaultSubject": "מסמכים מצורפים",
+      "defaultBody": "שלום,\n\nמצורפים המסמכים.\n\nבברכה,",
+      "sent": "המייל נשלח",
+      "errors": {
+        "unauthorized": "אין הרשאה לשלוח מסמכים מתיק זה",
+        "attachment": "צירוף המסמכים נכשל — בדוק את מספר הקבצים והגודל",
+        "generic": "שליחת המייל נכשלה. נסה שוב."
+      }
     }
   },
   "richTextEditor": {
@@ -3326,6 +3332,18 @@
         "emailExists": "כתובת המייל כבר רשומה במערכת.",
         "rateLimited": "בוצעו יותר מדי הזמנות לאחרונה. נסה שוב בעוד שעה.",
         "generic": "יצירת ההזמנה נכשלה. נסה שוב."
+      },
+      "restore": {
+        "title": "{name} הוסר מהצוות בעבר",
+        "body": "החשבון עם כתובת המייל הזאת עדיין קיים במערכת, ולכן אי אפשר ליצור חשבון חדש. אפשר להחזיר אותו לצוות — ההיסטוריה שלו נשמרת, והפרטים שמילאת עכשיו (שם, טלפון, תפקיד) יעודכנו. התיקים והמשימות שהועברו למנהל בזמן ההסרה לא יחזרו אליו אוטומטית.",
+        "action": "החזר לצוות",
+        "restored": "{name} הוחזר לצוות",
+        "restoredAndEmailed": "החבר הוחזר לצוות ונשלח אליו קישור לבחירת סיסמה",
+        "restoredNeedsLink": "החבר הוחזר לצוות. שלח לו קישור התחברות מהשורה שלו ברשימה.",
+        "errors": {
+          "unauthorized": "רק מנהל יכול להחזיר חברי צוות.",
+          "generic": "החזרת חבר הצוות נכשלה. נסה שוב."
+        }
       }
     }
   }

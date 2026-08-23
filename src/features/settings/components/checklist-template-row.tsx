@@ -6,6 +6,8 @@ import { Pencil, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
+
 import { deleteChecklistTemplateAction } from '../actions/delete-checklist-template';
 
 import type { ChecklistTemplateAdminRow } from '../services/checklist-templates.service';
@@ -23,7 +25,7 @@ export function ChecklistTemplateRow({ template, onEdit }: Props) {
   const handleDelete = () => {
     if (!window.confirm(t('row.deleteConfirm', { name: template.name_he }))) return;
     startTransition(async () => {
-      const res = await deleteChecklistTemplateAction(template.id);
+      const res = await callAction(() => deleteChecklistTemplateAction(template.id));
       if (res.ok) toast.success(t('row.deleted'));
       else if (res.error === 'system_locked') toast.error(t('row.systemLocked'));
       else toast.error(tc('saveFailed'));

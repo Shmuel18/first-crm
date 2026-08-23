@@ -6,6 +6,8 @@ import { Mail, MessageCircle, MessageSquare, Pencil, Trash2 } from 'lucide-react
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
+
 import { deleteTemplateAction } from '../actions/delete-template';
 import type { MessageTemplate, TemplateChannel } from '../types';
 
@@ -26,7 +28,7 @@ export function TemplateRow({ template, onEdit }: Props) {
   const handleDelete = () => {
     if (!window.confirm(t('deleteConfirm', { name: template.name }))) return;
     startTransition(async () => {
-      const res = await deleteTemplateAction(template.id);
+      const res = await callAction(() => deleteTemplateAction(template.id));
       if (res.ok) toast.success(t('toast.deleted'));
       else toast.error(t('toast.failed'));
     });

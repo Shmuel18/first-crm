@@ -11,6 +11,7 @@ import {
   caseFolderName,
   type DriveUploadResult,
 } from './google-drive';
+import { classifyDriveFileAncestry } from './drive-file-ancestry';
 import { getIntegration, persistDriveRootFolderId } from './integrations.service';
 
 type CaseDriveMeta = {
@@ -38,7 +39,30 @@ async function driveDb(admin: boolean): Promise<DriveDb> {
 
 export type DriveCaseUploadOutcome =
   | { ok: true; driveFileId: string; webViewLink: string }
-  | { ok: false; reason: 'not_connected' | 'no_subfolder_for_category' | 'error'; message?: string };
+  | {
+      ok: false;
+      reason: 'not_connected' | 'no_subfolder_for_category' | 'error';
+      message?: string;
+    };
+
+export type DriveCaseMoveOutcome =
+  | {
+      ok: true;
+      changed: boolean;
+      previousParents: string[];
+      targetFolderId: string;
+      targetFolderName: string;
+    }
+  | {
+      ok: false;
+      reason:
+        | 'not_connected'
+        | 'no_case_folder'
+        | 'invalid_case_folder'
+        | 'no_subfolder_for_category'
+        | 'error';
+      message?: string;
+    };
 
 /** Returns a Drive client if google_drive is connected, else null. */
 export async function getDriveClientIfConnected(): Promise<GoogleDriveClient | null> {
@@ -94,10 +118,7 @@ async function ensureRootFolder(client: GoogleDriveClient): Promise<string> {
  * without threading it through the upload API. Falls back to "Case" for a case
  * with no readable borrower.
  */
-export async function resolveCaseClientName(
-  caseId: string,
-  supabase: DriveDb,
-): Promise<string> {
+export async function resolveCaseClientName(caseId: string, supabase: DriveDb): Promise<string> {
   const { data } = await supabase
     .from('case_borrowers')
     .select('is_primary, borrower:borrowers(first_name, last_name, deleted_at)')
@@ -120,7 +141,9 @@ async function ensureCaseFolder(
   meta: CaseDriveMeta,
   supabase: DriveDb,
 ): Promise<string> {
-  if (meta.case_folder_id) return meta.case_folder_id;
+  if (meta.case_folder_id && (await client.isManagedCaseFolder(meta.case_folder_id, caseId))) {
+    return meta.case_folder_id;
+  }
 
   // Look up by a stable appProperty (caseFolderId = our case UUID) instead
   // of by display name. This protects against (a) the user renaming the
@@ -138,10 +161,14 @@ async function ensureCaseFolder(
   }
 
   const nowIso = new Date().toISOString();
-  await patchCaseDriveMeta(caseId, {
-    case_folder_id: id,
-    last_synced_at: nowIso,
-  }, supabase);
+  await patchCaseDriveMeta(
+    caseId,
+    {
+      case_folder_id: id,
+      last_synced_at: nowIso,
+    },
+    supabase,
+  );
   meta.case_folder_id = id;
   meta.last_synced_at = nowIso;
   return id;
@@ -158,7 +185,20 @@ async function ensureSubfolder(
   const folderName = DRIVE_SUBFOLDER_NAMES[driveFolder];
   if (!folderName) return null;
   const cached = meta.subfolders?.[driveFolder];
-  if (cached) return cached;
+  if (cached) {
+    // A cached stable id remains valid after a user renames the folder, but it
+    // must still be a live DIRECT child folder. A moved id (or a corrupt id
+    // pointing at a file) must not receive new client documents.
+    const placement = await client.getFilePlacement(cached);
+    if (
+      !placement?.trashed &&
+      placement?.mimeType === 'application/vnd.google-apps.folder' &&
+      placement?.parents.length === 1 &&
+      placement.parents[0] === caseFolderId
+    ) {
+      return cached;
+    }
+  }
   const id = await client.ensureFolder(folderName, caseFolderId);
   const newSubfolders = { ...(meta.subfolders ?? {}), [driveFolder]: id };
   // Note: this still has a small race vs another writer adding a different
@@ -185,13 +225,7 @@ export async function uploadCaseDocumentToDrive(
     const supabase = await driveDb(false);
     const meta = await getCaseDriveMeta(input.caseId, supabase);
     const rootId = await ensureRootFolder(client);
-    const caseFolderId = await ensureCaseFolder(
-      client,
-      rootId,
-      input.caseId,
-      meta,
-      supabase,
-    );
+    const caseFolderId = await ensureCaseFolder(client, rootId, input.caseId, meta, supabase);
     const subfolderId = await ensureSubfolder(
       client,
       input.caseId,
@@ -217,6 +251,125 @@ export async function uploadCaseDocumentToDrive(
 }
 
 /**
+ * Move an already-Drive-backed document into the case's canonical direct
+ * category folder. Unlike upload mirroring this is authoritative: callers
+ * must not update the website category unless this operation succeeds.
+ */
+export async function moveCaseDocumentToDriveFolder(input: {
+  caseId: string;
+  driveFileId: string;
+  driveFolder: string;
+}): Promise<DriveCaseMoveOutcome> {
+  const folderName = DRIVE_SUBFOLDER_NAMES[input.driveFolder];
+  if (!folderName) return { ok: false, reason: 'no_subfolder_for_category' };
+
+  const client = await getDriveClientIfConnected();
+  if (!client) return { ok: false, reason: 'not_connected' };
+
+  try {
+    const supabase = await driveDb(false);
+    const meta = await getCaseDriveMeta(input.caseId, supabase);
+    if (!meta.case_folder_id) return { ok: false, reason: 'no_case_folder' };
+    if (!(await client.isManagedCaseFolder(meta.case_folder_id, input.caseId))) {
+      return { ok: false, reason: 'invalid_case_folder' };
+    }
+
+    // The browser can hold a stale row after somebody moved this file to a
+    // different case in Drive. Never let a category change from the old case
+    // pull that live file back across case boundaries.
+    const sourceAncestry = await classifyDriveFileAncestry(
+      client,
+      input.driveFileId,
+      meta.case_folder_id,
+    );
+    if (sourceAncestry !== 'inside') {
+      return {
+        ok: false,
+        reason: 'error',
+        message: 'Drive file is no longer inside this case folder',
+      };
+    }
+
+    const targetFolderId = await ensureSubfolder(
+      client,
+      input.caseId,
+      meta.case_folder_id,
+      input.driveFolder,
+      meta,
+      supabase,
+    );
+    if (!targetFolderId) {
+      return { ok: false, reason: 'no_subfolder_for_category' };
+    }
+
+    // The folder id is the category identity; its current Drive display name
+    // is the mirrored path. A user rename must therefore be preserved instead
+    // of writing the original seeded Hebrew name back into document metadata.
+    const targetPlacement = await client.getFilePlacement(targetFolderId);
+    if (
+      !targetPlacement ||
+      targetPlacement.trashed ||
+      targetPlacement.mimeType !== 'application/vnd.google-apps.folder' ||
+      targetPlacement.parents.length !== 1 ||
+      targetPlacement.parents[0] !== meta.case_folder_id
+    ) {
+      return { ok: false, reason: 'no_subfolder_for_category' };
+    }
+
+    const move = await client.moveFile(input.driveFileId, targetFolderId);
+    return {
+      ok: true,
+      ...move,
+      targetFolderId,
+      targetFolderName: targetPlacement.name ?? folderName,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      reason: 'error',
+      message: err instanceof Error ? err.message : 'unknown',
+    };
+  }
+}
+
+/**
+ * Best-effort compensation for the rare case where Drive moved successfully
+ * but the subsequent documents-row update failed. It only rolls back while
+ * the file is still exactly in our expected target, so it never overwrites a
+ * concurrent move made by a Drive user.
+ */
+export async function restoreCaseDocumentDriveParent(input: {
+  driveFileId: string;
+  expectedCurrentParentId: string;
+  previousParents: string[];
+}): Promise<boolean> {
+  const previousParent = input.previousParents[0];
+  if (input.previousParents.length !== 1 || !previousParent) return false;
+  const client = await getDriveClientIfConnected();
+  if (!client) return false;
+
+  try {
+    const placement = await client.getFilePlacement(input.driveFileId);
+    if (
+      !placement ||
+      placement.trashed ||
+      placement.parents.length !== 1 ||
+      placement.parents[0] !== input.expectedCurrentParentId
+    ) {
+      return false;
+    }
+    await client.moveFile(input.driveFileId, previousParent);
+    return true;
+  } catch (err) {
+    console.error('[restoreCaseDocumentDriveParent] rollback failed', {
+      driveFileId: input.driveFileId,
+      message: err instanceof Error ? err.message : 'unknown',
+    });
+    return false;
+  }
+}
+
+/**
  * Best-effort: ensure the case's Drive folder + every category subfolder exist
  * (creating them if missing) and persist the folder id. No-ops when Drive isn't
  * connected, and never throws. Idempotent — ensureCaseFolder/ensureSubfolder
@@ -236,13 +389,7 @@ export async function provisionCaseDriveFolders(input: {
     const supabase = await driveDb(input.admin === true);
     const meta = await getCaseDriveMeta(input.caseId, supabase);
     const rootId = await ensureRootFolder(client);
-    const caseFolderId = await ensureCaseFolder(
-      client,
-      rootId,
-      input.caseId,
-      meta,
-      supabase,
-    );
+    const caseFolderId = await ensureCaseFolder(client, rootId, input.caseId, meta, supabase);
     for (const folder of Object.keys(DRIVE_SUBFOLDER_NAMES)) {
       await ensureSubfolder(client, input.caseId, caseFolderId, folder, meta, supabase);
     }

@@ -6,6 +6,8 @@ import { AlertCircle, CheckCircle2, FileSpreadsheet, Loader2, Upload } from 'luc
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
+
 import { importCasesAction } from '../actions/import-cases';
 import type { ImportResult } from '../types';
 
@@ -27,6 +29,7 @@ const rowErrorKey = (code: string): string => (KNOWN_ROW_CODES.has(code) ? code 
 
 export function ImportPanel() {
   const t = useTranslations('settings.import');
+  const tc = useTranslations('common');
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<ImportResult | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -40,7 +43,14 @@ export function ImportPanel() {
     formData.append('file', file);
     setResult(null);
     startTransition(async () => {
-      const res = await importCasesAction(formData);
+      const res = await callAction(() => importCasesAction(formData));
+      // A dropped upload is not an import outcome — keep it out of the result
+      // panel (which lists created/skipped rows) and just say the connection
+      // failed, so the user retries instead of reading an empty report.
+      if (!res.ok && res.error === 'network') {
+        toast.error(tc('noConnection'));
+        return;
+      }
       setResult(res);
       if (res.ok) {
         if (res.errors.length > 0) toast.error(t('blockedToast', { count: res.errors.length }));

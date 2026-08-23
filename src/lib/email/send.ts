@@ -3,6 +3,8 @@ import { Resend } from 'resend';
 import { env } from '@/lib/env';
 import { withTimeout } from '@/lib/http/with-timeout';
 
+import { OFFICE_EMAIL } from './addresses';
+
 export type SendEmailResult =
   | { ok: true; skipped?: false }
   | { ok: true; skipped: true } // not configured — intentional no-op
@@ -15,7 +17,8 @@ type SendEmailInput = {
   to: string;
   subject: string;
   html: string;
-  /** Lets the recipient hit Reply and reach a real inbox (e.g. the office). */
+  /** Where a reply should land. Defaults to the office inbox — never leave it
+   *  unset, or Reply targets the noreply@ sender and the answer is lost. */
   replyTo?: string;
   /** Optional file attachments (advisor→client emails). */
   attachments?: EmailAttachment[];
@@ -25,6 +28,11 @@ type SendEmailInput = {
  * Sends an email via Resend. If email is not configured (no RESEND_API_KEY /
  * EMAIL_FROM), it returns a successful "skipped" result rather than throwing,
  * so callers can stay agnostic — the feature simply degrades to in-app only.
+ *
+ * Reply-To defaults to the office inbox. EMAIL_FROM is a noreply@ address, so
+ * a message sent without one leaves the recipient's reply undeliverable —
+ * which is what happened to invites, notifications and system mail before this
+ * default existed.
  *
  * Never throws: email is always best-effort and must not break the action
  * that triggered it.
@@ -54,7 +62,7 @@ export async function sendEmail({
         to,
         subject,
         html,
-        replyTo,
+        replyTo: replyTo ?? OFFICE_EMAIL,
         ...(attachments && attachments.length > 0 ? { attachments } : {}),
       }),
       10_000,

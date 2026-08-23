@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { callAction } from '@/lib/actions/call-action';
+
 import { saveScenarioAction } from '../actions/save-scenario';
 
 import type { MixInput, PropertyKind } from '../types';
@@ -76,7 +78,7 @@ export function useScenarioAutosave(params: Params): UseScenarioAutosave {
     }
     inFlightRef.current = true;
     setStatus('saving');
-    const result = await saveScenarioAction({
+    const result = await callAction(() => saveScenarioAction({
       scenarioId: idRef.current,
       caseId: s.caseId,
       primaryBorrowerId: s.primaryBorrowerId,
@@ -85,7 +87,7 @@ export function useScenarioAutosave(params: Params): UseScenarioAutosave {
       propertyKind: s.propertyKind,
       mix: { ...s.mix, tracks: [...s.mix.tracks] },
       advisorConclusion: s.advisorConclusion || null,
-    });
+    }));
     inFlightRef.current = false;
     if (result.ok) {
       savedSigRef.current = sig;

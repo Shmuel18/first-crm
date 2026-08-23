@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { callAction } from '@/lib/actions/call-action';
 
 import { deleteEntryAction } from '../actions/delete-entry';
 import { upsertEntryAction } from '../actions/upsert-entry';
@@ -69,13 +70,13 @@ export function EntryEditDialog({ open, onOpenChange, entry, userId, employeeNam
       return;
     }
     start(async () => {
-      const res = await upsertEntryAction({
+      const res = await callAction(() => upsertEntryAction({
         id: entry?.id ?? null,
         userId,
         clockIn: inIso,
         clockOut: outIso,
         note: note.trim() || null,
-      });
+      }));
       if (!res.ok) {
         toast.error(t(`errors.${res.error}`));
         return;
@@ -89,7 +90,7 @@ export function EntryEditDialog({ open, onOpenChange, entry, userId, employeeNam
   const remove = () => {
     if (!entry) return;
     start(async () => {
-      const res = await deleteEntryAction(entry.id);
+      const res = await callAction(() => deleteEntryAction(entry.id));
       if (!res.ok) {
         toast.error(t(`errors.${res.error}`));
         return;

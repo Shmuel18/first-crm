@@ -30,6 +30,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { callAction } from '@/lib/actions/call-action';
 import type { Locale } from '@/lib/i18n/direction';
 
 import { addChecklistItemAction } from '../actions/add-checklist-item';
@@ -49,7 +50,7 @@ type Props = {
   locale: Locale;
 };
 
-const isDone = (i: DocumentChecklistItem): boolean => i.isDone || i.verifiedCount > 0;
+const isDone = (i: DocumentChecklistItem): boolean => i.isDone || i.validDocumentCount > 0;
 
 /**
  * Editable checklist manager (the modal in the mockup): tick rows received,
@@ -97,7 +98,7 @@ export function ChecklistManagerModal({
       prev.map((r) => (r.itemId === item.itemId ? { ...r, isDone: next } : r)),
     );
     startTransition(async () => {
-      const res = await toggleChecklistItemAction(caseId, item.itemId, next);
+      const res = await callAction(() => toggleChecklistItemAction(caseId, item.itemId, next));
       if (!res.ok) {
         setRows((prev) =>
           prev.map((r) => (r.itemId === item.itemId ? { ...r, isDone: !next } : r)),
@@ -111,7 +112,7 @@ export function ChecklistManagerModal({
     const value = label.trim();
     if (!value || addBusy) return;
     setAddBusy(true);
-    const res = await addChecklistItemAction(caseId, value);
+    const res = await callAction(() => addChecklistItemAction(caseId, value));
     setAddBusy(false); // release the add button the instant the DB write returns
     if (!res.ok) {
       toast.error(tc('saveFailed'));
@@ -124,7 +125,7 @@ export function ChecklistManagerModal({
   const doRemove = (item: DocumentChecklistItem) => {
     setRows((prev) => prev.filter((r) => r.itemId !== item.itemId));
     startTransition(async () => {
-      const res = await removeChecklistItemAction(caseId, item.itemId);
+      const res = await callAction(() => removeChecklistItemAction(caseId, item.itemId));
       if (!res.ok) toast.error(tc('saveFailed'));
     });
   };
@@ -145,7 +146,7 @@ export function ChecklistManagerModal({
     setRows(reordered);
     const ordered = reordered.map((r) => r.itemId);
     startTransition(async () => {
-      const res = await reorderChecklistItemsAction(caseId, ordered);
+      const res = await callAction(() => reorderChecklistItemsAction(caseId, ordered));
       if (!res.ok) toast.error(tc('saveFailed'));
     });
   };

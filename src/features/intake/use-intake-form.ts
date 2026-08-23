@@ -3,6 +3,8 @@
 import { parseAsInteger, useQueryState } from 'nuqs';
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 
+import { callAction } from '@/lib/actions/call-action';
+
 import { submitIntakeAction } from './actions/submit-intake';
 import { clearIntakeDraft, loadIntakeDraft, saveIntakeDraft } from './draft-storage';
 import {
@@ -25,7 +27,12 @@ export function useIntakeForm(locale: string, texts: Texts) {
   const [rawStep, setRawStep] = useQueryState('step', parseAsInteger.withDefault(1));
   const [state, setState] = useState<IntakeFormState>(() => emptyIntakeState(locale));
   const [errors, setErrors] = useState<IntakeFieldErrors>({});
-  const [submitError, setSubmitError] = useState<'rate_limited' | 'unknown' | null>(null);
+  // 'network' covers a submit that never reached the server. On this PUBLIC
+  // form that is the costliest failure of all: the prospect filled in five
+  // steps and the lead would otherwise vanish with no message at all. The
+  // local draft is only cleared on success, so their answers do survive.
+  const [submitError, setSubmitError] =
+    useState<'rate_limited' | 'unknown' | 'network' | null>(null);
   const [done, setDone] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -121,10 +128,10 @@ export function useIntakeForm(locale: string, texts: Texts) {
     }
     setErrors({});
     startTransition(async () => {
-      const result = await submitIntakeAction({
+      const result = await callAction(() => submitIntakeAction({
         ...toIntakePayload(state, locale),
         elapsed_ms: Date.now() - startedAt.current,
-      });
+      }));
       if (result.ok) {
         clearIntakeDraft();
         setDone(true);

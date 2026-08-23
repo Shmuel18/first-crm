@@ -19,6 +19,7 @@ import { FormField, NativeSelect } from '@/components/shared/form-fields';
 import { roleManagementLabel } from '@/lib/auth/role-label';
 
 import { inviteMemberAction } from '../actions/invite-member';
+import { RestoreMemberPanel } from './restore-member-panel';
 import { INVITE_ACTION_INITIAL, type InviteActionState, type TeamRole } from '../types';
 
 type Props = {
@@ -88,6 +89,14 @@ export function InviteMemberDialog({ open, onOpenChange, roles, locale }: Props)
                   </NativeSelect>
                 </FormField>
               </div>
+
+              {state.ok === false && state.error === 'email_exists_deleted' && (
+                <RestoreMemberPanel
+                  member={state.deletedMember}
+                  values={state.values ?? {}}
+                  onRestored={() => onOpenChange(false)}
+                />
+              )}
 
               {getGenericError(state, t) && (
                 <div
@@ -221,6 +230,8 @@ function getGenericError(
   if (state.error === 'idle' || state.error === 'validation') return null;
   if (state.error === 'unauthorized') return t('errors.unauthorized');
   if (state.error === 'email_exists') return t('errors.emailExists');
+  // Rendered as its own panel with a restore action, not as a flat error.
+  if (state.error === 'email_exists_deleted') return null;
   if (state.error === 'rate_limited') return t('errors.rateLimited');
   return t('errors.generic');
 }

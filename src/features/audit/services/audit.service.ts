@@ -1,3 +1,4 @@
+import { userHasPermission } from '@/lib/auth/permissions';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { formatPersonName } from '@/lib/utils/person-name';
@@ -99,9 +100,17 @@ export async function listAuditEntries(limit = 100): Promise<AuditEntry[]> {
 export async function listAuditEntriesForCase(
   caseId: string,
   limit = 200,
-  opts: { includeFinancials?: boolean } = {},
 ): Promise<AuditEntry[]> {
   const admin = createAdminClient();
+
+  // Manager-only financials are decided HERE, not by the caller. This read is
+  // service-role, so a caller-supplied `includeFinancials` flag would be a
+  // standing footgun: any new call site (a report, an export, an assistant
+  // tool) that copied the shape without the permission check would surface
+  // fee_amount / expected_income history to any case viewer. Deriving it
+  // internally makes that impossible to get wrong — and userHasPermission is
+  // React cache()-deduped, so the extra call is free within a request.
+  const includeFinancials = await userHasPermission('view_case_fee');
 
   // Step 1: collect the (table_name, id[]) pairs we need to scan in audit_log.
   // Run the id-lookup queries that don't depend on borrower_ids in parallel,
@@ -165,10 +174,9 @@ export async function listAuditEntriesForCase(
     { table: 'documents', ids: docIds },
     { table: 'tasks', ids: taskIds },
     // case_financials holds the manager-only fee_amount / expected_income
-    // (record_id = case_id). Only surface its audit diffs when the caller
-    // holds view_case_fee — fail-safe: excluded unless explicitly opted in,
-    // so a forgetful caller can't leak those fields to any case-viewer.
-    ...(opts.includeFinancials ? [{ table: 'case_financials', ids: [caseId] }] : []),
+    // (record_id = case_id). Surfaced only when the CURRENT USER holds
+    // view_case_fee (resolved above) — fail-safe and not delegable.
+    ...(includeFinancials ? [{ table: 'case_financials', ids: [caseId] }] : []),
   ].filter((t) => t.ids.length > 0);
 
   // Step 2: query audit_log for each target table+ids in parallel.

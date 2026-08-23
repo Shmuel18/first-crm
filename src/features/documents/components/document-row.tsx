@@ -6,9 +6,8 @@ import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { formatPersonName } from '@/lib/utils/person-name';
 
-import type { DocumentStatus, DocumentWithRelations } from '../types';
+import type { DocumentWithRelations } from '../types';
 import { AiFlagsBadge } from './ai-classification-chip';
-import { DocumentStatusChip } from './document-status-chip';
 
 type Props = {
   doc: DocumentWithRelations;
@@ -79,7 +78,6 @@ export function DocumentRow({ doc, onClick }: Props) {
         </div>
       </div>
 
-      <DocumentStatusChip status={doc.status as DocumentStatus} size="sm" />
     </button>
   );
 }

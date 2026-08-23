@@ -3,7 +3,19 @@ import { DRIVE_SUBFOLDER_NAMES } from './drive-folder-naming';
 export type CaseDriveMeta = {
   case_folder_id?: string;
   subfolders?: Partial<Record<string, string>>;
+  /** Complete descendant-folder snapshot from the last trusted sync pass. */
+  folder_tree?: DriveFolderSnapshotEntry[];
   last_synced_at?: string;
+};
+
+/** A Drive folder below the managed case folder. The case folder itself is
+ * intentionally omitted; its id already lives in `case_folder_id`. */
+export type DriveFolderSnapshotEntry = {
+  id: string;
+  parent_id: string;
+  name: string;
+  /** Display-name path from the case root to this folder, inclusive. */
+  relative_path: string[];
 };
 
 export type DriveSyncOutcome =
@@ -20,22 +32,12 @@ export type DriveSyncOutcome =
       ok: false;
       reason: 'not_connected' | 'case_not_found' | 'no_folder' | 'error';
       message?: string;
+      /** Some rows changed before a later fail-closed check failed. */
+      changed?: true;
     };
 
 /** Auto-sync on page load only if last sync was older than this. */
 export const MIN_AUTO_SYNC_INTERVAL_MS = 10_000;
-
-/**
- * Grace period before a vanished Drive file is soft-deleted from our DB.
- * If a file is missing across multiple syncs for less than this, we keep
- * the doc record and just stamp drive_missing_since on its metadata. After
- * the grace expires (still missing) → soft-delete. If the file reappears
- * within the window → clear the flag, no harm done.
- *
- * Protects against accidental drag-out / cloud sync hiccups that would
- * otherwise wipe real documents from the office's view in one cycle.
- */
-export const VANISHED_FILE_GRACE_PERIOD_MS = 48 * 60 * 60 * 1000;
 
 /** Reverse map: folder name (Hebrew) → drive_folder enum key. */
 export const NAME_TO_FOLDER_KEY: Record<string, string> = Object.fromEntries(
@@ -48,6 +50,9 @@ export const NAME_TO_FOLDER_KEY: Record<string, string> = Object.fromEntries(
 export type ExistingDocEntry = {
   docId: string;
   currentDriveFolder: string | null;
+  currentFileName: string;
+  currentFileSize: number | null;
+  currentMimeType: string | null;
   existingMetadata: Record<string, unknown>;
 };
 
@@ -66,4 +71,6 @@ export type SyncRunState = {
   existingByDriveId: Map<string, ExistingDocEntry>;
   /** False if any list call failed — sweeper bails to avoid wrongful deletes. */
   listingsComplete: boolean;
+  /** First Drive listing failure, surfaced instead of reporting a false success. */
+  listingFailure?: string;
 };

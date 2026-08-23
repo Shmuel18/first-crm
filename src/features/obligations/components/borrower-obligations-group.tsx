@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Tooltip } from '@/components/ui/tooltip';
+import { callAction } from '@/lib/actions/call-action';
 import { formatCurrency } from '@/lib/utils/format-currency';
 
 import { deleteObligationAction } from '../actions/delete-obligation';
@@ -62,7 +63,7 @@ export function BorrowerObligationsGroup({
   const handleDelete = (obligation: ObligationRow) => {
     setDeletingId(obligation.id);
     startTransition(async () => {
-      const result = await deleteObligationAction(obligation.id, obligation.borrower_id, caseId);
+      const result = await callAction(() => deleteObligationAction(obligation.id, obligation.borrower_id, caseId));
       setDeletingId(null);
       if (result.ok) {
         toast.success(t('deleteSuccess'));

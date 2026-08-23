@@ -10,10 +10,7 @@ import type { IntegrationProvider, IntegrationRow } from '../types';
 
 import { buildMultipartUploadBody } from './google-drive-multipart';
 import { refreshAccessToken, RefreshTokenError } from './google-oauth';
-import {
-  markIntegrationDisconnected,
-  persistRefreshedAccessToken,
-} from './integrations.service';
+import { markIntegrationDisconnected, persistRefreshedAccessToken } from './integrations.service';
 
 // Re-export domain types/constants for backward compatibility with the prior
 // `from './google-drive'` import shape used by sync, uploader, and backup
@@ -21,9 +18,17 @@ import {
 export { DRIVE_SUBFOLDER_NAMES, caseFolderName };
 export type { DriveFileMeta, DriveUploadResult };
 
+export type DriveFilePlacement = {
+  trashed: boolean;
+  parents: string[];
+  name: string | null;
+  mimeType: string | null;
+};
+
 const DRIVE_API = 'https://www.googleapis.com/drive/v3';
 const DRIVE_UPLOAD = 'https://www.googleapis.com/upload/drive/v3';
 const FOLDER_MIME = 'application/vnd.google-apps.folder';
+const STREAM_DOWNLOAD_TIMEOUT_MS = 55_000;
 
 /** Escape a value for use inside the Drive query DSL (`name = '...'`).
  *  Order matters: backslashes first, then quotes — otherwise the second
@@ -74,9 +79,7 @@ export class GoogleDriveClient {
           await markIntegrationDisconnected(
             this.integration.provider as IntegrationProvider,
             err.message,
-          ).catch((markErr) =>
-            console.error('failed to mark integration disconnected', markErr),
-          );
+          ).catch((markErr) => console.error('failed to mark integration disconnected', markErr));
         }
         throw err;
       }
@@ -109,7 +112,11 @@ export class GoogleDriveClient {
    * exponential backoff. Honors Retry-After header when present. Read-only
    * methods (GET) opt in; mutations bypass retry to stay idempotent.
    */
-  private async authedFetchRetry(url: string, init: RequestInit = {}, retries = 2): Promise<Response> {
+  private async authedFetchRetry(
+    url: string,
+    init: RequestInit = {},
+    retries = 2,
+  ): Promise<Response> {
     for (let attempt = 0; attempt <= retries; attempt++) {
       const res = await this.authedFetch(url, init);
       const transient = res.status === 429 || res.status === 502 || res.status === 503;
@@ -222,6 +229,120 @@ export class GoogleDriveClient {
     return data.trashed ? null : data.name;
   }
 
+  /**
+   * Prove that a cached case_folder_id still points at the folder this app
+   * created for the same case. A files.list query can legally return 200 + []
+   * for a wrong/inaccessible parent, which must never be interpreted as
+   * "every document was deleted" by the reconciliation sweep.
+   */
+  async isManagedCaseFolder(fileId: string, caseId: string): Promise<boolean> {
+    const fields = 'id,mimeType,trashed,appProperties';
+    const params = new URLSearchParams({ fields, supportsAllDrives: 'true' });
+    const res = await this.authedFetchRetry(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?${params.toString()}`,
+    );
+    if (res.status === 404) return false;
+    if (!res.ok) throw new Error(`Drive case folder verification failed: ${res.status}`);
+    const data = (await res.json()) as {
+      mimeType?: string;
+      trashed?: boolean;
+      appProperties?: Record<string, string>;
+    };
+    return (
+      data.trashed !== true &&
+      data.mimeType === FOLDER_MIME &&
+      data.appProperties?.caseFolderId === caseId
+    );
+  }
+
+  /**
+   * Confirm a file that was absent from the folder snapshot is truly gone.
+   * A live file may simply have been moved into a nested/custom folder; only
+   * 404 or Drive trash should be reconciled as a deletion on the site.
+   */
+  async isLiveFile(fileId: string): Promise<boolean> {
+    const fields = 'id,trashed';
+    const res = await this.authedFetchRetry(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?fields=${encodeURIComponent(fields)}`,
+    );
+    if (res.status === 404) return false;
+    if (!res.ok) throw new Error(`Drive file verification failed: ${res.status}`);
+    const data = (await res.json()) as { trashed?: boolean };
+    return data.trashed !== true;
+  }
+
+  /**
+   * Read a file/folder's current parents for exact-mirror reconciliation.
+   * `null` means Drive returned 404. Callers must treat every other failure as
+   * unknown (fail closed), never as proof that a file left a managed tree.
+   */
+  async getFilePlacement(fileId: string): Promise<DriveFilePlacement | null> {
+    const fields = 'id,name,mimeType,trashed,parents';
+    const params = new URLSearchParams({ fields, supportsAllDrives: 'true' });
+    const res = await this.authedFetchRetry(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?${params.toString()}`,
+    );
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`Drive file placement verification failed: ${res.status}`);
+    const data = (await res.json()) as {
+      name?: unknown;
+      mimeType?: unknown;
+      trashed?: boolean;
+      parents?: unknown;
+    };
+    return {
+      trashed: data.trashed === true,
+      parents: Array.isArray(data.parents)
+        ? data.parents.filter((parent): parent is string => typeof parent === 'string')
+        : [],
+      name: typeof data.name === 'string' ? data.name : null,
+      mimeType: typeof data.mimeType === 'string' ? data.mimeType : null,
+    };
+  }
+
+  /**
+   * Move a live Drive file to one exact parent folder. Google Drive v3 only
+   * supports parent changes through addParents/removeParents, so first read
+   * the authoritative parent and then PATCH the delta. Mutations are not
+   * retried: an ambiguous timeout must be reconciled by a later Drive sync.
+   */
+  async moveFile(
+    fileId: string,
+    targetParentId: string,
+  ): Promise<{ changed: boolean; previousParents: string[] }> {
+    const placement = await this.getFilePlacement(fileId);
+    if (!placement || placement.trashed) {
+      throw new Error('Drive file move failed: file is missing or trashed');
+    }
+
+    const previousParents = [...placement.parents];
+    const alreadyExact = previousParents.length === 1 && previousParents[0] === targetParentId;
+    if (alreadyExact) return { changed: false, previousParents };
+
+    const params = new URLSearchParams({
+      fields: 'id,parents',
+      supportsAllDrives: 'true',
+    });
+    if (!previousParents.includes(targetParentId)) {
+      params.set('addParents', targetParentId);
+    }
+    const removeParents = previousParents.filter((parent) => parent !== targetParentId);
+    if (removeParents.length > 0) {
+      params.set('removeParents', removeParents.join(','));
+    }
+
+    const res = await this.authedFetch(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?${params.toString()}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+      },
+    );
+    if (!res.ok) throw new Error(`Drive file move failed: ${res.status}`);
+    return { changed: true, previousParents };
+  }
+
   /** Rename a file/folder in place — same id, same parents, same contents. */
   async renameFile(fileId: string, name: string): Promise<void> {
     const res = await this.authedFetch(
@@ -235,6 +356,50 @@ export class GoogleDriveClient {
     if (!res.ok) throw new Error(`Drive rename failed: ${res.status}`);
   }
 
+  /** Keep the upstream body streaming for browser downloads larger than a
+   *  serverless function's buffered-response limit. */
+  async downloadFileResponse(fileId: string): Promise<Response> {
+    const res = await this.authedFetchRetry(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?alt=media`,
+      { signal: timeoutSignal(STREAM_DOWNLOAD_TIMEOUT_MS) },
+    );
+    if (!res.ok) throw new Error(`Drive download failed: ${res.status}`);
+    return res;
+  }
+
+  /** Raw bytes of a Drive file — used for email attachments and printing. */
+  async downloadFileBytes(fileId: string): Promise<Buffer> {
+    const res = await this.authedFetchRetry(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?alt=media`,
+    );
+    if (!res.ok) throw new Error(`Drive download failed: ${res.status}`);
+    return Buffer.from(await res.arrayBuffer());
+  }
+
+  /** Stream a Google-native file in an explicit export format. */
+  async exportFileResponse(fileId: string, mimeType: string): Promise<Response> {
+    const params = new URLSearchParams({ mimeType });
+    const res = await this.authedFetchRetry(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}/export?${params.toString()}`,
+      { signal: timeoutSignal(STREAM_DOWNLOAD_TIMEOUT_MS) },
+    );
+    if (!res.ok) throw new Error(`Drive export failed: ${res.status}`);
+    return res;
+  }
+
+  /** PDF remains the portable format used by printing and email attachments. */
+  async exportFileAsPdfResponse(fileId: string): Promise<Response> {
+    return this.exportFileResponse(fileId, 'application/pdf');
+  }
+
+  async exportFileAsPdf(fileId: string): Promise<Buffer> {
+    const res = await this.authedFetchRetry(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}/export?mimeType=application%2Fpdf`,
+    );
+    if (!res.ok) throw new Error(`Drive export failed: ${res.status}`);
+    return Buffer.from(await res.arrayBuffer());
+  }
+
   async downloadFileText(fileId: string): Promise<string> {
     const res = await this.authedFetchRetry(
       `${DRIVE_API}/files/${encodeURIComponent(fileId)}?alt=media`,
@@ -243,10 +408,33 @@ export class GoogleDriveClient {
     return res.text();
   }
 
+  /**
+   * Move a file to Drive's bin. Used when the advisor deletes a document in
+   * the app: the office expects the two sides to match, but a delete driven
+   * from a UI click should stay recoverable — Drive keeps a binned file for 30
+   * days. Permanent removal is retention's job (deleteFile).
+   */
+  async trashFile(fileId: string): Promise<void> {
+    const params = new URLSearchParams({ supportsAllDrives: 'true' });
+    const res = await this.authedFetch(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?${params.toString()}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trashed: true }),
+      },
+    );
+    if (!res.ok && res.status !== 404) {
+      throw new Error(`Drive trash failed: ${res.status}`);
+    }
+  }
+
   async deleteFile(fileId: string): Promise<void> {
-    const res = await this.authedFetch(`${DRIVE_API}/files/${encodeURIComponent(fileId)}`, {
-      method: 'DELETE',
-    });
+    const params = new URLSearchParams({ supportsAllDrives: 'true' });
+    const res = await this.authedFetch(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?${params.toString()}`,
+      { method: 'DELETE' },
+    );
     if (!res.ok && res.status !== 404) {
       throw new Error(`Drive delete failed: ${res.status}`);
     }
@@ -255,7 +443,15 @@ export class GoogleDriveClient {
   async listFolderFiles(folderId: string): Promise<DriveFileMeta[]> {
     const q = `'${folderId}' in parents and trashed = false and mimeType != '${FOLDER_MIME}'`;
     const fields = 'files(id,name,mimeType,size,webViewLink,modifiedTime,createdTime)';
-    const url = `${DRIVE_API}/files?q=${encodeURIComponent(q)}&fields=${encodeURIComponent(fields)}&pageSize=200&spaces=drive`;
+    const params = new URLSearchParams({
+      q,
+      fields,
+      pageSize: '200',
+      spaces: 'drive',
+      supportsAllDrives: 'true',
+      includeItemsFromAllDrives: 'true',
+    });
+    const url = `${DRIVE_API}/files?${params.toString()}`;
     const res = await this.authedFetchRetry(url);
     if (!res.ok) throw new Error(`Drive list folder failed: ${res.status}`);
     const data = (await res.json()) as { files: DriveFileMeta[] };
@@ -280,6 +476,8 @@ export class GoogleDriveClient {
         fields,
         pageSize: '1000',
         spaces: 'drive',
+        supportsAllDrives: 'true',
+        includeItemsFromAllDrives: 'true',
       });
       if (pageToken) params.set('pageToken', pageToken);
       const res = await this.authedFetchRetry(`${DRIVE_API}/files?${params.toString()}`);
@@ -308,7 +506,14 @@ export class GoogleDriveClient {
     const out: { id: string; name: string }[] = [];
     let pageToken: string | undefined;
     do {
-      const params = new URLSearchParams({ q, fields, pageSize: '1000', spaces: 'drive' });
+      const params = new URLSearchParams({
+        q,
+        fields,
+        pageSize: '1000',
+        spaces: 'drive',
+        supportsAllDrives: 'true',
+        includeItemsFromAllDrives: 'true',
+      });
       if (pageToken) params.set('pageToken', pageToken);
       const res = await this.authedFetchRetry(`${DRIVE_API}/files?${params.toString()}`);
       if (!res.ok) throw new Error(`Drive list subfolders failed: ${res.status}`);

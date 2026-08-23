@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { getDocumentPreviewUrlAction } from '@/features/documents/actions/get-document-preview-url';
+import { callAction } from '@/lib/actions/call-action';
 
 import {
   deleteTaskAttachmentAction,
@@ -74,8 +75,8 @@ export function TaskAttachmentsList({ taskId, reloadToken }: Props) {
         audioItems.map(async (item) => {
           const result =
             item.kind === 'general'
-              ? await getTaskAttachmentUrlAction(item.id)
-              : await getDocumentPreviewUrlAction(item.id);
+              ? await callAction(() => getTaskAttachmentUrlAction(item.id))
+              : await callAction(() => getDocumentPreviewUrlAction(item.id));
           return [item.id, result.ok ? result.url : null] as const;
         }),
       );
@@ -93,8 +94,8 @@ export function TaskAttachmentsList({ taskId, reloadToken }: Props) {
     setBusyId(item.id);
     const res =
       item.kind === 'general'
-        ? await getTaskAttachmentUrlAction(item.id)
-        : await getDocumentPreviewUrlAction(item.id);
+        ? await callAction(() => getTaskAttachmentUrlAction(item.id))
+        : await callAction(() => getDocumentPreviewUrlAction(item.id));
     setBusyId(null);
     if (res.ok)
       setPreview({
@@ -108,7 +109,7 @@ export function TaskAttachmentsList({ taskId, reloadToken }: Props) {
 
   const remove = async (id: string): Promise<void> => {
     setBusyId(id);
-    const res = await deleteTaskAttachmentAction(id);
+    const res = await callAction(() => deleteTaskAttachmentAction(id));
     setBusyId(null);
     if (res.ok) setItems((prev) => (prev ?? []).filter((x) => x.id !== id));
     else toast.error(t('attachmentsFailed'));

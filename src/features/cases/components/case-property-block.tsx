@@ -5,6 +5,8 @@ import { useMemo, useState } from 'react';
 import { Home } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { callAction } from '@/lib/actions/call-action';
+
 import { updateCaseFieldAction } from '../actions/update-case-field';
 import {
   isEditableCaseField,
@@ -78,7 +80,7 @@ export function CasePropertyBlock({
         : value;
 
     setLocalCase((c) => ({ ...c, [key]: coerced as never }));
-    const result = await updateCaseFieldAction(caseId, field, value);
+    const result = await callAction(() => updateCaseFieldAction(caseId, field, value));
     if (!result.ok) {
       setLocalCase((c) => ({ ...c, [key]: prev as never }));
       return { ok: false, message: result.message };
@@ -100,7 +102,7 @@ export function CasePropertyBlock({
       case_type_primary_id: nextPrimary,
       case_type_other_text: nextOther,
     }));
-    const r1 = await updateCaseFieldAction(caseId, 'case_type_primary_id', nextPrimary);
+    const r1 = await callAction(() => updateCaseFieldAction(caseId, 'case_type_primary_id', nextPrimary));
     if (!r1.ok) {
       setLocalCase((c) => ({
         ...c,
@@ -109,7 +111,7 @@ export function CasePropertyBlock({
       }));
       return;
     }
-    const r2 = await updateCaseFieldAction(caseId, 'case_type_other_text', nextOther);
+    const r2 = await callAction(() => updateCaseFieldAction(caseId, 'case_type_other_text', nextOther));
     if (!r2.ok) {
       setLocalCase((c) => ({
         ...c,

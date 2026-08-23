@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip } from '@/components/ui/tooltip';
+import { callAction } from '@/lib/actions/call-action';
 
 import { deleteCaseAction } from '../actions/delete-case';
 import { toggleArchiveAction } from '../actions/toggle-archive';
@@ -59,7 +60,7 @@ export function CaseMoreMenu({
   const onToggle = () => {
     if (isPending) return;
     startTransition(async () => {
-      const result = await toggleArchiveAction(caseId, !isArchived);
+      const result = await callAction(() => toggleArchiveAction(caseId, !isArchived));
       if (result.ok) {
         toast.success(t(isArchived ? 'restoreSuccess' : 'archiveSuccess'));
         router.refresh();
@@ -72,7 +73,7 @@ export function CaseMoreMenu({
   const onDelete = () => {
     if (isPending) return;
     startTransition(async () => {
-      const result = await deleteCaseAction(caseId);
+      const result = await callAction(() => deleteCaseAction(caseId));
       if (result.ok) {
         toast.success(t('deleteSuccess'));
         // Hard-redirect — the current case page no longer exists for this

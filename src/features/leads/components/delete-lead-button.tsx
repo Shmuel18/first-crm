@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { callAction } from '@/lib/actions/call-action';
 
 import { deleteLeadAction } from '../actions/delete-lead';
 
@@ -29,7 +30,7 @@ export function DeleteLeadButton({ leadId, leadName }: Props) {
 
   const confirmDelete = () =>
     startTransition(async () => {
-      const res = await deleteLeadAction(leadId);
+      const res = await callAction(() => deleteLeadAction(leadId));
       setOpen(false);
       if (res.ok) toast.success(t('toast.deleted'));
       else toast.error(t('toast.deleteFailed'));

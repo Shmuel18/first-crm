@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { callAction } from '@/lib/actions/call-action';
 import type { Locale } from '@/lib/i18n/direction';
 
 import { changeTaskStatusAction } from '../actions/change-task-status';
@@ -58,7 +59,7 @@ export function TaskRow({ task, locale, onEdit, onReassign, onThread, compact = 
   const handleToggleComplete = async () => {
     if (toggleBusy) return;
     setToggleBusy(true);
-    const res = completed ? await reopenTaskAction(task.id) : await completeTaskAction(task.id);
+    const res = completed ? await callAction(() => reopenTaskAction(task.id)) : await callAction(() => completeTaskAction(task.id));
     setToggleBusy(false); // release the checkbox the instant the DB write returns
     if (!res.ok) {
       toast.error(t('toast.actionFailed'));
@@ -70,7 +71,7 @@ export function TaskRow({ task, locale, onEdit, onReassign, onThread, compact = 
 
   const handleStatus = (status: TaskStatus) => {
     startTransition(async () => {
-      const res = await changeTaskStatusAction(task.id, status);
+      const res = await callAction(() => changeTaskStatusAction(task.id, status));
       if (!res.ok) toast.error(t('toast.actionFailed'));
     });
   };

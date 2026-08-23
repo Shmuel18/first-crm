@@ -6,6 +6,7 @@ import { Check, Lock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
 import { roleManagementLabel } from '@/lib/auth/role-label';
 import type { Locale } from '@/lib/i18n/direction';
 
@@ -87,7 +88,7 @@ export function RolesPermissionsEditor({ roles, permissions, granted, locale }: 
     const next = !isOn(permId);
     setOverrides((prev) => new Map(prev).set(key, next));
     startTransition(async () => {
-      const res = await toggleRolePermissionAction(selectedRoleId, permId, next);
+      const res = await callAction(() => toggleRolePermissionAction(selectedRoleId, permId, next));
       if (!res.ok) {
         // Revert to server truth on failure (drop the optimistic override).
         setOverrides((prev) => {

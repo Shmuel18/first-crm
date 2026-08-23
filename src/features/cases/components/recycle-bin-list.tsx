@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { callAction } from '@/lib/actions/call-action';
 import type { Locale } from '@/lib/i18n/direction';
 import { formatPersonName } from '@/lib/utils/person-name';
 import { formatDateShort } from '@/lib/utils/format-date';
@@ -60,7 +61,7 @@ export function RecycleBinList({ rows, locale, retentionPaused }: Props) {
 
   const handleRestore = (row: DeletedCaseRow) => {
     startTransition(async () => {
-      const result = await restoreCaseAction(row.id);
+      const result = await callAction(() => restoreCaseAction(row.id));
       if (result.ok) {
         toast.success(t('restoreSuccess', { caseNumber: row.caseNumber }));
       } else {
@@ -73,10 +74,10 @@ export function RecycleBinList({ rows, locale, retentionPaused }: Props) {
     if (!confirmTarget) return;
     const target = confirmTarget;
     startTransition(async () => {
-      const result = await permanentDeleteCaseAction({
+      const result = await callAction(() => permanentDeleteCaseAction({
         caseId: target.id,
         confirmCaseNumber: typedConfirm,
-      });
+      }));
       if (result.ok) {
         toast.success(t('permanentDeleteSuccess', { caseNumber: target.caseNumber }));
         setConfirmTarget(null);

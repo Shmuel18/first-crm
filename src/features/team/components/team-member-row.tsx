@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/shared/form-fields';
+import { callAction } from '@/lib/actions/call-action';
 import { roleManagementLabel } from '@/lib/auth/role-label';
 import { formatPersonName } from '@/lib/utils/person-name';
 
@@ -50,7 +51,7 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
 
   const handleRoleChange = (roleId: string) => {
     startTransition(async () => {
-      const res = await updateMemberRoleAction(member.id, roleId);
+      const res = await callAction(() => updateMemberRoleAction(member.id, roleId));
       if (res.ok) {
         toast.success(t('toast.roleUpdated'));
       } else if (res.error === 'self_role_change') {
@@ -65,7 +66,7 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
 
   const handleSetActive = (isActive: boolean) => {
     startTransition(async () => {
-      const res = await setMemberActiveAction(member.id, isActive);
+      const res = await callAction(() => setMemberActiveAction(member.id, isActive));
       if (res.ok) {
         toast.success(isActive ? t('toast.reactivated') : t('toast.deactivated'));
       } else if (res.error === 'self_deactivate') {
@@ -80,7 +81,7 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
 
   const handleResend = () => {
     startTransition(async () => {
-      const res = await resendInviteAction(member.id);
+      const res = await callAction(() => resendInviteAction(member.id));
       if (!res.ok) {
         toast.error(
           res.error === 'not_allowed' ? t('toast.resendNotAllowed') : t('toast.actionFailed'),
@@ -98,7 +99,7 @@ export function TeamMemberRow({ member, roles, locale, isSelf }: Props) {
 
   const handleDelete = () => {
     startTransition(async () => {
-      const res = await deleteMemberAction(member.id);
+      const res = await callAction(() => deleteMemberAction(member.id));
       if (res.ok) {
         toast.success(t('toast.deleted'));
       } else if (res.error === 'self_delete') {

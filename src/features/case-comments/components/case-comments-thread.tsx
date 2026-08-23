@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
 import type { Locale } from '@/lib/i18n/direction';
 
 import { deleteCaseCommentAction } from '../actions/delete-case-comment';
@@ -62,7 +63,7 @@ export function CaseCommentsThread({
   // the signal; we re-fetch the RLS-scoped list (author names come back correct)
   // and preserve any of our own optimistic bubbles still round-tripping.
   const handleRemoteChange = useCallback(async () => {
-    const res = await fetchCaseCommentsAction(caseId);
+    const res = await callAction(() => fetchCaseCommentsAction(caseId));
     if (!res.ok) return;
     setComments((prev) => {
       const pendingTemps = prev.filter((c) => c.id.startsWith('temp-'));
@@ -127,7 +128,7 @@ export function CaseCommentsThread({
   const handleSaveEdit = async (id: string, body: string): Promise<boolean> => {
     const prev = comments;
     setComments((c) => c.map((x) => (x.id === id ? { ...x, body } : x)));
-    const res = await editCaseCommentAction(id, body);
+    const res = await callAction(() => editCaseCommentAction(id, body));
     if (!res.ok) {
       setComments(prev);
       toast.error(t('toast.editFailed'));
@@ -140,7 +141,7 @@ export function CaseCommentsThread({
   const handleDelete = async (id: string): Promise<boolean> => {
     const prev = comments;
     setComments((c) => c.filter((x) => x.id !== id));
-    const res = await deleteCaseCommentAction(id);
+    const res = await callAction(() => deleteCaseCommentAction(id));
     if (!res.ok) {
       setComments(prev);
       toast.error(t('toast.deleteFailed'));

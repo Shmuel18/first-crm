@@ -1,13 +1,13 @@
 import { getTranslations } from 'next-intl/server';
 
 import { renderSystemEmail } from '@/features/templates/services/system-email-templates.service';
+import { OFFICE_EMAIL } from '@/lib/email/addresses';
 import { sendEmail } from '@/lib/email/send';
 import { isEmailConfigured } from '@/lib/env';
 
 import { sendIntakeOfficeEmail } from './intake-office-email';
 import type { IntakeInput } from '../schemas/intake.schema';
 
-const OFFICE_EMAIL = 'office@kaufman-finance.com';
 const WHATSAPP_URL = 'https://wa.me/97225681681';
 type IntakeConfirmationInput = {
   to: string;

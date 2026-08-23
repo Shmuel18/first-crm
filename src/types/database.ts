@@ -5540,6 +5540,10 @@ export type Database = {
         Args: { p_case_id: string; p_document_id: string; p_user_id: string }
         Returns: undefined
       }
+      soft_delete_drive_document_without_tombstone: {
+        Args: { p_case_id: string; p_document_id: string; p_user_id: string }
+        Returns: boolean
+      }
       soft_delete_lead: { Args: { p_lead_id: string }; Returns: undefined }
       set_primary_scenario: {
         Args: { p_scenario_id: string; p_is_primary?: boolean }

@@ -29,8 +29,11 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization)
      * - favicon.ico, robots.txt, sitemap.xml
-     * - PWA assets (manifest.webmanifest, sw.js, offline.html) — public, must be
-     *   reachable without an auth round-trip for install/registration to work
+     * - PWA assets (manifest.webmanifest, sw.js, offline.html, offline.js) —
+     *   public, must be reachable without an auth round-trip for install/
+     *   registration to work. offline.js in particular is fetched by the SW's
+     *   precache: routed through here it would cost a Supabase round-trip, and
+     *   an unauthenticated precache would cache the /login redirect in its place.
      * - public files (.svg, .png, .jpg, .jpeg, .gif, .webp)
      *
      * SECURITY NOTE (R1-edge-2): Server Functions are POSTs to the page that
@@ -40,6 +43,6 @@ export const config = {
      * Server Action on an excluded path; every server action must check
      * auth/authz itself (CLAUDE.md rule) and not rely on this proxy.
      */
-    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|sw\\.js|offline\\.html|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|sw\\.js|offline\\.html|offline\\.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

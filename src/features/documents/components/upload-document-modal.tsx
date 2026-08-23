@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { FormField, NativeSelect } from '@/components/shared/form-fields';
+import { callAction } from '@/lib/actions/call-action';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import { finalizeUploadAction } from '../actions/finalize-upload';
@@ -119,14 +120,14 @@ export function UploadDocumentModal({
     setPending(true);
     try {
       // ── Phase 1: ask the server for a signed upload URL ─────────────
-      const prep = await prepareUploadAction({
+      const prep = await callAction(() => prepareUploadAction({
         caseId,
         fileName: file.name,
         fileSize: file.size,
         mimeType: file.type,
         categoryId,
         borrowerId: borrowerIdRaw || null,
-      });
+      }));
       if (!prep.ok) {
         setGenericError(
           prep.error === 'unauthorized'
@@ -154,7 +155,7 @@ export function UploadDocumentModal({
       }
 
       // ── Phase 3: finalize — magic-byte check + Drive + DB row ───────
-      const final = await finalizeUploadAction({
+      const final = await callAction(() => finalizeUploadAction({
         documentId: prep.documentId,
         caseId,
         fileName: prep.safeFileName,
@@ -164,7 +165,7 @@ export function UploadDocumentModal({
         borrowerId: borrowerIdRaw || null,
         expiryDate: expiryRaw || null,
         notes: notesRaw || null,
-      });
+      }));
       if (!final.ok) {
         setGenericError(mapErrorMessage(final.message));
         return;
