@@ -1124,6 +1124,32 @@
       "noMatches": "No cases match the current filters",
       "tableCaption": "Cases table — {count, plural, =1 {1 case} other {# cases}}"
     },
+    "nlQuery": {
+      "placeholder": "Ask the system: how many stuck cases? Which of David's cases await the bank?",
+      "ask": "Ask",
+      "matches": "matching cases",
+      "showInTable": "Show in table",
+      "clear": "Clear",
+      "failed": "Query failed, try again",
+      "rateLimited": "Hourly query quota reached",
+      "noName": "(no name)",
+      "tryExamples": "Try e.g. \"How many cases await pre-approval?\" or \"Leumi cases past their target date\"",
+      "unresolved": "Couldn't uniquely identify: {names} — the filter ran without them",
+      "archiveValue": "Archive",
+      "chips": {
+        "view": "View",
+        "stage": "Stage",
+        "advisor": "Advisor",
+        "bank": "Bank",
+        "targetDate": "Target date",
+        "q": "Search"
+      },
+      "targetDateValues": {
+        "overdue": "Overdue",
+        "week": "This week",
+        "none": "No target"
+      }
+    },
     "density": {
       "label": "Row density",
       "compact": "Compact",
