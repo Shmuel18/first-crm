@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { DateInputWithPicker } from '@/components/ui/date-input-with-picker';
+import { callAction } from '@/lib/actions/call-action';
 
 import { addMaaserPaymentAction } from '../actions/add-maaser-payment';
 import { celebrateMaaserGift } from './celebrate';
@@ -34,12 +35,12 @@ export function MaaserPaymentForm({ defaultDate }: Props) {
     if (!canSubmit) return;
     startTransition(async () => {
       try {
-        const res = await addMaaserPaymentAction({
+        const res = await callAction(() => addMaaserPaymentAction({
           paidOn,
           amount: amountNum,
           recipient: recipient.trim() || null,
           note: note.trim() || null,
-        });
+        }));
         if (!res.ok) {
           toast.error(t(`errors.${res.error}`));
           return;

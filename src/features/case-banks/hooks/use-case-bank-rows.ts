@@ -5,6 +5,7 @@ import { useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
 import { useInlineMutationSync } from '@/lib/hooks/use-inline-mutation-sync';
 import { useOptimisticIds } from '@/lib/hooks/use-optimistic-ids';
 import { useSyncedRows } from '@/lib/hooks/use-synced-rows';
@@ -79,7 +80,7 @@ export function useCaseBankRows(
       try {
         // Wait out an in-flight insert so the server row exists before flagging it.
         const realId = await resolveRealId(rowId);
-        const result = realId ? await setPrimaryBankAction(caseId, bankId) : null;
+        const result = realId ? await callAction(() => setPrimaryBankAction(caseId, bankId)) : null;
         if (result?.ok) { refreshSoon(); return; }
         // Roll back only the flags (a whole-array snapshot would resurrect a
         // row addRow's failure path removed — which also toasted already).
@@ -103,7 +104,7 @@ export function useCaseBankRows(
         const realId = await resolveRealId(rowId);
         // Never-inserted row: nothing to delete server-side, addRow toasted.
         if (realId) {
-          const result = await deleteCaseBankAction(realId, caseId);
+          const result = await callAction(() => deleteCaseBankAction(realId, caseId));
           if (!result.ok) throw new Error(result.error);
           toast.success(t('deleteSuccess'));
           refreshSoon();
@@ -130,7 +131,10 @@ export function useCaseBankRows(
         realId = await resolveRealId(rowId);
         // Insert failed — addRow already removed the row and toasted once.
         if (!realId) return;
-        const result = await updateCaseBankFieldAction(realId, caseId, 'banker_name', next);
+        // `realId` is a `let`, so its non-null narrowing does not survive into
+        // the callback below — bind the proven value to a const first.
+        const resolvedId = realId;
+        const result = await callAction(() => updateCaseBankFieldAction(resolvedId, caseId, 'banker_name', next));
         if (!result.ok) throw new Error(result.error);
         refreshSoon();
       } catch {

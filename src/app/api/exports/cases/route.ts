@@ -45,8 +45,14 @@ export const runtime = 'nodejs';
 // stream incrementally.
 export const maxDuration = 30;
 
+/**
+ * Per-user hourly caps. PDF was 5, set when one export weighed 2.79 MB — the
+ * header logo alone was a 2.1 MB PNG. That export is now 33 KB, and a client on
+ * a filtered network spends TWO slots per download (the blocked attempt plus the
+ * json-transport retry), which made 5 read as "about two exports an hour".
+ */
 const RATE_LIMITS = {
-  pdf: { max: 5, action: 'export_cases_pdf' },
+  pdf: { max: 20, action: 'export_cases_pdf' },
   xlsx: { max: 10, action: 'export_cases_xlsx' },
 } as const;
 
@@ -57,7 +63,15 @@ function isFormat(value: string | null): value is ExportFormat {
 }
 
 function errorJson(error: string, status: number): NextResponse {
-  return NextResponse.json({ ok: false, error }, { status });
+  // no-store on ERRORS too, not just on the success path. An error response with
+  // no cache directive can be held by an intermediary — a proxy, or a service
+  // worker from an older build — and replayed to the user forever, with no
+  // request ever reaching this handler again. That is indistinguishable from a
+  // live server rejection when you are reading it off a screenshot.
+  return NextResponse.json(
+    { ok: false, error },
+    { status, headers: { 'Cache-Control': 'no-store, max-age=0' } },
+  );
 }
 
 export async function GET(request: NextRequest): Promise<NextResponse | Response> {
@@ -68,13 +82,30 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return errorJson('unauthorized', 401);
 
-  const { data: canView } = await supabase.rpc('has_permission', {
-    perm_key: 'view_all_cases',
-  });
-  const { data: canViewOwn } = await supabase.rpc('has_permission', {
-    perm_key: 'view_own_cases',
-  });
-  if (canView !== true && canViewOwn !== true) {
+  // Both checks in one round-trip pair, and — importantly — the RPC ERROR is not
+  // discarded. It used to be: `const { data } = await rpc(...)` turned any
+  // failure (JWT expiry, pooler blip, statement timeout) into `undefined`, which
+  // then read as "permission denied" and shipped a 403. A 403 that really means
+  // "the check couldn't run" is unfalsifiable from the outside — it sent this
+  // investigation looking for a missing grant that was never missing.
+  const [allRes, ownRes] = await Promise.all([
+    supabase.rpc('has_permission', { perm_key: 'view_all_cases' }),
+    supabase.rpc('has_permission', { perm_key: 'view_own_cases' }),
+  ]);
+  if (allRes.error || ownRes.error) {
+    console.error('[exports] permission check failed to run', {
+      userId: userRes.user.id,
+      viewAllError: allRes.error?.code ?? null,
+      viewOwnError: ownRes.error?.code ?? null,
+    });
+    return errorJson('permission_check_failed', 503);
+  }
+  if (allRes.data !== true && ownRes.data !== true) {
+    console.error('[exports] permission denied', {
+      userId: userRes.user.id,
+      viewAll: allRes.data,
+      viewOwn: ownRes.data,
+    });
     return errorJson('unauthorized', 403);
   }
 
@@ -119,7 +150,8 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
       cases.map((c) => c.assigned_advisor_id).filter((v): v is string => Boolean(v)),
     );
     const advisorNamesById = new Map<string, string>();
-    for (const [id, contact] of advisorContacts) if (contact.name) advisorNamesById.set(id, contact.name);
+    for (const [id, contact] of advisorContacts)
+      if (contact.name) advisorNamesById.set(id, contact.name);
     const rows = buildExportRows(cases, locale, advisorNamesById);
 
     let body: Buffer;
@@ -143,10 +175,11 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
       mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
       filename = `${BRAND.key}-cases-${dateStamp()}.xlsx`;
     } else {
-      const generatedAtLabel = new Date().toLocaleDateString(
-        locale === 'he' ? 'he-IL' : 'en-GB',
-        { day: 'numeric', month: 'long', year: 'numeric' },
-      );
+      const generatedAtLabel = new Date().toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-GB', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
       body = await generateCasesPdf(rows, {
         title: t('savedViews.pdf.title'),
         subtitle: t('savedViews.pdf.subtitle', { count: rows.length }),
@@ -164,9 +197,30 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
     }
 
     // Fire-and-forget audit; don't block the download on the audit insert.
-    void logCasesExport({ userId: userRes.user.id, format, count: cases.length }).catch(
-      (err) => console.error('[exports] audit log failed', err),
+    void logCasesExport({ userId: userRes.user.id, format, count: cases.length }).catch((err) =>
+      console.error('[exports] audit log failed', err),
     );
+
+    // ESCAPE HATCH for filtered networks (?transport=json).
+    //
+    // The office's connection runs through a content filter (Nativ). It blocks
+    // this endpoint's normal reply — a GET whose response is application/pdf
+    // with Content-Disposition: attachment reads as a file download — and
+    // answers with its own HTML block page carrying 403, a fake
+    // "Server: Microsoft IIS/5.0" banner and a 2012 date. The request never
+    // reaches Vercel, so nothing is wrong on our side and nothing is logged.
+    //
+    // The bank-summary PDF is unaffected because it travels as base64 inside a
+    // Server Action response: no file signature on the wire for a filter to
+    // match. This transport gives the export the same shape. Same bytes, same
+    // permissions, same rate limit — only the envelope changes, and the client
+    // rebuilds the file locally.
+    if (request.nextUrl.searchParams.get('transport') === 'json') {
+      return NextResponse.json(
+        { ok: true, filename, mimeType, base64: body.toString('base64') },
+        { headers: { 'Cache-Control': 'no-store, max-age=0' } },
+      );
+    }
 
     return new Response(new Uint8Array(body), {
       status: 200,

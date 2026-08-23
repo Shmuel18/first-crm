@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import type { UnreadCadence } from '@/features/cases/domain/unread-star';
+import { callAction } from '@/lib/actions/call-action';
 
 import { updateUnreadStarAction } from '../actions/update-unread-star';
 
@@ -34,7 +35,7 @@ export function UnreadStarControl({ initialCadence, initialWeekday }: Props) {
 
     startTransition(async () => {
       try {
-        const result = await updateUnreadStarAction(nextCadence, nextWeekday);
+        const result = await callAction(() => updateUnreadStarAction(nextCadence, nextWeekday));
         if (result.ok) {
           toast.success(t('saved'));
           return;

@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Tooltip } from '@/components/ui/tooltip';
+import { callAction } from '@/lib/actions/call-action';
 
 import { removeBorrowerFromCaseAction } from '../actions/remove-borrower-from-case';
 
@@ -59,7 +60,7 @@ export function CaseBorrowerCardHeader({
 
   const handleRemove = () => {
     startRemove(async () => {
-      const result = await removeBorrowerFromCaseAction(caseId, borrowerId);
+      const result = await callAction(() => removeBorrowerFromCaseAction(caseId, borrowerId));
       if (result.ok) {
         toast.success(tRemove('success', { name: fullName }));
         setConfirmRemoveOpen(false);

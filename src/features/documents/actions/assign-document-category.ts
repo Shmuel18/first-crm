@@ -1,43 +1,136 @@
 'use server';
 
+import { z } from 'zod';
+
+import {
+  moveCaseDocumentToDriveFolder,
+  restoreCaseDocumentDriveParent,
+  type DriveCaseMoveOutcome,
+} from '@/features/integrations/services/drive-case-uploader';
+import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 import { safeDbError } from '@/lib/supabase/db-error-log';
+import type { Database, Json } from '@/types/database';
 
 type Result =
   | { ok: true }
   | { ok: false; error: 'unauthorized' | 'validation' | 'unknown'; message?: string };
+
+type DocumentUpdate = Database['public']['Tables']['documents']['Update'];
+type SuccessfulDriveMove = Extract<DriveCaseMoveOutcome, { ok: true }>;
+
+const AssignDocumentCategorySchema = z.object({
+  documentId: z.string().uuid(),
+  caseId: z.string().uuid(),
+  categoryId: z.string().uuid(),
+});
+
+function metadataObject(value: Json | null): Record<string, Json | undefined> {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, Json | undefined>)
+    : {};
+}
 
 export async function assignDocumentCategoryAction(
   documentId: string,
   caseId: string,
   categoryId: string,
 ): Promise<Result> {
-  if (!documentId || !categoryId) return { ok: false, error: 'validation' };
+  const parsed = AssignDocumentCategorySchema.safeParse({ documentId, caseId, categoryId });
+  if (!parsed.success) return { ok: false, error: 'validation' };
 
   const supabase = await createClient();
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
 
-  // Same permission gate the other doc actions use: verifying a doc
-  // (including re-categorizing) requires verify_document or upload_document.
-  const { data: hasPerm } = await supabase.rpc('has_permission', {
-    perm_key: 'verify_document',
-  });
-  const { data: hasUploadPerm } = await supabase.rpc('has_permission', {
-    perm_key: 'upload_document',
-  });
-  if (hasPerm !== true && hasUploadPerm !== true) {
+  // Categorization is filing, not verification. The manual review workflow is
+  // retired, so upload_document is the single document-write capability.
+  if (
+    !(await userHasPermission('upload_document')) ||
+    !(await userCanEditCase(parsed.data.caseId))
+  ) {
     return { ok: false, error: 'unauthorized' };
   }
 
-  const { error } = await supabase
-    .from('documents')
-    .update({ category_id: categoryId })
-    .eq('id', documentId)
-    .eq('case_id', caseId); // defense-in-depth: doc must belong to the supplied case
+  const [documentResult, categoryResult] = await Promise.all([
+    supabase
+      .from('documents')
+      .select('id, drive_file_id, metadata')
+      .eq('id', parsed.data.documentId)
+      .eq('case_id', parsed.data.caseId)
+      .is('deleted_at', null)
+      .maybeSingle(),
+    supabase
+      .from('document_categories')
+      .select('id, drive_folder')
+      .eq('id', parsed.data.categoryId)
+      .eq('is_active', true)
+      .maybeSingle(),
+  ]);
 
-  if (error) {
-    console.error('[assignDocumentCategory] db error', safeDbError(error));
+  if (documentResult.error || categoryResult.error) {
+    console.error('[assignDocumentCategory] lookup error', {
+      document: documentResult.error ? safeDbError(documentResult.error) : null,
+      category: categoryResult.error ? safeDbError(categoryResult.error) : null,
+    });
+    return { ok: false, error: 'unknown' };
+  }
+  if (!documentResult.data || !categoryResult.data) {
+    return { ok: false, error: 'validation' };
+  }
+
+  let driveMove: SuccessfulDriveMove | null = null;
+  if (documentResult.data.drive_file_id) {
+    const move = await moveCaseDocumentToDriveFolder({
+      caseId: parsed.data.caseId,
+      driveFileId: documentResult.data.drive_file_id,
+      driveFolder: categoryResult.data.drive_folder,
+    });
+    if (!move.ok) {
+      console.error('[assignDocumentCategory] Drive move failed', {
+        reason: move.reason,
+        message: move.message,
+      });
+      return { ok: false, error: 'unknown' };
+    }
+    driveMove = move;
+  }
+
+  const update: DocumentUpdate = { category_id: parsed.data.categoryId };
+  if (driveMove) {
+    update.metadata = {
+      ...metadataObject(documentResult.data.metadata),
+      drive_parent_folder_id: driveMove.targetFolderId,
+      drive_relative_path: [driveMove.targetFolderName],
+    };
+  }
+
+  const { data: updated, error } = await supabase
+    .from('documents')
+    .update(update)
+    .eq('id', parsed.data.documentId)
+    .eq('case_id', parsed.data.caseId)
+    .is('deleted_at', null)
+    .select('id')
+    .maybeSingle();
+
+  if (error || !updated) {
+    if (driveMove?.changed && documentResult.data.drive_file_id) {
+      const restored = await restoreCaseDocumentDriveParent({
+        driveFileId: documentResult.data.drive_file_id,
+        expectedCurrentParentId: driveMove.targetFolderId,
+        previousParents: driveMove.previousParents,
+      });
+      if (!restored) {
+        console.error('[assignDocumentCategory] Drive compensation incomplete', {
+          documentId: parsed.data.documentId,
+        });
+      }
+    }
+    console.error(
+      '[assignDocumentCategory] db error',
+      error ? safeDbError(error) : { message: 'Document was not updated' },
+    );
     return { ok: false, error: 'unknown' };
   }
 

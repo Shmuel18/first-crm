@@ -28,6 +28,17 @@ export const NAME_MAX = 120;
 export const SHORT_NOTE_MAX = 500;
 export const NOTES_MAX = 2_000;
 export const REQUEST_DETAILS_MAX = 50_000;
+/**
+ * Free-text cap for PUBLIC, unauthenticated writes (the /check questionnaire
+ * and the marketing contact route). Deliberately far below
+ * REQUEST_DETAILS_MAX: staff typing into a case can legitimately paste a long
+ * history, but an anonymous prospect describing their situation never needs
+ * more than a few paragraphs. The gap is attacker-controlled text that lands
+ * in the office's records and is later read back by staff — and, once an
+ * assistant summarises leads, by a model. Smaller blast radius, no legitimate
+ * cost.
+ */
+export const PUBLIC_REQUEST_DETAILS_MAX = 4_000;
 export const CURRENCY_MAX_ILS = 100_000_000; // 100M
 export const MONTHLY_AMOUNT_MAX_ILS = 1_000_000;
 export const CHILDREN_MAX = 30;

@@ -13,6 +13,7 @@ import {
   type DropdownPosition,
 } from '@/features/cases/components/dropdown-position';
 import { useRowDensity } from '@/features/cases/hooks/use-row-density';
+import { callAction } from '@/lib/actions/call-action';
 
 import { setPrimaryBankAction } from '../actions/set-primary-bank';
 
@@ -87,7 +88,7 @@ export function EditableBankCell({
     setBank(option);
 
     startTransition(async () => {
-      const result = await setPrimaryBankAction(caseId, option?.id ?? null);
+      const result = await callAction(() => setPrimaryBankAction(caseId, option?.id ?? null));
       if (!result.ok) {
         setBank(prevBank);
         toast.error(tc('saveFailed'));

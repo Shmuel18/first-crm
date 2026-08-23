@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { callAction } from '@/lib/actions/call-action';
 import { useInlineMutationSync } from '@/lib/hooks/use-inline-mutation-sync';
 
 import { updateCaseFeeAmountAction } from '../actions/update-case-fee-amount';
@@ -65,7 +66,7 @@ export function useCaseDetailsState(
     setLocalCase((c) => ({ ...c, [key]: value as never }));
     beginOp();
     try {
-      const result = await updateCaseFieldAction(caseId, field, value);
+      const result = await callAction(() => updateCaseFieldAction(caseId, field, value));
       if (!result.ok) {
         setLocalCase((c) => ({ ...c, [key]: prev as never }));
         return { ok: false, message: result.message };
@@ -85,7 +86,7 @@ export function useCaseDetailsState(
     setLocalFee(value === null || value === '' ? null : Number(value));
     beginOp();
     try {
-      const result = await updateCaseFeeAmountAction(caseId, value);
+      const result = await callAction(() => updateCaseFeeAmountAction(caseId, value));
       if (!result.ok) {
         setLocalFee(prev);
         return { ok: false, message: result.message };

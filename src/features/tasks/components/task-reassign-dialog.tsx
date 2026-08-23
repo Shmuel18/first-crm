@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { FormField, NativeSelect } from '@/components/shared/form-fields';
+import { callAction } from '@/lib/actions/call-action';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import { reassignTaskAction } from '../actions/reassign-task';
@@ -68,7 +69,7 @@ export function TaskReassignDialog({ open, onOpenChange, task, assignees }: Prop
   const handleSubmit = () => {
     if (!task || unchanged) return;
     startTransition(async () => {
-      const res = await reassignTaskAction(task.id, selected, note.trim() || undefined);
+      const res = await callAction(() => reassignTaskAction(task.id, selected, note.trim() || undefined));
       if (!res.ok) {
         toast.error(t('toast.reassignFailed'));
         return;

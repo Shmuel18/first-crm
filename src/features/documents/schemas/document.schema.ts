@@ -17,14 +17,6 @@ export const DocumentMetadataSchema = z.object({
 
 export type DocumentMetadataInput = z.infer<typeof DocumentMetadataSchema>;
 
-export const DocumentStatusSchema = z.enum([
-  'new',
-  'verified',
-  'rejected',
-  'expired',
-  'not_relevant',
-]);
-
 export const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
 
 export const ALLOWED_MIME_TYPES = [

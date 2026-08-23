@@ -8,6 +8,8 @@ import { Loader2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 
+import { callAction } from '@/lib/actions/call-action';
+
 import { addEmptyBorrowerAction } from '../actions/add-empty-borrower';
 
 /**
@@ -47,7 +49,7 @@ export function AddBorrowerButton({ caseId, variant = 'header' }: Props) {
     if (pending || firing) return;
     setFiring(true);
     startTransition(async () => {
-      const result = await addEmptyBorrowerAction(caseId);
+      const result = await callAction(() => addEmptyBorrowerAction(caseId));
       if (!result.ok) {
         toast.error(tc('saveFailed'));
       } else {

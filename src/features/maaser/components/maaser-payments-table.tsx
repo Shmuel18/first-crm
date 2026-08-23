@@ -6,6 +6,7 @@ import { Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
 import { formatCurrency } from '@/lib/utils/format-currency';
 import type { Locale } from '@/lib/i18n/direction';
 
@@ -37,7 +38,7 @@ export function MaaserPaymentsTable({ payments, locale, revealed, mask }: Props)
       // action fails; on success revalidatePath supplies the canonical list.
       removeOptimisticPayment(id);
       try {
-        const res = await deleteMaaserPaymentAction(id);
+        const res = await callAction(() => deleteMaaserPaymentAction(id));
         if (!res.ok) {
           toast.error(t(`errors.${res.error}`));
           return;

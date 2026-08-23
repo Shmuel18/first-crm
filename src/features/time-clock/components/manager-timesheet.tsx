@@ -2,9 +2,19 @@
 
 import { useEffect, useState } from 'react';
 
-import { ChevronDown, ChevronLeft, ChevronRight, FileSpreadsheet, Loader2, Pencil, Plus } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  FileSpreadsheet,
+  Loader2,
+  Pencil,
+  Plus,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+
+import { retryViaJsonTransport, saveBlob } from '@/lib/utils/file-download';
 
 import { formatCurrency } from '@/lib/utils/format-currency';
 import type { Locale } from '@/lib/i18n/direction';
@@ -20,7 +30,13 @@ type Row = { employee: TrackedEmployee; entries: TimeEntry[] };
 const fullName = (e: TrackedEmployee, fallback: string): string =>
   [e.firstName, e.lastName].filter(Boolean).join(' ').trim() || fallback;
 
-export function ManagerTimesheet({ locale, refreshKey = 0 }: { locale: Locale; refreshKey?: number }) {
+export function ManagerTimesheet({
+  locale,
+  refreshKey = 0,
+}: {
+  locale: Locale;
+  refreshKey?: number;
+}) {
   const t = useTranslations('timeClock');
   const [offset, setOffset] = useState(0);
   const [reloadKey, setReloadKey] = useState(0);
@@ -31,28 +47,33 @@ export function ManagerTimesheet({ locale, refreshKey = 0 }: { locale: Locale; r
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const loading = loadedKey !== currentKey;
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [editing, setEditing] = useState<{ entry: TimeEntry | null; userId: string; name: string } | null>(null);
+  const [editing, setEditing] = useState<{
+    entry: TimeEntry | null;
+    userId: string;
+    name: string;
+  } | null>(null);
   const [exporting, setExporting] = useState(false);
 
   const doExport = async () => {
     const { fromISO, toISO } = israelMonthRange(nowMs, offset);
     setExporting(true);
     try {
-      const res = await fetch(
-        `/api/exports/timesheet?from=${encodeURIComponent(fromISO)}&to=${encodeURIComponent(toISO)}`,
-      );
+      const endpoint = `/api/exports/timesheet?from=${encodeURIComponent(fromISO)}&to=${encodeURIComponent(toISO)}`;
+      const res = await fetch(endpoint, { cache: 'no-store' });
       if (!res.ok) {
-        const j = (await res.json().catch(() => ({}))) as { error?: string };
-        toast.error(t(`manager.exportErrors.${j.error ?? 'unknown'}`));
+        let errorKey: string | null = null;
+        try {
+          errorKey = ((await res.json()) as { error?: string })?.error ?? null;
+        } catch {
+          // Not our JSON error contract — something other than our handler answered.
+        }
+        // A network filter blocks the file-download reply outright (see
+        // lib/utils/file-download). Retry through the envelope it lets past.
+        if (errorKey === null && (await retryViaJsonTransport(endpoint))) return;
+        toast.error(t(`manager.exportErrors.${errorKey ?? 'unknown'}`));
         return;
       }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `kaufman-timesheet.xlsx`;
-      a.click();
-      URL.revokeObjectURL(url);
+      saveBlob(await res.blob(), 'kaufman-timesheet.xlsx');
     } catch {
       toast.error(t('manager.exportErrors.unknown'));
     } finally {
@@ -82,9 +103,17 @@ export function ManagerTimesheet({ locale, refreshKey = 0 }: { locale: Locale; r
     timeZone: 'Asia/Jerusalem',
   });
   const fmtTime = (iso: string) =>
-    new Date(iso).toLocaleTimeString(dLocale, { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' });
+    new Date(iso).toLocaleTimeString(dLocale, {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Asia/Jerusalem',
+    });
   const fmtDay = (day: string) =>
-    new Date(day).toLocaleDateString(dLocale, { weekday: 'short', day: '2-digit', month: '2-digit' });
+    new Date(day).toLocaleDateString(dLocale, {
+      weekday: 'short',
+      day: '2-digit',
+      month: '2-digit',
+    });
 
   return (
     <section>
@@ -115,7 +144,9 @@ export function ManagerTimesheet({ locale, refreshKey = 0 }: { locale: Locale; r
             <ChevronRight className="size-4 rtl:hidden" aria-hidden="true" />
             <ChevronLeft className="size-4 ltr:hidden" aria-hidden="true" />
           </button>
-          <span className="min-w-28 text-center text-sm font-medium text-neutral-800 tabular-nums">{monthLabel}</span>
+          <span className="min-w-28 text-center text-sm font-medium text-neutral-800 tabular-nums">
+            {monthLabel}
+          </span>
           <button
             type="button"
             onClick={() => setOffset((o) => Math.min(0, o + 1))}
@@ -145,9 +176,13 @@ export function ManagerTimesheet({ locale, refreshKey = 0 }: { locale: Locale; r
             const days = groupByDay(entries, nowMs);
             const empMins = totalMinutes(entries, nowMs);
             const showMoney = employee.hourlyRate != null && employee.hourlyRate > 0;
-            const money = (mins: number): string => formatCurrency(earnings(mins, employee.hourlyRate), locale);
+            const money = (mins: number): string =>
+              formatCurrency(earnings(mins, employee.hourlyRate), locale);
             return (
-              <li key={employee.id} className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
+              <li
+                key={employee.id}
+                className="overflow-hidden rounded-xl border border-neutral-200 bg-white"
+              >
                 <div className="flex items-center gap-2 px-4 py-3">
                   <button
                     type="button"
@@ -155,18 +190,25 @@ export function ManagerTimesheet({ locale, refreshKey = 0 }: { locale: Locale; r
                     className="flex min-w-0 flex-1 items-center gap-2 text-start"
                     aria-expanded={isOpen}
                   >
-                    <ChevronDown className={`size-4 shrink-0 text-neutral-400 transition ${isOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
+                    <ChevronDown
+                      className={`size-4 shrink-0 text-neutral-400 transition ${isOpen ? 'rotate-180' : ''}`}
+                      aria-hidden="true"
+                    />
                     <span className="truncate text-sm font-medium text-neutral-900">{name}</span>
                     <span className="ms-auto shrink-0 text-end tabular-nums">
-                      <span className="block text-sm font-semibold text-brand-gold-text">{formatHm(empMins)}</span>
-                      {showMoney && <span className="block text-xs text-neutral-400">{money(empMins)}</span>}
+                      <span className="text-brand-gold-text block text-sm font-semibold">
+                        {formatHm(empMins)}
+                      </span>
+                      {showMoney && (
+                        <span className="block text-xs text-neutral-400">{money(empMins)}</span>
+                      )}
                     </span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setEditing({ entry: null, userId: employee.id, name })}
                     aria-label={t('manager.addEntry')}
-                    className="tap-target inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-brand-gold/50 text-brand-gold-text transition hover:bg-brand-gold-soft"
+                    className="tap-target border-brand-gold/50 text-brand-gold-text hover:bg-brand-gold-soft inline-flex size-7 shrink-0 items-center justify-center rounded-md border transition"
                   >
                     <Plus className="size-4" aria-hidden="true" />
                   </button>
@@ -175,7 +217,9 @@ export function ManagerTimesheet({ locale, refreshKey = 0 }: { locale: Locale; r
                 {isOpen && (
                   <div className="border-t border-neutral-100 px-4 py-2">
                     {days.length === 0 ? (
-                      <p className="py-3 text-center text-xs text-neutral-400">{t('manager.noEntries')}</p>
+                      <p className="py-3 text-center text-xs text-neutral-400">
+                        {t('manager.noEntries')}
+                      </p>
                     ) : (
                       <ul className="space-y-2">
                         {days.map((d) => (
@@ -184,21 +228,30 @@ export function ManagerTimesheet({ locale, refreshKey = 0 }: { locale: Locale; r
                               <span>{fmtDay(d.day)}</span>
                               <span className="font-medium tabular-nums">
                                 {formatHm(d.minutes)}
-                                {showMoney && <span className="text-neutral-400"> · {money(d.minutes)}</span>}
+                                {showMoney && (
+                                  <span className="text-neutral-400"> · {money(d.minutes)}</span>
+                                )}
                               </span>
                             </div>
                             <ul className="mt-0.5 space-y-0.5">
                               {d.entries.map((e) => (
                                 <li key={e.id} className="flex items-center gap-2 text-sm">
-                                  <span className="tabular-nums text-neutral-700" dir="ltr">
-                                    {fmtTime(e.clockIn)} – {e.clockOut ? fmtTime(e.clockOut) : t('history.stillOpen')}
+                                  <span className="text-neutral-700 tabular-nums" dir="ltr">
+                                    {fmtTime(e.clockIn)} –{' '}
+                                    {e.clockOut ? fmtTime(e.clockOut) : t('history.stillOpen')}
                                   </span>
-                                  {e.note && <span className="truncate text-xs text-neutral-400">· {e.note}</span>}
+                                  {e.note && (
+                                    <span className="truncate text-xs text-neutral-400">
+                                      · {e.note}
+                                    </span>
+                                  )}
                                   <button
                                     type="button"
-                                    onClick={() => setEditing({ entry: e, userId: employee.id, name })}
+                                    onClick={() =>
+                                      setEditing({ entry: e, userId: employee.id, name })
+                                    }
                                     aria-label={t('manager.editEntry')}
-                                    className="tap-target ms-auto inline-flex size-6 shrink-0 items-center justify-center rounded text-neutral-400 transition hover:text-brand-gold-text"
+                                    className="tap-target hover:text-brand-gold-text ms-auto inline-flex size-6 shrink-0 items-center justify-center rounded text-neutral-400 transition"
                                   >
                                     <Pencil className="size-3.5" aria-hidden="true" />
                                   </button>

@@ -5,6 +5,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { History, Loader2, UserRoundCheck, UserRoundPlus } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
+import { callAction } from '@/lib/actions/call-action';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import { getTaskAssignmentHistoryAction } from '../services/task-assignment-history.service';
@@ -26,7 +27,7 @@ export function TaskAssignmentHistory({ task }: Props) {
 
   useEffect(() => {
     startTransition(async () => {
-      const result = await getTaskAssignmentHistoryAction(task.id);
+      const result = await callAction(() => getTaskAssignmentHistoryAction(task.id));
       setHistory(result.ok ? result.history : []);
     });
   }, [task.id]);

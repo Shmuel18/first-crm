@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
-import { CalendarClock, Eye, Home, User } from 'lucide-react';
+import { CalendarClock, Eye, Home, Sparkles, User } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import {
@@ -11,15 +11,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import { parseLeadDetails } from '../domain/lead-details';
+import { parseStoredLeadTriage, type LeadHeat } from '../schemas/lead-triage.schema';
 import type { LeadRow } from '../types';
 
 export function LeadDetailsButton({ lead }: { lead: LeadRow }) {
   const t = useTranslations('leads.details');
   const [open, setOpen] = useState(false);
   const details = useMemo(() => parseLeadDetails(lead.metadata), [lead.metadata]);
+  const triage = useMemo(() => {
+    const meta = lead.metadata as { payload?: { ai_triage?: unknown } } | null;
+    return parseStoredLeadTriage(meta?.payload?.ai_triage);
+  }, [lead.metadata]);
 
   const intlLocale = useLocale() === 'he' ? 'he-IL' : 'en-GB';
   const money = (n: number) =>
@@ -50,6 +56,30 @@ export function LeadDetailsButton({ lead }: { lead: LeadRow }) {
           </DialogHeader>
 
           <div className="max-h-[70vh] space-y-4 overflow-y-auto pe-1 text-sm">
+            {/* AI triage (ai-v2-spec.md §4.3) — appears once the background
+                run finished; older/malformed data simply renders nothing. */}
+            {triage && (
+              <Section
+                icon={<Sparkles className="size-4" aria-hidden="true" />}
+                title={t('aiTriage.title')}
+              >
+                <div className="mb-1.5 flex items-center gap-2">
+                  <HeatChip heat={triage.heat} label={t(`aiTriage.heat.${triage.heat}`)} />
+                  <span className="text-neutral-700">{triage.summary_he}</span>
+                </div>
+                {triage.first_call_script.length > 0 && (
+                  <ol className="ms-4 list-decimal space-y-0.5 text-neutral-700">
+                    {triage.first_call_script.map((line, i) => (
+                      <li key={i}>{line}</li>
+                    ))}
+                  </ol>
+                )}
+                {triage.reasons.length > 0 && (
+                  <p className="mt-1.5 text-xs text-neutral-500">{triage.reasons.join(' · ')}</p>
+                )}
+              </Section>
+            )}
+
             {/* Basic contact — always present */}
             <Section icon={<User className="size-4" aria-hidden="true" />} title={t('contact')}>
               <Row label={t('phone')} value={lead.phone} dir="ltr" />
@@ -121,6 +151,25 @@ export function LeadDetailsButton({ lead }: { lead: LeadRow }) {
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+const HEAT_TONE: Record<LeadHeat, string> = {
+  hot: 'bg-red-50 text-red-700 border-red-200',
+  warm: 'bg-amber-50 text-amber-700 border-amber-200',
+  cold: 'bg-blue-50 text-blue-700 border-blue-200',
+};
+
+function HeatChip({ heat, label }: { heat: LeadHeat; label: string }) {
+  return (
+    <span
+      className={cn(
+        'inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold',
+        HEAT_TONE[heat],
+      )}
+    >
+      {label}
+    </span>
   );
 }
 

@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { Tooltip } from '@/components/ui/tooltip';
+import { callAction } from '@/lib/actions/call-action';
 
 import { getExpenseReceiptUrlAction } from '../actions/get-expense-receipt-url';
 import { removeExpenseReceiptAction } from '../actions/remove-expense-receipt';
@@ -68,7 +69,7 @@ export function ExpenseReceiptCell({
     startBusy(async () => {
       let ok = false;
       try {
-        const res = await uploadExpenseReceiptAction(fd);
+        const res = await callAction(() => uploadExpenseReceiptAction(fd));
         ok = res.ok;
         if (res.ok) {
           setName(res.receiptName);
@@ -107,7 +108,7 @@ export function ExpenseReceiptCell({
     startBusy(async () => {
       let ok = false;
       try {
-        const res = await removeExpenseReceiptAction(expenseId, caseId);
+        const res = await callAction(() => removeExpenseReceiptAction(expenseId, caseId));
         ok = res.ok;
         if (res.ok) {
           setName(null);

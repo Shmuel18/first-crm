@@ -125,7 +125,8 @@
       "consentRequired": "Please accept the privacy policy to continue.",
       "contactRequired": "Please provide a phone or email so we can reach you.",
       "rateLimited": "Too many requests from this address. Please try again in an hour.",
-      "unknown": "Something went wrong. Please try again."
+      "unknown": "Something went wrong. Please try again.",
+      "network": "The form was not submitted — you appear to be offline. Your answers are saved on this device; check your connection and send again."
     },
     "footer": {
       "privacy": "Privacy Policy",
@@ -150,6 +151,23 @@
     "backHome": "Back to cases"
   },
   "composeEmail": {
+    "ai": {
+      "label": "Draft with AI",
+      "purposeLabel": "Message goal",
+      "purposes": {
+        "missing_docs": "Missing documents reminder",
+        "status_update": "Status update",
+        "custom": "Free instruction"
+      },
+      "instructionPlaceholder": "What should the message say?",
+      "instructionRequired": "Write a short instruction first",
+      "generate": "Draft",
+      "writing": "Writing…",
+      "useDraft": "Use draft",
+      "clear": "Clear",
+      "failed": "Drafting failed, try again",
+      "rateLimited": "Hourly drafting quota reached — try later"
+    },
     "hint": "You can edit the message before sending. It will be sent in the office's branded layout.",
     "subjectLabel": "Subject",
     "bodyLabel": "Message body",
@@ -166,7 +184,7 @@
       "fromCase": "From case documents",
       "loading": "Loading…",
       "noDocuments": "No documents to attach",
-      "tooMany": "Up to 5 files can be attached",
+      "tooMany": "Up to {count} files can be attached",
       "tooLarge": "Files are too large (15MB total max)",
       "fileTypeNotAllowed": "Unsupported file type",
       "uploadFailed": "File upload failed",
@@ -205,6 +223,7 @@
     "done": "Done",
     "savedAgo": "Saved",
     "saveFailed": "Save failed. Try again.",
+    "noConnection": "No internet connection. The change was not saved — check your connection and try again.",
     "changedElsewhere": "Changed by someone else — reload to see the latest.",
     "noStatus": "No status",
     "comingSoon": "Coming soon",
@@ -233,6 +252,7 @@
     "cases": "Cases",
     "tasks": "Tasks",
     "simulators": "Simulators",
+    "inbox": "Inbox",
     "statistics": "Statistics",
     "collections": "Collections",
     "finance": "Finances",
@@ -246,6 +266,36 @@
     "sidebar": "Sidebar",
     "skipToContent": "Skip to main content",
     "unreadTasks": "{count, plural, =1 {1 open task} other {# open tasks}}"
+  },
+  "inbox": {
+    "eyebrow": "Smart assistant",
+    "title": "Inbox",
+    "subtitle": "Every incoming office email is triaged automatically. Anything unclear waits here for your call.",
+    "tabsLabel": "Mail filter",
+    "tabs": {
+      "attention": "Needs attention",
+      "all": "All",
+      "handled": "Handled"
+    },
+    "empty": "Nothing to show — all clear.",
+    "noSubject": "(no subject)",
+    "openInGmail": "Open in Gmail",
+    "caseLink": "Case {number}",
+    "linkToCase": "Link to case",
+    "caseNumberPlaceholder": "Case #",
+    "linkConfirm": "Link",
+    "caseNotFound": "No active case with that number",
+    "acknowledge": "Handled",
+    "dismiss": "Not relevant",
+    "categories": {
+      "client_documents": "Client documents",
+      "client_message": "Client message",
+      "probable_client": "Probably a client",
+      "bank": "Bank",
+      "vendor_or_marketing": "Vendors & marketing",
+      "internal": "Internal",
+      "unclear": "Unclear"
+    }
   },
   "collections": {
     "eyebrow": "Finances",
@@ -1076,6 +1126,32 @@
       "noMatches": "No cases match the current filters",
       "tableCaption": "Cases table — {count, plural, =1 {1 case} other {# cases}}"
     },
+    "nlQuery": {
+      "placeholder": "Ask the system: how many stuck cases? Which of David's cases await the bank?",
+      "ask": "Ask",
+      "matches": "matching cases",
+      "showInTable": "Show in table",
+      "clear": "Clear",
+      "failed": "Query failed, try again",
+      "rateLimited": "Hourly query quota reached",
+      "noName": "(no name)",
+      "tryExamples": "Try e.g. \"How many cases await pre-approval?\" or \"Leumi cases past their target date\"",
+      "unresolved": "Couldn't uniquely identify: {names} — the filter ran without them",
+      "archiveValue": "Archive",
+      "chips": {
+        "view": "View",
+        "stage": "Stage",
+        "advisor": "Advisor",
+        "bank": "Bank",
+        "targetDate": "Target date",
+        "q": "Search"
+      },
+      "targetDateValues": {
+        "overdue": "Overdue",
+        "week": "This week",
+        "none": "No target"
+      }
+    },
     "density": {
       "label": "Row density",
       "compact": "Compact",
@@ -1093,7 +1169,8 @@
       "export": "Export",
       "formatExcel": "Excel",
       "formatPdf": "PDF",
-      "exportFailed": "Export failed",
+      "exportFailedCode": "Export failed ({code})",
+      "exportDownloadBlocked": "The file was generated but the browser blocked the download. Try a regular browser tab.",
       "exportEmpty": "No cases to export",
       "exportRateLimited": "Too many exports. Try again in an hour.",
       "pdf": {
@@ -1198,6 +1275,14 @@
       "submit": "Create lead"
     },
     "details": {
+      "aiTriage": {
+        "title": "AI triage",
+        "heat": {
+          "hot": "Hot",
+          "warm": "Warm",
+          "cold": "Cold"
+        }
+      },
       "view": "View details",
       "contact": "Contact",
       "phone": "Phone",
@@ -1555,6 +1640,16 @@
       "backToCase": "Back to case",
       "truncatedNote": "Showing the last 200 entries. Older entries are available via the full audit log export."
     },
+    "briefing": {
+      "title": "Pre-call briefing",
+      "thinking": "Reading the case…",
+      "regenerate": "Refresh",
+      "copy": "Copy",
+      "copied": "Copied",
+      "failed": "Briefing failed, try again",
+      "rateLimited": "Hourly briefing quota for this case reached — try later",
+      "disclaimer": "AI-generated from case data — review before relying on it"
+    },
     "actionBar": {
       "backTooltip": "Back",
       "caseLabel": "Case",
@@ -1562,6 +1657,7 @@
       "openedAtTooltip": "Case opening date",
       "withBorrowers": "(Borrowers to be added)",
       "actions": {
+        "briefing": "Pre-call briefing",
         "calculator": "Calculations (LTV, DTI)",
         "history": "History / Audit Log",
         "documents": "Documents",
@@ -1645,7 +1741,7 @@
       "requestDetailsEmpty": "No detailed request written yet.",
       "documents": "Documents",
       "documentsComingSoon": "Document management + Google Drive sync coming soon",
-      "documentsHint": "Click 'Open documents' for the management page — upload, checklist, verify and statuses.",
+      "documentsHint": "Click 'Open documents' for uploads, the checklist, and full Drive synchronization.",
       "openDocuments": "Open documents"
     },
     "property": {
@@ -2231,6 +2327,24 @@
       },
       "errors": {
         "generic": "Save failed. Please try again."
+      },
+      "bankPdfSignature": {
+        "title": "Bank summary signature",
+        "adminOnly": "Admin only",
+        "description": "Who signs off at the bottom of the bank summary PDF. The office details are the default, so an advisor's personal contact details never reach the bank and documents stay valid after an advisor leaves.",
+        "modeLabel": "Sign with",
+        "saved": "Setting saved",
+        "failed": "Update failed. Please try again.",
+        "modes": {
+          "office": "Office details",
+          "advisor": "Assigned advisor",
+          "none": "No name (signature line only)"
+        },
+        "hints": {
+          "office": "Prints the office name plus the main phone and email.",
+          "advisor": "Prints the assigned advisor's name, phone and email.",
+          "none": "Prints an empty signature line — no name, no contact details."
+        }
       }
     },
     "sla": {
@@ -2593,11 +2707,6 @@
       "uploadCta": "Upload",
       "dueAtStage": "Due by {stage}",
       "uploadedCount": "{count, plural, =1 {1 file uploaded} other {# files uploaded}}",
-      "chip": {
-        "missing": "{count, plural, =1 {1 missing} other {# missing}}",
-        "pending": "{count, plural, =1 {1 pending review} other {# pending review}}",
-        "verified": "{count, plural, =1 {1 verified} other {# verified}}"
-      },
       "manage": {
         "open": "Manage",
         "title": "Document checklist",
@@ -2627,6 +2736,8 @@
     },
     "sync": {
       "button": "Sync from Drive",
+      "syncing": "Syncing with Drive…",
+      "complete": "Drive sync complete",
       "imported": "Imported {count} new files from Drive",
       "updated": "Updated location for {count} files moved in Drive",
       "deleted": "{count} files deleted in Drive were removed from the system",
@@ -2669,8 +2780,6 @@
       "progressLabel": "Complete",
       "progressAria": "Document collection progress {percent} percent",
       "total": "{count} documents total",
-      "verified": "{count} verified",
-      "pending": "{count} pending review",
       "missing": "{count} missing",
       "empty": "No documents uploaded yet"
     },
@@ -2678,6 +2787,20 @@
       "title": "Uncategorized ({count})",
       "subtitle": "Files in the case's Drive folder without a category subfolder. Pick a category for each file.",
       "pickCategory": "Categorize..."
+    },
+    "ai": {
+      "suggests": "Detected: {category} ({confidence}%)",
+      "accept": "Accept classification",
+      "reject": "Reject classification",
+      "resolveFailed": "Saving the verdict failed, try again",
+      "flags": {
+        "stale": "Document is outdated",
+        "name_mismatch": "Name doesn't match a borrower",
+        "unreadable": "Hard to read",
+        "missing_pages": "Pages appear missing",
+        "warning_notes": "Warning notes on the deed",
+        "category_mismatch": "Category may be wrong"
+      }
     },
     "folders": {
       "identity": {
@@ -2701,20 +2824,6 @@
         "subtitle": "Invoices · other documents"
       }
     },
-    "status": {
-      "missing": "Missing",
-      "new": "Pending review",
-      "verified": "Verified",
-      "rejected": "Rejected",
-      "expired": "Expired",
-      "not_relevant": "Not relevant"
-    },
-    "statusActions": {
-      "markVerified": "Mark as verified",
-      "markRejected": "Return to review",
-      "markNew": "Mark pending",
-      "markNotRelevant": "Mark not relevant"
-    },
     "uploadModal": {
       "title": "Upload new document",
       "fileLabel": "File (PDF / image / DOC, up to 20MB)",
@@ -2732,17 +2841,19 @@
       "title": "Preview",
       "uploadedBy": "Uploaded by",
       "uploadedAt": "Uploaded on",
-      "verifiedBy": "Verified by",
       "size": "Size",
       "category": "Type",
       "borrower": "Borrower",
       "expiry": "Expires on",
       "openNewTab": "Open in new tab",
       "openInDrive": "Open in Drive",
-      "downloadOriginal": "Download original",
+      "downloadOriginal": "Download",
+      "downloading": "Downloading...",
       "noPreview": "No preview available for this file type",
       "close": "Close",
-      "deleteConfirm": "Remove this document from the case? It will stay in retention storage for the configured recovery window."
+      "deleteConfirm": "Remove this document from the case? It will stay in retention storage for the configured recovery window.",
+      "print": "Print",
+      "sendByEmail": "Send by email"
     },
     "card": {
       "documentCount": "{count} documents",
@@ -2753,6 +2864,11 @@
     },
     "detail": {
       "back": "All folders",
+      "backToParent": "Back to parent folder",
+      "breadcrumbLabel": "Folder path",
+      "folderOpened": "Opened folder {name}",
+      "foldersTitle": "Folders",
+      "folderUnavailable": "This folder was moved or removed in Drive",
       "uploadedTitle": "Uploaded documents",
       "requiredTitle": "Still required",
       "requiredEmpty": "Everything collected in this category",
@@ -2768,7 +2884,23 @@
       "unauthorized": "Not authorized",
       "uploadFailed": "Upload failed. Please try again.",
       "deleteFailed": "Delete failed. Please try again.",
-      "statusUpdateFailed": "Status update failed"
+      "printFailed": "Printing failed. Try opening the document and printing from there.",
+      "downloadFailed": "Download failed. Try opening the document in a new tab and downloading it there."
+    },
+    "sendEmail": {
+      "button": "Send by email",
+      "title": "Send documents by email",
+      "recipientLabel": "Recipient",
+      "recipientPlaceholder": "banker@bank.co.il",
+      "recipientHint": "Any address — a banker, an appraiser, or the client.",
+      "defaultSubject": "Documents attached",
+      "defaultBody": "Hello,\n\nPlease find the documents attached.\n\nBest regards,",
+      "sent": "Email sent",
+      "errors": {
+        "unauthorized": "You are not allowed to send documents from this case",
+        "attachment": "Attaching the documents failed — check the file count and size",
+        "generic": "Sending the email failed. Please try again."
+      }
     }
   },
   "richTextEditor": {
@@ -3200,6 +3332,18 @@
         "emailExists": "This email is already registered.",
         "rateLimited": "Too many invites sent recently. Please try again in an hour.",
         "generic": "Sending the invite failed. Please try again."
+      },
+      "restore": {
+        "title": "{name} was removed from the team",
+        "body": "The account for this address still exists, so a new one can't be created. You can restore them — their history is kept, and the details you just entered (name, phone, role) will be applied. Cases and tasks reassigned to a manager on removal do not come back automatically.",
+        "action": "Restore to team",
+        "restored": "{name} was restored to the team",
+        "restoredAndEmailed": "Member restored and a set-password link was emailed to them",
+        "restoredNeedsLink": "Member restored. Send them a sign-in link from their row in the list.",
+        "errors": {
+          "unauthorized": "Only a manager can restore team members.",
+          "generic": "Restoring the member failed. Please try again."
+        }
       }
     }
   }

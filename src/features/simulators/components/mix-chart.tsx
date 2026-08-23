@@ -8,8 +8,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+
 import { useTranslations } from 'next-intl';
 
+import { CHART_INITIAL_DIMENSION } from '@/components/shared/chart-initial-dimension';
 import { sampleAnnualCurve } from '../domain/curve-sampling';
 import { agorotToNis, formatCompactNis, formatMoney } from '../utils/format';
 
@@ -24,8 +26,10 @@ export function MixChart({ points }: Props) {
 
   return (
     <div className="h-56">
-      {/* minHeight floor — prevents Recharts from measuring a 0-height container and logging width/height(-1). */}
-      <ResponsiveContainer width="100%" height="100%" minHeight={224}>
+      {/* initialDimension, not minHeight: Recharts starts at width/height -1 and
+          only measures in an effect, so the FIRST render warns unless it is handed
+          positive numbers up front. minHeight never reaches the size calculation. */}
+      <ResponsiveContainer width="100%" height="100%" initialDimension={CHART_INITIAL_DIMENSION}>
         <LineChart data={data} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
           <XAxis dataKey="year" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
           <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={44} tickFormatter={formatCompactNis} />

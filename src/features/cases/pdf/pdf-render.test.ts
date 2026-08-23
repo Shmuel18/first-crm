@@ -3,6 +3,7 @@ import { createElement as h } from 'react';
 import { renderToBuffer } from '@react-pdf/renderer';
 import { describe, expect, it } from 'vitest';
 
+import { generateCasesPdf } from '@/features/cases/services/export/pdf-generator';
 import { aggregateMix } from '@/features/simulators/domain/mix-aggregate';
 import { ReportDocument } from '@/features/simulators/pdf/report-document';
 import type { ScenarioReportData } from '@/features/simulators/pdf/report-data.service';
@@ -24,7 +25,8 @@ import { BankPdfDocument } from './bank-pdf-document';
  */
 const bankData: BankPdfData = {
   case: { caseNumber: 'KFG-2026-001', createdAt: '2026-01-15T00:00:00Z', statusName: 'הוגש לבנק', propertyValue: 2000000, requestedAmount: 1400000, equity: 600000, ltv: 70 },
-  advisorName: 'משה כהן', advisorPhone: '050-1234567', advisorEmail: 'moshe@kaufman.co.il',
+  advisorName: 'משה כהן',
+  signature: { name: 'משה כהן', contact: '050-1234567 · moshe@kaufman.co.il', showAdvisorOnCover: true },
   borrowers: [{
     id: 'b1', fullName: 'ישראל ישראלי', role: 'borrower', isPrimary: true, nationalId: '123456789',
     idIssueDate: '2015-01-01', idExpiryDate: '2025-01-01', birthDate: '1985-06-01', ageYears: 40,
@@ -48,6 +50,40 @@ const isPdf = (b: Buffer): boolean => b.toString('latin1', 0, 5) === '%PDF-';
 const bankHe = () => renderToBuffer(h(BankPdfDocument, { data: bankData, locale: 'he' }) as never);
 const bankEn = () => renderToBuffer(h(BankPdfDocument, { data: { ...bankData, mixes: [] }, locale: 'en' }) as never);
 const reportHe = () => renderToBuffer(h(ReportDocument, { data: reportData, locale: 'he' }) as never);
+
+/**
+ * The dashboard export embeds the brand mark. It once pointed at the 2.1 MB
+ * source PNG, which pushed a routine 84-case export to 2.8 MB — within reach of
+ * Vercel's 4.5 MB response cap, for a logo drawn at 40pt. Guard the ceiling so
+ * a future "just use the big one" change fails here instead of in production.
+ */
+describe('dashboard export PDF', () => {
+  it('renders under the response-size ceiling', async () => {
+    const rows = Array.from({ length: 120 }, (_, i) => ({
+      rowNumber: i + 1,
+      clientName: `אלבוים שמואל חיים +1 ${i}`,
+      nationalId: '037667276',
+      stage: 'הוגש לבנק',
+      bank: 'פועלים',
+      advisor: 'יעקב שפיצר',
+      shortNote: 'הערה קצרה',
+    }));
+    const buf = await generateCasesPdf(rows, {
+      title: 'תיקים פעילים',
+      subtitle: 'סה״כ 120 תיקים',
+      generatedAt: 'תאריך הפקה: 17.8.2026',
+      row: '#',
+      clientName: 'שם לקוח',
+      nationalId: 'ת"ז',
+      stage: 'שלב בתהליך',
+      bank: 'בנק',
+      advisor: 'יועץ אחראי',
+      shortNote: 'הערה קצרה',
+    });
+    expect(isPdf(buf)).toBe(true);
+    expect(buf.length).toBeLessThan(1_500_000);
+  }, 60_000);
+});
 
 describe('PDF render', () => {
   it('renders bank + report interleaved in one process without crashing', async () => {

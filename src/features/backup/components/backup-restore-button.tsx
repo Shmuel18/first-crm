@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { callAction } from '@/lib/actions/call-action';
 
 import { restoreBackupAction } from '../actions/restore-backup';
 
@@ -32,7 +33,7 @@ export function BackupRestoreButton({ fileId, fileName }: Props) {
   const confirmRestore = () =>
     startTransition(async () => {
       setOpen(false);
-      const res = await restoreBackupAction(fileId);
+      const res = await callAction(() => restoreBackupAction(fileId));
       if (res.ok) {
         toast.success(t('toast.restoreDone', { count: res.restored }));
         router.refresh();

@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { Tooltip } from '@/components/ui/tooltip';
+import { callAction } from '@/lib/actions/call-action';
 
 import { generateBankPdfAction } from '../actions/generate-bank-pdf';
 
@@ -28,7 +29,7 @@ export function GenerateBankPdfButton({ caseId, title }: Props) {
   const handleClick = () => {
     if (isPending) return;
     startTransition(async () => {
-      const result = await generateBankPdfAction(caseId);
+      const result = await callAction(() => generateBankPdfAction(caseId));
       if (!result.ok) {
         // Generic translated message — the action never returns a raw error.
         toast.error(tc('saveFailed'));

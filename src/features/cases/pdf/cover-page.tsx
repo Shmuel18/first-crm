@@ -64,16 +64,29 @@ export function CoverPage({
 
       {/* Meta strip */}
       <View style={styles.metaStrip}>
-        <MetaItem label={strings.cover.metaCaseNumber} value={data.case.caseNumber} />
+        <MetaItem
+          label={strings.cover.metaCaseNumber}
+          value={data.case.caseNumber}
+          locale={locale}
+        />
         <MetaItem
           label={strings.cover.metaOpened}
           value={fmtDate(data.case.createdAt, locale, strings.values.dash)}
+          locale={locale}
         />
         {data.case.statusName && (
-          <MetaItem label={strings.cover.metaStatus} value={data.case.statusName} />
+          <MetaItem
+            label={strings.cover.metaStatus}
+            value={data.case.statusName}
+            locale={locale}
+          />
         )}
         {data.advisorName && (
-          <MetaItem label={strings.cover.metaAdvisor} value={data.advisorName} />
+          <MetaItem
+            label={strings.cover.metaAdvisor}
+            value={data.advisorName}
+            locale={locale}
+          />
         )}
       </View>
 

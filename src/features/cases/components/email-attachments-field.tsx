@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE_BYTES } from '@/features/documents/schemas/document.schema';
+import { callAction } from '@/lib/actions/call-action';
 
 import { listCaseDocumentsForEmailAction } from '../actions/list-case-documents-for-email';
 import { prepareEmailAttachmentAction } from '../actions/prepare-email-attachment';
@@ -82,19 +83,19 @@ export function EmailAttachmentsField({
 
   async function handleFile(file: File): Promise<void> {
     setError(null);
-    if (atCount) return setError(t('tooMany'));
+    if (atCount) return setError(t('tooMany', { count: MAX_ATTACHMENT_COUNT }));
     const invalid = validateFile(file);
     if (invalid) return setError(invalid);
 
     setUploading(true);
     onUploadingChange(true);
     try {
-      const prep = await prepareEmailAttachmentAction({
+      const prep = await callAction(() => prepareEmailAttachmentAction({
         caseId,
         fileName: file.name,
         fileSize: file.size,
         mimeType: file.type,
-      });
+      }));
       if (!prep.ok) return setError(t('uploadFailed'));
       const put = await fetch(prep.signedUrl, {
         method: 'PUT',
@@ -114,14 +115,14 @@ export function EmailAttachmentsField({
   async function loadDocs(): Promise<void> {
     if (docs !== null || loadingDocs) return;
     setLoadingDocs(true);
-    const res = await listCaseDocumentsForEmailAction(caseId);
+    const res = await callAction(() => listCaseDocumentsForEmailAction(caseId));
     setDocs(res.ok ? res.documents : []);
     setLoadingDocs(false);
   }
 
   const addDoc = (doc: EmailDocumentOption): void => {
     setError(null);
-    if (atCount) return setError(t('tooMany'));
+    if (atCount) return setError(t('tooMany', { count: MAX_ATTACHMENT_COUNT }));
     if (items.some((i) => i.kind === 'document' && i.id === doc.id)) return;
     add({ kind: 'document', id: doc.id, fileName: doc.fileName, fileSize: doc.fileSize });
   };

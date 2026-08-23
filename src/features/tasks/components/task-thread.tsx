@@ -16,6 +16,7 @@ import {
   parseMentionBody,
   type PickedMention,
 } from '@/features/case-comments/domain/mentions';
+import { callAction } from '@/lib/actions/call-action';
 import type { Locale } from '@/lib/i18n/direction';
 import { formatPersonName } from '@/lib/utils/person-name';
 
@@ -152,7 +153,7 @@ export function TaskThread({ taskId }: Props) {
 
   const reload = () => {
     startLoad(async () => {
-      const res = await getTaskCommentsAction(taskId);
+      const res = await callAction(() => getTaskCommentsAction(taskId));
       if (res.ok) setComments(res.comments);
     });
   };
@@ -163,7 +164,7 @@ export function TaskThread({ taskId }: Props) {
 
   useEffect(() => {
     startLoad(async () => {
-      const res = await getTaskMentionableProfilesAction(taskId);
+      const res = await callAction(() => getTaskMentionableProfilesAction(taskId));
       if (res.ok) setMembers(res.members);
     });
     // Re-fetch when the task changes — the mentionable set is task-scoped.
@@ -188,7 +189,7 @@ export function TaskThread({ taskId }: Props) {
     if (!text) return;
     const body = buildMentionBody(text, picked);
     startSend(async () => {
-      const res = await addTaskCommentAction(taskId, body);
+      const res = await callAction(() => addTaskCommentAction(taskId, body));
       if (!res.ok) {
         toast.error(t('sendFailed'));
         return;

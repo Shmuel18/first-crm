@@ -1,0 +1,110 @@
+[
+  {
+    "name": "cover title (pure Hebrew names)",
+    "logical": "אלבוים שמואל חיים ואלבוים רבקה"
+  },
+  {
+    "name": "requested-amount label",
+    "logical": "סכום המשכנתא המבוקש:"
+  },
+  {
+    "name": "meta: case number label",
+    "logical": "מספר תיק:"
+  },
+  {
+    "name": "meta: opened label",
+    "logical": "נפתח:"
+  },
+  {
+    "name": "meta: status value",
+    "logical": "הוגש לבנק"
+  },
+  {
+    "name": "section title with parens + digit",
+    "logical": "פרטי הלקוחות (2 לווים)"
+  },
+  {
+    "name": "borrower column header + digit",
+    "logical": "לווה 1"
+  },
+  {
+    "name": "role value with parens",
+    "logical": "לווה (ראשי)"
+  },
+  {
+    "name": "borrower name",
+    "logical": "אלבוים שמואל חיים"
+  },
+  {
+    "name": "address (Hebrew + house number)",
+    "logical": "רחוב הרצל 14, בני ברק"
+  },
+  {
+    "name": "residency (Hebrew + slash)",
+    "logical": "תושב/ת ישראל"
+  },
+  {
+    "name": "marital status (Hebrew + slash)",
+    "logical": "נשוי/אה"
+  },
+  {
+    "name": "children label with digit inside",
+    "logical": "מספר ילדים עד גיל 18"
+  },
+  {
+    "name": "income source (Hebrew + geresh)",
+    "logical": "שכיר · חברת הייטק בע״מ"
+  },
+  {
+    "name": "self-employed income source",
+    "logical": "עצמאי · גן פרטי"
+  },
+  {
+    "name": "national id label (quotes)",
+    "logical": "מספר ת״ז"
+  },
+  {
+    "name": "id issue label",
+    "logical": "תאריך הנפקת ת״ז"
+  },
+  {
+    "name": "citizenship value (Hebrew + geresh)",
+    "logical": "ארה״ב"
+  },
+  {
+    "name": "mix title (Hebrew + ratio digits)",
+    "logical": "תמהיל 70/30 משופר"
+  },
+  {
+    "name": "mix table header",
+    "logical": "מדד שנתי"
+  },
+  {
+    "name": "track type value",
+    "logical": "קבועה לא צמודה"
+  },
+  {
+    "name": "repayment value",
+    "logical": "שפיצר"
+  },
+  {
+    "name": "page footer (Hebrew + digits)",
+    "logical": "עמוד 1 מתוך 4"
+  },
+  {
+    "name": "footer brand line",
+    "logical": "בקשה להגשה לבנק"
+  },
+  {
+    "name": "KPI label first payment",
+    "logical": "החזר ראשון"
+  },
+  {
+    "name": "mixes section title",
+    "logical": "מסלולי המשכנתא המוצעים"
+  },
+  {
+    "name": "id expiry label (gershayim)",
+    "logical": "תוקף ת״ז"
+  }
+]

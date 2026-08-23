@@ -5,6 +5,7 @@ import { useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
 import { useInlineMutationSync } from '@/lib/hooks/use-inline-mutation-sync';
 import { useSyncedRows } from '@/lib/hooks/use-synced-rows';
 import { reinsertAt } from '@/lib/utils/reinsert-at';
@@ -69,7 +70,7 @@ export function useFeePayments(
     setDeletingId(id);
     beginOp();
     void (async () => {
-      const res = await deleteFeePaymentAction(caseId, id).catch(() => null);
+      const res = await callAction(() => deleteFeePaymentAction(caseId, id)).catch(() => null);
       if (!res?.ok) {
         setPayments((list) => reinsertAt(list, index, removed));
         toast.error(t(`table.errors.${res?.error ?? 'unknown'}`));
@@ -87,7 +88,7 @@ export function useFeePayments(
     if (parsed === lastSavedAdvance.current) return;
     beginOp();
     void (async () => {
-      const res = await setAdvanceAmountAction(caseId, parsed).catch(() => null);
+      const res = await callAction(() => setAdvanceAmountAction(caseId, parsed)).catch(() => null);
       if (res?.ok) {
         lastSavedAdvance.current = parsed;
       } else {

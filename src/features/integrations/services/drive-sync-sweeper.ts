@@ -1,53 +1,50 @@
+import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
-import type { Json } from '@/types/database';
 
-import { VANISHED_FILE_GRACE_PERIOD_MS, type SyncRunState } from '../domain/drive-sync-types';
+import { type SyncRunState } from '../domain/drive-sync-types';
 
 /**
- * Soft-delete docs whose Drive file vanished, with a grace period:
- *   first time missing → stamp metadata.drive_missing_since = now, keep row
- *   missing ≥ 48h     → soft-delete + clear the flag
+ * Soft-delete docs that no longer belong to the managed case-folder tree, in
+ * the same complete pass that noticed.
  *
- * If the file reappears between syncs, the importer clears the flag, so the
- * clock effectively resets. Only runs when all list calls succeeded —
- * `state.listingsComplete=false` means a transient API hiccup could mark
- * healthy docs as missing, so we bail.
+ * The one safety left is `listingsComplete`: if ANY Drive list call failed
+ * this pass, a healthy file can look missing, so the sweep is skipped
+ * entirely rather than acting on a partial picture. This deliberately uses
+ * the exact-mirror detach RPC rather than the explicit
+ * UI-delete RPC: it clears active Drive pointers and writes no tombstone. That
+ * prevents retention from deleting a still-live file moved elsewhere, and
+ * allows the same Drive id to be imported again if the user moves it back.
+ * The detach RPC is service-role-only; the authenticated session supplies the
+ * audited actor after the sync action has already enforced edit+upload access.
  */
-export async function sweepVanishedDriveFiles(state: SyncRunState): Promise<void> {
+export async function sweepVanishedDriveFiles(caseId: string, state: SyncRunState): Promise<void> {
   if (!state.listingsComplete) return;
   const supabase = await createClient();
-  const nowMs = Date.now();
-  const nowIso = new Date(nowMs).toISOString();
+  const { data: userRes, error: authError } = await supabase.auth.getUser();
+  if (authError || !userRes.user) {
+    throw new Error('Drive sync could not authorize document removal');
+  }
+  const admin = createAdminClient();
 
   for (const [driveId, entry] of state.existingByDriveId) {
     if (state.seenDriveIds.has(driveId)) continue;
     if (!entry.docId) continue;
 
-    const missingSinceRaw = entry.existingMetadata.drive_missing_since;
-    const missingSince = typeof missingSinceRaw === 'string' ? missingSinceRaw : null;
-
-    if (!missingSince) {
-      // First sync that didn't see the file. Start the grace clock.
-      await supabase
-        .from('documents')
-        .update({
-          metadata: { ...entry.existingMetadata, drive_missing_since: nowIso },
-        })
-        .eq('id', entry.docId);
-      continue;
+    const { data: removed, error } = await admin.rpc(
+      'soft_delete_drive_document_without_tombstone',
+      {
+        p_document_id: entry.docId,
+        p_case_id: caseId,
+        p_user_id: userRes.user.id,
+      },
+    );
+    if (error) {
+      throw new Error(`Drive sync could not remove document: ${error.message}`);
     }
-
-    const missingForMs = nowMs - new Date(missingSince).getTime();
-    if (missingForMs < VANISHED_FILE_GRACE_PERIOD_MS) continue;
-
-    // Grace expired - soft-delete and clear the flag in one shot.
-    const cleared: Record<string, unknown> = { ...entry.existingMetadata };
-    delete cleared.drive_missing_since;
-    const { error } = await supabase
-      .from('documents')
-      // Record<string, unknown> → Json widening at the boundary.
-      .update({ deleted_at: nowIso, metadata: cleared as unknown as Json })
-      .eq('id', entry.docId);
-    if (!error) state.deleted += 1;
+    // Another sync or an explicit UI delete can win after our reference
+    // snapshot. The RPC's permission errors still fail loudly, but a false
+    // result is an idempotent already-gone race rather than a broken pass.
+    if (!removed) continue;
+    state.deleted += 1;
   }
 }

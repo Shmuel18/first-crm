@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { Tooltip } from '@/components/ui/tooltip';
+import { callAction } from '@/lib/actions/call-action';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import { quickUpdateCaseFieldAction } from '../actions/quick-update-case';
@@ -89,7 +90,7 @@ export function EditableAdvisorCell({
     setAdvisorName(option ? fullName(option, noNameFallback) : null);
 
     startTransition(async () => {
-      const result = await quickUpdateCaseFieldAction(caseId, 'assigned_advisor_id', newId);
+      const result = await callAction(() => quickUpdateCaseFieldAction(caseId, 'assigned_advisor_id', newId));
       if (!result.ok) {
         setAdvisorId(prevId);
         setAdvisorName(prevName);

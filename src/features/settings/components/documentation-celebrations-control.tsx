@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
+
 import { updateDocumentationCelebrationsAction } from '../actions/update-documentation-celebrations';
 
 type Props = { initialEnabled: boolean };
@@ -24,7 +26,7 @@ export function DocumentationCelebrationsControl({ initialEnabled }: Props) {
 
     startTransition(async () => {
       try {
-        const result = await updateDocumentationCelebrationsAction(next);
+        const result = await callAction(() => updateDocumentationCelebrationsAction(next));
         if (result.ok) {
           toast.success(t(next ? 'enabledToast' : 'disabledToast'));
           // The action skips revalidatePath — refresh so the router cache

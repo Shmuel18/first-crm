@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { callAction } from '@/lib/actions/call-action';
 import { useInlineMutationSync } from '@/lib/hooks/use-inline-mutation-sync';
 
 import { updateBorrowerFieldAction, type EditableBorrowerField } from '../actions/update-borrower-field';
@@ -48,7 +49,7 @@ export function useBorrowerCardState(caseId: string, borrower: BorrowerRow, role
     setLocalBorrower((b) => ({ ...b, [field]: value }));
     beginOp();
     try {
-      const result = await updateBorrowerFieldAction(borrower.id, caseId, field, value);
+      const result = await callAction(() => updateBorrowerFieldAction(borrower.id, caseId, field, value));
       if (!result.ok) {
         setLocalBorrower((b) => ({ ...b, [field]: prev }));
         return { ok: false, message: result.message };
@@ -72,7 +73,7 @@ export function useBorrowerCardState(caseId: string, borrower: BorrowerRow, role
     setLocalRole(next);
     beginOp();
     try {
-      const result = await updateBorrowerRoleAction(caseId, borrower.id, next);
+      const result = await callAction(() => updateBorrowerRoleAction(caseId, borrower.id, next));
       if (!result.ok) {
         setLocalRole(prev);
         return { ok: false, message: result.message };

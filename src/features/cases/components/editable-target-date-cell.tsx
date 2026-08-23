@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { DateInputWithPicker } from '@/components/ui/date-input-with-picker';
+import { callAction } from '@/lib/actions/call-action';
 import type { Locale } from '@/lib/i18n/direction';
 import { formatDateShort } from '@/lib/utils/format-date';
 
@@ -82,7 +83,7 @@ export function EditableTargetDateCell({
     setSavedValue(nextValue);
     setOpen(false);
     startTransition(async () => {
-      const result = await quickUpdateCaseFieldAction(caseId, 'target_date', nextValue || null);
+      const result = await callAction(() => quickUpdateCaseFieldAction(caseId, 'target_date', nextValue || null));
       if (!result.ok) {
         setSavedValue(previous);
         setValue(previous);

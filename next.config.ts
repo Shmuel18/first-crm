@@ -51,7 +51,11 @@ const cspDirectives = [
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
-  "frame-src 'self' https://*.supabase.co https://drive.google.com https://docs.google.com",
+  // blob: — the print path builds an off-screen iframe from a blob: URL of the
+  // document (Storage blobs are cross-origin, so an iframe pointed straight at
+  // the signed URL can't be told to print). Blob frames are same-origin and
+  // created only by our own code.
+  "frame-src 'self' blob: https://*.supabase.co https://drive.google.com https://docs.google.com",
   ...(shouldUpgradeInsecureRequests ? ['upgrade-insecure-requests'] : []),
 ];
 
@@ -94,14 +98,20 @@ const SECURITY_HEADERS = [
 
 const nextConfig: NextConfig = {
   deploymentId: process.env.NEXT_DEPLOYMENT_ID,
-  // react-pdf reads public/fonts/heebo-regular.ttf off disk at render time
-  // (features/cases/pdf/fonts.ts → readFileSync(process.cwd()/public/fonts/…)).
+  // react-pdf reads two assets off disk at render time:
+  //   - public/fonts/heebo-regular.ttf  (features/cases/pdf/fonts.ts)
+  //   - public/pdf/logo-coin.png        (cases/services/export/pdf-generator)
   // Vercel does NOT trace /public assets into a serverless function by default,
-  // so that read ENOENT'd in production and every PDF render (bank file + the
-  // simulator client report) failed with "render_failed". Force the font into
-  // every function's file trace so the on-disk read resolves in prod too.
+  // so those reads ENOENT in production while working fine locally. That broke
+  // every PDF render once (bank file + simulator report → "render_failed"), and
+  // again when the dashboard export grew a header logo pointing at an untraced
+  // path (→ /api/exports/cases 500, "ייצוא נכשל").
+  //
+  // RULE: any file read with fs at runtime must sit under a path listed here.
+  // public/pdf/ is the home for PDF render assets — add to that folder, not to
+  // /public root, and the trace covers it automatically.
   outputFileTracingIncludes: {
-    '/**': ['./public/fonts/**'],
+    '/**': ['./public/fonts/**', './public/pdf/**'],
   },
   // Baked-in at build so /api/health can compare it to the DB's applied schema
   // version and fail readiness when prod lags the code (migration 143).

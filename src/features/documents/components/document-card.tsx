@@ -2,8 +2,7 @@
 
 import { FileText, FileType2, Image as ImageIcon } from 'lucide-react';
 
-import type { DocumentStatus, DocumentWithRelations } from '../types';
-import { DocumentStatusChip } from './document-status-chip';
+import type { DocumentWithRelations } from '../types';
 
 type Props = {
   doc: DocumentWithRelations;
@@ -71,9 +70,6 @@ export function DocumentCard({ doc, previewUrl, onClick }: Props) {
             <FileTypeIcon mime={doc.mime_type} className="size-10 text-neutral-300" />
           </div>
         )}
-        <span className="absolute top-1.5 end-1.5 z-10">
-          <DocumentStatusChip status={doc.status as DocumentStatus} size="sm" />
-        </span>
       </div>
       <div className="px-2.5 py-2">
         <p className="truncate text-xs font-medium text-neutral-900">{label}</p>

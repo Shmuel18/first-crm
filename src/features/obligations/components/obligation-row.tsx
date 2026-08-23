@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { Tooltip } from '@/components/ui/tooltip';
+import { callAction } from '@/lib/actions/call-action';
 import { formatCurrency } from '@/lib/utils/format-currency';
 
 import { deleteObligationAction } from '../actions/delete-obligation';
@@ -57,7 +58,7 @@ export function ObligationRow({ caseId, obligation, locale, canEdit }: Props) {
   const saveField = async (field: EditableObligationField, value: unknown) => {
     const prev = row[field];
     setRow((r) => ({ ...r, [field]: value as never }));
-    const result = await updateObligationFieldAction(obligation.id, caseId, field, value);
+    const result = await callAction(() => updateObligationFieldAction(obligation.id, caseId, field, value));
     if (!result.ok) {
       setRow((r) => ({ ...r, [field]: prev as never }));
       return { ok: false, message: result.message };
@@ -70,12 +71,12 @@ export function ObligationRow({ caseId, obligation, locale, canEdit }: Props) {
       const prevMonths = row.months_remaining;
       const months = monthsUntil(value);
       setRow((r) => ({ ...r, months_remaining: months as never }));
-      const monthsResult = await updateObligationFieldAction(
+      const monthsResult = await callAction(() => updateObligationFieldAction(
         obligation.id,
         caseId,
         'months_remaining',
         months,
-      );
+      ));
       if (!monthsResult.ok) {
         setRow((r) => ({ ...r, months_remaining: prevMonths as never }));
       }
@@ -85,7 +86,7 @@ export function ObligationRow({ caseId, obligation, locale, canEdit }: Props) {
 
   const handleDelete = () => {
     startDelete(async () => {
-      const result = await deleteObligationAction(obligation.id, obligation.borrower_id, caseId);
+      const result = await callAction(() => deleteObligationAction(obligation.id, obligation.borrower_id, caseId));
       if (result.ok) {
         toast.success(t('deleteSuccess'));
       } else {

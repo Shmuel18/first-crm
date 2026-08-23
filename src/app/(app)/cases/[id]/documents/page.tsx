@@ -4,6 +4,11 @@ import { getLocale } from 'next-intl/server';
 
 import { listBorrowersForCase } from '@/features/borrowers/services/borrowers.service';
 import { DocumentsPageContent } from '@/features/documents/components/documents-page-content';
+import {
+  hasCaseDriveFolderSnapshot,
+  readCaseDriveFolderTree,
+  readCaseDriveSubfolderIds,
+} from '@/features/documents/domain/drive-folder-tree';
 import { getCaseDocumentChecklist } from '@/features/documents/services/document-checklist.service';
 import {
   listDocumentCategories,
@@ -11,7 +16,6 @@ import {
 } from '@/features/documents/services/documents.service';
 import { getCaseById } from '@/features/cases/services/cases.service';
 import { provisionCaseDriveFolders } from '@/features/integrations/services/drive-case-uploader';
-import { autoSyncIfStale } from '@/features/integrations/services/drive-document-sync';
 import { userCanEditCase, userHasPermissions } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
@@ -28,29 +32,15 @@ export default async function CaseDocumentsPage({ params }: Props) {
   // a view-only viewer, R11 DRIVE-3).
   const canEdit = await userCanEditCase(caseId);
 
-  // Fire-and-forget the Drive freshness check. Previously this was awaited
-  // before any rendering, which blocked first paint on a Google API hop
-  // (~600 ms p99, up to 10 s on a cold/throttled call). The page now
-  // renders from the DB immediately; the next visit picks up whatever the
-  // sync wrote. autoSyncIfStale has internal 10 s throttling so rapid
-  // navigation doesn't spam Drive. Only an editor can write, so only sync for one.
-  if (canEdit) {
-    void autoSyncIfStale(caseId).catch((err) => {
-      console.warn('[documents page] background sync failed', {
-        caseId,
-        message: err instanceof Error ? err.message : 'unknown',
-      });
-    });
-  }
-
-  const [caseData, documents, categories, borrowers, locale, documentPermissions] = await Promise.all([
-    getCaseById(caseId),
-    listDocumentsForCase(caseId),
-    listDocumentCategories(),
-    listBorrowersForCase(caseId),
-    getLocale().then(parseLocale),
-    userHasPermissions('delete_document', 'verify_document'),
-  ]);
+  const [caseData, documents, categories, borrowers, locale, documentPermissions] =
+    await Promise.all([
+      getCaseById(caseId),
+      listDocumentsForCase(caseId),
+      listDocumentCategories(),
+      listBorrowersForCase(caseId),
+      getLocale().then(parseLocale),
+      userHasPermissions('delete_document', 'upload_document', 'view_case_documents'),
+    ]);
 
   if (!caseData) notFound();
 
@@ -84,24 +74,25 @@ export default async function CaseDocumentsPage({ params }: Props) {
       }
     : null;
 
-  const driveFolderId =
-    caseData.metadata &&
-    typeof caseData.metadata === 'object' &&
-    'drive' in caseData.metadata
-      ? ((caseData.metadata as { drive?: { case_folder_id?: string } }).drive?.case_folder_id ?? null)
-      : null;
+  let driveMetadata = caseData.metadata;
+  let driveFolderId = readCaseDriveFolderId(driveMetadata);
 
   // First time a case's documents are opened without a Drive folder yet,
-  // provision its folder tree (best-effort, fire-and-forget). Once the id is
-  // stored, "open in Drive" + sync light up and later visits skip this. Existing
-  // cases get an empty tree to drag their current Drive files into.
-  if (!driveFolderId) {
-    void provisionCaseDriveFolders({
-      caseId: caseData.id,
-      caseNumber: caseData.case_number,
-      familyName: borrowerNames || 'Case',
-    }).catch(() => undefined);
+  // finish provisioning before rendering and reload the persisted snapshot.
+  // This one-time wait means "open in Drive" and sync work on the first visit,
+  // instead of presenting disabled controls that require a manual refresh.
+  if (!driveFolderId && canEdit && documentPermissions.upload_document === true) {
+    await provisionCaseDriveFolders({ caseId: caseData.id, admin: true });
+    const provisionedCase = await getCaseById(caseId);
+    if (provisionedCase) {
+      driveMetadata = provisionedCase.metadata;
+      driveFolderId = readCaseDriveFolderId(driveMetadata);
+    }
   }
+
+  const driveFolderTree = readCaseDriveFolderTree(driveMetadata);
+  const hasDriveFolderSnapshot = hasCaseDriveFolderSnapshot(driveMetadata);
+  const driveSubfolderIds = readCaseDriveSubfolderIds(driveMetadata);
 
   return (
     <DocumentsPageContent
@@ -112,12 +103,26 @@ export default async function CaseDocumentsPage({ params }: Props) {
       categories={categories}
       borrowers={borrowerOptions}
       driveFolderId={driveFolderId}
+      driveFolderTree={driveFolderTree}
+      hasDriveFolderSnapshot={hasDriveFolderSnapshot}
+      driveSubfolderIds={driveSubfolderIds}
       checklist={checklist}
       primaryBorrower={primaryBorrower}
       locale={locale}
       canEdit={canEdit}
+      canUploadDocuments={documentPermissions.upload_document === true && canEdit}
+      canSyncDrive={
+        documentPermissions.upload_document === true &&
+        documentPermissions.view_case_documents === true &&
+        canEdit
+      }
       canDeleteDocuments={documentPermissions.delete_document === true && canEdit}
-      canVerifyDocuments={documentPermissions.verify_document === true && canEdit}
     />
   );
+}
+
+function readCaseDriveFolderId(metadata: unknown): string | null {
+  if (!metadata || typeof metadata !== 'object' || !('drive' in metadata)) return null;
+  const id = (metadata as { drive?: { case_folder_id?: unknown } }).drive?.case_folder_id;
+  return typeof id === 'string' && id.length > 0 ? id : null;
 }

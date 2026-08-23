@@ -41,46 +41,19 @@ type PushTarget =
  */
 export async function pushLocalOnlyFilesToDrive(caseId: string): Promise<number> {
   try {
-    const ctx = await getPushContext(caseId);
-    if (!ctx) return 0;
     const targets = [
       ...(await collectDocumentTargets(caseId)),
       ...(await collectReceiptTargets(caseId)),
     ];
     let pushed = 0;
     for (const target of targets.slice(0, MAX_PUSHES_PER_SYNC)) {
-      if (await pushOne(caseId, ctx, target)) pushed += 1;
+      if (await pushOne(caseId, target)) pushed += 1;
     }
     return pushed;
   } catch (err) {
     console.error('[drivePushBackfill] failed', { caseId, err });
     return 0;
   }
-}
-
-type PushContext = { caseNumber: string; familyName: string };
-
-/** Case number + family name feed the Drive folder naming (same as the mirrors). */
-async function getPushContext(caseId: string): Promise<PushContext | null> {
-  const supabase = await createClient();
-  const { data: caseRow } = await supabase
-    .from('cases')
-    .select('case_number, primary_borrower_id')
-    .eq('id', caseId)
-    .maybeSingle();
-  if (!caseRow) return null;
-
-  let familyName = 'Case';
-  if (caseRow.primary_borrower_id) {
-    const { data: borrower } = await supabase
-      .from('borrowers')
-      .select('first_name, last_name')
-      .eq('id', caseRow.primary_borrower_id)
-      .maybeSingle();
-    familyName =
-      [borrower?.last_name, borrower?.first_name].filter(Boolean).join('_') || 'Case';
-  }
-  return { caseNumber: caseRow.case_number, familyName };
 }
 
 async function collectDocumentTargets(caseId: string): Promise<PushTarget[]> {
@@ -139,7 +112,6 @@ async function collectReceiptTargets(caseId: string): Promise<PushTarget[]> {
 
 async function pushOne(
   caseId: string,
-  ctx: PushContext,
   target: PushTarget,
 ): Promise<boolean> {
   // Service-role Storage read + stamp, same as the after() mirror. The stamp
@@ -158,8 +130,6 @@ async function pushOne(
 
   const out = await uploadCaseDocumentToDrive({
     caseId,
-    caseNumber: ctx.caseNumber,
-    familyName: ctx.familyName,
     // Invoices share the misc catch-all folder, same as mirrorReceiptToDrive.
     driveFolder: target.kind === 'receipt' ? 'misc' : target.driveFolder,
     file: { content: await blob.arrayBuffer(), name: target.fileName, mimeType: target.mimeType },

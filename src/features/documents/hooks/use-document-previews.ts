@@ -9,6 +9,8 @@ function isPreviewable(mime: string | null): boolean {
   return Boolean(mime && (mime.startsWith('image/') || mime === 'application/pdf'));
 }
 
+const EMPTY_PREVIEW_URLS: ReadonlyMap<string, string> = new Map();
+
 /**
  * Resolves Supabase signed preview URLs for the previewable (image/PDF)
  * documents in `documents`, keyed by document id. Fetched in one batched
@@ -41,5 +43,8 @@ export function useDocumentPreviews(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  return urls;
+  // Do not expose URLs left over from the previous folder while an empty
+  // folder is selected. Keeping this as a derived return avoids a synchronous
+  // setState inside the effect while still making the empty state immediate.
+  return previewableIds.length === 0 ? EMPTY_PREVIEW_URLS : urls;
 }

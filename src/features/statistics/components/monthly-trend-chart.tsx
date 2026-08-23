@@ -10,8 +10,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+
 import { useLocale, useTranslations } from 'next-intl';
 
+import { CHART_INITIAL_DIMENSION } from '@/components/shared/chart-initial-dimension';
 import { parseLocale } from '@/lib/i18n/direction';
 import { formatMonthLabel } from '../domain/period';
 import { formatInt } from '../utils/format';
@@ -35,7 +37,7 @@ export function MonthlyTrendChart({ trend }: Props) {
         {t('trend.title')}
       </h2>
       <div className="h-72">
-        <ResponsiveContainer width="100%" height="100%" minHeight={260}>
+        <ResponsiveContainer width="100%" height="100%" initialDimension={CHART_INITIAL_DIMENSION}>
           <BarChart data={data} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-neutral-200)" />
             <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />

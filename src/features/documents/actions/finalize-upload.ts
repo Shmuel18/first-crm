@@ -13,6 +13,7 @@ import { createClient } from '@/lib/supabase/server';
 import { sanitizeFilename } from '../domain/sanitize-filename';
 import { ALLOWED_MIME_TYPES } from '../schemas/document.schema';
 import { DocumentMetadataSchema } from '../schemas/document.schema';
+import { classifyDocumentInBackground } from '../services/ai-classification.service';
 import { resolveUploadContext, storagePathFor } from '../services/documents.service';
 
 const BUCKET = 'case-documents';
@@ -156,7 +157,10 @@ export async function finalizeUploadAction(
     notes: metaParsed.data.notes ?? null,
     expiry_date: metaParsed.data.expiry_date ?? null,
     uploaded_by: userRes.user.id,
-    status: 'new',
+    // Kaufman does not use a manual document-review queue. A successfully
+    // validated upload is accepted immediately; migration 230 enforces the
+    // same invariant for direct/legacy writers at the database boundary.
+    status: 'verified',
     metadata: { storage_path: storagePath },
     drive_file_id: null,
     drive_file_url: null,
@@ -177,8 +181,6 @@ export async function finalizeUploadAction(
   // Drive sync's push pass (pushLocalOnlyFilesToDrive, after a 10-min grace).
   if (ctx.driveFolder) {
     const driveFolder = ctx.driveFolder;
-    const caseNumber = ctx.caseNumber;
-    const familyName = ctx.familyName;
     const mimeType = sniffed.mime;
     after(async () => {
       try {
@@ -187,8 +189,6 @@ export async function finalizeUploadAction(
         if (!blob) return;
         const out = await uploadCaseDocumentToDrive({
           caseId: input.caseId,
-          caseNumber,
-          familyName,
           driveFolder,
           file: { content: await blob.arrayBuffer(), name: safeFileName, mimeType },
         });
@@ -203,6 +203,15 @@ export async function finalizeUploadAction(
       }
     });
   }
+
+  // AI classification (ai-v2-spec.md §2) — background, AFTER the response, and
+  // fail-soft: with the flag off (or no API key) this is a no-op, and any
+  // failure leaves the document exactly as the advisor saved it. The advisor
+  // picked a category here, so this pass only VALIDATES (flags: stale / name
+  // mismatch / category disagreement) — it never overrides a human choice.
+  after(async () => {
+    await classifyDocumentInBackground(input.documentId);
+  });
 
   // No revalidatePath: the heavy /cases/[id]/documents + /cases/[id] re-render into
   // the POST response spun the upload button. The modal calls router.refresh() after

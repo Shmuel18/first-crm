@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { baseInputClass } from '@/features/borrowers/components/editable-field-shared';
+import { callAction } from '@/lib/actions/call-action';
 import { useInlineMutationSync } from '@/lib/hooks/use-inline-mutation-sync';
 import { formatPersonName } from '@/lib/utils/person-name';
 
@@ -100,8 +101,8 @@ export function AssociatedAdvisorsField({
     startTransition(async () => {
       try {
         const res = isOn
-          ? await removeAssociatedAdvisorAction(caseId, advisorId)
-          : await addAssociatedAdvisorAction(caseId, advisorId);
+          ? await callAction(() => removeAssociatedAdvisorAction(caseId, advisorId))
+          : await callAction(() => addAssociatedAdvisorAction(caseId, advisorId));
         if (!res.ok) {
           setIds(prev);
           toast.error(tc('saveFailed'));

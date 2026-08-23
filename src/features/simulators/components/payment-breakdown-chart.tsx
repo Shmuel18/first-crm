@@ -10,8 +10,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+
 import { useTranslations } from 'next-intl';
 
+import { CHART_INITIAL_DIMENSION } from '@/components/shared/chart-initial-dimension';
 import { sampleAnnualCurve } from '../domain/curve-sampling';
 import { agorotToNis, formatCompactNis, formatMoney } from '../utils/format';
 
@@ -39,8 +41,7 @@ export function PaymentBreakdownChart({ principalCurve, interestCurve }: Props) 
 
   return (
     <div className="h-56">
-      {/* minHeight floor — prevents Recharts from measuring a 0-height container and logging width/height(-1). */}
-      <ResponsiveContainer width="100%" height="100%" minHeight={224}>
+      <ResponsiveContainer width="100%" height="100%" initialDimension={CHART_INITIAL_DIMENSION}>
         <ComposedChart data={data} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
           <XAxis dataKey="year" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
           <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={44} tickFormatter={formatCompactNis} />

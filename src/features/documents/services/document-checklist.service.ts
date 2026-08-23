@@ -11,15 +11,11 @@ import type { DocumentWithRelations, DriveFolder } from '../types';
  * case_type_documents template on first access) so it can be ticked, added
  * to, removed from and reordered per case.
  *
- * `status` is derived for the at-a-glance sidebar view:
- *   - 'verified' — manually ticked (isDone) OR a verified doc exists
- *   - 'missing'  — nothing uploaded and not ticked
- *   - 'rejected' — every uploaded doc was rejected
- *   - 'pending'  — uploaded, none verified yet, not ticked
- *
- * Decision (option 2): a manual tick OR a verified document closes the row.
+ * `status` is derived for the at-a-glance folder view. Kaufman has no manual
+ * review queue: a checklist row is complete as soon as any document is filed
+ * in its category (or the row is ticked manually), otherwise it is missing.
  */
-export type ChecklistStatus = 'missing' | 'pending' | 'verified' | 'rejected';
+export type ChecklistStatus = 'missing' | 'verified';
 
 export type DocumentChecklistItem = {
   itemId: string;
@@ -36,7 +32,8 @@ export type DocumentChecklistItem = {
   requiredAtStage: { id: string; key: string; name_he: string; name_en: string } | null;
   status: ChecklistStatus;
   uploadedCount: number;
-  verifiedCount: number;
+  /** Documents filed against this requirement. Presence means accepted. */
+  validDocumentCount: number;
 };
 
 const StageSchema = z.object({
@@ -88,7 +85,8 @@ export async function getCaseDocumentChecklist(
     return [];
   }
 
-  // Map: category_id → uploaded docs, for the verified/pending derivation.
+  // Map category_id → filed documents. There is deliberately no second
+  // verification pass: presence is completion for Kaufman's workflow.
   const byCategory = new Map<string, DocumentWithRelations[]>();
   for (const d of documents) {
     if (!d.category?.id) continue;
@@ -99,14 +97,8 @@ export async function getCaseDocumentChecklist(
 
   return parsed.data.map((r): DocumentChecklistItem => {
     const uploads = r.categoryId ? (byCategory.get(r.categoryId) ?? []) : [];
-    const verifiedCount = uploads.filter((d) => d.status === 'verified').length;
-    const rejectedCount = uploads.filter((d) => d.status === 'rejected').length;
-
-    let status: ChecklistStatus;
-    if (r.isDone || verifiedCount > 0) status = 'verified';
-    else if (uploads.length === 0) status = 'missing';
-    else if (rejectedCount === uploads.length) status = 'rejected';
-    else status = 'pending';
+    const validDocumentCount = uploads.length;
+    const status: ChecklistStatus = r.isDone || validDocumentCount > 0 ? 'verified' : 'missing';
 
     const fallback = r.label ?? '';
     return {
@@ -122,7 +114,7 @@ export async function getCaseDocumentChecklist(
       requiredAtStage: r.requiredAtStage,
       status,
       uploadedCount: uploads.length,
-      verifiedCount,
+      validDocumentCount,
     };
   });
 }

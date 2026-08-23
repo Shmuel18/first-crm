@@ -11,10 +11,15 @@ import {
   listTasksForCase,
 } from '@/features/tasks/services/tasks.service';
 import { listRenderedTemplatesForCase } from '@/features/templates/services/templates.service';
+import { isAiFeatureActive } from '@/lib/ai/flags';
+import { getAiFeatureSettings } from '@/lib/ai/flags.server';
+import { userHasPermission } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
+import { createClient } from '@/lib/supabase/server';
 import { asCaseId } from '@/lib/types/branded';
 
 import { CaseBackButton } from './case-back-button';
+import { CaseBriefingButton } from './case-briefing-button';
 import { CaseMoreMenu } from './case-more-menu';
 import { EditableStatusCell } from './editable-status-cell';
 import { GenerateBankPdfButton } from './generate-bank-pdf-button';
@@ -77,18 +82,25 @@ export async function CaseActionBar({
   // popover trigger needs the list of open tasks, the assignee picker, and
   // the case-option label for the create form. One Promise.all keeps the
   // action bar's render path cheap.
-  const [assignees, tasks, caseOption, templates] = await Promise.all([
-    listAssignableProfiles(),
-    listTasksForCase(brandedCaseId),
-    getCaseOption(brandedCaseId, locale),
-    listRenderedTemplatesForCase({
-      clientName:
-        [primaryBorrower?.firstName, primaryBorrower?.lastName].filter(Boolean).join(' ') ||
-        borrowerNames,
-      caseNumber,
-      locale,
-    }),
-  ]);
+  const [assignees, tasks, caseOption, templates, aiSettings, canUseAiAssistant] =
+    await Promise.all([
+      listAssignableProfiles(),
+      listTasksForCase(brandedCaseId),
+      getCaseOption(brandedCaseId, locale),
+      listRenderedTemplatesForCase({
+        clientName:
+          [primaryBorrower?.firstName, primaryBorrower?.lastName].filter(Boolean).join(' ') ||
+          borrowerNames,
+        caseNumber,
+        locale,
+      }),
+      createClient().then(getAiFeatureSettings),
+      userHasPermission('use_ai_assistant'),
+    ]);
+  // Briefing appears only when the flag is on AND the caller may use it —
+  // an off switch leaves the action bar pixel-identical to today (§0.1).
+  const showBriefing = canUseAiAssistant && isAiFeatureActive(aiSettings, 'case_briefing');
+  const showAiDraft = canUseAiAssistant && isAiFeatureActive(aiSettings, 'message_drafting');
 
   return (
     <div className="bg-brand-gold-soft text-neutral-900 sticky top-[-1rem] sm:top-[-1.5rem] z-20 shadow-sm -mx-4 px-4 sm:-mx-6 sm:px-6 py-3 border-b border-brand-gold/20">
@@ -135,6 +147,7 @@ export async function CaseActionBar({
         </div>
 
         <div className="flex items-center gap-0.5 shrink-0">
+          {showBriefing && <CaseBriefingButton caseId={caseId} title={t('actions.briefing')} />}
           <ActionIcon icon={Calculator} title={t('actions.calculator')} href={`/cases/${caseId}/simulators/mix`} />
           <ActionIcon
             icon={ClipboardList}
@@ -152,6 +165,7 @@ export async function CaseActionBar({
             title={t('actions.sendMessage')}
             borrower={primaryBorrower}
             templates={templates}
+            aiDraftEnabled={showAiDraft}
           />
           <CaseActionTaskPopover
             caseId={caseId}

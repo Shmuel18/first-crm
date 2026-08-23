@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+import { callAction } from '@/lib/actions/call-action';
 import { env } from '@/lib/env';
 
 import { subscribePushAction } from '../actions/subscribe-push';
@@ -84,13 +85,17 @@ export function usePushSubscription(): PushSubscriptionState {
         applicationServerKey: urlBase64ToUint8Array(publicKey),
       });
       const json = sub.toJSON();
+      // Bind endpoint to a const before the guard below: that narrowing does
+      // not survive into the callback passed to callAction, because TS cannot
+      // prove a mutable property stayed set across the call.
+      const endpoint = json.endpoint;
       const p256dh = json.keys?.p256dh;
       const auth = json.keys?.auth;
-      if (!json.endpoint || !p256dh || !auth) {
+      if (!endpoint || !p256dh || !auth) {
         await sub.unsubscribe().catch(() => {});
         return { ok: false, reason: 'error' };
       }
-      const res = await subscribePushAction({ endpoint: json.endpoint, p256dh, auth });
+      const res = await callAction(() => subscribePushAction({ endpoint, p256dh, auth }));
       if (!res.ok) {
         await sub.unsubscribe().catch(() => {});
         return { ok: false, reason: 'error' };
@@ -112,7 +117,14 @@ export function usePushSubscription(): PushSubscriptionState {
       if (sub) {
         const { endpoint } = sub;
         await sub.unsubscribe().catch(() => {});
-        await unsubscribePushAction(endpoint);
+        const res = await callAction(() => unsubscribePushAction(endpoint));
+        // Only report "off" once the server row is actually gone. This block
+        // sits in a try/FINALLY with no catch, so before callAction a dropped
+        // request threw straight past setSubscribed(false) — keep that. Nothing
+        // prunes a stale subscription server-side (there is no 410 handling in
+        // the dispatch path), so flipping the toggle on a failed call would
+        // hide a row that still exists.
+        if (!res.ok) return;
       }
       setSubscribed(false);
     } finally {

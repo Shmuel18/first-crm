@@ -5,6 +5,7 @@ import { useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { callAction } from '@/lib/actions/call-action';
 import { useInlineMutationSync } from '@/lib/hooks/use-inline-mutation-sync';
 import { useOptimisticIds } from '@/lib/hooks/use-optimistic-ids';
 import { useSyncedRows } from '@/lib/hooks/use-synced-rows';
@@ -84,7 +85,7 @@ export function useIncomeGroups(
         const realId = await resolveRealId(incomeId);
         // Never-inserted row: nothing to delete server-side, addIncome toasted.
         if (realId) {
-          const result = await deleteIncomeAction(realId, borrowerId, caseId);
+          const result = await callAction(() => deleteIncomeAction(realId, borrowerId, caseId));
           if (!result.ok) throw new Error(result.error);
           toast.success(t('deleteSuccess'));
           refreshSoon();
@@ -124,7 +125,7 @@ export function useIncomeGroups(
       const realId = await resolveRealId(incomeId);
       // Insert failed — addIncome already removed the row and toasted once.
       if (!realId) return { ok: false };
-      const result = await updateIncomeFieldAction(realId, caseId, field, value).catch(() => null);
+      const result = await callAction(() => updateIncomeFieldAction(realId, caseId, field, value)).catch(() => null);
       if (!result?.ok) {
         setGroups((prev) =>
           mapIncomeByIds(prev, borrowerId, [incomeId, realId], (i) => ({
