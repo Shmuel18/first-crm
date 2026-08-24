@@ -12,6 +12,8 @@ import {
 } from '@/features/settings/services/permissions.service';
 import { TeamTable } from '@/features/team/components/team-table';
 import { listRoles, listTeamMembers } from '@/features/team/services/team.service';
+import { getAiFeatureSettings } from '@/lib/ai/flags.server';
+import { filterInertAiPermissions } from '@/lib/ai/permission-visibility';
 import { isCurrentUserAdmin } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { createClient } from '@/lib/supabase/server';
@@ -39,12 +41,19 @@ export default async function PeopleSettingsPage() {
 
   // Fetch both datasets in parallel — admin-only page hit by 1 user, both
   // sub-tabs are small queries, so render-time parallelism beats lazy.
-  const [members, teamRoles, rolesPerms, overrides] = await Promise.all([
+  const [members, teamRoles, rolesPerms, overrides, aiSettings] = await Promise.all([
     listTeamMembers(),
     listRoles(),
     getRolesPermissions(),
     getUserPermissionOverrides(),
+    getAiFeatureSettings(supabase),
   ]);
+
+  // AI permission keys are auto-granted to admin at migration time (mig 169).
+  // While their feature flag is off the switch does nothing, so showing it
+  // would both mislead the admin and advertise an unsold feature — hide until
+  // the feature is actually enabled (then it returns on its own).
+  const visiblePermissions = filterInertAiPermissions(rolesPerms.permissions, aiSettings);
 
   // Per-user editor works on active members only (inactive can't log in). Role
   // name is shown as the "default" context; admin members are locked (fixed).
@@ -77,7 +86,7 @@ export default async function PeopleSettingsPage() {
         rolesSlot={
           <RolesPermissionsEditor
             roles={rolesPerms.roles}
-            permissions={rolesPerms.permissions}
+            permissions={visiblePermissions}
             granted={rolesPerms.granted}
             locale={locale}
           />
@@ -85,7 +94,7 @@ export default async function PeopleSettingsPage() {
         permsSlot={
           <UserPermissionsEditor
             members={permMembers}
-            permissions={rolesPerms.permissions}
+            permissions={visiblePermissions}
             granted={rolesPerms.granted}
             overrides={overrides}
             locale={locale}

@@ -1,5 +1,7 @@
 import { cache } from 'react';
 
+import { getAiFeatureSettings } from '@/lib/ai/flags.server';
+import { isAiPermissionInert } from '@/lib/ai/permission-visibility';
 import { userHasPermission } from '@/lib/auth/permissions';
 import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
@@ -85,11 +87,19 @@ export const getLayoutBootstrap = cache(async (): Promise<LayoutBootstrap> => {
   // in lockstep with the server guard so a non-permitted user never sees it.
   // Collections nav visibility rides the same per-permission check (not the
   // admin flag), so the manager can delegate גבייה to a non-admin.
-  const [canCreateCase, canViewCollections, canViewInbox] = await Promise.all([
+  const [canCreateCase, canViewCollections, hasInboxPermission] = await Promise.all([
     userHasPermission('create_case'),
     userHasPermission('view_collections'),
     userHasPermission('view_ai_inbox'),
   ]);
+
+  // The inbox is an AI feature, so the PERMISSION alone must not reveal it:
+  // migration-seeded AI keys are auto-granted to admin (mig 169), which would
+  // otherwise light the nav item up on a deliberately dark deploy. Short-
+  // circuited so only a permitted user ever pays for the settings read.
+  const canViewInbox =
+    hasInboxPermission &&
+    !isAiPermissionInert('view_ai_inbox', await getAiFeatureSettings(supabase));
 
   const profile = envelope.profile as Record<string, unknown> | null;
   const role =
