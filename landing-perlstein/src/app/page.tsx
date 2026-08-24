@@ -1,5 +1,6 @@
 ﻿import type { Metadata } from 'next';
 import Image from 'next/image';
+import Link from 'next/link';
 import { ArrowLeft, BadgeCheck, Banknote, Check, CheckCircle2, ClipboardCheck, FileSearch, Landmark, Mail, MapPin, MessageCircle, Phone, Scale, ShieldCheck, Sparkles, UserRoundCheck, X } from 'lucide-react';
 
 import styles from './perlstein-v2.module.css';
@@ -31,7 +32,7 @@ export default function PerlsteinLandingPage() {
     <a className={styles.skipLink} href="#content">דילוג לתוכן המרכזי</a>
     <div className={styles.topline}><span>ייעוץ אישי</span><i aria-hidden="true">·</i><span>תכנון מדויק</span><i aria-hidden="true">·</i><span>דרך ברורה מול הבנקים</span></div>
     <header className={styles.header}><div className={styles.headerInner}>
-      <a href="/" aria-label="פרלשטיין משכנתאות — דף הבית"><Image src="/brands/perlstein/logo-on-dark.png" alt="פרלשטיין משכנתאות" width={218} height={68} className={styles.logo} priority /></a>
+      <Link href="/" aria-label="פרלשטיין משכנתאות — דף הבית"><Image src="/brands/perlstein/logo-on-dark.png" alt="פרלשטיין משכנתאות" width={218} height={68} className={styles.logo} priority /></Link>
       <nav className={styles.nav} aria-label="ניווט ראשי"><a href="#why">למה יועץ?</a><a href="#solutions">פתרונות</a><a href="#process">התהליך</a><a href="#about">אודות</a><a href="#questions">שאלות</a></nav>
       <a className={styles.headerCta} href="tel:0533140442"><Phone size={16} /> 053-314-0442</a>
       <MobileMenu />
