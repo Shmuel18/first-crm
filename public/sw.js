@@ -7,7 +7,7 @@
  * request (data, assets, /api) goes straight to the network, uncached.
  *
  * Bump CACHE when PRECACHE changes so old shells are evicted on activate. */
-const CACHE = 'kfg-shell-v4';
+const CACHE = 'kfg-shell-v5';
 const OFFLINE_URL = '/offline.html';
 // offline.js self-heals the fallback page (auto-retry + honest "connecting" vs
 // "no connection" copy). It MUST be precached and served cache-first below —
@@ -82,7 +82,21 @@ self.addEventListener('activate', (event) => {
     caches
       .keys()
       .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim()),
+      .then(() => self.clients.claim())
+      /* A new SW version means a new deployment. Windows loaded from the old
+       * deployment stay PINNED to it (Vercel skew protection tags every
+       * request with ?dpl=), so an office window left open keeps exhibiting
+       * bugs that were already fixed. Reload the windows nobody is looking at
+       * right now; visible ones are handled gracefully by the page
+       * (PwaRegister reloads them the moment they're next hidden). */
+      .then(() => self.clients.matchAll({ type: 'window' }))
+      .then((clients) =>
+        Promise.all(
+          clients
+            .filter((c) => c.visibilityState !== 'visible')
+            .map((c) => c.navigate(c.url).catch(() => undefined)),
+        ),
+      ),
   );
 });
 
