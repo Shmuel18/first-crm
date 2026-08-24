@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 
 import { documentDisplayName } from '../domain/document-name';
 import { MAX_THUMBNAIL_BYTES, isInlineRenderable } from '../domain/inline-renderable';
+import { DocumentImageThumb } from './document-image-thumb';
 import { PdfPageCanvas } from './pdf-page-canvas';
 import { RenameDocumentDialog } from './rename-document-dialog';
 import type { DocumentWithRelations } from '../types';
@@ -69,12 +70,11 @@ export function DocumentCard({ doc, caseId, canRename, onClick }: Props) {
     <div className="group relative overflow-hidden rounded-lg border border-neutral-200 bg-white transition hover:border-brand-gold-text hover:shadow-md focus-within:ring-2 focus-within:ring-brand-gold-text/50">
       <div className="relative aspect-[4/3] overflow-hidden border-b border-neutral-100 bg-neutral-50">
         {thumbUrl && isImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <DocumentImageThumb
             src={thumbUrl}
+            mimeType={doc.mime_type}
             alt={label}
-            loading="lazy"
-            className="absolute inset-0 size-full object-cover"
+            fallback={<FileTypeIcon mime={doc.mime_type} className="size-10 text-neutral-300" />}
           />
         ) : thumbUrl && isPdf ? (
           <PdfPageCanvas

@@ -37,7 +37,11 @@ const isHttpsPublicApp = publicAppUrl.startsWith('https://');
 const shouldUpgradeInsecureRequests = isProduction && isHttpsPublicApp;
 const cspDirectives = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isProduction ? '' : " 'unsafe-eval'"}`,
+  // wasm-unsafe-eval permits WebAssembly compilation ONLY — not eval() or new
+  // Function(). pdf.js decodes JPEG2000 images through a wasm module, and
+  // JPEG2000 is what office multifunction scanners emit in their "compact PDF"
+  // modes: without this those scans fail to render while ordinary PDFs are fine.
+  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${isProduction ? '' : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://*.supabase.co https://drive.google.com https://docs.google.com",
   // Task voice notes are served from short-lived signed Supabase Storage URLs.
