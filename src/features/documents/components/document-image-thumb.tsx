@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import { useDocumentImage } from '../hooks/use-document-image';
 
 type Props = {
@@ -19,8 +21,10 @@ type Props = {
  */
 export function DocumentImageThumb({ src, mimeType, alt, fallback }: Props) {
   const image = useDocumentImage(src, mimeType);
+  // Bytes can arrive fine and still be undecodable (e.g. HEIC in Chrome).
+  const [decodeFailed, setDecodeFailed] = useState(false);
 
-  if (image.status === 'failed') {
+  if (image.status === 'failed' || decodeFailed) {
     return <div className="flex size-full items-center justify-center">{fallback}</div>;
   }
   if (image.status === 'loading') {
@@ -28,6 +32,11 @@ export function DocumentImageThumb({ src, mimeType, alt, fallback }: Props) {
   }
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={image.url} alt={alt} className="absolute inset-0 size-full object-cover" />
+    <img
+      src={image.url}
+      alt={alt}
+      onError={() => setDecodeFailed(true)}
+      className="absolute inset-0 size-full object-cover"
+    />
   );
 }

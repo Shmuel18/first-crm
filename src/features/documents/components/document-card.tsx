@@ -48,37 +48,37 @@ export function DocumentCard({ doc, caseId, canRename, onClick }: Props) {
   const label = documentDisplayName(doc.file_name);
   const isPdf = doc.mime_type === 'application/pdf';
   const isImage = !isPdf && isInlineRenderable(doc.mime_type);
-  // Thumbnails come from OUR origin, for both sources of bytes. The signed
-  // Storage URL and the Drive viewer are both third-party requests, and both
-  // fail in the office: Safari blocks Drive's cookies outright, and the
-  // network filter eats raw file responses from other hosts — which is what
-  // turned a folder of documents into a grid of broken-image icons.
-  //
-  // Two limits keep that honest. Only types the route actually serves inline
-  // get a tile (anything else comes back as octet-stream and would render as a
-  // broken image), and a large file is not streamed through the server just to
-  // fill a 200px tile — it shows its file-type icon and still previews in full
-  // when opened. Office files lost their Drive-iframe tile with them: that
-  // iframe is unusable on iOS, which is the reason for this whole change.
-  const tooBigForTile = (doc.file_size ?? 0) > MAX_THUMBNAIL_BYTES;
-  const thumbUrl =
-    (isImage || isPdf) && !tooBigForTile
-      ? `/api/documents/${encodeURIComponent(doc.id)}/download`
+  const endpoint = `/api/documents/${encodeURIComponent(doc.id)}/download`;
+  // Tiles come from OUR origin (third-party requests die in the office —
+  // Safari blocks Drive's cookies, the network filter eats foreign file
+  // responses). For a Drive-backed document the route serves Drive's
+  // PRE-RENDERED thumbnail (?thumb=1): tens of kilobytes, exists for PDFs,
+  // photos of any size, HEIC and Office files alike — so no size cap and no
+  // pdf.js decode per tile. Only a storage-only document falls back to its
+  // full bytes, and there the old limits still make sense: a renderable type,
+  // small enough to be worth streaming for a 200px tile.
+  const hasDriveThumb = Boolean(doc.drive_file_id);
+  const smallEnough = (doc.file_size ?? 0) <= MAX_THUMBNAIL_BYTES;
+  const imageThumbUrl = hasDriveThumb
+    ? `${endpoint}?thumb=1`
+    : isImage && smallEnough
+      ? endpoint
       : null;
+  const pdfCanvasUrl = !hasDriveThumb && isPdf && smallEnough ? endpoint : null;
 
   return (
     <div className="group relative overflow-hidden rounded-lg border border-neutral-200 bg-white transition hover:border-brand-gold-text hover:shadow-md focus-within:ring-2 focus-within:ring-brand-gold-text/50">
       <div className="relative aspect-[4/3] overflow-hidden border-b border-neutral-100 bg-neutral-50">
-        {thumbUrl && isImage ? (
+        {imageThumbUrl ? (
           <DocumentImageThumb
-            src={thumbUrl}
-            mimeType={doc.mime_type}
+            src={imageThumbUrl}
+            mimeType={hasDriveThumb ? 'image/jpeg' : doc.mime_type}
             alt={label}
             fallback={<FileTypeIcon mime={doc.mime_type} className="size-10 text-neutral-300" />}
           />
-        ) : thumbUrl && isPdf ? (
+        ) : pdfCanvasUrl ? (
           <PdfPageCanvas
-            src={thumbUrl}
+            src={pdfCanvasUrl}
             width={320}
             fallback={<FileTypeIcon mime={doc.mime_type} className="size-10 text-neutral-300" />}
             className="pointer-events-none absolute inset-0 size-full overflow-hidden [&>canvas]:size-full [&>canvas]:object-cover"

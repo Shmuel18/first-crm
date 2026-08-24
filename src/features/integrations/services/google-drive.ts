@@ -218,6 +218,24 @@ export class GoogleDriveClient {
   }
 
   /** Download a file's raw text content (used to read a backup JSON back). */
+  /**
+   * Drive's pre-generated thumbnail URL for a file, or null when Drive has
+   * none (very fresh uploads, some formats). Drive renders these for PDFs,
+   * images (HEIC included) and Office files alike, at tens of kilobytes —
+   * which is what makes document-grid tiles affordable. The link is
+   * short-lived and unauthenticated; callers should fetch it immediately.
+   */
+  async getThumbnailLink(fileId: string, sizePx = 640): Promise<string | null> {
+    const res = await this.authedFetchRetry(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?fields=thumbnailLink&supportsAllDrives=true`,
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as { thumbnailLink?: string };
+    if (!data.thumbnailLink) return null;
+    // The default link ends with a size directive like "=s220" — swap it.
+    return data.thumbnailLink.replace(/=s\d+$/, `=s${sizePx}`);
+  }
+
   /** Current display name of a file/folder, or null if it's gone (404). */
   async getFileName(fileId: string): Promise<string | null> {
     const res = await this.authedFetchRetry(

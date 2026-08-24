@@ -123,7 +123,34 @@ export async function GET(_request: Request, { params }: Context): Promise<Respo
   }
   if (!doc) return errorJson('not_found', 404);
 
-  const wantsJson = new URL(_request.url).searchParams.get('transport') === 'json';
+  const query = new URL(_request.url).searchParams;
+  const wantsJson = query.get('transport') === 'json';
+
+  // ?thumb=1 — a grid tile wants a recognizable picture, not the document.
+  // Drive keeps pre-rendered thumbnails (tens of KB, PDFs and Office files
+  // included), which is what makes a 100-tile folder affordable on the office
+  // machine. No thumbnail (fresh upload, storage-only doc) → fall through to
+  // the full bytes below, still subject to their own limits.
+  if (query.get('thumb') === '1' && doc.drive_file_id) {
+    try {
+      const client = await getDriveClientIfConnected();
+      const link = client ? await client.getThumbnailLink(doc.drive_file_id) : null;
+      if (link) {
+        const thumbRes = await fetch(link);
+        if (thumbRes.ok) {
+          const buf = Buffer.from(await thumbRes.arrayBuffer());
+          if (buf.byteLength > 0) {
+            return bytesResponse(buf, 'image/jpeg', wantsJson, doc.file_name + '.jpg');
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[documentDownload] thumbnail fetch failed, serving full bytes', {
+        message: err instanceof Error ? err.message : 'unknown',
+      });
+    }
+  }
+
   const storagePath = storagePathFrom(doc.metadata);
   if (storagePath) {
     const { data, error: blobError } = await supabase.storage

@@ -82,6 +82,12 @@ function callRouteJson(id = DOCUMENT_ID) {
   });
 }
 
+function callRouteThumb(id = DOCUMENT_ID) {
+  return GET(new Request(`http://localhost/api/documents/${id}/download?thumb=1`), {
+    params: Promise.resolve({ id }),
+  });
+}
+
 function callRoute(id = DOCUMENT_ID) {
   return GET(new Request(`http://localhost/api/documents/${id}/download`), {
     params: Promise.resolve({ id }),
@@ -121,6 +127,42 @@ describe('GET /api/documents/[id]/download', () => {
     setupSupabase({ doc: null });
 
     expect((await callRoute()).status).toBe(404);
+  });
+
+  it('serves the Drive pre-rendered thumbnail for ?thumb=1', async () => {
+    const doc = { ...BASE_DOC, drive_file_id: 'drive-file-1' };
+    setupSupabase({ doc });
+    const getThumbnailLink = vi.fn(async () => 'https://lh3.example/thumb=s640');
+    vi.mocked(getDriveClientIfConnected).mockResolvedValue({ getThumbnailLink } as never);
+    const realFetch = global.fetch;
+    const fetchSpy = vi
+      .spyOn(global, 'fetch')
+      .mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (String(input).startsWith('https://lh3.example/')) {
+          return new Response(new Uint8Array([1, 2, 3]) as unknown as BodyInit, { status: 200 });
+        }
+        return realFetch(input, init);
+      });
+
+    const response = await callRouteThumb();
+    fetchSpy.mockRestore();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Content-Type')).toBe('image/jpeg');
+    expect(getThumbnailLink).toHaveBeenCalledWith('drive-file-1');
+  });
+
+  it('falls back to full bytes when Drive has no thumbnail', async () => {
+    const doc = { ...BASE_DOC, drive_file_id: 'drive-file-1' };
+    setupSupabase({ doc });
+    const getThumbnailLink = vi.fn(async () => null);
+    vi.mocked(getDriveClientIfConnected).mockResolvedValue({ getThumbnailLink } as never);
+
+    const response = await callRouteThumb();
+
+    expect(response.status).toBe(200);
+    // Storage bytes served as the document itself, not a thumbnail.
+    await expect(response.text()).resolves.toBe('storage-bytes');
   });
 
   it('serves a Storage-backed document from our own origin', async () => {
