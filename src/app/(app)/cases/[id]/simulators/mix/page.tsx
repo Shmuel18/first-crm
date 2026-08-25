@@ -13,15 +13,28 @@ import { getCaseById } from '@/features/cases/services/cases.service';
 import { listIncomesForCase } from '@/features/incomes/services/incomes.service';
 import { listObligationsFlatForCase } from '@/features/obligations/services/obligations.service';
 import { seedMixFromCase } from '@/features/simulators/utils/seed-mix';
+import { isAiFeatureActive } from '@/lib/ai/flags';
+import { getAiFeatureSettings } from '@/lib/ai/flags.server';
 import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
+import { createClient } from '@/lib/supabase/server';
 import { asCaseId } from '@/lib/types/branded';
 
 export default async function CaseMixPage({ params }: { params: Promise<{ id: string }> }) {
   if (!(await userHasPermission('view_simulators'))) redirect('/cases');
   const { id } = await params;
   const caseId = asCaseId(id);
-  const [caseData, thresholds, scenarios, incomeGroups, obligations, canEdit, canUseSimulators, t] =
-    await Promise.all([
+  const [
+    caseData,
+    thresholds,
+    scenarios,
+    incomeGroups,
+    obligations,
+    canEdit,
+    canUseSimulators,
+    t,
+    aiSettings,
+    canUseAiAssistant,
+  ] = await Promise.all([
       getCaseById(caseId),
       getRegulatoryThresholds(),
       listScenariosForCase(caseId),
@@ -30,8 +43,13 @@ export default async function CaseMixPage({ params }: { params: Promise<{ id: st
       userCanEditCase(caseId),
       userHasPermission('use_simulators'),
       getTranslations('simulators'),
+      createClient().then(getAiFeatureSettings),
+      userHasPermission('use_ai_assistant'),
     ]);
   if (!caseData) notFound();
+
+  // Same gate as the case action bar and the documents screen.
+  const aiDraftEnabled = canUseAiAssistant && isAiFeatureActive(aiSettings, 'message_drafting');
 
   const locale = parseLocale(await getLocale());
   const monthlyNetIncome = nisToAgorot(incomeGroups.reduce((sum, group) => sum + group.monthlyTotal, 0));
@@ -58,6 +76,7 @@ export default async function CaseMixPage({ params }: { params: Promise<{ id: st
         monthlyNetIncome={monthlyNetIncome}
         monthlyObligations={monthlyObligations}
         readOnly={!canEdit || !canUseSimulators}
+        aiDraftEnabled={aiDraftEnabled}
       />
     </div>
   );

@@ -35,6 +35,8 @@ type Props = {
   /** View-only viewer of the case: hide "new tab" + make each calculator
    *  read-only (no edit affordances, no auto-save) — C-036 / SIM-PERSIST-2. */
   readOnly?: boolean;
+  /** AI draft-assist inside the "send report to client" dialog. */
+  aiDraftEnabled?: boolean;
 };
 
 function tabFromScenario(s: MortgageScenarioWithTracks): Tab {
@@ -63,6 +65,7 @@ export function MixWorkspace({
   monthlyNetIncome,
   monthlyObligations,
   readOnly = false,
+  aiDraftEnabled = false,
 }: Props) {
   const t = useTranslations('simulators');
   const tTools = useTranslations('simulators.tools');
@@ -170,6 +173,7 @@ export function MixWorkspace({
             initialConclusion={tab.conclusion}
             monthlyNetIncome={monthlyNetIncome}
             monthlyObligations={monthlyObligations}
+            aiDraftEnabled={aiDraftEnabled}
             isPrimary={tab.id != null && includedIds.has(tab.id)}
             primaryPending={primaryPending}
             onSetPrimary={caseId ? (include) => tab.id && handleToggleInclude(tab.id, include) : undefined}

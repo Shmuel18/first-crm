@@ -21,6 +21,10 @@ type Props = {
   conclusion: string;
   /** Only case-scoped scenarios can be emailed to a client. */
   canSend?: boolean;
+  /** The case this scenario belongs to — grounds the AI draft. */
+  caseId?: string;
+  /** Shows the "draft with AI" strip inside the compose dialog. */
+  aiDraftEnabled?: boolean;
 };
 type Draft = { subject: string; body: string };
 
@@ -30,7 +34,14 @@ type Draft = { subject: string; body: string };
  * and the mix workspace footer. If the scenario hasn't been auto-saved yet, the
  * action saves it first (so a valid mix can be printed without a conclusion).
  */
-export function ScenarioReportActions({ scenarioId, onEnsureSaved, conclusion, canSend = false }: Props) {
+export function ScenarioReportActions({
+  scenarioId,
+  onEnsureSaved,
+  conclusion,
+  canSend = false,
+  caseId,
+  aiDraftEnabled = false,
+}: Props) {
   const t = useTranslations('simulators.report');
   const [isPending, startTransition] = useTransition();
   const [isSending, startSendTransition] = useTransition();
@@ -111,6 +122,7 @@ export function ScenarioReportActions({ scenarioId, onEnsureSaved, conclusion, c
         initialBody={draft?.body ?? ''}
         pending={isSending}
         onSend={handleSend}
+        aiDraftCaseId={aiDraftEnabled && caseId ? caseId : undefined}
         extraFields={
           <p className="rounded-md bg-brand-gold-soft px-3 py-2 text-xs text-brand-gold-text">{t('emailAttachNote')}</p>
         }

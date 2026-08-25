@@ -42,6 +42,8 @@ type Props = {
   isPrimary?: boolean;
   /** True while a set-primary request is in flight (shared across tabs). */
   primaryPending?: boolean;
+  /** AI draft-assist inside the "send report to client" dialog. */
+  aiDraftEnabled?: boolean;
   /** Toggle this mix as the case's primary. Absent → no primary affordance. */
   onSetPrimary?: (makePrimary: boolean) => void;
   onCreated?: (scenarioId: string) => void;
@@ -66,6 +68,7 @@ export function MixCalculator({
   readOnly = false,
   isPrimary = false,
   primaryPending = false,
+  aiDraftEnabled = false,
   onSetPrimary,
   onCreated,
   onSaved,
@@ -171,6 +174,8 @@ export function MixCalculator({
               onEnsureSaved={saveNow}
               conclusion={calc.advisorConclusion}
               canSend={Boolean(caseId)}
+              caseId={caseId}
+              aiDraftEnabled={aiDraftEnabled}
             />
           </div>
         ) : null}
