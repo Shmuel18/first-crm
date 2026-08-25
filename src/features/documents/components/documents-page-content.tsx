@@ -71,6 +71,8 @@ type Props = {
   /** Drive reconciliation additionally requires document-view permission. */
   canSyncDrive: boolean;
   canDeleteDocuments: boolean;
+  /** AI draft-assist inside this page's compose dialogs (flag + permission). */
+  aiDraftEnabled: boolean;
 };
 
 export function DocumentsPageContent({
@@ -91,6 +93,7 @@ export function DocumentsPageContent({
   canUploadDocuments,
   canSyncDrive,
   canDeleteDocuments,
+  aiDraftEnabled,
 }: Props) {
   const t = useTranslations('documents.checklist');
   const td = useTranslations('documents.detail');
@@ -296,6 +299,7 @@ export function DocumentsPageContent({
         onSync={() => runDriveSync('manual')}
         syncPending={syncPending}
         syncStatus={syncStatus}
+        aiDraftEnabled={aiDraftEnabled}
       />
 
       {selected === null && (
@@ -491,6 +495,7 @@ export function DocumentsPageContent({
         canDeleteDocuments={canDeleteDocuments}
         canSendEmail={canEdit}
         defaultEmailRecipient={primaryBorrower?.email ?? null}
+        aiDraftEnabled={aiDraftEnabled}
         onClose={() => setPreviewDoc(null)}
       />
 

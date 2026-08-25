@@ -24,6 +24,8 @@ type Props = {
   defaultRecipient: string | null;
   /** Documents preselected by the caller (e.g. "send this one" from preview). */
   initialAttachments: ClientEmailAttachmentItem[];
+  /** Shows the "draft with AI" strip inside the compose dialog. */
+  aiDraftEnabled?: boolean;
 };
 
 const isEmail = (value: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
@@ -40,6 +42,7 @@ export function SendDocumentsEmailDialog({
   onOpenChange,
   defaultRecipient,
   initialAttachments,
+  aiDraftEnabled,
 }: Props) {
   const t = useTranslations('documents.sendEmail');
   const [recipient, setRecipient] = useState(defaultRecipient ?? '');
@@ -87,6 +90,7 @@ export function SendDocumentsEmailDialog({
       pending={isPending}
       sendDisabled={uploading || !isEmail(recipient)}
       onSend={send}
+      aiDraftCaseId={aiDraftEnabled ? caseId : undefined}
       headerFields={
         <div>
           <label

@@ -37,6 +37,8 @@ type Props = {
   onSync: () => void;
   syncPending: boolean;
   syncStatus: string;
+  /** AI draft-assist inside the compose dialogs (flag + permission). */
+  aiDraftEnabled: boolean;
 };
 
 export function DocumentsActionBar({
@@ -53,6 +55,7 @@ export function DocumentsActionBar({
   onSync,
   syncPending,
   syncStatus,
+  aiDraftEnabled,
 }: Props) {
   const t = useTranslations('documents.actions');
   const tPage = useTranslations('documents');
@@ -132,6 +135,7 @@ export function DocumentsActionBar({
                 title={t('sendRequest')}
                 borrower={primaryBorrower}
                 checklist={checklist}
+                aiDraftEnabled={aiDraftEnabled}
               />
             </>
           )}
@@ -173,6 +177,7 @@ export function DocumentsActionBar({
           onOpenChange={setEmailOpen}
           defaultRecipient={primaryBorrower?.email ?? null}
           initialAttachments={[]}
+          aiDraftEnabled={aiDraftEnabled}
         />
       )}
     </div>

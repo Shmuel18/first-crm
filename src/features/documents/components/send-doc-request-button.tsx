@@ -38,6 +38,8 @@ type Props = {
    *  the still-missing categories so the borrower knows exactly what to
    *  send back. Empty / null falls back to a generic prompt. */
   checklist: ReadonlyArray<DocumentChecklistItem> | null;
+  /** Shows the "draft with AI" strip inside the compose dialog. */
+  aiDraftEnabled?: boolean;
 };
 
 /**
@@ -52,7 +54,13 @@ type Props = {
  * on this bar, so the chrome doesn't change for advisors who only use
  * one channel.
  */
-export function SendDocRequestButton({ caseId, title, borrower, checklist }: Props) {
+export function SendDocRequestButton({
+  caseId,
+  title,
+  borrower,
+  checklist,
+  aiDraftEnabled,
+}: Props) {
   const t = useTranslations('documents.request');
   const tMenu = useTranslations('documents.requestMenu');
   const tc = useTranslations('common');
@@ -149,6 +157,7 @@ export function SendDocRequestButton({ caseId, title, borrower, checklist }: Pro
         initialBody={draft?.body ?? ''}
         pending={isPending}
         onSend={sendEmail}
+        aiDraftCaseId={aiDraftEnabled ? caseId : undefined}
       />
     </>
   );
