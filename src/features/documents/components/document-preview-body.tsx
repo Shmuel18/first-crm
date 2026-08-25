@@ -21,6 +21,9 @@ type Props = {
   fileName: string;
   isImage: boolean;
   isPdf: boolean;
+  /** Google-rendered first page for Drive-synced PDFs (correct Hebrew where
+   *  pdf.js garbles non-embedded bank fonts). */
+  drivePdfImageSrc: string | null;
   /** Re-fetch the Supabase signed URL. Hidden when a Drive file exists
    *  because Drive previews don't depend on our signed URL. */
   onRetry: () => void;
@@ -41,6 +44,7 @@ export function DocumentPreviewBody({
   fileName,
   isImage,
   isPdf,
+  drivePdfImageSrc,
   onRetry,
 }: Props) {
   const t = useTranslations('documents.previewModal');
@@ -75,7 +79,7 @@ export function DocumentPreviewBody({
         <img src={url} alt={fileName} className="max-h-[58vh] object-contain" />
       )}
       {!loading && !error && !drivePreviewUrl && url && isPdf && (
-        <PdfPageViewer src={url} fileName={fileName} />
+        <PdfPageViewer src={url} fileName={fileName} driveImageSrc={drivePdfImageSrc} />
       )}
       {!loading && !error && !drivePreviewUrl && url && !isImage && !isPdf && (
         <div className="text-center text-neutral-500 px-4 py-12">

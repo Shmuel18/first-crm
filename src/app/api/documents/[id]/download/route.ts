@@ -133,8 +133,14 @@ export async function GET(_request: Request, { params }: Context): Promise<Respo
   // the full bytes below, still subject to their own limits.
   if (query.get('thumb') === '1' && doc.drive_file_id) {
     try {
+      // ?size= lets the preview modal ask for a readable render (Google's
+      // rasterizer draws Hebrew bank PDFs correctly where pdf.js cannot);
+      // grid tiles keep the small default.
+      const sizeParam = Number(query.get('size'));
+      const thumbSize =
+        Number.isInteger(sizeParam) && sizeParam >= 220 && sizeParam <= 2048 ? sizeParam : 640;
       const client = await getDriveClientIfConnected();
-      const link = client ? await client.getThumbnailLink(doc.drive_file_id) : null;
+      const link = client ? await client.getThumbnailLink(doc.drive_file_id, thumbSize) : null;
       if (link) {
         const thumbRes = await fetch(link);
         if (thumbRes.ok) {

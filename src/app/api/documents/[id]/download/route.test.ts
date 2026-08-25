@@ -149,7 +149,7 @@ describe('GET /api/documents/[id]/download', () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get('Content-Type')).toBe('image/jpeg');
-    expect(getThumbnailLink).toHaveBeenCalledWith('drive-file-1');
+    expect(getThumbnailLink).toHaveBeenCalledWith('drive-file-1', 640);
   });
 
   it('falls back to full bytes when Drive has no thumbnail', async () => {

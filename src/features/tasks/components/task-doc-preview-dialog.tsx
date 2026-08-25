@@ -59,6 +59,7 @@ export function TaskDocPreviewDialog({ url, fileName, mimeType, driveUrl, onClos
             fileName={fileName}
             isImage={isImage}
             isPdf={isPdf}
+            drivePdfImageSrc={null}
             onRetry={() => undefined}
           />
         )}

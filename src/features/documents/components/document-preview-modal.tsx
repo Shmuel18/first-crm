@@ -223,6 +223,11 @@ export function DocumentPreviewModal({
   const drivePreviewUrl = doc.drive_file_id
     ? `https://drive.google.com/file/d/${doc.drive_file_id}/preview`
     : null;
+  // Drive-synced PDFs: Google's rasterization of the first page. pdf.js
+  // reverses/mis-spaces Hebrew when the PDF (typically a bank's) has no
+  // embedded fonts; Drive's renderer draws it the way Drive itself shows it.
+  const drivePdfImageSrc =
+    isPdf && doc.drive_file_id && ownPreviewUrl ? `${ownPreviewUrl}?thumb=1&size=1600` : null;
 
   return (
     <Dialog open={Boolean(doc)} onOpenChange={(open) => !open && onClose()}>
@@ -253,6 +258,7 @@ export function DocumentPreviewModal({
           fileName={fileName}
           isImage={isImage}
           isPdf={isPdf}
+          drivePdfImageSrc={drivePdfImageSrc}
           onRetry={handleRetry}
         />
 
