@@ -16,7 +16,10 @@ import {
 } from '@/features/documents/services/documents.service';
 import { getCaseById } from '@/features/cases/services/cases.service';
 import { provisionCaseDriveFolders } from '@/features/integrations/services/drive-case-uploader';
-import { userCanEditCase, userHasPermissions } from '@/lib/auth/permissions';
+import { isAiFeatureActive } from '@/lib/ai/flags';
+import { getAiFeatureSettings } from '@/lib/ai/flags.server';
+import { userCanEditCase, userHasPermission, userHasPermissions } from '@/lib/auth/permissions';
+import { createClient } from '@/lib/supabase/server';
 import { parseLocale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
 import { formatPersonName } from '@/lib/utils/person-name';
@@ -32,15 +35,29 @@ export default async function CaseDocumentsPage({ params }: Props) {
   // a view-only viewer, R11 DRIVE-3).
   const canEdit = await userCanEditCase(caseId);
 
-  const [caseData, documents, categories, borrowers, locale, documentPermissions] =
-    await Promise.all([
+  const [
+    caseData,
+    documents,
+    categories,
+    borrowers,
+    locale,
+    documentPermissions,
+    aiSettings,
+    canUseAiAssistant,
+  ] = await Promise.all([
       getCaseById(caseId),
       listDocumentsForCase(caseId),
       listDocumentCategories(),
       listBorrowersForCase(caseId),
       getLocale().then(parseLocale),
       userHasPermissions('delete_document', 'upload_document', 'view_case_documents'),
+      createClient().then(getAiFeatureSettings),
+      userHasPermission('use_ai_assistant'),
     ]);
+
+  // Same gate as the case action bar: flag AND permission. Off leaves every
+  // compose dialog on this page pixel-identical to before the AI layer.
+  const aiDraftEnabled = canUseAiAssistant && isAiFeatureActive(aiSettings, 'message_drafting');
 
   if (!caseData) notFound();
 
@@ -117,6 +134,7 @@ export default async function CaseDocumentsPage({ params }: Props) {
         canEdit
       }
       canDeleteDocuments={documentPermissions.delete_document === true && canEdit}
+      aiDraftEnabled={aiDraftEnabled}
     />
   );
 }

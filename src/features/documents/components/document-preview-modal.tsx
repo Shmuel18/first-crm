@@ -39,6 +39,8 @@ type Props = {
   canSendEmail: boolean;
   /** Prefill for the email recipient (the client), freely overwritten. */
   defaultEmailRecipient: string | null;
+  /** AI draft-assist inside the compose dialog (flag + permission). */
+  aiDraftEnabled: boolean;
   onClose: () => void;
 };
 
@@ -48,6 +50,7 @@ export function DocumentPreviewModal({
   canDeleteDocuments,
   canSendEmail,
   defaultEmailRecipient,
+  aiDraftEnabled,
   onClose,
 }: Props) {
   const tErr = useTranslations('documents.errors');
@@ -283,6 +286,7 @@ export function DocumentPreviewModal({
             open={emailOpen}
             onOpenChange={setEmailOpen}
             defaultRecipient={defaultEmailRecipient}
+            aiDraftEnabled={aiDraftEnabled}
             initialAttachments={[
               {
                 kind: 'document',
