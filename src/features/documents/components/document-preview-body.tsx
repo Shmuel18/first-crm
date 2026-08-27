@@ -24,6 +24,8 @@ type Props = {
   /** Google-rendered first page for Drive-synced PDFs (correct Hebrew where
    *  pdf.js garbles non-embedded bank fonts). */
   drivePdfImageSrc: string | null;
+  /** Cross-origin iframe clicks are invisible to the page-level listener. */
+  onDrivePreviewFocus?: () => void;
   /** Re-fetch the Supabase signed URL. Hidden when a Drive file exists
    *  because Drive previews don't depend on our signed URL. */
   onRetry: () => void;
@@ -45,22 +47,21 @@ export function DocumentPreviewBody({
   isImage,
   isPdf,
   drivePdfImageSrc,
+  onDrivePreviewFocus,
   onRetry,
 }: Props) {
   const t = useTranslations('documents.previewModal');
   const tError = useTranslations('error');
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-neutral-50 overflow-hidden min-h-[280px] max-h-[60vh] flex items-center justify-center">
-      {loading && (
-        <Loader2 className="size-5 animate-spin text-neutral-400" aria-label="Loading" />
-      )}
+    <div className="flex max-h-[60vh] min-h-[280px] items-center justify-center overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50">
+      {loading && <Loader2 className="size-5 animate-spin text-neutral-400" aria-label="Loading" />}
       {!loading && error && (
         <div className="px-4 py-6 text-center">
           <p className="text-sm text-rose-600">{error}</p>
           {!url && !drivePreviewUrl && (
             <Button type="button" variant="outline" onClick={onRetry} className="mt-3 h-8">
-              <RotateCw className="size-3.5 me-1" />
+              <RotateCw className="me-1 size-3.5" />
               {tError('retry')}
             </Button>
           )}
@@ -70,8 +71,9 @@ export function DocumentPreviewBody({
         <iframe
           src={drivePreviewUrl}
           title={fileName}
-          className="w-full h-[58vh]"
+          className="h-[58vh] w-full"
           allow="autoplay"
+          onFocus={onDrivePreviewFocus}
         />
       )}
       {!loading && !error && !drivePreviewUrl && url && isImage && (
@@ -82,8 +84,8 @@ export function DocumentPreviewBody({
         <PdfPageViewer src={url} fileName={fileName} driveImageSrc={drivePdfImageSrc} />
       )}
       {!loading && !error && !drivePreviewUrl && url && !isImage && !isPdf && (
-        <div className="text-center text-neutral-500 px-4 py-12">
-          <FileQuestion className="size-10 mx-auto mb-3 text-neutral-300" />
+        <div className="px-4 py-12 text-center text-neutral-500">
+          <FileQuestion className="mx-auto mb-3 size-10 text-neutral-300" />
           <p className="text-sm">{t('noPreview')}</p>
         </div>
       )}

@@ -65,8 +65,64 @@ describe('syncDriveDocumentsAction', () => {
       deleteVanishedFiles: true,
     });
     expect(revalidatePath).toHaveBeenCalledWith(`/cases/${CASE_ID}/documents`);
-    expect(revalidatePath).toHaveBeenCalledWith(`/cases/${CASE_ID}`);
+    // The case page renders nothing document-derived; revalidating it only
+    // cost the router its whole prefetch cache on the way back there.
+    expect(revalidatePath).not.toHaveBeenCalledWith(`/cases/${CASE_ID}`);
     expect(refresh).toHaveBeenCalledOnce();
+  });
+
+  it('does not revalidate when a forced sync finds Drive unchanged', async () => {
+    vi.mocked(syncDriveDocumentsForCase).mockResolvedValue({
+      ok: true,
+      imported: 0,
+      updated: 0,
+      skipped: 3,
+      deleted: 0,
+      pushed: 0,
+    });
+
+    const result = await syncDriveDocumentsAction(CASE_ID);
+
+    expect(result).toMatchObject({ ok: true, imported: 0, deleted: 0 });
+    // Nothing changed, so nothing to re-render. Revalidating anyway evicted
+    // the router's prefetch + bfcache and made the next navigation cold.
+    expect(revalidatePath).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it.each(['imported', 'updated', 'deleted', 'pushed'] as const)(
+    'revalidates the documents view when %s changes',
+    async (counter) => {
+      vi.mocked(syncDriveDocumentsForCase).mockResolvedValue({
+        ok: true,
+        imported: 0,
+        updated: 0,
+        skipped: 0,
+        deleted: 0,
+        pushed: 0,
+        [counter]: 1,
+      });
+
+      await syncDriveDocumentsAction(CASE_ID);
+
+      expect(revalidatePath).toHaveBeenCalledWith(`/cases/${CASE_ID}/documents`);
+      expect(revalidatePath).not.toHaveBeenCalledWith(`/cases/${CASE_ID}`);
+      expect(refresh).toHaveBeenCalledOnce();
+    },
+  );
+
+  it('does not revalidate when a forced sync fails before changing anything', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(syncDriveDocumentsForCase).mockResolvedValue({
+      ok: false,
+      reason: 'error',
+      message: 'Drive listing failed',
+    });
+
+    await syncDriveDocumentsAction(CASE_ID);
+
+    expect(revalidatePath).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
   });
 });
 
@@ -88,7 +144,9 @@ describe('autoSyncDriveDocumentsAction', () => {
       deleteVanishedFiles: true,
     });
     expect(revalidatePath).toHaveBeenCalledWith(`/cases/${CASE_ID}/documents`);
-    expect(revalidatePath).toHaveBeenCalledWith(`/cases/${CASE_ID}`);
+    // The case page renders nothing document-derived; revalidating it only
+    // cost the router its whole prefetch cache on the way back there.
+    expect(revalidatePath).not.toHaveBeenCalledWith(`/cases/${CASE_ID}`);
     expect(refresh).toHaveBeenCalledOnce();
   });
 
@@ -101,6 +159,16 @@ describe('autoSyncDriveDocumentsAction', () => {
       deleted: 0,
       pushed: 0,
     });
+
+    const result = await autoSyncDriveDocumentsAction(CASE_ID);
+
+    expect(result).toEqual({ ok: true, changed: false });
+    expect(revalidatePath).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it('does not revalidate when the freshness window skips the Drive pass', async () => {
+    vi.mocked(autoSyncIfStale).mockResolvedValue(null);
 
     const result = await autoSyncDriveDocumentsAction(CASE_ID);
 
@@ -150,6 +218,7 @@ describe('autoSyncDriveDocumentsAction', () => {
     const result = await autoSyncDriveDocumentsAction(CASE_ID);
 
     expect(result).toEqual({ ok: false, error: 'unknown' });
+    expect(revalidatePath).not.toHaveBeenCalled();
     expect(refresh).not.toHaveBeenCalled();
   });
 
@@ -166,7 +235,9 @@ describe('autoSyncDriveDocumentsAction', () => {
 
     expect(result).toEqual({ ok: false, error: 'unknown' });
     expect(revalidatePath).toHaveBeenCalledWith(`/cases/${CASE_ID}/documents`);
-    expect(revalidatePath).toHaveBeenCalledWith(`/cases/${CASE_ID}`);
+    // The case page renders nothing document-derived; revalidating it only
+    // cost the router its whole prefetch cache on the way back there.
+    expect(revalidatePath).not.toHaveBeenCalledWith(`/cases/${CASE_ID}`);
     expect(refresh).toHaveBeenCalledOnce();
   });
 });

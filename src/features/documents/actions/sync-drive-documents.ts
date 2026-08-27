@@ -8,6 +8,7 @@ import {
   autoSyncIfStale,
   syncDriveDocumentsForCase,
 } from '@/features/integrations/services/drive-document-sync';
+import { FORCED_SYNC_RATE_LIMIT_WINDOW_SECONDS } from '@/features/integrations/domain/drive-sync-types';
 import { userCanEditCase, userHasPermissions } from '@/lib/auth/permissions';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
@@ -49,9 +50,16 @@ async function authorizedSyncUser(caseId: string): Promise<AuthorizedSyncUser | 
   return allowed ? { userId: userRes.user.id } : null;
 }
 
+/**
+ * Only the documents route. `/cases/[id]` deliberately NOT revalidated: the
+ * case page renders no document-derived data (its action bar's document-alert
+ * prop is never passed), so busting it bought nothing — while every
+ * revalidatePath makes the router evict the ENTIRE client prefetch cache
+ * (ActionDidRevalidateStaticAndDynamic), so the next "back to case" became a
+ * cold fetch of the case page.
+ */
 function refreshDocumentViews(caseId: string) {
   revalidatePath(`/cases/${caseId}/documents`);
-  revalidatePath(`/cases/${caseId}`);
 }
 
 export async function syncDriveDocumentsAction(caseId: string): Promise<Result> {
@@ -68,7 +76,7 @@ export async function syncDriveDocumentsAction(caseId: string): Promise<Result> 
     action: 'sync_drive_documents',
     subject: `user:${actor.userId}:case:${parsed.data}`,
     max: 1,
-    windowSeconds: 30,
+    windowSeconds: FORCED_SYNC_RATE_LIMIT_WINDOW_SECONDS,
     failMode: 'closed',
   });
   if (!allowed) return { ok: false, error: 'rate_limited' };
@@ -92,8 +100,11 @@ export async function syncDriveDocumentsAction(caseId: string): Promise<Result> 
     return { ok: false, error };
   }
 
-  refreshDocumentViews(parsed.data);
+  // A no-op sync changes nothing to re-render. Skipping the revalidate keeps
+  // the router's prefetch cache intact, which is the common case:
+  // the focus-triggered sync usually finds Drive unchanged.
   if (out.imported > 0 || out.updated > 0 || out.deleted > 0 || out.pushed > 0) {
+    refreshDocumentViews(parsed.data);
     refresh();
   }
   return {
