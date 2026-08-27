@@ -6,10 +6,20 @@ import { AlertCircle, ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
+import { FORCED_SYNC_RETRY_DELAY_MS } from '@/features/integrations/domain/drive-sync-types';
 import { callAction } from '@/lib/actions/call-action';
 import type { Locale } from '@/lib/i18n/direction';
 
 import { canonicalDriveFolderRoots, documentsInsideDriveFolder } from '../domain/drive-folder-tree';
+import {
+  acknowledgeDriveSync,
+  decideDriveSyncFollowUp,
+  isDriveUrl,
+  markDriveOpened,
+  pendingDriveSyncVersion,
+  requestDriveSyncAfterReturn,
+} from '../domain/drive-open-signal';
+import { claimDriveSyncRun, releaseDriveSyncRun } from '../domain/drive-sync-run-lock';
 import {
   autoSyncDriveDocumentsAction,
   syncDriveDocumentsAction,
@@ -39,6 +49,15 @@ type Selection =
   | { kind: 'custom'; folderId: string }
   | { kind: 'uncategorized' }
   | null;
+
+type DriveSyncTrigger = 'stale' | 'focus' | 'manual' | 'retry';
+
+type ActiveDriveSync = {
+  caseId: string;
+  trigger: DriveSyncTrigger;
+  force: boolean;
+  coveredVersion: number | null;
+};
 
 type Props = {
   caseId: string;
@@ -104,7 +123,10 @@ export function DocumentsPageContent({
   const [previewDoc, setPreviewDoc] = useState<DocumentWithRelations | null>(null);
   const [manageOpen, setManageOpen] = useState(false);
   const [selected, setSelected] = useState<Selection>(null);
-  const syncInFlight = useRef(false);
+  const syncInFlight = useRef<ActiveDriveSync | null>(null);
+  const runDriveSyncRef = useRef<((trigger: DriveSyncTrigger) => void) | null>(null);
+  const activeCaseIdRef = useRef<string | null>(caseId);
+  const forcedRetryTimerRef = useRef<number | null>(null);
   const returnFocusId = useRef<string | null>(null);
   const [syncPending, startSyncTransition] = useTransition();
   const [syncStatus, setSyncStatus] = useState('');
@@ -112,18 +134,101 @@ export function DocumentsPageContent({
     ? (documents.find((document) => document.id === previewDoc.id) ?? null)
     : null;
 
+  // A Server Action promise keeps running after this component unmounts. Mark
+  // the owner explicitly so an old completion cannot update this screen,
+  // release a newer case's lock, or start follow-up work after navigation.
+  useEffect(() => {
+    activeCaseIdRef.current = caseId;
+    return () => {
+      if (activeCaseIdRef.current === caseId) activeCaseIdRef.current = null;
+      if (syncInFlight.current?.caseId === caseId) syncInFlight.current = null;
+      if (forcedRetryTimerRef.current !== null) {
+        clearTimeout(forcedRetryTimerRef.current);
+        forcedRetryTimerRef.current = null;
+      }
+      runDriveSyncRef.current = null;
+    };
+  }, [caseId]);
+
+  const scheduleForcedRetry = useCallback((scheduledCaseId: string) => {
+    if (forcedRetryTimerRef.current !== null) return;
+    forcedRetryTimerRef.current = window.setTimeout(() => {
+      forcedRetryTimerRef.current = null;
+      if (activeCaseIdRef.current === scheduledCaseId) {
+        runDriveSyncRef.current?.('retry');
+      }
+    }, FORCED_SYNC_RETRY_DELAY_MS);
+  }, []);
+
   const runDriveSync = useCallback(
-    (trigger: 'stale' | 'focus' | 'manual') => {
-      if (!canSyncDrive || !driveFolderId || syncInFlight.current) return;
-      syncInFlight.current = true;
+    (trigger: DriveSyncTrigger) => {
+      if (activeCaseIdRef.current !== caseId || !canSyncDrive || !driveFolderId) return;
+
+      const force = trigger !== 'stale';
+      const coveredVersion = force ? pendingDriveSyncVersion(caseId) : null;
+      // Focus/retry runs exist only to service a returned Drive visit. Manual
+      // sync remains available without such a signal.
+      if ((trigger === 'focus' || trigger === 'retry') && coveredVersion === null) return;
+      // A scheduled retry already owns the outstanding debt. Extra focus and
+      // visibility events coalesce into that one bounded attempt.
+      if (force && forcedRetryTimerRef.current !== null) {
+        if (trigger !== 'manual') return;
+        // Manual intent is explicit: replace the silent background retry and
+        // let the action return its normal rate-limit feedback if still early.
+        clearTimeout(forcedRetryTimerRef.current);
+        forcedRetryTimerRef.current = null;
+      }
+      // Returned debt is not consumed here. If a run is active it remains in
+      // the versioned registry, and that run's completion will hand it off.
+      if (syncInFlight.current !== null) return;
+
+      const claim = claimDriveSyncRun(caseId);
+      if (!claim.acquired) {
+        // A previous component instance still owns the Server Action. Wait for
+        // its real outcome instead of issuing a duplicate after remount.
+        if (force) {
+          void claim.released.then(({ followUp }) => {
+            if (activeCaseIdRef.current !== caseId || pendingDriveSyncVersion(caseId) === null) {
+              return;
+            }
+            if (followUp === 'immediate') runDriveSyncRef.current?.('focus');
+            else if (followUp === 'after_cooldown') scheduleForcedRetry(caseId);
+          });
+        }
+        return;
+      }
+
+      const run: ActiveDriveSync = { caseId, trigger, force, coveredVersion };
+      syncInFlight.current = run;
       setSyncStatus(tSync('syncing'));
 
       startSyncTransition(async () => {
+        let automaticFollowUp = true;
         try {
-          const force = trigger !== 'stale';
           const result = force
             ? await callAction(() => syncDriveDocumentsAction(caseId))
             : await callAction(() => autoSyncDriveDocumentsAction(caseId));
+
+          // Success covered the captured visit. Unauthorized/missing cases are
+          // terminal for this screen and can be discarded. A disconnected
+          // integration or missing Drive folder is reversible, so its debt is
+          // preserved for a later focus/remount but not retried in a loop.
+          const discardDebt =
+            result.ok ||
+            (!result.ok && (result.error === 'unauthorized' || result.error === 'case_not_found'));
+          automaticFollowUp =
+            result.ok ||
+            (!result.ok &&
+              (result.error === 'rate_limited' ||
+                result.error === 'unknown' ||
+                result.error === 'network'));
+          if (force && coveredVersion !== null && discardDebt) {
+            acknowledgeDriveSync(caseId, coveredVersion);
+          }
+
+          // A continuation from an unmounted/older case may safely finish on
+          // the server, but it must not touch the current UI.
+          if (activeCaseIdRef.current !== caseId || syncInFlight.current !== run) return;
 
           if (result.ok) {
             const parts: string[] = [];
@@ -167,30 +272,81 @@ export function DocumentsPageContent({
             console.warn('[documents] automatic Drive sync failed', { error: result.error });
           }
         } finally {
-          syncInFlight.current = false;
+          const followUp = decideDriveSyncFollowUp({
+            automatic: automaticFollowUp,
+            force,
+            retry: trigger === 'retry',
+            coveredVersion,
+            pendingVersion: pendingDriveSyncVersion(caseId),
+          });
+          // Release the per-tab lock even after unmount. A remounted instance
+          // may be waiting on this exact Promise to service preserved debt.
+          releaseDriveSyncRun(caseId, claim.token, { followUp });
+
+          const ownsCurrentRun = syncInFlight.current === run;
+          if (ownsCurrentRun) syncInFlight.current = null;
+          if (!ownsCurrentRun || activeCaseIdRef.current !== caseId) return;
+
+          if (followUp === 'immediate') runDriveSyncRef.current?.('focus');
+          else if (followUp === 'after_cooldown') scheduleForcedRetry(caseId);
         }
       });
     },
-    [canSyncDrive, caseId, driveFolderId, startSyncTransition, tSync],
+    [canSyncDrive, caseId, driveFolderId, scheduleForcedRetry, startSyncTransition, tSync],
   );
 
+  // Follow-up calls cannot close over runDriveSync directly (self-dependency).
   useEffect(() => {
-    runDriveSync('stale');
-
-    // The common workflow is: open Drive in a new tab, delete there, then
-    // return to this already-open page. Reconcile on return so no extra click
-    // or second navigation is needed.
-    const syncOnFocus = () => runDriveSync('focus');
-    const syncOnVisible = () => {
-      if (document.visibilityState === 'visible') runDriveSync('focus');
-    };
-    window.addEventListener('focus', syncOnFocus);
-    document.addEventListener('visibilitychange', syncOnVisible);
+    runDriveSyncRef.current = runDriveSync;
     return () => {
-      window.removeEventListener('focus', syncOnFocus);
-      document.removeEventListener('visibilitychange', syncOnVisible);
+      if (runDriveSyncRef.current === runDriveSync) runDriveSyncRef.current = null;
     };
   }, [runDriveSync]);
+
+  useEffect(() => {
+    // The common workflow is: open Drive in a new tab, delete there, then
+    // return to this already-open page. Reconcile on return so no extra click
+    // or second navigation is needed — but ONLY when the user actually went to
+    // Drive. A forced sync is a serial walk of the case's folders, and firing
+    // it on every alt-tab made the screen (and the navigation away from it)
+    // pay for a scan nobody asked for. Any other refocus falls back to the
+    // cheap staleness check.
+    const syncOnReturn = () => {
+      const returnedVersion = requestDriveSyncAfterReturn(caseId);
+      runDriveSync(returnedVersion === null ? 'stale' : 'focus');
+    };
+    const syncOnVisible = () => {
+      if (document.visibilityState === 'visible') syncOnReturn();
+    };
+    // Every Drive affordance on this screen is an anchor to drive.google.com;
+    // one capture-phase listener catches them all without threading a callback
+    // through the card / action-bar / preview-link tree. `auxclick` covers a
+    // middle-click and `contextmenu` the "open in new tab" menu — neither
+    // fires `click`. Over-marking (menu opened, nothing chosen) costs one
+    // forced pass; under-marking loses a real Drive change, so err this way.
+    const noteDriveLink = (event: Event) => {
+      const anchor = (event.target as Element | null)?.closest?.('a[href]');
+      if (anchor instanceof HTMLAnchorElement && isDriveUrl(anchor.href)) {
+        markDriveOpened(caseId);
+      }
+    };
+
+    // On a remount, an unacknowledged visit means the user has returned to
+    // this documents screen; otherwise this is just the normal stale check.
+    syncOnReturn();
+    window.addEventListener('focus', syncOnReturn);
+    document.addEventListener('visibilitychange', syncOnVisible);
+    for (const type of ['click', 'auxclick', 'contextmenu']) {
+      document.addEventListener(type, noteDriveLink, true);
+    }
+    return () => {
+      window.removeEventListener('focus', syncOnReturn);
+      document.removeEventListener('visibilitychange', syncOnVisible);
+      for (const type of ['click', 'auxclick', 'contextmenu']) {
+        document.removeEventListener(type, noteDriveLink, true);
+      }
+    };
+  }, [caseId, runDriveSync]);
 
   useEffect(() => {
     if (selected !== null || !returnFocusId.current) return;
@@ -489,7 +645,7 @@ export function DocumentsPageContent({
       {/* Same idea: switching docs (or closing) gives the modal a fresh
           mount so the URL fetch starts clean. */}
       <DocumentPreviewModal
-        key={`preview-${activePreviewDoc?.id ?? 'none'}`}
+        key={`preview-${activePreviewDoc?.id ?? 'none'}-${activePreviewDoc?.updated_at ?? 'none'}`}
         doc={activePreviewDoc}
         caseId={caseId}
         canDeleteDocuments={canDeleteDocuments}

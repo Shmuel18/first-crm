@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createClient } from '@/lib/supabase/server';
+import { MIN_AUTO_SYNC_INTERVAL_MS } from '../domain/drive-sync-types';
 
 import { getDriveClientIfConnected } from './drive-case-uploader';
-import { syncDriveDocumentsForCase } from './drive-document-sync';
+import { autoSyncIfStale, syncDriveDocumentsForCase } from './drive-document-sync';
 import { importOrUpdateDriveFile } from './drive-sync-importer';
 import { pushLocalOnlyFilesToDrive } from './drive-push-backfill';
 import { sweepVanishedDriveFiles } from './drive-sync-sweeper';
@@ -144,8 +145,41 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
   vi.clearAllMocks();
+});
+
+describe('autoSyncIfStale', () => {
+  const NOW = new Date('2026-08-27T12:00:00.000Z');
+
+  it('skips a snapshot just inside the three-minute freshness window', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+    mockDatabase({
+      driveMeta: {
+        case_folder_id: 'case-folder',
+        last_synced_at: new Date(NOW.getTime() - MIN_AUTO_SYNC_INTERVAL_MS + 1).toISOString(),
+      },
+    });
+
+    await expect(autoSyncIfStale(CASE_ID)).resolves.toBeNull();
+    expect(getDriveClientIfConnected).not.toHaveBeenCalled();
+  });
+
+  it('runs at the exact freshness boundary', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+    mockDatabase({
+      driveMeta: {
+        case_folder_id: 'case-folder',
+        last_synced_at: new Date(NOW.getTime() - MIN_AUTO_SYNC_INTERVAL_MS).toISOString(),
+      },
+    });
+
+    await expect(autoSyncIfStale(CASE_ID)).resolves.toMatchObject({ ok: true });
+    expect(getDriveClientIfConnected).toHaveBeenCalledOnce();
+  });
 });
 
 describe('syncDriveDocumentsForCase exact mirror', () => {

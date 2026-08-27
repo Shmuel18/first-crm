@@ -39,36 +39,47 @@ type Props = { params: Promise<{ id: string }> };
 export default async function CaseDetailPage({ params }: Props) {
   const { id } = await params;
 
-  const t = await getTranslations('case');
-  const tComments = await getTranslations('caseComments');
-
   const caseId = asCaseId(id);
 
-  // Eager fetches block first paint: the action bar needs the case + status
-  // options, and the borrowers list feeds the header's client-name display.
-  // Incomes and obligations stream in below via <Suspense>; tasks are
-  // fetched by the action bar for the new top-of-page popover.
-  const [caseData, borrowers, statusOptions, caseTypeOptions, advisorOptions, blockPrefs] =
-    await Promise.all([
-      timeAsync('cases.detail.getCaseById', () => getCaseById(caseId)),
-      timeAsync('cases.detail.listBorrowersForCase', () => listBorrowersForCase(caseId)),
-      timeAsync('cases.detail.listCaseStatusOptions', () => listCaseStatusOptions()),
-      timeAsync('cases.detail.listCaseTypeOptions', () => listCaseTypeOptions()),
-      timeAsync('cases.detail.listAdvisorOptions', () => listAdvisorOptions()),
-      getMyCaseBlockPreferences(),
-    ]);
-
-  if (!caseData) notFound();
-
-  // Use the same permission gate as the case_financials RLS policy (#27).
-  // Previously this was isCurrentUserAdmin(), which meant a non-admin with
-  // view_case_fee saw an empty UI block — but the fee_amount + expected_income
-  // values were still loaded by getCaseById and shipped down in the RSC
-  // payload, readable via view-source. Aligning the gate closes the leak.
-  // canSeeFinancials gates the manager-only agreed-fee row in the admin
-  // block. The DB enforces the same gate via case_financials RLS — this
-  // app-side check is for clean UX (hide the row) + defense-in-depth.
-  const [permissions, canEditCase, isManager] = await Promise.all([
+  // ONE wave. Every fetch below needs nothing but `caseId`, so they used to run
+  // as four sequential rounds (page fetches → permissions → properties, with
+  // translations and the locale awaited on their own) and the page cost the sum
+  // of them. Kept flat deliberately: adding a dependency here re-introduces a
+  // round trip. Incomes and obligations still stream in below via <Suspense>.
+  const [
+    t,
+    tComments,
+    locale,
+    caseData,
+    borrowers,
+    statusOptions,
+    caseTypeOptions,
+    advisorOptions,
+    blockPrefs,
+    additionalProperties,
+    permissions,
+    canEditCase,
+    isManager,
+  ] = await Promise.all([
+    getTranslations('case'),
+    getTranslations('caseComments'),
+    getLocale().then(parseLocale),
+    timeAsync('cases.detail.getCaseById', () => getCaseById(caseId)),
+    timeAsync('cases.detail.listBorrowersForCase', () => listBorrowersForCase(caseId)),
+    timeAsync('cases.detail.listCaseStatusOptions', () => listCaseStatusOptions()),
+    timeAsync('cases.detail.listCaseTypeOptions', () => listCaseTypeOptions()),
+    timeAsync('cases.detail.listAdvisorOptions', () => listAdvisorOptions()),
+    getMyCaseBlockPreferences(),
+    // Additional properties (beyond the primary on cases.*) for the property block.
+    timeAsync('cases.detail.listCaseProperties', () => listCaseProperties(caseId)),
+    // Use the same permission gate as the case_financials RLS policy (#27).
+    // Previously this was isCurrentUserAdmin(), which meant a non-admin with
+    // view_case_fee saw an empty UI block — but the fee_amount + expected_income
+    // values were still loaded by getCaseById and shipped down in the RSC
+    // payload, readable via view-source. Aligning the gate closes the leak.
+    // canSeeFinancials gates the manager-only agreed-fee row in the admin
+    // block. The DB enforces the same gate via case_financials RLS — this
+    // app-side check is for clean UX (hide the row) + defense-in-depth.
     timeAsync('cases.detail.permissions', () =>
       userHasPermissions(
         'view_case_fee',
@@ -88,6 +99,9 @@ export default async function CaseDetailPage({ params }: Props) {
     // Manager (is_admin): gates the dashboard unread-star stamp below.
     isCurrentUserAdmin(),
   ]);
+
+  if (!caseData) notFound();
+
   const canSeeFinancials = permissions.view_case_fee === true;
   const canArchive = permissions.archive_case === true;
   const canRestore = permissions.restore_archived_case === true;
@@ -98,9 +112,7 @@ export default async function CaseDetailPage({ params }: Props) {
   const canAssignAdvisor = canEditCase && permissions.assign_case_to_user === true;
   // assign_case_to_user (+ edit authority) gates managing associated advisors.
   const canManageAdvisors = canAssignAdvisor;
-  const associatedAdvisorIds = (caseData.case_associated_advisors ?? []).map(
-    (a) => a.advisor_id,
-  );
+  const associatedAdvisorIds = (caseData.case_associated_advisors ?? []).map((a) => a.advisor_id);
 
   const borrowerNames =
     borrowers
@@ -141,13 +153,8 @@ export default async function CaseDetailPage({ params }: Props) {
       is_primary: cb.is_primary,
     }));
 
-  const locale = parseLocale(await getLocale());
-
-  // Additional properties (beyond the primary on cases.*) for the property block.
-  const additionalProperties = await listCaseProperties(caseData.id);
-
   return (
-    <div className="space-y-5 -mt-6">
+    <div className="-mt-6 space-y-5">
       {/* Manager opened this case → clear its dashboard unread star (mig 219). */}
       {isManager && <MarkCaseViewed caseId={caseData.id} />}
       <CaseActionBar
@@ -169,153 +176,153 @@ export default async function CaseDetailPage({ params }: Props) {
       />
 
       <CaseBlockPrefsProvider prefs={blockPrefs}>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <CaseBlock
-          title={t('blocks.borrowers')}
-          icon={<UserCircle2 />}
-          fullWidth
-          blockKey="borrowers"
-          // RightSlot summary: borrower names instead of a button — aligns
-          // with the Incomes / Obligations blocks which surface a money
-          // total in the same spot. The "+ Add borrower" button moved
-          // inside the block content (visible only when expanded).
-          rightSlot={
-            borrowerNames ? (
-              <span className="text-xs text-neutral-600 truncate max-w-xs">{borrowerNames}</span>
-            ) : null
-          }
-        >
-          {borrowers.length === 0 ? (
-            <div className="text-center py-6 space-y-3">
-              <p className="text-sm text-neutral-500">{t('blocks.noBorrowers')}</p>
-              {canEditCase && <AddBorrowerButton caseId={caseData.id} variant="cta" />}
-            </div>
-          ) : (
-            // Borrowers stacked vertically (not side-by-side) so each card
-            // gets full block width and inner fields can pair without
-            // cramping. Was md:grid-cols-2 — at ~400px per card the dates
-            // + adornments didn't fit cleanly.
-            <div className="space-y-4">
-              {canEditCase && (
-                <div className="flex justify-end">
-                  <AddBorrowerButton caseId={caseData.id} variant="header" />
-                </div>
-              )}
-              {/* A disabled <fieldset> natively disables every inline-edit
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <CaseBlock
+            title={t('blocks.borrowers')}
+            icon={<UserCircle2 />}
+            fullWidth
+            blockKey="borrowers"
+            // RightSlot summary: borrower names instead of a button — aligns
+            // with the Incomes / Obligations blocks which surface a money
+            // total in the same spot. The "+ Add borrower" button moved
+            // inside the block content (visible only when expanded).
+            rightSlot={
+              borrowerNames ? (
+                <span className="max-w-xs truncate text-xs text-neutral-600">{borrowerNames}</span>
+              ) : null
+            }
+          >
+            {borrowers.length === 0 ? (
+              <div className="space-y-3 py-6 text-center">
+                <p className="text-sm text-neutral-500">{t('blocks.noBorrowers')}</p>
+                {canEditCase && <AddBorrowerButton caseId={caseData.id} variant="cta" />}
+              </div>
+            ) : (
+              // Borrowers stacked vertically (not side-by-side) so each card
+              // gets full block width and inner fields can pair without
+              // cramping. Was md:grid-cols-2 — at ~400px per card the dates
+              // + adornments didn't fit cleanly.
+              <div className="space-y-4">
+                {canEditCase && (
+                  <div className="flex justify-end">
+                    <AddBorrowerButton caseId={caseData.id} variant="header" />
+                  </div>
+                )}
+                {/* A disabled <fieldset> natively disables every inline-edit
                   control inside the borrower cards (inputs / selects / remove)
                   for a view-only user, without threading canEdit through the
                   whole borrowers feature. Contact links (anchors) stay usable. */}
-              <fieldset disabled={!canEditCase} className="space-y-4 border-0 p-0 m-0 min-w-0">
-                {borrowers.map(({ borrower, role_in_case, is_primary }, index) => (
-                  <CaseBorrowerCard
-                    key={borrower.id}
-                    caseId={caseData.id}
-                    borrower={borrower}
-                    roleInCase={role_in_case}
-                    isPrimary={is_primary}
-                    // Lock removal on (a) the primary (by data flag) or (b) the
-                    // first row in the rendered list. The list is ordered
-                    // is_primary DESC, so "first" is the de-facto anchor even
-                    // if the data has no row flagged primary (legacy / partial
-                    // migrations). Combined with isOnly to never let the user
-                    // empty a case.
-                    isFirst={index === 0}
-                    isOnly={borrowers.length === 1}
-                  />
-                ))}
-              </fieldset>
-            </div>
-          )}
-        </CaseBlock>
+                <fieldset disabled={!canEditCase} className="m-0 min-w-0 space-y-4 border-0 p-0">
+                  {borrowers.map(({ borrower, role_in_case, is_primary }, index) => (
+                    <CaseBorrowerCard
+                      key={borrower.id}
+                      caseId={caseData.id}
+                      borrower={borrower}
+                      roleInCase={role_in_case}
+                      isPrimary={is_primary}
+                      // Lock removal on (a) the primary (by data flag) or (b) the
+                      // first row in the rendered list. The list is ordered
+                      // is_primary DESC, so "first" is the de-facto anchor even
+                      // if the data has no row flagged primary (legacy / partial
+                      // migrations). Combined with isOnly to never let the user
+                      // empty a case.
+                      isFirst={index === 0}
+                      isOnly={borrowers.length === 1}
+                    />
+                  ))}
+                </fieldset>
+              </div>
+            )}
+          </CaseBlock>
 
-        <CaseRequestDetailsBlock
-          caseId={caseData.id}
-          initialHtml={caseData.request_details}
-          canEdit={canEditCase}
-        />
+          <CaseRequestDetailsBlock
+            caseId={caseData.id}
+            initialHtml={caseData.request_details}
+            canEdit={canEditCase}
+          />
 
-        <Suspense fallback={<CaseBlockSkeleton title={t('blocks.incomes')} icon={<Wallet />} />}>
-          <CaseIncomesBlock caseId={caseData.id} />
-        </Suspense>
+          <Suspense fallback={<CaseBlockSkeleton title={t('blocks.incomes')} icon={<Wallet />} />}>
+            <CaseIncomesBlock caseId={caseData.id} />
+          </Suspense>
 
-        <Suspense
-          fallback={<CaseBlockSkeleton title={t('blocks.obligations')} icon={<Receipt />} />}
-        >
-          <CaseObligationsBlock caseId={caseData.id} />
-        </Suspense>
+          <Suspense
+            fallback={<CaseBlockSkeleton title={t('blocks.obligations')} icon={<Receipt />} />}
+          >
+            <CaseObligationsBlock caseId={caseData.id} />
+          </Suspense>
 
-        <CasePropertyBlock
-          caseId={caseData.id}
-          initial={{
-            case_type_primary_id: caseData.case_type_primary?.id ?? null,
-            case_type_other_text: caseData.case_type_other_text ?? null,
-            city: caseData.city ?? null,
-            gush_helka: caseData.gush_helka ?? null,
-            property_value: caseData.property_value,
-            requested_mortgage_amount: caseData.requested_mortgage_amount,
-          }}
-          caseTypes={caseTypeOptions}
-          additionalProperties={additionalProperties}
-          canEdit={canEditCase}
-        />
+          <CasePropertyBlock
+            caseId={caseData.id}
+            initial={{
+              case_type_primary_id: caseData.case_type_primary?.id ?? null,
+              case_type_other_text: caseData.case_type_other_text ?? null,
+              city: caseData.city ?? null,
+              gush_helka: caseData.gush_helka ?? null,
+              property_value: caseData.property_value,
+              requested_mortgage_amount: caseData.requested_mortgage_amount,
+            }}
+            caseTypes={caseTypeOptions}
+            additionalProperties={additionalProperties}
+            canEdit={canEditCase}
+          />
 
-        {/* Equity + LTV intentionally removed from this block — they aren't
+          {/* Equity + LTV intentionally removed from this block — they aren't
             in the new product spec for the property card. The equity column
             stays in the DB as nullable so old data isn't dropped. */}
 
-        {/* Admin block owns the case-details fields (status / bank
+          {/* Admin block owns the case-details fields (status / bank
             application no. / primary bank / advisor / insurance / short
             note / referrer / fee), the banks list, and the office-expenses
             table. Tasks moved out to the action-bar popover so there's a
             single top-level entry for the case's open tasks.
             insurance is a CHECK-constrained DB string; narrow to the union. */}
-        <CaseAdminBlock
-          caseId={caseData.id}
-          statusId={caseData.status?.id ?? null}
-          statusName={caseData.status?.name_he ?? null}
-          statusColor={caseData.status?.color ?? null}
-          // Scalar column, not the assigned_advisor embed: the embed is
-          // RLS-gated to null for non-admins, which would blank the advisor
-          // field for a secretary even on an assigned case. The id resolves to
-          // a name via the advisorOptions list (list_active_advisors RPC).
-          assignedAdvisorId={caseData.assigned_advisor_id ?? null}
-          bankRequestNumber={caseData.bank_request_number}
-          insurance={caseData.insurance_status as InsuranceStatus | null}
-          insuranceAgentName={caseData.insurance_agent_name}
-          appraiserName={caseData.appraiser_name}
-          targetDate={caseData.target_date}
-          referrerName={caseData.referrer_name}
-          shortNote={caseData.short_note}
-          createdAt={caseData.created_at}
-          bankRows={bankRows}
-          canSeeFinancials={canSeeFinancials}
-          feeAmount={
-            // Defense in depth: even if the row is in RAM, don't leak the
-            // value down to the client when the UI is going to hide it.
-            canSeeFinancials ? caseData.case_financials?.fee_amount ?? null : null
-          }
-          statuses={statusOptions}
-          advisors={advisorOptions}
-          associatedAdvisorIds={associatedAdvisorIds}
-          canManageAdvisors={canManageAdvisors}
-          canEdit={canEditCase}
-          canChangeStatus={canChangeStatus}
-          canAssignAdvisor={canAssignAdvisor}
-          locale={locale}
-        />
+          <CaseAdminBlock
+            caseId={caseData.id}
+            statusId={caseData.status?.id ?? null}
+            statusName={caseData.status?.name_he ?? null}
+            statusColor={caseData.status?.color ?? null}
+            // Scalar column, not the assigned_advisor embed: the embed is
+            // RLS-gated to null for non-admins, which would blank the advisor
+            // field for a secretary even on an assigned case. The id resolves to
+            // a name via the advisorOptions list (list_active_advisors RPC).
+            assignedAdvisorId={caseData.assigned_advisor_id ?? null}
+            bankRequestNumber={caseData.bank_request_number}
+            insurance={caseData.insurance_status as InsuranceStatus | null}
+            insuranceAgentName={caseData.insurance_agent_name}
+            appraiserName={caseData.appraiser_name}
+            targetDate={caseData.target_date}
+            referrerName={caseData.referrer_name}
+            shortNote={caseData.short_note}
+            createdAt={caseData.created_at}
+            bankRows={bankRows}
+            canSeeFinancials={canSeeFinancials}
+            feeAmount={
+              // Defense in depth: even if the row is in RAM, don't leak the
+              // value down to the client when the UI is going to hide it.
+              canSeeFinancials ? (caseData.case_financials?.fee_amount ?? null) : null
+            }
+            statuses={statusOptions}
+            advisors={advisorOptions}
+            associatedAdvisorIds={associatedAdvisorIds}
+            canManageAdvisors={canManageAdvisors}
+            canEdit={canEditCase}
+            canChangeStatus={canChangeStatus}
+            canAssignAdvisor={canAssignAdvisor}
+            locale={locale}
+          />
 
-        {/* Documentation (internal team thread) — intentionally last on the
+          {/* Documentation (internal team thread) — intentionally last on the
             page: it's a running log, not a data-entry block, so it sits below
             the case fields. fullWidth, so it caps the grid as its own row. */}
-        <Suspense
-          fallback={<CaseBlockSkeleton title={tComments('blockTitle')} icon={<MessagesSquare />} />}
-        >
-          <CaseCommentsBlock caseId={caseData.id} />
-        </Suspense>
-      </div>
+          <Suspense
+            fallback={
+              <CaseBlockSkeleton title={tComments('blockTitle')} icon={<MessagesSquare />} />
+            }
+          >
+            <CaseCommentsBlock caseId={caseData.id} />
+          </Suspense>
+        </div>
       </CaseBlockPrefsProvider>
-
     </div>
   );
 }
-

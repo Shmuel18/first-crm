@@ -20,6 +20,7 @@ import { formatDateShort } from '@/lib/utils/format-date';
 import { deleteDocumentAction } from '../actions/delete-document';
 import { getDocumentPreviewUrlAction } from '../actions/get-document-preview-url';
 import { isAttachable } from '../domain/attachable';
+import { markDriveOpened } from '../domain/drive-open-signal';
 import { documentDownloadName, isDocumentDownloadable } from '../domain/google-native-download';
 import { isInlineRenderable } from '../domain/inline-renderable';
 import { usePrintDocument } from '../hooks/use-print-document';
@@ -143,7 +144,10 @@ export function DocumentPreviewModal({
   const canPrintInApp = renderable;
   const printFallbackUrl = doc.drive_file_url;
   const openInDrive = () => {
-    if (printFallbackUrl) window.open(printFallbackUrl, '_blank', 'noopener,noreferrer');
+    if (!printFallbackUrl) return;
+    // Programmatic open — the page's capture-phase link listener cannot see it.
+    markDriveOpened(doc.case_id);
+    window.open(printFallbackUrl, '_blank', 'noopener,noreferrer');
   };
   const handlePrint = () => {
     if (!canPrintInApp) {
@@ -165,7 +169,9 @@ export function DocumentPreviewModal({
       // (the shape the office filter lets through), then Drive's viewer.
       try {
         const res = await fetch(`${endpoint}?transport=json`, { cache: 'no-store' });
-        const body = res.ok ? ((await res.json()) as { ok?: boolean; base64?: string; mimeType?: string }) : null;
+        const body = res.ok
+          ? ((await res.json()) as { ok?: boolean; base64?: string; mimeType?: string })
+          : null;
         if (body?.ok && body.base64) {
           // The document's own mime decides how the frame renders it; the
           // envelope's is only a transport detail.
@@ -259,6 +265,7 @@ export function DocumentPreviewModal({
           isImage={isImage}
           isPdf={isPdf}
           drivePdfImageSrc={drivePdfImageSrc}
+          onDrivePreviewFocus={() => markDriveOpened(doc.case_id)}
           onRetry={handleRetry}
         />
 

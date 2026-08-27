@@ -36,8 +36,20 @@ export type DriveSyncOutcome =
       changed?: true;
     };
 
-/** Auto-sync on page load only if last sync was older than this. */
-export const MIN_AUTO_SYNC_INTERVAL_MS = 10_000;
+/**
+ * Auto-sync on page load only if last sync was older than this. At the old
+ * 10s this fired on effectively every visit, so opening the documents screen
+ * meant waiting on a full serial walk of the case's Drive folders. Drive
+ * edits made outside the app are not that time-critical, and any real change
+ * is still picked up by the forced sync that runs after the user returns from
+ * Drive (plus the manual sync button).
+ */
+export const MIN_AUTO_SYNC_INTERVAL_MS = 3 * 60_000;
+
+/** Forced reconciliation is limited server-side to one pass per window. */
+export const FORCED_SYNC_RATE_LIMIT_WINDOW_SECONDS = 30;
+/** One bounded client retry after a rate-limit response or queued forced pass. */
+export const FORCED_SYNC_RETRY_DELAY_MS = FORCED_SYNC_RATE_LIMIT_WINDOW_SECONDS * 1_000;
 
 /** Reverse map: folder name (Hebrew) → drive_folder enum key. */
 export const NAME_TO_FOLDER_KEY: Record<string, string> = Object.fromEntries(
