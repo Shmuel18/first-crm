@@ -328,6 +328,77 @@
       "unclear": "Unclear"
     }
   },
+  "agreements": {
+    "block": {
+      "title": "Engagement agreement",
+      "statusNone": "No agreement sent yet",
+      "statusSent": "Sent for signature on {date}, awaiting client",
+      "statusExpired": "Link expired (sent {date})",
+      "statusSigned": "Signed on {date}",
+      "methodDigital": "Digital signature",
+      "methodManual": "Marked manually",
+      "sentTo": "Sent to {email}",
+      "send": "Send for signature",
+      "resend": "Resend",
+      "cancelLink": "Cancel link",
+      "markSigned": "Mark as signed",
+      "unmarkSigned": "Unmark",
+      "viewPdf": "View signed agreement",
+      "driveLink": "Open in Drive",
+      "errors": {
+        "unauthorized": "You do not have permission for this action",
+        "validation": "The submitted values are invalid",
+        "rate_limited": "Too many requests — try again later",
+        "no_borrower": "The case has no named primary borrower — complete the borrower details first",
+        "not_found": "Record not found — refresh the page",
+        "unknown": "The action failed — try again",
+        "network": "Connection failed — check your network and try again"
+      }
+    },
+    "dialog": {
+      "title": "Send engagement agreement for signature",
+      "description": "These amounts will appear in the agreement the client receives by email and signs digitally.",
+      "feeTotal": "Total fee (₪)",
+      "feeAdvance": "Advance at signing (₪)",
+      "feeBalance": "Balance due at execution",
+      "clientEmail": "Client email address",
+      "send": "Send to client",
+      "sending": "Sending…",
+      "cancel": "Cancel",
+      "emailSent": "The agreement was emailed to the client",
+      "emailNotDelivered": "The agreement was created but the email was not delivered — try again or check email settings",
+      "validation": {
+        "advance": "The advance cannot exceed the total fee"
+      },
+      "errors": {
+        "unauthorized": "You do not have permission to send an agreement",
+        "validation": "The submitted values are invalid",
+        "rate_limited": "Too many agreements sent for this case — try again later",
+        "no_borrower": "The case has no named primary borrower — complete the borrower details first",
+        "unknown": "Sending failed — try again",
+        "network": "Connection failed — check your network and try again"
+      }
+    },
+    "sign": {
+      "padAria": "Signature area",
+      "padHint": "Sign here with your finger or mouse",
+      "clear": "Clear",
+      "signatureTitle": "Client signature",
+      "signatureHint": "After reading the agreement, sign in the box and confirm.",
+      "consent": "I have read the full agreement and accept its terms",
+      "submit": "Confirm and sign the agreement",
+      "successTitle": "The agreement was signed successfully",
+      "successBody": "A signed copy was saved at {office}. You can close this page — no further action is needed.",
+      "expiredTitle": "This link has expired",
+      "expiredBody": "Contact {office} to receive a new link.",
+      "invalidTitle": "This link is not valid",
+      "invalidBody": "The link may have been replaced or cancelled. Contact the office for a new link.",
+      "errors": {
+        "rateLimited": "Too many attempts — try again in a few minutes",
+        "unknown": "The signature was not saved — try again"
+      }
+    }
+  },
   "collections": {
     "eyebrow": "Finances",
     "title": "Collections",
@@ -1644,6 +1715,7 @@
       "comment_added": "Team comment",
       "email_advisor_message": "Email sent to client",
       "email_document_request": "Document request emailed to client",
+      "email_agreement_sign_request": "Engagement agreement sent for signature",
       "fields_updated": "Details updated"
     },
     "added": {
@@ -3218,6 +3290,19 @@
     },
     "cta": {
       "openTask": "Open in app"
+    },
+    "agreementSignRequest": {
+      "subject": "Engagement agreement for digital signature",
+      "heading": "Your engagement agreement",
+      "greeting": "Hello {name},",
+      "intro": "Attached is a link to your mortgage engagement agreement. Click the button, read the agreement and sign digitally — it takes a minute.",
+      "linkNote": "The link is personal and single-use. If it expires, contact the office for a new one.",
+      "cta": "View and sign the agreement"
+    },
+    "agreementSigned": {
+      "subject": "{name} signed the engagement agreement",
+      "heading": "Agreement signed",
+      "body": "{name} signed the engagement agreement digitally. The signed copy is attached to this email and saved on the case and in Drive."
     },
     "task_assigned": {
       "subject": "A new task was assigned to you",

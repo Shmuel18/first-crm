@@ -7,6 +7,7 @@ import { CaseExpensesList } from '@/features/case-expenses/components/case-expen
 import { listCaseExpenses } from '@/features/case-expenses/services/case-expenses.service';
 import { CasePayoutsList } from '@/features/case-payouts/components/case-payouts-list';
 import { listCasePayouts } from '@/features/case-payouts/services/case-payouts.service';
+import { CaseAgreementAdminSection } from '@/features/agreements/components/case-agreement-admin-section';
 import { CaseCollectionsAdminSection } from '@/features/collections/components/case-collections-admin-section';
 import type { Locale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
@@ -174,6 +175,10 @@ export async function CaseAdminBlock({
           block. Self-gates on view_collections (renders null + no header for
           users without it). The full management surface is on /collections. */}
       <CaseCollectionsAdminSection caseId={caseId} />
+
+      {/* הסכם התקשרות — signed / send-for-signature. Self-gates on
+          view_collections like the collections section above. */}
+      <CaseAgreementAdminSection caseId={caseId} />
 
       {/* Section 4 — Commissions & salaries (MANAGER-ONLY). Sits with the
           fee it's paid out of; gated by canSeeFinancials at the prop level

@@ -1705,6 +1705,102 @@ export type Database = {
           },
         ]
       }
+      case_agreements: {
+        Row: {
+          agreement_version: string
+          case_id: string
+          client_email: string | null
+          client_name: string
+          client_national_id: string | null
+          client_phone: string | null
+          created_at: string
+          drive_file_id: string | null
+          drive_file_url: string | null
+          expires_at: string | null
+          fee_advance: number
+          fee_total: number
+          id: string
+          pdf_path: string | null
+          sent_at: string
+          sent_by: string | null
+          signature_png: string | null
+          signed_at: string | null
+          signed_method: string | null
+          signer_ip: string | null
+          signer_user_agent: string | null
+          status: string
+          token_hash: string | null
+          updated_at: string
+        }
+        Insert: {
+          agreement_version: string
+          case_id: string
+          client_email?: string | null
+          client_name: string
+          client_national_id?: string | null
+          client_phone?: string | null
+          created_at?: string
+          drive_file_id?: string | null
+          drive_file_url?: string | null
+          expires_at?: string | null
+          fee_advance?: number
+          fee_total: number
+          id?: string
+          pdf_path?: string | null
+          sent_at?: string
+          sent_by?: string | null
+          signature_png?: string | null
+          signed_at?: string | null
+          signed_method?: string | null
+          signer_ip?: string | null
+          signer_user_agent?: string | null
+          status?: string
+          token_hash?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agreement_version?: string
+          case_id?: string
+          client_email?: string | null
+          client_name?: string
+          client_national_id?: string | null
+          client_phone?: string | null
+          created_at?: string
+          drive_file_id?: string | null
+          drive_file_url?: string | null
+          expires_at?: string | null
+          fee_advance?: number
+          fee_total?: number
+          id?: string
+          pdf_path?: string | null
+          sent_at?: string
+          sent_by?: string | null
+          signature_png?: string | null
+          signed_at?: string | null
+          signed_method?: string | null
+          signer_ip?: string | null
+          signer_user_agent?: string | null
+          status?: string
+          token_hash?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_agreements_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_agreements_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_associated_advisors: {
         Row: {
           added_at: string

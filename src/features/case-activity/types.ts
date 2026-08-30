@@ -21,7 +21,7 @@ export type ActivityEntity =
   | 'tasks'
   | 'case_financials';
 
-export type ClientEmailKind = 'advisor_message' | 'document_request';
+export type ClientEmailKind = 'advisor_message' | 'document_request' | 'agreement_sign_request';
 
 /**
  * One line on the case activity timeline. Discriminated by `kind` — each kind

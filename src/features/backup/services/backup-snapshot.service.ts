@@ -23,6 +23,7 @@ const BACKUP_TABLES = [
   'case_properties',
   'case_payouts',
   'case_fee_payments',
+  'case_agreements',
   'maaser_payments',
   'maaser_ledger_entries',
   'time_entries',
