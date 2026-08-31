@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { cache } from 'react';
 
 import { renderToBuffer } from '@react-pdf/renderer';
 
@@ -7,6 +8,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { AgreementPdfDocument } from '../pdf/agreement-pdf-document';
 import { hashAgreementToken } from './agreement-token';
 
+import type { AgreementDocument, AgreementLanguage } from '../domain/agreement-text';
 import type { Database } from '@/types/database';
 
 const BUCKET = 'case-documents';
@@ -17,12 +19,13 @@ type AgreementRow = Database['public']['Tables']['case_agreements']['Row'];
 export type AgreementForSigning = {
   id: string;
   caseId: string;
+  language: AgreementLanguage;
+  /** The frozen wording this client was sent; null on pre-239 rows. */
+  document: AgreementDocument | null;
   clientName: string;
   clientNationalId: string | null;
   clientPhone: string | null;
   clientEmail: string | null;
-  feeTotal: number;
-  feeAdvance: number;
   agreementVersion: string;
   status: string;
   expired: boolean;
@@ -30,7 +33,32 @@ export type AgreementForSigning = {
 };
 
 const SIGNING_COLUMNS =
-  'id, case_id, status, agreement_version, fee_total, fee_advance, client_name, client_national_id, client_phone, client_email, expires_at, signed_at' as const;
+  'id, case_id, status, agreement_version, language, text_snapshot, client_name, client_national_id, client_phone, client_email, expires_at, signed_at' as const;
+
+/**
+ * The frozen wording, or null when the row predates the snapshot column
+ * (migration 239).
+ *
+ * Null on purpose rather than falling back to today's template: the template
+ * still contains `{{feePercent}}`-style placeholders whose values live in
+ * columns a pre-239 row does not have, so rendering it would either show raw
+ * placeholders or invent commercial terms. Callers treat a signable row with
+ * no document as unusable — which is safe, because every pre-239 row is
+ * already signed (its PDF is the evidence) and every new send writes a
+ * snapshot.
+ */
+function resolveDocument(snapshot: unknown): AgreementDocument | null {
+  if (
+    snapshot &&
+    typeof snapshot === 'object' &&
+    'title' in snapshot &&
+    'preamble' in snapshot &&
+    Array.isArray((snapshot as AgreementDocument).sections)
+  ) {
+    return snapshot as AgreementDocument;
+  }
+  return null;
+}
 
 /**
  * Resolve a signing link's token to its agreement row. Service-role read —
@@ -38,8 +66,13 @@ const SIGNING_COLUMNS =
  * migration 166); the 256-bit token IS the credential, and only its hash is
  * ever compared. Returns null for unknown/cancelled tokens so the page can't
  * be used to probe anything.
+ *
+ * React-cached so generateMetadata and the page body share ONE lookup per
+ * request instead of hitting the DB twice for the same token.
  */
-export async function getAgreementForSigning(token: string): Promise<AgreementForSigning | null> {
+export const getAgreementForSigning = cache(async function getAgreementForSigning(
+  token: string,
+): Promise<AgreementForSigning | null> {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from('case_agreements')
@@ -58,8 +91,8 @@ export async function getAgreementForSigning(token: string): Promise<AgreementFo
     | 'case_id'
     | 'status'
     | 'agreement_version'
-    | 'fee_total'
-    | 'fee_advance'
+    | 'language'
+    | 'text_snapshot'
     | 'client_name'
     | 'client_national_id'
     | 'client_phone'
@@ -71,29 +104,30 @@ export async function getAgreementForSigning(token: string): Promise<AgreementFo
   // shape; Row pins it to the generated table type (same pattern as the
   // other *_COLUMNS services).
   const row = data as Row;
+  const language = row.language as AgreementLanguage;
   return {
     id: row.id,
     caseId: row.case_id,
+    language,
+    document: resolveDocument(row.text_snapshot),
     clientName: row.client_name,
     clientNationalId: row.client_national_id,
     clientPhone: row.client_phone,
     clientEmail: row.client_email,
-    feeTotal: Number(row.fee_total),
-    feeAdvance: Number(row.fee_advance),
     agreementVersion: row.agreement_version,
     status: row.status,
     expired: row.expires_at !== null && new Date(row.expires_at) < new Date(),
     signedAt: row.signed_at,
   };
-}
+});
 
 export type FinalizeSignatureResult =
   | { ok: true; caseId: string; agreementId: string; pdf: Buffer; fileName: string }
   | { ok: false; error: 'conflict' | 'storage' | 'render_failed' };
 
 /** Israel-wall-clock stamp printed on the PDF and shown in the office UI. */
-function israelTimestamp(date: Date): string {
-  return new Intl.DateTimeFormat('he-IL', {
+function israelTimestamp(date: Date, language: AgreementLanguage): string {
+  return new Intl.DateTimeFormat(language === 'he' ? 'he-IL' : 'en-GB', {
     timeZone: 'Asia/Jerusalem',
     dateStyle: 'short',
     timeStyle: 'short',
@@ -112,6 +146,10 @@ export async function finalizeAgreementSignature(input: {
   signerUserAgent: string | null;
 }): Promise<FinalizeSignatureResult> {
   const { agreement } = input;
+  if (!agreement.document) {
+    console.error('[agreements] cannot sign a row with no text snapshot', agreement.id);
+    return { ok: false, error: 'render_failed' };
+  }
   const signedAt = new Date();
 
   let pdf: Buffer;
@@ -119,14 +157,14 @@ export async function finalizeAgreementSignature(input: {
     pdf = await renderToBuffer(
       <AgreementPdfDocument
         data={{
+          language: agreement.language,
+          document: agreement.document,
           clientName: agreement.clientName,
           clientNationalId: agreement.clientNationalId,
           clientPhone: agreement.clientPhone,
           clientEmail: agreement.clientEmail,
-          feeTotal: agreement.feeTotal,
-          feeAdvance: agreement.feeAdvance,
           signaturePngDataUrl: input.signaturePngDataUrl,
-          signedAtText: israelTimestamp(signedAt),
+          signedAtText: israelTimestamp(signedAt, agreement.language),
           signerIp: input.signerIp,
           agreementVersion: agreement.agreementVersion,
         }}
@@ -182,11 +220,12 @@ export async function finalizeAgreementSignature(input: {
     return { ok: false, error: 'conflict' };
   }
 
+  const baseName = agreement.language === 'he' ? 'הסכם התקשרות' : 'Engagement Agreement';
   return {
     ok: true,
     caseId: agreement.caseId,
     agreementId: agreement.id,
     pdf,
-    fileName: `הסכם התקשרות - ${agreement.clientName}.pdf`,
+    fileName: `${baseName} - ${agreement.clientName}.pdf`,
   };
 }

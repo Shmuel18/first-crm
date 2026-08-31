@@ -2,10 +2,8 @@
 
 import { z } from 'zod';
 
-import { getCaseCollectionsData } from '@/features/collections/services/collections.service';
 import { userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
-import { asCaseId } from '@/lib/types/branded';
 
 import { AGREEMENT_VERSION } from '../constants';
 import { getAgreementClientSnapshot } from '../services/agreements.service';
@@ -17,12 +15,18 @@ export type MarkAgreementSignedResult =
   | { ok: false; error: 'unauthorized' | 'validation' | 'no_borrower' | 'unknown' };
 
 /**
- * The plain "the client signed" checkbox — for agreements signed on paper /
- * in person, outside the digital flow. Records a 'signed' row with
- * signed_method='manual' (no token, no email) and supersedes any outstanding
- * signing link. The fee snapshot is best-effort from case_financials: without
- * view_case_fee RLS nulls it and the record simply says 0 — the manual mark
- * is a checkbox, not a fee document.
+ * The plain "the client signed" mark — for agreements signed on paper or in
+ * person, outside the digital flow. Records a 'signed' row with
+ * signed_method='manual' (no token, no email, no document) and supersedes any
+ * outstanding signing link.
+ *
+ * Gated on send_client_agreement to MATCH the migration-239 INSERT policy:
+ * checking a different permission than RLS enforces would let the action
+ * accept a caller the database then rejects (and refuse one it would accept).
+ *
+ * No commercial terms are recorded: nothing was generated, so there is no
+ * percentage, no printed estimate and no advance to snapshot. Inventing
+ * numbers here would put figures on a record that no document backs.
  */
 export async function markAgreementSignedAction(
   caseId: string,
@@ -31,18 +35,13 @@ export async function markAgreementSignedAction(
   if (!parsed.success) return { ok: false, error: 'validation' };
 
   const authorized =
-    (await userHasPermission('manage_collections')) && (await userCanEditCase(caseId));
+    (await userHasPermission('send_client_agreement')) && (await userCanEditCase(caseId));
   if (!authorized) return { ok: false, error: 'unauthorized' };
 
   const snapshot = await getAgreementClientSnapshot(caseId);
   if (!snapshot) return { ok: false, error: 'no_borrower' };
 
-  const { feeAmount, advanceAmount } = await getCaseCollectionsData(asCaseId(caseId));
-  const feeTotal = feeAmount ?? 0;
-  const feeAdvance = Math.min(advanceAmount ?? 0, feeTotal);
-
   const supabase = await createClient();
-
   // A paper signature supersedes any live link.
   await supabase
     .from('case_agreements')
@@ -56,8 +55,6 @@ export async function markAgreementSignedAction(
     status: 'signed',
     signed_method: 'manual',
     agreement_version: AGREEMENT_VERSION,
-    fee_total: feeTotal,
-    fee_advance: feeAdvance,
     client_name: snapshot.name,
     client_national_id: snapshot.nationalId,
     client_phone: snapshot.phone,

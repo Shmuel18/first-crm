@@ -1,11 +1,16 @@
+import type { AgreementLanguage } from './domain/agreement-text';
+
 export type AgreementStatus = 'sent' | 'signed' | 'cancelled';
 
 export type AgreementSignedMethod = 'digital' | 'manual';
 
 /**
- * One engagement-agreement record (case_agreements, migration 238), camelCased
- * for the UI. The fee + client fields are the SNAPSHOT taken at send time —
- * they deliberately do not follow later edits to case_financials/borrowers.
+ * One engagement-agreement record (case_agreements, migrations 238/239),
+ * camelCased for the UI.
+ *
+ * The commercial terms are the SNAPSHOT taken at send time and deliberately do
+ * not follow later edits to the case. `feePercent` is the authoritative term;
+ * `feeTotal` is the informational estimate that was printed alongside it.
  */
 export type CaseAgreement = {
   id: string;
@@ -13,8 +18,12 @@ export type CaseAgreement = {
   status: AgreementStatus;
   signedMethod: AgreementSignedMethod | null;
   agreementVersion: string;
-  feeTotal: number;
+  language: AgreementLanguage;
+  feePercent: number | null;
   feeAdvance: number;
+  loanAmount: number | null;
+  /** Informational estimate as printed — not the agreed sum. */
+  feeTotal: number | null;
   clientName: string;
   clientEmail: string | null;
   sentAt: string;

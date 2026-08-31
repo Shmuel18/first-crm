@@ -1,38 +1,38 @@
 import { FileSignature } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 
-import { getCaseCollectionsData } from '@/features/collections/services/collections.service';
 import { userHasPermissions } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
-import { asCaseId } from '@/lib/types/branded';
 
 import { resolveAgreementState } from '../domain/agreement-state';
-import {
-  getAgreementClientSnapshot,
-  listCaseAgreements,
-} from '../services/agreements.service';
+import { getAgreementClientSnapshot, listCaseAgreements } from '../services/agreements.service';
 import { AgreementAdminClient } from './agreement-admin-client';
 
 /**
  * הסכם התקשרות sub-section of the מנהלה block: did the client sign, send for
- * digital signature, or mark a paper signature. Self-gates on view_collections
- * (the row carries the agreed fee, so it lives inside the financial permission
- * fabric, same as the collections ledger) — renders null, incl. its own
- * header, without it.
+ * digital signature, or mark a paper signature.
+ *
+ * Self-gates on view_collections OR send_client_agreement — the second is what
+ * lets the office delegate sending (e.g. to the secretary) without handing
+ * over the collections module. Renders null, incl. its own header, for anyone
+ * holding neither.
  */
 export async function CaseAgreementAdminSection({ caseId }: { caseId: string }) {
-  const perms = await userHasPermissions('view_collections', 'manage_collections', 'view_case_fee');
-  if (!perms.view_collections) return null;
+  const perms = await userHasPermissions('view_collections', 'send_client_agreement');
+  const canSend = perms.send_client_agreement === true;
+  if (perms.view_collections !== true && !canSend) return null;
 
-  const id = asCaseId(caseId);
-  const [rows, collections, snapshot, t, locale] = await Promise.all([
+  const [rows, snapshot, t, locale] = await Promise.all([
     listCaseAgreements(caseId),
-    getCaseCollectionsData(id),
     getAgreementClientSnapshot(caseId),
     getTranslations('agreements'),
     getLocale().then(parseLocale),
   ]);
   const state = resolveAgreementState(rows, new Date());
+
+  // Seed the dialog from the last agreement's terms so a re-send repeats them
+  // instead of making the sender retype the rate.
+  const previous = rows[0] ?? null;
 
   return (
     <div className="pt-2">
@@ -45,12 +45,11 @@ export async function CaseAgreementAdminSection({ caseId }: { caseId: string }) 
       <AgreementAdminClient
         caseId={caseId}
         initialState={state}
-        canManage={perms.manage_collections === true}
-        // Sending shows + snapshots the fee — needs the financial permission too.
-        canSend={perms.manage_collections === true && perms.view_case_fee === true}
+        canManage={canSend}
         defaultEmail={snapshot?.email ?? ''}
-        defaultFeeTotal={collections.feeAmount}
-        defaultFeeAdvance={collections.advanceAmount}
+        defaultFeePercent={previous?.feePercent ?? null}
+        defaultFeeAdvance={previous?.feeAdvance ?? null}
+        loanAmount={snapshot?.loanAmount ?? null}
         locale={locale}
       />
     </div>

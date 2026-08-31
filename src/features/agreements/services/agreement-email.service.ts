@@ -8,18 +8,20 @@ type SignRequestEmailInput = {
   to: string;
   clientName: string;
   signUrl: string;
+  /** The agreement's language — the wrapper follows the document. */
+  language: 'he' | 'en';
 };
 
 /**
  * The "please sign your engagement agreement" email — branded shell with the
- * signing link as the gold CTA. Hebrew only for now: the agreement text itself
- * is a Hebrew legal document, so the wrapper follows it.
+ * signing link as the gold CTA, in the same language as the agreement itself.
  */
 export async function sendAgreementSignRequestEmail(
   input: SignRequestEmailInput,
 ): Promise<'sent' | 'skipped' | 'failed'> {
-  const t = await getTranslations({ locale: 'he', namespace: 'email' });
-  const tMail = await getTranslations({ locale: 'he', namespace: 'email.agreementSignRequest' });
+  const { language } = input;
+  const t = await getTranslations({ locale: language, namespace: 'email' });
+  const tMail = await getTranslations({ locale: language, namespace: 'email.agreementSignRequest' });
 
   const bodyHtml =
     `<p>${escapeHtml(tMail('greeting', { name: input.clientName }))}</p>` +
@@ -30,7 +32,7 @@ export async function sendAgreementSignRequestEmail(
     to: input.to,
     subject: tMail('subject'),
     html: renderBrandedEmail({
-      locale: 'he',
+      locale: language,
       heading: tMail('heading'),
       bodyHtml,
       cta: { label: tMail('cta'), url: input.signUrl },
@@ -57,6 +59,8 @@ export async function sendAgreementSignedOfficeEmail(input: {
     to: OFFICE_EMAIL,
     subject: tMail('subject', { name: input.clientName }),
     html: renderBrandedEmail({
+      // Office-facing, so it stays in the office's own language regardless of
+      // which language the client signed in.
       locale: 'he',
       heading: tMail('heading'),
       bodyHtml: `<p>${escapeHtml(tMail('body', { name: input.clientName }))}</p>`,

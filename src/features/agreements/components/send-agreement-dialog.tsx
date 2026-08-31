@@ -18,25 +18,36 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { callAction } from '@/lib/actions/call-action';
 import { formatCurrency } from '@/lib/utils/format-currency';
+import { cn } from '@/lib/utils';
 import type { Locale } from '@/lib/i18n/direction';
 
 import { sendAgreementAction } from '../actions/send-agreement';
+import { estimatedBalance, estimatedFee } from '../domain/agreement-calc';
+
+import type { AgreementLanguage } from '../domain/agreement-text';
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   caseId: string;
   defaultEmail: string;
-  defaultFeeTotal: number | null;
+  defaultFeePercent: number | null;
   defaultFeeAdvance: number | null;
+  /** cases.requested_mortgage_amount — the basis for the printed estimate. */
+  loanAmount: number | null;
   locale: Locale;
-  onSent: (email: string, feeTotal: number, feeAdvance: number) => void;
+  onSent: (email: string, language: AgreementLanguage) => void;
 };
 
+const LANGUAGES: AgreementLanguage[] = ['he', 'en'];
+
 /**
- * Manager's send-for-signature dialog: total fee + advance (prefilled from
- * the מנהלה numbers), the derived balance-at-execution, and the client's
- * email. Controlled inputs, re-seeded on open (render-phase reset — the
+ * Send-for-signature dialog: language, the agreed percentage and the advance.
+ * The shekel figures are shown as a live preview of what the client will read
+ * — the percentage is the term that actually binds, so the preview is labelled
+ * as an estimate and disappears when the case has no loan amount on file.
+ *
+ * Controlled inputs, re-seeded on open (render-phase reset — the
  * shared-dialog-goes-stale rule).
  */
 export function SendAgreementDialog({
@@ -44,33 +55,37 @@ export function SendAgreementDialog({
   onOpenChange,
   caseId,
   defaultEmail,
-  defaultFeeTotal,
+  defaultFeePercent,
   defaultFeeAdvance,
+  loanAmount,
   locale,
   onSent,
 }: Props) {
   const t = useTranslations('agreements.dialog');
-  const [feeTotal, setFeeTotal] = useState('');
+  const [language, setLanguage] = useState<AgreementLanguage>('he');
+  const [feePercent, setFeePercent] = useState('');
   const [feeAdvance, setFeeAdvance] = useState('');
   const [email, setEmail] = useState('');
   const [pending, setPending] = useState(false);
-  const [seededFor, setSeededFor] = useState(false);
+  const [seeded, setSeeded] = useState(false);
 
   // Re-seed drafts each time the dialog opens (render-phase, not effect).
-  if (open && !seededFor) {
-    setSeededFor(true);
-    setFeeTotal(defaultFeeTotal != null ? String(defaultFeeTotal) : '');
+  if (open && !seeded) {
+    setSeeded(true);
+    setLanguage('he');
+    setFeePercent(defaultFeePercent != null ? String(defaultFeePercent) : '');
     setFeeAdvance(defaultFeeAdvance != null ? String(defaultFeeAdvance) : '');
     setEmail(defaultEmail);
-  } else if (!open && seededFor) {
-    setSeededFor(false);
+  } else if (!open && seeded) {
+    setSeeded(false);
   }
 
-  const total = Number(feeTotal) || 0;
+  const percent = Number(feePercent) || 0;
   const advance = Number(feeAdvance) || 0;
-  const balance = Math.max(0, total - advance);
+  const estimate = estimatedFee(loanAmount, percent);
+  const balance = estimatedBalance(estimate, advance);
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-  const valid = emailValid && total > 0 && advance >= 0 && advance <= total;
+  const valid = emailValid && percent > 0 && percent <= 100 && advance >= 0;
 
   const send = async (): Promise<void> => {
     if (!valid || pending) return;
@@ -78,7 +93,8 @@ export function SendAgreementDialog({
     const res = await callAction(() =>
       sendAgreementAction({
         caseId,
-        feeTotal: total,
+        language,
+        feePercent: percent,
         feeAdvance: advance,
         clientEmail: email.trim(),
       }),
@@ -88,13 +104,10 @@ export function SendAgreementDialog({
       toast.error(t(`errors.${res.error}`));
       return;
     }
-    if (res.emailStatus === 'sent') {
-      toast.success(t('emailSent'));
-    } else {
-      // The link exists but nothing reached the client — say so honestly.
-      toast.warning(t('emailNotDelivered'));
-    }
-    onSent(email.trim(), total, advance);
+    if (res.emailStatus === 'sent') toast.success(t('emailSent'));
+    // The link exists but nothing reached the client — say so honestly.
+    else toast.warning(t('emailNotDelivered'));
+    onSent(email.trim(), language);
     onOpenChange(false);
   };
 
@@ -107,17 +120,39 @@ export function SendAgreementDialog({
         </DialogHeader>
 
         <div className="grid gap-4">
+          <div className="grid gap-1.5">
+            <Label>{t('language')}</Label>
+            <div className="flex overflow-hidden rounded-lg border border-neutral-200">
+              {LANGUAGES.map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  onClick={() => setLanguage(l)}
+                  className={cn(
+                    'flex-1 px-3 py-2 text-sm font-medium transition',
+                    language === l
+                      ? 'bg-brand-gold text-brand-black'
+                      : 'bg-white text-neutral-600 hover:bg-neutral-50',
+                  )}
+                >
+                  {t(`languages.${l}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-1.5">
-              <Label htmlFor={`agr-fee-${caseId}`}>{t('feeTotal')}</Label>
+              <Label htmlFor={`agr-pct-${caseId}`}>{t('feePercent')}</Label>
               <Input
-                id={`agr-fee-${caseId}`}
+                id={`agr-pct-${caseId}`}
                 type="number"
                 min="0"
-                step="100"
+                max="100"
+                step="0.1"
                 dir="ltr"
-                value={feeTotal}
-                onChange={(e) => setFeeTotal(e.target.value)}
+                value={feePercent}
+                onChange={(e) => setFeePercent(e.target.value)}
               />
             </div>
             <div className="grid gap-1.5">
@@ -133,15 +168,34 @@ export function SendAgreementDialog({
               />
             </div>
           </div>
-          <p className="text-sm text-neutral-600">
-            {t('feeBalance')}:{' '}
-            <span className="font-semibold text-neutral-900 tabular-nums">
-              {formatCurrency(balance, locale)}
-            </span>
-          </p>
-          {advance > total && (
-            <p className="text-xs font-medium text-red-600">{t('validation.advance')}</p>
-          )}
+
+          <div className="rounded-lg bg-brand-gold-soft px-3 py-2.5 text-sm">
+            {estimate === null ? (
+              <p className="text-neutral-600">{t('noLoanAmount')}</p>
+            ) : (
+              <>
+                <p className="text-neutral-700">
+                  {t('estimateBasis', { loan: formatCurrency(loanAmount, locale) })}
+                </p>
+                <p className="mt-1 text-neutral-900">
+                  {t('estimateFee')}:{' '}
+                  <span className="font-semibold tabular-nums">
+                    {formatCurrency(estimate, locale)}
+                  </span>
+                  {balance !== null && (
+                    <>
+                      {' · '}
+                      {t('estimateBalance')}:{' '}
+                      <span className="font-semibold tabular-nums">
+                        {formatCurrency(balance, locale)}
+                      </span>
+                    </>
+                  )}
+                </p>
+              </>
+            )}
+          </div>
+
           <div className="grid gap-1.5">
             <Label htmlFor={`agr-email-${caseId}`}>{t('clientEmail')}</Label>
             <Input

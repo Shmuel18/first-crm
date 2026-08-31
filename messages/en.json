@@ -353,23 +353,29 @@
         "not_found": "Record not found — refresh the page",
         "unknown": "The action failed — try again",
         "network": "Connection failed — check your network and try again"
-      }
+      },
+      "voidSigned": "Void signed agreement"
     },
     "dialog": {
       "title": "Send engagement agreement for signature",
-      "description": "These amounts will appear in the agreement the client receives by email and signs digitally.",
-      "feeTotal": "Total fee (₪)",
+      "description": "The client receives an email with a personal link, reads the agreement and signs digitally.",
+      "language": "Agreement language",
+      "languages": {
+        "he": "Hebrew",
+        "en": "English"
+      },
+      "feePercent": "Fee (% of the loan)",
       "feeAdvance": "Advance at signing (₪)",
-      "feeBalance": "Balance due at execution",
+      "estimateBasis": "Based on a requested loan of {loan}:",
+      "estimateFee": "Estimated fee",
+      "estimateBalance": "Balance at execution",
+      "noLoanAmount": "No requested mortgage amount on the case — the agreement will state the percentage only, with no shekel estimate.",
       "clientEmail": "Client email address",
       "send": "Send to client",
       "sending": "Sending…",
       "cancel": "Cancel",
       "emailSent": "The agreement was emailed to the client",
       "emailNotDelivered": "The agreement was created but the email was not delivered — try again or check email settings",
-      "validation": {
-        "advance": "The advance cannot exceed the total fee"
-      },
       "errors": {
         "unauthorized": "You do not have permission to send an agreement",
         "validation": "The submitted values are invalid",
@@ -396,6 +402,34 @@
       "errors": {
         "rateLimited": "Too many attempts — try again in a few minutes",
         "unknown": "The signature was not saved — try again"
+      }
+    },
+    "template": {
+      "title": "Engagement agreement",
+      "subtitle": "The wording clients are sent for signature. Changes apply only to agreements sent from now on — agreements already sent keep the wording they were sent with.",
+      "languages": {
+        "he": "Hebrew",
+        "en": "English"
+      },
+      "docTitle": "Agreement title",
+      "preamble": "Preamble (the parties)",
+      "section": "Section {number}",
+      "sectionTitle": "Section heading",
+      "paragraph": "Paragraph {number}",
+      "addParagraph": "Add paragraph",
+      "addSection": "Add section",
+      "removeSection": "Delete section",
+      "removeParagraph": "Delete paragraph",
+      "placeholdersHelp": "You can use these fields in the text; the system fills them in per client:",
+      "save": "Save",
+      "saved": "Wording saved",
+      "reset": "Restore original wording",
+      "resetHint": "The original wording was restored for editing — press Save to apply it",
+      "errors": {
+        "unauthorized": "Only a manager can edit the agreement wording",
+        "validation": "The wording is invalid — make sure no section or paragraph is empty",
+        "unknown": "Saving failed — try again",
+        "network": "Connection failed — check your network and try again"
       }
     }
   },
@@ -2281,7 +2315,8 @@
       "import": "Data import",
       "auditLog": "Audit log",
       "recycleBin": "Deleted cases",
-      "backup": "Backup & restore"
+      "backup": "Backup & restore",
+      "agreement": "Engagement agreement"
     },
     "simulators": {
       "pageTitle": "Simulator settings",

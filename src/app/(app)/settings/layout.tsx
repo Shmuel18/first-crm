@@ -2,6 +2,7 @@ import {
   Bell,
   Building2,
   Calculator,
+  FileSignature,
   FileText,
   HardDrive,
   Landmark,
@@ -66,6 +67,7 @@ const NAV_SECTIONS: SettingsNavSection[] = [
     titleKey: 'system',
     items: [
       { href: '/settings/templates', labelKey: 'templates', icon: FileText, adminOnly: true },
+      { href: '/settings/agreement', labelKey: 'agreement', icon: FileSignature, adminOnly: true },
       { href: '/settings/checklists', labelKey: 'checklists', icon: ListChecks, adminOnly: true },
       { href: '/settings/simulators', labelKey: 'simulators', icon: Calculator, permission: 'manage_simulator_settings' },
       { href: '/settings/integrations', labelKey: 'integrations', icon: Plug, adminOnly: true },

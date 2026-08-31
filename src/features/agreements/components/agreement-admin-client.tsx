@@ -23,10 +23,10 @@ type Props = {
   caseId: string;
   initialState: AgreementState;
   canManage: boolean;
-  canSend: boolean;
   defaultEmail: string;
-  defaultFeeTotal: number | null;
+  defaultFeePercent: number | null;
   defaultFeeAdvance: number | null;
+  loanAmount: number | null;
   locale: Locale;
 };
 
@@ -40,10 +40,10 @@ export function AgreementAdminClient({
   caseId,
   initialState,
   canManage,
-  canSend,
   defaultEmail,
-  defaultFeeTotal,
+  defaultFeePercent,
   defaultFeeAdvance,
+  loanAmount,
   locale,
 }: Props) {
   const t = useTranslations('agreements.block');
@@ -140,10 +140,12 @@ export function AgreementAdminClient({
               )}
             </>
           )}
-          {state.kind === 'signed' && state.agreement.signedMethod === 'manual' && canManage && (
+          {state.kind === 'signed' && canManage && (
             <AgreementSmallButton
               onClick={() => cancel(state.agreement.id)}
-              label={t('unmarkSigned')}
+              label={
+                state.agreement.signedMethod === 'manual' ? t('unmarkSigned') : t('voidSigned')
+              }
               disabled={busy || !settled}
             />
           )}
@@ -162,7 +164,7 @@ export function AgreementAdminClient({
               disabled={busy || !settled}
             />
           )}
-          {state.kind !== 'signed' && canSend && (
+          {state.kind !== 'signed' && canManage && (
             <button
               type="button"
               onClick={() => setDialogOpen(true)}
@@ -186,14 +188,15 @@ export function AgreementAdminClient({
         onOpenChange={setDialogOpen}
         caseId={caseId}
         defaultEmail={defaultEmail}
-        defaultFeeTotal={defaultFeeTotal}
+        defaultFeePercent={defaultFeePercent}
         defaultFeeAdvance={defaultFeeAdvance}
+        loanAmount={loanAmount}
         locale={locale}
-        onSent={(email, feeTotal, feeAdvance) => {
+        onSent={(email, language) => {
           setOverride({
             kind: 'sent',
             expired: false,
-            agreement: { ...optimisticAgreement(caseId), feeTotal, feeAdvance, clientEmail: email },
+            agreement: { ...optimisticAgreement(caseId, language), clientEmail: email },
           });
           refreshSoon();
         }}

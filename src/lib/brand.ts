@@ -40,6 +40,11 @@ export type Brand = {
     goldDark: string;
     goldText: string;
   };
+  /** Who signs on the office's behalf — named in the engagement agreement. */
+  representativeHe: string;
+  representativeEn: string;
+  /** The CRM host the engagement agreement names as an official channel. */
+  crmDomain: string;
   /** Two-line wordmark rendered in the transactional email header. */
   emailWordmark: { top: string; bottom: string };
   /** Absolute URL of the square mark for email clients; unset = text-only header. */
@@ -68,6 +73,9 @@ const BRANDS: Record<BrandKey, Brand> = {
       goldDark: '#B8945A',
       goldText: '#8A6E2D',
     },
+    representativeHe: 'משה קויפמן',
+    representativeEn: 'Moshe Kaufman',
+    crmDomain: 'crm.kaufman-finance.com',
     emailWordmark: { top: 'KAUFMAN', bottom: 'FINANCE GROUP' },
     emailLogoUrl: 'https://kaufman-finance.com/assets/logo-coin-square.png',
     contact: {
@@ -95,6 +103,9 @@ const BRANDS: Record<BrandKey, Brand> = {
       goldDark: '#B98F3A',
       goldText: '#8C6C26',
     },
+    representativeHe: 'פרלשטיין',
+    representativeEn: 'Perlstein',
+    crmDomain: 'crm.perlstein-mortgages.com',
     emailWordmark: { top: 'פרלשטיין', bottom: 'משכנתאות' },
     contact: {
       phone: '053-314-0442',

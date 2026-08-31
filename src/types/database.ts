@@ -1718,7 +1718,11 @@ export type Database = {
           drive_file_url: string | null
           expires_at: string | null
           fee_advance: number
-          fee_total: number
+          fee_percent: number | null
+          language: string
+          loan_amount: number | null
+          text_snapshot: Json | null
+          fee_total: number | null
           id: string
           pdf_path: string | null
           sent_at: string
@@ -1744,7 +1748,11 @@ export type Database = {
           drive_file_url?: string | null
           expires_at?: string | null
           fee_advance?: number
-          fee_total: number
+          fee_percent?: number | null
+          language?: string
+          loan_amount?: number | null
+          text_snapshot?: Json | null
+          fee_total?: number | null
           id?: string
           pdf_path?: string | null
           sent_at?: string
@@ -1770,7 +1778,11 @@ export type Database = {
           drive_file_url?: string | null
           expires_at?: string | null
           fee_advance?: number
-          fee_total?: number
+          fee_percent?: number | null
+          language?: string
+          loan_amount?: number | null
+          text_snapshot?: Json | null
+          fee_total?: number | null
           id?: string
           pdf_path?: string | null
           sent_at?: string
@@ -4338,6 +4350,7 @@ export type Database = {
       office_settings: {
         Row: {
           address_city: string | null
+          agreement_text: Json | null
           address_postal_code: string | null
           address_street: string | null
           ai_features: Json
@@ -4385,6 +4398,7 @@ export type Database = {
         }
         Insert: {
           address_city?: string | null
+          agreement_text?: Json | null
           address_postal_code?: string | null
           address_street?: string | null
           ai_features?: Json
@@ -4432,6 +4446,7 @@ export type Database = {
         }
         Update: {
           address_city?: string | null
+          agreement_text?: Json | null
           address_postal_code?: string | null
           address_street?: string | null
           ai_features?: Json

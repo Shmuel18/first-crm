@@ -3,11 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Eraser } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 type Props = {
   /** Fired with the PNG data URL after each stroke; null when cleared/empty. */
   onChange: (dataUrl: string | null) => void;
+  /** Resolved server-side in the AGREEMENT's language, not the visitor's. */
+  ariaLabel: string;
+  hint: string;
+  clearLabel: string;
 };
 
 const PAD_HEIGHT = 160;
@@ -26,8 +29,7 @@ const PAD_HEIGHT = 160;
  * The backing store is DPR-scaled so the exported PNG stays sharp in the PDF;
  * `touch-action: none` keeps the page from scrolling mid-stroke.
  */
-export function SignaturePad({ onChange }: Props) {
-  const t = useTranslations('agreements.sign');
+export function SignaturePad({ onChange, ariaLabel, hint, clearLabel }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawing = useRef(false);
   const cssWidth = useRef(0);
@@ -140,11 +142,11 @@ export function SignaturePad({ onChange }: Props) {
           onPointerCancel={onPointerUp}
           className="block w-full touch-none rounded-xl"
           style={{ height: PAD_HEIGHT }}
-          aria-label={t('padAria')}
+          aria-label={ariaLabel}
         />
         {!hasInk && (
           <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-neutral-400">
-            {t('padHint')}
+            {hint}
           </span>
         )}
       </div>
@@ -155,7 +157,7 @@ export function SignaturePad({ onChange }: Props) {
         className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-neutral-500 transition hover:text-neutral-800 disabled:opacity-40"
       >
         <Eraser className="size-3.5" aria-hidden="true" />
-        {t('clear')}
+        {clearLabel}
       </button>
     </div>
   );
