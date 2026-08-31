@@ -7,6 +7,7 @@ import { getRequestIp } from '@/lib/http/request-ip';
 import { checkRateLimit } from '@/lib/rate-limit';
 
 import { SIGNATURE_PNG_MAX_BYTES } from '../constants';
+import { isValidSignaturePng } from '../domain/validate-signature-png';
 import { SubmitSignatureSchema } from '../schemas/agreement.schema';
 import { mirrorAgreementToDrive } from '../services/agreement-drive.service';
 import { sendAgreementSignedOfficeEmail } from '../services/agreement-email.service';
@@ -14,6 +15,7 @@ import {
   finalizeAgreementSignature,
   getAgreementForSigning,
 } from '../services/agreement-signing.service';
+import { hashAgreementToken } from '../services/agreement-token';
 
 export type SubmitSignatureResult =
   | { ok: true }
@@ -22,12 +24,10 @@ export type SubmitSignatureResult =
       error: 'invalid_link' | 'expired' | 'already_signed' | 'validation' | 'rate_limited' | 'unknown';
     };
 
-/** PNG magic bytes — the declared data-URL prefix is caller-controlled. */
+/** The declared data-URL prefix is caller-controlled — verify the real bytes. */
 function isPngPayload(dataUrl: string): boolean {
   const b64 = dataUrl.slice('data:image/png;base64,'.length);
-  const buf = Buffer.from(b64, 'base64');
-  if (buf.length < 8 || buf.length > SIGNATURE_PNG_MAX_BYTES) return false;
-  return buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47;
+  return isValidSignaturePng(Buffer.from(b64, 'base64'), SIGNATURE_PNG_MAX_BYTES);
 }
 
 /**
@@ -54,6 +54,18 @@ export async function submitAgreementSignatureAction(
     failMode: 'closed',
   });
   if (!ipAllowed) return { ok: false, error: 'rate_limited' };
+
+  // Per-token too: an IP rotator still can't burn unlimited PDF renders against
+  // one link. Keyed on the token's HASH so the counter table never holds a
+  // usable credential.
+  const tokenAllowed = await checkRateLimit({
+    action: 'sign_agreement_token',
+    subject: `token:${hashAgreementToken(token)}`,
+    max: 10,
+    windowSeconds: 3600,
+    failMode: 'closed',
+  });
+  if (!tokenAllowed) return { ok: false, error: 'rate_limited' };
 
   if (!isPngPayload(signaturePng)) return { ok: false, error: 'validation' };
 

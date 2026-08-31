@@ -164,6 +164,18 @@ COMMENT ON COLUMN public.case_agreements.token_hash IS
   'persisted — a DB read cannot be replayed into a signing session.';
 
 -- -----------------------------------------------------------------------------
+-- Erasure: a signed agreement owns a Storage blob + a Drive copy, so a
+-- permanent case delete must be able to record them when cleanup fails —
+-- exactly what migration 177 did for the case folder. Without this the
+-- orphan log's CHECK would reject the row and the pointer would be lost.
+-- -----------------------------------------------------------------------------
+ALTER TABLE public.erasure_orphan_log
+  DROP CONSTRAINT IF EXISTS erasure_orphan_log_entity_check;
+ALTER TABLE public.erasure_orphan_log
+  ADD CONSTRAINT erasure_orphan_log_entity_check
+  CHECK (entity IN ('document', 'expense', 'case', 'agreement'));
+
+-- -----------------------------------------------------------------------------
 -- client_email_log: the sign-request email is a new client-facing send kind.
 -- Migration 163 asked exactly for this: "Extend the CHECK when a new
 -- client-facing send kind appears." The TS ClientEmailKind union + the

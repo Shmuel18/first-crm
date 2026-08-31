@@ -18,6 +18,10 @@ export async function mirrorAgreementToDrive(
       caseId,
       driveFolder: 'misc',
       file: { content: file.content, name: file.name, mimeType: 'application/pdf' },
+      // No user session here (public signing flow, running in after()) — without
+      // this the folder lookup/naming/caching all run under RLS with no rows and
+      // a brand-new case folder would be created literally named "Case".
+      admin: true,
     });
     if (!out.ok) {
       console.error('[agreements] drive mirror skipped', out.reason);

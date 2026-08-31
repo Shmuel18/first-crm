@@ -11,13 +11,16 @@ vi.mock('@/features/integrations/services/drive-case-uploader', () => ({ eraseDr
 
 type Res = { data: unknown; error: { message: string } | null };
 
-function mockAdmin(opts: { docs?: Res; expenses?: Res; caseRow?: Res }) {
+function mockAdmin(opts: { docs?: Res; expenses?: Res; agreements?: Res; caseRow?: Res }) {
   const docs = opts.docs ?? { data: [], error: null };
   const expenses = opts.expenses ?? { data: [], error: null };
+  const agreements = opts.agreements ?? { data: [], error: null };
   const caseRow = opts.caseRow ?? { data: null, error: null };
   const from = (table: string) => {
     if (table === 'documents') return { select: () => ({ eq: () => Promise.resolve(docs) }) };
     if (table === 'case_expenses') return { select: () => ({ eq: () => Promise.resolve(expenses) }) };
+    // Signed engagement agreements own a PDF + Drive copy (migration 238).
+    if (table === 'case_agreements') return { select: () => ({ eq: () => Promise.resolve(agreements) }) };
     if (table === 'cases') {
       return { select: () => ({ eq: () => ({ maybeSingle: () => Promise.resolve(caseRow) }) }) };
     }
@@ -50,6 +53,44 @@ describe('collectCaseFileRefs — fail-closed (R5-lifecycle-2 follow-up)', () =>
   it('FAILS CLOSED when the case (folder) read errors', async () => {
     mockAdmin({ caseRow: { data: null, error: { message: 'boom' } } });
     await expect(collectCaseFileRefs('case-1')).resolves.toEqual({ ok: false });
+  });
+
+  it('FAILS CLOSED when the agreements read errors (migration 238)', async () => {
+    mockAdmin({ agreements: { data: null, error: { message: 'boom' } } });
+    await expect(collectCaseFileRefs('case-1')).resolves.toEqual({ ok: false });
+  });
+
+  it('collects a signed agreement PDF + its Drive copy as an erasable pointer', async () => {
+    mockAdmin({
+      agreements: {
+        data: [{ id: 'agr-1', pdf_path: 'case-1/agreements/agr-1.pdf', drive_file_id: 'drive-agr1' }],
+        error: null,
+      },
+    });
+    await expect(collectCaseFileRefs('case-1')).resolves.toEqual({
+      ok: true,
+      refs: {
+        pointers: [
+          {
+            entity: 'agreement',
+            rowId: 'agr-1',
+            storagePath: 'case-1/agreements/agr-1.pdf',
+            driveFileId: 'drive-agr1',
+          },
+        ],
+        caseFolderId: null,
+      },
+    });
+  });
+
+  it('ignores an agreement that was never signed (no PDF, no Drive copy)', async () => {
+    mockAdmin({
+      agreements: { data: [{ id: 'agr-2', pdf_path: null, drive_file_id: null }], error: null },
+    });
+    await expect(collectCaseFileRefs('case-1')).resolves.toEqual({
+      ok: true,
+      refs: { pointers: [], caseFolderId: null },
+    });
   });
 });
 

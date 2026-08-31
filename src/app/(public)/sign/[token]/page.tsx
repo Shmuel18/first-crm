@@ -30,6 +30,7 @@ export default async function SignAgreementPage({
 }) {
   const { token } = await params;
   const agreement = TOKEN_SHAPE.test(token) ? await getAgreementForSigning(token) : null;
+  const signable = agreement !== null && agreement.status === 'sent' && !agreement.expired;
 
   return (
     // The document body is position:fixed (globals.css) — public pages opt
@@ -56,22 +57,35 @@ export default async function SignAgreementPage({
           token={token}
           title={AGREEMENT_TITLE}
           officeName={BRAND.nameHe}
-          partyLines={buildPartyLines(agreement.clientName, {
-            nationalId: agreement.clientNationalId,
-            phone: agreement.clientPhone,
-            email: agreement.clientEmail,
-          })}
-          sections={buildAgreementSections({
-            officeName: BRAND.nameHe,
-            officePhone: BRAND.contact.phone ?? '',
-            officeEmail: BRAND.contact.email ?? '',
-            feeTotalText: formatCurrency(agreement.feeTotal, 'he'),
-            feeAdvanceText: formatCurrency(agreement.feeAdvance, 'he'),
-            feeBalanceText: formatCurrency(
-              agreementBalance(agreement.feeTotal, agreement.feeAdvance),
-              'he',
-            ),
-          })}
+          // A spent link (already signed / expired) renders only its notice —
+          // so it must not CARRY the agreement either. These props land in the
+          // response body whether or not they are displayed, and the link
+          // outlives its purpose in the client's inbox, so the identity + fee
+          // are withheld once the link can no longer be used to sign.
+          partyLines={
+            signable
+              ? buildPartyLines(agreement.clientName, {
+                  nationalId: agreement.clientNationalId,
+                  phone: agreement.clientPhone,
+                  email: agreement.clientEmail,
+                })
+              : []
+          }
+          sections={
+            signable
+              ? buildAgreementSections({
+                  officeName: BRAND.nameHe,
+                  officePhone: BRAND.contact.phone ?? '',
+                  officeEmail: BRAND.contact.email ?? '',
+                  feeTotalText: formatCurrency(agreement.feeTotal, 'he'),
+                  feeAdvanceText: formatCurrency(agreement.feeAdvance, 'he'),
+                  feeBalanceText: formatCurrency(
+                    agreementBalance(agreement.feeTotal, agreement.feeAdvance),
+                    'he',
+                  ),
+                })
+              : []
+          }
           initialState={
             agreement.status === 'signed' ? 'signed' : agreement.expired ? 'expired' : 'ready'
           }

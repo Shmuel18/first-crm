@@ -140,6 +140,15 @@ export async function finalizeAgreementSignature(input: {
   const admin = createAdminClient();
   // Unique per ATTEMPT (not per agreement): on a double-submit race the loser
   // must be able to delete its own blob without touching the winner's PDF.
+  //
+  // Visibility note: this lands in the case-documents bucket, whose SELECT
+  // policy (migration 040) gates on view_case_documents — NOT view_collections
+  // — so any advisor with document access on the case can read the PDF and
+  // therefore the fee it prints, even though the case_agreements ROW is gated
+  // on view_collections. That asymmetry is DELIBERATE: the office decided the
+  // signed agreement is an office-wide document (it is also mirrored into the
+  // case's shared Drive folder for exactly that reason). Tighten both surfaces
+  // together if that decision is ever reversed — locking only one is theatre.
   const pdfPath = `${agreement.caseId}/agreements/${agreement.id}-${randomUUID()}.pdf`;
   const { error: upErr } = await admin.storage
     .from(BUCKET)

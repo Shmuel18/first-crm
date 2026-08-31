@@ -24,6 +24,15 @@ export type DriveCaseUploadInput = {
   caseId: string;
   driveFolder: string; // identity | income_il | income_abroad | insurance_collateral
   file: { content: ArrayBuffer | Uint8Array; name: string; mimeType: string };
+  /**
+   * Run the Drive metadata reads/writes with the service-role client.
+   * REQUIRED for callers with no user session (the public agreement-signing
+   * flow mirrors its PDF from after()): with the request client, RLS returns
+   * no rows, so the cached folder id is invisible, the borrower lookup that
+   * NAMES a new case folder comes back empty (folder created as "Case"), and
+   * the metadata write that caches the folder id silently no-ops.
+   */
+  admin?: boolean;
 };
 
 /**
@@ -222,7 +231,7 @@ export async function uploadCaseDocumentToDrive(
   if (!client) return { ok: false, reason: 'not_connected' };
 
   try {
-    const supabase = await driveDb(false);
+    const supabase = await driveDb(input.admin === true);
     const meta = await getCaseDriveMeta(input.caseId, supabase);
     const rootId = await ensureRootFolder(client);
     const caseFolderId = await ensureCaseFolder(client, rootId, input.caseId, meta, supabase);

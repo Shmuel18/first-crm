@@ -23,6 +23,8 @@ type Props = {
   initialState: 'ready' | 'signed' | 'expired';
 };
 
+type ViewState = 'ready' | 'signed' | 'expired' | 'invalid';
+
 /**
  * The client-facing signing surface: the agreement text (server-built, same
  * source as the PDF), a consent checkbox, the signature pad, and submit.
@@ -41,7 +43,7 @@ export function SignAgreementView({
   const [signature, setSignature] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
   const [pending, setPending] = useState(false);
-  const [state, setState] = useState<'ready' | 'signed' | 'expired'>(initialState);
+  const [state, setState] = useState<ViewState>(initialState);
   const [error, setError] = useState<string | null>(null);
 
   const submit = async (): Promise<void> => {
@@ -64,6 +66,12 @@ export function SignAgreementView({
       setState('expired');
       return;
     }
+    // The link was cancelled or replaced while this page was open — retrying
+    // can never succeed, so say so instead of offering a retryable error.
+    if (res.error === 'invalid_link') {
+      setState('invalid');
+      return;
+    }
     setError(t(`errors.${res.error === 'rate_limited' ? 'rateLimited' : 'unknown'}`));
   };
 
@@ -81,12 +89,13 @@ export function SignAgreementView({
     );
   }
 
-  if (state === 'expired') {
+  if (state === 'expired' || state === 'invalid') {
+    const key = state === 'expired' ? 'expired' : 'invalid';
     return (
       <div dir="rtl" className="mx-auto max-w-xl px-6 py-16 text-center">
-        <h2 className="font-display text-2xl font-bold text-neutral-900">{t('expiredTitle')}</h2>
+        <h2 className="font-display text-2xl font-bold text-neutral-900">{t(`${key}Title`)}</h2>
         <p className="mt-2 text-sm leading-6 text-neutral-600">
-          {t('expiredBody', { office: officeName })}
+          {t(`${key}Body`, { office: officeName })}
         </p>
       </div>
     );

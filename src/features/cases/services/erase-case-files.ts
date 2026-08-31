@@ -3,12 +3,12 @@ import { eraseDriveTargets } from '@/features/integrations/services/drive-case-u
 import { createAdminClient } from '@/lib/supabase/admin';
 
 type Admin = ReturnType<typeof createAdminClient>;
-type OrphanEntity = 'document' | 'expense' | 'case';
+type OrphanEntity = 'document' | 'expense' | 'case' | 'agreement';
 
 /** One Storage/Drive pointer tied to its owning row, so a failed erasure can be
- *  recorded durably in erasure_orphan_log (mig 144/177) for manual cleanup. */
+ *  recorded durably in erasure_orphan_log (mig 144/177/238) for manual cleanup. */
 export type CaseFilePointer = {
-  entity: 'document' | 'expense';
+  entity: 'document' | 'expense' | 'agreement';
   rowId: string;
   storagePath: string | null;
   driveFileId: string | null;
@@ -86,6 +86,31 @@ export async function collectCaseFileRefs(caseId: string): Promise<CollectCaseFi
         : null;
     if (storagePath || driveFileId) {
       pointers.push({ entity: 'expense', rowId: exp.id, storagePath, driveFileId });
+    }
+  }
+
+  // Signed engagement agreements own a PDF in the same bucket + a Drive copy
+  // (migration 238). The cascade drops the rows, so collect them here too.
+  const agrRes = await admin
+    .from('case_agreements')
+    .select('id, pdf_path, drive_file_id')
+    .eq('case_id', caseId);
+  if (agrRes.error) {
+    console.error('[collectCaseFileRefs] agreements read failed — aborting', {
+      caseId,
+      message: agrRes.error.message,
+    });
+    return { ok: false };
+  }
+  for (const agr of agrRes.data ?? []) {
+    const storagePath =
+      typeof agr.pdf_path === 'string' && agr.pdf_path.length > 0 ? agr.pdf_path : null;
+    const driveFileId =
+      typeof agr.drive_file_id === 'string' && agr.drive_file_id.length > 0
+        ? agr.drive_file_id
+        : null;
+    if (storagePath || driveFileId) {
+      pointers.push({ entity: 'agreement', rowId: agr.id, storagePath, driveFileId });
     }
   }
 
