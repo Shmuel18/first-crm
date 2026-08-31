@@ -50,12 +50,12 @@ function makeCase(o: Partial<TestCase> = {}): CaseWithRelations {
 }
 
 const NO_FILTERS: DashboardFilters = {
-  advisor: null,
-  stage: null,
-  bank: null,
-  referrer: null,
-  insuranceAgent: null,
-  targetDate: null,
+  advisor: [],
+  stage: [],
+  bank: [],
+  referrer: [],
+  insuranceAgent: [],
+  targetDate: [],
 };
 
 describe('parseCaseView', () => {
@@ -72,29 +72,29 @@ describe('parseCaseView', () => {
 
 describe('parseDashboardFilters', () => {
   it('uses safe defaults', () => {
-    expect(parseDashboardFilters({})).toEqual({
-      advisor: null,
-      stage: null,
-      bank: null,
-      referrer: null,
-      insuranceAgent: null,
-      targetDate: null,
-    });
+    expect(parseDashboardFilters({})).toEqual(NO_FILTERS);
   });
 
-  it('reads values', () => {
+  it('reads a single legacy value as a one-item list', () => {
     expect(parseDashboardFilters({ advisor: 'a1' })).toEqual({
-      advisor: 'a1',
-      stage: null,
-      bank: null,
-      referrer: null,
-      insuranceAgent: null,
-      targetDate: null,
+      ...NO_FILTERS,
+      advisor: ['a1'],
     });
   });
 
-  it('takes the first value of array params', () => {
-    expect(parseDashboardFilters({ stage: ['s1', 's2'] }).stage).toBe('s1');
+  it('reads the comma-joined list the multi-select pickers write', () => {
+    expect(parseDashboardFilters({ stage: 's1,s2' }).stage).toEqual(['s1', 's2']);
+  });
+
+  it('reads a repeated param as well', () => {
+    expect(parseDashboardFilters({ stage: ['s1', 's2'] }).stage).toEqual(['s1', 's2']);
+  });
+
+  it('keeps only known target-date states', () => {
+    expect(parseDashboardFilters({ targetDate: 'week,nonsense,none' }).targetDate).toEqual([
+      'week',
+      'none',
+    ]);
   });
 });
 
@@ -109,9 +109,9 @@ describe('filterCases', () => {
     const otherAgent = makeCase({ insurance_agent_name: 'דנה כהן' });
     const noAgent = makeCase();
     const cases = [withAgent, otherAgent, noAgent];
-    expect(filterCases(cases, { ...NO_FILTERS, insuranceAgent: 'משה לוי' })).toEqual([withAgent]);
+    expect(filterCases(cases, { ...NO_FILTERS, insuranceAgent: ['משה לוי'] })).toEqual([withAgent]);
     // A partial name is not a match — the picker only offers whole values.
-    expect(filterCases(cases, { ...NO_FILTERS, insuranceAgent: 'משה' })).toEqual([]);
+    expect(filterCases(cases, { ...NO_FILTERS, insuranceAgent: ['משה'] })).toEqual([]);
   });
 
   it('combines the insurance-agent filter with the referrer filter', () => {
@@ -120,8 +120,8 @@ describe('filterCases', () => {
     expect(
       filterCases([both, agentOnly], {
         ...NO_FILTERS,
-        insuranceAgent: 'משה לוי',
-        referrer: 'יוסי',
+        insuranceAgent: ['משה לוי'],
+        referrer: ['יוסי'],
       }),
     ).toEqual([both]);
   });
@@ -134,13 +134,43 @@ describe('filterCases', () => {
       assigned_advisor_id: 'a2',
       case_associated_advisors: [{ advisor_id: 'a1' }],
     });
-    expect(filterCases([a, b, c], { ...NO_FILTERS, advisor: 'a1' })).toEqual([a, c]);
+    expect(filterCases([a, b, c], { ...NO_FILTERS, advisor: ['a1'] })).toEqual([a, c]);
   });
 
   it('filters by stage (status id)', () => {
     const a = makeCase({ status: { id: 's1', key: 'open' } });
     const b = makeCase({ status: { id: 's2', key: 'open' } });
-    expect(filterCases([a, b], { ...NO_FILTERS, stage: 's2' })).toEqual([b]);
+    expect(filterCases([a, b], { ...NO_FILTERS, stage: ['s2'] })).toEqual([b]);
+  });
+
+  it('unions several ticked stages', () => {
+    const a = makeCase({ status: { id: 's1', key: 'open' } });
+    const b = makeCase({ status: { id: 's2', key: 'open' } });
+    const c = makeCase({ status: { id: 's3', key: 'open' } });
+    // Kaufman's ask: "everything except 'in review' and 'done'" — tick the rest.
+    expect(filterCases([a, b, c], { ...NO_FILTERS, stage: ['s1', 's3'] })).toEqual([a, c]);
+  });
+
+  it('unions several ticked advisors, responsible or associated', () => {
+    const a = makeCase({ assigned_advisor_id: 'a1' });
+    const b = makeCase({ assigned_advisor_id: 'a2' });
+    const c = makeCase({
+      assigned_advisor_id: 'a3',
+      case_associated_advisors: [{ advisor_id: 'a2' }],
+    });
+    expect(filterCases([a, b, c], { ...NO_FILTERS, advisor: ['a1', 'a2'] })).toEqual([a, b, c]);
+  });
+
+  it('ANDs across filters while ORing inside one', () => {
+    const match = makeCase({ status: { id: 's1', key: 'open' }, assigned_advisor_id: 'a1' });
+    const wrongAdvisor = makeCase({ status: { id: 's2', key: 'open' }, assigned_advisor_id: 'a9' });
+    expect(
+      filterCases([match, wrongAdvisor], {
+        ...NO_FILTERS,
+        stage: ['s1', 's2'],
+        advisor: ['a1'],
+      }),
+    ).toEqual([match]);
   });
 
   it('matches a bank only through non-deleted links', () => {
@@ -148,7 +178,7 @@ describe('filterCases', () => {
     const removed = makeCase({
       case_banks: [{ deleted_at: '2026-01-01', bank: { id: 'bank1' } }],
     });
-    expect(filterCases([active, removed], { ...NO_FILTERS, bank: 'bank1' })).toEqual([active]);
+    expect(filterCases([active, removed], { ...NO_FILTERS, bank: ['bank1'] })).toEqual([active]);
   });
 
   it('filters by manual target date state', () => {
@@ -157,8 +187,18 @@ describe('filterCases', () => {
     const none = makeCase();
     const now = new Date('2026-05-29T12:00:00');
     expect(
-      filterCases([overdue, soon, none], { ...NO_FILTERS, targetDate: 'week' }, now),
+      filterCases([overdue, soon, none], { ...NO_FILTERS, targetDate: ['week'] }, now),
     ).toEqual([soon]);
+  });
+
+  it('unions several target-date states', () => {
+    const overdue = makeCase({ target_date: '2026-05-01' });
+    const soon = makeCase({ target_date: '2026-05-31' });
+    const none = makeCase();
+    const now = new Date('2026-05-29T12:00:00');
+    expect(
+      filterCases([overdue, soon, none], { ...NO_FILTERS, targetDate: ['overdue', 'none'] }, now),
+    ).toEqual([overdue, none]);
   });
 });
 

@@ -59,9 +59,10 @@ export const TaskListFiltersSchema = z.object({
   view: z.enum(TASK_VIEW_VALUES).default('mine'),
   status: z.enum(TASK_STATUS_VALUES).optional(),
   caseId: z.uuid().optional(),
-  // Narrow to tasks assigned to one teammate — used in the "assigned by me" /
-  // "all" views to filter by advisor. Pointless in "mine" (all are the caller's).
-  assignedTo: z.uuid().optional(),
+  // Narrow to tasks assigned to one OR SEVERAL teammates — used in the
+  // "assigned by me" / "all" views to filter by advisor. Pointless in "mine"
+  // (all are the caller's). Undefined / empty means no narrowing.
+  assignedTo: z.array(z.uuid()).optional(),
 });
 
 export type TaskListFilters = z.infer<typeof TaskListFiltersSchema>;

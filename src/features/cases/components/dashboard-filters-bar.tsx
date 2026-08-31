@@ -1,23 +1,15 @@
 'use client';
 
-import { ChevronDown, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { parseAsString, parseAsStringEnum, useQueryState } from 'nuqs';
+import { parseAsArrayOf, parseAsString, parseAsStringEnum, useQueryState } from 'nuqs';
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { MultiSelectFilter, type MultiSelectOption } from '@/components/shared/multi-select-filter';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import { DashboardExportButtons } from './dashboard-export-buttons';
 import { RowDensityControl } from './row-density-control';
-import { TARGET_DATE_FILTER_VALUES } from '../domain/target-date';
-
-type Option = { id: string; name: string };
+import { TARGET_DATE_FILTER_VALUES, type TargetDateFilter } from '../domain/target-date';
 
 type Props = {
   statusOptions: ReadonlyArray<{ id: string; name_he: string }>;
@@ -36,11 +28,25 @@ type Props = {
   insuranceAgentOptions: ReadonlyArray<string>;
 };
 
-const ALL = '__all';
 const urlOpts = { shallow: false } as const;
+// Every picker is multi-select: nuqs writes one comma-joined param
+// (`?stage=a,b`), which the server mirrors via parseQueryList. A single legacy
+// value (`?stage=a`) still parses, so old links and the "back to the list"
+// memory keep working.
+const listParser = parseAsArrayOf(parseAsString).withOptions(urlOpts);
+const targetDateParser = parseAsArrayOf(
+  parseAsStringEnum<TargetDateFilter>([...TARGET_DATE_FILTER_VALUES]),
+).withOptions(urlOpts);
 
-function isTargetDateValue(value: string | null): value is (typeof TARGET_DATE_FILTER_VALUES)[number] {
-  return (TARGET_DATE_FILTER_VALUES as readonly string[]).includes(value ?? '');
+const EMPTY: string[] = [];
+
+/** Empty selection clears the param instead of leaving `?stage=` behind. */
+function orNull<T>(next: T[]): T[] | null {
+  return next.length > 0 ? next : null;
+}
+
+function isTargetDateValue(value: string): value is TargetDateFilter {
+  return (TARGET_DATE_FILTER_VALUES as readonly string[]).includes(value);
 }
 
 export function DashboardFiltersBar({
@@ -55,37 +61,31 @@ export function DashboardFiltersBar({
   const t = useTranslations('dashboard.filters');
   const locale = useLocale();
 
-  const [advisor, setAdvisor] = useQueryState('advisor', parseAsString.withOptions(urlOpts));
-  const [stage, setStage] = useQueryState('stage', parseAsString.withOptions(urlOpts));
-  const [bank, setBank] = useQueryState('bank', parseAsString.withOptions(urlOpts));
-  const [referrer, setReferrer] = useQueryState('referrer', parseAsString.withOptions(urlOpts));
-  const [insuranceAgent, setInsuranceAgent] = useQueryState(
-    'insuranceAgent',
-    parseAsString.withOptions(urlOpts),
-  );
-  const [targetDate, setTargetDate] = useQueryState(
-    'targetDate',
-    parseAsStringEnum([...TARGET_DATE_FILTER_VALUES]).withOptions(urlOpts),
-  );
+  const [advisor, setAdvisor] = useQueryState('advisor', listParser);
+  const [stage, setStage] = useQueryState('stage', listParser);
+  const [bank, setBank] = useQueryState('bank', listParser);
+  const [referrer, setReferrer] = useQueryState('referrer', listParser);
+  const [insuranceAgent, setInsuranceAgent] = useQueryState('insuranceAgent', listParser);
+  const [targetDate, setTargetDate] = useQueryState('targetDate', targetDateParser);
   // The free-text search input lives in the view-selector bar above and owns
   // its own `?q=` state — we deliberately don't read or clear it from here.
 
-  const stages: Option[] = statusOptions.map((s) => ({ id: s.id, name: s.name_he }));
-  const banks: Option[] = bankOptions.map((b) => ({ id: b.id, name: b.name_he }));
-  const targetDates: Option[] = [
+  const stages: MultiSelectOption[] = statusOptions.map((s) => ({ id: s.id, name: s.name_he }));
+  const banks: MultiSelectOption[] = bankOptions.map((b) => ({ id: b.id, name: b.name_he }));
+  const targetDates: MultiSelectOption[] = [
     { id: 'overdue', name: t('targetDate.overdue') },
     { id: 'week', name: t('targetDate.week') },
     { id: 'none', name: t('targetDate.none') },
   ];
-  const advisors: Option[] = advisorOptions.map((a) => ({
+  const advisors: MultiSelectOption[] = advisorOptions.map((a) => ({
     id: a.id,
     name: formatPersonName(a.first_name, a.last_name) || '—',
   }));
 
   // Referrer / insurance-agent values are free text — the id IS the name
   // (exact-match filter).
-  const referrers: Option[] = referrerOptions.map((r) => ({ id: r, name: r }));
-  const insuranceAgents: Option[] = insuranceAgentOptions.map((a) => ({ id: a, name: a }));
+  const referrers: MultiSelectOption[] = referrerOptions.map((r) => ({ id: r, name: r }));
+  const insuranceAgents: MultiSelectOption[] = insuranceAgentOptions.map((a) => ({ id: a, name: a }));
 
   const showAdvisor = canFilterByAdvisor && advisors.length > 0;
   const showReferrer = canFilterByReferrer && referrers.length > 0;
@@ -94,13 +94,9 @@ export function DashboardFiltersBar({
   // The free-text search lives in a sibling component (the view selector bar
   // above), so we deliberately leave `query` alone here — it would be a
   // surprise to wipe text the user typed in a different bar.
-  const anyActive =
-    advisor !== null ||
-    stage !== null ||
-    bank !== null ||
-    referrer !== null ||
-    insuranceAgent !== null ||
-    targetDate !== null;
+  const anyActive = [advisor, stage, bank, referrer, insuranceAgent, targetDate].some(
+    (v) => v !== null && v.length > 0,
+  );
 
   const clearAll = () => {
     setAdvisor(null);
@@ -118,38 +114,50 @@ export function DashboardFiltersBar({
     >
       {/* === FILTERING (what data) === */}
       {showAdvisor && (
-        <FilterSelect
+        <MultiSelectFilter
           label={t('advisor')}
-          value={advisor}
-          onChange={setAdvisor}
+          values={advisor ?? EMPTY}
+          onChange={(next) => setAdvisor(orNull(next))}
           options={advisors}
           allLabel={t('all')}
         />
       )}
-      <FilterSelect label={t('stage')} value={stage} onChange={setStage} options={stages} allLabel={t('all')} />
-      <FilterSelect label={t('bank')} value={bank} onChange={setBank} options={banks} allLabel={t('all')} />
+      <MultiSelectFilter
+        label={t('stage')}
+        values={stage ?? EMPTY}
+        onChange={(next) => setStage(orNull(next))}
+        options={stages}
+        allLabel={t('all')}
+      />
+      <MultiSelectFilter
+        label={t('bank')}
+        values={bank ?? EMPTY}
+        onChange={(next) => setBank(orNull(next))}
+        options={banks}
+        allLabel={t('all')}
+      />
       {showReferrer && (
-        <FilterSelect
+        <MultiSelectFilter
           label={t('referrer')}
-          value={referrer}
-          onChange={setReferrer}
+          values={referrer ?? EMPTY}
+          onChange={(next) => setReferrer(orNull(next))}
           options={referrers}
           allLabel={t('all')}
         />
       )}
       {showInsuranceAgent && (
-        <FilterSelect
+        <MultiSelectFilter
           label={t('insuranceAgent')}
-          value={insuranceAgent}
-          onChange={setInsuranceAgent}
+          values={insuranceAgent ?? EMPTY}
+          onChange={(next) => setInsuranceAgent(orNull(next))}
           options={insuranceAgents}
           allLabel={t('all')}
         />
       )}
-      <FilterSelect
+      <MultiSelectFilter
         label={t('targetDate.label')}
-        value={targetDate}
-        onChange={(next) => setTargetDate(isTargetDateValue(next) ? next : null)}
+        values={targetDate ?? EMPTY}
+        onChange={(next) => setTargetDate(orNull(next.filter(isTargetDateValue)))}
         options={targetDates}
         allLabel={t('all')}
       />
@@ -172,62 +180,5 @@ export function DashboardFiltersBar({
       </div>
       <DashboardExportButtons />
     </div>
-  );
-}
-
-function chipClass(active: boolean): string {
-  return [
-    'inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border text-xs transition',
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40',
-    active
-      ? 'border-brand-gold-text bg-brand-gold-soft text-brand-black font-medium'
-      : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50',
-  ].join(' ');
-}
-
-function FilterSelect({
-  label,
-  value,
-  onChange,
-  options,
-  allLabel,
-}: {
-  label: string;
-  value: string | null;
-  onChange: (v: string | null) => void;
-  options: Option[];
-  allLabel: string;
-}) {
-  const selected = options.find((o) => o.id === value);
-  const accessibleName = selected ? `${label}: ${selected.name}` : label;
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <button
-            type="button"
-            aria-label={accessibleName}
-            aria-pressed={value !== null}
-            className={chipClass(value !== null)}
-          >
-            <span>{selected ? selected.name : label}</span>
-            <ChevronDown className="size-3 text-neutral-500" aria-hidden="true" />
-          </button>
-        }
-      />
-      <DropdownMenuContent align="start" className="min-w-44 max-h-72">
-        <DropdownMenuRadioGroup
-          value={value ?? ALL}
-          onValueChange={(v) => onChange(v === ALL ? null : v)}
-        >
-          <DropdownMenuRadioItem value={ALL}>{allLabel}</DropdownMenuRadioItem>
-          {options.map((o) => (
-            <DropdownMenuRadioItem key={o.id} value={o.id}>
-              {o.name}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }

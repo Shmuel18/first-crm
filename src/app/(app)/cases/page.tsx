@@ -65,7 +65,7 @@ export default async function CasesListPage({ searchParams }: Props) {
             // cases before that runs. The set is ~80 rows, already fully loaded.
             listCases({
               isArchived: isArchive,
-              statusId: filters.stage ?? undefined,
+              statusIds: filters.stage,
             }),
           { view },
         );

@@ -126,7 +126,14 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
   try {
     // Respect the dashboard's current filters / search / sort (forwarded as query
     // params) so the export matches exactly what the user sees, not the whole book.
-    const sp = Object.fromEntries(request.nextUrl.searchParams);
+    // getAll, not Object.fromEntries: the multi-select filters arrive as one
+    // comma-joined value, but a hand-written url can repeat a key — collapsing
+    // it to the last one would export a different set than the screen shows.
+    const sp: Record<string, string | string[]> = {};
+    for (const key of request.nextUrl.searchParams.keys()) {
+      const values = request.nextUrl.searchParams.getAll(key);
+      sp[key] = values.length > 1 ? values : (values[0] ?? '');
+    }
     const isArchived = sp.view === 'archive';
     const filters = parseDashboardFilters(sp);
     const sort = parseCaseSort(sp);

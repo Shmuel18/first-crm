@@ -27,6 +27,9 @@ export const CASE_SELECT_WITH_RELATIONS = `
 
 export type CaseListFilters = {
   statusId?: string;
+  /** Multi-select stage filter from the dashboard — matches ANY of the ids.
+   *  Takes precedence over statusId when both are given. */
+  statusIds?: string[];
   caseTypeId?: string;
   advisorId?: string;
   isArchived?: boolean;
@@ -52,7 +55,11 @@ export async function listCases(filters: CaseListFilters = {}): Promise<CaseWith
   if (filters.isArchived !== undefined) {
     query = query.eq('is_archived', filters.isArchived);
   }
-  if (filters.statusId) query = query.eq('status_id', filters.statusId);
+  if (filters.statusIds && filters.statusIds.length > 0) {
+    query = query.in('status_id', filters.statusIds);
+  } else if (filters.statusId) {
+    query = query.eq('status_id', filters.statusId);
+  }
   if (filters.caseTypeId) query = query.eq('case_type_primary_id', filters.caseTypeId);
   if (filters.advisorId) query = query.eq('assigned_advisor_id', filters.advisorId);
   if (filters.search) {

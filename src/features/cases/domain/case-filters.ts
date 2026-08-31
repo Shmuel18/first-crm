@@ -4,6 +4,8 @@
  * single listCases fetch rather than as extra SQL predicates.
  */
 
+import { parseQueryList } from '@/lib/utils/query-list';
+
 import { getCaseClientLabel, getPrimaryBorrowerNationalId } from './case-derivations';
 import {
   matchesTargetDateFilter,
@@ -14,26 +16,30 @@ import {
 import type { CaseWithRelations } from '../types';
 
 export type DashboardFilters = {
-  advisor: string | null;
-  stage: string | null;
-  bank: string | null;
+  /**
+   * Every filter is MULTI-select: an empty array means "off", and several
+   * values are OR'd (Kaufman: "let me tick a few stages, everything except
+   * 'in review' and 'done'"). Different filters still AND with each other.
+   */
+  advisor: string[];
+  stage: string[];
+  /** Case matches when ANY of its non-deleted banks is in the list. */
+  bank: string[];
   /** Exact match on cases.referrer_name. Manager-only filter (the picker is
    *  gated in the UI), so non-managers never set it. */
-  referrer: string | null;
+  referrer: string[];
   /** Exact match on cases.insurance_agent_name. Open to every dashboard
    *  viewer — the picker is built from the cases RLS already let them see. */
-  insuranceAgent: string | null;
-  targetDate: TargetDateFilter | null;
+  insuranceAgent: string[];
+  targetDate: TargetDateFilter[];
 };
 
 function first(v: string | string[] | undefined): string | null {
   return (Array.isArray(v) ? v[0] : v) ?? null;
 }
 
-function parseTargetDateFilter(value: string | null): TargetDateFilter | null {
-  return (TARGET_DATE_FILTER_VALUES as readonly string[]).includes(value ?? '')
-    ? (value as TargetDateFilter)
-    : null;
+function isTargetDateFilter(value: string): value is TargetDateFilter {
+  return (TARGET_DATE_FILTER_VALUES as readonly string[]).includes(value);
 }
 
 export type CaseView = 'active' | 'archive' | 'leads';
@@ -49,16 +55,42 @@ export function parseDashboardFilters(
   sp: Record<string, string | string[] | undefined>,
 ): DashboardFilters {
   return {
-    advisor: first(sp.advisor),
-    stage: first(sp.stage),
-    bank: first(sp.bank),
-    referrer: first(sp.referrer),
-    insuranceAgent: first(sp.insuranceAgent),
-    targetDate: parseTargetDateFilter(first(sp.targetDate)),
+    advisor: parseQueryList(sp.advisor),
+    stage: parseQueryList(sp.stage),
+    bank: parseQueryList(sp.bank),
+    referrer: parseQueryList(sp.referrer),
+    insuranceAgent: parseQueryList(sp.insuranceAgent),
+    targetDate: parseQueryList(sp.targetDate).filter(isTargetDateFilter),
     // No hide-closed/frozen field: closed/on_hold/stuck cases auto-archive
     // (migrations 226/227), so the active list is already free of them
     // server-side (is_archived = FALSE).
   };
+}
+
+/**
+ * Match the selected advisors as the RESPONSIBLE one (scalar column — always
+ * readable, unlike the RLS-gated assigned_advisor embed) OR as an ASSOCIATED
+ * advisor (migration 146). "Filter by advisor" therefore returns every case
+ * that advisor works on, in either role.
+ */
+function matchesAdvisors(c: CaseWithRelations, ids: ReadonlyArray<string>): boolean {
+  if (ids.length === 0) return true;
+  if (c.assigned_advisor_id && ids.includes(c.assigned_advisor_id)) return true;
+  return (c.case_associated_advisors ?? []).some((a) => ids.includes(a.advisor_id));
+}
+
+function matchesBanks(c: CaseWithRelations, ids: ReadonlyArray<string>): boolean {
+  if (ids.length === 0) return true;
+  return (c.case_banks ?? []).some(
+    (cb) => !cb.deleted_at && cb.bank !== null && ids.includes(cb.bank.id),
+  );
+}
+
+/** Exact-match on a free-text column. An empty list means the filter is off;
+ *  a case whose column is NULL never matches a non-empty list. */
+function matchesText(value: string | null, allowed: ReadonlyArray<string>): boolean {
+  if (allowed.length === 0) return true;
+  return value !== null && allowed.includes(value);
 }
 
 export function filterCases(
@@ -66,30 +98,16 @@ export function filterCases(
   f: DashboardFilters,
   now = new Date(),
 ): CaseWithRelations[] {
-  return cases.filter((c) => {
-    // Match the selected advisor as the RESPONSIBLE (scalar column — always
-    // readable, unlike the RLS-gated assigned_advisor embed) OR as an
-    // ASSOCIATED advisor (migration 146). "Filter by advisor" therefore returns
-    // every case that advisor works on, in either role.
-    if (
-      f.advisor &&
-      c.assigned_advisor_id !== f.advisor &&
-      !(c.case_associated_advisors ?? []).some((a) => a.advisor_id === f.advisor)
-    ) {
-      return false;
-    }
-    if (f.stage && c.status?.id !== f.stage) return false;
-    if (
-      f.bank &&
-      !c.case_banks?.some((cb) => !cb.deleted_at && cb.bank?.id === f.bank)
-    ) {
-      return false;
-    }
-    if (f.referrer && c.referrer_name !== f.referrer) return false;
-    if (f.insuranceAgent && c.insurance_agent_name !== f.insuranceAgent) return false;
-    if (!matchesTargetDateFilter(c.target_date, f.targetDate, now)) return false;
-    return true;
-  });
+  return cases.filter(
+    (c) =>
+      matchesAdvisors(c, f.advisor) &&
+      (f.stage.length === 0 || f.stage.includes(c.status?.id ?? '')) &&
+      matchesBanks(c, f.bank) &&
+      matchesText(c.referrer_name, f.referrer) &&
+      matchesText(c.insurance_agent_name, f.insuranceAgent) &&
+      (f.targetDate.length === 0 ||
+        f.targetDate.some((state) => matchesTargetDateFilter(c.target_date, state, now))),
+  );
 }
 
 /**

@@ -134,14 +134,17 @@ export function buildDashboardUrl(params: NlResolved['params']): string {
   return query ? `/cases?${query}` : '/cases';
 }
 
-/** The DashboardFilters shape filterCases() consumes (same pipeline as the page). */
+/** The DashboardFilters shape filterCases() consumes (same pipeline as the page).
+ *  Those filters are multi-select lists; an NL query resolves to at most one
+ *  value per filter, so each becomes a 0- or 1-item list. */
 export function toDashboardFilters(params: NlResolved['params']): DashboardFilters {
+  const one = <T,>(value: T | null): T[] => (value === null ? [] : [value]);
   return {
-    advisor: params.advisor,
-    stage: params.stage,
-    bank: params.bank,
-    referrer: null,
-    insuranceAgent: null,
-    targetDate: params.targetDate,
+    advisor: one(params.advisor),
+    stage: one(params.stage),
+    bank: one(params.bank),
+    referrer: [],
+    insuranceAgent: [],
+    targetDate: one(params.targetDate),
   };
 }

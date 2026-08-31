@@ -30,6 +30,7 @@ import {
 import { userHasPermission } from '@/lib/auth/permissions';
 import { asCaseId } from '@/lib/types/branded';
 import { parseLocale } from '@/lib/i18n/direction';
+import { parseQueryList } from '@/lib/utils/query-list';
 
 type SearchParams = Promise<{
   view?: string;
@@ -58,8 +59,13 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
   const caseId = z.uuid().safeParse(sp.case).success ? sp.case : undefined;
   // Assignee filter only applies outside "mine" (where every task is already
   // the caller's). Ignored for that view so the param can't linger misleadingly.
-  const assignedTo =
-    view !== 'mine' && z.uuid().safeParse(sp.assignee).success ? sp.assignee : undefined;
+  // Multi-select, same encoding as the dashboard filters: `?assignee=a,b`
+  // returns the tasks of EITHER teammate.
+  const assigneeIds =
+    view === 'mine'
+      ? []
+      : parseQueryList(sp.assignee).filter((id) => z.uuid().safeParse(id).success);
+  const assignedTo = assigneeIds.length > 0 ? assigneeIds : undefined;
   const display: 'board' | 'list' = sp.display === 'list' ? 'list' : 'board';
   const focus: 'immediate' | 'overdue' | null =
     sp.focus === 'immediate' || sp.focus === 'overdue' ? sp.focus : null;
