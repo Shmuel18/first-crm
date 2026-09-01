@@ -29,7 +29,7 @@ export type BoardRow = {
 
 /** What the current user is allowed to do with the clock. */
 export type ClockAccess = {
-  /** Manager (is_admin) — sees the board + edits everyone. */
+  /** Office owner (is_owner, mig 241) — sees the board + edits everyone. */
   isManager: boolean;
   /** Flagged hourly employee — sees their own punch clock. */
   isTracked: boolean;

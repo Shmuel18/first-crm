@@ -24,7 +24,7 @@ type NavItem = {
   collectionsOnly?: boolean;
   /** Gated on view_ai_inbox — the smart mail-triage queue (mig 234). */
   inboxOnly?: boolean;
-  /** Gated on is_maaser_owner (mig 240), NOT the admin flag: the office has a
+  /** Gated on is_owner (migs 240/241), NOT the admin flag: the office has a
    *  second manager who gets everything except the owner's tithe ledger. */
   maaserOnly?: boolean;
 };

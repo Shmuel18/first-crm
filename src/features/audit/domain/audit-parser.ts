@@ -51,6 +51,12 @@ export type AuditRow = {
  */
 const HIDDEN_FIELDS = new Set([
   'metadata',
+  // Wage data. The audit trigger records {old, new} for every changed column,
+  // so without this an admin reads pay rates out of the audit log even with
+  // every time-clock surface closed (migration 241). Display-level only — the
+  // audit_log row itself is still admin-readable; see the residual note in 241.
+  'hourly_rate',
+  'is_owner',
   'drive_file_id',
   'drive_file_url',
   'file_size',

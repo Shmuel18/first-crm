@@ -5,12 +5,15 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { getManagerTimesheet } from '@/features/time-clock/services/time-clock.service';
 import { generateTimesheetXlsx } from '@/features/time-clock/services/timesheet-xlsx';
 import { BRAND } from '@/lib/brand';
+import { isCurrentUserOwner } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 import { dateStamp } from '@/lib/utils/date-stamp';
 
-// ExcelJS needs Node (Buffer). Manager-only payroll timesheet export.
+// ExcelJS needs Node (Buffer). OWNER-only payroll timesheet export — the
+// spreadsheet carries every tracked employee's hours AND their pay rate, so it
+// is gated on is_owner (mig 241), not on the admin role.
 export const runtime = 'nodejs';
 export const maxDuration = 30;
 
@@ -34,8 +37,7 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return errorJson('unauthorized', 401);
 
-  const { data: isAdmin } = await supabase.rpc('is_admin');
-  if (isAdmin !== true) return errorJson('unauthorized', 403);
+  if (!(await isCurrentUserOwner())) return errorJson('unauthorized', 403);
 
   const allowed = await checkRateLimit({
     action: 'export_timesheet',

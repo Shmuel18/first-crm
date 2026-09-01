@@ -6,14 +6,14 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { MaaserView } from '@/features/maaser/components/maaser-view';
 import { pickDailyQuote } from '@/features/maaser/domain/quotes';
 import { getMaaserBasis, listMaaserEntries, listMaaserPayments } from '@/features/maaser/services/maaser.service';
-import { isCurrentUserMaaserOwner } from '@/lib/auth/permissions';
+import { isCurrentUserOwner } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 
 export default async function MaaserPage() {
   // OWNER-only (mig 240) — his personal charity ledger, deliberately narrower
   // than is_admin() so a second manager gets everything but this. RLS + the
   // maaser_income_basis() gate enforce it server-side; this is the UX guard.
-  if (!(await isCurrentUserMaaserOwner())) redirect('/cases');
+  if (!(await isCurrentUserOwner())) redirect('/cases');
 
   const [basis, entries, payments, t] = await Promise.all([
     getMaaserBasis(),

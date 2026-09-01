@@ -61,7 +61,7 @@ export async function updateMemberEmailAction(
 
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select('email, first_name, language')
+    .select('email, first_name, language, is_protected')
     .eq('id', userId)
     .is('deleted_at', null)
     .maybeSingle();
@@ -71,6 +71,16 @@ export async function updateMemberEmailAction(
     return { ok: false, error: 'unknown', values };
   }
   if (!profile?.email) return { ok: false, error: 'not_found', values };
+
+  // The owner's login address is not an admin's to move. Repointing it and then
+  // running a reset is account takeover — and it would hand the new admin every
+  // owner-only surface (ma'aser, backup, time clock). The DB refuses this too
+  // (migration 241); this check is here so the dialog shows a translated
+  // refusal instead of a generic failure.
+  if (profile.is_protected) {
+    console.error('[updateMemberEmail] refused: target profile is protected', { userId });
+    return { ok: false, error: 'unauthorized', values };
+  }
 
   const oldProfileEmail = profile.email.trim().toLowerCase();
   if (oldProfileEmail === email) return { ok: false, error: 'unchanged', values };

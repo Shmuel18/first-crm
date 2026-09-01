@@ -4,16 +4,16 @@ import { revalidatePath } from 'next/cache';
 
 import { z } from 'zod';
 
-import { getCurrentUser, isCurrentUserAdmin } from '@/lib/auth/permissions';
+import { getCurrentUser, isCurrentUserOwner } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
 type Result = { ok: true } | { ok: false; error: 'unauthorized' | 'validation' | 'unknown' };
 
-/** Manager soft-deletes a time entry (via the is_admin-gated RPC). */
+/** Owner soft-deletes a time entry (via the is_owner-gated RPC, mig 241). */
 export async function deleteEntryAction(id: string): Promise<Result> {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: 'unauthorized' };
-  if (!(await isCurrentUserAdmin())) return { ok: false, error: 'unauthorized' };
+  if (!(await isCurrentUserOwner())) return { ok: false, error: 'unauthorized' };
 
   if (!z.uuid().safeParse(id).success) return { ok: false, error: 'validation' };
 

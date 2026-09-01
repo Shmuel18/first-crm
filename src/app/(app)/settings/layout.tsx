@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
-import { isCurrentUserMaaserOwner, userHasPermission } from '@/lib/auth/permissions';
+import { isCurrentUserOwner, userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
 import { SettingsNavLink } from './settings-nav-link';
@@ -29,7 +29,7 @@ type SettingsNavItem = {
   labelKey: string;
   icon: React.ComponentType<{ className?: string }>;
   adminOnly?: boolean;
-  /** Owner-only (is_maaser_owner, mig 240) — stricter than adminOnly. */
+  /** Owner-only (is_owner, migs 240/241) — stricter than adminOnly. */
   ownerOnly?: boolean;
   /** Granular permission gate; aligns the nav with the route's own check. */
   permission?: string;
@@ -99,7 +99,7 @@ export default async function SettingsLayout({
   const { data: isAdmin } = await supabase.rpc('is_admin');
   const canManageSimulators = await userHasPermission('manage_simulator_settings');
   // Only an admin can be the owner, so non-admins never pay for this call.
-  const isOwner = isAdmin === true && (await isCurrentUserMaaserOwner());
+  const isOwner = isAdmin === true && (await isCurrentUserOwner());
 
   // Filter items per section, then drop sections that ended up empty (e.g.
   // a non-admin sees no items in the office/data sections — better to hide

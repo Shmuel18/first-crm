@@ -4,12 +4,12 @@ import { getTranslations } from 'next-intl/server';
 
 import { BackupPanel } from '@/features/backup/components/backup-panel';
 import { getBackupView } from '@/features/backup/services/backup-view.service';
-import { isCurrentUserMaaserOwner } from '@/lib/auth/permissions';
+import { isCurrentUserOwner } from '@/lib/auth/permissions';
 
 export default async function BackupSettingsPage() {
   // Owner-only (mig 240), not admin-only: a snapshot carries the ma'aser
   // tables, so backup/restore is a way around the ledger's own gate.
-  if (!(await isCurrentUserMaaserOwner())) redirect('/settings/profile');
+  if (!(await isCurrentUserOwner())) redirect('/settings/profile');
 
   const t = await getTranslations('settings.backup');
   const view = await getBackupView();

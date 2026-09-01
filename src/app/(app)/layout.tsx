@@ -15,7 +15,7 @@ import { TaskBadgeAppSync } from '@/features/tasks/components/task-badge-app-syn
 import { TaskBadgeProvider } from '@/features/tasks/components/task-badge-provider';
 import { TaskNudge } from '@/features/tasks/components/task-nudge';
 import { isCurrentUserTimeTracked } from '@/features/time-clock/services/time-clock.service';
-import { isCurrentUserMaaserOwner } from '@/lib/auth/permissions';
+import { isCurrentUserOwner } from '@/lib/auth/permissions';
 import { getDirection, parseLocale } from '@/lib/i18n/direction';
 import { getLayoutBootstrap } from '@/lib/layout/bootstrap';
 
@@ -30,14 +30,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   ]);
   const dir = getDirection(parseLocale(rawLocale));
 
-  // Time-clock nav: managers always; tracked hourly staff via a cheap own-profile
-  // read (short-circuited for admins so they never pay for it).
-  const canUseTimeClock =
-    bootstrap.isAdmin || (bootstrap.authenticated && (await isCurrentUserTimeTracked()));
+  // The tithe ledger (mig 240) and the time clock (241) are the OWNER's, not
+  // every manager's. Only an admin can be the owner, so non-admins never pay
+  // for the extra round-trip.
+  const isOwner = bootstrap.isAdmin && (await isCurrentUserOwner());
+  const canViewMaaser = isOwner;
 
-  // The tithe ledger is the OWNER's, not every manager's (mig 240). Only admins
-  // can be the owner, so non-admins never pay for the extra round-trip.
-  const canViewMaaser = bootstrap.isAdmin && (await isCurrentUserMaaserOwner());
+  // Time-clock nav: the owner always (he runs the board); tracked hourly staff
+  // via a cheap own-profile read, which the owner short-circuits past.
+  const canUseTimeClock =
+    isOwner || (bootstrap.authenticated && (await isCurrentUserTimeTracked()));
 
   return (
     <TooltipProvider>

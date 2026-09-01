@@ -35,7 +35,7 @@ type FinanceItem = NavItem & {
   adminOnly?: boolean;
   /** Gated on view_collections (not the admin flag). */
   collectionsOnly?: boolean;
-  /** Gated on is_maaser_owner (mig 240) — see the sidebar note. */
+  /** Gated on is_owner (migs 240/241) — see the sidebar note. */
   maaserOnly?: boolean;
 };
 

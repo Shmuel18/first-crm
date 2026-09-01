@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import { getDriveClientIfConnected } from '@/features/integrations/services/drive-case-uploader';
-import { isCurrentUserMaaserOwner } from '@/lib/auth/permissions';
+import { isCurrentUserOwner } from '@/lib/auth/permissions';
 import { encryptWithKey, encryptWithKeyV2 } from '@/lib/crypto/secrets';
 import { env } from '@/lib/env';
 import { checkRateLimit } from '@/lib/rate-limit';
@@ -26,7 +26,7 @@ export async function runBackupAction(): Promise<RunBackupResult> {
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
   // OWNER, not just admin (mig 240): the snapshot contains the ma'aser tables,
   // so whoever can produce a backup file can read the owner's tithe ledger.
-  if (!(await isCurrentUserMaaserOwner())) return { ok: false, error: 'unauthorized' };
+  if (!(await isCurrentUserOwner())) return { ok: false, error: 'unauthorized' };
 
   // Backups scan every business table and upload to Drive — the nightly cron
   // already does this once per day. A manual button-mash shouldn't trigger

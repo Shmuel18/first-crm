@@ -1,6 +1,6 @@
 import { cache } from 'react';
 
-import { getCurrentUser, isCurrentUserAdmin } from '@/lib/auth/permissions';
+import { getCurrentUser, isCurrentUserOwner } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
 import { israelMonthRange } from '../domain/month-range';
@@ -50,9 +50,15 @@ function mapEmployee(r: ProfileRow): TrackedEmployee {
   };
 }
 
-/** What the current user can do with the clock: manage (admin) and/or punch (tracked). */
+/**
+ * What the current user can do with the clock: manage and/or punch.
+ *
+ * `isManager` is the OWNER gate (is_owner, mig 241), NOT is_admin: attendance
+ * and pay rates are reserved to the office owner, so the office's second admin
+ * gets no board, no timesheet and no employee toggles.
+ */
 export async function getClockAccess(): Promise<ClockAccess> {
-  const [isManager, user] = await Promise.all([isCurrentUserAdmin(), getCurrentUser()]);
+  const [isManager, user] = await Promise.all([isCurrentUserOwner(), getCurrentUser()]);
   if (!user) return { isManager: false, isTracked: false, hourlyRate: null };
 
   const supabase = await createClient();
@@ -70,8 +76,8 @@ export async function getClockAccess(): Promise<ClockAccess> {
 
 /**
  * Lightweight cached check for nav gating: is the current user a tracked hourly
- * employee? (Managers get the nav via is_admin, checked separately — short-circuit
- * there so admins never pay for this read.)
+ * employee? (The owner gets the nav via is_owner, checked separately — short-
+ * circuit there so they never pay for this read.)
  */
 export const isCurrentUserTimeTracked = cache(async (): Promise<boolean> => {
   const user = await getCurrentUser();
@@ -135,9 +141,9 @@ export async function listMyEntries(): Promise<TimeEntry[]> {
   return listMyEntriesForRange(fromISO, toISO);
 }
 
-/** Manager: every hourly-tracked employee with their current open shift (the live board). */
+/** Owner: every hourly-tracked employee with their current open shift (the live board). */
 export async function getBoard(): Promise<BoardRow[]> {
-  if (!(await isCurrentUserAdmin())) return [];
+  if (!(await isCurrentUserOwner())) return [];
   const supabase = await createClient();
   const { data: staff, error } = await supabase
     .from('profiles')
@@ -163,9 +169,9 @@ export async function getBoard(): Promise<BoardRow[]> {
   return employees.map((employee) => ({ employee, openEntry: openByUser.get(employee.id) ?? null }));
 }
 
-/** Manager: all active staff + their tracking flags (for the settings toggles). */
+/** Owner: all active staff + their tracking flags (for the settings toggles). */
 export async function listStaffForTracking(): Promise<TrackedEmployee[]> {
-  if (!(await isCurrentUserAdmin())) return [];
+  if (!(await isCurrentUserOwner())) return [];
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('profiles')
@@ -179,12 +185,12 @@ export async function listStaffForTracking(): Promise<TrackedEmployee[]> {
   return (data ?? []).map((r) => mapEmployee(r as ProfileRow));
 }
 
-/** Manager: every tracked employee + their shifts in [fromISO, toISO) — the timesheet. */
+/** Owner: every tracked employee + their shifts in [fromISO, toISO) — the timesheet. */
 export async function getManagerTimesheet(
   fromISO: string,
   toISO: string,
 ): Promise<{ employee: TrackedEmployee; entries: TimeEntry[] }[]> {
-  if (!(await isCurrentUserAdmin())) return [];
+  if (!(await isCurrentUserOwner())) return [];
   const supabase = await createClient();
   const { data: staff, error } = await supabase
     .from('profiles')
@@ -218,13 +224,13 @@ export async function getManagerTimesheet(
   return employees.map((employee) => ({ employee, entries: byUser.get(employee.id) ?? [] }));
 }
 
-/** Manager: one employee's shifts in [fromISO, toISO) (newest first). */
+/** Owner: one employee's shifts in [fromISO, toISO) (newest first). */
 export async function listEntriesForRange(
   userId: string,
   fromISO: string,
   toISO: string,
 ): Promise<TimeEntry[]> {
-  if (!(await isCurrentUserAdmin())) return [];
+  if (!(await isCurrentUserOwner())) return [];
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('time_entries')

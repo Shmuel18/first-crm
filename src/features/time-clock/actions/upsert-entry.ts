@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
-import { getCurrentUser, isCurrentUserAdmin } from '@/lib/auth/permissions';
+import { getCurrentUser, isCurrentUserOwner } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
 import { UpsertEntrySchema, type UpsertEntryInput } from '../schemas/time-clock.schema';
@@ -15,7 +15,7 @@ type Result =
 export async function upsertEntryAction(input: UpsertEntryInput): Promise<Result> {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: 'unauthorized' };
-  if (!(await isCurrentUserAdmin())) return { ok: false, error: 'unauthorized' };
+  if (!(await isCurrentUserOwner())) return { ok: false, error: 'unauthorized' };
 
   const parsed = UpsertEntrySchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: 'validation' };

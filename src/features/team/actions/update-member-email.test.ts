@@ -49,10 +49,12 @@ function arrange({
   profileEmail = 'old@example.com',
   authEmail = 'old@example.com',
   authUpdateError = null,
+  isProtected = false,
 }: {
   profileEmail?: string;
   authEmail?: string;
   authUpdateError?: { code?: string } | null;
+  isProtected?: boolean;
 } = {}) {
   const updatePayloads: unknown[] = [];
   const updateQueries = [
@@ -69,6 +71,7 @@ function arrange({
         email: profileEmail,
         first_name: 'Employee',
         language: 'he',
+        is_protected: isProtected,
       },
       error: null,
     })),
@@ -145,6 +148,20 @@ describe('updateMemberEmailAction', () => {
       firstName: 'Employee',
       locale: 'he',
     });
+  });
+
+  it('refuses to move a protected profile: repointing the owner login is takeover', async () => {
+    const { updatePayloads, updateUserById } = arrange({ isProtected: true });
+
+    const result = await updateMemberEmailAction(UPDATE_MEMBER_EMAIL_INITIAL, form());
+
+    expect(result).toEqual({
+      ok: false,
+      error: 'unauthorized',
+      values: { user_id: MEMBER_ID, email: 'new@example.com' },
+    });
+    expect(updatePayloads).toHaveLength(0);
+    expect(updateUserById).not.toHaveBeenCalled();
   });
 
   it('rolls the profile back when Auth rejects a duplicate address', async () => {

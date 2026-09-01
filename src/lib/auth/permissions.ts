@@ -122,24 +122,26 @@ export const userCanEditCase = cache(async (caseId: string): Promise<boolean> =>
 });
 
 /**
- * True if the current user is the office OWNER — the only user who may see the
- * ma'aser ledger (wraps the is_maaser_owner RPC, migration 240).
+ * True if the current user is the office OWNER (wraps the is_owner RPC,
+ * migrations 240 + 241).
  *
- * Deliberately NOT is_admin(): the office has a second manager who gets every
- * admin capability except this one, and it is NOT a permission key either —
- * an admin can edit roles and per-user overrides, so a permission-based fence
- * could be lifted by the person it excludes. The flag has no UI.
+ * These are the capabilities the `admin` role does NOT confer: the ma'aser
+ * ledger, backup/restore, and the time clock. Deliberately NOT is_admin() —
+ * the office has a second manager who gets everything else — and deliberately
+ * NOT a permission key either: an admin can edit roles and per-user
+ * overrides, so a permission-based fence could be lifted by the person it
+ * excludes. The flag has no UI.
  */
-export const isCurrentUserMaaserOwner = cache(async (): Promise<boolean> => {
+export const isCurrentUserOwner = cache(async (): Promise<boolean> => {
   const supabase = await createClient();
-  // database.ts predates migration 240; cast to a minimal local shape (same
+  // database.ts predates migration 241; cast to a minimal local shape (same
   // justified pattern as userCanEditCase above). Regenerate types to drop it.
   const ownerClient = supabase as unknown as {
-    rpc(fn: 'is_maaser_owner'): PromiseLike<{ data: boolean | null; error: { message: string } | null }>;
+    rpc(fn: 'is_owner'): PromiseLike<{ data: boolean | null; error: { message: string } | null }>;
   };
-  const { data, error } = await ownerClient.rpc('is_maaser_owner');
+  const { data, error } = await ownerClient.rpc('is_owner');
   if (error) {
-    console.error('is_maaser_owner RPC failed', { err: error.message });
+    console.error('is_owner RPC failed', { err: error.message });
     return false;
   }
   return data === true;
