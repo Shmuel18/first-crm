@@ -4,6 +4,9 @@ export type {
   MonthlyTrendPoint,
   StatusSnapshot,
   AdvisorStat,
+  CycleBucket,
+  CycleTime,
+  StageBreakdownRow,
 } from './schemas/statistics.schema';
 
 /**

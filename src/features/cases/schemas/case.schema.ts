@@ -43,6 +43,10 @@ export const CaseFormShape = z.object({
   case_type_other_text: optionalShortString(NAME_MAX),
   short_note: optionalShortString(SHORT_NOTE_MAX),
   target_date: optionalDate,
+  // Real date the office opened the file (migration 243). NULL falls back to
+  // created_at — imported cases carry the import date there, so this is the
+  // field that makes "how long did the case take" honest for the legacy book.
+  opened_at: optionalDate,
   request_details: optionalLongText(REQUEST_DETAILS_MAX),
 });
 

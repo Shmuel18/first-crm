@@ -1,5 +1,10 @@
 import type { Locale } from '@/lib/i18n/direction';
-import type { MonthlyTrend, StatusSnapshot } from '../schemas/statistics.schema';
+import type {
+  CycleBucket,
+  MonthlyTrend,
+  StageBreakdownRow,
+  StatusSnapshot,
+} from '../schemas/statistics.schema';
 
 /**
  * Statuses surfaced as count chips beside the funnel instead of bars: the two
@@ -43,6 +48,35 @@ export function statusName(
   locale: Locale,
 ): string {
   return locale === 'he' ? status.name_he : status.name_en;
+}
+
+/** A bucket ready to render: its share of the population and its bar length. */
+export type CycleBucketView = CycleBucket & { share: number; barPct: number };
+
+/**
+ * Prepare the cycle-time histogram. `share` is the bucket's percentage of all
+ * measured cases (what the reader wants to know); `barPct` scales against the
+ * BIGGEST bucket, not the total, so the tallest bar always fills the track and
+ * a flat distribution stays legible instead of rendering five stubs.
+ */
+export function toCycleBucketViews(buckets: CycleBucket[], total: number): CycleBucketView[] {
+  const max = buckets.reduce((m, b) => Math.max(m, b.count), 0);
+  return buckets.map((b) => ({
+    ...b,
+    share: total > 0 ? Math.round((b.count / total) * 100) : 0,
+    barPct: max > 0 ? (b.count / max) * 100 : 0,
+  }));
+}
+
+/** A stage row ready to render, with its bar scaled to the slowest stage. */
+export type StageBreakdownView = StageBreakdownRow & { barPct: number };
+
+/** Slowest stage first — "where do cases actually sit" is the question. */
+export function toStageBreakdownViews(rows: StageBreakdownRow[]): StageBreakdownView[] {
+  const max = rows.reduce((m, r) => Math.max(m, r.avg_days), 0);
+  return [...rows]
+    .sort((a, b) => b.avg_days - a.avg_days)
+    .map((r) => ({ ...r, barPct: max > 0 ? (r.avg_days / max) * 100 : 0 }));
 }
 
 /** Last two months of the trend, for a this-month vs last-month delta. */

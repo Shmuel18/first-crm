@@ -11,15 +11,16 @@ import { CaseAgreementAdminSection } from '@/features/agreements/components/case
 import { CaseCollectionsAdminSection } from '@/features/collections/components/case-collections-admin-section';
 import type { Locale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
-import { formatDateShort } from '@/lib/utils/format-date';
 
 import type { InsuranceStatus } from '../schemas/case.schema';
+import { getCaseExecutionReachedAt } from '../services/case-cycle-time.service';
 import type {
   AdvisorOption,
   StatusOption,
 } from '../services/case-lookups.service';
 
 import { CaseBlock } from './case-block';
+import { CaseCycleTimeLine } from './case-cycle-time-line';
 import { CaseDetailsSection } from './case-details-section';
 
 type Props = {
@@ -38,8 +39,11 @@ type Props = {
   targetDate: string | null;
   referrerName: string | null;
   shortNote: string | null;
-  /** Case opening date (cases.created_at) — shown read-only for the record. */
+  /** Case opening date (cases.created_at) — the fallback anchor for timing. */
   createdAt: string;
+  /** Hand-entered real opening date (migration 243). Overrides createdAt in
+   *  every timing readout; editable in the case-details fields below. */
+  openedAt: string | null;
   /** All active case_banks rows (with bank + banker_name) for the inline
    *  banks list inside the admin block. */
   bankRows: ReadonlyArray<CaseBankRowData>;
@@ -91,6 +95,7 @@ export async function CaseAdminBlock({
   referrerName,
   shortNote,
   createdAt,
+  openedAt,
   bankRows,
   canSeeFinancials,
   feeAmount,
@@ -110,22 +115,30 @@ export async function CaseAdminBlock({
   // cheap and tightly scoped, so we don't pull them up to the page.
   // Payouts (commissions/salaries) are manager-only — skip the query entirely
   // for non-managers (RLS would return [] anyway; this avoids the roundtrip).
-  const [banks, expenses, payouts] = await Promise.all([
+  const [banks, expenses, payouts, executionReachedAt] = await Promise.all([
     listBankOptions(),
     listCaseExpenses(asCaseId(caseId)),
     canSeeFinancials ? listCasePayouts(asCaseId(caseId)) : Promise.resolve([]),
+    // Cycle-time milestone. Joins the existing wave rather than adding a
+    // round trip; scoped by case_id, which idx_stage_durations_case covers.
+    getCaseExecutionReachedAt(asCaseId(caseId)),
   ]);
+
+  // One timestamp for the whole render so the "still in progress" day count
+  // can't drift between the line and anything else derived from it.
+  const now = new Date().toISOString();
 
   return (
     <CaseBlock title={t('blocks.admin')} icon={<Wallet />} fullWidth blockKey="admin">
       {/* Section 1 — Case details (8 inline fields). */}
       <SectionHeader title={tAdmin('sections.caseDetails')} />
-      <p className="pb-2 pt-2 text-xs text-neutral-500">
-        {tAdmin('openedAt')}:{' '}
-        <span className="font-medium text-neutral-700 tabular-nums">
-          {formatDateShort(createdAt, locale)}
-        </span>
-      </p>
+      <CaseCycleTimeLine
+        openedAt={openedAt}
+        createdAt={createdAt}
+        reachedAt={executionReachedAt}
+        now={now}
+        locale={locale}
+      />
       <CaseDetailsSection
         caseId={caseId}
         initial={{
@@ -136,6 +149,7 @@ export async function CaseAdminBlock({
           insurance_agent_name: insuranceAgentName,
           appraiser_name: appraiserName,
           target_date: targetDate,
+          opened_at: openedAt,
           referrer_name: referrerName,
           short_note: shortNote,
         }}

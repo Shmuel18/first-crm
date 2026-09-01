@@ -2728,6 +2728,7 @@ export type Database = {
           insurance_status: string | null
           is_archived: boolean
           metadata: Json
+          opened_at: string | null
           primary_borrower_id: string | null
           property_value: number | null
           referrer_name: string | null
@@ -2760,6 +2761,7 @@ export type Database = {
           insurance_status?: string | null
           is_archived?: boolean
           metadata?: Json
+          opened_at?: string | null
           primary_borrower_id?: string | null
           property_value?: number | null
           referrer_name?: string | null
@@ -2792,6 +2794,7 @@ export type Database = {
           insurance_status?: string | null
           is_archived?: boolean
           metadata?: Json
+          opened_at?: string | null
           primary_borrower_id?: string | null
           property_value?: number | null
           referrer_name?: string | null

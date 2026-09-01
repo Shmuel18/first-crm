@@ -1,11 +1,13 @@
 import { useTranslations } from 'next-intl';
 
 import { AdvisorBreakdown } from './advisor-breakdown';
+import { CycleTimePanel } from './cycle-time-panel';
 import { FinancialSummary } from './financial-summary';
 import { KpiGrid } from './kpi-grid';
 import { MonthlyTrendChart } from './monthly-trend-chart';
 import { PeriodSelector } from './period-selector';
 import { PipelineFunnel } from './pipeline-funnel';
+import { StageBreakdownPanel } from './stage-breakdown-panel';
 
 import type { MonthlyTrend, StatisticsSummary } from '../schemas/statistics.schema';
 import type { StatisticsPeriod } from '../types';
@@ -41,6 +43,13 @@ export function StatisticsView({ summary, trend, period }: Props) {
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
             <PipelineFunnel snapshot={summary.status_snapshot} />
             <AdvisorBreakdown rows={summary.by_advisor} />
+          </div>
+          {/* "כמה זמן אורך תיק" — the distribution and the per-stage split.
+              Paired side by side: one answers how long the whole file takes,
+              the other where inside the pipeline that time is spent. */}
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <CycleTimePanel cycleTime={summary.cycle_time} />
+            <StageBreakdownPanel rows={summary.stage_breakdown} />
           </div>
           <FinancialSummary financial={summary.financial} />
         </>

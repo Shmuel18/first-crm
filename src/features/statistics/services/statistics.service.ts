@@ -10,13 +10,15 @@ import type { DateRange, StatisticsPeriod } from '../types';
 
 /**
  * Data access for the manager statistics dashboard. Both reads go through the
- * SECURITY DEFINER RPCs in migration 133, which gate on is_admin() server-side
- * — so a non-admin call raises and surfaces here as a logged error + null/[]
- * (never the raw Postgres message). The page also guards with isCurrentUserAdmin
- * before rendering; this is the defense-in-depth layer.
+ * SECURITY DEFINER RPCs from migration 135 (bodies last restated in 243), which
+ * gate on is_admin() server-side — so a non-admin call raises and surfaces here
+ * as a logged error + null/[] (never the raw Postgres message). The page also
+ * guards with isCurrentUserAdmin before rendering; this is the defense-in-depth
+ * layer.
  *
- * The generated database types don't yet include these RPCs, so the client is
- * narrowed locally to the exact call shape (same pattern as layout bootstrap).
+ * The RPCs return untyped JSONB, so the client is narrowed locally to the exact
+ * call shape and the payload is validated by the Zod schemas (same pattern as
+ * layout bootstrap).
  */
 
 type SummaryRpcClient = {

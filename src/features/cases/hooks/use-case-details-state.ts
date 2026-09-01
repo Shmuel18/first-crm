@@ -19,6 +19,7 @@ export type LocalCase = Pick<
   | 'insurance_agent_name'
   | 'appraiser_name'
   | 'target_date'
+  | 'opened_at'
   | 'referrer_name'
   | 'short_note'
 >;

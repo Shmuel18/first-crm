@@ -737,8 +737,27 @@
       "executedInPeriod": "Executed",
       "stuckCases": "Stuck",
       "avgCycleDays": "Avg. days to execution",
-      "avgCycleDaysHint": "From case opening to execution",
+      "avgCycleDaysHint": "From case opening to execution or completed & paid",
       "leadsConverted": "Leads converted"
+    },
+    "cycleTime": {
+      "title": "How long a case takes",
+      "caption": "{count, plural, =1 {1 case reached execution} other {# cases reached execution}} — all cases, regardless of the selected period",
+      "average": "{days, plural, =1 {1 day on average} other {# days on average}}",
+      "empty": "No cases have reached execution yet.",
+      "buckets": {
+        "lt_30": "Under 30 days",
+        "d30_60": "30–60 days",
+        "d60_90": "60–90 days",
+        "d90_180": "90–180 days",
+        "gte_180": "Over 180 days"
+      }
+    },
+    "stageBreakdown": {
+      "title": "Average time per stage",
+      "caption": "Average days per stage visit, across completed stages",
+      "daysShort": "days",
+      "empty": "No stage data to show yet."
     },
     "trend": {
       "title": "Opened vs executed by month",
@@ -1855,7 +1874,10 @@
       "open": "Open in Google Calendar"
     },
     "admin": {
-      "openedAt": "Case opened",
+      "openedAt": "Opened",
+      "executionAt": "Reached execution",
+      "daysToExecution": "{days, plural, =1 {1 day to execution} other {# days to execution}}",
+      "daysInProgress": "{days, plural, =1 {1 day in progress} other {# days in progress}}",
       "sections": {
         "caseDetails": "Case details",
         "banks": "Banks",
@@ -1917,6 +1939,7 @@
       "insuranceAgent": "Insurance agent",
       "appraiser": "Appraiser",
       "targetDate": "Target date",
+      "openedAt": "Case opening date",
       "referrer": "Referred by",
       "shortNote": "Short note",
       "advisor": "Assigned advisor",

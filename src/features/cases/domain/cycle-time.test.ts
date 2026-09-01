@@ -1,0 +1,63 @@
+import { describe, expect, it } from 'vitest';
+
+import { computeCaseCycleTime, daysBetween, resolveOpenedAt } from './cycle-time';
+
+describe('resolveOpenedAt', () => {
+  it('prefers the hand-entered opening date over the row timestamp', () => {
+    expect(resolveOpenedAt('2026-03-12', '2026-06-01T09:00:00Z')).toBe('2026-03-12');
+  });
+
+  it('falls back to created_at when the office never filled the date in', () => {
+    expect(resolveOpenedAt(null, '2026-06-01T09:00:00Z')).toBe('2026-06-01T09:00:00Z');
+  });
+});
+
+describe('daysBetween', () => {
+  it('counts whole days between two instants', () => {
+    expect(daysBetween('2026-03-01T00:00:00Z', '2026-03-31T00:00:00Z')).toBe(30);
+  });
+
+  it('rounds to the nearest day rather than truncating', () => {
+    expect(daysBetween('2026-03-01T00:00:00Z', '2026-03-02T20:00:00Z')).toBe(2);
+  });
+
+  it('returns a negative number when the milestone predates the opening date', () => {
+    // A typo in opened_at must stay visible — clamping it to 0 would hide the
+    // only signal the office has that the date is wrong.
+    expect(daysBetween('2026-07-01T00:00:00Z', '2026-06-01T00:00:00Z')).toBe(-30);
+  });
+
+  it('returns null for an unparseable date', () => {
+    expect(daysBetween('not-a-date', '2026-06-01T00:00:00Z')).toBeNull();
+  });
+});
+
+describe('computeCaseCycleTime', () => {
+  const NOW = '2026-09-01T12:00:00Z';
+
+  it('measures opening to milestone once the case reached execution', () => {
+    expect(
+      computeCaseCycleTime('2026-03-12', '2026-06-01T09:00:00Z', '2026-06-20T00:00:00Z', NOW),
+    ).toEqual({ state: 'reached', days: 100, reachedAt: '2026-06-20T00:00:00Z' });
+  });
+
+  it('measures opening to today while the case is still in flight', () => {
+    // 31.5 days → rounds up, same rule as the reached branch.
+    expect(computeCaseCycleTime('2026-08-01', '2026-08-01T00:00:00Z', null, NOW)).toEqual({
+      state: 'pending',
+      days: 32,
+    });
+  });
+
+  it('uses created_at as the anchor when opened_at is unset', () => {
+    // The imported-case path: created_at is the import day, so the number is
+    // short — honest given what the data actually knows.
+    expect(
+      computeCaseCycleTime(null, '2026-06-01T00:00:00Z', '2026-06-11T00:00:00Z', NOW),
+    ).toEqual({ state: 'reached', days: 10, reachedAt: '2026-06-11T00:00:00Z' });
+  });
+
+  it('returns null when the dates cannot be parsed', () => {
+    expect(computeCaseCycleTime(null, 'garbage', null, NOW)).toBeNull();
+  });
+});

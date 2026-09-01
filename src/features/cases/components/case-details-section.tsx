@@ -163,6 +163,17 @@ export function CaseDetailsSection({
         onSave={(v) => saveField('target_date', v)}
         canEdit={canEdit}
       />
+      {/* Real opening date (migration 243). Left empty the case falls back to
+          created_at — which for a bulk-imported case is the import day, so
+          this is where the office corrects the legacy book and makes the
+          "days to ביצוע" readout above (and the statistics) truthful. */}
+      <EditableField
+        type="date"
+        label={tFields('openedAt')}
+        value={localCase.opened_at}
+        onSave={(v) => saveField('opened_at', v)}
+        canEdit={canEdit}
+      />
       {/* הופנה ע״י — placed next to the agreed fee per the office layout. */}
       <EditableField
         label={tFields('referrer')}

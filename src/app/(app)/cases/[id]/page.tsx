@@ -294,6 +294,7 @@ export default async function CaseDetailPage({ params }: Props) {
             referrerName={caseData.referrer_name}
             shortNote={caseData.short_note}
             createdAt={caseData.created_at}
+            openedAt={caseData.opened_at}
             bankRows={bankRows}
             canSeeFinancials={canSeeFinancials}
             feeAmount={
