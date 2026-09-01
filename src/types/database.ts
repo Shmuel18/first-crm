@@ -3324,6 +3324,55 @@ export type Database = {
           },
         ]
       }
+      employee_pay_rates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          hourly_rate: number
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          hourly_rate: number
+          updated_at?: string
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          hourly_rate?: number
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_pay_rates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_pay_rates_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_pay_rates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       erasure_orphan_log: {
         Row: {
           deleted_at: string | null
@@ -4557,7 +4606,6 @@ export type Database = {
           phone: string | null
           role_id: string | null
           auto_clock_in: boolean
-          hourly_rate: number | null
           time_tracked: boolean
           updated_at: string
           updated_by: string | null
@@ -4580,7 +4628,6 @@ export type Database = {
           phone?: string | null
           role_id?: string | null
           auto_clock_in?: boolean
-          hourly_rate?: number | null
           time_tracked?: boolean
           updated_at?: string
           updated_by?: string | null
@@ -4603,7 +4650,6 @@ export type Database = {
           phone?: string | null
           role_id?: string | null
           auto_clock_in?: boolean
-          hourly_rate?: number | null
           time_tracked?: boolean
           updated_at?: string
           updated_by?: string | null

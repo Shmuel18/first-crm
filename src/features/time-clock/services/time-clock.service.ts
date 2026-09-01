@@ -10,6 +10,12 @@ import type { BoardRow, ClockAccess, TimeEntry, TrackedEmployee } from '../types
 // Explicit columns (never select('*')) mirroring the TimeEntry shape.
 const TIME_ENTRY_COLUMNS = 'id, user_id, clock_in, clock_out, note, source' as const;
 
+// Wages live in their own owner-scoped table since migration 242 — profiles is
+// admin-readable and RLS cannot hide a single column, so `hourly_rate` on
+// profiles handed every wage to the office's second admin. Staff identity and
+// the tracking flags stay on profiles; the rate is joined in below.
+const STAFF_COLUMNS = 'id, first_name, last_name, time_tracked, auto_clock_in' as const;
+
 type EntryRow = {
   id: string;
   user_id: string;
@@ -36,18 +42,44 @@ type ProfileRow = {
   last_name: string | null;
   time_tracked: boolean;
   auto_clock_in: boolean;
-  hourly_rate: number | null;
 };
 
-function mapEmployee(r: ProfileRow): TrackedEmployee {
+function mapEmployee(r: ProfileRow, hourlyRate: number | null): TrackedEmployee {
   return {
     id: r.id,
     firstName: r.first_name,
     lastName: r.last_name,
     timeTracked: r.time_tracked,
     autoClockIn: r.auto_clock_in,
-    hourlyRate: r.hourly_rate == null ? null : Number(r.hourly_rate),
+    hourlyRate,
   };
+}
+
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * Wages for the given staff ids, keyed by user id.
+ *
+ * A second round-trip rather than a join: PostgREST can only embed across a
+ * declared FK, and employee_pay_rates points AT profiles, so the embed would
+ * have to be written from the rates side and would drop rate-less staff. RLS
+ * (self-or-owner, mig 242) already returns an empty map to anyone else, so a
+ * caller that slips past the gate above still gets no wages.
+ */
+async function fetchRates(
+  supabase: SupabaseServerClient,
+  ids: readonly string[],
+): Promise<Map<string, number>> {
+  if (ids.length === 0) return new Map();
+  const { data, error } = await supabase
+    .from('employee_pay_rates')
+    .select('user_id, hourly_rate')
+    .in('user_id', [...ids]);
+  if (error) {
+    console.error('[time-clock] pay rates error', { code: error.code });
+    return new Map();
+  }
+  return new Map((data ?? []).map((r) => [r.user_id, Number(r.hourly_rate)]));
 }
 
 /**
@@ -62,15 +94,14 @@ export async function getClockAccess(): Promise<ClockAccess> {
   if (!user) return { isManager: false, isTracked: false, hourlyRate: null };
 
   const supabase = await createClient();
-  const { data } = await supabase
-    .from('profiles')
-    .select('time_tracked, hourly_rate')
-    .eq('id', user.id)
-    .maybeSingle();
+  const [{ data }, rates] = await Promise.all([
+    supabase.from('profiles').select('time_tracked').eq('id', user.id).maybeSingle(),
+    fetchRates(supabase, [user.id]),
+  ]);
   return {
     isManager,
     isTracked: Boolean(data?.time_tracked),
-    hourlyRate: data?.hourly_rate == null ? null : Number(data.hourly_rate),
+    hourlyRate: rates.get(user.id) ?? null,
   };
 }
 
@@ -147,7 +178,7 @@ export async function getBoard(): Promise<BoardRow[]> {
   const supabase = await createClient();
   const { data: staff, error } = await supabase
     .from('profiles')
-    .select('id, first_name, last_name, time_tracked, auto_clock_in, hourly_rate')
+    .select(STAFF_COLUMNS)
     .eq('time_tracked', true)
     .eq('is_active', true)
     .order('first_name', { ascending: true });
@@ -155,7 +186,9 @@ export async function getBoard(): Promise<BoardRow[]> {
     console.error('[time-clock] board staff error', { code: error.code });
     return [];
   }
-  const employees = (staff ?? []).map((r) => mapEmployee(r as ProfileRow));
+  const rows = staff ?? [];
+  const rates = await fetchRates(supabase, rows.map((r) => r.id));
+  const employees = rows.map((r) => mapEmployee(r as ProfileRow, rates.get(r.id) ?? null));
   if (employees.length === 0) return [];
 
   const { data: open } = await supabase
@@ -175,14 +208,16 @@ export async function listStaffForTracking(): Promise<TrackedEmployee[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, first_name, last_name, time_tracked, auto_clock_in, hourly_rate')
+    .select(STAFF_COLUMNS)
     .eq('is_active', true)
     .order('first_name', { ascending: true });
   if (error) {
     console.error('[time-clock] staff list error', { code: error.code });
     return [];
   }
-  return (data ?? []).map((r) => mapEmployee(r as ProfileRow));
+  const rows = data ?? [];
+  const rates = await fetchRates(supabase, rows.map((r) => r.id));
+  return rows.map((r) => mapEmployee(r as ProfileRow, rates.get(r.id) ?? null));
 }
 
 /** Owner: every tracked employee + their shifts in [fromISO, toISO) — the timesheet. */
@@ -194,7 +229,7 @@ export async function getManagerTimesheet(
   const supabase = await createClient();
   const { data: staff, error } = await supabase
     .from('profiles')
-    .select('id, first_name, last_name, time_tracked, auto_clock_in, hourly_rate')
+    .select(STAFF_COLUMNS)
     .eq('time_tracked', true)
     .eq('is_active', true)
     .order('first_name', { ascending: true });
@@ -202,7 +237,9 @@ export async function getManagerTimesheet(
     console.error('[time-clock] timesheet staff error', { code: error.code });
     return [];
   }
-  const employees = (staff ?? []).map((r) => mapEmployee(r as ProfileRow));
+  const staffRows = staff ?? [];
+  const rates = await fetchRates(supabase, staffRows.map((r) => r.id));
+  const employees = staffRows.map((r) => mapEmployee(r as ProfileRow, rates.get(r.id) ?? null));
   if (employees.length === 0) return [];
 
   const { data: rows } = await supabase
