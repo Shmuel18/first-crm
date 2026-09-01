@@ -24,6 +24,9 @@ type NavItem = {
   collectionsOnly?: boolean;
   /** Gated on view_ai_inbox — the smart mail-triage queue (mig 234). */
   inboxOnly?: boolean;
+  /** Gated on is_maaser_owner (mig 240), NOT the admin flag: the office has a
+   *  second manager who gets everything except the owner's tithe ledger. */
+  maaserOnly?: boolean;
 };
 
 // Team / Templates / Audit Log used to live here as top-level admin items.
@@ -37,7 +40,7 @@ const BASE_TOP_ITEMS: readonly NavItem[] = [
   { href: '/simulators', labelKey: 'simulators', icon: Calculator },
   { href: '/statistics', labelKey: 'statistics', icon: BarChart3, adminOnly: true },
   { href: '/collections', labelKey: 'collections', icon: Coins, collectionsOnly: true },
-  { href: '/maaser', labelKey: 'maaser', icon: HandCoins, adminOnly: true },
+  { href: '/maaser', labelKey: 'maaser', icon: HandCoins, maaserOnly: true },
   { href: '/time-clock', labelKey: 'timeClock', icon: Clock, timeClockOnly: true },
 ] as const;
 
@@ -50,9 +53,16 @@ type SidebarProps = {
   canViewCollections?: boolean;
   canUseTimeClock?: boolean;
   canViewInbox?: boolean;
+  canViewMaaser?: boolean;
 };
 
-export function Sidebar({ isManager, canViewCollections, canUseTimeClock, canViewInbox }: SidebarProps) {
+export function Sidebar({
+  isManager,
+  canViewCollections,
+  canUseTimeClock,
+  canViewInbox,
+  canViewMaaser,
+}: SidebarProps) {
   const pathname = usePathname();
   const t = useTranslations('nav');
   // Live counts (TaskBadgeProvider), NOT props: this rail lives in the layout,
@@ -65,7 +75,8 @@ export function Sidebar({ isManager, canViewCollections, canUseTimeClock, canVie
       (!item.adminOnly || isManager) &&
       (!item.collectionsOnly || canViewCollections) &&
       (!item.timeClockOnly || canUseTimeClock) &&
-      (!item.inboxOnly || canViewInbox),
+      (!item.inboxOnly || canViewInbox) &&
+      (!item.maaserOnly || canViewMaaser),
   ).map((item) =>
     item.labelKey === 'tasks'
       ? { ...item, badge: tasksBadge, criticalBadge: criticalTasksBadge }

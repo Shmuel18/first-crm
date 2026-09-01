@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
-import { getCurrentUser, isCurrentUserAdmin } from '@/lib/auth/permissions';
+import { getCurrentUser, isCurrentUserMaaserOwner } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
 import { AddMaaserPaymentSchema, type AddMaaserPaymentInput } from '../schemas/maaser.schema';
@@ -12,7 +12,7 @@ type Result = { ok: true } | { ok: false; error: 'unauthorized' | 'validation' |
 export async function addMaaserPaymentAction(input: AddMaaserPaymentInput): Promise<Result> {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: 'unauthorized' };
-  if (!(await isCurrentUserAdmin())) return { ok: false, error: 'unauthorized' };
+  if (!(await isCurrentUserMaaserOwner())) return { ok: false, error: 'unauthorized' };
 
   const parsed = AddMaaserPaymentSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: 'validation' };

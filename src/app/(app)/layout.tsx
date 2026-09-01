@@ -15,6 +15,7 @@ import { TaskBadgeAppSync } from '@/features/tasks/components/task-badge-app-syn
 import { TaskBadgeProvider } from '@/features/tasks/components/task-badge-provider';
 import { TaskNudge } from '@/features/tasks/components/task-nudge';
 import { isCurrentUserTimeTracked } from '@/features/time-clock/services/time-clock.service';
+import { isCurrentUserMaaserOwner } from '@/lib/auth/permissions';
 import { getDirection, parseLocale } from '@/lib/i18n/direction';
 import { getLayoutBootstrap } from '@/lib/layout/bootstrap';
 
@@ -33,6 +34,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // read (short-circuited for admins so they never pay for it).
   const canUseTimeClock =
     bootstrap.isAdmin || (bootstrap.authenticated && (await isCurrentUserTimeTracked()));
+
+  // The tithe ledger is the OWNER's, not every manager's (mig 240). Only admins
+  // can be the owner, so non-admins never pay for the extra round-trip.
+  const canViewMaaser = bootstrap.isAdmin && (await isCurrentUserMaaserOwner());
 
   return (
     <TooltipProvider>
@@ -59,12 +64,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           canViewCollections={bootstrap.canViewCollections}
           canUseTimeClock={canUseTimeClock}
           canViewInbox={bootstrap.canViewInbox}
+          canViewMaaser={canViewMaaser}
         />
         <BottomNav
           isManager={bootstrap.isAdmin}
           canViewCollections={bootstrap.canViewCollections}
           canUseTimeClock={canUseTimeClock}
           canViewInbox={bootstrap.canViewInbox}
+          canViewMaaser={canViewMaaser}
         />
       {/* The inner viewport owns scrolling. Sticky subheaders compensate for
           viewport padding so they pin flush under the fixed topbar. */}

@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
-import { userHasPermission } from '@/lib/auth/permissions';
+import { isCurrentUserMaaserOwner, userHasPermission } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
 import { SettingsNavLink } from './settings-nav-link';
@@ -29,6 +29,8 @@ type SettingsNavItem = {
   labelKey: string;
   icon: React.ComponentType<{ className?: string }>;
   adminOnly?: boolean;
+  /** Owner-only (is_maaser_owner, mig 240) — stricter than adminOnly. */
+  ownerOnly?: boolean;
   /** Granular permission gate; aligns the nav with the route's own check. */
   permission?: string;
   disabled?: boolean;
@@ -79,7 +81,9 @@ const NAV_SECTIONS: SettingsNavSection[] = [
       { href: '/settings/import', labelKey: 'import', icon: Upload, adminOnly: true },
       { href: '/settings/audit-log', labelKey: 'auditLog', icon: ScrollText, adminOnly: true },
       { href: '/settings/recycle-bin', labelKey: 'recycleBin', icon: Trash2, adminOnly: true },
-      { href: '/settings/backup', labelKey: 'backup', icon: HardDrive, adminOnly: true },
+      // Owner-only, not admin-only: a snapshot carries the ma'aser tables, so
+      // backup/restore would otherwise be a way around the ledger's gate.
+      { href: '/settings/backup', labelKey: 'backup', icon: HardDrive, ownerOnly: true },
     ],
   },
 ];
@@ -94,6 +98,8 @@ export default async function SettingsLayout({
   const supabase = await createClient();
   const { data: isAdmin } = await supabase.rpc('is_admin');
   const canManageSimulators = await userHasPermission('manage_simulator_settings');
+  // Only an admin can be the owner, so non-admins never pay for this call.
+  const isOwner = isAdmin === true && (await isCurrentUserMaaserOwner());
 
   // Filter items per section, then drop sections that ended up empty (e.g.
   // a non-admin sees no items in the office/data sections — better to hide
@@ -103,6 +109,7 @@ export default async function SettingsLayout({
     titleKey: section.titleKey,
     items: section.items.filter((it) => {
       if (it.permission === 'manage_simulator_settings') return canManageSimulators;
+      if (it.ownerOnly) return isOwner;
       return !it.adminOnly || isAdmin === true;
     }),
   })).filter((section) => section.items.length > 0);

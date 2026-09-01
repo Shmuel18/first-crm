@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import { getDriveClientIfConnected } from '@/features/integrations/services/drive-case-uploader';
-import { isCurrentUserAdmin } from '@/lib/auth/permissions';
+import { isCurrentUserMaaserOwner } from '@/lib/auth/permissions';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { decryptWithKey } from '@/lib/crypto/secrets';
 import { env } from '@/lib/env';
@@ -26,7 +26,9 @@ export async function restoreBackupAction(driveFileId: string): Promise<RestoreB
   const supabase = await createClient();
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
-  if (!(await isCurrentUserAdmin())) return { ok: false, error: 'unauthorized' };
+  // OWNER, not just admin (mig 240) — mirrors runBackupAction, and matches the
+  // restore_backup_snapshot RPC's own gate, which moved in the same migration.
+  if (!(await isCurrentUserMaaserOwner())) return { ok: false, error: 'unauthorized' };
   if (typeof driveFileId !== 'string' || driveFileId.length === 0 || driveFileId.length > 200) {
     return { ok: false, error: 'validation' };
   }

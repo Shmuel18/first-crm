@@ -6,13 +6,14 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { MaaserView } from '@/features/maaser/components/maaser-view';
 import { pickDailyQuote } from '@/features/maaser/domain/quotes';
 import { getMaaserBasis, listMaaserEntries, listMaaserPayments } from '@/features/maaser/services/maaser.service';
-import { isCurrentUserAdmin } from '@/lib/auth/permissions';
+import { isCurrentUserMaaserOwner } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 
 export default async function MaaserPage() {
-  // Manager-only — the owner's personal charity ledger. RLS + the statistics
-  // RPC's is_admin() gate enforce this server-side; this is the user-facing guard.
-  if (!(await isCurrentUserAdmin())) redirect('/cases');
+  // OWNER-only (mig 240) — his personal charity ledger, deliberately narrower
+  // than is_admin() so a second manager gets everything but this. RLS + the
+  // maaser_income_basis() gate enforce it server-side; this is the UX guard.
+  if (!(await isCurrentUserMaaserOwner())) redirect('/cases');
 
   const [basis, entries, payments, t] = await Promise.all([
     getMaaserBasis(),

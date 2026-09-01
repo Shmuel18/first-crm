@@ -35,6 +35,8 @@ type FinanceItem = NavItem & {
   adminOnly?: boolean;
   /** Gated on view_collections (not the admin flag). */
   collectionsOnly?: boolean;
+  /** Gated on is_maaser_owner (mig 240) — see the sidebar note. */
+  maaserOnly?: boolean;
 };
 
 // Always-visible flat tabs (before + after the finance slot).
@@ -56,7 +58,7 @@ const TRAILING_ITEMS: readonly NavItem[] = [
 const FINANCE_ITEMS: readonly FinanceItem[] = [
   { href: '/statistics', labelKey: 'statistics', icon: BarChart3, adminOnly: true },
   { href: '/collections', labelKey: 'collections', icon: Coins, collectionsOnly: true },
-  { href: '/maaser', labelKey: 'maaser', icon: HandCoins, adminOnly: true },
+  { href: '/maaser', labelKey: 'maaser', icon: HandCoins, maaserOnly: true },
 ] as const;
 
 type Props = {
@@ -64,6 +66,7 @@ type Props = {
   canViewCollections?: boolean;
   canUseTimeClock?: boolean;
   canViewInbox?: boolean;
+  canViewMaaser?: boolean;
 };
 
 /**
@@ -78,6 +81,7 @@ export function BottomNav({
   canViewCollections,
   canUseTimeClock,
   canViewInbox,
+  canViewMaaser,
 }: Props): React.ReactElement {
   const pathname = usePathname();
   const t = useTranslations('nav');
@@ -85,7 +89,10 @@ export function BottomNav({
   const { pending: tasksBadge, critical: criticalTasksBadge } = useTaskBadge();
 
   const finance = FINANCE_ITEMS.filter(
-    (item) => (!item.adminOnly || isManager) && (!item.collectionsOnly || canViewCollections),
+    (item) =>
+      (!item.adminOnly || isManager) &&
+      (!item.collectionsOnly || canViewCollections) &&
+      (!item.maaserOnly || canViewMaaser),
   );
 
   // The inbox tab slots in right after tasks for triage-permitted users only —

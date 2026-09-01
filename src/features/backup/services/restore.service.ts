@@ -8,9 +8,9 @@ export type RestoreCounts = Record<string, number>;
 
 /**
  * Call the restore_backup_snapshot RPC (migration 030). The RPC is
- * SECURITY DEFINER and re-checks is_admin() against the caller, so this uses
- * the cookie-bound client (not service-role) — auth.uid() must reflect the
- * signed-in admin for that gate to pass.
+ * SECURITY DEFINER and re-checks is_maaser_owner() against the caller (mig 240
+ * narrowed it from is_admin), so this uses the cookie-bound client (not
+ * service-role) — auth.uid() must reflect the signed-in owner for that gate.
  */
 export async function restoreSnapshot(snapshot: BackupSnapshot): Promise<RestoreCounts> {
   const supabase = await createClient();

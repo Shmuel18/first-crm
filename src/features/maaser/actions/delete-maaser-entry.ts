@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
-import { getCurrentUser, isCurrentUserAdmin } from '@/lib/auth/permissions';
+import { getCurrentUser, isCurrentUserMaaserOwner } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
 type Result = { ok: true } | { ok: false; error: 'unauthorized' | 'validation' | 'unknown' };
@@ -11,7 +11,7 @@ type Result = { ok: true } | { ok: false; error: 'unauthorized' | 'validation' |
 export async function deleteMaaserEntryAction(id: string): Promise<Result> {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: 'unauthorized' };
-  if (!(await isCurrentUserAdmin())) return { ok: false, error: 'unauthorized' };
+  if (!(await isCurrentUserMaaserOwner())) return { ok: false, error: 'unauthorized' };
 
   const parsed = z.uuid().safeParse(id);
   if (!parsed.success) return { ok: false, error: 'validation' };

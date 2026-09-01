@@ -120,3 +120,27 @@ export const userCanEditCase = cache(async (caseId: string): Promise<boolean> =>
 
   return data === true;
 });
+
+/**
+ * True if the current user is the office OWNER — the only user who may see the
+ * ma'aser ledger (wraps the is_maaser_owner RPC, migration 240).
+ *
+ * Deliberately NOT is_admin(): the office has a second manager who gets every
+ * admin capability except this one, and it is NOT a permission key either —
+ * an admin can edit roles and per-user overrides, so a permission-based fence
+ * could be lifted by the person it excludes. The flag has no UI.
+ */
+export const isCurrentUserMaaserOwner = cache(async (): Promise<boolean> => {
+  const supabase = await createClient();
+  // database.ts predates migration 240; cast to a minimal local shape (same
+  // justified pattern as userCanEditCase above). Regenerate types to drop it.
+  const ownerClient = supabase as unknown as {
+    rpc(fn: 'is_maaser_owner'): PromiseLike<{ data: boolean | null; error: { message: string } | null }>;
+  };
+  const { data, error } = await ownerClient.rpc('is_maaser_owner');
+  if (error) {
+    console.error('is_maaser_owner RPC failed', { err: error.message });
+    return false;
+  }
+  return data === true;
+});
