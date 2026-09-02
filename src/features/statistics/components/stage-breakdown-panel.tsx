@@ -13,15 +13,18 @@ type Props = { rows: StageBreakdownRow[] };
 const FALLBACK_COLOR = 'var(--color-brand-gold-dark)';
 
 /**
- * Average time a case spends in each stage, slowest first — the "where does
- * the time actually go" half of Kaufman's cycle-time ask.
+ * Average time a case spends in each stage, in process order (שלב בתהליך) —
+ * the "where does the time actually go" half of Kaufman's cycle-time ask.
  *
- * Counts only COMPLETED stage visits (the RPC filters exited_at IS NOT NULL),
- * so a case sitting in a stage right now doesn't drag the average down before
- * it has finished. `n` is visits rather than cases: a file that bounces back
- * into איסוף מסמכים contributes both visits, which is what "time per visit"
- * has to mean. Server Component with CSS bars, same reasoning as the sibling
- * cycle-time panel.
+ * Counts cases sitting in a stage RIGHT NOW as well as ones that moved on
+ * (migration 245). Measuring only finished visits meant measuring only the
+ * cases that got unstuck: פתיחת תיק averaged 3.4 days while thirteen cases had
+ * been parked there fifty-two. `n` is visits rather than cases — a file that
+ * bounces back into איסוף מסמכים contributes both — and `open_n` is how many
+ * are still running, which is why a figure can climb with nothing happening.
+ *
+ * Server Component with CSS bars, same reasoning as the sibling cycle-time
+ * panel.
  */
 export function StageBreakdownPanel({ rows }: Props) {
   const t = useTranslations('statistics.stageBreakdown');
@@ -46,7 +49,10 @@ export function StageBreakdownPanel({ rows }: Props) {
                 key={row.key}
                 className="grid grid-cols-[7.5rem_1fr_4.5rem] items-center gap-3 text-sm"
               >
-                <span className="truncate text-neutral-600" title={statusName(row, locale)}>
+                <span
+                  className="truncate text-neutral-600"
+                  title={t('rowHint', { visits: row.n, open: row.open_n })}
+                >
                   {statusName(row, locale)}
                 </span>
                 <span className="h-2.5 overflow-hidden rounded-full bg-neutral-100">

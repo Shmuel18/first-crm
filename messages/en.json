@@ -755,7 +755,8 @@
     },
     "stageBreakdown": {
       "title": "Average time per stage",
-      "caption": "Average days per stage visit, across completed stages",
+      "caption": "Average days in stage, including cases sitting there now",
+      "rowHint": "{visits} visits, {open} still in progress",
       "daysShort": "days",
       "empty": "No stage data to show yet."
     },

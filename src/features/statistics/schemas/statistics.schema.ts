@@ -50,9 +50,11 @@ export const CycleTimeSchema = z.object({
   buckets: z.array(CycleBucketSchema),
 });
 
-/** Average days spent in one status, over completed stage visits. `n` counts
- *  visits, not distinct cases — a case that re-enters a stage contributes
- *  each visit (migration 243). */
+/** Average days spent in one status. Counts visits, not distinct cases — a
+ *  case that re-enters a stage contributes each visit. Includes cases sitting
+ *  in the stage right now, measured to today (migration 245), of which
+ *  `open_n` says how many; visits the case backed out of are excluded as
+ *  corrections. */
 export const StageBreakdownRowSchema = z.object({
   key: z.string(),
   name_he: z.string(),
@@ -61,6 +63,8 @@ export const StageBreakdownRowSchema = z.object({
   sort_order: z.number(),
   avg_days: z.number(),
   n: z.number(),
+  /** Defaults to 0 for a payload from an RPC predating migration 245. */
+  open_n: z.number().default(0),
 });
 
 export const StatisticsSummarySchema = z.object({

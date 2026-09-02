@@ -64,19 +64,53 @@ describe('toCycleBucketViews', () => {
 });
 
 describe('toStageBreakdownViews', () => {
-  function stage(key: string, avg_days: number): StageBreakdownRow {
-    return { key, name_he: key, name_en: key, color: null, sort_order: 1, avg_days, n: 5 };
+  function stage(key: string, avg_days: number, sort_order: number): StageBreakdownRow {
+    return {
+      key,
+      name_he: key,
+      name_en: key,
+      color: null,
+      sort_order,
+      avg_days,
+      n: 5,
+      open_n: 1,
+    };
   }
 
-  it('orders slowest stage first — the question is where time is lost', () => {
-    const views = toStageBreakdownViews([stage('a', 3.4), stage('b', 22.2), stage('c', 17)]);
-    expect(views.map((v) => v.key)).toEqual(['b', 'c', 'a']);
+  it('orders by process stage, not by how slow the stage is', () => {
+    const views = toStageBreakdownViews([
+      stage('pre_approved', 22.2, 6),
+      stage('case_opened', 3.4, 1),
+      stage('collateral', 17, 7),
+    ]);
+    expect(views.map((v) => v.key)).toEqual(['case_opened', 'pre_approved', 'collateral']);
+  });
+
+  it('still scales the bars against the slowest stage', () => {
+    const views = toStageBreakdownViews([stage('a', 10, 1), stage('b', 20, 2)]);
+    expect(views[0]?.barPct).toBe(50);
+    expect(views[1]?.barPct).toBe(100);
+  });
+
+  it('drops destinations — their "average" is time parked, not stage duration', () => {
+    const views = toStageBreakdownViews([
+      stage('collateral', 17, 7),
+      stage('closed', 29.7, 9),
+      stage('stuck', 39.8, 10),
+      stage('on_hold', 61.6, 11),
+    ]);
+    expect(views.map((v) => v.key)).toEqual(['collateral']);
+  });
+
+  it('scales bars against the shown stages only, ignoring the dropped ones', () => {
+    // on_hold's 61.6 must not flatten every real stage into a stub.
+    const views = toStageBreakdownViews([stage('collateral', 17, 7), stage('on_hold', 61.6, 11)]);
     expect(views[0]?.barPct).toBe(100);
   });
 
   it('does not mutate the caller array', () => {
-    const rows = [stage('a', 1), stage('b', 9)];
+    const rows = [stage('b', 1, 9), stage('a', 9, 1)];
     toStageBreakdownViews(rows);
-    expect(rows.map((r) => r.key)).toEqual(['a', 'b']);
+    expect(rows.map((r) => r.key)).toEqual(['b', 'a']);
   });
 });

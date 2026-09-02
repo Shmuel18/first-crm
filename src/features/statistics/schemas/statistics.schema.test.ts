@@ -42,6 +42,7 @@ function payload(): Record<string, unknown> {
         sort_order: 1,
         avg_days: 61.8,
         n: 31,
+        open_n: 13,
       },
     ],
     status_snapshot: [],
@@ -64,6 +65,17 @@ describe('StatisticsSummarySchema', () => {
     expect(parsed.data?.cycle_time?.n).toBe(15);
     expect(parsed.data?.cycle_time?.buckets).toHaveLength(5);
     expect(parsed.data?.stage_breakdown[0]?.avg_days).toBe(61.8);
+    expect(parsed.data?.stage_breakdown[0]?.open_n).toBe(13);
+  });
+
+  it('defaults open_n for a stage row from an RPC predating migration 245', () => {
+    const older = payload();
+    const rows = older.stage_breakdown as Array<Record<string, unknown>>;
+    delete rows[0]?.open_n;
+
+    const parsed = StatisticsSummarySchema.safeParse(older);
+    expect(parsed.success).toBe(true);
+    expect(parsed.data?.stage_breakdown[0]?.open_n).toBe(0);
   });
 
   it('still parses a pre-243 payload, defaulting the new sections', () => {

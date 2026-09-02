@@ -96,11 +96,20 @@ export function toCycleBucketViews(buckets: CycleBucket[], total: number): Cycle
 /** A stage row ready to render, with its bar scaled to the slowest stage. */
 export type StageBreakdownView = StageBreakdownRow & { barPct: number };
 
-/** Slowest stage first — "where do cases actually sit" is the question. */
+/**
+ * The stages a case passes THROUGH, in process order (שלב בתהליך).
+ *
+ * closed / stuck / on_hold are dropped for the same reason the funnel pulls
+ * them out of its bars: they are destinations, not stages. With in-progress
+ * visits now counted (migration 245) their "average" would be time since the
+ * case was parked there — 29 days and climbing for בוצע ושולם — which is not a
+ * stage duration and would sit at the bottom of the list looking like one.
+ */
 export function toStageBreakdownViews(rows: StageBreakdownRow[]): StageBreakdownView[] {
-  const max = rows.reduce((m, r) => Math.max(m, r.avg_days), 0);
-  return [...rows]
-    .sort((a, b) => b.avg_days - a.avg_days)
+  const stages = rows.filter((r) => !(SIDE_KEYS as readonly string[]).includes(r.key));
+  const max = stages.reduce((m, r) => Math.max(m, r.avg_days), 0);
+  return [...stages]
+    .sort((a, b) => a.sort_order - b.sort_order)
     .map((r) => ({ ...r, barPct: max > 0 ? (r.avg_days / max) * 100 : 0 }));
 }
 
