@@ -156,6 +156,42 @@ function toCaseRef(
   return { id: c.id, case_number: c.case_number, clientName: name || null };
 }
 
+/**
+ * One task by id, in the same shape the list renders — for the tasks page's
+ * `?thread=<id>` deep link, which a mention / comment notification lands on.
+ * Fetched on its own rather than looked up in the list: the reader may have
+ * been mentioned on a task that the current tab (e.g. "mine") doesn't show.
+ * RLS decides visibility; anything it hides comes back as null, same as a
+ * soft-deleted or unknown id.
+ */
+export async function getTaskById(taskId: string): Promise<TaskWithRelations | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('tasks')
+    .select(TASK_SELECT)
+    .eq('id', taskId)
+    .is('deleted_at', null)
+    .maybeSingle();
+  if (error) {
+    console.error('[getTaskById] select error', { code: error.code });
+    return null;
+  }
+  if (!data) return null;
+
+  // Same contract as listTasks: the select string defines the embedded shape.
+  const row = data as unknown as Omit<TaskWithRelations, 'case' | 'assignee' | 'creator' | 'assigner'> & {
+    case: { id: string; case_number: string; case_borrowers?: CaseBorrowerLink[] | null } | null;
+  };
+  const peopleById = await resolveTaskPeople([row]);
+  return {
+    ...row,
+    assignee: personFor(row.assigned_to, peopleById),
+    creator: personFor(row.created_by, peopleById),
+    assigner: personFor(row.assigned_by, peopleById),
+    case: toCaseRef(row.case),
+  };
+}
+
 export async function listTasksForCase(caseId: CaseId): Promise<TaskWithRelations[]> {
   const tasks = await listTasks({ view: 'all', caseId });
   return tasks.filter((task) => task.status !== 'completed' && task.status !== 'cancelled');

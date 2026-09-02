@@ -87,6 +87,7 @@ export async function updateTaskAction(
     emailAssignedTask({
       recipientId: assignee,
       actorId: userRes.user.id,
+      taskId,
       taskTitle: parsed.data.title,
       caseId: parsed.data.case_id ?? existing.case_id,
     });

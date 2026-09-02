@@ -8,6 +8,8 @@ import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import type { Locale } from '@/lib/i18n/direction';
 
+import { resolveThreadDialogTask } from '../domain/thread-dialog';
+import { useThreadParam } from '../hooks/use-thread-param';
 import { TaskFormDialog } from './task-form-dialog';
 import { TaskReassignDialog } from './task-reassign-dialog';
 import { TaskRow } from './task-row';
@@ -36,6 +38,9 @@ type Props = {
   emptyKey?: 'empty' | 'emptyCase';
   compact?: boolean;
   hideCreateButton?: boolean;
+  /** A task whose conversation should be open on arrival — the page resolves
+   *  `?thread=<id>` (a mention/comment notification's link) into this. */
+  initialThreadTask?: TaskWithRelations | null;
 };
 
 export function TasksList({
@@ -47,6 +52,7 @@ export function TasksList({
   emptyKey = 'empty',
   compact = false,
   hideCreateButton = false,
+  initialThreadTask = null,
 }: Props) {
   const t = useTranslations('tasks');
   const ts = useTranslations('tasks.status');
@@ -55,6 +61,11 @@ export function TasksList({
   >(null);
   const [reassignTarget, setReassignTarget] = useState<TaskWithRelations | null>(null);
   const [threadTarget, setThreadTarget] = useState<TaskWithRelations | null>(null);
+  // The deep-linked thread is derived from the LIVE ?thread param, not seeded
+  // once — a bell click while already on this page changes the URL without a
+  // remount, and a repeat notification for the same task must reopen it.
+  const { threadId, clearThreadParam } = useThreadParam();
+  const dialogTask = resolveThreadDialogTask(threadId, initialThreadTask, threadTarget);
 
   const renderRow = (task: TaskWithRelations) => (
     <TaskRow
@@ -158,9 +169,13 @@ export function TasksList({
       />
 
       <TaskThreadDialog
-        open={threadTarget !== null}
-        onOpenChange={(o) => !o && setThreadTarget(null)}
-        task={threadTarget}
+        open={dialogTask !== null}
+        onOpenChange={(o) => {
+          if (o) return;
+          setThreadTarget(null);
+          clearThreadParam();
+        }}
+        task={dialogTask}
       />
     </div>
   );

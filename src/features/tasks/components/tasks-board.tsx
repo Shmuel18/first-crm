@@ -21,6 +21,8 @@ import { TaskBoardColumn } from './task-board-column';
 import { TaskFormDialog } from './task-form-dialog';
 import { TaskReassignDialog } from './task-reassign-dialog';
 import { TaskThreadDialog } from './task-thread-dialog';
+import { resolveThreadDialogTask } from '../domain/thread-dialog';
+import { useThreadParam } from '../hooks/use-thread-param';
 import type { TaskStatus, TaskWithRelations } from '../types';
 
 const BOARD_COLUMNS: TaskStatus[] = ['pending', 'in_progress', 'snoozed', 'completed'];
@@ -33,9 +35,12 @@ type Props = {
   locale: Locale;
   assignees: ReadonlyArray<Profile>;
   cases: ReadonlyArray<CaseOption>;
+  /** A task whose conversation should be open on arrival — the page resolves
+   *  `?thread=<id>` (a mention/comment notification's link) into this. */
+  initialThreadTask?: TaskWithRelations | null;
 };
 
-export function TasksBoard({ tasks, locale, assignees, cases }: Props) {
+export function TasksBoard({ tasks, locale, assignees, cases, initialThreadTask = null }: Props) {
   const t = useTranslations('tasks.status');
   const tb = useTranslations('tasks.board');
   const tc = useTranslations('common');
@@ -51,6 +56,11 @@ export function TasksBoard({ tasks, locale, assignees, cases }: Props) {
   const [editing, setEditing] = useState<TaskWithRelations | null>(null);
   const [reassignTarget, setReassignTarget] = useState<TaskWithRelations | null>(null);
   const [threadTarget, setThreadTarget] = useState<TaskWithRelations | null>(null);
+  // The deep-linked thread is derived from the LIVE ?thread param, not seeded
+  // once — a bell click while already on this page changes the URL without a
+  // remount, and a repeat notification for the same task must reopen it.
+  const { threadId, clearThreadParam } = useThreadParam();
+  const dialogTask = resolveThreadDialogTask(threadId, initialThreadTask, threadTarget);
 
   // Small activation distance so a click (open) isn't read as a drag.
   // KeyboardSensor adds keyboard operability (A11Y-1): focus a card (Tab), pick
@@ -123,11 +133,13 @@ export function TasksBoard({ tasks, locale, assignees, cases }: Props) {
       />
 
       <TaskThreadDialog
-        open={threadTarget !== null}
+        open={dialogTask !== null}
         onOpenChange={(open) => {
-          if (!open) setThreadTarget(null);
+          if (open) return;
+          setThreadTarget(null);
+          clearThreadParam();
         }}
-        task={threadTarget}
+        task={dialogTask}
       />
     </>
   );

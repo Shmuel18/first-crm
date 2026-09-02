@@ -75,6 +75,7 @@ export async function reassignTaskAction(
         recipientId: parsed.data.assigneeId,
         actorId: userId,
         kind: 'task_assigned',
+        taskId: parsed.data.taskId,
         taskTitle: title,
         caseId,
       }),

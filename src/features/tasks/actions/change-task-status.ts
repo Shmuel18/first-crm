@@ -85,6 +85,7 @@ export async function changeTaskStatusAction(taskId: string, status: string): Pr
         recipientId: completionRecipient,
         actorId: userId,
         kind: 'task_completed',
+        taskId: parsed.data.taskId,
         taskTitle: existing.title,
         caseId: existing.case_id,
       }),

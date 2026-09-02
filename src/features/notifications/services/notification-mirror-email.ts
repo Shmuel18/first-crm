@@ -9,6 +9,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { resolveCaseLabel } from './case-label.service';
 import { shouldEmailUser } from './preferences.service';
 import { withCaseInSubject } from '../domain/case-label';
+import { notificationHref } from '../domain/notification-href';
 import type { NotificationType } from '../types';
 
 /** The kinds this mirror handles. Task assigned/completed email from their
@@ -32,6 +33,8 @@ type MirrorInput = {
   recipientId: string;
   kind: NotificationType;
   caseId: string | null;
+  /** notifications.task_id — the deep-link target for the task kinds. */
+  taskId: string | null;
   /** The notification row's `data` snapshot (shape varies by kind). */
   data: Record<string, unknown>;
 };
@@ -61,13 +64,11 @@ export async function sendMirroredNotificationEmail(input: MirrorInput): Promise
     const tEmail = await getTranslations({ locale, namespace: 'email' });
 
     const params = bodyParams(input.kind, input.data, locale, tEmail('someone'));
+    // Same destination rule as the bell and the push payload: a task mention
+    // lands in that task's conversation, not on the generic list.
     const url =
-      input.caseId &&
-      input.kind !== 'task_reminder' &&
-      input.kind !== 'task_mention' &&
-      input.kind !== 'task_comment'
-        ? `${env.NEXT_PUBLIC_APP_URL}/cases/${input.caseId}`
-        : `${env.NEXT_PUBLIC_APP_URL}/tasks`;
+      env.NEXT_PUBLIC_APP_URL +
+      notificationHref(input.kind, { caseId: input.caseId, taskId: input.taskId });
 
     // WHICH client this is about — the mention/comment/reminder templates carry
     // only the actor + a body preview, which with ~80 open cases leaves the

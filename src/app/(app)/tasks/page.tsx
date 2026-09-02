@@ -17,6 +17,7 @@ import { capCompletedTasks, isImmediateTask, isOverdue } from '@/features/tasks/
 import {
   countPendingByView,
   getCaseNumberLabel,
+  getTaskById,
   listAssignableProfiles,
   listCaseOptions,
   listTasks,
@@ -39,6 +40,8 @@ type SearchParams = Promise<{
   display?: string;
   focus?: string;
   assignee?: string;
+  /** Task whose conversation opens on arrival — a notification's deep link. */
+  thread?: string;
 }>;
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -69,6 +72,10 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
   const display: 'board' | 'list' = sp.display === 'list' ? 'list' : 'board';
   const focus: 'immediate' | 'overdue' | null =
     sp.focus === 'immediate' || sp.focus === 'overdue' ? sp.focus : null;
+  // `?thread=<id>` — where a mention / comment notification lands. Resolved by
+  // id rather than found in the list: the reader may not be the assignee, so
+  // the task can be absent from the tab they arrive on.
+  const threadId = z.uuid().safeParse(sp.thread).success ? sp.thread : undefined;
 
   const t = await getTranslations('tasks');
   const locale = parseLocale(await getLocale());
@@ -82,7 +89,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
 
   // The board groups by status into columns, so it needs every status; the
   // status filter only applies to the list view.
-  const [tasks, mineCount, assignedByMeCount, allCount, assignees, cases, caseLabel] =
+  const [tasks, mineCount, assignedByMeCount, allCount, assignees, cases, caseLabel, threadTask] =
     await Promise.all([
       listTasks({
         view,
@@ -96,6 +103,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
       listAssignableProfiles(),
       listCaseOptions(locale),
       caseId ? getCaseNumberLabel(asCaseId(caseId)) : Promise.resolve(null),
+      threadId ? getTaskById(threadId) : Promise.resolve(null),
     ]);
 
   const visibleTasks = tasks;
@@ -159,12 +167,31 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
         </div>
       )}
 
+      {/* A notification promised to open a conversation and the task could
+          not be resolved — hidden by RLS (the reader was a participant but
+          has since been reassigned away) or deleted after the notification
+          went out. Say so rather than silently showing the plain list, and
+          offer the way out that also drops the stuck ?thread param. */}
+      {threadId && !threadTask && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-brand-surface px-3 py-2">
+          <span className="text-sm text-neutral-700">{t('threadUnavailable')}</span>
+          <Link
+            href="/tasks"
+            className="inline-flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-900"
+          >
+            <X className="size-3.5" />
+            {t('dismissThread')}
+          </Link>
+        </div>
+      )}
+
       {display === 'board' ? (
         <TasksBoard
           tasks={capCompletedTasks(focusedTasks, 50)}
           locale={locale}
           assignees={assignees}
           cases={cases}
+          initialThreadTask={threadTask}
         />
       ) : (
         <TasksList
@@ -174,6 +201,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Search
           locale={locale}
           presetCaseId={caseId ?? null}
           hideCreateButton
+          initialThreadTask={threadTask}
         />
       )}
     </div>

@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 
 import { NextResponse } from 'next/server';
 
+import { notificationHref } from '@/features/notifications/domain/notification-href';
 import { sendMirroredNotificationEmail } from '@/features/notifications/services/notification-mirror-email';
 import { sendPushToUser, type PushPayload } from '@/features/notifications/services/push-sender';
 import type { NotificationType } from '@/features/notifications/types';
@@ -40,16 +41,6 @@ const TITLES: Record<NotificationType, { he: string; en: string }> = {
   ai_digest: { he: 'הסיכום היומי שלך מוכן', en: 'Your daily digest is ready' },
 };
 
-function urlForType(type: NotificationType, caseId: string | null): string {
-  if (type === 'web_lead') return '/cases?view=leads';
-  if (type === 'ai_digest') return '/cases';
-  if (type === 'backup_stale' || type === 'erasure_stale') return '/settings/integrations';
-  if (type === 'case_mention' || type === 'case_status_overdue') {
-    return caseId ? `/cases/${caseId}` : '/cases';
-  }
-  return '/tasks';
-}
-
 function isAuthorized(request: Request): boolean {
   if (!env.CRON_SECRET) return false;
   const provided = Buffer.from(request.headers.get('authorization') ?? '');
@@ -76,6 +67,7 @@ export async function POST(request: Request): Promise<Response> {
       user_id?: string;
       type?: NotificationType;
       case_id?: string | null;
+      task_id?: string | null;
       data?: Record<string, unknown> | null;
     } | null;
   };
@@ -96,10 +88,13 @@ export async function POST(request: Request): Promise<Response> {
     .maybeSingle();
   const locale: 'he' | 'en' = profile?.language === 'en' ? 'en' : 'he';
 
+  // Same destination rule as the bell and the email mirror — a task
+  // notification opens that task's conversation, never the case.
+  const ids = { caseId: record.case_id ?? null, taskId: record.task_id ?? null };
   const push: PushPayload = {
     title: title[locale],
     body: locale === 'en' ? 'Open the app for details' : 'פתח את האפליקציה לפרטים',
-    url: urlForType(record.type, record.case_id ?? null),
+    url: notificationHref(record.type, ids),
     lang: locale,
     dir: locale === 'en' ? 'ltr' : 'rtl',
   };
@@ -112,7 +107,8 @@ export async function POST(request: Request): Promise<Response> {
     sendMirroredNotificationEmail({
       recipientId: record.user_id,
       kind: record.type,
-      caseId: record.case_id ?? null,
+      caseId: ids.caseId,
+      taskId: ids.taskId,
       data: record.data ?? {},
     }),
   ]);

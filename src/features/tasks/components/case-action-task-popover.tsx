@@ -62,6 +62,16 @@ export function CaseActionTaskPopover({
     if (!open || dialogOpen) return;
     const handler = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
+      // A target that is no longer in the document was removed by a handler
+      // that ran before this one — React's root listener sits below `document`,
+      // and on a REAL pointer event the browser runs React's microtask flush
+      // between the two listeners. The thread dialog's @-mention picker does
+      // exactly that (it unmounts its list inside onMouseDown), which left this
+      // handler holding a detached <button>: the role="dialog" guard below
+      // could not walk up to the popup, the click read as "outside", and the
+      // popover closed — taking the whole conversation dialog with it. Keyboard
+      // selection never fires mousedown, which is why only the mouse "escaped".
+      if (target && !target.isConnected) return;
       if (
         panelRef.current?.contains(target) ||
         buttonRef.current?.contains(target) ||

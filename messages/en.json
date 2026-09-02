@@ -3171,6 +3171,8 @@
     },
     "filteredByCase": "Filtered to tasks for case {label}",
     "clearCaseFilter": "Clear filter",
+    "threadUnavailable": "The conversation you followed is unavailable — the task was deleted or you no longer have access to it",
+    "dismissThread": "Dismiss",
     "views": {
       "mine": "My tasks",
       "assigned-by-me": "Assigned by me",

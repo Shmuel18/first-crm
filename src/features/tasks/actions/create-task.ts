@@ -74,6 +74,7 @@ export async function createTaskAction(
     emailAssignedTask({
       recipientId: assignee,
       actorId: userId,
+      taskId: inserted.id,
       taskTitle: parsed.data.title,
       caseId: parsed.data.case_id ?? null,
     });

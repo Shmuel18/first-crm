@@ -9,6 +9,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { resolveCaseLabel } from './case-label.service';
 import { shouldEmailUser } from './preferences.service';
 import { withCaseInSubject } from '../domain/case-label';
+import { notificationHref } from '../domain/notification-href';
 import type { NotificationType } from '../types';
 
 type TaskEmailInput = {
@@ -16,6 +17,8 @@ type TaskEmailInput = {
   actorId: string | null;
   kind: NotificationType;
   taskTitle: string;
+  /** The task itself — the email's CTA opens its conversation. */
+  taskId: string | null;
   caseId: string | null;
   /** Task description — surfaced in the task_completed email so the assigner
    *  recalls what the task was, alongside the linked client (mig 181). */
@@ -51,9 +54,12 @@ export async function sendTaskNotificationEmail(input: TaskEmailInput): Promise<
     const t = await getTranslations({ locale, namespace: 'email' });
 
     const actor = actorName || (input.actorId ? t('someone') : t('system'));
-    const url = input.caseId
-      ? `${env.NEXT_PUBLIC_APP_URL}/cases/${input.caseId}`
-      : `${env.NEXT_PUBLIC_APP_URL}/tasks`;
+    // Opens the task's conversation. It used to link to the CASE, which the
+    // assignee may not be allowed to open (advisors see only their own cases
+    // under RLS) — the same 404 the bell had already been steered around.
+    const url =
+      env.NEXT_PUBLIC_APP_URL +
+      notificationHref(input.kind, { caseId: input.caseId, taskId: input.taskId });
 
     // Which client (+ what the task was, on completion) so the recipient
     // recognizes it from the inbox without opening the app.

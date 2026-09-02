@@ -22,6 +22,7 @@ import {
 } from '../actions/mark-read';
 import { refreshTaskSurfacesAction } from '../actions/refresh-task-surfaces';
 import { formatRelativeTime } from '../domain/format';
+import { notificationHref } from '../domain/notification-href';
 import type {
   Notification,
   NotificationData,
@@ -260,24 +261,10 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
         void markNotificationReadAction(n.id);
       });
     }
-    // Only genuinely case-scoped notifications deep-link to the case. A task
-    // notification must NOT route to its linked case: the assignee can always
-    // see their own task, but the case may be invisible to them under RLS
-    // (advisors see only cases where they're the assigned advisor), which made
-    // the case page 404. Routing every task notification to /tasks is safe for
-    // all roles and future task types.
-    const isCaseNotification = n.type === 'case_status_overdue' || n.type === 'case_mention';
-    const href =
-      n.type === 'web_lead'
-        ? '/cases?view=leads'
-        : n.type === 'ai_digest'
-          ? '/cases'
-          : n.type === 'backup_stale' || n.type === 'erasure_stale'
-            ? '/settings/integrations'
-            : isCaseNotification && n.case_id
-              ? `/cases/${n.case_id}`
-              : '/tasks';
-    router.push(href);
+    // One routing rule shared with the push payload and the email mirrors
+    // (notificationHref) — a task notification opens that task's conversation,
+    // never the case, which the reader may not be allowed to see.
+    router.push(notificationHref(n.type, { caseId: n.case_id, taskId: n.task_id }));
   };
 
   const handleMarkAll = () => {

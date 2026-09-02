@@ -5,6 +5,7 @@ import { sendTaskNotificationEmail } from '@/features/notifications/services/not
 type Input = {
   recipientId: string;
   actorId: string;
+  taskId: string;
   taskTitle: string;
   caseId: string | null;
 };
@@ -22,8 +23,15 @@ type Input = {
  * reach the assignee at the scheduled time, which the task-reminders cron does
  * via the email-mirrored task_reminder (mig 161).
  */
-export function emailAssignedTask({ recipientId, actorId, taskTitle, caseId }: Input): void {
+export function emailAssignedTask({ recipientId, actorId, taskId, taskTitle, caseId }: Input): void {
   after(() =>
-    sendTaskNotificationEmail({ recipientId, actorId, kind: 'task_assigned', taskTitle, caseId }),
+    sendTaskNotificationEmail({
+      recipientId,
+      actorId,
+      kind: 'task_assigned',
+      taskId,
+      taskTitle,
+      caseId,
+    }),
   );
 }

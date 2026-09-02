@@ -3171,6 +3171,8 @@
     },
     "filteredByCase": "מסונן למשימות של תיק {label}",
     "clearCaseFilter": "נקה סינון",
+    "threadUnavailable": "השיחה שביקשת לפתוח אינה זמינה — המשימה נמחקה או שאין לך הרשאה לצפות בה",
+    "dismissThread": "סגור",
     "views": {
       "mine": "המשימות שלי",
       "assigned-by-me": "שהקציתי",

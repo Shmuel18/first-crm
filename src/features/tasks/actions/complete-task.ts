@@ -66,6 +66,7 @@ export async function completeTaskAction(taskId: string): Promise<Result> {
         recipientId: completionRecipient,
         actorId: userRes.user.id,
         kind: 'task_completed',
+        taskId: idParsed.data,
         taskTitle: existing.title,
         caseId: existing.case_id,
         description: existing.description,
