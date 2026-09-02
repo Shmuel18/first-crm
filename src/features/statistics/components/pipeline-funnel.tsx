@@ -14,7 +14,7 @@ import { useLocale, useTranslations } from 'next-intl';
 
 import { CHART_INITIAL_DIMENSION } from '@/components/shared/chart-initial-dimension';
 import { parseLocale } from '@/lib/i18n/direction';
-import { splitPipeline, statusName } from '../domain/metrics';
+import { completedTotal, splitPipeline, statusName } from '../domain/metrics';
 import { formatInt } from '../utils/format';
 
 import type { StatusSnapshot } from '../schemas/statistics.schema';
@@ -27,6 +27,7 @@ export function PipelineFunnel({ snapshot }: Props) {
   const t = useTranslations('statistics');
   const locale = parseLocale(useLocale());
   const { pipeline, side } = splitPipeline(snapshot);
+  const completed = completedTotal(snapshot);
   const data = pipeline.map((status) => ({
     key: status.key,
     name: statusName(status, locale),
@@ -88,6 +89,27 @@ export function PipelineFunnel({ snapshot }: Props) {
                   <span className="font-medium tabular-nums text-neutral-900">{formatInt(status.count)}</span>
                 </span>
               ))}
+            </div>
+          )}
+          {/* ביצוע and בוצע ושולם are split above by design — one is a live
+              pipeline bar, the other a side chip — so the office was adding
+              them up by hand. This is that sum, with the parts spelled out so
+              the number is checkable at a glance. */}
+          {completed.parts.length > 0 && (
+            <div className="mt-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-t border-neutral-100 pt-3">
+              <div>
+                <span className="text-sm font-medium text-neutral-700">
+                  {t('pipeline.completedTotal')}
+                </span>{' '}
+                <span className="text-xs text-neutral-400">
+                  {completed.parts
+                    .map((p) => `${statusName(p, locale)} ${formatInt(p.count)}`)
+                    .join(' + ')}
+                </span>
+              </div>
+              <span className="font-display text-xl font-semibold tabular-nums text-brand-gold-text">
+                {formatInt(completed.total)}
+              </span>
             </div>
           )}
         </>

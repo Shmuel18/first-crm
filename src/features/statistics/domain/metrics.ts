@@ -15,6 +15,13 @@ import type {
  */
 const SIDE_KEYS = ['closed', 'stuck', 'on_hold'] as const;
 
+/**
+ * The two statuses that both mean "the deal happened": ביצוע and בוצע ושולם.
+ * Same pair the statistics RPCs resolve the milestone against (migration 243),
+ * kept in one place so the funnel total and the KPI can never drift apart.
+ */
+const COMPLETED_KEYS = ['execution', 'closed'] as const;
+
 export type StatusDirection = 'up' | 'down' | 'flat';
 export type Delta = { pct: number | null; direction: StatusDirection };
 
@@ -41,6 +48,24 @@ export function splitPipeline(snapshot: StatusSnapshot[]): {
     pipeline: ordered.filter((s) => !isSide(s.key)),
     side: ordered.filter((s) => isSide(s.key)),
   };
+}
+
+/** Combined ביצוע + בוצע ושולם, with the parts kept for the caption. */
+export type CompletedTotal = { total: number; parts: StatusSnapshot[] };
+
+/**
+ * How many cases currently sit at ביצוע or בוצע ושולם, as one number.
+ *
+ * The funnel splits them by design — ביצוע is a live pipeline bar, בוצע ושולם
+ * is a side chip whose count is an ever-growing all-time total — so reading
+ * "how many got there" meant adding two figures by hand. This is Kaufman's
+ * "שיראה הכל ולא יצטרכו לחשב" applied to the snapshot.
+ */
+export function completedTotal(snapshot: StatusSnapshot[]): CompletedTotal {
+  const parts = snapshot
+    .filter((s) => (COMPLETED_KEYS as readonly string[]).includes(s.key))
+    .sort((a, b) => a.sort_order - b.sort_order);
+  return { total: parts.reduce((sum, s) => sum + s.count, 0), parts };
 }
 
 export function statusName(

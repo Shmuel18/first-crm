@@ -766,7 +766,8 @@
     },
     "pipeline": {
       "title": "Pipeline by stage",
-      "empty": "No active cases to show."
+      "empty": "No active cases to show.",
+      "completedTotal": "Total completed"
     },
     "advisor": {
       "title": "By advisor",
