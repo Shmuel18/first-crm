@@ -121,7 +121,9 @@ export async function CaseAdminBlock({
     canSeeFinancials ? listCasePayouts(asCaseId(caseId)) : Promise.resolve([]),
     // Cycle-time milestone. Joins the existing wave rather than adding a
     // round trip; scoped by case_id, which idx_stage_durations_case covers.
-    getCaseExecutionReachedAt(asCaseId(caseId)),
+    // Needs the current status: the case only counts as having reached ביצוע
+    // while it is still there (migration 244).
+    getCaseExecutionReachedAt(asCaseId(caseId), statusId),
   ]);
 
   // One timestamp for the whole render so the "still in progress" day count

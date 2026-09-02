@@ -1,6 +1,99 @@
 import { describe, expect, it } from 'vitest';
 
-import { computeCaseCycleTime, daysBetween, resolveOpenedAt } from './cycle-time';
+import { computeCaseCycleTime, currentMilestoneStart, daysBetween, resolveOpenedAt } from './cycle-time';
+
+const EXEC = 'exec-id';
+const CLOSED = 'closed-id';
+const COLLATERAL = 'collateral-id';
+const MS = [EXEC, CLOSED];
+
+describe('currentMilestoneStart', () => {
+  it('returns null when the case has left ביצוע again', () => {
+    // Case 2026-003 (פרלמן), verbatim: ביצוע picked twice by mistake and
+    // reverted within a minute. The case has never actually executed.
+    expect(
+      currentMilestoneStart(
+        [
+          { entered_at: '2026-06-10T20:24:00Z', status_id: COLLATERAL },
+          { entered_at: '2026-07-27T06:04:00Z', status_id: EXEC },
+          { entered_at: '2026-07-27T06:05:00Z', status_id: COLLATERAL },
+          { entered_at: '2026-07-29T19:08:00Z', status_id: EXEC },
+          { entered_at: '2026-07-29T19:08:08Z', status_id: COLLATERAL },
+        ],
+        MS,
+      ),
+    ).toBeNull();
+  });
+
+  it('returns null for a genuine regression too — 28 days in ביצוע, then back', () => {
+    // Case 2026-074. Under the state rule, how long it stayed is irrelevant:
+    // it is not in ביצוע now, so it has not executed.
+    expect(
+      currentMilestoneStart(
+        [
+          { entered_at: '2026-07-28T00:00:00Z', status_id: EXEC },
+          { entered_at: '2026-08-24T18:24:19Z', status_id: COLLATERAL },
+        ],
+        MS,
+      ),
+    ).toBeNull();
+  });
+
+  it('reports the real date, not an earlier slip, once the case truly arrives', () => {
+    expect(
+      currentMilestoneStart(
+        [
+          { entered_at: '2026-06-01T10:00:00Z', status_id: EXEC },
+          { entered_at: '2026-06-01T10:00:30Z', status_id: COLLATERAL },
+          { entered_at: '2026-07-15T09:00:00Z', status_id: EXEC },
+        ],
+        MS,
+      ),
+    ).toBe('2026-07-15T09:00:00Z');
+  });
+
+  it('keeps the ביצוע date after the case moves on to בוצע ושולם', () => {
+    // The run spans both milestone statuses, so it starts at ביצוע.
+    expect(
+      currentMilestoneStart(
+        [
+          { entered_at: '2026-05-01T00:00:00Z', status_id: COLLATERAL },
+          { entered_at: '2026-06-01T00:00:00Z', status_id: EXEC },
+          { entered_at: '2026-07-01T00:00:00Z', status_id: CLOSED },
+        ],
+        MS,
+      ),
+    ).toBe('2026-06-01T00:00:00Z');
+  });
+
+  it('handles a case that jumped straight to בוצע ושולם', () => {
+    expect(
+      currentMilestoneStart(
+        [
+          { entered_at: '2026-05-01T00:00:00Z', status_id: COLLATERAL },
+          { entered_at: '2026-07-01T00:00:00Z', status_id: CLOSED },
+        ],
+        MS,
+      ),
+    ).toBe('2026-07-01T00:00:00Z');
+  });
+
+  it('is order-independent — it sorts before walking back', () => {
+    expect(
+      currentMilestoneStart(
+        [
+          { entered_at: '2026-07-01T00:00:00Z', status_id: CLOSED },
+          { entered_at: '2026-06-01T00:00:00Z', status_id: EXEC },
+        ],
+        MS,
+      ),
+    ).toBe('2026-06-01T00:00:00Z');
+  });
+
+  it('returns null for a case with no history at all', () => {
+    expect(currentMilestoneStart([], MS)).toBeNull();
+  });
+});
 
 describe('resolveOpenedAt', () => {
   it('prefers the hand-entered opening date over the row timestamp', () => {

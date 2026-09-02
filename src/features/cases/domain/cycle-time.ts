@@ -17,6 +17,38 @@
 
 const MS_PER_DAY = 86_400_000;
 
+/** One row of a case's status history, as stage_durations records it. */
+export type StageVisit = { entered_at: string; status_id: string };
+
+/**
+ * When the case's CURRENT run at ביצוע / בוצע ושולם began, or null if it is
+ * not at either right now (migration 244).
+ *
+ * ביצוע is a state, not a permanent achievement: a case enters when the status
+ * is set and leaves when it is set back. Without this, a status picked by
+ * mistake and undone moments later stuck forever — case 2026-003 reported
+ * "הגיע לביצוע" off a 42-second slip.
+ *
+ * Walking back from the newest row rather than taking the earliest milestone
+ * matters: a case that slipped once and later reached ביצוע for real must
+ * report the REAL date, not the slip.
+ *
+ * Must stay in step with the `milestone` CTE in migration 244.
+ */
+export function currentMilestoneStart(
+  visits: StageVisit[],
+  milestoneStatusIds: readonly string[],
+): string | null {
+  const ordered = [...visits].sort((a, b) => a.entered_at.localeCompare(b.entered_at));
+  let start: string | null = null;
+  for (let i = ordered.length - 1; i >= 0; i -= 1) {
+    const visit = ordered[i];
+    if (visit === undefined || !milestoneStatusIds.includes(visit.status_id)) break;
+    start = visit.entered_at;
+  }
+  return start;
+}
+
 /** Effective opening instant: the hand-entered date wins over the row's. */
 export function resolveOpenedAt(openedAt: string | null, createdAt: string): string {
   return openedAt ?? createdAt;
