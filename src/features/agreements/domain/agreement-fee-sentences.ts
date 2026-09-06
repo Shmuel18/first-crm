@@ -12,9 +12,7 @@ import type { AgreementLanguage } from './agreement-text';
  * deal say different things, and "a fee of 0% of the loan" or "an advance of
  * ₪0 shall be paid" would be nonsense in a signed contract.
  *
- * The office APPROVED the Hebrew flat-sum clauses on 2026-09-06. The English
- * pair mirrors them and was not reviewed separately — send it for review before
- * the first English fixed-fee agreement goes out.
+ * The office APPROVED both flat-sum pairs — Hebrew and English — on 2026-09-06.
  *
  * These are legal DATA like the rest of the wording: any edit here REQUIRES
  * bumping AGREEMENT_VERSION in ../constants.
