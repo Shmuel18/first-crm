@@ -19,10 +19,22 @@ export type AgreementVars = {
   feeAdvanceSentence: string;
   /**
    * The whole "based on a loan of X the fee is about Y" sentence, or '' when
-   * the case has no loan figure. A sentence rather than a value so the wording
-   * disappears cleanly instead of leaving a dangling "(about —)".
+   * the case has no loan figure (and always for a fixed fee, which is not an
+   * estimate). A sentence rather than a value so the wording disappears
+   * cleanly instead of leaving a dangling "(about —)".
    */
   feeEstimateSentence: string;
+  /**
+   * The whole fee clause — "a fee of 1.5% of the loan advanced" or "a fixed fee
+   * of X". A sentence because a percentage deal and a flat-sum deal cannot be
+   * expressed by swapping one value into shared prose.
+   */
+  feeTermsSentence: string;
+  /**
+   * The whole "change in loan amount" clause: recalculation on a percentage
+   * deal, and an explicit "the fee does not change" on a fixed one.
+   */
+  feeLoanChangeSentence: string;
 };
 
 const PLACEHOLDER = /\{\{(\w+)\}\}/g;

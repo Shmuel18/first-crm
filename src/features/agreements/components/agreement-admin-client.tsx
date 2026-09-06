@@ -17,6 +17,7 @@ import { optimisticAgreement } from '../domain/optimistic-agreement';
 import { AgreementSmallButton, AgreementStatusChip } from './agreement-status-chip';
 import { SendAgreementDialog } from './send-agreement-dialog';
 
+import type { AgreementFeeTerms } from '../domain/agreement-calc';
 import type { AgreementState } from '../types';
 
 type Props = {
@@ -24,7 +25,8 @@ type Props = {
   initialState: AgreementState;
   canManage: boolean;
   defaultEmail: string;
-  defaultFeePercent: number | null;
+  /** Terms of the last agreement on this case, so a re-send repeats them. */
+  defaultFee: AgreementFeeTerms | null;
   defaultFeeAdvance: number | null;
   loanAmount: number | null;
   locale: Locale;
@@ -41,7 +43,7 @@ export function AgreementAdminClient({
   initialState,
   canManage,
   defaultEmail,
-  defaultFeePercent,
+  defaultFee,
   defaultFeeAdvance,
   loanAmount,
   locale,
@@ -188,7 +190,7 @@ export function AgreementAdminClient({
         onOpenChange={setDialogOpen}
         caseId={caseId}
         defaultEmail={defaultEmail}
-        defaultFeePercent={defaultFeePercent}
+        defaultFee={defaultFee}
         defaultFeeAdvance={defaultFeeAdvance}
         loanAmount={loanAmount}
         locale={locale}

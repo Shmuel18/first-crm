@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { estimatedBalance, estimatedFee } from './agreement-calc';
+import {
+  agreementFeeTerms,
+  estimatedBalance,
+  estimatedFee,
+  printedFeeAmount,
+} from './agreement-calc';
+import { advanceSentence, buildFeeSentences } from './agreement-fee-sentences';
 import { formatFeePercent, renderAgreementDocument } from './render-agreement';
 
 import type { AgreementDocument } from './agreement-text';
@@ -23,6 +29,17 @@ describe('estimatedFee', () => {
   });
 });
 
+describe('printedFeeAmount', () => {
+  it('estimates from the loan on a percentage deal', () => {
+    expect(printedFeeAmount({ basis: 'percent', feePercent: 1.5 }, 1_000_000)).toBe(15_000);
+  });
+
+  it('is the agreed sum on a fixed deal, whatever the loan', () => {
+    expect(printedFeeAmount({ basis: 'fixed', feeAmount: 8_000 }, 1_000_000)).toBe(8_000);
+    expect(printedFeeAmount({ basis: 'fixed', feeAmount: 8_000 }, null)).toBe(8_000);
+  });
+});
+
 describe('estimatedBalance', () => {
   it('subtracts the advance from the estimate', () => {
     expect(estimatedBalance(15_000, 5_000)).toBe(10_000);
@@ -34,6 +51,76 @@ describe('estimatedBalance', () => {
 
   it('stays unknown when the estimate is unknown', () => {
     expect(estimatedBalance(null, 5_000)).toBeNull();
+  });
+});
+
+describe('agreementFeeTerms', () => {
+  it('reads a percentage row as a percentage deal', () => {
+    expect(agreementFeeTerms({ feePercent: 1.5, feeTotal: 15_000 })).toEqual({
+      basis: 'percent',
+      feePercent: 1.5,
+    });
+  });
+
+  it('reads a row with only a total as a fixed-fee deal', () => {
+    expect(agreementFeeTerms({ feePercent: null, feeTotal: 8_000 })).toEqual({
+      basis: 'fixed',
+      feeAmount: 8_000,
+    });
+  });
+
+  it('has nothing to repeat when the row states no price', () => {
+    expect(agreementFeeTerms({ feePercent: null, feeTotal: null })).toBeNull();
+  });
+});
+
+describe('buildFeeSentences', () => {
+  it('states the rate and the recalculation rule on a percentage deal', () => {
+    const s = buildFeeSentences({
+      terms: { basis: 'percent', feePercent: 1.5 },
+      language: 'he',
+      loanAmount: 1_000_000,
+      estimate: 15_000,
+    });
+    expect(s.terms).toContain('1.5%');
+    expect(s.loanChange).toContain('יחושב שכר הטרחה בהתאם');
+    expect(s.estimate).not.toBe('');
+  });
+
+  it('states a flat sum, no recalculation and no estimate on a fixed deal', () => {
+    const s = buildFeeSentences({
+      terms: { basis: 'fixed', feeAmount: 8_000 },
+      language: 'he',
+      loanAmount: 1_000_000,
+      estimate: null,
+    });
+    expect(s.terms).not.toContain('%');
+    expect(s.loanChange).toContain('אינו משתנה');
+    // A fixed fee is the agreed sum, so nothing is presented as an estimate.
+    expect(s.estimate).toBe('');
+  });
+
+  it('drops the illustration when the case has no loan figure', () => {
+    const s = buildFeeSentences({
+      terms: { basis: 'percent', feePercent: 1.5 },
+      language: 'en',
+      loanAmount: null,
+      estimate: null,
+    });
+    expect(s.estimate).toBe('');
+    expect(s.terms).toContain('1.5%');
+  });
+});
+
+describe('advanceSentence', () => {
+  it('promises the advance when there is one', () => {
+    expect(advanceSentence(5_000, 'he')).toContain('ישולם במעמד חתימת הסכם זה');
+  });
+
+  it('says no advance is due rather than promising a payment of zero', () => {
+    const text = advanceSentence(0, 'he');
+    expect(text).toContain('לא נדרשת מקדמה');
+    expect(text).not.toContain('0');
   });
 });
 
@@ -53,6 +140,8 @@ const VARS: AgreementVars = {
   feePercent: '1.5%',
   feeAdvance: '5,000 ₪',
   feeAdvanceSentence: 'לוח התשלומים: סך של 5,000 ₪ ישולם במעמד החתימה.',
+  feeTermsSentence: 'שכר טרחה בשיעור של 1.5% מסכום ההלוואה.',
+  feeLoanChangeSentence: 'שינוי בסכום ההלוואה: יחושב מחדש.',
   feeEstimateSentence: ' (הערכה)',
 };
 
@@ -61,12 +150,16 @@ describe('renderAgreementDocument', () => {
     const doc: AgreementDocument = {
       title: 'הסכם {{officeName}}',
       preamble: 'בין {{clientName}}, ת"ז {{clientNationalId}}',
-      sections: [{ title: 'שכר טרחה', paragraphs: ['שיעור {{feePercent}}{{feeEstimateSentence}}'] }],
+      sections: [
+        { title: 'שכר טרחה', paragraphs: ['ישלם {{feeTermsSentence}}{{feeEstimateSentence}}'] },
+      ],
     };
     const out = renderAgreementDocument(doc, VARS);
     expect(out.title).toBe('הסכם קופמן פייננס גרופ');
     expect(out.preamble).toBe('בין ישראל ישראלי, ת"ז 123456782');
-    expect(out.sections[0]!.paragraphs[0]).toBe('שיעור 1.5% (הערכה)');
+    expect(out.sections[0]!.paragraphs[0]).toBe(
+      'ישלם שכר טרחה בשיעור של 1.5% מסכום ההלוואה. (הערכה)',
+    );
   });
 
   it('leaves an unknown placeholder visible rather than blanking it', () => {

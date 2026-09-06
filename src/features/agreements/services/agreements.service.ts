@@ -82,10 +82,13 @@ export type CreateSentAgreementInput = {
   tokenHash: string;
   agreementVersion: string;
   language: AgreementLanguage;
-  feePercent: number;
+  /** Null for a fixed-fee engagement — the agreed sum is feeTotal instead. */
+  feePercent: number | null;
   feeAdvance: number;
   loanAmount: number | null;
-  feeEstimate: number | null;
+  /** The shekel figure printed as the fee: an estimate on a percentage deal,
+   *  the agreed sum on a fixed one. */
+  feeTotal: number | null;
   document: AgreementDocument;
   clientEmail: string;
   snapshot: AgreementClientSnapshot;
@@ -119,7 +122,7 @@ export async function createSentAgreement(input: CreateSentAgreementInput): Prom
       fee_percent: input.feePercent,
       fee_advance: input.feeAdvance,
       loan_amount: input.loanAmount,
-      fee_total: input.feeEstimate,
+      fee_total: input.feeTotal,
       // The exact wording this client was shown — frozen against later edits
       // of the office template.
       text_snapshot: input.document as unknown as Json,

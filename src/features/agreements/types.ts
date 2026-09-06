@@ -9,8 +9,10 @@ export type AgreementSignedMethod = 'digital' | 'manual';
  * camelCased for the UI.
  *
  * The commercial terms are the SNAPSHOT taken at send time and deliberately do
- * not follow later edits to the case. `feePercent` is the authoritative term;
- * `feeTotal` is the informational estimate that was printed alongside it.
+ * not follow later edits to the case. On a percentage deal `feePercent` is the
+ * authoritative term and `feeTotal` the estimate printed alongside it; on a
+ * fixed-fee deal `feePercent` is null and `feeTotal` IS the agreed sum
+ * (domain/agreement-calc.agreementFeeTerms tells the two apart).
  */
 export type CaseAgreement = {
   id: string;
@@ -22,7 +24,7 @@ export type CaseAgreement = {
   feePercent: number | null;
   feeAdvance: number;
   loanAmount: number | null;
-  /** Informational estimate as printed — not the agreed sum. */
+  /** Printed estimate on a percentage deal; the agreed sum on a fixed one. */
   feeTotal: number | null;
   clientName: string;
   clientEmail: string | null;

@@ -2,7 +2,8 @@ import { BRAND } from '@/lib/brand';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { formatCurrency } from '@/lib/utils/format-currency';
 
-import { estimatedFee } from '../domain/agreement-calc';
+import { estimatedFee, type AgreementFeeTerms } from '../domain/agreement-calc';
+import { advanceSentence, buildFeeSentences } from '../domain/agreement-fee-sentences';
 import { DEFAULT_AGREEMENT_TEXT } from '../domain/agreement-text';
 import { formatFeePercent, renderAgreementDocument } from '../domain/render-agreement';
 
@@ -55,11 +56,23 @@ export async function getAgreementTemplate(
   }
 }
 
+/**
+ * Wording saved before fixed fees existed states the fee as "…at a rate of
+ * {{feePercent}}…", which is simply false for a flat-sum deal. Rather than
+ * print a wrong commercial term, a fixed-fee send falls back to the current
+ * default wording, which carries both variants.
+ */
+function usableForFixedFee(doc: AgreementDocument): boolean {
+  const text = [doc.preamble, ...doc.sections.flatMap((s) => s.paragraphs)].join(' ');
+  return text.includes('{{feeTermsSentence}}') && !text.includes('{{feePercent}}');
+}
+
 export type AgreementTerms = {
   language: AgreementLanguage;
   clientName: string;
   clientNationalId: string | null;
-  feePercent: number;
+  /** Percentage of the loan, or a flat sum agreed up front. */
+  fee: AgreementFeeTerms;
   feeAdvance: number;
   loanAmount: number | null;
 };
@@ -70,28 +83,21 @@ export type AgreementTerms = {
  * change what an existing client was shown.
  */
 export async function buildAgreementDocument(terms: AgreementTerms): Promise<AgreementDocument> {
-  const template = await getAgreementTemplate(terms.language);
+  const stored = await getAgreementTemplate(terms.language);
+  const template =
+    terms.fee.basis === 'fixed' && !usableForFixedFee(stored)
+      ? DEFAULT_AGREEMENT_TEXT[terms.language]
+      : stored;
+
+  const estimate =
+    terms.fee.basis === 'percent' ? estimatedFee(terms.loanAmount, terms.fee.feePercent) : null;
+  const fee = buildFeeSentences({
+    terms: terms.fee,
+    language: terms.language,
+    loanAmount: terms.loanAmount,
+    estimate,
+  });
   const he = terms.language === 'he';
-  const estimate = estimatedFee(terms.loanAmount, terms.feePercent);
-
-  // A whole sentence, so it vanishes cleanly when the case has no loan figure.
-  const estimateSentence =
-    estimate === null || terms.loanAmount === null
-      ? ''
-      : he
-        ? ` לצורך המחשה בלבד: על בסיס הלוואה בסך ${formatCurrency(terms.loanAmount, 'he')}, שכר הטרחה הוא כ-${formatCurrency(estimate, 'he')} בתוספת מע"מ.`
-        : ` For illustration only: based on a loan of ${formatCurrency(terms.loanAmount, 'en')}, the professional fee would be approximately ${formatCurrency(estimate, 'en')} plus VAT.`;
-
-  // No advance is a real arrangement (fee entirely at execution) — the clause
-  // must say so rather than promising a payment of zero.
-  const advanceSentence =
-    terms.feeAdvance > 0
-      ? he
-        ? `לוח התשלומים: סך של ${formatCurrency(terms.feeAdvance, 'he')}, בתוספת מע"מ, ישולם במעמד חתימת הסכם זה וייחשב כתשלום על חשבון שכר הטרחה הכולל.`
-        : `Payment Schedule: A sum of ${formatCurrency(terms.feeAdvance, 'en')}, plus VAT, shall be paid upon signing this Agreement and shall be credited towards the total professional fee.`
-      : he
-        ? 'לוח התשלומים: לא נדרשת מקדמה במעמד חתימת הסכם זה; שכר הטרחה במלואו ישולם במועדים הקבועים להלן.'
-        : 'Payment Schedule: No advance is payable upon signing this Agreement; the professional fee shall be paid in full at the times set out below.';
 
   return renderAgreementDocument(template, {
     clientName: terms.clientName,
@@ -99,9 +105,14 @@ export async function buildAgreementDocument(terms: AgreementTerms): Promise<Agr
     officeName: he ? BRAND.nameHe : BRAND.nameEn,
     officeRepresentative: he ? BRAND.representativeHe : BRAND.representativeEn,
     officeCrmDomain: BRAND.crmDomain,
-    feePercent: formatFeePercent(terms.feePercent, terms.language),
+    // Kept for wording the office saved before fixed fees existed; a fixed-fee
+    // send never reaches such a template (see usableForFixedFee).
+    feePercent:
+      terms.fee.basis === 'percent' ? formatFeePercent(terms.fee.feePercent, terms.language) : '',
     feeAdvance: formatCurrency(terms.feeAdvance, terms.language),
-    feeAdvanceSentence: advanceSentence,
-    feeEstimateSentence: estimateSentence,
+    feeAdvanceSentence: advanceSentence(terms.feeAdvance, terms.language),
+    feeTermsSentence: fee.terms,
+    feeLoanChangeSentence: fee.loanChange,
+    feeEstimateSentence: fee.estimate,
   });
 }

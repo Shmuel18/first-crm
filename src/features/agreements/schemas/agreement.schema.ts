@@ -1,15 +1,33 @@
 import { z } from 'zod';
 
-/** Manager's send-for-signature input (from the מנהלה dialog). */
-export const SendAgreementSchema = z.object({
+/** What every send carries, whichever way the fee was agreed. */
+const SendAgreementBase = z.object({
   caseId: z.uuid(),
   language: z.enum(['he', 'en']),
-  /** The agreed rate — the authoritative commercial term since 2026-08-31. */
-  feePercent: z.number().positive().max(100),
   /** Paid at signing, in shekels. */
   feeAdvance: z.number().nonnegative().max(10_000_000),
   clientEmail: z.email().max(320),
 });
+
+/**
+ * Manager's send-for-signature input (from the מנהלה dialog).
+ *
+ * A discriminated union rather than two optional fields: exactly one fee term
+ * is the agreed one, and the document prints a different clause for each — so
+ * an input carrying both, or neither, is not a valid engagement.
+ */
+export const SendAgreementSchema = z.discriminatedUnion('feeBasis', [
+  SendAgreementBase.extend({
+    feeBasis: z.literal('percent'),
+    /** The agreed rate — the authoritative term for a percentage deal. */
+    feePercent: z.number().positive().max(100),
+  }),
+  SendAgreementBase.extend({
+    feeBasis: z.literal('fixed'),
+    /** The whole agreed fee in shekels, independent of the loan. */
+    feeAmount: z.number().positive().max(10_000_000),
+  }),
+]);
 
 export type SendAgreementInput = z.infer<typeof SendAgreementSchema>;
 

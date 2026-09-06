@@ -368,12 +368,19 @@
         "he": "Hebrew",
         "en": "English"
       },
+      "feeBasis": "How the fee was agreed",
+      "feeBases": {
+        "percent": "Percentage of the loan",
+        "fixed": "Fixed amount"
+      },
       "feePercent": "Fee (% of the loan)",
+      "feeAmount": "Fixed fee (₪)",
       "feeAdvance": "Advance at signing (₪)",
       "estimateBasis": "Based on a requested loan of {loan}:",
       "estimateFee": "Estimated fee",
+      "agreedFee": "Agreed fee",
       "estimateBalance": "Balance at execution",
-      "noLoanAmount": "No requested mortgage amount on the case — the agreement will state the percentage only, with no shekel estimate.",
+      "noLoanAmount": "No requested mortgage amount on the case — the agreement will state the percentage alone, with no shekel estimate.",
       "clientEmail": "Client email address",
       "send": "Send to client",
       "sending": "Sending…",

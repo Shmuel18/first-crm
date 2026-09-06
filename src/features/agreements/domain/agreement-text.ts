@@ -14,6 +14,13 @@
  *
  * Placeholders are `{{name}}` and are substituted by domain/render-agreement.
  * Changing any clause here REQUIRES bumping AGREEMENT_VERSION in ../constants.
+ *
+ * The fee clause and the "change in loan amount" clause are whole SENTENCES
+ * supplied per deal ({{feeTermsSentence}} / {{feeLoanChangeSentence}}), because
+ * the office charges either a percentage of the loan or a flat sum, and each
+ * needs different prose. Both variants live in
+ * domain/agreement-fee-sentences.ts; the office approved the flat-sum pair on
+ * 2026-09-06.
  */
 
 export type AgreementSection = {
@@ -39,11 +46,11 @@ const HEBREW: AgreementDocument = {
     {
       title: 'שכר הטרחה ותנאי התשלום',
       paragraphs: [
-        'שכר הטרחה: בתמורה לשירותי הייעוץ והליווי, ישלם הלקוח למשרד שכר טרחה בשיעור של {{feePercent}} מסכום ההלוואה הכולל שיועמד ללקוח בפועל, בתוספת מע"מ כדין.{{feeEstimateSentence}}',
+        'שכר הטרחה: בתמורה לשירותי הייעוץ והליווי, ישלם הלקוח למשרד {{feeTermsSentence}}{{feeEstimateSentence}}',
         '{{feeAdvanceSentence}}',
         'יתרת שכר הטרחה תשולם עם העברת תיק המשכנתא לביצוע בבנק, ובכל מקרה לא יאוחר ממועד העמדת כספי ההלוואה ללקוח או לטובת העסקה.',
         'הוצאות צדדים שלישיים: שכר הטרחה אינו כולל אגרות בנקאיות, שכר שמאי, שכר עורך דין או נוטריון, תרגומים, אישורים, רישומים, פרמיות ביטוח או כל תשלום אחר הנדרש על ידי צד שלישי. הוצאות אלו יחולו על הלקוח וישולמו על ידו בנפרד.',
-        'שינוי בסכום ההלוואה: ככל שסכום ההלוואה שיועמד בפועל יהיה שונה מהסכום שנבחן או התבקש בתחילת ההתקשרות, יחושב שכר הטרחה בהתאם לסכום ההלוואה שהועמד בפועל.',
+        '{{feeLoanChangeSentence}}',
       ],
     },
     {
@@ -80,11 +87,11 @@ const ENGLISH: AgreementDocument = {
     {
       title: 'Fees and Payment Terms',
       paragraphs: [
-        'Professional Fee: In consideration for the advisory and support services provided by the Firm, the Client shall pay the Firm a professional fee equal to {{feePercent}} of the total loan amount advanced, plus VAT as required by law.{{feeEstimateSentence}}',
+        'Professional Fee: In consideration for the advisory and support services provided by the Firm, the Client shall pay the Firm {{feeTermsSentence}}{{feeEstimateSentence}}',
         '{{feeAdvanceSentence}}',
         'The balance of the professional fee shall become payable when the mortgage application is submitted to the lender for execution and, in any event, no later than the date on which the loan funds are advanced to the Client or applied towards the relevant transaction.',
         'Third-Party Expenses: The professional fee does not include bank fees, appraisal fees, legal or notarial fees, translation costs, approvals, registration costs, insurance premiums or any other payment required by a third party. Such expenses shall be borne and paid separately by the Client.',
-        'Change in Loan Amount: If the amount of the loan actually advanced differs from the amount initially considered or requested, the professional fee shall be calculated according to the amount actually advanced.',
+        '{{feeLoanChangeSentence}}',
       ],
     },
     {

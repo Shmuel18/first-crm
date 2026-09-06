@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { userHasPermissions } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 
+import { agreementFeeTerms } from '../domain/agreement-calc';
 import { resolveAgreementState } from '../domain/agreement-state';
 import { getAgreementClientSnapshot, listCaseAgreements } from '../services/agreements.service';
 import { AgreementAdminClient } from './agreement-admin-client';
@@ -31,7 +32,7 @@ export async function CaseAgreementAdminSection({ caseId }: { caseId: string }) 
   const state = resolveAgreementState(rows, new Date());
 
   // Seed the dialog from the last agreement's terms so a re-send repeats them
-  // instead of making the sender retype the rate.
+  // instead of making the sender retype the deal (percentage or flat sum).
   const previous = rows[0] ?? null;
 
   return (
@@ -47,7 +48,7 @@ export async function CaseAgreementAdminSection({ caseId }: { caseId: string }) 
         initialState={state}
         canManage={canSend}
         defaultEmail={snapshot?.email ?? ''}
-        defaultFeePercent={previous?.feePercent ?? null}
+        defaultFee={previous ? agreementFeeTerms(previous) : null}
         defaultFeeAdvance={previous?.feeAdvance ?? null}
         loanAmount={snapshot?.loanAmount ?? null}
         locale={locale}

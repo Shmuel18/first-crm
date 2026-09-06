@@ -29,9 +29,12 @@ const PLACEHOLDERS = [
   'officeName',
   'officeRepresentative',
   'officeCrmDomain',
+  'feeTermsSentence',
+  'feeLoanChangeSentence',
+  'feeAdvanceSentence',
+  'feeEstimateSentence',
   'feePercent',
   'feeAdvance',
-  'feeEstimateSentence',
 ];
 
 /**

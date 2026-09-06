@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 
+import { logClientEmail } from '@/features/case-activity/services/client-email-log.service';
 import { OFFICE_EMAIL } from '@/lib/email/addresses';
 import { escapeHtml, renderBrandedEmail } from '@/lib/email/render';
 import { sendEmail } from '@/lib/email/send';
@@ -42,6 +43,33 @@ export async function sendAgreementSignRequestEmail(
   });
   if (res.ok && 'skipped' in res && res.skipped) return 'skipped';
   return res.ok ? 'sent' : 'failed';
+}
+
+/**
+ * Send the signing link and, when it actually went out, record it on the case
+ * activity feed.
+ *
+ * NEVER logs the signUrl — the token is a bearer credential and the feed is
+ * readable by anyone with can_view_case, so the row carries the email's
+ * visible text instead.
+ */
+export async function sendAndLogSignRequest(
+  input: SignRequestEmailInput & { caseId: string },
+): Promise<'sent' | 'skipped' | 'failed'> {
+  const status = await sendAgreementSignRequestEmail(input);
+  if (status !== 'sent') return status;
+  const tMail = await getTranslations({
+    locale: input.language,
+    namespace: 'email.agreementSignRequest',
+  });
+  await logClientEmail({
+    caseId: input.caseId,
+    kind: 'agreement_sign_request',
+    recipient: input.to,
+    subject: tMail('subject'),
+    body: tMail('intro'),
+  });
+  return status;
 }
 
 /**
