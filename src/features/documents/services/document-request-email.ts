@@ -7,7 +7,8 @@ import { sanitizeRichTextHtml } from '@/lib/utils/sanitize-html';
 
 
 type DocumentRequestEmailInput = {
-  to: string;
+  /** One or more borrower addresses (see sendEmail). */
+  to: string | string[];
   /** Advisor-chosen email language — sets the shell's direction + footer. */
   locale: 'he' | 'en';
   subject: string;

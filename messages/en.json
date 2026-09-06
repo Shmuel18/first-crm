@@ -200,6 +200,10 @@
       "rateLimited": "Hourly drafting quota reached — try later"
     },
     "hint": "You can edit the message before sending. It will be sent in the office's branded layout.",
+    "recipients": {
+      "label": "To",
+      "noneSelected": "Pick at least one recipient"
+    },
     "subjectLabel": "Subject",
     "bodyLabel": "Message body",
     "bodyPlaceholder": "Write your message here…",
@@ -1846,7 +1850,7 @@
       "sendMessageMenu": {
         "viaEmail": "Send via email",
         "viaWhatsapp": "Send via WhatsApp",
-        "noEmail": "No client email",
+        "noEmail": "No borrower has an email",
         "noPhone": "No client phone",
         "whatsappGreeting": "Hello {name},",
         "whatsappGreetingNoName": "Hello,",
@@ -1854,7 +1858,7 @@
         "noContact": "No contact info",
         "emailDefaultSubject": "A message from Kaufman Finance Group",
         "emailSent": "Email sent to the client",
-        "emailNoAddress": "No client email on file",
+        "emailNoAddress": "No borrower on this case has an email address",
         "emailNotConfigured": "Email sending isn't configured",
         "emailUnauthorized": "You don't have permission for this action",
         "emailFailed": "Sending failed. Please try again.",
@@ -2862,7 +2866,7 @@
       "title": "Request documents",
       "viaEmail": "Send by email",
       "viaWhatsapp": "Send via WhatsApp",
-      "noEmail": "Borrower has no email",
+      "noEmail": "No borrower has an email",
       "noPhone": "Borrower has no phone",
       "whatsappTemplate": "Hi {name}, we still need the following documents for your file:\n{docList}\nPlease snap photos and send them back here. Thanks!",
       "whatsappTemplateNoMissing": "Hi {name}, we need some additional documents for your file. Could you reach out so we can clarify? Thanks!"
@@ -2923,7 +2927,7 @@
       "confirm": "Email the client a request to complete their documents?",
       "send": "Send request",
       "sent": "Request sent to the client",
-      "noEmail": "The client has no email address on file",
+      "noEmail": "No borrower on this case has an email address",
       "notConfigured": "Email sending isn't configured",
       "unauthorized": "You don't have permission for this action",
       "failed": "Sending failed. Please try again.",

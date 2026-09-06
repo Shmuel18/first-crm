@@ -14,7 +14,10 @@ export type SendEmailResult =
 export type EmailAttachment = { filename: string; content: Buffer };
 
 type SendEmailInput = {
-  to: string;
+  /** One address, or several when a case has more than one contactable
+   *  borrower — Resend puts them all on the same To: line, so a couple sees
+   *  that the message went to both. */
+  to: string | string[];
   subject: string;
   html: string;
   /** Where a reply should land. Defaults to the office inbox — never leave it

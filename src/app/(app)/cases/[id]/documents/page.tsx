@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
 
 import { listBorrowersForCase } from '@/features/borrowers/services/borrowers.service';
+import { buildEmailRecipients } from '@/features/cases/domain/email-recipients';
 import { DocumentsPageContent } from '@/features/documents/components/documents-page-content';
 import {
   hasCaseDriveFolderSnapshot,
@@ -91,6 +92,11 @@ export default async function CaseDocumentsPage({ params }: Props) {
       }
     : null;
 
+  // Every borrower with an address, primary first: the recipient options for
+  // the document-request dialog. Keying the email channel off the primary
+  // alone blocked cases where only the second borrower has an address.
+  const emailRecipients = buildEmailRecipients(borrowers);
+
   let driveMetadata = caseData.metadata;
   let driveFolderId = readCaseDriveFolderId(driveMetadata);
 
@@ -125,6 +131,7 @@ export default async function CaseDocumentsPage({ params }: Props) {
       driveSubfolderIds={driveSubfolderIds}
       checklist={checklist}
       primaryBorrower={primaryBorrower}
+      emailRecipients={emailRecipients}
       locale={locale}
       canEdit={canEdit}
       canUploadDocuments={documentPermissions.upload_document === true && canEdit}

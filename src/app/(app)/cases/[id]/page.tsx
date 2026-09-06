@@ -9,6 +9,7 @@ import { CaseBorrowerCard } from '@/features/borrowers/components/case-borrower-
 import { listBorrowersForCase } from '@/features/borrowers/services/borrowers.service';
 import { CaseCommentsBlock } from '@/features/case-comments/components/case-comments-block';
 import { CaseActionBar } from '@/features/cases/components/case-action-bar';
+import { buildEmailRecipients } from '@/features/cases/domain/email-recipients';
 import { CaseAdminBlock } from '@/features/cases/components/case-admin-block';
 import { CaseBlock } from '@/features/cases/components/case-block';
 import { CaseBlockPrefsProvider } from '@/features/cases/components/case-block-prefs-context';
@@ -133,6 +134,12 @@ export default async function CaseDetailPage({ params }: Props) {
       }
     : null;
 
+  // Every borrower on the case who has an address, primary first — the
+  // recipient options in the compose dialog. A couple often registers a single
+  // shared address under the second borrower, so the email channel must not be
+  // keyed off the primary alone.
+  const emailRecipients = buildEmailRecipients(borrowers);
+
   // Banks linked to this case — passed to the admin block's inline list.
   // Each row has the bank info + banker_name + is_primary; the list
   // renders one row per bank with inline-edit + delete + primary toggle.
@@ -168,6 +175,7 @@ export default async function CaseDetailPage({ params }: Props) {
         caseTypeSecondary={caseData.case_type_secondary?.name_he ?? null}
         borrowerNames={borrowerNames}
         primaryBorrower={primaryBorrower}
+        emailRecipients={emailRecipients}
         isArchived={caseData.is_archived}
         canArchive={canArchive}
         canRestore={canRestore}

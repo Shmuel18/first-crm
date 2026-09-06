@@ -4,7 +4,7 @@ import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
 
 import { logClientEmail } from '@/features/case-activity/services/client-email-log.service';
-import { getPrimaryBorrowerEmail } from '@/features/cases/services/borrower-email.service';
+import { resolveCaseEmailRecipients } from '@/features/cases/services/case-recipients.service';
 import { sendBrandedClientEmail } from '@/features/cases/services/client-email.service';
 import { getCurrentUser, userCanEditCase, userHasPermission } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
@@ -64,8 +64,11 @@ export async function emailScenarioReportAction(input: unknown): Promise<Result>
   if (!allowed) return { ok: false, error: 'rate_limited' };
 
   const supabase = await createClient();
-  const email = await getPrimaryBorrowerEmail(supabase, scenario.case_id);
-  if (!email) return { ok: false, error: 'no_email' };
+  // No recipient picker on the report screen — the shared resolver still
+  // falls back to the second borrower when the primary has no address.
+  const recipients = await resolveCaseEmailRecipients(supabase, scenario.case_id);
+  if (recipients.length === 0) return { ok: false, error: 'no_email' };
+  const emails = recipients.map((r) => r.email);
 
   const rawLocale = await getLocale();
   let rendered: Awaited<ReturnType<typeof renderScenarioReportPdf>>;
@@ -89,7 +92,7 @@ export async function emailScenarioReportAction(input: unknown): Promise<Result>
   if (!rendered) return { ok: false, error: 'not_found' };
 
   const sent = await sendBrandedClientEmail({
-    to: email,
+    to: emails,
     locale: parsed.data.locale,
     subject: parsed.data.subject,
     bodyHtml: parsed.data.body,
@@ -101,7 +104,7 @@ export async function emailScenarioReportAction(input: unknown): Promise<Result>
   await logClientEmail({
     caseId: scenario.case_id,
     kind: 'advisor_message',
-    recipient: email,
+    recipient: emails.join(', '),
     subject: parsed.data.subject,
     body: htmlToPlainText(parsed.data.body),
   });

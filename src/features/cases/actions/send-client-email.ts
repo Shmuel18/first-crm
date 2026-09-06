@@ -1,21 +1,15 @@
 'use server';
 
-import { after } from 'next/server';
-
 import { z } from 'zod';
 
-import { logClientEmail } from '@/features/case-activity/services/client-email-log.service';
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
-import { htmlToPlainText } from '@/lib/utils/html-to-text';
 
 import { MAX_ATTACHMENT_COUNT } from '../domain/email-attachment-limits';
-import { getPrimaryBorrowerEmail } from '../services/borrower-email.service';
-import { sendBrandedClientEmail } from '../services/client-email.service';
-import {
-  cleanupEmailTempFiles,
-  resolveClientEmailAttachments,
-} from '../services/email-attachments.service';
+import { MAX_EMAIL_RECIPIENTS } from '../domain/email-recipient-limits';
+import { dispatchClientEmail } from '../services/client-email-dispatch.service';
+import { resolveCaseEmailRecipients } from '../services/case-recipients.service';
+import { resolveClientEmailAttachments } from '../services/email-attachments.service';
 
 const SendClientEmailSchema = z.object({
   caseId: z.string().min(1).max(100),
@@ -25,6 +19,9 @@ const SendClientEmailSchema = z.object({
   // Rich-text HTML from the editor (sanitized server-side before send); the
   // markup overhead means a larger cap than the old plain-text 5000.
   body: z.string().trim().min(1).max(20000),
+  /** Borrowers picked in the dialog's recipient field; validated against the
+   *  case server-side. Omitted = the case's primary contactable borrower. */
+  recipientBorrowerIds: z.array(z.uuid()).max(MAX_EMAIL_RECIPIENTS).optional(),
   /** Existing case documents to attach (resolved server-side against the case). */
   documentIds: z.array(z.uuid()).max(MAX_ATTACHMENT_COUNT).optional(),
   /** Newly uploaded transient blobs: temp storage path + original file name. */
@@ -42,58 +39,36 @@ type Result =
     };
 
 /**
- * Sends an advisor-composed email to the case's primary borrower, optionally
- * with file attachments (existing case documents and/or newly uploaded files).
- * Validates, authorizes, resolves attachments (case-scoped + capped), wraps the
- * text in the branded layout (reply-to office@), then cleans up temp blobs.
+ * Sends an advisor-composed email to the borrowers picked on the case,
+ * optionally with file attachments (existing case documents and/or newly
+ * uploaded files). Validates, authorizes, resolves recipients + attachments
+ * (both case-scoped), then hands the branded send off to after().
  */
 export async function sendClientEmailAction(input: unknown): Promise<Result> {
   const parsed = SendClientEmailSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: 'unknown' };
-  const { caseId, locale, subject, body, documentIds = [], uploads = [] } = parsed.data;
+  const { caseId, locale, subject, body, recipientBorrowerIds, documentIds = [], uploads = [] } =
+    parsed.data;
 
   const supabase = await createClient();
   if (!(await userCanEditCase(caseId))) return { ok: false, error: 'unauthorized' };
 
-  const email = await getPrimaryBorrowerEmail(supabase, caseId);
-  if (!email) return { ok: false, error: 'no_email' };
+  const recipients = await resolveCaseEmailRecipients(supabase, caseId, recipientBorrowerIds);
+  if (recipients.length === 0) return { ok: false, error: 'no_email' };
 
   const resolved = await resolveClientEmailAttachments(supabase, { caseId, documentIds, uploads });
   if (!resolved.ok) return { ok: false, error: 'attachment' };
 
-  // The actual Resend HTTP call (plus attachment upload) is the slow part and
-  // was previously awaited, spinning the compose dialog. Validation, auth and
-  // attachment resolution already passed above, so hand the send off to after()
-  // and return immediately. Delivery failures are logged server-side (Resend is
-  // configured in prod); the temp blobs are always cleaned up.
-  after(async () => {
-    try {
-      const sent = await sendBrandedClientEmail({
-        to: email,
-        locale,
-        subject,
-        bodyHtml: body,
-        attachments: resolved.attachments,
-      });
-      if (sent === 'sent') {
-        await logClientEmail({
-          caseId,
-          kind: 'advisor_message',
-          recipient: email,
-          subject,
-          body: htmlToPlainText(body),
-        });
-      } else {
-        console.error('[sendClientEmail] not delivered', { caseId, sent });
-      }
-    } catch (err) {
-      console.error(
-        '[sendClientEmail] background send failed',
-        err instanceof Error ? err.message : 'unknown',
-      );
-    } finally {
-      await cleanupEmailTempFiles(supabase, caseId, resolved.tempPaths).catch(() => undefined);
-    }
+  dispatchClientEmail({
+    supabase,
+    caseId,
+    to: recipients.map((r) => r.email),
+    locale,
+    subject,
+    bodyHtml: body,
+    attachments: resolved.attachments,
+    tempPaths: resolved.tempPaths,
+    source: 'sendClientEmail',
   });
 
   return { ok: true };

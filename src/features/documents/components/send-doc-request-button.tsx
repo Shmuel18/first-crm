@@ -15,11 +15,20 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Tooltip } from '@/components/ui/tooltip';
 import { buildWhatsAppLink } from '@/features/borrowers/domain/contact-links';
+import { EmailRecipientsField } from '@/features/cases/components/email-recipients-field';
+import {
+  defaultRecipientIds,
+  type EmailRecipient,
+} from '@/features/cases/domain/email-recipients';
 import { callAction } from '@/lib/actions/call-action';
 import { env } from '@/lib/env';
 import { parseLocale } from '@/lib/i18n/direction';
 
 import { sendDocumentRequestAction } from '../actions/send-document-request';
+import {
+  buildDocRequestEmailText,
+  buildDocRequestWhatsappText,
+} from '../domain/document-request-text';
 import type { DocumentChecklistItem } from '../services/document-checklist.service';
 
 type Props = {
@@ -34,6 +43,9 @@ type Props = {
     email: string | null;
     phone: string | null;
   } | null;
+  /** Everyone on the case with an address, primary first. Empty disables the
+   *  email option; the advisor picks among them inside the dialog. */
+  emailRecipients: ReadonlyArray<EmailRecipient>;
   /** Required-docs checklist for this case. The WhatsApp message lists
    *  the still-missing categories so the borrower knows exactly what to
    *  send back. Empty / null falls back to a generic prompt. */
@@ -58,6 +70,7 @@ export function SendDocRequestButton({
   caseId,
   title,
   borrower,
+  emailRecipients,
   checklist,
   aiDraftEnabled,
 }: Props) {
@@ -66,6 +79,7 @@ export function SendDocRequestButton({
   const tc = useTranslations('common');
   const locale = parseLocale(useLocale());
   const [draft, setDraft] = useState<{ subject: string; body: string } | null>(null);
+  const [recipientIds, setRecipientIds] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
 
   const fullName =
@@ -73,22 +87,37 @@ export function SendDocRequestButton({
     tc('noName');
   const waLink = buildWhatsAppLink(
     borrower?.phone,
-    buildWhatsappText({ name: fullName, checklist, locale, tMenu }),
+    buildDocRequestWhatsappText({ name: fullName, checklist, locale, t: tMenu }),
   );
-  const hasEmail = Boolean(borrower?.email?.trim());
+  const hasEmail = emailRecipients.length > 0;
 
   // Prefill on open (not on mount) so the draft always reflects the current
   // checklist, and a reopened dialog starts fresh rather than half-edited.
   const openEmailDialog = (): void => {
+    setRecipientIds(defaultRecipientIds(emailRecipients));
     setDraft({
       subject: t('emailSubject'),
-      body: buildEmailText({ name: fullName, checklist, locale, t }),
+      body: buildDocRequestEmailText({
+        name: fullName,
+        checklist,
+        locale,
+        office: env.NEXT_PUBLIC_APP_NAME,
+        t,
+      }),
     });
   };
 
   const sendEmail = (subject: string, body: string, emailLocale: 'he' | 'en'): void => {
     startTransition(async () => {
-      const res = await callAction(() => sendDocumentRequestAction({ caseId, locale: emailLocale, subject, body }));
+      const res = await callAction(() =>
+        sendDocumentRequestAction({
+          caseId,
+          locale: emailLocale,
+          subject,
+          body,
+          recipientBorrowerIds: recipientIds,
+        }),
+      );
       if (res.ok) {
         toast.success(t('sent'));
         setDraft(null);
@@ -156,64 +185,18 @@ export function SendDocRequestButton({
         initialSubject={draft?.subject ?? ''}
         initialBody={draft?.body ?? ''}
         pending={isPending}
+        sendDisabled={recipientIds.length === 0}
         onSend={sendEmail}
         aiDraftCaseId={aiDraftEnabled ? caseId : undefined}
+        headerFields={
+          <EmailRecipientsField
+            recipients={emailRecipients}
+            selectedIds={recipientIds}
+            onChange={setRecipientIds}
+            disabled={isPending}
+          />
+        }
       />
     </>
   );
-}
-
-type MenuT = ReturnType<typeof useTranslations>;
-
-/**
- * Prefill for the editable email draft — greeting, ask, missing-required-docs
- * bullets and a signoff, in the advisor's UI language. Mirrors the WhatsApp
- * builder below so both channels start from the same message.
- */
-function buildEmailText({
-  name,
-  checklist,
-  locale,
-  t,
-}: {
-  name: string;
-  checklist: ReadonlyArray<DocumentChecklistItem> | null;
-  locale: 'he' | 'en';
-  t: MenuT;
-}): string {
-  const missing = (checklist ?? []).filter((i) => i.isRequired && i.status === 'missing');
-  const lines = [t('emailGreeting', { name }), '', t('emailBody')];
-  if (missing.length > 0) {
-    lines.push('', t('emailDocsIntro'));
-    for (const item of missing) lines.push(`• ${locale === 'he' ? item.nameHe : item.nameEn}`);
-  }
-  lines.push('', t('emailSignoff', { office: env.NEXT_PUBLIC_APP_NAME }));
-  return lines.join('\n');
-}
-
-/**
- * Build the prefilled WhatsApp message. Pulls the missing-required docs
- * out of the checklist and lists them as bullets in the current locale.
- * Falls back to a generic "we need more docs, please reach out" when the
- * checklist is empty or every required doc is already in.
- */
-function buildWhatsappText({
-  name,
-  checklist,
-  locale,
-  tMenu,
-}: {
-  name: string;
-  checklist: ReadonlyArray<DocumentChecklistItem> | null;
-  locale: 'he' | 'en';
-  tMenu: MenuT;
-}): string {
-  const missing = (checklist ?? []).filter((i) => i.isRequired && i.status === 'missing');
-  if (missing.length === 0) {
-    return tMenu('whatsappTemplateNoMissing', { name });
-  }
-  const docList = missing
-    .map((i) => `- ${locale === 'he' ? i.nameHe : i.nameEn}`)
-    .join('\n');
-  return tMenu('whatsappTemplate', { name, docList });
 }

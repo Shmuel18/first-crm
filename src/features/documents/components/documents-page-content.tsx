@@ -33,6 +33,8 @@ import {
   type DriveFolderNode,
 } from '../types';
 import { ChecklistManagerModal } from './checklist-manager-modal';
+import type { EmailRecipient } from '@/features/cases/domain/email-recipients';
+
 import { DocumentsActionBar } from './documents-action-bar';
 import { DocumentPreviewModal } from './document-preview-modal';
 import { DriveFolderCard } from './drive-folder-card';
@@ -75,6 +77,7 @@ type Props = {
   checklist: ReadonlyArray<DocumentChecklistItem>;
   /** Primary borrower's contact info — forwarded to the action bar's
    *  "request docs" menu so it can offer Email + WhatsApp channels. */
+  emailRecipients: ReadonlyArray<EmailRecipient>;
   primaryBorrower: {
     firstName: string | null;
     lastName: string | null;
@@ -107,6 +110,7 @@ export function DocumentsPageContent({
   driveSubfolderIds,
   checklist,
   primaryBorrower,
+  emailRecipients,
   locale,
   canEdit,
   canUploadDocuments,
@@ -448,6 +452,7 @@ export function DocumentsPageContent({
         onUpload={handleUploadGlobal}
         driveFolderId={driveFolderId}
         primaryBorrower={primaryBorrower}
+        emailRecipients={emailRecipients}
         checklist={checklist}
         canEdit={canEdit}
         canUploadDocuments={canUploadDocuments}
@@ -650,7 +655,7 @@ export function DocumentsPageContent({
         caseId={caseId}
         canDeleteDocuments={canDeleteDocuments}
         canSendEmail={canEdit}
-        defaultEmailRecipient={primaryBorrower?.email ?? null}
+        defaultEmailRecipient={emailRecipients[0]?.email ?? null}
         aiDraftEnabled={aiDraftEnabled}
         onClose={() => setPreviewDoc(null)}
       />

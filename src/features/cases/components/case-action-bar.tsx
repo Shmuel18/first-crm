@@ -18,6 +18,7 @@ import { parseLocale } from '@/lib/i18n/direction';
 import { createClient } from '@/lib/supabase/server';
 import { asCaseId } from '@/lib/types/branded';
 
+import type { EmailRecipient } from '../domain/email-recipients';
 import { CaseBackButton } from './case-back-button';
 import { CaseMoreMenu } from './case-more-menu';
 import { EditableStatusCell } from './editable-status-cell';
@@ -44,6 +45,8 @@ type ActionBarProps = {
     email: string | null;
     phone: string | null;
   } | null;
+  /** Everyone on the case with an address — the recipient picker's options. */
+  emailRecipients: ReadonlyArray<EmailRecipient>;
   hasDocumentAlerts?: boolean;
   lastSavedAt?: string;
   isArchived: boolean;
@@ -65,6 +68,7 @@ export async function CaseActionBar({
   caseTypeSecondary,
   borrowerNames,
   primaryBorrower,
+  emailRecipients,
   hasDocumentAlerts,
   lastSavedAt,
   isArchived,
@@ -162,6 +166,7 @@ export async function CaseActionBar({
             caseId={caseId}
             title={t('actions.sendMessage')}
             borrower={primaryBorrower}
+            emailRecipients={emailRecipients}
             templates={templates}
             aiDraftEnabled={showAiDraft}
           />

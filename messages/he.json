@@ -200,6 +200,10 @@
       "rateLimited": "הגעת למכסת הניסוחים לשעה — נסה מאוחר יותר"
     },
     "hint": "אפשר לערוך את ההודעה לפני השליחה. היא תישלח בעיצוב הממותג של המשרד.",
+    "recipients": {
+      "label": "אל",
+      "noneSelected": "בחר/י לפחות נמען אחד"
+    },
     "subjectLabel": "נושא",
     "bodyLabel": "תוכן ההודעה",
     "bodyPlaceholder": "כתוב/י את ההודעה כאן…",
@@ -1846,7 +1850,7 @@
       "sendMessageMenu": {
         "viaEmail": "שלח באימייל",
         "viaWhatsapp": "שלח ב-WhatsApp",
-        "noEmail": "אין אימייל ללקוח",
+        "noEmail": "אין אימייל לאף לווה",
         "noPhone": "אין טלפון ללקוח",
         "whatsappGreeting": "שלום {name},",
         "whatsappGreetingNoName": "שלום,",
@@ -1854,7 +1858,7 @@
         "noContact": "אין פרטי קשר",
         "emailDefaultSubject": "הודעה מ-Kaufman Finance Group",
         "emailSent": "המייל נשלח ללקוח",
-        "emailNoAddress": "אין אימייל ללקוח",
+        "emailNoAddress": "אין אימייל לאף לווה בתיק",
         "emailNotConfigured": "שליחת אימייל לא מוגדרת במערכת",
         "emailUnauthorized": "אין לך הרשאה לפעולה זו",
         "emailFailed": "השליחה נכשלה. נסה שוב.",
@@ -2862,7 +2866,7 @@
       "title": "בקשת מסמכים",
       "viaEmail": "שלח באימייל",
       "viaWhatsapp": "שלח ב-WhatsApp",
-      "noEmail": "אין אימייל ללווה",
+      "noEmail": "אין אימייל לאף לווה",
       "noPhone": "אין טלפון ללווה",
       "whatsappTemplate": "שלום {name}, אנחנו זקוקים למסמכים הבאים לתיק:\n{docList}\nאנא צלמ/י ושלח/י לי בחזרה ב-WhatsApp. תודה!",
       "whatsappTemplateNoMissing": "שלום {name}, אנחנו זקוקים למסמכים נוספים לתיק. אשמח שתחזור/י אלי לבירור. תודה!"
@@ -2923,7 +2927,7 @@
       "confirm": "לשלוח ללקוח בקשה להשלמת המסמכים באימייל?",
       "send": "שלח בקשה",
       "sent": "הבקשה נשלחה ללקוח",
-      "noEmail": "ללקוח אין כתובת אימייל",
+      "noEmail": "אין אימייל לאף לווה בתיק",
       "notConfigured": "שליחת אימייל לא מוגדרת במערכת",
       "unauthorized": "אין לך הרשאה לפעולה זו",
       "failed": "השליחה נכשלה. נסה שוב.",

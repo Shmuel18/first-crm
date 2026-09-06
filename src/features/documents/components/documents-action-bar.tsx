@@ -7,6 +7,7 @@ import { ClipboardList, FolderOpen, Mail, Loader2, RefreshCw, Upload } from 'luc
 import { useLocale, useTranslations } from 'next-intl';
 
 import { BackLink } from '@/components/shared/back-link';
+import type { EmailRecipient } from '@/features/cases/domain/email-recipients';
 import { Tooltip } from '@/components/ui/tooltip';
 import { parseLocale } from '@/lib/i18n/direction';
 
@@ -26,6 +27,9 @@ type Props = {
     email: string | null;
     phone: string | null;
   } | null;
+  /** Everyone on the case with an address — options for the recipient picker
+   *  and the default address of the free-form "send documents" dialog. */
+  emailRecipients: ReadonlyArray<EmailRecipient>;
   checklist: ReadonlyArray<DocumentChecklistItem>;
   /** Case-level edit authority for requests/email. */
   canEdit: boolean;
@@ -48,6 +52,7 @@ export function DocumentsActionBar({
   onUpload,
   driveFolderId,
   primaryBorrower,
+  emailRecipients,
   checklist,
   canEdit,
   canUploadDocuments,
@@ -134,6 +139,7 @@ export function DocumentsActionBar({
                 caseId={caseId}
                 title={t('sendRequest')}
                 borrower={primaryBorrower}
+                emailRecipients={emailRecipients}
                 checklist={checklist}
                 aiDraftEnabled={aiDraftEnabled}
               />
@@ -175,7 +181,7 @@ export function DocumentsActionBar({
           caseId={caseId}
           open={emailOpen}
           onOpenChange={setEmailOpen}
-          defaultRecipient={primaryBorrower?.email ?? null}
+          defaultRecipient={emailRecipients[0]?.email ?? null}
           initialAttachments={[]}
           aiDraftEnabled={aiDraftEnabled}
         />

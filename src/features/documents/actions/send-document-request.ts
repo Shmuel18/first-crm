@@ -1,6 +1,6 @@
 'use server';
 
-import { getPrimaryBorrowerEmail } from '@/features/cases/services/borrower-email.service';
+import { resolveCaseEmailRecipients } from '@/features/cases/services/case-recipients.service';
 import { logClientEmail } from '@/features/case-activity/services/client-email-log.service';
 import { userCanEditCase } from '@/lib/auth/permissions';
 import { checkRateLimit } from '@/lib/rate-limit';
@@ -15,15 +15,15 @@ type Result =
   | { ok: false; error: 'unauthorized' | 'no_email' | 'not_configured' | 'rate_limited' | 'unknown' };
 
 /**
- * Sends the advisor-reviewed document-request email to the case's primary
- * borrower. The dialog prefills the text (greeting + missing-docs list) and
+ * Sends the advisor-reviewed document-request email to the borrowers picked
+ * in the dialog. The dialog prefills the text (greeting + missing-docs list) and
  * the advisor edits before sending — the server validates, authorizes, and
  * wraps the final text in the branded layout.
  */
 export async function sendDocumentRequestAction(input: unknown): Promise<Result> {
   const parsed = DocumentRequestEmailSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: 'unknown' };
-  const { caseId, locale, subject, body } = parsed.data;
+  const { caseId, locale, subject, body, recipientBorrowerIds } = parsed.data;
 
   const supabase = await createClient();
   if (!(await userCanEditCase(caseId))) return { ok: false, error: 'unauthorized' };
@@ -39,18 +39,19 @@ export async function sendDocumentRequestAction(input: unknown): Promise<Result>
   });
   if (!allowed) return { ok: false, error: 'rate_limited' };
 
-  const email = await getPrimaryBorrowerEmail(supabase, caseId);
-  if (!email) return { ok: false, error: 'no_email' };
+  const recipients = await resolveCaseEmailRecipients(supabase, caseId, recipientBorrowerIds);
+  if (recipients.length === 0) return { ok: false, error: 'no_email' };
+  const emails = recipients.map((r) => r.email);
 
   // Shell direction + footer follow the language chosen in the compose dialog.
-  const sent = await sendDocumentRequestEmail({ to: email, locale, subject, bodyHtml: body });
+  const sent = await sendDocumentRequestEmail({ to: emails, locale, subject, bodyHtml: body });
   if (sent === 'skipped') return { ok: false, error: 'not_configured' };
   if (sent === 'failed') return { ok: false, error: 'unknown' };
   // Best-effort log — powers the case activity feed; never fails the send.
   await logClientEmail({
     caseId,
     kind: 'document_request',
-    recipient: email,
+    recipient: emails.join(', '),
     subject,
     body: htmlToPlainText(body),
   });
