@@ -39,13 +39,23 @@ export type AgreementVars = {
 
 const PLACEHOLDER = /\{\{(\w+)\}\}/g;
 
-function fill(text: string, vars: AgreementVars): string {
-  // An unknown placeholder is left visible on purpose: a typo in the office's
-  // edited wording must be obvious to whoever proofreads the draft, not
-  // silently blanked out of a legal document.
+/**
+ * Substitute `{{name}}` from a flat map of pre-formatted strings. Shared by the
+ * document render and the fee-sentence render, so both treat an unknown
+ * placeholder the same way.
+ *
+ * An unknown placeholder is left VISIBLE on purpose: a typo in the office's
+ * edited wording must be obvious to whoever proofreads the draft, not silently
+ * blanked out of a legal document.
+ */
+export function fillPlaceholders(text: string, vars: Readonly<Record<string, string>>): string {
   return text.replace(PLACEHOLDER, (match, key: string) =>
-    key in vars ? vars[key as keyof AgreementVars] : match,
+    Object.hasOwn(vars, key) ? (vars[key] ?? match) : match,
   );
+}
+
+function fill(text: string, vars: AgreementVars): string {
+  return fillPlaceholders(text, vars);
 }
 
 /**

@@ -4,6 +4,7 @@ import { formatCurrency } from '@/lib/utils/format-currency';
 
 import { estimatedFee, type AgreementFeeTerms } from '../domain/agreement-calc';
 import { advanceSentence, buildFeeSentences } from '../domain/agreement-fee-sentences';
+import { mergeFeeSentences, type FeeSentenceTemplates } from '../domain/agreement-fee-text';
 import { DEFAULT_AGREEMENT_TEXT } from '../domain/agreement-text';
 import { formatFeePercent, renderAgreementDocument } from '../domain/render-agreement';
 
@@ -57,6 +58,30 @@ export async function getAgreementTemplate(
 }
 
 /**
+ * The office's fee sentences for a language, each falling back to the approved
+ * default when it was never edited (or was edited into something unusable).
+ * Same service-role read as the document wording, for the same reason.
+ */
+export async function getAgreementFeeSentences(
+  language: AgreementLanguage,
+): Promise<FeeSentenceTemplates> {
+  try {
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from('office_settings')
+      .select('agreement_fee_text')
+      .limit(1)
+      .maybeSingle();
+    if (error || !data?.agreement_fee_text) return mergeFeeSentences(language, null);
+    const stored = (data.agreement_fee_text as Record<string, unknown>)[language];
+    return mergeFeeSentences(language, stored);
+  } catch (err) {
+    console.error('[agreements] fee wording read failed, using defaults', err);
+    return mergeFeeSentences(language, null);
+  }
+}
+
+/**
  * Wording saved before fixed fees existed states the fee as "…at a rate of
  * {{feePercent}}…", which is simply false for a flat-sum deal. Rather than
  * print a wrong commercial term, a fixed-fee send falls back to the current
@@ -83,7 +108,10 @@ export type AgreementTerms = {
  * change what an existing client was shown.
  */
 export async function buildAgreementDocument(terms: AgreementTerms): Promise<AgreementDocument> {
-  const stored = await getAgreementTemplate(terms.language);
+  const [stored, feeTemplates] = await Promise.all([
+    getAgreementTemplate(terms.language),
+    getAgreementFeeSentences(terms.language),
+  ]);
   const template =
     terms.fee.basis === 'fixed' && !usableForFixedFee(stored)
       ? DEFAULT_AGREEMENT_TEXT[terms.language]
@@ -96,6 +124,7 @@ export async function buildAgreementDocument(terms: AgreementTerms): Promise<Agr
     language: terms.language,
     loanAmount: terms.loanAmount,
     estimate,
+    templates: feeTemplates,
   });
   const he = terms.language === 'he';
 
@@ -110,7 +139,7 @@ export async function buildAgreementDocument(terms: AgreementTerms): Promise<Agr
     feePercent:
       terms.fee.basis === 'percent' ? formatFeePercent(terms.fee.feePercent, terms.language) : '',
     feeAdvance: formatCurrency(terms.feeAdvance, terms.language),
-    feeAdvanceSentence: advanceSentence(terms.feeAdvance, terms.language),
+    feeAdvanceSentence: advanceSentence(terms.feeAdvance, terms.language, feeTemplates),
     feeTermsSentence: fee.terms,
     feeLoanChangeSentence: fee.loanChange,
     feeEstimateSentence: fee.estimate,

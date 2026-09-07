@@ -2,8 +2,11 @@ import { redirect } from 'next/navigation';
 
 import { getTranslations } from 'next-intl/server';
 
-import { AgreementTemplateEditor } from '@/features/agreements/components/agreement-template-editor';
-import { getAgreementTemplate } from '@/features/agreements/services/agreement-text.service';
+import { AgreementSettingsClient } from '@/features/agreements/components/agreement-settings-client';
+import {
+  getAgreementFeeSentences,
+  getAgreementTemplate,
+} from '@/features/agreements/services/agreement-text.service';
 import { isCurrentUserAdmin } from '@/lib/auth/permissions';
 
 /**
@@ -14,9 +17,11 @@ import { isCurrentUserAdmin } from '@/lib/auth/permissions';
 export default async function AgreementSettingsPage() {
   if (!(await isCurrentUserAdmin())) redirect('/settings/profile');
 
-  const [he, en, t] = await Promise.all([
+  const [he, en, feeHe, feeEn, t] = await Promise.all([
     getAgreementTemplate('he'),
     getAgreementTemplate('en'),
+    getAgreementFeeSentences('he'),
+    getAgreementFeeSentences('en'),
     getTranslations('agreements.template'),
   ]);
 
@@ -27,7 +32,10 @@ export default async function AgreementSettingsPage() {
         <p className="mt-0.5 text-sm text-neutral-500">{t('subtitle')}</p>
       </header>
 
-      <AgreementTemplateEditor initial={{ he, en }} />
+      <AgreementSettingsClient
+        documents={{ he, en }}
+        feeSentences={{ he: feeHe, en: feeEn }}
+      />
     </div>
   );
 }

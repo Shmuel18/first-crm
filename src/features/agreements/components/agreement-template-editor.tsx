@@ -10,7 +10,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { callAction } from '@/lib/actions/call-action';
-import { cn } from '@/lib/utils';
 
 import { saveAgreementTemplateAction } from '../actions/save-agreement-template';
 import { DEFAULT_AGREEMENT_TEXT } from '../domain/agreement-text';
@@ -19,9 +18,10 @@ import type { AgreementDocument, AgreementLanguage } from '../domain/agreement-t
 
 type Props = {
   initial: Record<AgreementLanguage, AgreementDocument>;
+  /** Owned by the settings shell, so one toggle drives every editor. */
+  language: AgreementLanguage;
 };
 
-const LANGUAGES: AgreementLanguage[] = ['he', 'en'];
 /** Placeholders the office may use; listed in the UI so they are discoverable. */
 const PLACEHOLDERS = [
   'clientName',
@@ -42,9 +42,8 @@ const PLACEHOLDERS = [
  * writes only the language being edited. Already-sent agreements keep the text
  * they were sent with (each row snapshots it), so editing here is safe.
  */
-export function AgreementTemplateEditor({ initial }: Props) {
+export function AgreementTemplateEditor({ initial, language }: Props) {
   const t = useTranslations('agreements.template');
-  const [language, setLanguage] = useState<AgreementLanguage>('he');
   const [docs, setDocs] = useState<Record<AgreementLanguage, AgreementDocument>>(initial);
   const [pending, setPending] = useState(false);
 
@@ -73,23 +72,6 @@ export function AgreementTemplateEditor({ initial }: Props) {
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex overflow-hidden rounded-lg border border-neutral-200">
-          {LANGUAGES.map((l) => (
-            <button
-              key={l}
-              type="button"
-              onClick={() => setLanguage(l)}
-              className={cn(
-                'px-4 py-2 text-sm font-medium transition',
-                language === l
-                  ? 'bg-brand-gold text-brand-black'
-                  : 'bg-white text-neutral-600 hover:bg-neutral-50',
-              )}
-            >
-              {t(`languages.${l}`)}
-            </button>
-          ))}
-        </div>
         <div className="ms-auto flex items-center gap-2">
           <button
             type="button"

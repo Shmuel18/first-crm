@@ -1,5 +1,11 @@
 import { z } from 'zod';
 
+import {
+  FEE_SENTENCE_KEYS,
+  feeSentenceIsComplete,
+  type FeeSentenceKey,
+} from '../domain/agreement-fee-text';
+
 /** What every send carries, whichever way the fee was agreed. */
 const SendAgreementBase = z.object({
   caseId: z.uuid(),
@@ -65,3 +71,33 @@ export const SaveAgreementTemplateSchema = z.object({
 });
 
 export type SaveAgreementTemplateInput = z.infer<typeof SaveAgreementTemplateSchema>;
+
+/**
+ * Settings → Engagement agreement: the office's own fee wording for ONE
+ * language. Every variant is required — the editor always submits the full set
+ * (seeded from the defaults), and a partial save would silently reintroduce
+ * default prose next to edited prose.
+ *
+ * A sentence that dropped a placeholder its meaning depends on is REFUSED: a
+ * fee clause with the fee edited out of it would print a contract stating no
+ * price. `feeSentenceIsComplete` is the same check the reader applies, so a row
+ * can never hold wording the renderer would have to fall back on.
+ */
+export const SaveAgreementFeeTextSchema = z.object({
+  language: z.enum(['he', 'en']),
+  sentences: z
+    .object(
+      Object.fromEntries(
+        FEE_SENTENCE_KEYS.map((key) => [key, z.string().trim().min(1).max(2000)]),
+      ) as Record<FeeSentenceKey, z.ZodString>,
+    )
+    .superRefine((sentences, ctx) => {
+      for (const key of FEE_SENTENCE_KEYS) {
+        if (!feeSentenceIsComplete(key, sentences[key])) {
+          ctx.addIssue({ code: 'custom', path: [key], message: 'missing_placeholder' });
+        }
+      }
+    }),
+});
+
+export type SaveAgreementFeeTextInput = z.infer<typeof SaveAgreementFeeTextSchema>;

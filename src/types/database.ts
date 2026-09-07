@@ -4403,6 +4403,7 @@ export type Database = {
         Row: {
           address_city: string | null
           agreement_text: Json | null
+          agreement_fee_text: Json | null
           address_postal_code: string | null
           address_street: string | null
           ai_features: Json
@@ -4451,6 +4452,7 @@ export type Database = {
         Insert: {
           address_city?: string | null
           agreement_text?: Json | null
+          agreement_fee_text?: Json | null
           address_postal_code?: string | null
           address_street?: string | null
           ai_features?: Json
@@ -4499,6 +4501,7 @@ export type Database = {
         Update: {
           address_city?: string | null
           agreement_text?: Json | null
+          agreement_fee_text?: Json | null
           address_postal_code?: string | null
           address_street?: string | null
           ai_features?: Json

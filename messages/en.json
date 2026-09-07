@@ -415,6 +415,40 @@
         "unknown": "The signature was not saved — try again"
       }
     },
+    "feeText": {
+      "title": "Fee clauses",
+      "subtitle": "These clauses are chosen per deal — a percentage or a fixed sum, with an advance or without. Edit the wording of each option here; the figures are filled in automatically.",
+      "labels": {
+        "termsPercent": "Fee — percentage of the loan",
+        "termsFixed": "Fee — fixed sum",
+        "loanChangePercent": "Change in loan amount — percentage deal",
+        "loanChangeFixed": "Change in loan amount — fixed fee",
+        "advanceWithAmount": "Advance — when one was agreed",
+        "advanceNone": "Advance — when there is none",
+        "estimate": "Shekel illustration sentence"
+      },
+      "hints": {
+        "termsPercent": "Goes inside \"In consideration for the advisory and support services, the Client shall pay the Firm…\".",
+        "termsFixed": "The same place, when the agreement is sent with a fixed sum. No percentage appears in it.",
+        "loanChangePercent": "The clause saying the fee follows the loan actually advanced.",
+        "loanChangeFixed": "Its counterpart for a fixed fee — that it does not change.",
+        "advanceWithAmount": "The payment schedule when an advance was entered on sending.",
+        "advanceNone": "The payment schedule when no advance was entered. It must name no sum.",
+        "estimate": "Appended to the fee clause on a percentage deal, only when the case has a requested mortgage amount."
+      },
+      "mustKeep": "Must keep in the text:",
+      "missingPlaceholder": "A required field is missing — without it the clause states no amount:",
+      "save": "Save fee clauses",
+      "saved": "Fee clauses saved",
+      "reset": "Restore the original wording",
+      "resetHint": "The original wording is back in the editor — press save to apply it",
+      "errors": {
+        "unauthorized": "Only an admin can edit the agreement wording",
+        "validation": "One of the clauses is empty or missing a required field",
+        "unknown": "Saving failed — try again",
+        "network": "The connection failed — check your network and try again"
+      }
+    },
     "template": {
       "title": "Engagement agreement",
       "subtitle": "The wording clients are sent for signature. Changes apply only to agreements sent from now on — agreements already sent keep the wording they were sent with.",
