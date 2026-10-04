@@ -31,6 +31,15 @@ export function getTargetDateState(value: string | null | undefined, now = new D
   return 'future';
 }
 
+/**
+ * Office rule (Kaufman, 2026-10): every open case carries a target date, and
+ * the UI keeps flagging the cell until one is set. A closed or on-hold case is
+ * exempt — there is no deadline left to chase.
+ */
+export function isTargetDateMissing(value: string | null | undefined, isFrozen: boolean): boolean {
+  return !isFrozen && getTargetDateState(value) === 'none';
+}
+
 export function matchesTargetDateFilter(
   value: string | null | undefined,
   filter: TargetDateFilter | null,

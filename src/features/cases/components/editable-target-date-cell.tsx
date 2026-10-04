@@ -12,7 +12,7 @@ import type { Locale } from '@/lib/i18n/direction';
 import { formatDateShort } from '@/lib/utils/format-date';
 
 import { quickUpdateCaseFieldAction } from '../actions/quick-update-case';
-import { getTargetDateState } from '../domain/target-date';
+import { getTargetDateState, isTargetDateMissing } from '../domain/target-date';
 import { calcDropdownPos, type DropdownPosition } from './dropdown-position';
 
 type Props = {
@@ -23,7 +23,12 @@ type Props = {
   triggerClassName?: string;
   /** When false, render the date read-only (no picker popover). */
   canEdit?: boolean;
+  /** Closed / on-hold case — exempt from the "every case has a target date"
+   *  flag (see isTargetDateMissing). */
+  isFrozen: boolean;
 };
+
+const MISSING_CLASS = 'border-red-300 bg-red-50 font-medium text-red-700';
 
 function stateClass(value: string | null): string {
   const state = getTargetDateState(value);
@@ -38,6 +43,7 @@ export function EditableTargetDateCell({
   locale,
   triggerClassName = '',
   canEdit = true,
+  isFrozen,
 }: Props) {
   const tc = useTranslations('common');
   const td = useTranslations('dashboard.targetDate');
@@ -92,14 +98,21 @@ export function EditableTargetDateCell({
     });
   };
 
-  const label = savedValue ? formatDateShort(savedValue, locale) : td('empty');
+  // Keyed off the SAVED value, so the flag drops the moment a date commits
+  // (optimistically) and returns if the save rolls back.
+  const missing = isTargetDateMissing(savedValue, isFrozen);
+  const label = savedValue
+    ? formatDateShort(savedValue, locale)
+    : td(missing ? 'missing' : 'empty');
+  const chipClass = missing ? MISSING_CLASS : stateClass(savedValue);
 
   // Read-only: viewer can't edit this case — show the dated chip (keeping the
-  // overdue/soon coloring) with no picker affordance.
+  // overdue/soon/missing coloring) with no picker affordance. A missing date
+  // stays static here: blinking at someone who can't fix it is just noise.
   if (!canEdit) {
     return (
       <span
-        className={`inline-flex min-w-24 items-center gap-1 rounded-md border px-2 py-1 text-xs ${stateClass(savedValue)} ${triggerClassName}`}
+        className={`inline-flex min-w-24 items-center gap-1 rounded-md border px-2 py-1 text-xs ${chipClass} ${triggerClassName}`}
       >
         <span className="truncate">{label}</span>
         <CalendarDays className="size-3" aria-hidden="true" />
@@ -119,7 +132,7 @@ export function EditableTargetDateCell({
         }}
         disabled={isPending}
         aria-label={td('edit')}
-        className={`inline-flex min-w-24 items-center justify-between gap-1 rounded-md border px-2 py-1 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 disabled:opacity-60 ${stateClass(savedValue)} ${triggerClassName}`}
+        className={`inline-flex min-w-24 items-center justify-between gap-1 rounded-md border px-2 py-1 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40 disabled:opacity-60 ${chipClass} ${missing && !isPending ? 'target-date-missing' : ''} ${triggerClassName}`}
       >
         <span className="truncate">{label}</span>
         {isPending ? (

@@ -12,8 +12,12 @@ export function isStuckCase(c: { status: { key: string } | null }): boolean {
   return c.status?.key === 'stuck';
 }
 
+export function isFrozenStatusKey(key: string | null | undefined): boolean {
+  return key === 'on_hold' || key === 'closed';
+}
+
 export function isFrozenCase(c: { status: { key: string } | null }): boolean {
-  return c.status?.key === 'on_hold' || c.status?.key === 'closed';
+  return isFrozenStatusKey(c.status?.key);
 }
 
 export function getInitials(

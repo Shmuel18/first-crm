@@ -584,6 +584,34 @@
   animation: task-critical-dot-pulse 1s ease-in-out infinite;
 }
 
+/* An open case with no target date (office rule — every case carries one).
+   Background + ring only, so it sits on the dashboard chip (which keeps its
+   own static red border) and on a case-page field row alike. ~0.8 cycles/s,
+   far under the WCAG 2.3.1 three-flashes limit. Under reduced motion the
+   global clamp below stops it and the static red styling carries the flag. */
+@keyframes target-date-missing-pulse {
+  0%,
+  100% {
+    background-color: var(--color-red-50);
+    box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.2);
+  }
+  50% {
+    background-color: var(--color-red-100);
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.35);
+  }
+}
+
+.target-date-missing {
+  animation: target-date-missing-pulse 1.2s ease-in-out infinite;
+}
+
+/* The pulse animates box-shadow, which is also how the focus ring draws —
+   pause it on keyboard focus so the focused chip stays identifiable. */
+.target-date-missing:focus-visible,
+.target-date-missing:focus-within {
+  animation: none;
+}
+
 /* Loading-screen brand mark: a slow "breathe" (scale + opacity) with a soft
    gold glow — more premium than a flat opacity pulse. */
 @keyframes logo-breathe {

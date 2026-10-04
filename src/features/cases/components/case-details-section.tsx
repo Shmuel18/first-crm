@@ -8,6 +8,8 @@ import { formatPersonName } from '@/lib/utils/person-name';
 import { FieldGroup } from '@/features/borrowers/components/borrower-compact-fields';
 import { EditableField } from '@/features/borrowers/components/editable-field';
 
+import { isFrozenStatusKey } from '../domain/case-state';
+import { isTargetDateMissing } from '../domain/target-date';
 import { useCaseDetailsState, type LocalCase } from '../hooks/use-case-details-state';
 import { INSURANCE_STATUS_VALUES } from '../schemas/case.schema';
 import type {
@@ -84,6 +86,8 @@ export function CaseDetailsSection({
     label:
       formatPersonName(a.first_name, a.last_name) || tc('noName'),
   }));
+  const statusKey = statuses.find((s) => s.id === localCase.status_id)?.key;
+  const targetDateMissing = isTargetDateMissing(localCase.target_date, isFrozenStatusKey(statusKey));
   const insuranceOptions = INSURANCE_STATUS_VALUES.map((v) => ({
     value: v,
     label: tInsurance(v),
@@ -156,13 +160,17 @@ export function CaseDetailsSection({
         onSave={(v) => saveField('appraiser_name', v)}
         canEdit={canEdit}
       />
-      <EditableField
-        type="date"
-        label={tFields('targetDate')}
-        value={localCase.target_date}
-        onSave={(v) => saveField('target_date', v)}
-        canEdit={canEdit}
-      />
+      {/* Every open case needs a target date — the row pulses until one is
+          saved (static under read-only, same as the dashboard chip). */}
+      <div className={targetDateMissing ? `rounded-md ${canEdit ? 'target-date-missing' : 'bg-red-50'}` : undefined}>
+        <EditableField
+          type="date"
+          label={tFields('targetDate')}
+          value={localCase.target_date}
+          onSave={(v) => saveField('target_date', v)}
+          canEdit={canEdit}
+        />
+      </div>
       {/* Real opening date (migration 243). Left empty the case falls back to
           created_at — which for a bulk-imported case is the import day, so
           this is where the office corrects the legacy book and makes the

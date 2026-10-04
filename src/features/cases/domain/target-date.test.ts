@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   compareTargetDates,
   getTargetDateState,
+  isTargetDateMissing,
   isValidTargetDate,
   matchesTargetDateFilter,
 } from './target-date';
@@ -90,5 +91,22 @@ describe('isValidTargetDate', () => {
     expect(isValidTargetDate('2020-13-45')).toBe(false);
     expect(isValidTargetDate('2026-02-30')).toBe(false);
     expect(isValidTargetDate('2023-02-29')).toBe(false);
+  });
+});
+
+describe('isTargetDateMissing', () => {
+  it('flags an open case with no (or an unreadable) target date', () => {
+    expect(isTargetDateMissing(null, false)).toBe(true);
+    expect(isTargetDateMissing('', false)).toBe(true);
+    expect(isTargetDateMissing('not-a-date', false)).toBe(true);
+  });
+
+  it('does not flag an open case that has a date, even an overdue one', () => {
+    expect(isTargetDateMissing('2026-06-22', false)).toBe(false);
+    expect(isTargetDateMissing('2020-01-01', false)).toBe(false);
+  });
+
+  it('exempts a closed / on-hold case', () => {
+    expect(isTargetDateMissing(null, true)).toBe(false);
   });
 });
