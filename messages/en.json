@@ -1399,7 +1399,7 @@
       "targetDate": "Target date",
       "bank": "Bank",
       "advisor": "Advisor",
-      "shortNote": "Short Note"
+      "shortNote": "Short note / missing items"
     },
     "sort": {
       "label": "Sort",
@@ -1710,7 +1710,7 @@
       "updated_at": "Updated",
       "deleted_at": "Deleted",
       "case_type_other_text": "Other case type (details)",
-      "short_note": "Short note",
+      "short_note": "Short note / missing items",
       "request_details": "Request details",
       "referrer_name": "Referrer name",
       "case_blocker": "Blocker",
@@ -1948,7 +1948,7 @@
       "admin": "Administration",
       "collections": "Collections",
       "tasks": "Tasks",
-      "shortNote": "Short note",
+      "shortNote": "Short note / missing items",
       "shortNoteEmpty": "No note yet. Shown in dashboard under status - for quick reminders.",
       "requestDetails": "Request Details",
       "requestDetailsEmpty": "No detailed request written yet.",
@@ -1989,7 +1989,7 @@
       "targetDate": "Target date",
       "openedAt": "Case opening date",
       "referrer": "Referred by",
-      "shortNote": "Short note",
+      "shortNote": "Short note / missing items",
       "advisor": "Assigned advisor",
       "associated": "Associated",
       "associatedAdd": "Add advisor",
@@ -2026,7 +2026,7 @@
         "insuranceNotSpecified": "— Not specified —",
         "referrer": "Referred by (referrer name)",
         "referrerPlaceholder": "e.g.: Dani Cohen (former client)",
-        "shortNote": "Short note (shown in dashboard)",
+        "shortNote": "Short note / missing items (shown in dashboard)",
         "shortNotePlaceholder": "e.g.: Client returns Monday, issue with payslip",
         "requestDetails": "Case story / request details (full)",
         "requestDetailsPlaceholder": ""

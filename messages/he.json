@@ -1399,7 +1399,7 @@
       "targetDate": "תאריך יעד",
       "bank": "בנק",
       "advisor": "יועץ אחראי",
-      "shortNote": "הערה קצרה"
+      "shortNote": "הערה קצרה / חוסרים"
     },
     "sort": {
       "label": "מיון",
@@ -1710,7 +1710,7 @@
       "updated_at": "עודכן",
       "deleted_at": "נמחק",
       "case_type_other_text": "פירוט סוג עסקה אחר",
-      "short_note": "הערה קצרה",
+      "short_note": "הערה קצרה / חוסרים",
       "request_details": "פרטי הבקשה",
       "referrer_name": "שם הממליץ",
       "case_blocker": "גורם מעכב",
@@ -1948,7 +1948,7 @@
       "admin": "מנהלה",
       "collections": "גבייה",
       "tasks": "משימות",
-      "shortNote": "הערה קצרה",
+      "shortNote": "הערה קצרה / חוסרים",
       "shortNoteEmpty": "ללא הערה. מוצגת בדשבורד מתחת לסטטוס - לתזכורות מהירות.",
       "requestDetails": "פרטי הבקשה",
       "requestDetailsEmpty": "טרם נכתבו פרטי בקשה מלאים.",
@@ -1989,7 +1989,7 @@
       "targetDate": "תאריך יעד",
       "openedAt": "תאריך פתיחת תיק",
       "referrer": "הופנה ע״י",
-      "shortNote": "הערה קצרה",
+      "shortNote": "הערה קצרה / חוסרים",
       "advisor": "יועץ אחראי",
       "associated": "משוייכים",
       "associatedAdd": "הוסף יועץ",
@@ -2026,7 +2026,7 @@
         "insuranceNotSpecified": "— לא צוין —",
         "referrer": "הופנה ע״י (שם המפנה)",
         "referrerPlaceholder": "לדוגמה: דני כהן (לקוח קודם)",
-        "shortNote": "הערה קצרה (מוצגת בדשבורד)",
+        "shortNote": "הערה קצרה / חוסרים (מוצגת בדשבורד)",
         "shortNotePlaceholder": "לדוגמה: הלקוח חוזר ביום ב', יש בעיה עם תלוש שכר",
         "requestDetails": "סיפור התיק / פרטי הבקשה (מלא)",
         "requestDetailsPlaceholder": ""
