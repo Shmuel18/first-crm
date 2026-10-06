@@ -5,9 +5,10 @@ import { useState } from 'react';
 import { callAction } from '@/lib/actions/call-action';
 import { useInlineMutationSync } from '@/lib/hooks/use-inline-mutation-sync';
 
-import { updateCaseFeeAmountAction } from '../actions/update-case-fee-amount';
+import { setCaseFeeTermsAction } from '../actions/set-case-fee-terms';
 import { updateCaseFieldAction } from '../actions/update-case-field';
 import { isEditableCaseField, type EditableCaseField } from '../domain/editable-case-fields';
+import type { CaseFeeTerms, FeeBasis } from '../domain/fee-terms';
 import type { CaseRow } from '../types';
 
 export type LocalCase = Pick<
@@ -37,7 +38,7 @@ type SaveResult = { ok: true } | { ok: false; message?: string };
 export function useCaseDetailsState(
   caseId: string,
   initial: LocalCase,
-  initialFeeAmount: number | null,
+  initialFeeTerms: CaseFeeTerms,
 ) {
   const { pendingCount, refreshOwed, beginOp, endOp, refreshSoon } = useInlineMutationSync();
   const canApplyResync = pendingCount === 0 && !refreshOwed;
@@ -50,11 +51,12 @@ export function useCaseDetailsState(
     if (canApplyResync) setLocalCase(initial);
   }
 
-  const [localFee, setLocalFee] = useState<number | null>(initialFeeAmount);
-  const [feeRef, setFeeRef] = useState<number | null>(initialFeeAmount);
-  if (initialFeeAmount !== feeRef) {
-    setFeeRef(initialFeeAmount);
-    if (canApplyResync) setLocalFee(initialFeeAmount);
+  const [localFee, setLocalFee] = useState<CaseFeeTerms>(initialFeeTerms);
+  const feeSig = `${initialFeeTerms.amount}|${initialFeeTerms.percent}`;
+  const [feeRef, setFeeRef] = useState(feeSig);
+  if (feeSig !== feeRef) {
+    setFeeRef(feeSig);
+    if (canApplyResync) setLocalFee(initialFeeTerms);
   }
 
   const saveField = async (field: EditableCaseField, value: string | null): Promise<SaveResult> => {
@@ -82,16 +84,21 @@ export function useCaseDetailsState(
     }
   };
 
-  const saveFee = async (value: string | null): Promise<SaveResult> => {
+  // A percentage's shekel sum is derived in the DB (migration 248), so the
+  // optimistic state keeps the previous sum until the server returns the real
+  // one a moment later.
+  const saveFee = async (basis: FeeBasis, value: string | null): Promise<SaveResult> => {
     const prev = localFee;
-    setLocalFee(value === null || value === '' ? null : Number(value));
+    const n = value === null || value === '' ? null : Number(value);
+    setLocalFee(basis === 'fixed' ? { amount: n, percent: null } : { amount: n === null ? null : prev.amount, percent: n });
     beginOp();
     try {
-      const result = await callAction(() => updateCaseFeeAmountAction(caseId, value));
+      const result = await callAction(() => setCaseFeeTermsAction(caseId, { basis, value }));
       if (!result.ok) {
         setLocalFee(prev);
         return { ok: false, message: result.message };
       }
+      setLocalFee(result.terms);
       return { ok: true };
     } catch {
       setLocalFee(prev);

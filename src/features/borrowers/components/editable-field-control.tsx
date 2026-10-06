@@ -130,9 +130,10 @@ export function renderControl(p: ControlRenderProps) {
 
   // Mobile keyboard hint: pick the right virtual keyboard per field type.
   // `tel` for phone numbers, `email` for email, `numeric` for currency /
-  // counts (decimal would show a "." key on iOS which we don't need).
+  // counts (decimal would show a "." key on iOS which we don't need — unless
+  // the field opts in, like a fee percentage).
   const inputMode =
-    p.type === 'number' ? 'numeric'
+    p.type === 'number' ? (p.decimal ? 'decimal' : 'numeric')
       : p.type === 'tel' ? 'tel'
       : p.type === 'email' ? 'email'
       : undefined;

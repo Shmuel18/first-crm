@@ -12,6 +12,7 @@ import { CaseCollectionsAdminSection } from '@/features/collections/components/c
 import type { Locale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
 
+import type { CaseFeeTerms } from '../domain/fee-terms';
 import type { InsuranceStatus } from '../schemas/case.schema';
 import { getCaseExecutionReachedAt } from '../services/case-cycle-time.service';
 import type {
@@ -50,7 +51,10 @@ type Props = {
   /** Manager-only agreed-fee. Already filtered by the page based on
    *  canSeeFinancials — non-managers receive null and the field hides. */
   canSeeFinancials: boolean;
-  feeAmount: number | null;
+  /** Fixed sum or percentage (migration 248); both null when hidden. */
+  feeTerms: CaseFeeTerms;
+  /** cases.requested_mortgage_amount — the base of a percentage fee. */
+  loanAmount: number | null;
   /** Lookups passed down from the page. */
   statuses: ReadonlyArray<StatusOption>;
   advisors: ReadonlyArray<AdvisorOption>;
@@ -98,7 +102,8 @@ export async function CaseAdminBlock({
   openedAt,
   bankRows,
   canSeeFinancials,
-  feeAmount,
+  feeTerms,
+  loanAmount,
   statuses,
   advisors,
   associatedAdvisorIds,
@@ -165,7 +170,8 @@ export async function CaseAdminBlock({
         canChangeStatus={canChangeStatus}
         canAssignAdvisor={canAssignAdvisor}
         canSeeFinancials={canSeeFinancials}
-        initialFeeAmount={feeAmount}
+        initialFeeTerms={feeTerms}
+        loanAmount={loanAmount}
       />
 
       {/* Sections 2 + 3 — Banks and Office expenses side-by-side on

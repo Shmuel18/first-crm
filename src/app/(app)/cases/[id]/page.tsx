@@ -305,11 +305,17 @@ export default async function CaseDetailPage({ params }: Props) {
             openedAt={caseData.opened_at}
             bankRows={bankRows}
             canSeeFinancials={canSeeFinancials}
-            feeAmount={
+            feeTerms={
               // Defense in depth: even if the row is in RAM, don't leak the
               // value down to the client when the UI is going to hide it.
-              canSeeFinancials ? (caseData.case_financials?.fee_amount ?? null) : null
+              canSeeFinancials
+                ? {
+                    amount: caseData.case_financials?.fee_amount ?? null,
+                    percent: caseData.case_financials?.fee_percent ?? null,
+                  }
+                : { amount: null, percent: null }
             }
+            loanAmount={caseData.requested_mortgage_amount}
             statuses={statusOptions}
             advisors={advisorOptions}
             associatedAdvisorIds={associatedAdvisorIds}

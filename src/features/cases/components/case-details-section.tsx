@@ -2,13 +2,13 @@
 
 import { useTranslations } from 'next-intl';
 
-import { CurrencySign } from '@/components/ui/currency-sign';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import { FieldGroup } from '@/features/borrowers/components/borrower-compact-fields';
 import { EditableField } from '@/features/borrowers/components/editable-field';
 
 import { isFrozenStatusKey } from '../domain/case-state';
+import type { CaseFeeTerms } from '../domain/fee-terms';
 import { isTargetDateMissing } from '../domain/target-date';
 import { useCaseDetailsState, type LocalCase } from '../hooks/use-case-details-state';
 import { INSURANCE_STATUS_VALUES } from '../schemas/case.schema';
@@ -18,6 +18,7 @@ import type {
 } from '../services/case-lookups.service';
 
 import { AssociatedAdvisorsField } from './associated-advisors-field';
+import { CaseFeeField } from './case-fee-field';
 import { EditableStatusCell } from './editable-status-cell';
 
 /**
@@ -53,7 +54,10 @@ type Props = {
   canAssignAdvisor: boolean;
   /** Manager-only: agreed fee shows + is editable only when this is true. */
   canSeeFinancials: boolean;
-  initialFeeAmount: number | null;
+  /** Agreed fee — a sum or a percentage (migration 248). Both null when hidden. */
+  initialFeeTerms: CaseFeeTerms;
+  /** Requested loan — what a percentage fee is taken of. */
+  loanAmount: number | null;
 };
 
 export function CaseDetailsSection({
@@ -69,7 +73,8 @@ export function CaseDetailsSection({
   canChangeStatus,
   canAssignAdvisor,
   canSeeFinancials,
-  initialFeeAmount,
+  initialFeeTerms,
+  loanAmount,
 }: Props) {
   const tFields = useTranslations('case.fields');
   const tInsurance = useTranslations('case.insurance');
@@ -79,7 +84,7 @@ export function CaseDetailsSection({
   // the background router-cache refresh (stale back/forward payloads were
   // reverting and even overwriting saved values — see the hook doc).
   const { localCase, localFee, saveField, saveFee } =
-    useCaseDetailsState(caseId, initial, initialFeeAmount);
+    useCaseDetailsState(caseId, initial, initialFeeTerms);
 
   const advisorOptions = advisors.map((a) => ({
     value: a.id,
@@ -195,15 +200,12 @@ export function CaseDetailsSection({
           "paid" flag here anymore (it was a second, conflicting source of
           truth for the same question). */}
       {canSeeFinancials && (
-        <EditableField
-          type="number"
+        <CaseFeeField
           label={tFields('feeAmount')}
-          value={localFee == null ? null : String(localFee)}
-          onSave={(v) => saveFee(v)}
-          dir="ltr"
-          groupThousands
+          terms={localFee}
+          loanAmount={loanAmount}
+          onSave={saveFee}
           canEdit={canEdit}
-          adornment={<CurrencySign />}
         />
       )}
       {/* Short note last + spans 2 columns so it gets the biggest visual

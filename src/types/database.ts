@@ -2365,6 +2365,7 @@ export type Database = {
           created_by: string | null
           expected_income: number | null
           fee_amount: number | null
+          fee_percent: number | null
           fee_paid: boolean
           fee_paid_at: string | null
           updated_at: string
@@ -2376,6 +2377,7 @@ export type Database = {
           created_by?: string | null
           expected_income?: number | null
           fee_amount?: number | null
+          fee_percent?: number | null
           fee_paid?: boolean
           fee_paid_at?: string | null
           updated_at?: string
@@ -2387,6 +2389,7 @@ export type Database = {
           created_by?: string | null
           expected_income?: number | null
           fee_amount?: number | null
+          fee_percent?: number | null
           fee_paid?: boolean
           fee_paid_at?: string | null
           updated_at?: string
@@ -5731,6 +5734,15 @@ export type Database = {
       save_regulatory_thresholds: {
         Args: { p_thresholds: Json }
         Returns: undefined
+      }
+      set_case_fee_terms: {
+        Args: {
+          p_case_id: string
+          p_fee_amount: number
+          p_fee_percent: number
+          p_user_id: string
+        }
+        Returns: number
       }
       set_primary_bank: {
         Args: { p_bank_id: string; p_case_id: string; p_user_id: string }

@@ -32,6 +32,9 @@ type CommonProps = {
    *  type='number'. Use for money / large counts — NOT for years or IDs,
    *  where grouping (2,024) would be wrong. */
   groupThousands?: boolean;
+  /** Opt-in for fractional numbers (e.g. a 1.5% fee): mobile keyboards get a
+   *  decimal point. Only takes effect for a plain type='number' field. */
+  decimal?: boolean;
   /** When false, render the value read-only (plain text, no input/select) —
    *  e.g. for a user who can VIEW but not EDIT this case. Defaults to true.
    *  The interactive control is the affordance; gating it here keeps the UI

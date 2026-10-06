@@ -1705,6 +1705,7 @@
       "banker_phone": "Banker phone",
       "banker_email": "Banker email",
       "fee_amount": "Fee",
+      "fee_percent": "Fee percentage",
       "expected_income": "Expected income",
       "created_at": "Created",
       "updated_at": "Updated",
@@ -1964,6 +1965,13 @@
       "removeFailed": "Couldn't remove the property",
       "saveFailed": "Save failed",
       "additionalLabel": "Property {n}"
+    },
+    "fee": {
+      "basisLabel": "How the fee is set",
+      "basisFixed": "Amount in shekels",
+      "basisPercent": "Percent of the mortgage",
+      "percentHint": "= {amount} · of a requested mortgage of {loan}",
+      "percentNoLoan": "The amount is calculated once the requested mortgage is entered"
     },
     "fields": {
       "transactionPurpose": "Transaction purpose",

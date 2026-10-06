@@ -60,6 +60,9 @@ export type CaseWithRelations = CaseRow & {
    *  expected_income). Don't re-add it as a second source of truth. */
   case_financials: {
     fee_amount: number | null;
+    /** Set when the fee is a percentage of the requested loan (migration 248);
+     *  fee_amount then holds the sum the DB derived from it. */
+    fee_percent: number | null;
     expected_income: number | null;
   } | null;
   /** Associated advisors (0..N) — migration 146. Only the id is loaded; names
