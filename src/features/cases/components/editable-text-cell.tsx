@@ -162,6 +162,8 @@ export function EditableTextCell({
         type="button"
         onClick={openEditor}
         aria-label={triggerLabel}
+        // The cell shows one line; hovering shows the whole note, line by line.
+        title={savedValue || undefined}
         className="group inline-flex items-center gap-1.5 w-full text-start min-w-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold-text/40"
       >
         <span

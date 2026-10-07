@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { FormField, FormSection, NativeSelect } from '@/components/shared/form-fields';
 
 import { fieldDefault } from '@/lib/utils/form-defaults';
@@ -185,8 +186,9 @@ export function CaseForm({
       <FormSection title={t('sections.notes')}>
         <div className="md:col-span-2">
           <FormField label={t('fields.shortNote')} error={fieldErrors.short_note}>
-            <Input
+            <Textarea
               name="short_note"
+              rows={3}
               defaultValue={value('short_note')}
               placeholder={t('fields.shortNotePlaceholder')}
             />

@@ -77,7 +77,10 @@ export function EditableField(props: FieldProps) {
       <div className="grid grid-cols-[6rem_1fr] items-center gap-2 text-sm">
         <span className="text-neutral-500 truncate">{label}</span>
         <div className="flex items-center gap-1.5 min-w-0">
-          <span dir={resolvedDir} className="min-w-0 flex-1 truncate py-1.5 text-neutral-900">
+          <span
+            dir={resolvedDir}
+            className={`min-w-0 flex-1 py-1.5 text-neutral-900 ${type === 'textarea' ? 'whitespace-pre-line break-words' : 'truncate'}`}
+          >
             {display}
           </span>
           {adornment ? <div className="shrink-0">{adornment}</div> : null}

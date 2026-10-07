@@ -213,6 +213,8 @@ export function CaseDetailsSection({
           it room to breathe), but not a full-width row of its own. */}
       <div className="sm:col-span-2">
         <EditableField
+          type="textarea"
+          rows={3}
           label={tFields('shortNote')}
           value={localCase.short_note}
           onSave={(v) => saveField('short_note', v)}

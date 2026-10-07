@@ -8,6 +8,7 @@ import {
   optionalDate,
   optionalEnum,
   optionalLongText,
+  optionalNotes,
   optionalShortString,
   optionalUuid,
   REQUEST_DETAILS_MAX,
@@ -41,7 +42,8 @@ export const CaseFormShape = z.object({
   city: optionalShortString(NAME_MAX),
   gush_helka: optionalShortString(NAME_MAX),
   case_type_other_text: optionalShortString(NAME_MAX),
-  short_note: optionalShortString(SHORT_NOTE_MAX),
+  // Multi-line: the office lists a case's missing documents here, one per line.
+  short_note: optionalNotes(SHORT_NOTE_MAX),
   target_date: optionalDate,
   // Real date the office opened the file (migration 243). NULL falls back to
   // created_at — imported cases carry the import date there, so this is the

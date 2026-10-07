@@ -148,7 +148,7 @@ export function CaseCard({ row, statusOptions, advisorOptions, canViewAll, editG
       </div>
 
       {row.shortNote && (
-        <p className="mt-1 line-clamp-2 text-xs text-neutral-500">{row.shortNote}</p>
+        <p className="mt-1 line-clamp-2 whitespace-pre-line text-xs text-neutral-500">{row.shortNote}</p>
       )}
     </div>
   );
