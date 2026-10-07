@@ -51,6 +51,19 @@ export function EditableTextCell({
   const anchorRef = useRef<HTMLButtonElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Follow a newer stored note from the server (realtime refresh). Without
+  // this the cell kept its first-loaded copy forever and its next save was
+  // compared against a value the DB no longer held. Skipped while our own
+  // save is in flight, and never overwrites text being edited.
+  const [propRef, setPropRef] = useState(initialValue ?? '');
+  if ((initialValue ?? '') !== propRef) {
+    setPropRef(initialValue ?? '');
+    if (!isPending) {
+      setSavedValue(initialValue ?? '');
+      if (!editing) setValue(initialValue ?? '');
+    }
+  }
+
   useEffect(() => {
     if (editing) {
       requestAnimationFrame(() => {
@@ -104,6 +117,10 @@ export function EditableTextCell({
         previousSaved || null,
       ));
       if (result.ok) {
+        // Hold the STORED note (the server trims and flattens line breaks).
+        // Keeping what was typed made the next edit's compare-and-swap miss
+        // and report "changed by another user" on a note nobody else touched.
+        setSavedValue(result.value ?? '');
         setShowSaved(true);
       } else {
         setSavedValue(previousSaved);

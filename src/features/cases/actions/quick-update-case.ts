@@ -24,7 +24,10 @@ const ALLOWED_FIELDS = [
 
 type AllowedField = (typeof ALLOWED_FIELDS)[number];
 
-type UpdateResult = { ok: true } | { ok: false; error: string };
+// `value` is what was actually STORED: the schema normalises free text (trims,
+// flattens line breaks, strips invisible bidi marks), and a cell that compares
+// against its next edit must hold the stored form, not what was typed.
+type UpdateResult = { ok: true; value: string | null } | { ok: false; error: string };
 
 export async function quickUpdateCaseFieldAction(
   caseId: string,
@@ -110,5 +113,5 @@ export async function quickUpdateCaseFieldAction(
   // refresh after the DB update can leave the client transition spinning while
   // the updated value is already visible from another tab. The next natural
   // navigation/refresh will read the canonical DB value.
-  return { ok: true };
+  return { ok: true, value: finalValue };
 }
