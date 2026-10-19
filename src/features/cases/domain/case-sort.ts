@@ -1,14 +1,20 @@
 /**
  * Dashboard sort state — column-header sorting (Excel/Sheets-style).
  *
- * Two sortable columns:
- *   - name  : surname then first name of the primary borrower.
- *   - stage : pipeline order (status.sort_order).
+ * Sortable keys:
+ *   - name       : surname then first name of the primary borrower.
+ *   - stage      : pipeline order (status.sort_order).
+ *   - targetDate : nearest deadline first.
+ *   - opened     : case-opening order — the DB order, which `listCases`
+ *                  returns oldest-first (the pre-2026-10 default view).
  *
- * Everything else — including the # column — is non-sortable. When no
- * sort is active the table shows cases in the DB-returned order, which
- * `listCases` orders oldest-first (the dashboard reads top-down as a
- * timeline). Cancelling a column sort returns to this default.
+ * When no sort is active the dashboard sorts by URGENCY (Kaufman, 2026-10):
+ * dated cases by target date (overdue first), then undated ones in opening
+ * order. Cancelling a column sort returns to this default.
+ *
+ * ביצוע cases sink to the bottom in the urgency / opened / targetDate views —
+ * nothing is left to chase on them. The explicit name and stage sorts don't
+ * move them: those are lookups, and stage order already places ביצוע.
  *
  * Empty / missing keys (case with no borrowers, no stage) always sink
  * to the bottom — independent of the sort direction. Direction is
@@ -21,7 +27,7 @@ import { compareTargetDates } from './target-date';
 
 import type { CaseWithRelations } from '../types';
 
-export const SORT_COLUMNS = ['name', 'stage', 'targetDate'] as const;
+export const SORT_COLUMNS = ['name', 'stage', 'targetDate', 'opened'] as const;
 export type SortColumn = (typeof SORT_COLUMNS)[number];
 export type SortDir = 'asc' | 'desc';
 
@@ -71,13 +77,37 @@ function stagePos(c: CaseWithRelations, order: Map<string, number>): number {
   return c.status?.id ? order.get(c.status.id) ?? Number.POSITIVE_INFINITY : Number.POSITIVE_INFINITY;
 }
 
+/** 1 for a case in ביצוע (sinks to the bottom), 0 otherwise. */
+function executionRank(c: CaseWithRelations): number {
+  return c.status?.key === 'execution' ? 1 : 0;
+}
+
+/**
+ * Default view. Relies on Array.prototype.sort being stable: the input
+ * arrives in opening order, so cases with an equal key (same date, or no
+ * date) keep that order.
+ */
+function sortByUrgency(cases: ReadonlyArray<CaseWithRelations>): CaseWithRelations[] {
+  return [...cases].sort(
+    (a, b) =>
+      executionRank(a) - executionRank(b) || compareTargetDates(a.target_date, b.target_date),
+  );
+}
+
+/** Opening order = the incoming DB order; desc simply reverses it. */
+function sortByOpened(cases: ReadonlyArray<CaseWithRelations>, dir: SortDir): CaseWithRelations[] {
+  const ordered = dir === 'desc' ? [...cases].reverse() : [...cases];
+  return ordered.sort((a, b) => executionRank(a) - executionRank(b));
+}
+
 export function applySort(
   cases: ReadonlyArray<CaseWithRelations>,
   sort: CaseSort | null,
   statusOptions: ReadonlyArray<StatusRef>,
 ): CaseWithRelations[] {
   if (cases.length === 0) return [];
-  if (!sort) return [...cases]; // no active sort — keep the DB order
+  if (!sort) return sortByUrgency(cases);
+  if (sort.column === 'opened') return sortByOpened(cases, sort.dir);
 
   const sorted = [...cases];
   // Secondary tiebreaker — always asc surname.
@@ -100,7 +130,9 @@ export function applySort(
     case 'targetDate':
       sorted.sort((a, b) => {
         const cmp = compareTargetDates(a.target_date, b.target_date);
-        return (sort.dir === 'desc' ? -cmp : cmp) || tieBySurname(a, b);
+        return (
+          executionRank(a) - executionRank(b) || (sort.dir === 'desc' ? -cmp : cmp) || tieBySurname(a, b)
+        );
       });
       break;
   }

@@ -1403,7 +1403,10 @@
     },
     "sort": {
       "label": "Sort",
-      "default": "Default order",
+      "default": "By urgency",
+      "opened": "Case opening",
+      "openedAsc": "Case opening — oldest first",
+      "openedDesc": "Case opening — newest first",
       "asc": "ascending",
       "desc": "descending"
     },

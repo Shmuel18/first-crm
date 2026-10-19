@@ -7,7 +7,7 @@ import { formatPersonName } from '@/lib/utils/person-name';
 import { FieldGroup } from '@/features/borrowers/components/borrower-compact-fields';
 import { EditableField } from '@/features/borrowers/components/editable-field';
 
-import { isFrozenStatusKey } from '../domain/case-state';
+import { isTargetDateExemptStatusKey } from '../domain/case-state';
 import type { CaseFeeTerms } from '../domain/fee-terms';
 import { isTargetDateMissing } from '../domain/target-date';
 import { useCaseDetailsState, type LocalCase } from '../hooks/use-case-details-state';
@@ -92,7 +92,7 @@ export function CaseDetailsSection({
       formatPersonName(a.first_name, a.last_name) || tc('noName'),
   }));
   const statusKey = statuses.find((s) => s.id === localCase.status_id)?.key;
-  const targetDateMissing = isTargetDateMissing(localCase.target_date, isFrozenStatusKey(statusKey));
+  const targetDateMissing = isTargetDateMissing(localCase.target_date, isTargetDateExemptStatusKey(statusKey));
   const insuranceOptions = INSURANCE_STATUS_VALUES.map((v) => ({
     value: v,
     label: tInsurance(v),

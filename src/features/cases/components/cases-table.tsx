@@ -75,8 +75,8 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions, 
   const density = useRowDensity();
   const unreadSet = useMemo(() => new Set(unreadCaseIds ?? []), [unreadCaseIds]);
 
-  // Sort is opt-in: URL is clean → null → table keeps its incoming order
-  // (which `listCases` returns newest-first). Click a header to activate.
+  // URL is clean → null → applySort's urgency default (see case-sort.ts).
+  // Click a header (or use CasesSortControl) to pick another order.
   const [sortCol, setSortCol] = useQueryState(
     'sort',
     parseAsStringEnum([...SORT_COLUMNS]).withOptions({ shallow: true }),
@@ -114,7 +114,7 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions, 
       return;
     }
     // Same column re-clicked → cycle asc → desc → cleared → asc. The
-    // cleared state returns to the listCases default ordering (oldest first).
+    // cleared state returns to the urgency default.
     if (sortDirRaw === 'asc') {
       setSortDir('desc');
     } else if (sortDirRaw === 'desc') {
@@ -157,7 +157,7 @@ export function CasesTable({ cases, statusOptions, bankOptions, advisorOptions, 
       );
     } else {
       // Explicit cancel via the 3-cycle: forget the preference so the next
-      // visit gets the default oldest-first view, not a re-surfaced old sort.
+      // visit gets the urgency default, not a re-surfaced old sort.
       window.localStorage.removeItem(SORT_STORAGE_KEY);
     }
   }, [sortCol, sortDirRaw]);

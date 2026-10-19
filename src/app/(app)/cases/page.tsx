@@ -190,8 +190,8 @@ export default async function CasesListPage({ searchParams }: Props) {
               width, so we only switch at xl (1280px). Between md (768) and
               xl the table used to horizontally-scroll without indication,
               clipping the bank + advisor columns out of sight. */}
+          <CasesSortControl />
           <div className="xl:hidden">
-            <CasesSortControl />
             <CasesCardList
               cases={visible}
               statusOptions={statusOptions}

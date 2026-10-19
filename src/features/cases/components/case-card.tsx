@@ -126,7 +126,7 @@ export function CaseCard({ row, statusOptions, advisorOptions, canViewAll, editG
             caseId={row.id}
             initialValue={row.targetDate}
             locale={locale}
-            isFrozen={row.isFrozen}
+            targetDateExempt={row.targetDateExempt}
             triggerClassName="min-h-11"
             canEdit={canEdit}
           />

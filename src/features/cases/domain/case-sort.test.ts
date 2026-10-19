@@ -7,7 +7,7 @@ import type { CaseWithRelations } from '../types';
 type Borrower = { is_primary: boolean; borrower: { first_name: string | null; last_name: string | null } | null };
 type TestCase = {
   id?: string;
-  status: { id: string; sort_order?: number } | null;
+  status: { id: string; key?: string; sort_order?: number } | null;
   case_borrowers: Borrower[];
   target_date: string | null;
 };
@@ -209,6 +209,55 @@ describe('applySort', () => {
         STATUS_OPTIONS,
       );
       expect(result.map((c) => c.id)).toEqual(['overdue', 'future', 'none']);
+    });
+  });
+
+  describe('urgency default (no sort)', () => {
+    const exec = { id: 's9', key: 'execution' };
+    const firstOpened = makeCase({ id: 'first-opened', target_date: '2026-12-01' });
+    const undatedA = makeCase({ id: 'undated-a' });
+    const overdue = makeCase({ id: 'overdue', target_date: '2026-05-01' });
+    const execDated = makeCase({ id: 'exec-dated', status: exec, target_date: '2026-01-01' });
+    const undatedB = makeCase({ id: 'undated-b' });
+    const soon = makeCase({ id: 'soon', target_date: '2026-06-10' });
+    // Input = DB order = opening order.
+    const input = [firstOpened, undatedA, overdue, execDated, undatedB, soon];
+
+    it('puts dated cases first by deadline, then undated in opening order, ביצוע last', () => {
+      expect(applySort(input, null, STATUS_OPTIONS).map((c) => c.id)).toEqual([
+        'overdue',
+        'soon',
+        'first-opened',
+        'undated-a',
+        'undated-b',
+        'exec-dated',
+      ]);
+    });
+
+    it('sorts by opening order on request, ביצוע still last', () => {
+      const asc = applySort(input, { column: 'opened', dir: 'asc' }, STATUS_OPTIONS);
+      expect(asc.map((c) => c.id)).toEqual([
+        'first-opened',
+        'undated-a',
+        'overdue',
+        'undated-b',
+        'soon',
+        'exec-dated',
+      ]);
+      const desc = applySort(input, { column: 'opened', dir: 'desc' }, STATUS_OPTIONS);
+      expect(desc.map((c) => c.id)).toEqual([
+        'soon',
+        'undated-b',
+        'overdue',
+        'undated-a',
+        'first-opened',
+        'exec-dated',
+      ]);
+    });
+
+    it('sinks ביצוע in the explicit target-date sort too', () => {
+      const result = applySort(input, { column: 'targetDate', dir: 'asc' }, STATUS_OPTIONS);
+      expect(result.at(-1)?.id).toBe('exec-dated');
     });
   });
 });

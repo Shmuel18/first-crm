@@ -15,14 +15,16 @@ import {
 import { SORT_COLUMNS, type SortColumn, type SortDir } from '../domain/case-sort';
 
 const SORT_DIRS: SortDir[] = ['asc', 'desc'];
-const FIELDS: SortColumn[] = ['name', 'stage', 'targetDate'];
+// Opening order first: it's the one alternative to the urgency default that
+// the office actually switches to.
+const FIELDS: SortColumn[] = ['opened', 'targetDate', 'name', 'stage'];
 
 /**
- * Mobile sort control for the cases card list — the small-screen equivalent of
- * the desktop table's sortable column headers (which don't exist on cards).
- * Writes the same `sort`/`dir` URL params (shallow), so the card list re-sorts
- * client-side instantly and the desktop table's localStorage persistence stays
- * in sync. Only rendered inside the mobile (xl:hidden) block.
+ * Sort picker above the case list. On mobile it is the only way to sort (cards
+ * have no column headers); on desktop it sits beside the sortable headers and
+ * is the one place to pick "opening order" (no column for it). Writes the same
+ * `sort`/`dir` URL params (shallow) as the headers, so both stay in sync with
+ * the desktop table's localStorage persistence. No sort = urgency (default).
  */
 export function CasesSortControl() {
   const t = useTranslations('dashboard');
@@ -40,7 +42,15 @@ export function CasesSortControl() {
       ? t('columns.clientName')
       : c === 'stage'
         ? t('columns.stage')
-        : t('columns.targetDate');
+        : c === 'opened'
+          ? t('sort.opened')
+          : t('columns.targetDate');
+
+  // "Opening order ascending" reads badly — spell out oldest/newest instead.
+  const itemLabel = (c: SortColumn, d: SortDir): string =>
+    c === 'opened'
+      ? t(d === 'desc' ? 'sort.openedDesc' : 'sort.openedAsc')
+      : labelFor(c);
 
   const current = sortCol ? `${sortCol}:${sortDir ?? 'asc'}` : '';
 
@@ -98,7 +108,7 @@ export function CasesSortControl() {
                     ) : (
                       <ArrowUp className="size-3.5 text-neutral-500" aria-hidden="true" />
                     )}
-                    {labelFor(c)}
+                    {itemLabel(c, d)}
                     <span className="sr-only">{d === 'desc' ? t('sort.desc') : t('sort.asc')}</span>
                   </span>
                 </DropdownMenuRadioItem>

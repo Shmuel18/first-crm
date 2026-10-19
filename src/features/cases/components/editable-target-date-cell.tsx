@@ -23,9 +23,9 @@ type Props = {
   triggerClassName?: string;
   /** When false, render the date read-only (no picker popover). */
   canEdit?: boolean;
-  /** Closed / on-hold case — exempt from the "every case has a target date"
-   *  flag (see isTargetDateMissing). */
-  isFrozen: boolean;
+  /** Closed / on-hold / ביצוע case — exempt from the "every case has a
+   *  target date" flag (see isTargetDateMissing). */
+  targetDateExempt: boolean;
 };
 
 const MISSING_CLASS = 'border-red-300 bg-red-50 font-medium text-red-700';
@@ -43,7 +43,7 @@ export function EditableTargetDateCell({
   locale,
   triggerClassName = '',
   canEdit = true,
-  isFrozen,
+  targetDateExempt,
 }: Props) {
   const tc = useTranslations('common');
   const td = useTranslations('dashboard.targetDate');
@@ -100,7 +100,7 @@ export function EditableTargetDateCell({
 
   // Keyed off the SAVED value, so the flag drops the moment a date commits
   // (optimistically) and returns if the save rolls back.
-  const missing = isTargetDateMissing(savedValue, isFrozen);
+  const missing = isTargetDateMissing(savedValue, targetDateExempt);
   const label = savedValue
     ? formatDateShort(savedValue, locale)
     : td(missing ? 'missing' : 'empty');

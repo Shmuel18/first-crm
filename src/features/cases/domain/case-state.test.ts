@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getInitials, isFrozenCase, isStuckCase } from './case-state';
+import { getInitials, isFrozenCase, isStuckCase, isTargetDateExemptStatusKey } from './case-state';
 
 describe('isStuckCase', () => {
   it('is true only for the stuck status key', () => {
@@ -31,5 +31,19 @@ describe('getInitials', () => {
     expect(getInitials('Moshe', null)).toBe('M');
     expect(getInitials(null, null)).toBe('?');
     expect(getInitials(undefined, undefined)).toBe('?');
+  });
+});
+
+describe('isTargetDateExemptStatusKey', () => {
+  it('exempts closed, on-hold and ביצוע', () => {
+    expect(isTargetDateExemptStatusKey('closed')).toBe(true);
+    expect(isTargetDateExemptStatusKey('on_hold')).toBe(true);
+    expect(isTargetDateExemptStatusKey('execution')).toBe(true);
+  });
+
+  it('keeps every other open stage flagged', () => {
+    expect(isTargetDateExemptStatusKey('stuck')).toBe(false);
+    expect(isTargetDateExemptStatusKey('lead')).toBe(false);
+    expect(isTargetDateExemptStatusKey(null)).toBe(false);
   });
 });

@@ -133,7 +133,7 @@ export function CaseTableRow({ row, statusOptions, bankOptions, advisorOptions, 
           caseId={row.id}
           initialValue={row.targetDate}
           locale={locale}
-          isFrozen={row.isFrozen}
+          targetDateExempt={row.targetDateExempt}
           canEdit={canEdit}
         />
       </td>

@@ -8,7 +8,7 @@ import {
   getPrimaryBorrowerNationalId,
   getSecondaryBanksCount,
 } from './case-derivations';
-import { isFrozenCase, isStuckCase } from './case-state';
+import { isFrozenCase, isStuckCase, isTargetDateExemptStatusKey } from './case-state';
 
 /**
  * Flatten a CaseWithRelations + its 1-based row index into the shape the
@@ -51,6 +51,7 @@ export function toRowData(
     shortNote: c.short_note ?? null,
     isStuck: isStuckCase(c),
     isFrozen: isFrozenCase(c),
+    targetDateExempt: isTargetDateExemptStatusKey(c.status?.key),
     isUnread: unreadIds?.has(c.id) ?? false,
     updatedAt: c.updated_at,
   };
