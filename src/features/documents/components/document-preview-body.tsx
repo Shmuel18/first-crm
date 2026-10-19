@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/button';
 import { PdfPageViewer } from './pdf-page-viewer';
 
 type Props = {
+  /** Grow to fill a flex-column parent (the full-screen documents modal)
+   *  instead of the fixed-height slot the smaller task dialog uses. */
+  fill?: boolean;
   loading: boolean;
   error: string | null;
   /** Drive's hosted viewer. Only for formats no browser can render (Word,
@@ -39,6 +42,7 @@ type Props = {
  * renderer matrix is testable.
  */
 export function DocumentPreviewBody({
+  fill = false,
   loading,
   error,
   drivePreviewUrl,
@@ -54,7 +58,11 @@ export function DocumentPreviewBody({
   const tError = useTranslations('error');
 
   return (
-    <div className="flex max-h-[60vh] min-h-[280px] items-center justify-center overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50">
+    <div
+      className={`flex items-center justify-center overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50 ${
+        fill ? 'min-h-0 flex-1' : 'max-h-[60vh] min-h-[280px]'
+      }`}
+    >
       {loading && <Loader2 className="size-5 animate-spin text-neutral-400" aria-label="Loading" />}
       {!loading && error && (
         <div className="px-4 py-6 text-center">
@@ -71,17 +79,26 @@ export function DocumentPreviewBody({
         <iframe
           src={drivePreviewUrl}
           title={fileName}
-          className="h-[58vh] w-full"
+          className={fill ? 'size-full' : 'h-[58vh] w-full'}
           allow="autoplay"
           onFocus={onDrivePreviewFocus}
         />
       )}
       {!loading && !error && !drivePreviewUrl && url && isImage && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt={fileName} className="max-h-[58vh] object-contain" />
+        <img
+          src={url}
+          alt={fileName}
+          className={fill ? 'max-h-full max-w-full object-contain' : 'max-h-[58vh] object-contain'}
+        />
       )}
       {!loading && !error && !drivePreviewUrl && url && isPdf && (
-        <PdfPageViewer src={url} fileName={fileName} driveImageSrc={drivePdfImageSrc} />
+        <PdfPageViewer
+          src={url}
+          fileName={fileName}
+          driveImageSrc={drivePdfImageSrc}
+          fill={fill}
+        />
       )}
       {!loading && !error && !drivePreviewUrl && url && !isImage && !isPdf && (
         <div className="px-4 py-12 text-center text-neutral-500">

@@ -237,8 +237,11 @@ export function DocumentPreviewModal({
 
   return (
     <Dialog open={Boolean(doc)} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
+      {/* Full screen (Kaufman, 2026-10): the old max-w-3xl box showed a bank
+          PDF too small to read. A small margin on desktop keeps it reading as
+          a layer over the case; on a phone it takes the whole screen. */}
+      <DialogContent className="flex h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] max-w-none flex-col gap-3 p-4 max-sm:h-dvh max-sm:max-h-dvh max-sm:w-full max-sm:rounded-none sm:p-5">
+        <DialogHeader className="pe-8">
           <DialogTitle>
             <DocumentTitleEditor
               documentId={doc.id}
@@ -255,6 +258,7 @@ export function DocumentPreviewModal({
         </DialogHeader>
 
         <DocumentPreviewBody
+          fill
           // Our own preview needs no signed URL, so it must not wait on that
           // fetch — nor be hidden when it fails (it only feeds print/download).
           loading={ownPreviewUrl ? false : loading}

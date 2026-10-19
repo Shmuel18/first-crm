@@ -15,6 +15,9 @@ type Props = {
    *  which is what the banks send — while Drive's own renderer draws them
    *  correctly, so when this image exists it covers the canvas on page 1. */
   driveImageSrc?: string | null;
+  /** Fill the full-screen modal: the page scrolls inside the remaining
+   *  height and is drawn wider (capped so a page stays readable, not huge). */
+  fill?: boolean;
 };
 
 type DriveImageState = 'loading' | 'shown' | 'failed';
@@ -25,7 +28,7 @@ type DriveImageState = 'loading' | 'shown' | 'failed';
  * exist on Android and barely works on iOS — so the page controls that the
  * desktop viewer used to provide have to come from us.
  */
-export function PdfPageViewer({ src, fileName, driveImageSrc }: Props) {
+export function PdfPageViewer({ src, fileName, driveImageSrc, fill = false }: Props) {
   const t = useTranslations('documents.previewModal');
   const [page, setPage] = useState(1);
   const [pageCount, setPageCount] = useState(1);
@@ -34,50 +37,49 @@ export function PdfPageViewer({ src, fileName, driveImageSrc }: Props) {
   const go = (delta: number): void =>
     setPage((current) => Math.min(Math.max(current + delta, 1), pageCount));
 
-  const driveImageShown =
-    Boolean(driveImageSrc) && page === 1 && driveImage === 'shown';
+  const driveImageShown = Boolean(driveImageSrc) && page === 1 && driveImage === 'shown';
 
   return (
-    <div className="flex w-full flex-col items-center gap-2">
-      <div className="relative max-h-[52vh] w-full overflow-auto">
-        {driveImageSrc && page === 1 && driveImage !== 'failed' && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={driveImageSrc}
-            alt={fileName}
-            onLoad={() => setDriveImage('shown')}
-            onError={() => setDriveImage('failed')}
-            className={driveImageShown ? 'block w-full' : 'absolute size-0 opacity-0'}
-          />
-        )}
-        {/* The canvas keeps rendering underneath even when the Drive image
+    <div className={`flex w-full flex-col items-center gap-2 ${fill ? 'h-full' : ''}`}>
+      <div className={`relative w-full overflow-auto ${fill ? 'min-h-0 flex-1' : 'max-h-[52vh]'}`}>
+        <div className={fill ? 'relative mx-auto max-w-5xl' : 'relative'}>
+          {driveImageSrc && page === 1 && driveImage !== 'failed' && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={driveImageSrc}
+              alt={fileName}
+              onLoad={() => setDriveImage('shown')}
+              onError={() => setDriveImage('failed')}
+              className={driveImageShown ? 'block w-full' : 'absolute size-0 opacity-0'}
+            />
+          )}
+          {/* The canvas keeps rendering underneath even when the Drive image
             covers it — it is what reports the page count for the pager, and
             the instant fallback if the image errors. Kept in layout (not
             display:none) so pdf.js's render task can complete. */}
-        <div
-          className={
-            driveImageShown ? 'absolute size-0 overflow-hidden opacity-0' : undefined
-          }
-        >
-          <PdfPageCanvas
-            key={`${src}#${page}`}
-            src={src}
-            pageNumber={page}
-            width={900}
-            onPageCount={setPageCount}
-            fallback={
-              driveImageShown ? null : (
-                <div className="px-4 py-12 text-center text-neutral-500">
-                  <FileQuestion
-                    className="mx-auto mb-3 size-10 text-neutral-300"
-                    aria-hidden="true"
-                  />
-                  <p className="text-sm">{t('noPreview')}</p>
-                </div>
-              )
-            }
-            className="min-h-[240px] w-full"
-          />
+          <div
+            className={driveImageShown ? 'absolute size-0 overflow-hidden opacity-0' : undefined}
+          >
+            <PdfPageCanvas
+              key={`${src}#${page}`}
+              src={src}
+              pageNumber={page}
+              width={fill ? 1024 : 900}
+              onPageCount={setPageCount}
+              fallback={
+                driveImageShown ? null : (
+                  <div className="px-4 py-12 text-center text-neutral-500">
+                    <FileQuestion
+                      className="mx-auto mb-3 size-10 text-neutral-300"
+                      aria-hidden="true"
+                    />
+                    <p className="text-sm">{t('noPreview')}</p>
+                  </div>
+                )
+              }
+              className="min-h-[240px] w-full"
+            />
+          </div>
         </div>
       </div>
       {pageCount > 1 && (
