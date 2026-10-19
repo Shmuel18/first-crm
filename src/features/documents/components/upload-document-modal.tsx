@@ -1,9 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
-import { Loader2, Upload as UploadIcon, X } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -17,13 +17,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { FormField, NativeSelect } from '@/components/shared/form-fields';
-import { callAction } from '@/lib/actions/call-action';
 import { formatPersonName } from '@/lib/utils/person-name';
 
-import { finalizeUploadAction } from '../actions/finalize-upload';
-import { prepareUploadAction } from '../actions/prepare-upload';
-import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE_BYTES } from '../schemas/document.schema';
+import { getUploadFileError, MAX_FILES_PER_UPLOAD } from '../domain/upload-file-check';
+import { useMultiUpload } from '../hooks/use-multi-upload';
 import { type DocumentCategoryRow, type DriveFolder } from '../types';
+
+import { UploadFilePicker } from './upload-file-picker';
 
 type Props = {
   open: boolean;
@@ -35,14 +35,10 @@ type Props = {
 };
 
 /**
- * Direct-to-storage upload (batch 25):
- *
- *   1. prepareUploadAction() returns a signed upload URL + documentId.
- *   2. The browser PUTs the file directly to Supabase Storage — bytes never
- *      pass through the Server Action body (no 21 MB limit, no function
- *      memory pressure).
- *   3. finalizeUploadAction() does the magic-byte sniff (Range GET of first
- *      4 KB), the Drive secondary upload, and the documents INSERT.
+ * Upload one or more files into a case (up to MAX_FILES_PER_UPLOAD per batch,
+ * by drag-and-drop or the picker). Type / borrower / expiry / notes apply to
+ * every file in the batch. The upload flow itself lives in useMultiUpload;
+ * failed files stay listed with their error so the user can retry just those.
  */
 export function UploadDocumentModal({
   open,
@@ -55,63 +51,48 @@ export function UploadDocumentModal({
   const t = useTranslations('documents.uploadModal');
   const tErr = useTranslations('documents.errors');
   const router = useRouter();
-  const formRef = useRef<HTMLFormElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [isDragOver, setIsDragOver] = useState(false);
+  const { progress, uploadAll } = useMultiUpload(caseId);
+  const [files, setFiles] = useState<File[]>([]);
+  const [failedNames, setFailedNames] = useState<ReadonlyMap<string, string>>(new Map());
   const [clientFileError, setClientFileError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
   const [genericError, setGenericError] = useState<string | null>(null);
+  const pending = progress !== null;
 
-  // Mirror of the server-side guards so the user sees the error before a
-  // 20 MB file uploads in full and gets rejected post-upload.
-  const validateFile = (file: File): string | null => {
-    if (file.size === 0) return tErr('fileRequired');
-    if (file.size > MAX_FILE_SIZE_BYTES) return tErr('fileTooLarge');
-    if (!(ALLOWED_MIME_TYPES as readonly string[]).includes(file.type)) {
-      return tErr('fileTypeNotAllowed');
-    }
-    return null;
-  };
+  const errorText = (key: string): string =>
+    key === 'fileRequired' || key === 'fileTooLarge' || key === 'fileTypeNotAllowed'
+      ? tErr(key)
+      : tErr('uploadFailed');
 
-  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
-    e.preventDefault();
-    setIsDragOver(false);
+  // Valid files join the list (deduped by name + size); a refused one is
+  // reported by name instead of silently vanishing from a multi-file drop.
+  const addFiles = (incoming: File[]): void => {
     setClientFileError(null);
-    const dropped = e.dataTransfer.files?.[0];
-    if (!dropped || !fileInputRef.current) return;
-    const err = validateFile(dropped);
-    if (err) {
-      setClientFileError(err);
-      return;
+    const rejected = incoming.find((f) => getUploadFileError(f) !== null);
+    const valid = incoming.filter(
+      (f) =>
+        getUploadFileError(f) === null &&
+        !files.some((x) => x.name === f.name && x.size === f.size),
+    );
+    const merged = [...files, ...valid];
+    if (merged.length > MAX_FILES_PER_UPLOAD) {
+      setClientFileError(t('tooManyFiles', { max: MAX_FILES_PER_UPLOAD }));
+    } else if (rejected) {
+      const reason = errorText(getUploadFileError(rejected) ?? 'uploadFailed');
+      setClientFileError(t('fileRejected', { name: rejected.name, reason }));
     }
-    const dt = new DataTransfer();
-    dt.items.add(dropped);
-    fileInputRef.current.files = dt.files;
-    setFileName(dropped.name);
-  };
-
-  const mapErrorMessage = (key: string | undefined): string => {
-    if (!key) return tErr('uploadFailed');
-    if (key === 'fileRequired') return tErr('fileRequired');
-    if (key === 'fileTooLarge') return tErr('fileTooLarge');
-    if (key === 'fileTypeNotAllowed') return tErr('fileTypeNotAllowed');
-    return tErr('uploadFailed');
+    setFiles(merged.slice(0, MAX_FILES_PER_UPLOAD));
   };
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault();
     if (pending) return;
     setGenericError(null);
-
-    const form = e.currentTarget;
-    const file = fileInputRef.current?.files?.[0];
-    if (!file) {
+    if (files.length === 0) {
       setClientFileError(tErr('fileRequired'));
       return;
     }
 
-    const formData = new FormData(form);
+    const formData = new FormData(e.currentTarget);
     const categoryId = String(formData.get('category_id') ?? '');
     if (!categoryId) {
       // The form is noValidate, so the empty "choose a type" option has to be
@@ -121,73 +102,25 @@ export function UploadDocumentModal({
       setGenericError(tErr('categoryRequired'));
       return;
     }
-    const borrowerIdRaw = String(formData.get('borrower_id') ?? '');
-    const expiryRaw = String(formData.get('expiry_date') ?? '');
-    const notesRaw = String(formData.get('notes') ?? '');
+    const failures = await uploadAll(files, {
+      categoryId,
+      borrowerId: String(formData.get('borrower_id') ?? '') || null,
+      expiryDate: String(formData.get('expiry_date') ?? '') || null,
+      notes: String(formData.get('notes') ?? '') || null,
+    });
 
-    setPending(true);
-    try {
-      // ── Phase 1: ask the server for a signed upload URL ─────────────
-      const prep = await callAction(() => prepareUploadAction({
-        caseId,
-        fileName: file.name,
-        fileSize: file.size,
-        mimeType: file.type,
-        categoryId,
-        borrowerId: borrowerIdRaw || null,
-      }));
-      if (!prep.ok) {
-        setGenericError(
-          prep.error === 'unauthorized'
-            ? tErr('uploadFailed')
-            : mapErrorMessage(prep.message),
-        );
-        return;
-      }
-
-      // ── Phase 2: browser uploads bytes directly to Storage ──────────
-      const putRes = await fetch(prep.signedUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': file.type,
-          // Supabase signed-upload URLs accept the token via Authorization header.
-          // The signed URL embeds the token too, so this header is sometimes
-          // redundant — keeping it explicit makes the intent clear.
-          'x-upsert': 'false',
-        },
-        body: file,
-      });
-      if (!putRes.ok) {
-        setGenericError(tErr('uploadFailed'));
-        return;
-      }
-
-      // ── Phase 3: finalize — magic-byte check + Drive + DB row ───────
-      const final = await callAction(() => finalizeUploadAction({
-        documentId: prep.documentId,
-        caseId,
-        fileName: prep.safeFileName,
-        fileSize: file.size,
-        mimeType: file.type,
-        categoryId,
-        borrowerId: borrowerIdRaw || null,
-        expiryDate: expiryRaw || null,
-        notes: notesRaw || null,
-      }));
-      if (!final.ok) {
-        setGenericError(mapErrorMessage(final.message));
-        return;
-      }
-
-      // Success — close the modal, then refresh in the background (the action no
-      // longer revalidates; that spun the button on the heavy documents re-render).
+    // Refresh in the background once anything landed (the action no longer
+    // revalidates; that spun the button on the heavy documents re-render).
+    if (failures.length < files.length) router.refresh();
+    if (failures.length === 0) {
+      setFiles([]);
+      setFailedNames(new Map());
       onOpenChange(false);
-      router.refresh();
-    } catch {
-      setGenericError(tErr('uploadFailed'));
-    } finally {
-      setPending(false);
+      return;
     }
+    setFiles(failures.map((f) => f.file));
+    setFailedNames(new Map(failures.map((f) => [f.file.name, f.errorKey])));
+    setGenericError(t('someFailed', { count: failures.length }));
   }
 
   const filteredCategories = defaultFolder
@@ -206,62 +139,15 @@ export function UploadDocumentModal({
           <DialogTitle>{t('title')}</DialogTitle>
         </DialogHeader>
 
-        <form ref={formRef} onSubmit={handleSubmit} className="space-y-4" noValidate>
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <FormField label={t('fileLabel')} required error={clientFileError ?? undefined}>
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="file-input"
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setIsDragOver(true);
-                }}
-                onDragLeave={() => setIsDragOver(false)}
-                onDrop={handleDrop}
-                className={`flex-1 flex items-center gap-2 px-3 h-10 rounded-md border border-dashed transition cursor-pointer text-sm focus-within:border-brand-gold-text focus-within:ring-2 focus-within:ring-brand-gold-text/30 ${
-                  isDragOver
-                    ? 'border-brand-gold-text bg-brand-gold/15 text-brand-gold-text'
-                    : 'border-neutral-300 bg-neutral-50 hover:border-brand-gold-text hover:bg-brand-gold/8 text-neutral-700'
-                }`}
-              >
-                <UploadIcon className="size-4 shrink-0" />
-                <span className="truncate">{fileName ?? t('filePlaceholder')}</span>
-              </label>
-              {fileName && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (fileInputRef.current) fileInputRef.current.value = '';
-                    setFileName(null);
-                  }}
-                  className="size-9 rounded-md border border-neutral-200 text-neutral-500 hover:text-rose-600 hover:border-rose-200 transition flex items-center justify-center"
-                  aria-label="clear"
-                >
-                  <X className="size-4" />
-                </button>
-              )}
-            </div>
-            <input
-              id="file-input"
-              ref={fileInputRef}
-              name="file"
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,.doc,.docx,.xls,.xlsx"
-              className="sr-only"
-              required
-              onChange={(e) => {
-                setClientFileError(null);
-                const f = e.target.files?.[0];
-                if (f) {
-                  const err = validateFile(f);
-                  if (err) {
-                    setClientFileError(err);
-                    e.target.value = '';
-                    setFileName(null);
-                    return;
-                  }
-                }
-                setFileName(f?.name ?? null);
-              }}
+            <UploadFilePicker
+              files={files}
+              onAdd={addFiles}
+              onRemove={(index) => setFiles((prev) => prev.filter((_, i) => i !== index))}
+              failedNames={failedNames}
+              errorText={errorText}
+              disabled={pending}
             />
           </FormField>
 
@@ -309,7 +195,17 @@ export function UploadDocumentModal({
               disabled={pending}
               className="bg-brand-black hover:bg-neutral-800 text-white h-10 min-w-28"
             >
-              {pending ? <Loader2 className="size-4 animate-spin" /> : t('submit')}
+              {progress ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                  {progress.total > 1 &&
+                    t('progress', { current: progress.current, total: progress.total })}
+                </span>
+              ) : files.length > 1 ? (
+                t('submitMany', { count: files.length })
+              ) : (
+                t('submit')
+              )}
             </Button>
             <Button
               type="button"

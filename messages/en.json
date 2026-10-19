@@ -3052,8 +3052,8 @@
     },
     "uploadModal": {
       "title": "Upload new document",
-      "fileLabel": "File (PDF / image / DOC, up to 20MB)",
-      "filePlaceholder": "Drag a file or click to select",
+      "fileLabel": "Files (PDF / image / DOC, up to 20MB each)",
+      "filePlaceholder": "Drag files here or click to choose — several at once is fine",
       "categoryLabel": "Document type",
       "borrowerLabel": "Link to borrower (optional)",
       "borrowerGeneral": "General (not linked to a borrower)",
@@ -3062,7 +3062,13 @@
       "submit": "Upload",
       "submitting": "Uploading...",
       "cancel": "Cancel",
-      "categoryPlaceholder": "— choose a document type —"
+      "categoryPlaceholder": "— choose a document type —",
+      "removeFile": "Remove {name}",
+      "tooManyFiles": "You can upload up to {max} files at once",
+      "fileRejected": "{name} was not added: {reason}",
+      "someFailed": "{count, plural, one {One file was not uploaded and is still listed} other {# files were not uploaded and are still listed}} — you can try again",
+      "submitMany": "Upload {count} files",
+      "progress": "Uploading {current} of {total}"
     },
     "previewModal": {
       "title": "Preview",

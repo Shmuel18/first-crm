@@ -3052,8 +3052,8 @@
     },
     "uploadModal": {
       "title": "העלאת מסמך חדש",
-      "fileLabel": "קובץ (PDF / תמונה / DOC, עד 20MB)",
-      "filePlaceholder": "גרור קובץ או לחץ לבחירה",
+      "fileLabel": "קבצים (PDF / תמונה / DOC, עד 20MB לקובץ)",
+      "filePlaceholder": "גרור לכאן קבצים או לחץ לבחירה — אפשר כמה בבת אחת",
       "categoryLabel": "סוג מסמך",
       "borrowerLabel": "שייך ללווה (אופציונלי)",
       "borrowerGeneral": "כללי (לא משויך ללווה)",
@@ -3062,7 +3062,13 @@
       "submit": "העלה",
       "submitting": "מעלה...",
       "cancel": "ביטול",
-      "categoryPlaceholder": "— בחר סוג מסמך —"
+      "categoryPlaceholder": "— בחר סוג מסמך —",
+      "removeFile": "הסר את {name}",
+      "tooManyFiles": "אפשר להעלות עד {max} קבצים בבת אחת",
+      "fileRejected": "{name} לא נוסף: {reason}",
+      "someFailed": "{count, plural, one {קובץ אחד לא הועלה והוא נשאר ברשימה} other {# קבצים לא הועלו והם נשארו ברשימה}} — אפשר לנסות שוב",
+      "submitMany": "העלה {count} קבצים",
+      "progress": "מעלה {current} מתוך {total}"
     },
     "previewModal": {
       "title": "תצוגה מקדימה",
