@@ -142,10 +142,15 @@ export async function GET(request: NextRequest): Promise<NextResponse | Response
     const allCases = await listCases({ isArchived });
     let cases = filterCases(allCases, filters);
     cases = filterCasesByQuery(cases, query);
-    if (sort) {
-      const { data: statuses } = await supabase.from('case_statuses').select('id, sort_order');
-      cases = applySort(cases, sort, statuses ?? []);
-    }
+    // Always sort — no sort param means the dashboard's urgency default, NOT
+    // the DB's opening order (an export that skipped this printed the oldest
+    // case first while the screen showed the most urgent). Statuses only feed
+    // the explicit stage sort, so skip that query otherwise.
+    const statuses =
+      sort?.column === 'stage'
+        ? ((await supabase.from('case_statuses').select('id, sort_order')).data ?? [])
+        : [];
+    cases = applySort(cases, sort, statuses);
     if (cases.length === 0) return errorJson('empty', 404);
 
     const locale = parseLocale(await getLocale());
