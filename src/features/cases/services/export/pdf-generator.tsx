@@ -121,12 +121,13 @@ const styles = StyleSheet.create({
   },
   // Widths sum to 100%. Note: order is right-to-left visually due to row-reverse.
   colRow: { width: '5%' },
-  colName: { width: '20%' },
-  colId: { width: '11%' },
-  colStage: { width: '17%' },
-  colBank: { width: '13%' },
-  colAdvisor: { width: '14%' },
-  colNote: { width: '20%' },
+  colName: { width: '18%' },
+  colId: { width: '10%' },
+  colStage: { width: '15%' },
+  colTarget: { width: '9%' },
+  colBank: { width: '12%' },
+  colAdvisor: { width: '12%' },
+  colNote: { width: '19%' },
   footer: {
     position: 'absolute',
     bottom: 18,
@@ -147,6 +148,7 @@ export type PdfHeaders = {
   clientName: string;
   nationalId: string;
   stage: string;
+  targetDate: string;
   bank: string;
   advisor: string;
   shortNote: string;
@@ -184,6 +186,7 @@ function CasesDocument({
             <Text style={[styles.headerCell, styles.colName]}>{h.clientName}</Text>
             <Text style={[styles.headerCell, styles.colId]}>{h.nationalId}</Text>
             <Text style={[styles.headerCell, styles.colStage]}>{h.stage}</Text>
+            <Text style={[styles.headerCell, styles.colTarget]}>{h.targetDate}</Text>
             <Text style={[styles.headerCell, styles.colBank]}>{h.bank}</Text>
             <Text style={[styles.headerCell, styles.colAdvisor]}>{h.advisor}</Text>
             <Text style={[styles.headerCell, styles.colNote]}>{h.shortNote}</Text>
@@ -195,6 +198,7 @@ function CasesDocument({
               <Text style={[styles.cell, styles.colName]}>{row.clientName}</Text>
               <Text style={[styles.cell, styles.colId]}>{row.nationalId}</Text>
               <Text style={[styles.cell, styles.colStage]}>{row.stage}</Text>
+              <Text style={[styles.cell, styles.colTarget]}>{row.targetDate}</Text>
               <Text style={[styles.cell, styles.colBank]}>{row.bank}</Text>
               <Text style={[styles.cell, styles.colAdvisor]}>{row.advisor}</Text>
               <Text style={[styles.cell, styles.colNote]}>{row.shortNote}</Text>

@@ -9,6 +9,7 @@ export type XlsxHeaders = {
   clientName: string;
   nationalId: string;
   stage: string;
+  targetDate: string;
   bank: string;
   advisor: string;
   shortNote: string;
@@ -52,6 +53,7 @@ export async function generateCasesXlsx(
     { header: headers.clientName, key: 'clientName', width: 28 },
     { header: headers.nationalId, key: 'nationalId', width: 14 },
     { header: headers.stage, key: 'stage', width: 22 },
+    { header: headers.targetDate, key: 'targetDate', width: 13 },
     { header: headers.bank, key: 'bank', width: 22 },
     { header: headers.advisor, key: 'advisor', width: 20 },
     { header: headers.shortNote, key: 'shortNote', width: 40 },

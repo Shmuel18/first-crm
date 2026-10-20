@@ -1,4 +1,5 @@
 import type { Locale } from '@/lib/i18n/direction';
+import { formatDateShort } from '@/lib/utils/format-date';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import {
@@ -11,7 +12,7 @@ import {
 import type { CaseWithRelations } from '../../types';
 
 /**
- * Flat row matching the 7-column dashboard, ready for xlsx/pdf rendering.
+ * Flat row matching the 8-column dashboard, ready for xlsx/pdf rendering.
  * Order matches the visible table.
  */
 export type ExportRow = {
@@ -19,6 +20,8 @@ export type ExportRow = {
   clientName: string;
   nationalId: string;
   stage: string;
+  /** d/M/yyyy, or '' when the case has no target date. */
+  targetDate: string;
   bank: string;
   advisor: string;
   shortNote: string;
@@ -55,6 +58,7 @@ export function buildExportRows(
       clientName: getCaseClientLabel(c) || '',
       nationalId: getPrimaryBorrowerNationalId(c) ?? '',
       stage: c.status ? pickName(c.status) : '',
+      targetDate: formatDateShort(c.target_date, locale),
       bank: bankLabel,
       advisor: advisorName,
       shortNote: c.short_note ?? '',
