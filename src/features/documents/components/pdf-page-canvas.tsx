@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Loader2 } from 'lucide-react';
 
 import { fetchPdfBytes } from '../domain/pdf-bytes';
+import { openPdf } from '../hooks/pdfjs-loader';
 
 /**
  * Draws one page of a PDF into a canvas.
@@ -21,11 +22,10 @@ import { fetchPdfBytes } from '../domain/pdf-bytes';
  *     envelope), never from pdf.js itself;
  *   - the pdf.js worker is bundled, so it arrives as a hashed /_next/static
  *     chunk like every other script the office already loads megabytes of,
- *     instead of a lone 1.4 MB file under /public.
+ *     instead of a lone 1.4 MB file under /public (see pdfjs-loader).
  *
- * One worker serves every tile and every page: pdf.js scopes documents inside
- * a worker, and one dedicated worker per tile exhausts the browser's pool on a
- * full folder.
+ * Single-page only (the folder tiles). The preview modal's multi-page view is
+ * PdfScrollViewer, which parses the document once for all its pages.
  */
 type Props = {
   /** Same-origin URL of the PDF bytes. */
@@ -45,34 +45,6 @@ type RenderState = 'idle' | 'done' | 'failed';
 
 /** Chrome refuses canvases beyond ~16k in either axis; stay well inside. */
 const MAX_CANVAS_PX = 8192;
-
-type PdfjsModule = typeof import('pdfjs-dist');
-
-let pdfjsPromise: Promise<PdfjsModule> | null = null;
-
-/**
- * Load pdf.js once and give it a worker built by our own bundler. The
- * `new URL(..., import.meta.url)` form is what Turbopack/webpack recognise as a
- * worker entry, so the worker ships hashed under /_next/static.
- */
-function loadPdfjs(): Promise<PdfjsModule> {
-  pdfjsPromise ??= (async () => {
-    const pdfjs = await import('pdfjs-dist');
-    try {
-      pdfjs.GlobalWorkerOptions.workerPort = new Worker(
-        new URL('pdfjs-dist/build/pdf.worker.mjs', import.meta.url),
-        { type: 'module' },
-      );
-    } catch (err) {
-      // Bundled worker unavailable (older browser, bundler surprise): fall back
-      // to the copy under /public rather than losing rendering entirely.
-      console.error('[pdfPageCanvas] bundled worker failed, using /public copy', err);
-      pdfjs.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.js';
-    }
-    return pdfjs;
-  })();
-  return pdfjsPromise;
-}
 
 export function PdfPageCanvas({
   src,
@@ -105,16 +77,11 @@ export function PdfPageCanvas({
           return;
         }
 
-        const pdfjs = await loadPdfjs();
-        if (cancelled) return;
-
-        const task = pdfjs.getDocument({
-          data: fetched.bytes,
-          // Production CSP has no 'unsafe-eval', so pdf.js must not reach for
-          // it, and the standard font data ships with us rather than a CDN.
-          isEvalSupported: false,
-          standardFontDataUrl: '/pdfjs/standard_fonts/',
-        });
+        const task = await openPdf(fetched.bytes);
+        if (cancelled) {
+          void task.destroy();
+          return;
+        }
         destroyTask = () => void task.destroy();
         const doc = await task.promise;
         if (cancelled) return;

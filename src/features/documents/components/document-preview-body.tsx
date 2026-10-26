@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 
-import { PdfPageViewer } from './pdf-page-viewer';
+import { PdfScrollViewer } from './pdf-scroll-viewer';
 
 type Props = {
   /** Grow to fill a flex-column parent (the full-screen documents modal)
@@ -93,7 +93,7 @@ export function DocumentPreviewBody({
         />
       )}
       {!loading && !error && !drivePreviewUrl && url && isPdf && (
-        <PdfPageViewer
+        <PdfScrollViewer
           src={url}
           fileName={fileName}
           driveImageSrc={drivePdfImageSrc}

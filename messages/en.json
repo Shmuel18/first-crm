@@ -3089,8 +3089,8 @@
       "print": "Print",
       "sendByEmail": "Send by email",
       "pageOf": "Page {page} of {total}",
-      "previousPage": "Previous page",
-      "nextPage": "Next page"
+      "thumbnails": "Page thumbnails",
+      "goToPage": "Go to page {page}"
     },
     "card": {
       "documentCount": "{count} documents",

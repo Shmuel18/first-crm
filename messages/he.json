@@ -3089,8 +3089,8 @@
       "print": "הדפס",
       "sendByEmail": "שלח במייל",
       "pageOf": "דף {page} מתוך {total}",
-      "previousPage": "העמוד הקודם",
-      "nextPage": "העמוד הבא"
+      "thumbnails": "תמונות ממוזערות של הדפים",
+      "goToPage": "מעבר לדף {page}"
     },
     "card": {
       "documentCount": "{count} מסמכים",
