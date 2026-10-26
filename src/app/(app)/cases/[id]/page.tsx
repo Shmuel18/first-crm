@@ -298,6 +298,7 @@ export default async function CaseDetailPage({ params }: Props) {
             insurance={caseData.insurance_status as InsuranceStatus | null}
             insuranceAgentName={caseData.insurance_agent_name}
             appraiserName={caseData.appraiser_name}
+            lawyerName={caseData.lawyer_name}
             targetDate={caseData.target_date}
             referrerName={caseData.referrer_name}
             shortNote={caseData.short_note}

@@ -2730,6 +2730,7 @@ export type Database = {
           insurance_agent_name: string | null
           insurance_status: string | null
           is_archived: boolean
+          lawyer_name: string | null
           metadata: Json
           opened_at: string | null
           primary_borrower_id: string | null
@@ -2763,6 +2764,7 @@ export type Database = {
           insurance_agent_name?: string | null
           insurance_status?: string | null
           is_archived?: boolean
+          lawyer_name?: string | null
           metadata?: Json
           opened_at?: string | null
           primary_borrower_id?: string | null
@@ -2796,6 +2798,7 @@ export type Database = {
           insurance_agent_name?: string | null
           insurance_status?: string | null
           is_archived?: boolean
+          lawyer_name?: string | null
           metadata?: Json
           opened_at?: string | null
           primary_borrower_id?: string | null

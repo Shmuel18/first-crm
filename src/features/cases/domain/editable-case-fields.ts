@@ -34,6 +34,7 @@ export const EDITABLE_CASE_FIELDS = [
   'insurance_status',
   'insurance_agent_name',
   'appraiser_name',
+  'lawyer_name',
   'target_date',
   'opened_at',
   'referrer_name',

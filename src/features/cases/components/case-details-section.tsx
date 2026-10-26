@@ -20,6 +20,7 @@ import type {
 import { AssociatedAdvisorsField } from './associated-advisors-field';
 import { CaseFeeField } from './case-fee-field';
 import { EditableStatusCell } from './editable-status-cell';
+import { LabeledCell } from './labeled-cell';
 
 /**
  * "פרטי התיק" sub-section of the admin block. 8 inline-editable fields in
@@ -45,7 +46,7 @@ type Props = {
   associatedAdvisorIds: ReadonlyArray<string>;
   canManageAdvisors: boolean;
   /** General case-edit authority (can_edit_case). Gates the plain fields
-   *  (bank request no. / insurance / appraiser / target-date / referrer /
+   *  (bank request no. / insurance / appraiser / lawyer / target-date / referrer /
    *  note / fee). */
   canEdit: boolean;
   /** can_edit_case AND change_case_status — gates the inline status cell. */
@@ -165,6 +166,12 @@ export function CaseDetailsSection({
         onSave={(v) => saveField('appraiser_name', v)}
         canEdit={canEdit}
       />
+      <EditableField
+        label={tFields('lawyer')}
+        value={localCase.lawyer_name}
+        onSave={(v) => saveField('lawyer_name', v)}
+        canEdit={canEdit}
+      />
       {/* Every open case needs a target date — the row pulses until one is
           saved (static under read-only, same as the dashboard chip). */}
       <div className={targetDateMissing ? `rounded-md ${canEdit ? 'target-date-missing' : 'bg-red-50'}` : undefined}>
@@ -227,22 +234,3 @@ export function CaseDetailsSection({
   );
 }
 
-/**
- * Wrap a non-EditableField cell (e.g. EditableStatusCell, EditableBankCell)
- * so its label aligns visually with the EditableField rows next to it in
- * the same FieldGroup. Same 6rem label column + flex-1 content column.
- */
-function LabeledCell({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="grid grid-cols-[6rem_1fr] items-center gap-2 text-sm">
-      <span className="text-neutral-500 truncate">{label}</span>
-      <div className="flex items-center gap-1.5 min-w-0">{children}</div>
-    </div>
-  );
-}
