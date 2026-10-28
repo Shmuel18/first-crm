@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { totalRequestedLoan } from '@/features/cases/domain/total-requested-loan';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import type { AgreementDocument, AgreementLanguage } from '../domain/agreement-text';
@@ -147,7 +148,8 @@ export type AgreementClientSnapshot = {
   nationalId: string | null;
   phone: string | null;
   email: string | null;
-  /** cases.requested_mortgage_amount — the basis for the printed estimate. */
+  /** Total requested loan across all the case's properties — the basis for
+   *  the printed estimate, same as the מנהלה fee (migration 250). */
   loanAmount: number | null;
 };
 
@@ -160,11 +162,18 @@ export async function getAgreementClientSnapshot(
   caseId: string,
 ): Promise<AgreementClientSnapshot | null> {
   const supabase = await createClient();
-  const { data: caseRow } = await supabase
-    .from('cases')
-    .select('primary_borrower_id, requested_mortgage_amount')
-    .eq('id', caseId)
-    .maybeSingle();
+  const [{ data: caseRow }, { data: extraProperties }] = await Promise.all([
+    supabase
+      .from('cases')
+      .select('primary_borrower_id, requested_mortgage_amount')
+      .eq('id', caseId)
+      .maybeSingle(),
+    supabase
+      .from('case_properties')
+      .select('requested_mortgage_amount')
+      .eq('case_id', caseId)
+      .is('deleted_at', null),
+  ]);
   const borrowerId = caseRow?.primary_borrower_id;
   if (!borrowerId) return null;
 
@@ -182,9 +191,12 @@ export async function getAgreementClientSnapshot(
     nationalId: borrower.national_id?.trim() || null,
     phone: borrower.phone?.trim() || null,
     email: borrower.email?.trim() || null,
-    loanAmount:
-      caseRow?.requested_mortgage_amount == null
-        ? null
-        : Number(caseRow.requested_mortgage_amount),
+    loanAmount: totalRequestedLoan(
+      caseRow?.requested_mortgage_amount == null ? null : Number(caseRow.requested_mortgage_amount),
+      (extraProperties ?? []).map((p) => ({
+        requested_mortgage_amount:
+          p.requested_mortgage_amount == null ? null : Number(p.requested_mortgage_amount),
+      })),
+    ),
   };
 }

@@ -25,6 +25,7 @@ import {
   listCaseTypeOptions,
 } from '@/features/cases/services/case-lookups.service';
 import { getMyCaseBlockPreferences } from '@/features/cases/services/case-block-preferences.service';
+import { totalRequestedLoan } from '@/features/cases/domain/total-requested-loan';
 import { listCaseProperties } from '@/features/cases/services/case-properties.service';
 import { getCaseById } from '@/features/cases/services/cases.service';
 import { CaseIncomesBlock } from '@/features/incomes/components/case-incomes-block';
@@ -316,7 +317,8 @@ export default async function CaseDetailPage({ params }: Props) {
                   }
                 : { amount: null, percent: null }
             }
-            loanAmount={caseData.requested_mortgage_amount}
+            // A percentage fee is taken of every property's loan (migration 250).
+            loanAmount={totalRequestedLoan(caseData.requested_mortgage_amount, additionalProperties)}
             statuses={statusOptions}
             advisors={advisorOptions}
             associatedAdvisorIds={associatedAdvisorIds}

@@ -54,7 +54,8 @@ type Props = {
   canSeeFinancials: boolean;
   /** Fixed sum or percentage (migration 248); both null when hidden. */
   feeTerms: CaseFeeTerms;
-  /** cases.requested_mortgage_amount — the base of a percentage fee. */
+  /** Total requested loan across all the case's properties — the base of a
+   *  percentage fee (migration 250). */
   loanAmount: number | null;
   /** Lookups passed down from the page. */
   statuses: ReadonlyArray<StatusOption>;

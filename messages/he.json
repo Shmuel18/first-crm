@@ -1973,7 +1973,7 @@
       "basisLabel": "אופן חישוב שכ״ט",
       "basisFixed": "סכום בשקלים",
       "basisPercent": "אחוז מהמשכנתא",
-      "percentHint": "= {amount} · מתוך משכנתא מבוקשת של {loan}",
+      "percentHint": "= {amount} · מתוך סך המשכנתאות המבוקשות ({loan})",
       "percentNoLoan": "הסכום יחושב כשיוזן גובה המשכנתא המבוקש"
     },
     "fields": {

@@ -16,7 +16,8 @@ import { FeeBasisToggle } from './fee-basis-toggle';
 type Props = {
   label: string;
   terms: CaseFeeTerms;
-  /** cases.requested_mortgage_amount — what a percentage fee is taken of. */
+  /** Total requested loan across all the case's properties — what a
+   *  percentage fee is taken of (migration 250). */
   loanAmount: number | null;
   onSave: (basis: FeeBasis, value: string | null) => Promise<SaveResult>;
   canEdit: boolean;
