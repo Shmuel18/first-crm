@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl';
 
 import { Input } from '@/components/ui/input';
 
+import { hebrewTitle } from '../domain/hebrew-title';
 import { CALENDAR_VIEWS, type CalendarView } from '../types';
 
 type Props = {
@@ -47,7 +48,13 @@ export function CalendarToolbar({ view, anchor, query, onQuery, onView, onStep, 
           <ChevronLeft className="size-4 ltr:rotate-180" aria-hidden="true" />
         </button>
       </div>
-      <h2 className="min-w-32 font-display text-lg font-semibold text-neutral-900">{title}</h2>
+      <h2 className="min-w-32 font-display text-lg font-semibold text-neutral-900">
+        {title}
+        <span className="text-neutral-300" aria-hidden="true"> · </span>
+        <span lang="he" dir="rtl" className="text-base font-medium text-brand-gold-text">
+          {hebrewTitle(view, anchor)}
+        </span>
+      </h2>
 
       <div className="ms-auto flex flex-wrap items-center gap-2">
         <div className="relative">
