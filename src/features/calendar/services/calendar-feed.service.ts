@@ -2,6 +2,7 @@ import { getCaseClientLabel } from '@/features/cases/domain/case-derivations';
 import { createClient } from '@/lib/supabase/server';
 import { israelWallClockNow } from '@/lib/utils/israel-time';
 
+import { calendarCaseLabel } from '../domain/case-label';
 import { israelDayAndTime, israelDayStart } from '../domain/israel-day';
 import { stageDirections } from '../domain/stage-direction';
 import { isEventKind } from '../domain/event-kind';
@@ -27,7 +28,7 @@ export type CalendarFeed = {
   events: Record<string, CalendarEventRecord>;
 };
 
-type CaseInfo = { label: string; advisorId: string | null };
+type CaseInfo = { label: string; caseNumber: string; advisorId: string | null };
 
 /**
  * Every calendar item in [fromDay, toDay) the caller may see. Item titles are
@@ -66,7 +67,11 @@ export async function getCalendarFeed(
   const cases = new Map<string, CaseInfo>(
     (await readCaseLabels(db, referenced)).map((c) => [
       c.id,
-      { label: `#${c.case_number} · ${getCaseClientLabel(c)}`, advisorId: c.assigned_advisor_id },
+      {
+        label: calendarCaseLabel(c.case_number, getCaseClientLabel(c)),
+        caseNumber: c.case_number,
+        advisorId: c.assigned_advisor_id,
+      },
     ]),
   );
   const caseOf = (id: string | null) => (id ? (cases.get(id) ?? null) : null);
@@ -75,6 +80,7 @@ export async function getCalendarFeed(
     return {
       caseId,
       caseLabel: c?.label ?? null,
+      caseNumber: c?.caseNumber ?? null,
       advisorIds: c?.advisorId ? [c.advisorId] : [],
       href: caseId ? `/cases/${caseId}` : null,
       endTime: null,

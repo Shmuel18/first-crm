@@ -102,7 +102,7 @@ export async function readEvents(db: Db, r: CalendarRangeBounds) {
   return data ?? [];
 }
 
-/** "#2026-031 · כהן משה" + the responsible advisor, for every referenced case. */
+/** Case number + client names + the responsible advisor, for every referenced case. */
 export async function readCaseLabels(db: Db, caseIds: ReadonlyArray<string>) {
   const ids = [...new Set(caseIds)];
   if (ids.length === 0) return [];

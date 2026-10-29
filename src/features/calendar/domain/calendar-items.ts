@@ -22,7 +22,7 @@ export type CalendarFilter = {
   layers: ReadonlySet<CalendarLayer>;
   /** Empty = everyone the viewer can see. */
   advisorIds: ReadonlySet<string>;
-  /** Free-text match on title / client. */
+  /** Free-text match on title / client / case number. */
   query: string;
 };
 
@@ -32,12 +32,14 @@ export function filterItems(
   filter: CalendarFilter,
 ): CalendarItem[] {
   const q = filter.query.trim().toLowerCase();
+  const caseNumber = q.replace(/^#/, '');
   return items.filter(
     (item) =>
       filter.layers.has(item.layer) &&
       (filter.advisorIds.size === 0 || item.advisorIds.some((id) => filter.advisorIds.has(id))) &&
       (q === '' ||
         item.title.toLowerCase().includes(q) ||
-        (item.caseLabel ?? '').toLowerCase().includes(q)),
+        (item.caseLabel ?? '').toLowerCase().includes(q) ||
+        (caseNumber !== '' && (item.caseNumber ?? '').includes(caseNumber))),
   );
 }

@@ -13,6 +13,7 @@ function item(over: Partial<CalendarItem>): CalendarItem {
     endTime: null,
     title: 'x',
     caseLabel: null,
+    caseNumber: null,
     caseId: null,
     advisorIds: [],
     detail: null,
@@ -35,7 +36,7 @@ describe('groupByDay', () => {
 });
 
 describe('filterItems', () => {
-  const a = item({ layer: 'task', advisorIds: ['u1'], caseLabel: 'כהן משה' });
+  const a = item({ layer: 'task', advisorIds: ['u1'], caseLabel: 'כהן משה', caseNumber: '2026-031' });
   const b = item({ layer: 'event', advisorIds: ['u2'], title: 'פגישה' });
 
   it('applies layers, advisors and the search text together', () => {
@@ -44,5 +45,11 @@ describe('filterItems', () => {
     expect(filterItems([a, b], { layers: new Set(['event'] as const), advisorIds: new Set(), query: '' })).toEqual([b]);
     expect(filterItems([a, b], { layers: all, advisorIds: new Set(['u1']), query: '' })).toEqual([a]);
     expect(filterItems([a, b], { layers: all, advisorIds: new Set(), query: 'כהן' })).toEqual([a]);
+  });
+
+  it('still finds an item by its (hidden) case number', () => {
+    const all = new Set(['task', 'event'] as const);
+    expect(filterItems([a, b], { layers: all, advisorIds: new Set(), query: '#2026-031' })).toEqual([a]);
+    expect(filterItems([a, b], { layers: all, advisorIds: new Set(), query: '#' })).toEqual([]);
   });
 });

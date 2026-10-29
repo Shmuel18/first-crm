@@ -41,8 +41,10 @@ export type CalendarItem = {
   /** Israel wall-clock "HH:MM" end, for timed events. */
   endTime: string | null;
   title: string;
-  /** Sub-line: the client ("#2026-031 · כהן משה"), or null. */
+  /** Sub-line: the client ("כהן משה"), or null. */
   caseLabel: string | null;
+  /** Not shown — kept so the search still finds an item by its case number. */
+  caseNumber: string | null;
   caseId: string | null;
   /** Responsible advisor of the case (or event participants) for the filter. */
   advisorIds: ReadonlyArray<string>;
