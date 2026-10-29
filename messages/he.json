@@ -3090,7 +3090,10 @@
       "sendByEmail": "שלח במייל",
       "pageOf": "דף {page} מתוך {total}",
       "thumbnails": "תמונות ממוזערות של הדפים",
-      "goToPage": "מעבר לדף {page}"
+      "goToPage": "מעבר לדף {page}",
+      "previousDocument": "המסמך הקודם",
+      "nextDocument": "המסמך הבא",
+      "documentOf": "מסמך {position} מתוך {total}"
     },
     "card": {
       "documentCount": "{count} מסמכים",

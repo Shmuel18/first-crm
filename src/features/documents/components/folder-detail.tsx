@@ -42,7 +42,8 @@ type Props = {
   canUploadDocuments: boolean;
   onBack: () => void;
   onUpload?: (folder: DriveFolder) => void;
-  onPreview: (doc: DocumentWithRelations) => void;
+  /** Opens the preview; the folder's documents ride along for prev/next. */
+  onPreview: (doc: DocumentWithRelations, siblings: ReadonlyArray<DocumentWithRelations>) => void;
 };
 
 /**
@@ -258,7 +259,7 @@ export function FolderDetail({
                   doc={doc}
                   caseId={caseId}
                   canRename={canUploadDocuments}
-                  onClick={onPreview}
+                  onClick={(d) => onPreview(d, directDocuments)}
                 />
               ))}
             </div>

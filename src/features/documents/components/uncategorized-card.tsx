@@ -19,7 +19,7 @@ type Props = {
   caseId: string;
   /** Gate the recategorize control for view-only users (C-036). */
   canEdit: boolean;
-  onPreview: (doc: DocumentWithRelations) => void;
+  onPreview: (doc: DocumentWithRelations, siblings: ReadonlyArray<DocumentWithRelations>) => void;
 };
 
 // Declared at module scope (not inside the component) so the React runtime
@@ -56,7 +56,7 @@ export function UncategorizedCard({ documents, categories, caseId, canEdit, onPr
             categories={categories}
             caseId={caseId}
             canEdit={canEdit}
-            onPreview={onPreview}
+            onPreview={(d) => onPreview(d, documents)}
           />
         ))}
       </div>

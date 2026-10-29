@@ -3090,7 +3090,10 @@
       "sendByEmail": "Send by email",
       "pageOf": "Page {page} of {total}",
       "thumbnails": "Page thumbnails",
-      "goToPage": "Go to page {page}"
+      "goToPage": "Go to page {page}",
+      "previousDocument": "Previous document",
+      "nextDocument": "Next document",
+      "documentOf": "Document {position} of {total}"
     },
     "card": {
       "documentCount": "{count} documents",

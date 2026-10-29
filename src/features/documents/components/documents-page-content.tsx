@@ -20,6 +20,7 @@ import {
   requestDriveSyncAfterReturn,
 } from '../domain/drive-open-signal';
 import { claimDriveSyncRun, releaseDriveSyncRun } from '../domain/drive-sync-run-lock';
+import { siblingNav } from '../domain/sibling-nav';
 import {
   autoSyncDriveDocumentsAction,
   syncDriveDocumentsAction,
@@ -125,6 +126,20 @@ export function DocumentsPageContent({
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploadFolder, setUploadFolder] = useState<DriveFolder | null>(null);
   const [previewDoc, setPreviewDoc] = useState<DocumentWithRelations | null>(null);
+  // The folder the preview was opened from, in its display order — what the
+  // preview's prev/next steps through.
+  const [previewSiblingIds, setPreviewSiblingIds] = useState<ReadonlyArray<string>>([]);
+  const openPreview = (
+    doc: DocumentWithRelations,
+    siblings: ReadonlyArray<DocumentWithRelations>,
+  ): void => {
+    setPreviewSiblingIds(siblings.map((d) => d.id));
+    setPreviewDoc(doc);
+  };
+  const stepPreview = (id: string | null): void => {
+    const next = id ? documents.find((d) => d.id === id) : undefined;
+    if (next) setPreviewDoc(next);
+  };
   const [manageOpen, setManageOpen] = useState(false);
   const [selected, setSelected] = useState<Selection>(null);
   const syncInFlight = useRef<ActiveDriveSync | null>(null);
@@ -573,7 +588,7 @@ export function DocumentsPageContent({
             canUploadDocuments={canUploadDocuments}
             onBack={returnToFolderGrid}
             onUpload={handleUploadFromFolder}
-            onPreview={setPreviewDoc}
+            onPreview={openPreview}
           />
         ))}
 
@@ -610,7 +625,7 @@ export function DocumentsPageContent({
               locale={locale}
               canUploadDocuments={canUploadDocuments}
               onBack={returnToFolderGrid}
-              onPreview={setPreviewDoc}
+              onPreview={openPreview}
             />
           );
         })()}
@@ -630,7 +645,7 @@ export function DocumentsPageContent({
             categories={categories}
             caseId={caseId}
             canEdit={canUploadDocuments}
-            onPreview={setPreviewDoc}
+            onPreview={openPreview}
           />
         </div>
       )}
@@ -658,6 +673,18 @@ export function DocumentsPageContent({
         defaultEmailRecipient={emailRecipients[0]?.email ?? null}
         aiDraftEnabled={aiDraftEnabled}
         onClose={() => setPreviewDoc(null)}
+        nav={(() => {
+          const state = activePreviewDoc
+            ? siblingNav(previewSiblingIds, activePreviewDoc.id)
+            : null;
+          return state
+            ? {
+                state,
+                onPrev: () => stepPreview(state.prevId),
+                onNext: () => stepPreview(state.nextId),
+              }
+            : null;
+        })()}
       />
 
       <ChecklistManagerModal

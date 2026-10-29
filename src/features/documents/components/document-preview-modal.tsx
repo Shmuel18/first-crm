@@ -23,9 +23,12 @@ import { isAttachable } from '../domain/attachable';
 import { markDriveOpened } from '../domain/drive-open-signal';
 import { documentDownloadName, isDocumentDownloadable } from '../domain/google-native-download';
 import { isInlineRenderable } from '../domain/inline-renderable';
+import type { SiblingNav } from '../domain/sibling-nav';
+import { useDocumentNavKeys } from '../hooks/use-document-nav-keys';
 import { usePrintDocument } from '../hooks/use-print-document';
 import type { DocumentWithRelations } from '../types';
 
+import { DocumentNavBar } from './document-nav-bar';
 import { DocumentPreviewActions } from './document-preview-actions';
 import { SendDocumentsEmailDialog } from './send-documents-email-dialog';
 import { DocumentPreviewBody } from './document-preview-body';
@@ -43,6 +46,9 @@ type Props = {
   /** AI draft-assist inside the compose dialog (flag + permission). */
   aiDraftEnabled: boolean;
   onClose: () => void;
+  /** Stepping to the neighbouring documents of the folder it was opened from;
+   *  absent when the preview has no siblings. */
+  nav?: { state: SiblingNav; onPrev: () => void; onNext: () => void } | null;
 };
 
 export function DocumentPreviewModal({
@@ -53,6 +59,7 @@ export function DocumentPreviewModal({
   defaultEmailRecipient,
   aiDraftEnabled,
   onClose,
+  nav = null,
 }: Props) {
   const tErr = useTranslations('documents.errors');
   const locale = parseLocale(useLocale());
@@ -73,6 +80,11 @@ export function DocumentPreviewModal({
   const [downloading, setDownloading] = useState(false);
   const [downloadFailed, setDownloadFailed] = useState(false);
   const { printing, failed: printFailed, printBlob, printBytes, markFailed } = usePrintDocument();
+  const swipe = useDocumentNavKeys(
+    locale === 'he',
+    nav?.state.prevId ? nav.onPrev : null,
+    nav?.state.nextId ? nav.onNext : null,
+  );
 
   useEffect(() => {
     // Parent uses `key={doc?.id ?? 'none'}` so each preview mounts fresh -
@@ -255,8 +267,10 @@ export function DocumentPreviewModal({
               the document having two different names. The folder already says
               which category this is. */}
           <DialogDescription className="pt-1">{uploadDate}</DialogDescription>
+          {nav && <DocumentNavBar nav={nav.state} onPrev={nav.onPrev} onNext={nav.onNext} />}
         </DialogHeader>
 
+        <div className="flex min-h-0 flex-1 flex-col" {...swipe}>
         <DocumentPreviewBody
           fill
           // Our own preview needs no signed URL, so it must not wait on that
@@ -272,6 +286,7 @@ export function DocumentPreviewModal({
           onDrivePreviewFocus={() => markDriveOpened(doc.case_id)}
           onRetry={handleRetry}
         />
+        </div>
 
         <DocumentPreviewLinks
           url={url}
