@@ -11,6 +11,13 @@ vi.mock('@/features/integrations/services/drive-case-uploader', () => ({
 }));
 vi.mock('@/lib/auth/permissions', () => ({ userHasPermission: vi.fn() }));
 vi.mock('@/lib/supabase/server', () => ({ createClient: vi.fn() }));
+// The PII-access audit write (service-role client + env) is out of scope here;
+// `after()` needs a request scope, so run its callback inline.
+vi.mock('@/features/audit/services/audit-writer', () => ({ logPiiAccess: vi.fn() }));
+vi.mock('next/server', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('next/server')>()),
+  after: (fn: () => unknown) => void fn(),
+}));
 
 const DOCUMENT_ID = '11111111-1111-4111-8111-111111111111';
 const USER_ID = '22222222-2222-4222-8222-222222222222';
