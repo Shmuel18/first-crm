@@ -20,7 +20,8 @@ type MirroredKind =
   | 'task_comment'
   | 'task_reminder'
   | 'case_status_overdue'
-  | 'calendar_reminder';
+  | 'calendar_reminder'
+  | 'expense_added';
 
 const MIRRORED_KINDS = new Set<MirroredKind>([
   'case_mention',
@@ -29,6 +30,7 @@ const MIRRORED_KINDS = new Set<MirroredKind>([
   'task_reminder',
   'case_status_overdue',
   'calendar_reminder',
+  'expense_added',
 ]);
 
 type MirrorInput = {
@@ -127,6 +129,17 @@ function bodyParams(
       caseNumber: str('caseNumber'),
       status: locale === 'he' ? str('statusNameHe') : str('statusNameEn'),
       days: num('daysInStatus'),
+    };
+  }
+  if (kind === 'expense_added') {
+    return {
+      actor: str('actorName') || fallbackActor,
+      amount: new Intl.NumberFormat(locale === 'en' ? 'en-IL' : 'he-IL', {
+        style: 'currency',
+        currency: 'ILS',
+        maximumFractionDigits: 0,
+      }).format(num('amount')),
+      description: str('description') || '—',
     };
   }
   if (kind === 'calendar_reminder') {

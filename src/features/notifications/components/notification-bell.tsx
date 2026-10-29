@@ -28,6 +28,7 @@ import type {
   NotificationData,
   NotificationDataAiDigest,
   NotificationDataCalendarReminder,
+  NotificationDataExpenseAdded,
   NotificationDataCaseMention,
   NotificationDataCaseStatusOverdue,
   NotificationDataTask,
@@ -218,6 +219,16 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
       case 'web_lead': {
         const d = n.data as Partial<NotificationDataWebLead>;
         return t('message.web_lead', { name: d.leadName?.trim() || t('aLead') });
+      }
+      case 'expense_added': {
+        const d = n.data as Partial<NotificationDataExpenseAdded>;
+        const actor = d.actorName || (n.actor_id ? t('someone') : t('system'));
+        const amount = new Intl.NumberFormat(locale === 'en' ? 'en-IL' : 'he-IL', {
+          style: 'currency',
+          currency: 'ILS',
+          maximumFractionDigits: 0,
+        }).format(d.amount ?? 0);
+        return t('message.expense_added', { actor, amount, description: d.description?.trim() || '' });
       }
       case 'calendar_reminder': {
         const d = n.data as Partial<NotificationDataCalendarReminder>;

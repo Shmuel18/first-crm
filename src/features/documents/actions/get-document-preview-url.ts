@@ -1,5 +1,8 @@
 'use server';
 
+import { after } from 'next/server';
+
+import { logPiiAccess } from '@/features/audit/services/audit-writer';
 import { userHasPermission } from '@/lib/auth/permissions';
 import { safeDbError } from '@/lib/supabase/db-error-log';
 import { createClient } from '@/lib/supabase/server';
@@ -50,6 +53,10 @@ export async function getDocumentPreviewUrlAction(
     return { ok: false, error: 'unknown' };
   }
 
+  const userId = userRes.user.id;
+  after(() =>
+    logPiiAccess({ userId, kind: 'document_view', table: 'documents', recordId: doc.id, detail: doc.file_name }),
+  );
   return {
     ok: true,
     url: data.signedUrl,

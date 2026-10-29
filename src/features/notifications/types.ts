@@ -15,6 +15,7 @@ export const NOTIFICATION_TYPE_VALUES = [
   'web_lead',
   'ai_digest',
   'calendar_reminder',
+  'expense_added',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPE_VALUES)[number];
 
@@ -28,6 +29,8 @@ export type NotificationPreferences = {
   email_case_status_overdue: boolean;
   /** Calendar event reminders (migration 254 — split from email_task_reminder). */
   email_calendar_reminder: boolean;
+  /** Owner alert when someone records a case expense (migration 255). */
+  email_expense_added: boolean;
 };
 
 export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
@@ -37,6 +40,7 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   email_task_reminder: true,
   email_case_status_overdue: true,
   email_calendar_reminder: true,
+  email_expense_added: true,
 };
 
 /**
@@ -125,6 +129,13 @@ export type NotificationDataCalendarReminder = {
   caseLabel: string | null;
 };
 
+export type NotificationDataExpenseAdded = {
+  amount: number;
+  description: string | null;
+  actorName: string | null;
+  caseLabel: string | null;
+};
+
 /**
  * Discriminated union over `notification.type`. Index by type to get the
  * exact shape — `NotificationDataByType['case_status_overdue']` is the
@@ -143,6 +154,7 @@ export type NotificationDataByType = {
   web_lead: NotificationDataWebLead;
   ai_digest: NotificationDataAiDigest;
   calendar_reminder: NotificationDataCalendarReminder;
+  expense_added: NotificationDataExpenseAdded;
 };
 
 /**

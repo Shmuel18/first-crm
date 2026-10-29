@@ -3,6 +3,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { safeDbError } from '@/lib/supabase/db-error-log';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 
 import { PostCaseCommentSchema } from '../schemas/case-comment.schema';
@@ -32,6 +33,20 @@ export async function postCaseCommentAction(caseId: string, body: string): Promi
   const supabase = await createClient();
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
+  // Each comment (mentions) fans out bell + email notifications — throttle per user so a
+  // loop can't turn into a notification / email bomb (security review P1).
+  // A rate-limited call reports the generic failure the UI already handles.
+  if (
+    !(await checkRateLimit({
+      action: 'post_case_comment',
+      subject: `user:${userRes.user.id}`,
+      max: 60,
+      windowSeconds: 60,
+      failMode: 'open',
+    }))
+  ) {
+    return { ok: false, error: 'unknown' };
+  }
 
   // case_comments isn't in the generated types yet (migration 107) — untyped handle.
   const db = supabase as unknown as SupabaseClient;

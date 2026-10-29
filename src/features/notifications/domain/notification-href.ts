@@ -30,6 +30,7 @@ export function notificationHref(
       return '/settings/integrations';
     case 'case_mention':
     case 'case_status_overdue':
+    case 'expense_added':
       return ids.caseId ? `/cases/${ids.caseId}` : '/cases';
     case 'task_assigned':
     case 'task_completed':

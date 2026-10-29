@@ -2662,6 +2662,7 @@
       "emailMentions": "מייל כשמאזכרים אותי בתגובה",
       "emailTaskReminder": "מייל בתזכורת למשימה",
       "emailCalendarReminder": "מייל בתזכורת מלוח השנה",
+      "emailExpenseAdded": "מייל כשנרשמת הוצאה בתיק",
       "emailCaseStatusOverdue": "מייל כשתיק שלי תקוע בשלב מעבר לזמן",
       "saved": "ההעדפות נשמרו",
       "celebrations": {
@@ -3424,7 +3425,8 @@
       "web_lead": "ליד חדש מהאתר: {name}",
       "ai_digest": "הסיכום היומי שלך מוכן",
       "unknown": "התראה חדשה",
-      "calendar_reminder": "תזכורת: {title} — {when}"
+      "calendar_reminder": "תזכורת: {title} — {when}",
+      "expense_added": "{actor} רשם/ה הוצאה של {amount}{description, select, other { — {description}}}"
     }
   },
   "email": {

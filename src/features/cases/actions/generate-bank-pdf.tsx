@@ -1,10 +1,13 @@
 'use server';
 
+import { after } from 'next/server';
+
 import { renderToBuffer } from '@react-pdf/renderer';
 
 import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
 
+import { logPiiAccess } from '@/features/audit/services/audit-writer';
 import { getCurrentUser } from '@/lib/auth/permissions';
 import { parseLocale } from '@/lib/i18n/direction';
 import { checkRateLimit } from '@/lib/rate-limit';
@@ -62,6 +65,10 @@ export async function generateBankPdfAction(caseId: string): Promise<Result> {
     const buffer = await renderToBuffer(<BankPdfDocument data={data} locale={locale} />);
     const base64 = buffer.toString('base64');
     const safeCaseNumber = data.case.caseNumber.replace(/[^\w-]/g, '_');
+    // The bank PDF is the whole borrower file in one page — leave a trail.
+    after(() =>
+      logPiiAccess({ userId: user.id, kind: 'bank_pdf', table: 'cases', recordId: parsed.data }),
+    );
     return {
       ok: true,
       base64,

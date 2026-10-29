@@ -1,4 +1,8 @@
+import { after } from 'next/server';
+
 import { z } from 'zod';
+
+import { logPiiAccess } from '@/features/audit/services/audit-writer';
 
 import {
   googleNativeDownloadExport,
@@ -125,6 +129,15 @@ export async function GET(_request: Request, { params }: Context): Promise<Respo
 
   const query = new URL(_request.url).searchParams;
   const wantsJson = query.get('transport') === 'json';
+
+  // A full read of the document (preview / download / print) is a PII
+  // disclosure — audit it. Thumbnails below are not (one row per grid tile).
+  if (query.get('thumb') !== '1') {
+    const userId = userRes.user.id;
+    after(() =>
+      logPiiAccess({ userId, kind: 'document_view', table: 'documents', recordId: doc.id, detail: doc.file_name }),
+    );
+  }
 
   // ?thumb=1 — a grid tile wants a recognizable picture, not the document.
   // Drive keeps pre-rendered thumbnails (tens of KB, PDFs and Office files

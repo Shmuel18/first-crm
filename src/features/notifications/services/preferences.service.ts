@@ -23,7 +23,7 @@ export async function getMyNotificationPreferences(): Promise<NotificationPrefer
 
   const { data } = await prefsTable(supabase)
     .select(
-      'email_task_assigned, email_task_completed, email_mentions, email_task_reminder, email_case_status_overdue, email_calendar_reminder',
+      'email_task_assigned, email_task_completed, email_mentions, email_task_reminder, email_case_status_overdue, email_calendar_reminder, email_expense_added',
     )
     .eq('user_id', userRes.user.id)
     .maybeSingle();
@@ -36,6 +36,7 @@ export async function getMyNotificationPreferences(): Promise<NotificationPrefer
     email_task_reminder: data.email_task_reminder !== false,
     email_case_status_overdue: data.email_case_status_overdue !== false,
     email_calendar_reminder: data.email_calendar_reminder !== false,
+    email_expense_added: data.email_expense_added !== false,
   };
 }
 
@@ -66,6 +67,7 @@ const PREF_COLUMN: Partial<Record<NotificationType, keyof NotificationPreference
   task_comment: 'email_mentions',
   task_reminder: 'email_task_reminder',
   calendar_reminder: 'email_calendar_reminder',
+  expense_added: 'email_expense_added',
   case_status_overdue: 'email_case_status_overdue',
 };
 

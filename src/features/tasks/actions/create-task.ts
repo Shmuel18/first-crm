@@ -2,6 +2,7 @@
 
 import { getTranslations } from 'next-intl/server';
 
+import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 import { formDataToObject, formDataToValues } from '@/lib/utils/form-data';
 import { resolveSchemaErrors } from '@/lib/validators/i18n-errors';
@@ -37,6 +38,20 @@ export async function createTaskAction(
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized', values };
   const userId = userRes.user.id;
+  // Each new task (assignee notification) fans out bell + email notifications — throttle per user so a
+  // loop can't turn into a notification / email bomb (security review P1).
+  // A rate-limited call reports the generic failure the UI already handles.
+  if (
+    !(await checkRateLimit({
+      action: 'create_task',
+      subject: `user:${userId}`,
+      max: 60,
+      windowSeconds: 60,
+      failMode: 'open',
+    }))
+  ) {
+    return { ok: false, error: 'unknown', values };
+  }
 
   // Defense-in-depth: if scoped to a case, verify visibility before insert.
   if (parsed.data.case_id) {

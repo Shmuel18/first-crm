@@ -40,6 +40,7 @@ const TITLES: Record<NotificationType, { he: string; en: string }> = {
   web_lead: { he: 'ליד חדש מהאתר', en: 'New website lead' },
   ai_digest: { he: 'הסיכום היומי שלך מוכן', en: 'Your daily digest is ready' },
   calendar_reminder: { he: 'תזכורת מלוח השנה', en: 'Calendar reminder' },
+  expense_added: { he: 'נרשמה הוצאה בתיק', en: 'An expense was recorded' },
 };
 
 function isAuthorized(request: Request): boolean {

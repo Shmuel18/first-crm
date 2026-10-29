@@ -4,6 +4,7 @@ import { after } from 'next/server';
 
 import { sendTaskNotificationEmail } from '@/features/notifications/services/notification-email';
 import { safeDbError } from '@/lib/supabase/db-error-log';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 
 import { ReassignTaskSchema } from '../schemas/task.schema';
@@ -49,6 +50,20 @@ export async function reassignTaskAction(
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
   const userId = userRes.user.id;
+  // Each reassignment fans out bell + email notifications — throttle per user so a
+  // loop can't turn into a notification / email bomb (security review P1).
+  // A rate-limited call reports the generic failure the UI already handles.
+  if (
+    !(await checkRateLimit({
+      action: 'reassign_task',
+      subject: `user:${userId}`,
+      max: 60,
+      windowSeconds: 60,
+      failMode: 'open',
+    }))
+  ) {
+    return { ok: false, error: 'unknown' };
+  }
 
   const rpcClient = supabase as unknown as ReassignTaskRpcClient;
   const { data, error } = await rpcClient.rpc('reassign_task', {

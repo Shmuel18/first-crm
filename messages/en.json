@@ -2662,6 +2662,7 @@
       "emailMentions": "Email when someone mentions me in a comment",
       "emailTaskReminder": "Email on task reminders",
       "emailCalendarReminder": "Email on a calendar reminder",
+      "emailExpenseAdded": "Email when an expense is recorded on a case",
       "emailCaseStatusOverdue": "Email when one of my cases is overdue in a stage",
       "saved": "Preferences saved",
       "celebrations": {
@@ -3424,7 +3425,8 @@
       "web_lead": "New website lead: {name}",
       "ai_digest": "Your daily digest is ready",
       "unknown": "New notification",
-      "calendar_reminder": "Reminder: {title} — {when}"
+      "calendar_reminder": "Reminder: {title} — {when}",
+      "expense_added": "{actor} recorded an expense of {amount}{description, select, other { — {description}}}"
     }
   },
   "email": {

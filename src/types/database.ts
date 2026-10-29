@@ -4374,6 +4374,7 @@ export type Database = {
       notification_preferences: {
         Row: {
           email_calendar_reminder: boolean
+          email_expense_added: boolean
           email_case_status_overdue: boolean
           email_mentions: boolean
           email_task_assigned: boolean
@@ -4384,6 +4385,7 @@ export type Database = {
         }
         Insert: {
           email_calendar_reminder?: boolean
+          email_expense_added?: boolean
           email_case_status_overdue?: boolean
           email_mentions?: boolean
           email_task_assigned?: boolean
@@ -4394,6 +4396,7 @@ export type Database = {
         }
         Update: {
           email_calendar_reminder?: boolean
+          email_expense_added?: boolean
           email_case_status_overdue?: boolean
           email_mentions?: boolean
           email_task_assigned?: boolean
@@ -5901,6 +5904,7 @@ export type Database = {
       save_notification_settings: {
         Args: {
           p_email_calendar_reminder?: boolean
+          p_email_expense_added?: boolean
           p_email_case_status_overdue?: boolean
           p_email_mentions?: boolean
           p_email_task_assigned: boolean

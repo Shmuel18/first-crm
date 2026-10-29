@@ -30,3 +30,35 @@ export async function logCasesExport(params: {
     console.error('logCasesExport failed', error.message);
   }
 }
+
+export type PiiAccessKind = 'bank_pdf' | 'document_view';
+
+/**
+ * Records a single-record disclosure of client PII — the bank PDF (full
+ * borrower file) or a document's bytes — so "who looked at this client's
+ * papers" has an answer (security review 2026-06-19, P1). Thumbnails are not
+ * logged: a folder grid would write one row per tile without anyone reading.
+ *
+ * Same mechanics as logCasesExport: service-role insert (direct audit_log
+ * inserts are RLS-blocked), action EXPORT, best-effort — call it from
+ * `after()` so the disclosure itself never waits on or fails with the audit.
+ */
+export async function logPiiAccess(params: {
+  userId: string;
+  kind: PiiAccessKind;
+  table: 'cases' | 'documents';
+  recordId: string;
+  detail?: string;
+}): Promise<void> {
+  const admin = createAdminClient();
+  const { error } = await admin.from('audit_log').insert({
+    table_name: params.table,
+    record_id: params.recordId,
+    action: 'EXPORT',
+    changed_fields: { kind: params.kind, ...(params.detail ? { detail: params.detail } : {}) },
+    user_id: params.userId,
+  });
+  if (error) {
+    console.error('logPiiAccess failed', error.message);
+  }
+}
