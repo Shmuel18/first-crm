@@ -138,20 +138,29 @@ export function renderControl(p: ControlRenderProps) {
       : p.type === 'email' ? 'email'
       : undefined;
 
+  const listId = p.suggestions && p.suggestions.length > 0 ? `${p.id}-suggestions` : undefined;
   return (
-    <input
-      ref={p.inputRef}
-      id={p.id}
-      type={p.type}
-      inputMode={inputMode}
-      value={p.localValue}
-      onChange={(e) => p.setLocalValue(e.target.value)}
-      onBlur={(e) => p.save(e.target.value)}
-      placeholder={p.placeholder}
-      disabled={p.disabled || p.isPending}
-      dir={p.resolvedDir}
-      className={`${inputClass} ${numberClass} ${p.inputClassName ?? ''}`}
-    />
+    <>
+      <input
+        ref={p.inputRef}
+        id={p.id}
+        type={p.type}
+        inputMode={inputMode}
+        value={p.localValue}
+        onChange={(e) => p.setLocalValue(e.target.value)}
+        onBlur={(e) => p.save(e.target.value)}
+        placeholder={p.placeholder}
+        disabled={p.disabled || p.isPending}
+        dir={p.resolvedDir}
+        list={listId}
+        className={`${inputClass} ${numberClass} ${p.inputClassName ?? ''}`}
+      />
+      {listId && (
+        <datalist id={listId}>
+          {p.suggestions?.map((s) => <option key={s} value={s} />)}
+        </datalist>
+      )}
+    </>
   );
 }
 

@@ -2408,7 +2408,8 @@
       "auditLog": "Audit log",
       "recycleBin": "Deleted cases",
       "backup": "Backup & restore",
-      "agreement": "Engagement agreement"
+      "agreement": "Engagement agreement",
+      "contacts": "Professional contacts"
     },
     "simulators": {
       "pageTitle": "Simulator settings",
@@ -3622,6 +3623,69 @@
           "generic": "Restoring the member failed. Please try again."
         }
       }
+    }
+  },
+  "contacts": {
+    "title": "Professional contacts",
+    "subtitle": "The office's appraisers, lawyers and insurance agents. Their names are suggested in the case fields, and you can send them the case details.",
+    "add": "Add",
+    "delete": "Delete",
+    "empty": "No contacts of this kind yet",
+    "confirmDelete": "Remove {name} from the list? Names already entered on cases stay.",
+    "saveFailed": "Saving failed. Try again.",
+    "form": {
+      "create": "New contact",
+      "edit": "Edit contact"
+    },
+    "fields": {
+      "kind": "Type",
+      "name": "Name",
+      "phone": "Phone",
+      "whatsapp": "WhatsApp",
+      "email": "Email",
+      "company": "Firm / company",
+      "notes": "Notes"
+    },
+    "kinds": {
+      "appraiser": "Appraiser",
+      "lawyer": "Lawyer",
+      "insurance_agent": "Insurance agent"
+    },
+    "kindsPlural": {
+      "appraiser": "Appraisers",
+      "lawyer": "Lawyers",
+      "insurance_agent": "Insurance agents"
+    },
+    "messageFields": {
+      "clientName": "Client",
+      "nationalId": "ID",
+      "phone": "Client phone",
+      "city": "City",
+      "gushHelka": "Block/parcel",
+      "propertyValue": "Property value",
+      "loanAmount": "Loan amount",
+      "bank": "Bank"
+    },
+    "send": {
+      "title": {
+        "appraiser": "Send to appraiser",
+        "lawyer": "Send to lawyer",
+        "insurance_agent": "Send to insurance agent"
+      },
+      "subtitle": "Choose who to send to, tick the details to include, and edit the wording if needed.",
+      "contactLabel": "Contact",
+      "include": "Details to include",
+      "messageLabel": "Message",
+      "greeting": "Hello {name},",
+      "intro": {
+        "appraiser": "Here are the case details for the appraisal:",
+        "lawyer": "Here are the case details for your handling:",
+        "insurance_agent": "Here are the case details for a mortgage insurance quote:"
+      },
+      "closing": "Many thanks,",
+      "viaEmail": "Send by email",
+      "viaWhatsapp": "Send on WhatsApp",
+      "emailSubject": "Case details — {client}"
     }
   }
 }

@@ -26,6 +26,8 @@ import {
 } from '@/features/cases/services/case-lookups.service';
 import { getMyCaseBlockPreferences } from '@/features/cases/services/case-block-preferences.service';
 import { totalRequestedLoan } from '@/features/cases/domain/total-requested-loan';
+import { contactCaseDetails } from '@/features/contacts/domain/contact-case-details';
+import { listProfessionalContacts } from '@/features/contacts/services/contacts.service';
 import { listCaseProperties } from '@/features/cases/services/case-properties.service';
 import { getCaseById } from '@/features/cases/services/cases.service';
 import { CaseIncomesBlock } from '@/features/incomes/components/case-incomes-block';
@@ -62,6 +64,7 @@ export default async function CaseDetailPage({ params }: Props) {
     permissions,
     canEditCase,
     isManager,
+    professionalContacts,
   ] = await Promise.all([
     getTranslations('case'),
     getTranslations('caseComments'),
@@ -90,6 +93,8 @@ export default async function CaseDetailPage({ params }: Props) {
         'delete_case',
         'assign_case_to_user',
         'change_case_status',
+        // "Return to leads" (migration 251) needs create_lead too.
+        'create_lead',
       ),
     ),
     // Authority to edit THIS case (can_edit_case RPC, migration 147): gates
@@ -100,6 +105,7 @@ export default async function CaseDetailPage({ params }: Props) {
     timeAsync('cases.detail.canEditCase', () => userCanEditCase(caseId)),
     // Manager (is_admin): gates the dashboard unread-star stamp below.
     isCurrentUserAdmin(),
+    listProfessionalContacts(),
   ]);
 
   if (!caseData) notFound();
@@ -323,6 +329,13 @@ export default async function CaseDetailPage({ params }: Props) {
             }
             // A percentage fee is taken of every property's loan (migration 250).
             loanAmount={totalRequestedLoan(caseData.requested_mortgage_amount, additionalProperties)}
+            contactsContext={{
+              contacts: professionalContacts,
+              details: contactCaseDetails(
+                caseData,
+                totalRequestedLoan(caseData.requested_mortgage_amount, additionalProperties),
+              ),
+            }}
             statuses={statusOptions}
             advisors={advisorOptions}
             associatedAdvisorIds={associatedAdvisorIds}

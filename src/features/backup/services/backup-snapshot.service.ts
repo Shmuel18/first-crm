@@ -46,6 +46,7 @@ const BACKUP_TABLES = [
   'task_comments',
   'task_attachments',
   'leads',
+  'professional_contacts',
   'reminder_rules',
   'holidays',
   'roles',

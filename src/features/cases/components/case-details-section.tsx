@@ -2,6 +2,11 @@
 
 import { useTranslations } from 'next-intl';
 
+
+import {
+  CaseContactFields,
+  type CaseContactsContext,
+} from '@/features/contacts/components/case-contact-fields';
 import { formatPersonName } from '@/lib/utils/person-name';
 
 import { FieldGroup } from '@/features/borrowers/components/borrower-compact-fields';
@@ -59,6 +64,8 @@ type Props = {
   initialFeeTerms: CaseFeeTerms;
   /** Requested loan — what a percentage fee is taken of. */
   loanAmount: number | null;
+  /** The professionals directory + this case's details for "send to …". */
+  contactsContext: CaseContactsContext;
 };
 
 export function CaseDetailsSection({
@@ -76,6 +83,7 @@ export function CaseDetailsSection({
   canSeeFinancials,
   initialFeeTerms,
   loanAmount,
+  contactsContext,
 }: Props) {
   const tFields = useTranslations('case.fields');
   const tInsurance = useTranslations('case.insurance');
@@ -154,23 +162,12 @@ export function CaseDetailsSection({
         onSave={(v) => saveField('insurance_status', v)}
         canEdit={canEdit}
       />
-      <EditableField
-        label={tFields('insuranceAgent')}
-        value={localCase.insurance_agent_name}
-        onSave={(v) => saveField('insurance_agent_name', v)}
+      <CaseContactFields
+        caseId={caseId}
+        values={localCase}
+        onSave={saveField}
         canEdit={canEdit}
-      />
-      <EditableField
-        label={tFields('appraiser')}
-        value={localCase.appraiser_name}
-        onSave={(v) => saveField('appraiser_name', v)}
-        canEdit={canEdit}
-      />
-      <EditableField
-        label={tFields('lawyer')}
-        value={localCase.lawyer_name}
-        onSave={(v) => saveField('lawyer_name', v)}
-        canEdit={canEdit}
+        context={contactsContext}
       />
       {/* Every open case needs a target date — the row pulses until one is
           saved (static under read-only, same as the dashboard chip). */}

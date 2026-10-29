@@ -2408,7 +2408,8 @@
       "auditLog": "יומן שינויים",
       "recycleBin": "ארכיון מחוקים",
       "backup": "גיבוי ושחזור",
-      "agreement": "הסכם התקשרות"
+      "agreement": "הסכם התקשרות",
+      "contacts": "אנשי קשר מקצועיים"
     },
     "simulators": {
       "pageTitle": "הגדרות סימולטור",
@@ -3622,6 +3623,69 @@
           "generic": "החזרת חבר הצוות נכשלה. נסה שוב."
         }
       }
+    }
+  },
+  "contacts": {
+    "title": "אנשי קשר מקצועיים",
+    "subtitle": "השמאים, עורכי הדין וסוכני הביטוח של המשרד. השמות מוצעים בשדות התיק, ואפשר לשלוח להם את פרטי התיק.",
+    "add": "הוסף",
+    "delete": "מחק",
+    "empty": "אין עדיין אנשי קשר מהסוג הזה",
+    "confirmDelete": "למחוק את {name} מהרשימה? שמות שכבר הוזנו בתיקים יישארו.",
+    "saveFailed": "השמירה נכשלה. נסה שוב.",
+    "form": {
+      "create": "איש קשר חדש",
+      "edit": "עריכת איש קשר"
+    },
+    "fields": {
+      "kind": "סוג",
+      "name": "שם",
+      "phone": "טלפון",
+      "whatsapp": "וואטסאפ",
+      "email": "מייל",
+      "company": "משרד / חברה",
+      "notes": "הערות"
+    },
+    "kinds": {
+      "appraiser": "שמאי",
+      "lawyer": "עורך דין",
+      "insurance_agent": "סוכן ביטוח"
+    },
+    "kindsPlural": {
+      "appraiser": "שמאים",
+      "lawyer": "עורכי דין",
+      "insurance_agent": "סוכני ביטוח"
+    },
+    "messageFields": {
+      "clientName": "לקוח",
+      "nationalId": "ת\"ז",
+      "phone": "טלפון לקוח",
+      "city": "עיר",
+      "gushHelka": "גוש/חלקה",
+      "propertyValue": "שווי הנכס",
+      "loanAmount": "סכום הלוואה",
+      "bank": "בנק"
+    },
+    "send": {
+      "title": {
+        "appraiser": "שליחה לשמאי",
+        "lawyer": "שליחה לעורך דין",
+        "insurance_agent": "שליחה לסוכן ביטוח"
+      },
+      "subtitle": "בחר למי לשלוח, סמן אילו פרטים לכלול, ושנה את הנוסח אם צריך.",
+      "contactLabel": "איש קשר",
+      "include": "פרטים לכלול",
+      "messageLabel": "נוסח ההודעה",
+      "greeting": "שלום {name},",
+      "intro": {
+        "appraiser": "מצורפים פרטי התיק לצורך שמאות:",
+        "lawyer": "מצורפים פרטי התיק לטיפולך:",
+        "insurance_agent": "מצורפים פרטי התיק להצעת ביטוח משכנתא:"
+      },
+      "closing": "תודה רבה,",
+      "viaEmail": "שלח במייל",
+      "viaWhatsapp": "שלח בוואטסאפ",
+      "emailSubject": "פרטי תיק — {client}"
     }
   }
 }

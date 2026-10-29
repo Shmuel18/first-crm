@@ -40,6 +40,9 @@ type CommonProps = {
    *  The interactive control is the affordance; gating it here keeps the UI
    *  honest instead of letting the user edit and then hit a server reject. */
   canEdit?: boolean;
+  /** Text fields only: names offered as you type (a native <datalist>), e.g.
+   *  the office's appraisers. Free text is still accepted. */
+  suggestions?: ReadonlyArray<string>;
 };
 
 export type FieldProps = CommonProps &

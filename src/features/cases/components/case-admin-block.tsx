@@ -9,6 +9,7 @@ import { CasePayoutsList } from '@/features/case-payouts/components/case-payouts
 import { listCasePayouts } from '@/features/case-payouts/services/case-payouts.service';
 import { CaseAgreementAdminSection } from '@/features/agreements/components/case-agreement-admin-section';
 import { CaseCollectionsAdminSection } from '@/features/collections/components/case-collections-admin-section';
+import type { CaseContactsContext } from '@/features/contacts/components/case-contact-fields';
 import type { Locale } from '@/lib/i18n/direction';
 import { asCaseId } from '@/lib/types/branded';
 
@@ -70,6 +71,8 @@ type Props = {
   canChangeStatus: boolean;
   canAssignAdvisor: boolean;
   locale: Locale;
+  /** Professionals directory + case details for "send to appraiser / …". */
+  contactsContext: CaseContactsContext;
 };
 
 /**
@@ -115,6 +118,7 @@ export async function CaseAdminBlock({
   canChangeStatus,
   canAssignAdvisor,
   locale,
+  contactsContext,
 }: Props) {
   const t = await getTranslations('case');
   const tAdmin = await getTranslations('case.admin');
@@ -176,6 +180,7 @@ export async function CaseAdminBlock({
         canSeeFinancials={canSeeFinancials}
         initialFeeTerms={feeTerms}
         loanAmount={loanAmount}
+        contactsContext={contactsContext}
       />
 
       {/* Sections 2 + 3 — Banks and Office expenses side-by-side on

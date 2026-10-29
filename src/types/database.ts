@@ -3852,6 +3852,54 @@ export type Database = {
           },
         ]
       }
+      professional_contacts: {
+        Row: {
+          company: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          email: string | null
+          id: string
+          kind: string
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+          updated_by: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          id?: string
+          kind: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          id?: string
+          kind?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       time_entries: {
         Row: {
           clock_in: string
@@ -5714,6 +5762,10 @@ export type Database = {
       restore_case: { Args: { p_case_id: string }; Returns: boolean }
       retention_purge_enabled: { Args: never; Returns: boolean }
       revoke_user_sessions: { Args: { p_user_id: string }; Returns: number }
+      soft_delete_professional_contact: {
+        Args: { p_id: string }
+        Returns: boolean
+      }
       return_case_to_lead: {
         Args: { p_case_id: string }
         Returns: string

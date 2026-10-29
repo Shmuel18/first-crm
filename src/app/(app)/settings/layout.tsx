@@ -1,5 +1,6 @@
 import {
   Bell,
+  BookUser,
   Building2,
   Calculator,
   FileSignature,
@@ -63,6 +64,9 @@ const NAV_SECTIONS: SettingsNavSection[] = [
       { href: '/settings/office', labelKey: 'office', icon: Building2, adminOnly: true },
       { href: '/settings/people', labelKey: 'people', icon: Users, adminOnly: true },
       { href: '/settings/banks', labelKey: 'banks', icon: Landmark, adminOnly: true },
+      // Everyone reads the directory (the case fields suggest from it); the page
+      // itself gates editing on manage_lookups.
+      { href: '/settings/contacts', labelKey: 'contacts', icon: BookUser },
     ],
   },
   {
