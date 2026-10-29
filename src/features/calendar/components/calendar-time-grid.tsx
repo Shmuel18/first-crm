@@ -2,9 +2,11 @@
 
 import { useTranslations } from 'next-intl';
 
+import { hebrewDayMonth } from '../domain/hebrew-date';
 import type { CalendarItem } from '../types';
 
 import { CalendarChip } from './calendar-chip';
+import { CalendarNowLine } from './calendar-now-line';
 
 /** Office hours on the axis; earlier / later items pin to the edges. */
 const FIRST_HOUR = 7;
@@ -35,6 +37,8 @@ export function CalendarTimeGrid({ days, today, byDay, onOpenItem, onCreate, onD
   const hours = Array.from({ length: LAST_HOUR - FIRST_HOUR }, (_, i) => FIRST_HOUR + i);
   const weekdays = t.raw('weekdaysShort') as string[]; // fixed-length array in the catalog
   const cols = { gridTemplateColumns: `3rem repeat(${days.length}, minmax(0, 1fr))` };
+  /** Today's column is tinted gold all the way down. */
+  const tint = (day: string): string => (day === today ? 'bg-brand-gold-soft' : '');
 
   const drop = (day: string) => (e: React.DragEvent) => {
     e.preventDefault();
@@ -47,8 +51,19 @@ export function CalendarTimeGrid({ days, today, byDay, onOpenItem, onCreate, onD
       <div className="grid border-b border-neutral-200 bg-neutral-50 text-center text-xs" style={cols}>
         <div />
         {days.map((day) => (
-          <div key={day} className={`py-1.5 ${day === today ? 'font-semibold text-brand-gold-text' : 'text-neutral-600'}`}>
-            {weekdays[new Date(`${day}T12:00:00Z`).getUTCDay()]} {Number(day.slice(8, 10))}/{Number(day.slice(5, 7))}
+          <div
+            key={day}
+            aria-current={day === today ? 'date' : undefined}
+            className={`min-w-0 px-0.5 py-1.5 ${
+              day === today ? 'border-b-2 border-brand-gold bg-brand-gold-soft font-bold text-brand-gold-text' : 'text-neutral-600'
+            }`}
+          >
+            <div className="truncate">
+              {weekdays[new Date(`${day}T12:00:00Z`).getUTCDay()]} {Number(day.slice(8, 10))}/{Number(day.slice(5, 7))}
+            </div>
+            <div lang="he" dir="rtl" className={`truncate text-[10px] ${day === today ? '' : 'text-neutral-400'}`}>
+              {hebrewDayMonth(day)}
+            </div>
           </div>
         ))}
       </div>
@@ -60,7 +75,7 @@ export function CalendarTimeGrid({ days, today, byDay, onOpenItem, onCreate, onD
             onClick={() => onCreate(day, null)}
             onDragOver={(e) => e.preventDefault()}
             onDrop={drop(day)}
-            className="min-h-10 cursor-pointer space-y-0.5 border-s border-neutral-100 p-1"
+            className={`min-h-10 cursor-pointer space-y-0.5 border-s border-neutral-100 p-1 ${tint(day)}`}
           >
             {(byDay.get(day) ?? []).filter((i) => i.time === null).map((item) => (
               <CalendarChip key={item.key} item={item} onOpen={onOpenItem} compact={days.length > 1} />
@@ -81,7 +96,7 @@ export function CalendarTimeGrid({ days, today, byDay, onOpenItem, onCreate, onD
             key={day}
             onDragOver={(e) => e.preventDefault()}
             onDrop={drop(day)}
-            className="relative border-s border-neutral-100"
+            className={`relative border-s border-neutral-100 ${tint(day)}`}
             style={{ height: hours.length * HOUR_PX }}
           >
             {hours.map((h) => (
@@ -94,6 +109,7 @@ export function CalendarTimeGrid({ days, today, byDay, onOpenItem, onCreate, onD
                 className="block w-full border-b border-neutral-50 hover:bg-neutral-50"
               />
             ))}
+            {day === today && <CalendarNowLine day={day} firstHour={FIRST_HOUR} lastHour={LAST_HOUR} hourPx={HOUR_PX} />}
             {(byDay.get(day) ?? []).filter((i) => i.time !== null).map((item) => (
               <div
                 key={item.key}

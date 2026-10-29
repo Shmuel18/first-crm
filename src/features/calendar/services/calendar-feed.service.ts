@@ -2,6 +2,7 @@ import { getCaseClientLabel } from '@/features/cases/domain/case-derivations';
 import { createClient } from '@/lib/supabase/server';
 import { israelWallClockNow } from '@/lib/utils/israel-time';
 
+import { calendarCaseLabel } from '../domain/case-labels';
 import { israelDayAndTime, israelDayStart } from '../domain/israel-day';
 import { stageDirections } from '../domain/stage-direction';
 import { isEventKind } from '../domain/event-kind';
@@ -66,7 +67,7 @@ export async function getCalendarFeed(
   const cases = new Map<string, CaseInfo>(
     (await readCaseLabels(db, referenced)).map((c) => [
       c.id,
-      { label: `#${c.case_number} · ${getCaseClientLabel(c)}`, advisorId: c.assigned_advisor_id },
+      { label: calendarCaseLabel(getCaseClientLabel(c), c.case_number), advisorId: c.assigned_advisor_id },
     ]),
   );
   const caseOf = (id: string | null) => (id ? (cases.get(id) ?? null) : null);

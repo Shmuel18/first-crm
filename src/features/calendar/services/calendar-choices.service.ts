@@ -3,9 +3,11 @@ import { listAdvisorOptions } from '@/features/cases/services/case-lookups.servi
 import { createClient } from '@/lib/supabase/server';
 import { formatPersonName } from '@/lib/utils/person-name';
 
+import { caseChoiceLabels } from '../domain/case-labels';
+
 export type Choice = { id: string; label: string };
 
-/** Open cases the viewer can see, for linking an event — "#2026-031 · כהן משה". */
+/** Open cases the viewer can see, for linking an event — "כהן משה" (number added only when names repeat). */
 export async function listCalendarCaseChoices(): Promise<Choice[]> {
   const supabase = await createClient();
   const { data } = await supabase
@@ -15,7 +17,9 @@ export async function listCalendarCaseChoices(): Promise<Choice[]> {
     .eq('is_archived', false)
     .order('created_at', { ascending: false })
     .limit(500);
-  return (data ?? []).map((c) => ({ id: c.id, label: `#${c.case_number} · ${getCaseClientLabel(c)}` }));
+  return caseChoiceLabels(
+    (data ?? []).map((c) => ({ id: c.id, clientName: getCaseClientLabel(c), caseNumber: c.case_number })),
+  );
 }
 
 /** Active staff as { id, name } (identity-only RPC — no contact details). */

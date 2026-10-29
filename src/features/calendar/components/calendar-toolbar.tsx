@@ -5,7 +5,21 @@ import { useLocale, useTranslations } from 'next-intl';
 
 import { Input } from '@/components/ui/input';
 
+import { addDays, rangeFor, shiftAnchor } from '../domain/calendar-range';
+import { hebrewDate, hebrewSpan } from '../domain/hebrew-date';
 import { CALENDAR_VIEWS, type CalendarView } from '../types';
+
+/** The Hebrew-calendar side of the title: the whole date for a day, else the months the view covers. */
+function hebrewTitle(view: CalendarView, anchor: string): string {
+  if (view === 'day') return hebrewDate(anchor);
+  if (view === 'month') {
+    // The Gregorian month itself, not the six-week grid around it.
+    const first = `${anchor.slice(0, 7)}-01`;
+    return hebrewSpan(first, addDays(shiftAnchor('month', first, 1), -1));
+  }
+  const { days } = rangeFor(view, anchor);
+  return hebrewSpan(days[0] ?? anchor, days[days.length - 1] ?? anchor);
+}
 
 type Props = {
   view: CalendarView;
@@ -47,7 +61,13 @@ export function CalendarToolbar({ view, anchor, query, onQuery, onView, onStep, 
           <ChevronLeft className="size-4 ltr:rotate-180" aria-hidden="true" />
         </button>
       </div>
-      <h2 className="min-w-32 font-display text-lg font-semibold text-neutral-900">{title}</h2>
+      <h2 className="min-w-32 font-display text-lg font-semibold text-neutral-900">
+        {title}
+        <span className="text-neutral-300" aria-hidden="true"> · </span>
+        <span lang="he" dir="rtl" className="font-sans text-sm font-normal text-neutral-500">
+          {hebrewTitle(view, anchor)}
+        </span>
+      </h2>
 
       <div className="ms-auto flex flex-wrap items-center gap-2">
         <div className="relative">
