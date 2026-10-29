@@ -3751,6 +3751,7 @@
       "Friday",
       "Saturday"
     ],
+    "now": "Now",
     "allDay": "All day",
     "more": "+{count} more",
     "emptyRange": "Nothing in this range",

@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 
+import { hebrewDayMonth } from '../domain/hebrew-date';
 import type { CalendarItem } from '../types';
 
 import { CalendarChip } from './calendar-chip';
@@ -30,14 +31,27 @@ export function CalendarAgenda({ days, today, byDay, onOpenItem }: Props) {
   return (
     <ol className="space-y-3">
       {withItems.map((day) => (
-        <li key={day} className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
+        <li
+          key={day}
+          aria-current={day === today ? 'date' : undefined}
+          className={`overflow-hidden rounded-xl border bg-white ${
+            day === today ? 'border-brand-gold ring-1 ring-brand-gold' : 'border-neutral-200'
+          }`}
+        >
           <h3
-            className={`border-b border-neutral-100 px-3 py-1.5 text-xs font-semibold ${
-              day === today ? 'bg-brand-gold-soft text-brand-gold-text' : 'bg-neutral-50 text-neutral-600'
+            className={`flex items-baseline justify-between gap-2 border-b px-3 py-1.5 text-xs ${
+              day === today
+                ? 'border-brand-gold/40 bg-brand-gold-soft font-bold text-brand-gold-text'
+                : 'border-neutral-100 bg-neutral-50 font-semibold text-neutral-600'
             }`}
           >
-            {day === today ? `${t('today')} · ` : ''}
-            {weekdays[new Date(`${day}T12:00:00Z`).getUTCDay()]} {Number(day.slice(8, 10))}/{Number(day.slice(5, 7))}
+            <span>
+              {day === today ? `${t('today')} · ` : ''}
+              {weekdays[new Date(`${day}T12:00:00Z`).getUTCDay()]} {Number(day.slice(8, 10))}/{Number(day.slice(5, 7))}
+            </span>
+            <span lang="he" className={`font-medium ${day === today ? '' : 'text-neutral-400'}`}>
+              {hebrewDayMonth(day)}
+            </span>
           </h3>
           <div className="space-y-1 p-2">
             {(byDay.get(day) ?? []).map((item) => (

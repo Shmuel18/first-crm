@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 
+import { hebrewCellLabel } from '../domain/hebrew-date';
 import type { CalendarItem } from '../types';
 
 import { CalendarChip } from './calendar-chip';
@@ -50,22 +51,35 @@ export function CalendarMonth({ days, month, today, byDay, onOpenItem, onOpenDay
                 const key = e.dataTransfer.getData('text/calendar-item');
                 if (key) onDropItem(key, day);
               }}
-              className={`min-h-24 cursor-pointer space-y-0.5 border-b border-e border-neutral-100 p-1 transition hover:bg-neutral-50 ${
-                inMonth ? '' : 'bg-neutral-50/60 text-neutral-400'
+              aria-current={isToday ? 'date' : undefined}
+              className={`min-h-24 cursor-pointer space-y-0.5 border-b border-e border-neutral-100 p-1 transition ${
+                isToday
+                  ? 'bg-brand-gold-soft ring-2 ring-inset ring-brand-gold'
+                  : inMonth
+                    ? 'hover:bg-neutral-50'
+                    : 'bg-neutral-50/60 text-neutral-400 hover:bg-neutral-50'
               }`}
             >
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenDay(day);
-                }}
-                className={`flex size-6 items-center justify-center rounded-full text-xs tabular-nums hover:bg-neutral-200 ${
-                  isToday ? 'bg-brand-black font-semibold text-white hover:bg-brand-black' : ''
-                }`}
-              >
-                {Number(day.slice(8, 10))}
-              </button>
+              <div className="flex items-center justify-between gap-1">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenDay(day);
+                  }}
+                  className={`flex size-6 items-center justify-center rounded-full text-xs tabular-nums hover:bg-neutral-200 ${
+                    isToday ? 'bg-brand-black font-semibold text-white hover:bg-brand-black' : ''
+                  }`}
+                >
+                  {Number(day.slice(8, 10))}
+                </button>
+                <span
+                  lang="he"
+                  className={`truncate text-[11px] ${isToday ? 'font-semibold text-brand-gold-text' : inMonth ? 'text-neutral-400' : 'text-neutral-300'}`}
+                >
+                  {hebrewCellLabel(day)}
+                </span>
+              </div>
               {items.slice(0, MAX_PER_CELL).map((item) => (
                 <CalendarChip key={item.key} item={item} onOpen={onOpenItem} compact />
               ))}
