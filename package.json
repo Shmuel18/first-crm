@@ -12,6 +12,7 @@
     "dev:seed-documents": "node scripts/seed-dev-documents.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
+    "e2e": "playwright test",
     "postinstall": "patch-package"
   },
   "dependencies": {
@@ -57,6 +58,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "@tailwindcss/postcss": "^4",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20",
