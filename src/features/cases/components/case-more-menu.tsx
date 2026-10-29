@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 
-import { Archive, MoreVertical, RotateCcw, Trash2 } from 'lucide-react';
+import { Archive, MoreVertical, RotateCcw, Trash2, Undo2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
@@ -30,6 +30,7 @@ import { deleteCaseAction } from '../actions/delete-case';
 import { toggleArchiveAction } from '../actions/toggle-archive';
 
 import { getDashboardReturnUrl } from './dashboard-url-memory';
+import { ReturnToLeadDialog } from './return-to-lead-dialog';
 
 type Props = {
   caseId: string;
@@ -37,6 +38,8 @@ type Props = {
   canArchive: boolean;
   canRestore: boolean;
   canDelete: boolean;
+  /** archive_case + create_lead + edit authority (migration 251). */
+  canReturnToLead: boolean;
 };
 
 export function CaseMoreMenu({
@@ -45,17 +48,21 @@ export function CaseMoreMenu({
   canArchive,
   canRestore,
   canDelete,
+  canReturnToLead,
 }: Props) {
   const t = useTranslations('case.actionBar');
   const tc = useTranslations('common');
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [returnToLeadOpen, setReturnToLeadOpen] = useState(false);
+  // Only an active case goes back to leads; an archived one is already parked.
+  const showReturnToLead = canReturnToLead && !isArchived;
 
   const canToggle = isArchived ? canRestore : canArchive;
   // Hide the whole menu when no action is offered — keeps the action bar
   // tidy and prevents an empty popover.
-  if (!canToggle && !canDelete) return null;
+  if (!canToggle && !canDelete && !showReturnToLead) return null;
 
   const onToggle = () => {
     if (isPending) return;
@@ -118,9 +125,19 @@ export function CaseMoreMenu({
               {t(isArchived ? 'actions.restore' : 'actions.archive')}
             </DropdownMenuItem>
           )}
+          {showReturnToLead && (
+            <DropdownMenuItem
+              onClick={() => setReturnToLeadOpen(true)}
+              disabled={isPending}
+              className="text-xs py-1 px-2.5 justify-center"
+            >
+              <Undo2 className="size-3.5" aria-hidden="true" />
+              {t('actions.returnToLead')}
+            </DropdownMenuItem>
+          )}
           {canDelete && (
             <>
-              {canToggle && <DropdownMenuSeparator />}
+              {(canToggle || showReturnToLead) && <DropdownMenuSeparator />}
               <DropdownMenuItem
                 onClick={() => setConfirmDeleteOpen(true)}
                 disabled={isPending}
@@ -133,6 +150,14 @@ export function CaseMoreMenu({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {showReturnToLead && (
+        <ReturnToLeadDialog
+          caseId={caseId}
+          open={returnToLeadOpen}
+          onOpenChange={setReturnToLeadOpen}
+        />
+      )}
 
       <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
         <AlertDialogContent>

@@ -24,6 +24,29 @@ export async function convertLeadAction(leadId: string): Promise<ConvertLeadResu
   if (!userRes.user) return { ok: false, error: 'unauthorized' };
   if (!(await userHasPermission('create_case'))) return { ok: false, error: 'unauthorized' };
 
+  // A lead that came from a case sent back to leads (migration 251) revives
+  // THAT case — documents, notes and history intact — instead of opening an
+  // empty new one. NULL means no dormant case: fall through to a normal convert.
+  const revived = await supabase.rpc('revive_dormant_case_for_lead', { p_lead_id: leadId });
+  if (revived.error) {
+    console.error('[convertLead] revive failed', { leadId, code: revived.error.code });
+    return {
+      ok: false,
+      error:
+        revived.error.code === '42501'
+          ? 'unauthorized'
+          : revived.error.code === 'P0002'
+            ? 'not_found'
+            : revived.error.code === '22023'
+              ? 'already_converted'
+              : 'unknown',
+    };
+  }
+  if (revived.data) {
+    revalidatePath('/cases');
+    redirect(`/cases/${revived.data}`);
+  }
+
   // convert_lead_to_case (migration 031) isn't in the generated Database types
   // yet. Cast the client to a narrow rpc signature, but call it as a normal
   // method so supabase-js keeps its `this` binding — a detached/bound reference

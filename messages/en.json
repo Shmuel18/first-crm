@@ -1882,7 +1882,8 @@
         "more": "More",
         "archive": "Move to archive",
         "restore": "Restore from archive",
-        "delete": "Delete case"
+        "delete": "Delete case",
+        "returnToLead": "Return to leads"
       },
       "archiveSuccess": "Case moved to archive",
       "restoreSuccess": "Case restored from archive",
@@ -1892,6 +1893,14 @@
       "deleteDialog": {
         "title": "Delete case",
         "description": "The case will be hidden from the dashboard and moved to \"Deleted cases\" in Settings. You can restore it from there within 14 days — after that it will be permanently deleted."
+      },
+      "returnToLead": {
+        "title": "Return this case to leads?",
+        "description": "The case moves to the archive and appears in the leads tab. Nothing is deleted: converting the lead again brings back this same case with all its documents, notes and history.",
+        "confirm": "Return to leads",
+        "success": "The case was returned to leads",
+        "unauthorized": "You don't have permission for this action",
+        "error": "The action failed. Try again."
       },
       "sendMessageMenu": {
         "viaEmail": "Send via email",

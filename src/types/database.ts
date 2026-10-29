@@ -3542,6 +3542,7 @@ export type Database = {
           assigned_to: string | null
           converted_at: string | null
           converted_to_case_id: string | null
+          dormant_case_id: string | null
           created_at: string
           created_by: string | null
           deleted_at: string | null
@@ -3561,6 +3562,7 @@ export type Database = {
           assigned_to?: string | null
           converted_at?: string | null
           converted_to_case_id?: string | null
+          dormant_case_id?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -3580,6 +3582,7 @@ export type Database = {
           assigned_to?: string | null
           converted_at?: string | null
           converted_to_case_id?: string | null
+          dormant_case_id?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -5711,6 +5714,14 @@ export type Database = {
       restore_case: { Args: { p_case_id: string }; Returns: boolean }
       retention_purge_enabled: { Args: never; Returns: boolean }
       revoke_user_sessions: { Args: { p_user_id: string }; Returns: number }
+      return_case_to_lead: {
+        Args: { p_case_id: string }
+        Returns: string
+      }
+      revive_dormant_case_for_lead: {
+        Args: { p_lead_id: string }
+        Returns: string | null
+      }
       save_borrower_for_case_full: {
         Args: {
           p_borrower_id: string

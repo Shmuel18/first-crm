@@ -5,7 +5,7 @@ import type { LeadRow } from '../types';
 // Explicit column list (audit-driven). Mirrors the leads Row type so schema
 // additions are gated by an intentional update here.
 const LEAD_FULL_COLUMNS =
-  'id, first_name, last_name, national_id, email, phone, status, assigned_to, notes, metadata, converted_at, converted_to_case_id, deleted_at, created_at, created_by, updated_at, updated_by' as const;
+  'id, first_name, last_name, national_id, email, phone, status, assigned_to, notes, metadata, converted_at, converted_to_case_id, dormant_case_id, deleted_at, created_at, created_by, updated_at, updated_by' as const;
 
 type LeadListOptions = {
   /**

@@ -108,6 +108,9 @@ export default async function CaseDetailPage({ params }: Props) {
   const canArchive = permissions.archive_case === true;
   const canRestore = permissions.restore_archived_case === true;
   const canDelete = permissions.delete_case === true;
+  // Same gates as return_case_to_lead (migration 251).
+  const canReturnToLead =
+    canEditCase && permissions.archive_case === true && permissions.create_lead === true;
   // Status / advisor changes need their granular permission ON TOP of edit
   // authority (DB triggers enforce both — migration 178).
   const canChangeStatus = canEditCase && permissions.change_case_status === true;
@@ -181,6 +184,7 @@ export default async function CaseDetailPage({ params }: Props) {
         canArchive={canArchive}
         canRestore={canRestore}
         canDelete={canDelete}
+        canReturnToLead={canReturnToLead}
         canChangeStatus={canChangeStatus}
       />
 

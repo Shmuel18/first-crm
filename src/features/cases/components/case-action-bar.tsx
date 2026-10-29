@@ -53,6 +53,7 @@ type ActionBarProps = {
   canArchive: boolean;
   canRestore: boolean;
   canDelete: boolean;
+  canReturnToLead: boolean;
   /** can_edit_case AND change_case_status — gates the inline status cell. */
   canChangeStatus: boolean;
 };
@@ -75,6 +76,7 @@ export async function CaseActionBar({
   canArchive,
   canRestore,
   canDelete,
+  canReturnToLead,
   canChangeStatus,
 }: ActionBarProps) {
   const t = await getTranslations('case.actionBar');
@@ -190,6 +192,7 @@ export async function CaseActionBar({
             canArchive={canArchive}
             canRestore={canRestore}
             canDelete={canDelete}
+            canReturnToLead={canReturnToLead}
           />
         </div>
       </div>
