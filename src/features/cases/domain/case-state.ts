@@ -16,10 +16,10 @@ export function isFrozenStatusKey(key: string | null | undefined): boolean {
   return key === 'on_hold' || key === 'closed';
 }
 
-/** Stages with no deadline left to chase: closed / on-hold, and ביצוע —
- *  the work is done, only the bank's execution remains (Kaufman, 2026-10). */
+/** Stages with no deadline left to chase: closed / on-hold, ביצוע (only the
+ *  bank's execution remains) and הוצא לבחינה (Kaufman, 2026-10). */
 export function isTargetDateExemptStatusKey(key: string | null | undefined): boolean {
-  return isFrozenStatusKey(key) || key === 'execution';
+  return isFrozenStatusKey(key) || key === 'execution' || key === 'sent_for_review';
 }
 
 export function isFrozenCase(c: { status: { key: string } | null }): boolean {

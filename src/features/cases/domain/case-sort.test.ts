@@ -255,6 +255,12 @@ describe('applySort', () => {
       ]);
     });
 
+    it('puts הוצא לבחינה just above ביצוע at the bottom', () => {
+      const review = makeCase({ id: 'review', status: { id: 's8', key: 'sent_for_review' } });
+      const result = applySort([review, ...input], null, STATUS_OPTIONS).map((c) => c.id);
+      expect(result.slice(-2)).toEqual(['review', 'exec-dated']);
+    });
+
     it('sinks ביצוע in the explicit target-date sort too', () => {
       const result = applySort(input, { column: 'targetDate', dir: 'asc' }, STATUS_OPTIONS);
       expect(result.at(-1)?.id).toBe('exec-dated');

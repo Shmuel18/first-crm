@@ -35,10 +35,11 @@ describe('getInitials', () => {
 });
 
 describe('isTargetDateExemptStatusKey', () => {
-  it('exempts closed, on-hold and ביצוע', () => {
+  it('exempts closed, on-hold, ביצוע and הוצא לבחינה', () => {
     expect(isTargetDateExemptStatusKey('closed')).toBe(true);
     expect(isTargetDateExemptStatusKey('on_hold')).toBe(true);
     expect(isTargetDateExemptStatusKey('execution')).toBe(true);
+    expect(isTargetDateExemptStatusKey('sent_for_review')).toBe(true);
   });
 
   it('keeps every other open stage flagged', () => {

@@ -12,8 +12,8 @@
  * dated cases by target date (overdue first), then undated ones in opening
  * order. Cancelling a column sort returns to this default.
  *
- * ביצוע cases sink to the bottom in the urgency / opened / targetDate views —
- * nothing is left to chase on them. The explicit name and stage sorts don't
+ * הוצא לבחינה and then ביצוע cases sink to the bottom in the urgency / opened /
+ * targetDate views — nothing is left for the advisor to chase on them. The explicit name and stage sorts don't
  * move them: those are lookups, and stage order already places ביצוע.
  *
  * Empty / missing keys (case with no borrowers, no stage) always sink
@@ -77,9 +77,14 @@ function stagePos(c: CaseWithRelations, order: Map<string, number>): number {
   return c.status?.id ? order.get(c.status.id) ?? Number.POSITIVE_INFINITY : Number.POSITIVE_INFINITY;
 }
 
-/** 1 for a case in ביצוע (sinks to the bottom), 0 otherwise. */
-function executionRank(c: CaseWithRelations): number {
-  return c.status?.key === 'execution' ? 1 : 0;
+/**
+ * How far a case sinks: 0 for the working pipeline, 1 for הוצא לבחינה, 2 for
+ * ביצוע (the very bottom). Both are past the advisor's own work (Kaufman,
+ * 2026-10), and הוצא לבחינה still precedes ביצוע in the process.
+ */
+function sinkRank(c: CaseWithRelations): number {
+  const key = c.status?.key;
+  return key === 'execution' ? 2 : key === 'sent_for_review' ? 1 : 0;
 }
 
 /**
@@ -90,14 +95,14 @@ function executionRank(c: CaseWithRelations): number {
 function sortByUrgency(cases: ReadonlyArray<CaseWithRelations>): CaseWithRelations[] {
   return [...cases].sort(
     (a, b) =>
-      executionRank(a) - executionRank(b) || compareTargetDates(a.target_date, b.target_date),
+      sinkRank(a) - sinkRank(b) || compareTargetDates(a.target_date, b.target_date),
   );
 }
 
 /** Opening order = the incoming DB order; desc simply reverses it. */
 function sortByOpened(cases: ReadonlyArray<CaseWithRelations>, dir: SortDir): CaseWithRelations[] {
   const ordered = dir === 'desc' ? [...cases].reverse() : [...cases];
-  return ordered.sort((a, b) => executionRank(a) - executionRank(b));
+  return ordered.sort((a, b) => sinkRank(a) - sinkRank(b));
 }
 
 export function applySort(
@@ -131,7 +136,7 @@ export function applySort(
       sorted.sort((a, b) => {
         const cmp = compareTargetDates(a.target_date, b.target_date);
         return (
-          executionRank(a) - executionRank(b) || (sort.dir === 'desc' ? -cmp : cmp) || tieBySurname(a, b)
+          sinkRank(a) - sinkRank(b) || (sort.dir === 'desc' ? -cmp : cmp) || tieBySurname(a, b)
         );
       });
       break;
