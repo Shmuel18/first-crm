@@ -12,9 +12,11 @@
  *   convert_lead_to_case    — lead conversion is gated by create_case
  *   manage_roles            — the roles editor is admin-only (isCurrentUserAdmin)
  *   manage_settings         — settings pages are admin-only by design
- *   manage_lookups          — no lookups-management UI; admin-only
  *   verify_document         — Kaufman accepts filed documents immediately;
  *                             migration 230 keeps the key only for restore compatibility
+ *
+ * manage_lookups was re-exposed 2026-10-29: it now gates editing the
+ * professional contacts directory (migration 252).
  *
  * Shared by the client editor (render filter) AND the server action (write
  * guard, R3-roles-4) — keep this module free of any server-touching imports so
@@ -29,6 +31,5 @@ export const HIDDEN_PERMISSION_KEYS = new Set<string>([
   'convert_lead_to_case',
   'manage_roles',
   'manage_settings',
-  'manage_lookups',
   'verify_document',
 ]);
