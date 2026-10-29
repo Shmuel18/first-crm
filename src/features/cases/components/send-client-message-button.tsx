@@ -9,6 +9,7 @@ import { ComposeEmailDialog } from '@/components/shared/compose-email-dialog';
 import { buildWhatsAppLink } from '@/features/borrowers/domain/contact-links';
 import type { RenderedTemplate } from '@/features/templates/types';
 import { callAction } from '@/lib/actions/call-action';
+import { logWhatsAppSendAction } from '@/features/case-activity/actions/log-whatsapp-send';
 
 import { sendClientEmailAction } from '../actions/send-client-email';
 import { defaultRecipientIds, selectedRecipients } from '../domain/email-recipients';
@@ -101,8 +102,20 @@ export function SendClientMessageButton({
   };
 
   const openWhatsApp = (text?: string): void => {
-    const link = buildWhatsAppLink(borrower?.phone, text ?? greeting);
-    if (link) window.open(link, '_blank', 'noopener,noreferrer');
+    const body = text ?? greeting;
+    const link = buildWhatsAppLink(borrower?.phone, body);
+    if (!link || !borrower?.phone) return;
+    window.open(link, '_blank', 'noopener,noreferrer');
+    // Case history: the send was OPENED (whether it was sent is up to WhatsApp).
+    void callAction(() =>
+      logWhatsAppSendAction({
+        caseId,
+        kind: 'advisor_message',
+        recipientName: [borrower.firstName, borrower.lastName].filter(Boolean).join(' '),
+        phone: borrower.phone ?? '',
+        body,
+      }),
+    );
   };
 
   // email + email-channel templates → editable preview; 'general' templates

@@ -31,7 +31,8 @@ export function emailToEvent(row: ClientEmailLogRow, senderName: string | null):
     actorName: senderName,
     kind: 'email_sent',
     emailKind: row.kind,
-    recipient: row.recipient_email,
+    channel: row.channel === 'whatsapp' ? 'whatsapp' : 'email',
+    recipient: row.recipient_email ?? row.recipient_phone ?? '',
     subject: row.subject,
     body: row.body,
   };

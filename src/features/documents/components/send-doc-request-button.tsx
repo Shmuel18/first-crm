@@ -21,6 +21,7 @@ import {
   type EmailRecipient,
 } from '@/features/cases/domain/email-recipients';
 import { callAction } from '@/lib/actions/call-action';
+import { logWhatsAppSendAction } from '@/features/case-activity/actions/log-whatsapp-send';
 import { env } from '@/lib/env';
 import { parseLocale } from '@/lib/i18n/direction';
 
@@ -85,10 +86,22 @@ export function SendDocRequestButton({
   const fullName =
     [borrower?.firstName, borrower?.lastName].filter(Boolean).join(' ').trim() ||
     tc('noName');
-  const waLink = buildWhatsAppLink(
-    borrower?.phone,
-    buildDocRequestWhatsappText({ name: fullName, checklist, locale, t: tMenu }),
-  );
+  const waText = buildDocRequestWhatsappText({ name: fullName, checklist, locale, t: tMenu });
+  const waLink = buildWhatsAppLink(borrower?.phone, waText);
+  const openWhatsApp = (): void => {
+    if (!waLink || !borrower?.phone) return;
+    window.open(waLink, '_blank', 'noopener,noreferrer');
+    // Case history: the request was OPENED in WhatsApp (sending is up to the advisor).
+    void callAction(() =>
+      logWhatsAppSendAction({
+        caseId,
+        kind: 'document_request',
+        recipientName: fullName,
+        phone: borrower.phone ?? '',
+        body: waText,
+      }),
+    );
+  };
   const hasEmail = emailRecipients.length > 0;
 
   // Prefill on open (not on mount) so the draft always reflects the current
@@ -166,7 +179,7 @@ export function SendDocRequestButton({
           </DropdownMenuItem>
           <DropdownMenuItem
             disabled={!waLink}
-            onClick={() => waLink && window.open(waLink, '_blank', 'noopener,noreferrer')}
+            onClick={openWhatsApp}
             className="gap-2"
           >
             <MessageCircle className="size-4 text-emerald-600" aria-hidden="true" />

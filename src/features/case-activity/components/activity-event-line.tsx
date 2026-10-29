@@ -12,6 +12,7 @@ import {
   FolderPlus,
   Landmark,
   Mail,
+  MessageCircle,
   MessageSquare,
   Pencil,
   Reply,
@@ -74,7 +75,7 @@ function iconFor(event: ActivityEvent): LucideIcon {
     case 'comment_added':
       return MessageSquare;
     case 'email_sent':
-      return Mail;
+      return event.channel === 'whatsapp' ? MessageCircle : Mail;
     case 'fields_updated':
       return Pencil;
     case 'record_added':
@@ -111,7 +112,7 @@ function sentenceFor(event: ActivityEvent, t: (key: string) => string): string {
     case 'record_removed':
       return t(`removed.${event.entity}`);
     case 'email_sent':
-      return t(`events.email_${event.emailKind}`);
+      return t(`events.${event.channel}_${event.emailKind}`);
     case 'fields_updated':
       return t('events.fields_updated');
     default:

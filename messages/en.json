@@ -1822,7 +1822,12 @@
       "email_advisor_message": "Email sent to client",
       "email_document_request": "Document request emailed to client",
       "email_agreement_sign_request": "Engagement agreement sent for signature",
-      "fields_updated": "Details updated"
+      "fields_updated": "Details updated",
+      "email_professional_message": "Email sent to a professional",
+      "whatsapp_advisor_message": "WhatsApp send opened to the client",
+      "whatsapp_document_request": "Document request opened on WhatsApp",
+      "whatsapp_agreement_sign_request": "Agreement send opened on WhatsApp",
+      "whatsapp_professional_message": "WhatsApp send opened to a professional"
     },
     "added": {
       "cases": "Case created",
@@ -2656,6 +2661,7 @@
       "emailTaskCompleted": "Email when a task I created is completed",
       "emailMentions": "Email when someone mentions me in a comment",
       "emailTaskReminder": "Email on task reminders",
+      "emailCalendarReminder": "Email on a calendar reminder",
       "emailCaseStatusOverdue": "Email when one of my cases is overdue in a stage",
       "saved": "Preferences saved",
       "celebrations": {

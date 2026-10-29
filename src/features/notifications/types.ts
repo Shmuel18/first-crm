@@ -26,6 +26,8 @@ export type NotificationPreferences = {
   email_mentions: boolean;
   email_task_reminder: boolean;
   email_case_status_overdue: boolean;
+  /** Calendar event reminders (migration 254 — split from email_task_reminder). */
+  email_calendar_reminder: boolean;
 };
 
 export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
@@ -34,6 +36,7 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   email_mentions: true,
   email_task_reminder: true,
   email_case_status_overdue: true,
+  email_calendar_reminder: true,
 };
 
 /**

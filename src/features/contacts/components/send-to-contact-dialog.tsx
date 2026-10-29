@@ -16,6 +16,8 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { buildWhatsAppLink } from '@/features/borrowers/domain/contact-links';
+import { logWhatsAppSendAction } from '@/features/case-activity/actions/log-whatsapp-send';
+import { callAction } from '@/lib/actions/call-action';
 import { SendDocumentsEmailDialog } from '@/features/documents/components/send-documents-email-dialog';
 
 import {
@@ -132,8 +134,17 @@ export function SendToContactDialog(props: Props) {
               type="button"
               disabled={!whatsapp}
               onClick={() => {
-                if (!whatsapp) return;
+                if (!whatsapp || !contact) return;
                 window.open(whatsapp, '_blank', 'noopener,noreferrer');
+                void callAction(() =>
+                  logWhatsAppSendAction({
+                    caseId,
+                    kind: 'professional_message',
+                    recipientName: contact.name,
+                    phone: contact.whatsapp ?? contact.phone ?? '',
+                    body: message,
+                  }),
+                );
                 noteSent();
                 onOpenChange(false);
               }}

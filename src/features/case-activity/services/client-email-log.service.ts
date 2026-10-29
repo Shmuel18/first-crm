@@ -26,7 +26,7 @@ export async function listClientEmailLog(caseId: string): Promise<ClientEmailLog
 
   const { data, error } = await db
     .from('client_email_log')
-    .select('id, case_id, kind, recipient_email, subject, body, sent_by, created_at')
+    .select('id, case_id, kind, channel, recipient_email, recipient_phone, subject, body, sent_by, created_at')
     .eq('case_id', caseId)
     .order('created_at', { ascending: false })
     .limit(MAX_EMAILS);

@@ -133,6 +133,12 @@ export function NotificationsForm({ preferences, thresholds, statuses, showSla, 
             onCheckedChange={(next) => setEmail((v) => ({ ...v, email_task_reminder: next }))}
           />
           <ToggleRow
+            name="email_calendar_reminder"
+            label={t('emailCalendarReminder')}
+            checked={email.email_calendar_reminder}
+            onCheckedChange={(next) => setEmail((v) => ({ ...v, email_calendar_reminder: next }))}
+          />
+          <ToggleRow
             name="email_case_status_overdue"
             label={t('emailCaseStatusOverdue')}
             checked={email.email_case_status_overdue}

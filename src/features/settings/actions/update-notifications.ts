@@ -84,6 +84,7 @@ export async function updateNotificationsAction(
     p_email_mentions: formData.has('email_mentions'),
     p_email_task_reminder: formData.has('email_task_reminder'),
     p_email_case_status_overdue: formData.has('email_case_status_overdue'),
+    p_email_calendar_reminder: formData.has('email_calendar_reminder'),
     // Conditional: admin who skipped SLA entirely (e.g., no `sla_*` fields)
     // sends null → RPC skips the SLA block. Admin who included SLA sends
     // the merge-patch object.

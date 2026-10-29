@@ -1822,7 +1822,12 @@
       "email_advisor_message": "נשלח אימייל ללקוח",
       "email_document_request": "נשלחה בקשת מסמכים ללקוח",
       "email_agreement_sign_request": "נשלח הסכם התקשרות לחתימה",
-      "fields_updated": "עדכון פרטים"
+      "fields_updated": "עדכון פרטים",
+      "email_professional_message": "נשלח אימייל לאיש מקצוע",
+      "whatsapp_advisor_message": "נפתחה שליחה בוואטסאפ ללקוח",
+      "whatsapp_document_request": "נפתחה בקשת מסמכים בוואטסאפ ללקוח",
+      "whatsapp_agreement_sign_request": "נפתחה שליחת הסכם בוואטסאפ",
+      "whatsapp_professional_message": "נפתחה שליחה בוואטסאפ לאיש מקצוע"
     },
     "added": {
       "cases": "התיק נוצר",
@@ -2656,6 +2661,7 @@
       "emailTaskCompleted": "מייל כשמשימה שיצרתי הושלמה",
       "emailMentions": "מייל כשמאזכרים אותי בתגובה",
       "emailTaskReminder": "מייל בתזכורת למשימה",
+      "emailCalendarReminder": "מייל בתזכורת מלוח השנה",
       "emailCaseStatusOverdue": "מייל כשתיק שלי תקוע בשלב מעבר לזמן",
       "saved": "ההעדפות נשמרו",
       "celebrations": {

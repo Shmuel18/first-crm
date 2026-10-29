@@ -3015,30 +3015,36 @@ export type Database = {
         Row: {
           body: string
           case_id: string
+          channel: string
           created_at: string
           id: string
           kind: string
-          recipient_email: string
+          recipient_email: string | null
+          recipient_phone: string | null
           sent_by: string | null
           subject: string
         }
         Insert: {
           body?: string
           case_id: string
+          channel?: string
           created_at?: string
           id?: string
           kind: string
-          recipient_email: string
+          recipient_email?: string | null
+          recipient_phone?: string | null
           sent_by?: string | null
           subject: string
         }
         Update: {
           body?: string
           case_id?: string
+          channel?: string
           created_at?: string
           id?: string
           kind?: string
-          recipient_email?: string
+          recipient_email?: string | null
+          recipient_phone?: string | null
           sent_by?: string | null
           subject?: string
         }
@@ -4367,6 +4373,7 @@ export type Database = {
       }
       notification_preferences: {
         Row: {
+          email_calendar_reminder: boolean
           email_case_status_overdue: boolean
           email_mentions: boolean
           email_task_assigned: boolean
@@ -4376,6 +4383,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          email_calendar_reminder?: boolean
           email_case_status_overdue?: boolean
           email_mentions?: boolean
           email_task_assigned?: boolean
@@ -4385,6 +4393,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          email_calendar_reminder?: boolean
           email_case_status_overdue?: boolean
           email_mentions?: boolean
           email_task_assigned?: boolean
@@ -5891,6 +5900,7 @@ export type Database = {
       save_mortgage_scenario: { Args: { p_payload: Json }; Returns: string }
       save_notification_settings: {
         Args: {
+          p_email_calendar_reminder?: boolean
           p_email_case_status_overdue?: boolean
           p_email_mentions?: boolean
           p_email_task_assigned: boolean

@@ -21,7 +21,15 @@ export type ActivityEntity =
   | 'tasks'
   | 'case_financials';
 
-export type ClientEmailKind = 'advisor_message' | 'document_request' | 'agreement_sign_request';
+export type ClientEmailKind =
+  | 'advisor_message'
+  | 'document_request'
+  | 'agreement_sign_request'
+  /** Appraiser / lawyer / insurance agent (migration 252). */
+  | 'professional_message';
+
+/** email = sent by the server; whatsapp = a send the advisor OPENED (mig 254). */
+export type SendChannel = 'email' | 'whatsapp';
 
 /**
  * One line on the case activity timeline. Discriminated by `kind` — each kind
@@ -59,6 +67,7 @@ type ActivityEventBody =
   | {
       kind: 'email_sent';
       emailKind: ClientEmailKind;
+      channel: SendChannel;
       recipient: string;
       subject: string;
       /** Full message body as sent (plain text) — surfaced expandably in the feed. */
@@ -88,7 +97,11 @@ export type ClientEmailLogRow = {
   id: string;
   case_id: string;
   kind: ClientEmailKind;
-  recipient_email: string;
+  channel: SendChannel;
+  /** Email sends; null for a WhatsApp row. */
+  recipient_email: string | null;
+  /** WhatsApp sends; null for an email row. */
+  recipient_phone: string | null;
   subject: string;
   body: string;
   sent_by: string | null;
