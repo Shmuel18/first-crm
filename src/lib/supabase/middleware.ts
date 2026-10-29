@@ -83,6 +83,7 @@ export async function updateSession(request: NextRequest) {
     matches('/simulators') ||
     matches('/statistics') ||
     matches('/dashboard') ||
+    matches('/calendar') ||
     // /auth/set-password is hit AFTER /auth/callback runs the code exchange
     // and writes session cookies. An unauth visit here is invalid (no session
     // to update), so bounce to /login like any protected page.

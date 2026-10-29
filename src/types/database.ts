@@ -1705,6 +1705,89 @@ export type Database = {
           },
         ]
       }
+      calendar_event_participants: {
+        Row: {
+          created_at: string
+          event_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_event_participants_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calendar_events: {
+        Row: {
+          all_day: boolean
+          case_id: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          ends_at: string | null
+          id: string
+          kind: string
+          location: string | null
+          notes: string | null
+          reminded_at: string | null
+          reminder_minutes: number | null
+          starts_at: string
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          all_day?: boolean
+          case_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          ends_at?: string | null
+          id?: string
+          kind?: string
+          location?: string | null
+          notes?: string | null
+          reminded_at?: string | null
+          reminder_minutes?: number | null
+          starts_at: string
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          all_day?: boolean
+          case_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          ends_at?: string | null
+          id?: string
+          kind?: string
+          location?: string | null
+          notes?: string | null
+          reminded_at?: string | null
+          reminder_minutes?: number | null
+          starts_at?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       case_agreements: {
         Row: {
           agreement_version: string
@@ -5762,6 +5845,26 @@ export type Database = {
       restore_case: { Args: { p_case_id: string }; Returns: boolean }
       retention_purge_enabled: { Args: never; Returns: boolean }
       revoke_user_sessions: { Args: { p_user_id: string }; Returns: number }
+      save_calendar_event: {
+        Args: {
+          p_all_day: boolean
+          p_case_id: string | null
+          p_ends_at: string | null
+          p_id: string | null
+          p_kind: string
+          p_location: string | null
+          p_notes: string | null
+          p_participant_ids: string[] | null
+          p_reminder_minutes: number | null
+          p_starts_at: string
+          p_title: string
+        }
+        Returns: string
+      }
+      delete_calendar_event: {
+        Args: { p_id: string }
+        Returns: boolean
+      }
       soft_delete_professional_contact: {
         Args: { p_id: string }
         Returns: boolean

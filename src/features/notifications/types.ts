@@ -14,6 +14,7 @@ export const NOTIFICATION_TYPE_VALUES = [
   'erasure_stale',
   'web_lead',
   'ai_digest',
+  'calendar_reminder',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPE_VALUES)[number];
 
@@ -112,6 +113,15 @@ export type NotificationDataAiDigest = {
   date: string;
 };
 
+export type NotificationDataCalendarReminder = {
+  /** The event's title. */
+  title: string;
+  /** Pre-formatted Israel date + time ("29/10 10:00"), or the date for an all-day event. */
+  when: string;
+  /** "#2026-031 · כהן משה" when the event is linked to a case. */
+  caseLabel: string | null;
+};
+
 /**
  * Discriminated union over `notification.type`. Index by type to get the
  * exact shape — `NotificationDataByType['case_status_overdue']` is the
@@ -129,6 +139,7 @@ export type NotificationDataByType = {
   erasure_stale: NotificationDataErasureStale;
   web_lead: NotificationDataWebLead;
   ai_digest: NotificationDataAiDigest;
+  calendar_reminder: NotificationDataCalendarReminder;
 };
 
 /**

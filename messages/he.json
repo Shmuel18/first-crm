@@ -300,7 +300,8 @@
     "primary": "ניווט ראשי",
     "sidebar": "סרגל צד",
     "skipToContent": "דלג לתוכן הראשי",
-    "unreadTasks": "{count, plural, =1 {משימה אחת פתוחה} other {# משימות פתוחות}}"
+    "unreadTasks": "{count, plural, =1 {משימה אחת פתוחה} other {# משימות פתוחות}}",
+    "calendar": "לוח שנה"
   },
   "inbox": {
     "eyebrow": "עוזר חכם",
@@ -3416,7 +3417,8 @@
       "erasure_stale": "מחיקת קבצים אינה רצה — בדוק את משימת הניקוי ואת החיבור ל-Google Drive (הגדרות → אינטגרציות)",
       "web_lead": "ליד חדש מהאתר: {name}",
       "ai_digest": "הסיכום היומי שלך מוכן",
-      "unknown": "התראה חדשה"
+      "unknown": "התראה חדשה",
+      "calendar_reminder": "תזכורת: {title} — {when}"
     }
   },
   "email": {
@@ -3686,6 +3688,113 @@
       "viaEmail": "שלח במייל",
       "viaWhatsapp": "שלח בוואטסאפ",
       "emailSubject": "פרטי תיק — {client}"
+    }
+  },
+  "calendar": {
+    "title": "לוח שנה",
+    "subtitle": "תאריכי יעד, משימות, שינויי שלב, תוקף מסמכים ואירועים — במקום אחד.",
+    "today": "היום",
+    "previous": "הקודם",
+    "next": "הבא",
+    "search": "חיפוש לקוח…",
+    "viewLabel": "תצוגה",
+    "views": {
+      "month": "חודש",
+      "week": "שבוע",
+      "day": "יום",
+      "agenda": "רשימה"
+    },
+    "newEvent": "אירוע חדש",
+    "filters": "סינון",
+    "layersTitle": "מה להציג",
+    "layers": {
+      "stage": "שינויי שלב",
+      "targetDate": "תאריכי יעד",
+      "task": "משימות",
+      "event": "אירועים",
+      "expiry": "תוקף מסמכים ות\"ז",
+      "agreement": "הסכמי שכ\"ט",
+      "opened": "פתיחת תיק"
+    },
+    "prefix": {
+      "stage": "",
+      "targetDate": "יעד:",
+      "task": "משימה:",
+      "event": "",
+      "expiry": "{detail, select, id {פג תוקף ת\"ז:} other {פג תוקף:}}",
+      "agreement": "{detail, select, sent {הסכם נשלח:} signed {הסכם נחתם:} other {קישור ההסכם פג:}}",
+      "opened": "נפתח תיק:"
+    },
+    "advisorsTitle": "יועצים",
+    "advisorsHint": "בלי בחירה — כולם",
+    "weekdaysShort": [
+      "א׳",
+      "ב׳",
+      "ג׳",
+      "ד׳",
+      "ה׳",
+      "ו׳",
+      "ש׳"
+    ],
+    "weekdaysLong": [
+      "ראשון",
+      "שני",
+      "שלישי",
+      "רביעי",
+      "חמישי",
+      "שישי",
+      "שבת"
+    ],
+    "allDay": "כל היום",
+    "more": "+{count} נוספים",
+    "emptyRange": "אין כלום בטווח הזה",
+    "forward": "התקדם שלב",
+    "back": "חזר שלב",
+    "movedBack": "התיק חזר שלב אחורה.",
+    "moveTo": "העבר לתאריך",
+    "save": "שמור",
+    "markDone": "סמן כבוצע",
+    "edit": "ערוך",
+    "delete": "מחק",
+    "confirmDelete": "למחוק את האירוע?",
+    "openCase": "פתח תיק",
+    "openTask": "פתח משימה",
+    "actionFailed": "הפעולה נכשלה. נסה שוב.",
+    "errors": {
+      "endBeforeStart": "שעת הסיום לפני שעת ההתחלה"
+    },
+    "form": {
+      "newTitle": "אירוע חדש",
+      "editTitle": "עריכת אירוע",
+      "title": "כותרת",
+      "kind": "סוג",
+      "kinds": {
+        "client_meeting": "פגישת לקוח",
+        "bank_meeting": "פגישה בבנק",
+        "signing": "חתימה",
+        "appraiser": "שמאי",
+        "reminder": "תזכורת",
+        "other": "אחר"
+      },
+      "date": "תאריך",
+      "allDay": "כל היום",
+      "start": "התחלה",
+      "end": "סיום",
+      "location": "מיקום",
+      "case": "תיק",
+      "noCase": "— ללא תיק —",
+      "reminder": "תזכורת",
+      "reminders": {
+        "none": "ללא",
+        "60": "שעה לפני",
+        "1440": "יום לפני"
+      },
+      "participants": "משתתפים",
+      "notes": "הערות",
+      "saved": "האירוע נשמר",
+      "invalid": "חסרים פרטים או שהשעות לא תקינות",
+      "unauthorized": "אין לך הרשאה לזה",
+      "failed": "השמירה נכשלה. נסה שוב."
     }
   }
 }

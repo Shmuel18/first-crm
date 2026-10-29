@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 
 import { NextResponse } from 'next/server';
 
+import { runCalendarReminders } from '@/features/calendar/services/calendar-reminders.service';
 import { runTaskReminders } from '@/features/tasks/services/task-reminders.service';
 import { env } from '@/lib/env';
 
@@ -24,7 +25,9 @@ export async function GET(request: Request): Promise<Response> {
 
   try {
     const result = await runTaskReminders();
-    return NextResponse.json({ ok: true, ...result });
+    // Calendar events ride the same 15-minute tick (no extra Vercel cron).
+    const calendar = await runCalendarReminders();
+    return NextResponse.json({ ok: true, ...result, calendar });
   } catch (err) {
     console.error('[cron/task-reminders] failed', {
       message: err instanceof Error ? err.message : 'unknown',

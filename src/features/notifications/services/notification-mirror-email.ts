@@ -19,7 +19,8 @@ type MirroredKind =
   | 'task_mention'
   | 'task_comment'
   | 'task_reminder'
-  | 'case_status_overdue';
+  | 'case_status_overdue'
+  | 'calendar_reminder';
 
 const MIRRORED_KINDS = new Set<MirroredKind>([
   'case_mention',
@@ -27,6 +28,7 @@ const MIRRORED_KINDS = new Set<MirroredKind>([
   'task_comment',
   'task_reminder',
   'case_status_overdue',
+  'calendar_reminder',
 ]);
 
 type MirrorInput = {
@@ -126,6 +128,9 @@ function bodyParams(
       status: locale === 'he' ? str('statusNameHe') : str('statusNameEn'),
       days: num('daysInStatus'),
     };
+  }
+  if (kind === 'calendar_reminder') {
+    return { title: str('title'), when: str('when') };
   }
   // task_reminder — data is the NotificationDataTask snapshot.
   return { task: str('taskTitle') };

@@ -23,6 +23,8 @@ export function notificationHref(
       return '/cases?view=leads';
     case 'ai_digest':
       return '/cases';
+    case 'calendar_reminder':
+      return '/calendar';
     case 'backup_stale':
     case 'erasure_stale':
       return '/settings/integrations';

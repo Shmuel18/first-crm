@@ -47,6 +47,8 @@ const BACKUP_TABLES = [
   'task_attachments',
   'leads',
   'professional_contacts',
+  'calendar_events',
+  'calendar_event_participants',
   'reminder_rules',
   'holidays',
   'roles',

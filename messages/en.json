@@ -300,7 +300,8 @@
     "primary": "Primary navigation",
     "sidebar": "Sidebar",
     "skipToContent": "Skip to main content",
-    "unreadTasks": "{count, plural, =1 {1 open task} other {# open tasks}}"
+    "unreadTasks": "{count, plural, =1 {1 open task} other {# open tasks}}",
+    "calendar": "Calendar"
   },
   "inbox": {
     "eyebrow": "Smart assistant",
@@ -3416,7 +3417,8 @@
       "erasure_stale": "File erasure isn't running — check the cleanup job and the Google Drive connection (Settings → Integrations)",
       "web_lead": "New website lead: {name}",
       "ai_digest": "Your daily digest is ready",
-      "unknown": "New notification"
+      "unknown": "New notification",
+      "calendar_reminder": "Reminder: {title} — {when}"
     }
   },
   "email": {
@@ -3686,6 +3688,113 @@
       "viaEmail": "Send by email",
       "viaWhatsapp": "Send on WhatsApp",
       "emailSubject": "Case details — {client}"
+    }
+  },
+  "calendar": {
+    "title": "Calendar",
+    "subtitle": "Target dates, tasks, stage changes, document expiry and events — in one place.",
+    "today": "Today",
+    "previous": "Previous",
+    "next": "Next",
+    "search": "Search client…",
+    "viewLabel": "View",
+    "views": {
+      "month": "Month",
+      "week": "Week",
+      "day": "Day",
+      "agenda": "List"
+    },
+    "newEvent": "New event",
+    "filters": "Filter",
+    "layersTitle": "Show",
+    "layers": {
+      "stage": "Stage changes",
+      "targetDate": "Target dates",
+      "task": "Tasks",
+      "event": "Events",
+      "expiry": "Document & ID expiry",
+      "agreement": "Fee agreements",
+      "opened": "Case opened"
+    },
+    "prefix": {
+      "stage": "",
+      "targetDate": "Target:",
+      "task": "Task:",
+      "event": "",
+      "expiry": "{detail, select, id {ID expires:} other {Expires:}}",
+      "agreement": "{detail, select, sent {Agreement sent:} signed {Agreement signed:} other {Agreement link expires:}}",
+      "opened": "Case opened:"
+    },
+    "advisorsTitle": "Advisors",
+    "advisorsHint": "None selected — everyone",
+    "weekdaysShort": [
+      "Sun",
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat"
+    ],
+    "weekdaysLong": [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday"
+    ],
+    "allDay": "All day",
+    "more": "+{count} more",
+    "emptyRange": "Nothing in this range",
+    "forward": "Moved forward",
+    "back": "Moved back",
+    "movedBack": "The case moved back a stage.",
+    "moveTo": "Move to date",
+    "save": "Save",
+    "markDone": "Mark done",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Delete this event?",
+    "openCase": "Open case",
+    "openTask": "Open task",
+    "actionFailed": "The action failed. Try again.",
+    "errors": {
+      "endBeforeStart": "The end time is before the start time"
+    },
+    "form": {
+      "newTitle": "New event",
+      "editTitle": "Edit event",
+      "title": "Title",
+      "kind": "Type",
+      "kinds": {
+        "client_meeting": "Client meeting",
+        "bank_meeting": "Bank meeting",
+        "signing": "Signing",
+        "appraiser": "Appraiser",
+        "reminder": "Reminder",
+        "other": "Other"
+      },
+      "date": "Date",
+      "allDay": "All day",
+      "start": "Start",
+      "end": "End",
+      "location": "Location",
+      "case": "Case",
+      "noCase": "— no case —",
+      "reminder": "Reminder",
+      "reminders": {
+        "none": "None",
+        "60": "An hour before",
+        "1440": "A day before"
+      },
+      "participants": "Participants",
+      "notes": "Notes",
+      "saved": "Event saved",
+      "invalid": "Details are missing or the times are invalid",
+      "unauthorized": "You don't have permission for this",
+      "failed": "Saving failed. Try again."
     }
   }
 }

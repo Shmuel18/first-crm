@@ -3,7 +3,18 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { BarChart3, Calculator, CheckSquare, Clock, Coins, HandCoins, Inbox, LayoutDashboard, Settings } from 'lucide-react';
+import {
+  BarChart3,
+  Calculator,
+  CalendarDays,
+  CheckSquare,
+  Clock,
+  Coins,
+  HandCoins,
+  Inbox,
+  LayoutDashboard,
+  Settings,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useTaskBadge } from '@/features/tasks/components/task-badge-provider';
@@ -12,7 +23,7 @@ import { isNavItemActive } from './is-nav-item-active';
 
 type NavItem = {
   href: string;
-  labelKey: 'cases' | 'tasks' | 'inbox' | 'simulators' | 'statistics' | 'maaser' | 'collections' | 'timeClock' | 'settings';
+  labelKey: 'cases' | 'tasks' | 'calendar' | 'inbox' | 'simulators' | 'statistics' | 'maaser' | 'collections' | 'timeClock' | 'settings';
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
   criticalBadge?: number;
@@ -36,6 +47,7 @@ type NavItem = {
 const BASE_TOP_ITEMS: readonly NavItem[] = [
   { href: '/cases', labelKey: 'cases', icon: LayoutDashboard },
   { href: '/tasks', labelKey: 'tasks', icon: CheckSquare },
+  { href: '/calendar', labelKey: 'calendar', icon: CalendarDays },
   { href: '/inbox', labelKey: 'inbox', icon: Inbox, inboxOnly: true },
   { href: '/simulators', labelKey: 'simulators', icon: Calculator },
   { href: '/statistics', labelKey: 'statistics', icon: BarChart3, adminOnly: true },

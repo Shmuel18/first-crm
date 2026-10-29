@@ -64,6 +64,8 @@ const PREF_COLUMN: Partial<Record<NotificationType, keyof NotificationPreference
   task_mention: 'email_mentions',
   task_comment: 'email_mentions',
   task_reminder: 'email_task_reminder',
+  // Calendar reminders share the reminders toggle — one switch for "remind me".
+  calendar_reminder: 'email_task_reminder',
   case_status_overdue: 'email_case_status_overdue',
 };
 

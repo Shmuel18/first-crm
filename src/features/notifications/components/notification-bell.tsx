@@ -27,6 +27,7 @@ import type {
   Notification,
   NotificationData,
   NotificationDataAiDigest,
+  NotificationDataCalendarReminder,
   NotificationDataCaseMention,
   NotificationDataCaseStatusOverdue,
   NotificationDataTask,
@@ -217,6 +218,10 @@ export function NotificationBell({ initialUnread, notifications, locale }: Props
       case 'web_lead': {
         const d = n.data as Partial<NotificationDataWebLead>;
         return t('message.web_lead', { name: d.leadName?.trim() || t('aLead') });
+      }
+      case 'calendar_reminder': {
+        const d = n.data as Partial<NotificationDataCalendarReminder>;
+        return t('message.calendar_reminder', { title: d.title ?? '', when: d.when ?? '' });
       }
       case 'ai_digest': {
         // The digest text IS the message — AI-phrased (or the deterministic
