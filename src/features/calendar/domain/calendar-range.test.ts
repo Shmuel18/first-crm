@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { addDays, isCalendarDay, rangeFor, shiftAnchor } from './calendar-range';
+import { addDays, daysBetween, isCalendarDay, rangeFor, shiftAnchor, spanDaysInRange } from './calendar-range';
 
 describe('rangeFor', () => {
   it('shows a month as six weeks starting on the Sunday before the 1st', () => {
@@ -43,5 +43,29 @@ describe('day helpers', () => {
     expect(addDays('2026-03-26', 2)).toBe('2026-03-28');
     expect(isCalendarDay('2026-02-30')).toBe(false);
     expect(isCalendarDay('2026-02-28')).toBe(true);
+  });
+});
+
+describe('daysBetween', () => {
+  it('counts whole days across a month and a DST change', () => {
+    expect(daysBetween('2026-10-20', '2026-11-02')).toBe(13);
+    expect(daysBetween('2026-11-02', '2026-10-20')).toBe(-13);
+  });
+});
+
+describe('spanDaysInRange', () => {
+  it('lists every day of a vacation', () => {
+    expect(spanDaysInRange('2026-11-01', '2026-11-03', '2026-10-25', '2026-12-06')).toEqual([
+      '2026-11-01',
+      '2026-11-02',
+      '2026-11-03',
+    ]);
+  });
+  it('clips a span that started before the range and runs past it', () => {
+    expect(spanDaysInRange('2026-10-28', '2026-11-10', '2026-11-08', '2026-11-10')).toEqual(['2026-11-08', '2026-11-09']);
+  });
+  it('treats a missing or earlier end as a single day', () => {
+    expect(spanDaysInRange('2026-11-01', null, '2026-10-25', '2026-12-06')).toEqual(['2026-11-01']);
+    expect(spanDaysInRange('2026-11-01', '2026-10-30', '2026-10-25', '2026-12-06')).toEqual(['2026-11-01']);
   });
 });

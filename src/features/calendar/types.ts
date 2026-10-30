@@ -19,6 +19,7 @@ export const EVENT_KINDS = [
   'signing',
   'appraiser',
   'reminder',
+  'absence',
   'other',
 ] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
@@ -27,7 +28,8 @@ export type EventKind = (typeof EVENT_KINDS)[number];
 export type CalendarEditable =
   | { kind: 'targetDate'; caseId: string }
   | { kind: 'task'; taskId: string }
-  | { kind: 'event'; eventId: string }
+  /** startDay: the event's first day — a multi-day event shows a chip per day. */
+  | { kind: 'event'; eventId: string; startDay: string }
   | null;
 
 export type CalendarItem = {

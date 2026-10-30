@@ -3728,7 +3728,7 @@
       "stage": "",
       "targetDate": "יעד:",
       "task": "משימה:",
-      "event": "",
+      "event": "{detail, select, absence {לא במשרד:} other {}}",
       "expiry": "{detail, select, id {פג תוקף ת\"ז:} other {פג תוקף:}}",
       "agreement": "{detail, select, sent {הסכם נשלח:} signed {הסכם נחתם:} other {קישור ההסכם פג:}}",
       "opened": "נפתח תיק:"
@@ -3783,9 +3783,11 @@
         "signing": "חתימה",
         "appraiser": "שמאי",
         "reminder": "תזכורת",
+        "absence": "היעדרות (חופש / חו״ל)",
         "other": "אחר"
       },
       "date": "תאריך",
+      "endDate": "עד תאריך (לכמה ימים)",
       "allDay": "כל היום",
       "start": "התחלה",
       "end": "סיום",

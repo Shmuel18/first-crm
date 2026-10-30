@@ -47,6 +47,7 @@ export function CalendarEventForm({ initial, onClose, onSaved, currentUserId, ca
   const [allDay, setAllDay] = useState(existing ? existing.allDay : !('time' in initial && initial.time));
   const [startTime, setStartTime] = useState(start?.time ?? ('time' in initial ? (initial.time ?? '09:00') : '09:00'));
   const [endTime, setEndTime] = useState(existing?.endsAt ? israelDayAndTime(existing.endsAt).time : '');
+  const [endDate, setEndDate] = useState(existing?.allDay && existing.endsAt ? israelDayAndTime(existing.endsAt).day : '');
   const [location, setLocation] = useState(existing?.location ?? '');
   const [caseId, setCaseId] = useState(existing?.caseId ?? '');
   const [reminder, setReminder] = useState(existing?.reminderMinutes ? String(existing.reminderMinutes) : '');
@@ -67,6 +68,7 @@ export function CalendarEventForm({ initial, onClose, onSaved, currentUserId, ca
           date,
           startTime: allDay ? null : startTime,
           endTime: allDay || !endTime ? null : endTime,
+          endDate: allDay && endDate > date ? endDate : null,
           location: location.trim() || null,
           notes: notes.trim() || null,
           caseId: caseId || null,
@@ -95,7 +97,15 @@ export function CalendarEventForm({ initial, onClose, onSaved, currentUserId, ca
           </FormField>
           <div className="grid grid-cols-2 gap-3">
             <FormField label={t('kind')}>
-              <NativeSelect value={kind} onChange={(e) => isEventKind(e.target.value) && setKind(e.target.value)}>
+              <NativeSelect
+                value={kind}
+                onChange={(e) => {
+                  if (!isEventKind(e.target.value)) return;
+                  setKind(e.target.value);
+                  // A vacation / trip abroad is whole days.
+                  if (e.target.value === 'absence') setAllDay(true);
+                }}
+              >
                 {EVENT_KINDS.map((k) => (
                   <option key={k} value={k}>{t(`kinds.${k}`)}</option>
                 ))}
@@ -109,6 +119,11 @@ export function CalendarEventForm({ initial, onClose, onSaved, currentUserId, ca
             <input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} />
             {t('allDay')}
           </label>
+          {allDay && (
+            <FormField label={t('endDate')}>
+              <Input type="date" value={endDate} min={date} onChange={(e) => setEndDate(e.target.value)} />
+            </FormField>
+          )}
           {!allDay && (
             <div className="grid grid-cols-2 gap-3">
               <FormField label={t('start')}>

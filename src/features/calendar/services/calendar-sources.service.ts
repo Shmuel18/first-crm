@@ -13,7 +13,7 @@ type Db = Awaited<ReturnType<typeof createClient>>;
 export async function readTargetDates(db: Db, r: CalendarRangeBounds) {
   const { data } = await db
     .from('cases')
-    .select('id, target_date')
+    .select('id, target_date, status:case_statuses(key)')
     .is('deleted_at', null)
     .eq('is_archived', false)
     .gte('target_date', r.fromDay)
@@ -97,19 +97,20 @@ export async function readEvents(db: Db, r: CalendarRangeBounds) {
       'id, title, kind, starts_at, ends_at, all_day, location, notes, case_id, reminder_minutes, calendar_event_participants(user_id)',
     )
     .is('deleted_at', null)
-    .gte('starts_at', r.fromIso)
-    .lt('starts_at', r.toIso);
+    .lt('starts_at', r.toIso)
+    // Overlaps the range: starts inside it, or a multi-day span still running.
+    .or(`starts_at.gte."${r.fromIso}",ends_at.gte."${r.fromIso}"`);
   return data ?? [];
 }
 
-/** Case number + client names + the responsible advisor, for every referenced case. */
+/** Case number + client names + the responsible and associated advisors, for every referenced case. */
 export async function readCaseLabels(db: Db, caseIds: ReadonlyArray<string>) {
   const ids = [...new Set(caseIds)];
   if (ids.length === 0) return [];
   const { data } = await db
     .from('cases')
     .select(
-      'id, case_number, assigned_advisor_id, case_borrowers(is_primary, borrower:borrowers(first_name, last_name))',
+      'id, case_number, assigned_advisor_id, case_associated_advisors(advisor_id), case_borrowers(is_primary, borrower:borrowers(first_name, last_name))',
     )
     .in('id', ids);
   return data ?? [];

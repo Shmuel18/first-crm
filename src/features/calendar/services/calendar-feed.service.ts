@@ -1,8 +1,10 @@
 import { getCaseClientLabel } from '@/features/cases/domain/case-derivations';
+import { isTargetDateExemptStatusKey } from '@/features/cases/domain/case-state';
 import { createClient } from '@/lib/supabase/server';
 import { israelWallClockNow } from '@/lib/utils/israel-time';
 
 import { calendarCaseLabel } from '../domain/case-label';
+import { spanDaysInRange } from '../domain/calendar-range';
 import { israelDayAndTime, israelDayStart } from '../domain/israel-day';
 import { stageDirections } from '../domain/stage-direction';
 import { isEventKind } from '../domain/event-kind';
@@ -28,7 +30,8 @@ export type CalendarFeed = {
   events: Record<string, CalendarEventRecord>;
 };
 
-type CaseInfo = { label: string; caseNumber: string; advisorId: string | null };
+/** advisorIds: the responsible advisor + every associated one — a case's items show for all of them. */
+type CaseInfo = { label: string; caseNumber: string; advisorIds: string[] };
 
 /**
  * Every calendar item in [fromDay, toDay) the caller may see. Item titles are
@@ -70,7 +73,12 @@ export async function getCalendarFeed(
       {
         label: calendarCaseLabel(c.case_number, getCaseClientLabel(c)),
         caseNumber: c.case_number,
-        advisorId: c.assigned_advisor_id,
+        advisorIds: [
+          ...new Set([
+            ...(c.assigned_advisor_id ? [c.assigned_advisor_id] : []),
+            ...(c.case_associated_advisors?.map((a) => a.advisor_id) ?? []),
+          ]),
+        ],
       },
     ]),
   );
@@ -81,7 +89,7 @@ export async function getCalendarFeed(
       caseId,
       caseLabel: c?.label ?? null,
       caseNumber: c?.caseNumber ?? null,
-      advisorIds: c?.advisorId ? [c.advisorId] : [],
+      advisorIds: c?.advisorIds ?? [],
       href: caseId ? `/cases/${caseId}` : null,
       endTime: null,
     };
@@ -101,7 +109,8 @@ export async function getCalendarFeed(
       time: null,
       title: caseOf(c.id)?.label ?? '',
       detail: null,
-      overdue: c.target_date < today,
+      // ביצוע / בוצע / frozen / sent-for-review cases are past the deadline by design — not red.
+      overdue: c.target_date < today && !isTargetDateExemptStatusKey(c.status?.key),
       editable: { kind: 'targetDate', caseId: c.id },
     });
   }
@@ -195,18 +204,25 @@ export async function getCalendarFeed(
       reminderMinutes: e.reminder_minutes,
       participantIds: participants,
     };
-    items.push({
-      ...base(e.case_id),
-      advisorIds: participants,
-      key: `event:${e.id}`,
-      layer: 'event',
-      day: start.day,
-      time: e.all_day ? null : start.time,
-      endTime: !e.all_day && e.ends_at ? israelDayAndTime(e.ends_at).time : null,
-      title: e.title,
-      detail: e.kind,
-      editable: { kind: 'event', eventId: e.id },
-    });
+    const caseItem = base(e.case_id);
+    // A case event shows for everyone on the case as well as its participants;
+    // an all-day span (vacation, abroad) gets a chip on each of its days.
+    const advisorIds = [...new Set([...caseItem.advisorIds, ...participants])];
+    const endDay = e.all_day && e.ends_at ? israelDayAndTime(e.ends_at).day : null;
+    for (const day of spanDaysInRange(start.day, endDay, fromDay, toDay)) {
+      items.push({
+        ...caseItem,
+        advisorIds,
+        key: day === start.day ? `event:${e.id}` : `event:${e.id}:${day}`,
+        layer: 'event',
+        day,
+        time: e.all_day ? null : start.time,
+        endTime: !e.all_day && e.ends_at ? israelDayAndTime(e.ends_at).time : null,
+        title: e.title,
+        detail: e.kind,
+        editable: { kind: 'event', eventId: e.id, startDay: start.day },
+      });
+    }
   }
 
   return { items, events: eventRecords };

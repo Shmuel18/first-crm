@@ -17,6 +17,19 @@ export function addDays(day: string, n: number): string {
   return toDay(d);
 }
 
+/** Whole days from `from` to `to` (negative when `to` is earlier). */
+export function daysBetween(from: string, to: string): number {
+  return Math.round((toDate(to).getTime() - toDate(from).getTime()) / 86_400_000);
+}
+
+/** The days of [startDay, endDay] (endDay null = one day) inside [fromDay, toDay). */
+export function spanDaysInRange(startDay: string, endDay: string | null, fromDay: string, toDay: string): string[] {
+  const days: string[] = [];
+  const last = endDay && endDay > startDay ? endDay : startDay;
+  for (let d = startDay < fromDay ? fromDay : startDay; d <= last && d < toDay; d = addDays(d, 1)) days.push(d);
+  return days;
+}
+
 /** True for a real YYYY-MM-DD. */
 export function isCalendarDay(value: string | null | undefined): value is string {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;

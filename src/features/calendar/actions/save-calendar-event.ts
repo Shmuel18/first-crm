@@ -23,7 +23,14 @@ export async function saveCalendarEventAction(input: unknown): Promise<SaveCalen
   const v = parsed.data;
 
   const startsAt = v.startTime ? israelWallClockToIso(`${v.date}T${v.startTime}`) : israelDayStart(v.date);
-  const endsAt = v.startTime && v.endTime ? israelWallClockToIso(`${v.date}T${v.endTime}`) : null;
+  // A multi-day all-day event stores the START of its last day as ends_at.
+  const endsAt = v.startTime
+    ? v.endTime
+      ? israelWallClockToIso(`${v.date}T${v.endTime}`)
+      : null
+    : v.endDate && v.endDate > v.date
+      ? israelDayStart(v.endDate)
+      : null;
   if (!startsAt) return { ok: false, error: 'validation' };
 
   const supabase = await createClient();

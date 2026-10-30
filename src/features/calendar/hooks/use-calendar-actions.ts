@@ -12,6 +12,7 @@ import { callAction } from '@/lib/actions/call-action';
 
 import { deleteCalendarEventAction } from '../actions/delete-calendar-event';
 import { moveCalendarEventAction } from '../actions/move-calendar-event';
+import { addDays, daysBetween } from '../domain/calendar-range';
 import type { CalendarItem } from '../types';
 
 /**
@@ -41,7 +42,8 @@ export function useCalendarActions(): {
         ? await callAction(() => updateCaseFieldAction(e.caseId, 'target_date', day))
         : e.kind === 'task'
           ? await callAction(() => rescheduleTaskAction(e.taskId, day))
-          : await callAction(() => moveCalendarEventAction(e.eventId, day));
+          : // A chip of a multi-day event moves the whole span by the same offset.
+            await callAction(() => moveCalendarEventAction(e.eventId, addDays(e.startDay, daysBetween(item.day, day))));
     return finish(res.ok);
   };
 

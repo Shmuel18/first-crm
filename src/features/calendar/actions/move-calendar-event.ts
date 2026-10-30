@@ -8,13 +8,14 @@ import { createClient } from '@/lib/supabase/server';
 
 import { israelWallClockToIso } from '@/lib/utils/israel-time';
 
+import { addDays, daysBetween } from '../domain/calendar-range';
 import { israelDayAndTime, israelDayStart } from '../domain/israel-day';
 
 type Result = { ok: true } | { ok: false; error: 'validation' | 'unauthorized' | 'unknown' };
 
 const MoveSchema = z.object({ eventId: z.uuid(), day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) });
 
-/** Drag an event to another day, keeping its time of day and length. */
+/** Move an event to start on another day, keeping its time of day and length. */
 export async function moveCalendarEventAction(eventId: string, day: string): Promise<Result> {
   const parsed = MoveSchema.safeParse({ eventId, day });
   if (!parsed.success) return { ok: false, error: 'validation' };
@@ -39,14 +40,20 @@ export async function moveCalendarEventAction(eventId: string, day: string): Pro
     ? israelDayStart(parsed.data.day)
     : israelWallClockToIso(`${parsed.data.day}T${from.time}`);
   if (!startsAt) return { ok: false, error: 'validation' };
-  const lengthMs = ev.ends_at ? Date.parse(ev.ends_at) - Date.parse(ev.starts_at) : null;
+  // An all-day span moves by whole days (its ends_at is the start of its last
+  // day); a timed event keeps its length.
+  const endsAt = !ev.ends_at
+    ? null
+    : ev.all_day
+      ? israelDayStart(addDays(parsed.data.day, daysBetween(from.day, israelDayAndTime(ev.ends_at).day)))
+      : new Date(Date.parse(startsAt) + Date.parse(ev.ends_at) - Date.parse(ev.starts_at)).toISOString();
 
   const { error } = await supabase.rpc('save_calendar_event', {
     p_id: ev.id,
     p_title: ev.title,
     p_kind: ev.kind,
     p_starts_at: startsAt,
-    p_ends_at: lengthMs === null ? null : new Date(Date.parse(startsAt) + lengthMs).toISOString(),
+    p_ends_at: endsAt,
     p_all_day: ev.all_day,
     p_location: ev.location,
     p_notes: ev.notes,

@@ -18,6 +18,8 @@ export const CalendarEventSchema = z
     /** Israel wall-clock "HH:MM"; null = all-day event. */
     startTime: z.string().regex(TIME).nullable(),
     endTime: z.string().regex(TIME).nullable(),
+    /** Last day of an all-day event spanning several days (vacation, abroad); null = one day. */
+    endDate: z.string().regex(DAY).nullable(),
     location: z.string().trim().max(200).nullable(),
     notes: z.string().trim().max(2000).nullable(),
     caseId: z.uuid().nullable(),
@@ -26,6 +28,10 @@ export const CalendarEventSchema = z
   })
   .refine((v) => !v.endTime || !v.startTime || v.endTime >= v.startTime, {
     path: ['endTime'],
+    message: 'calendar.errors.endBeforeStart',
+  })
+  .refine((v) => !v.endDate || (v.startTime === null && v.endDate >= v.date), {
+    path: ['endDate'],
     message: 'calendar.errors.endBeforeStart',
   });
 

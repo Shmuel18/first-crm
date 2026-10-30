@@ -3728,7 +3728,7 @@
       "stage": "",
       "targetDate": "Target:",
       "task": "Task:",
-      "event": "",
+      "event": "{detail, select, absence {Out of office:} other {}}",
       "expiry": "{detail, select, id {ID expires:} other {Expires:}}",
       "agreement": "{detail, select, sent {Agreement sent:} signed {Agreement signed:} other {Agreement link expires:}}",
       "opened": "Case opened:"
@@ -3783,9 +3783,11 @@
         "signing": "Signing",
         "appraiser": "Appraiser",
         "reminder": "Reminder",
+        "absence": "Absence (vacation / abroad)",
         "other": "Other"
       },
       "date": "Date",
+      "endDate": "Until (multi-day)",
       "allDay": "All day",
       "start": "Start",
       "end": "End",

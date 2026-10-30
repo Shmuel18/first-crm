@@ -30,8 +30,10 @@ type Props = {
 
 const MISSING_CLASS = 'border-red-300 bg-red-50 font-medium text-red-700';
 
-function stateClass(value: string | null): string {
+function stateClass(value: string | null, exempt: boolean): string {
   const state = getTargetDateState(value);
+  // A ביצוע / בוצע / frozen case is past its deadline by design — not red.
+  if (exempt && (state === 'overdue' || state === 'soon')) return 'border-neutral-200 bg-white text-neutral-700';
   if (state === 'overdue') return 'border-red-200 bg-red-50 text-red-700';
   if (state === 'soon') return 'border-brand-gold/40 bg-brand-gold-soft text-brand-gold-text';
   return 'border-neutral-200 bg-white text-neutral-700';
@@ -104,7 +106,7 @@ export function EditableTargetDateCell({
   const label = savedValue
     ? formatDateShort(savedValue, locale)
     : td(missing ? 'missing' : 'empty');
-  const chipClass = missing ? MISSING_CLASS : stateClass(savedValue);
+  const chipClass = missing ? MISSING_CLASS : stateClass(savedValue, targetDateExempt);
 
   // Read-only: viewer can't edit this case — show the dated chip (keeping the
   // overdue/soon/missing coloring) with no picker affordance. A missing date
