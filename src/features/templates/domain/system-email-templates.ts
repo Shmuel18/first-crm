@@ -285,18 +285,18 @@ export const SYSTEM_EMAIL_TEMPLATE_DEFINITIONS: Record<
     key: 'case_status_overdue',
     category: 'staff',
     critical: false,
-    variables: ['caseNumber', 'status', 'days'],
+    variables: ['client', 'caseNumber', 'status', 'days'],
     defaults: {
       he: {
-        subject: 'תיק {caseNumber} ממתין מעבר לזמן',
+        subject: 'התיק של {client} ממתין מעבר לזמן',
         heading: 'תיק תקוע בשלב',
-        body: 'תיק {caseNumber} נמצא בשלב "{status}" כבר {days} ימים — מעבר לסף שהוגדר.',
+        body: 'התיק של {client} נמצא בשלב "{status}" כבר {days} ימים — מעבר לסף שהוגדר.',
         ctaLabel: 'פתח במערכת',
       },
       en: {
-        subject: 'Case {caseNumber} is overdue in its stage',
+        subject: 'The case of {client} is overdue in its stage',
         heading: 'A case is stuck in a stage',
-        body: 'Case {caseNumber} has been in "{status}" for {days} days — past the configured threshold.',
+        body: 'The case of {client} has been in "{status}" for {days} days — past the configured threshold.',
         ctaLabel: 'Open in app',
       },
     },

@@ -3505,9 +3505,9 @@
       "body": "המשימה \"{task}\" ממתינה לך."
     },
     "case_status_overdue": {
-      "subject": "תיק {caseNumber} ממתין מעבר לזמן",
+      "subject": "התיק של {client} ממתין מעבר לזמן",
       "heading": "תיק תקוע בשלב",
-      "body": "תיק {caseNumber} נמצא בשלב \"{status}\" כבר {days} ימים — מעבר לסף שהוגדר."
+      "body": "התיק של {client} נמצא בשלב \"{status}\" כבר {days} ימים — מעבר לסף שהוגדר."
     },
     "intakeOffice": {
       "subject": "שאלון חדש מהאתר — {name}",
@@ -3525,7 +3525,8 @@
         "borrowers": "מספר לווים",
         "details": "פרטי הבקשה"
       }
-    }
+    },
+    "expenseNoDescription": "לא נרשם תיאור"
   },
   "team": {
     "title": "צוות",

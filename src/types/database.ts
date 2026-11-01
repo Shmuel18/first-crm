@@ -2289,6 +2289,7 @@ export type Database = {
           description: string | null
           expense_date: string | null
           id: string
+          owner_alerted_at: string | null
           receipt_drive_id: string | null
           receipt_drive_url: string | null
           receipt_mime: string | null
@@ -2307,6 +2308,7 @@ export type Database = {
           description?: string | null
           expense_date?: string | null
           id?: string
+          owner_alerted_at?: string | null
           receipt_drive_id?: string | null
           receipt_drive_url?: string | null
           receipt_mime?: string | null
@@ -2325,6 +2327,7 @@ export type Database = {
           description?: string | null
           expense_date?: string | null
           id?: string
+          owner_alerted_at?: string | null
           receipt_drive_id?: string | null
           receipt_drive_url?: string | null
           receipt_mime?: string | null
@@ -5689,6 +5692,7 @@ export type Database = {
         Returns: string
       }
       admin_delete_member: { Args: { p_user_id: string }; Returns: undefined }
+      alert_undescribed_expenses: { Args: never; Returns: number }
       applied_schema_version: { Args: never; Returns: number }
       bootstrap_first_admin: { Args: { p_email: string }; Returns: string }
       can_edit_case: { Args: { p_case_id: string }; Returns: boolean }

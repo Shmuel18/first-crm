@@ -8,7 +8,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 
 import { resolveCaseLabel } from './case-label.service';
 import { shouldEmailUser } from './preferences.service';
-import { withCaseInSubject, type CaseLabel } from '../domain/case-label';
+import { withCaseInSubject } from '../domain/case-label';
 import { notificationHref } from '../domain/notification-href';
 import type { NotificationType } from '../types';
 
@@ -67,7 +67,6 @@ export async function sendMirroredNotificationEmail(input: MirrorInput): Promise
     const locale = recipient.language === 'en' ? 'en' : 'he';
     const tEmail = await getTranslations({ locale, namespace: 'email' });
 
-    const params = bodyParams(input.kind, input.data, locale, tEmail('someone'));
     // Same destination rule as the bell and the push payload: a task mention
     // lands in that task's conversation, not on the generic list.
     const url =
@@ -79,6 +78,11 @@ export async function sendMirroredNotificationEmail(input: MirrorInput): Promise
     // recipient guessing. Resolved live from case_id (not the row snapshot) so
     // it also works for notifications created before migration 222.
     const caseLabel = await resolveCaseLabel(admin, input.caseId);
+    const params = bodyParams(input.kind, input.data, locale, {
+      actor: tEmail('someone'),
+      noDescription: tEmail('expenseNoDescription'),
+      client: caseLabel?.short ?? '',
+    });
 
     const email = await renderSystemEmail({
       key: input.kind,
@@ -86,7 +90,7 @@ export async function sendMirroredNotificationEmail(input: MirrorInput): Promise
       variables: params,
       ctaUrl: url,
       afterBodyHtml: caseLabel
-        ? renderContextTable([[tEmail('taskContext.case'), contextLabel(input.kind, caseLabel)]])
+        ? renderContextTable([[tEmail('taskContext.case'), caseLabel.short]])
         : undefined,
       footer: tEmail('footer'),
     });
@@ -103,12 +107,6 @@ export async function sendMirroredNotificationEmail(input: MirrorInput): Promise
   }
 }
 
-/** The expense alert goes to the owner, who knows clients by name — the case
- *  number is noise there (Kaufman, 2026-11-01). Other kinds keep "#num · name". */
-function contextLabel(kind: NotificationType, label: CaseLabel): string {
-  return kind === 'expense_added' && label.clientName ? label.clientName : label.label;
-}
-
 function isMirroredKind(kind: NotificationType): kind is MirroredKind {
   return MIRRORED_KINDS.has(kind as MirroredKind);
 }
@@ -118,14 +116,14 @@ function bodyParams(
   kind: NotificationType,
   data: Record<string, unknown>,
   locale: 'he' | 'en',
-  fallbackActor: string,
+  ctx: { actor: string; noDescription: string; client: string },
 ): Record<string, string | number> {
   const str = (key: string): string => (typeof data[key] === 'string' ? (data[key] as string) : '');
   const num = (key: string): number => (typeof data[key] === 'number' ? (data[key] as number) : 0);
 
   if (kind === 'case_mention' || kind === 'task_mention' || kind === 'task_comment') {
     return {
-      actor: str('actorName') || fallbackActor,
+      actor: str('actorName') || ctx.actor,
       preview: str('preview'),
       task: str('taskTitle'),
     };
@@ -133,19 +131,21 @@ function bodyParams(
   if (kind === 'case_status_overdue') {
     return {
       caseNumber: str('caseNumber'),
+      // The client's name — the case number alone is no use to the reader.
+      client: ctx.client || `#${str('caseNumber')}`,
       status: locale === 'he' ? str('statusNameHe') : str('statusNameEn'),
       days: num('daysInStatus'),
     };
   }
   if (kind === 'expense_added') {
     return {
-      actor: str('actorName') || fallbackActor,
+      actor: str('actorName') || ctx.actor,
       amount: new Intl.NumberFormat(locale === 'en' ? 'en-IL' : 'he-IL', {
         style: 'currency',
         currency: 'ILS',
         maximumFractionDigits: 0,
       }).format(num('amount')),
-      description: str('description') || '—',
+      description: str('description') || ctx.noDescription,
     };
   }
   if (kind === 'calendar_reminder') {

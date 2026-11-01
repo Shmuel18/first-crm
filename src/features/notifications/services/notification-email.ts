@@ -65,7 +65,7 @@ export async function sendTaskNotificationEmail(input: TaskEmailInput): Promise<
     // recognizes it from the inbox without opening the app.
     const caseLabel = await resolveCaseLabel(admin, input.caseId);
     const rows: Array<[string, string]> = [];
-    if (caseLabel) rows.push([t('taskContext.case'), caseLabel.label]);
+    if (caseLabel) rows.push([t('taskContext.case'), caseLabel.short]);
     const desc = input.kind === 'task_completed' ? input.description?.trim() : null;
     if (desc) {
       rows.push([t('taskContext.description'), desc.length > 300 ? `${desc.slice(0, 300)}…` : desc]);

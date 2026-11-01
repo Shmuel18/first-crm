@@ -3505,9 +3505,9 @@
       "body": "The task \"{task}\" is waiting for you."
     },
     "case_status_overdue": {
-      "subject": "Case {caseNumber} is overdue in its stage",
+      "subject": "The case of {client} is overdue in its stage",
       "heading": "A case is stuck in a stage",
-      "body": "Case {caseNumber} has been in \"{status}\" for {days} days — past the configured threshold."
+      "body": "The case of {client} has been in \"{status}\" for {days} days — past the configured threshold."
     },
     "intakeOffice": {
       "subject": "New questionnaire from the website — {name}",
@@ -3525,7 +3525,8 @@
         "borrowers": "Borrowers",
         "details": "Request details"
       }
-    }
+    },
+    "expenseNoDescription": "no description entered"
   },
   "team": {
     "title": "Team",
