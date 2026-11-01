@@ -8,7 +8,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 
 import { resolveCaseLabel } from './case-label.service';
 import { shouldEmailUser } from './preferences.service';
-import { withCaseInSubject } from '../domain/case-label';
+import { withCaseInSubject, type CaseLabel } from '../domain/case-label';
 import { notificationHref } from '../domain/notification-href';
 import type { NotificationType } from '../types';
 
@@ -86,7 +86,7 @@ export async function sendMirroredNotificationEmail(input: MirrorInput): Promise
       variables: params,
       ctaUrl: url,
       afterBodyHtml: caseLabel
-        ? renderContextTable([[tEmail('taskContext.case'), caseLabel.label]])
+        ? renderContextTable([[tEmail('taskContext.case'), contextLabel(input.kind, caseLabel)]])
         : undefined,
       footer: tEmail('footer'),
     });
@@ -101,6 +101,12 @@ export async function sendMirroredNotificationEmail(input: MirrorInput): Promise
   } catch {
     return false; // email is best-effort, never break the webhook
   }
+}
+
+/** The expense alert goes to the owner, who knows clients by name — the case
+ *  number is noise there (Kaufman, 2026-11-01). Other kinds keep "#num · name". */
+function contextLabel(kind: NotificationType, label: CaseLabel): string {
+  return kind === 'expense_added' && label.clientName ? label.clientName : label.label;
 }
 
 function isMirroredKind(kind: NotificationType): kind is MirroredKind {

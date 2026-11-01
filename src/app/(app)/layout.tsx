@@ -4,6 +4,7 @@ import { Toaster } from 'sonner';
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import { BottomNav } from '@/components/layout/bottom-nav';
+import { DayRolloverRefresh } from '@/components/layout/day-rollover-refresh';
 import { NavProgress } from '@/components/layout/nav-progress';
 import { RouteFocus } from '@/components/layout/route-focus';
 import { Sidebar } from '@/components/layout/sidebar';
@@ -57,6 +58,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           {t('skipToContent')}
         </a>
         <RouteFocus />
+        <DayRolloverRefresh />
         <Suspense fallback={null}>
           <NavProgress />
         </Suspense>
