@@ -17,16 +17,25 @@ export function ManagerSection({
   board,
   staff,
   locale,
+  readOnly = false,
 }: {
   board: BoardRow[];
   staff: TrackedEmployee[];
   locale: Locale;
+  /** Attendance viewer (mig 259): see hours, change nothing. */
+  readOnly?: boolean;
 }) {
   const [version, setVersion] = useState(0);
   return (
     <>
-      <ManagerPanel board={board} staff={staff} locale={locale} onChanged={() => setVersion((v) => v + 1)} />
-      <ManagerTimesheet locale={locale} refreshKey={version} />
+      <ManagerPanel
+        board={board}
+        staff={staff}
+        locale={locale}
+        readOnly={readOnly}
+        onChanged={() => setVersion((v) => v + 1)}
+      />
+      <ManagerTimesheet locale={locale} refreshKey={version} readOnly={readOnly} />
     </>
   );
 }

@@ -146,3 +146,18 @@ export const isCurrentUserOwner = cache(async (): Promise<boolean> => {
   }
   return data === true;
 });
+
+/**
+ * True if the current user may READ every tracked employee's attendance —
+ * the owner, or a profile flagged can_view_attendance (migration 259). Read
+ * only: editing shifts, flags and wages stay behind isCurrentUserOwner.
+ */
+export const canCurrentUserViewAttendance = cache(async (): Promise<boolean> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('can_view_attendance');
+  if (error) {
+    console.error('can_view_attendance RPC failed', { err: error.message });
+    return false;
+  }
+  return data === true;
+});

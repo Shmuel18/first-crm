@@ -16,21 +16,21 @@ import { parseLocale } from '@/lib/i18n/direction';
 
 export default async function TimeClockPage() {
   const access = await getClockAccess();
-  if (!access.isTracked && !access.isManager) redirect('/cases');
+  if (!access.isTracked && !access.canViewAll) redirect('/cases');
 
   const [locale, t, openEntry, myEntries, board, staff] = await Promise.all([
     getLocale().then(parseLocale),
     getTranslations('timeClock'),
     access.isTracked ? getMyOpenEntry() : Promise.resolve(null),
     access.isTracked ? listMyEntries() : Promise.resolve([]),
-    access.isManager ? getBoard() : Promise.resolve([]),
+    access.canViewAll ? getBoard() : Promise.resolve([]),
     access.isManager ? listStaffForTracking() : Promise.resolve([]),
   ]);
 
   return (
     <div className="mx-auto max-w-2xl space-y-8">
       <header>
-        <div className="mb-1 inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-brand-gold-text">
+        <div className="text-brand-gold-text mb-1 inline-flex items-center gap-1.5 text-xs font-medium tracking-wide uppercase">
           <Clock className="size-3.5" aria-hidden="true" />
           {t('eyebrow')}
         </div>
@@ -46,10 +46,17 @@ export default async function TimeClockPage() {
         />
       )}
 
-      {access.isManager && (
+      {access.canViewAll && (
         <>
           {access.isTracked && <hr className="border-neutral-200" />}
-          <ManagerSection board={board} staff={staff} locale={locale} />
+          {/* An attendance viewer (mig 259) gets the same board + timesheet,
+              read-only: no tracking/wage settings, no edits, no export. */}
+          <ManagerSection
+            board={board}
+            staff={staff}
+            locale={locale}
+            readOnly={!access.isManager}
+          />
         </>
       )}
     </div>

@@ -33,9 +33,12 @@ const fullName = (e: TrackedEmployee, fallback: string): string =>
 export function ManagerTimesheet({
   locale,
   refreshKey = 0,
+  readOnly = false,
 }: {
   locale: Locale;
   refreshKey?: number;
+  /** Attendance viewer (mig 259): no export, no add/edit. */
+  readOnly?: boolean;
 }) {
   const t = useTranslations('timeClock');
   const [offset, setOffset] = useState(0);
@@ -120,19 +123,21 @@ export function ManagerTimesheet({
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-semibold text-neutral-900">{t('manager.timesheet')}</h2>
-          <button
-            type="button"
-            onClick={doExport}
-            disabled={exporting || rows.length === 0}
-            className="inline-flex items-center gap-1 rounded-md border border-emerald-300 px-2 py-1 text-xs font-medium text-emerald-700 transition hover:bg-emerald-50 disabled:opacity-50"
-          >
-            {exporting ? (
-              <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-            ) : (
-              <FileSpreadsheet className="size-3.5" aria-hidden="true" />
-            )}
-            {t('manager.export')}
-          </button>
+          {!readOnly && (
+            <button
+              type="button"
+              onClick={doExport}
+              disabled={exporting || rows.length === 0}
+              className="inline-flex items-center gap-1 rounded-md border border-emerald-300 px-2 py-1 text-xs font-medium text-emerald-700 transition hover:bg-emerald-50 disabled:opacity-50"
+            >
+              {exporting ? (
+                <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <FileSpreadsheet className="size-3.5" aria-hidden="true" />
+              )}
+              {t('manager.export')}
+            </button>
+          )}
         </div>
         <div className="inline-flex items-center gap-1">
           <button
@@ -204,14 +209,16 @@ export function ManagerTimesheet({
                       )}
                     </span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditing({ entry: null, userId: employee.id, name })}
-                    aria-label={t('manager.addEntry')}
-                    className="tap-target border-brand-gold/50 text-brand-gold-text hover:bg-brand-gold-soft inline-flex size-7 shrink-0 items-center justify-center rounded-md border transition"
-                  >
-                    <Plus className="size-4" aria-hidden="true" />
-                  </button>
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => setEditing({ entry: null, userId: employee.id, name })}
+                      aria-label={t('manager.addEntry')}
+                      className="tap-target border-brand-gold/50 text-brand-gold-text hover:bg-brand-gold-soft inline-flex size-7 shrink-0 items-center justify-center rounded-md border transition"
+                    >
+                      <Plus className="size-4" aria-hidden="true" />
+                    </button>
+                  )}
                 </div>
 
                 {isOpen && (
@@ -245,16 +252,18 @@ export function ManagerTimesheet({
                                       · {e.note}
                                     </span>
                                   )}
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setEditing({ entry: e, userId: employee.id, name })
-                                    }
-                                    aria-label={t('manager.editEntry')}
-                                    className="tap-target hover:text-brand-gold-text ms-auto inline-flex size-6 shrink-0 items-center justify-center rounded text-neutral-400 transition"
-                                  >
-                                    <Pencil className="size-3.5" aria-hidden="true" />
-                                  </button>
+                                  {!readOnly && (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setEditing({ entry: e, userId: employee.id, name })
+                                      }
+                                      aria-label={t('manager.editEntry')}
+                                      className="tap-target hover:text-brand-gold-text ms-auto inline-flex size-6 shrink-0 items-center justify-center rounded text-neutral-400 transition"
+                                    >
+                                      <Pencil className="size-3.5" aria-hidden="true" />
+                                    </button>
+                                  )}
                                 </li>
                               ))}
                             </ul>

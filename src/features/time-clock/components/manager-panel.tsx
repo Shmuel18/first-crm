@@ -18,15 +18,19 @@ type Props = {
   board: BoardRow[];
   staff: TrackedEmployee[];
   locale: Locale;
+  /** Attendance viewer: board only, no tracking/wage settings. */
+  readOnly?: boolean;
   /** Fired after a tracking/rate change so a sibling (the timesheet) can re-fetch. */
   onChanged?: () => void;
 };
 
-const fullName = (e: { firstName: string | null; lastName: string | null }, fallback: string): string =>
-  [e.firstName, e.lastName].filter(Boolean).join(' ').trim() || fallback;
+const fullName = (
+  e: { firstName: string | null; lastName: string | null },
+  fallback: string,
+): string => [e.firstName, e.lastName].filter(Boolean).join(' ').trim() || fallback;
 
 /** Manager view: live "who's on the clock now" board + per-employee tracking toggles. */
-export function ManagerPanel({ board, staff, locale, onChanged }: Props) {
+export function ManagerPanel({ board, staff, locale, readOnly = false, onChanged }: Props) {
   const t = useTranslations('timeClock');
   const router = useRouter();
 
@@ -56,7 +60,7 @@ export function ManagerPanel({ board, staff, locale, onChanged }: Props) {
           <ul className="divide-y divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white">
             {board.map(({ employee, openEntry }) => (
               <li key={employee.id} className="flex items-center justify-between gap-3 px-4 py-3">
-                <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex min-w-0 items-center gap-2.5">
                   <Circle
                     className={`size-2.5 shrink-0 ${openEntry ? 'fill-emerald-500 text-emerald-500' : 'fill-neutral-300 text-neutral-300'}`}
                     aria-hidden="true"
@@ -65,8 +69,12 @@ export function ManagerPanel({ board, staff, locale, onChanged }: Props) {
                     {fullName(employee, t('unnamed'))}
                   </span>
                 </div>
-                <span className={`shrink-0 text-sm tabular-nums ${openEntry ? 'text-emerald-700' : 'text-neutral-400'}`}>
-                  {openEntry ? t('board.since', { time: fmtTime(openEntry.clockIn) }) : t('board.off')}
+                <span
+                  className={`shrink-0 text-sm tabular-nums ${openEntry ? 'text-emerald-700' : 'text-neutral-400'}`}
+                >
+                  {openEntry
+                    ? t('board.since', { time: fmtTime(openEntry.clockIn) })
+                    : t('board.off')}
                 </span>
               </li>
             ))}
@@ -74,24 +82,39 @@ export function ManagerPanel({ board, staff, locale, onChanged }: Props) {
         )}
       </section>
 
-      {/* Tracking settings */}
-      <section>
-        <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-neutral-900">
-          <Settings2 className="size-4 text-brand-gold-text" aria-hidden="true" />
-          {t('settings.title')}
-        </h2>
-        <p className="mb-2 text-xs text-neutral-500">{t('settings.hint')}</p>
-        <ul className="divide-y divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white">
-          {staff.map((s) => (
-            <StaffRow key={s.id} staff={s} label={fullName(s, t('unnamed'))} onChanged={onChanged} />
-          ))}
-        </ul>
-      </section>
+      {/* Tracking settings (owner only) */}
+      {!readOnly && (
+        <section>
+          <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-neutral-900">
+            <Settings2 className="text-brand-gold-text size-4" aria-hidden="true" />
+            {t('settings.title')}
+          </h2>
+          <p className="mb-2 text-xs text-neutral-500">{t('settings.hint')}</p>
+          <ul className="divide-y divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white">
+            {staff.map((s) => (
+              <StaffRow
+                key={s.id}
+                staff={s}
+                label={fullName(s, t('unnamed'))}
+                onChanged={onChanged}
+              />
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }
 
-function StaffRow({ staff, label, onChanged }: { staff: TrackedEmployee; label: string; onChanged?: () => void }) {
+function StaffRow({
+  staff,
+  label,
+  onChanged,
+}: {
+  staff: TrackedEmployee;
+  label: string;
+  onChanged?: () => void;
+}) {
   const t = useTranslations('timeClock');
   const [tracked, setTracked] = useState(staff.timeTracked);
   const [auto, setAuto] = useState(staff.autoClockIn);
@@ -105,18 +128,25 @@ function StaffRow({ staff, label, onChanged }: { staff: TrackedEmployee; label: 
     return Number.isFinite(n) && n >= 0 ? n : null;
   };
 
-  const save = (nextTracked: boolean, nextAuto: boolean, nextRate: number | null, notify = false) => {
+  const save = (
+    nextTracked: boolean,
+    nextAuto: boolean,
+    nextRate: number | null,
+    notify = false,
+  ) => {
     const prevT = tracked;
     const prevA = auto;
     setTracked(nextTracked);
     setAuto(nextAuto);
     start(async () => {
-      const res = await callAction(() => setEmployeeTrackingAction({
-        userId: staff.id,
-        timeTracked: nextTracked,
-        autoClockIn: nextAuto,
-        hourlyRate: nextRate,
-      }));
+      const res = await callAction(() =>
+        setEmployeeTrackingAction({
+          userId: staff.id,
+          timeTracked: nextTracked,
+          autoClockIn: nextAuto,
+          hourlyRate: nextRate,
+        }),
+      );
       if (!res.ok) {
         setTracked(prevT);
         setAuto(prevA);
@@ -143,7 +173,7 @@ function StaffRow({ staff, label, onChanged }: { staff: TrackedEmployee; label: 
             onChange={(e) => setRate(e.target.value)}
             onBlur={() => save(tracked, auto, parseRate(rate), true)}
             onKeyDown={(e) => e.key === 'Enter' && (e.currentTarget as HTMLInputElement).blur()}
-            className="w-16 rounded border border-neutral-200 px-1.5 py-0.5 text-xs tabular-nums text-neutral-900 focus:border-brand-gold-text focus:outline-none focus:ring-1 focus:ring-brand-gold-text/30"
+            className="focus:border-brand-gold-text focus:ring-brand-gold-text/30 w-16 rounded border border-neutral-200 px-1.5 py-0.5 text-xs text-neutral-900 tabular-nums focus:ring-1 focus:outline-none"
           />
           <span className="text-neutral-400">₪</span>
         </div>
@@ -151,18 +181,22 @@ function StaffRow({ staff, label, onChanged }: { staff: TrackedEmployee; label: 
           <input
             type="checkbox"
             checked={tracked}
-            onChange={(e) => save(e.target.checked, e.target.checked ? auto : false, parseRate(rate))}
-            className="size-4 rounded border-neutral-300 accent-brand-gold-text"
+            onChange={(e) =>
+              save(e.target.checked, e.target.checked ? auto : false, parseRate(rate))
+            }
+            className="accent-brand-gold-text size-4 rounded border-neutral-300"
           />
           {t('settings.tracked')}
         </label>
-        <label className={`flex items-center gap-1.5 text-xs ${tracked ? 'text-neutral-700' : 'text-neutral-300'}`}>
+        <label
+          className={`flex items-center gap-1.5 text-xs ${tracked ? 'text-neutral-700' : 'text-neutral-300'}`}
+        >
           <input
             type="checkbox"
             checked={auto}
             disabled={!tracked}
             onChange={(e) => save(tracked, e.target.checked, parseRate(rate))}
-            className="size-4 rounded border-neutral-300 accent-brand-gold-text disabled:opacity-50"
+            className="accent-brand-gold-text size-4 rounded border-neutral-300 disabled:opacity-50"
           />
           {t('settings.auto')}
         </label>

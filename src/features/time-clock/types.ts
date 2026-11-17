@@ -31,6 +31,8 @@ export type BoardRow = {
 export type ClockAccess = {
   /** Office owner (is_owner, mig 241) — sees the board + edits everyone. */
   isManager: boolean;
+  /** Owner OR attendance viewer (mig 259) — sees the board + timesheet, read-only for the viewer. */
+  canViewAll: boolean;
   /** Flagged hourly employee — sees their own punch clock. */
   isTracked: boolean;
   /** The current user's own wage per hour (₪), for their earnings display. */

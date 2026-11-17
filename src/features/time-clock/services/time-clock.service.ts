@@ -1,6 +1,6 @@
 import { cache } from 'react';
 
-import { getCurrentUser, isCurrentUserOwner } from '@/lib/auth/permissions';
+import { canCurrentUserViewAttendance, getCurrentUser, isCurrentUserOwner } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
 import { israelMonthRange } from '../domain/month-range';
@@ -90,8 +90,12 @@ async function fetchRates(
  * gets no board, no timesheet and no employee toggles.
  */
 export async function getClockAccess(): Promise<ClockAccess> {
-  const [isManager, user] = await Promise.all([isCurrentUserOwner(), getCurrentUser()]);
-  if (!user) return { isManager: false, isTracked: false, hourlyRate: null };
+  const [isManager, canViewAll, user] = await Promise.all([
+    isCurrentUserOwner(),
+    canCurrentUserViewAttendance(),
+    getCurrentUser(),
+  ]);
+  if (!user) return { isManager: false, canViewAll: false, isTracked: false, hourlyRate: null };
 
   const supabase = await createClient();
   const [{ data }, rates] = await Promise.all([
@@ -100,6 +104,7 @@ export async function getClockAccess(): Promise<ClockAccess> {
   ]);
   return {
     isManager,
+    canViewAll,
     isTracked: Boolean(data?.time_tracked),
     hourlyRate: rates.get(user.id) ?? null,
   };
@@ -107,8 +112,9 @@ export async function getClockAccess(): Promise<ClockAccess> {
 
 /**
  * Lightweight cached check for nav gating: is the current user a tracked hourly
- * employee? (The owner gets the nav via is_owner, checked separately — short-
- * circuit there so they never pay for this read.)
+ * employee or an attendance viewer (mig 259)? One own-profile read. (The owner
+ * gets the nav via is_owner, checked separately — short-circuit there so they
+ * never pay for this read.)
  */
 export const isCurrentUserTimeTracked = cache(async (): Promise<boolean> => {
   const user = await getCurrentUser();
@@ -116,10 +122,10 @@ export const isCurrentUserTimeTracked = cache(async (): Promise<boolean> => {
   const supabase = await createClient();
   const { data } = await supabase
     .from('profiles')
-    .select('time_tracked')
+    .select('time_tracked, can_view_attendance')
     .eq('id', user.id)
     .maybeSingle();
-  return Boolean(data?.time_tracked);
+  return Boolean(data?.time_tracked || data?.can_view_attendance);
 });
 
 /** The current user's currently-open shift, or null. */
@@ -172,9 +178,13 @@ export async function listMyEntries(): Promise<TimeEntry[]> {
   return listMyEntriesForRange(fromISO, toISO);
 }
 
-/** Owner: every hourly-tracked employee with their current open shift (the live board). */
+/**
+ * Owner or attendance viewer: every hourly-tracked employee with their current
+ * open shift (the live board). A viewer's wage map comes back empty (pay-rate
+ * RLS is self-or-owner), so no wage reaches them.
+ */
 export async function getBoard(): Promise<BoardRow[]> {
-  if (!(await isCurrentUserOwner())) return [];
+  if (!(await canCurrentUserViewAttendance())) return [];
   const supabase = await createClient();
   const { data: staff, error } = await supabase
     .from('profiles')
@@ -220,12 +230,12 @@ export async function listStaffForTracking(): Promise<TrackedEmployee[]> {
   return rows.map((r) => mapEmployee(r as ProfileRow, rates.get(r.id) ?? null));
 }
 
-/** Owner: every tracked employee + their shifts in [fromISO, toISO) — the timesheet. */
+/** Owner or attendance viewer: every tracked employee + their shifts in [fromISO, toISO). */
 export async function getManagerTimesheet(
   fromISO: string,
   toISO: string,
 ): Promise<{ employee: TrackedEmployee; entries: TimeEntry[] }[]> {
-  if (!(await isCurrentUserOwner())) return [];
+  if (!(await canCurrentUserViewAttendance())) return [];
   const supabase = await createClient();
   const { data: staff, error } = await supabase
     .from('profiles')
